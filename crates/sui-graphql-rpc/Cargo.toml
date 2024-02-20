@@ -61,7 +61,6 @@ sui-graphql-rpc-client.workspace = true
 # TODO: put these behind feature flag to prevent leakage
 # Used for dummy data
 bcs.workspace = true
-simulacrum.workspace = true  # todo: cleanup test only deps
 sui-json-rpc.workspace = true
 sui-json-rpc-types.workspace = true
 sui-indexer.workspace = true

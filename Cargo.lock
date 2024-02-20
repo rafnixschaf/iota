@@ -10760,37 +10760,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simulacrum"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "fastcrypto",
- "futures",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "shared-crypto",
- "sui-config",
- "sui-execution",
- "sui-framework",
- "sui-genesis-builder",
- "sui-keys",
- "sui-protocol-config",
- "sui-storage",
- "sui-swarm-config",
- "sui-transaction-checks",
- "sui-types",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11264,7 +11233,6 @@ dependencies = [
  "rocksdb",
  "serde",
  "serde_json",
- "simulacrum",
  "snowflake-api",
  "strum 0.24.1",
  "strum_macros 0.24.3",
@@ -11914,7 +11882,6 @@ dependencies = [
  "serial_test",
  "shared-crypto",
  "similar",
- "simulacrum",
  "sui-framework",
  "sui-graphql-rpc-client",
  "sui-graphql-rpc-headers",
@@ -11993,7 +11960,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "simulacrum",
  "sui-json",
  "sui-json-rpc",
  "sui-json-rpc-api",
@@ -13270,7 +13236,6 @@ dependencies = [
  "regex",
  "rocksdb",
  "serde_json",
- "simulacrum",
  "sui-config",
  "sui-framework",
  "sui-framework-snapshot",

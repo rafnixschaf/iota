@@ -74,7 +74,6 @@ members = [
   "crates/mysten-service-boilerplate",
   "crates/prometheus-closure-metric",
   "crates/shared-crypto",
-  "crates/simulacrum",
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
   "crates/sui-analytics-indexer",
@@ -545,7 +544,6 @@ mysten-service = { path = "crates/mysten-service" }
 mysten-service-boilerplate = { path = "crates/mysten-service-boilerplate" }
 prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
-simulacrum = { path = "crates/simulacrum" }
 sui = { path = "crates/sui" }
 sui-adapter-transactional-tests = { path = "crates/sui-adapter-transactional-tests" }
 sui-analytics-indexer = { path = "crates/sui-analytics-indexer" }
