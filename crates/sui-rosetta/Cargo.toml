@@ -28,7 +28,6 @@ eyre.workspace = true
 typed-store.workspace = true
 tempfile.workspace = true
 fastcrypto.workspace = true
-sui-swarm-config.workspace = true
 sui-types.workspace = true
 sui-sdk.workspace = true
 sui-keys.workspace = true
