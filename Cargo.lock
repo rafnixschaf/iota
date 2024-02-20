@@ -12626,33 +12626,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-snapshot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "byteorder",
- "bytes",
- "fastcrypto",
- "futures",
- "indicatif",
- "integer-encoding",
- "num_enum 0.6.1",
- "object_store 0.7.0",
- "prometheus",
- "serde",
- "serde_json",
- "sui-protocol-config",
- "sui-storage",
- "sui-types",
- "tempfile",
- "tokio",
- "tokio-stream",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-source-validation"
 version = "1.19.0"
 dependencies = [
@@ -12951,7 +12924,6 @@ dependencies = [
  "sui-protocol-config",
  "sui-replay",
  "sui-sdk",
- "sui-snapshot",
  "sui-storage",
  "sui-types",
  "telemetry-subscribers",
