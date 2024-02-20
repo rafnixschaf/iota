@@ -38,7 +38,6 @@ rocksdb.workspace = true
 sui-graphql-rpc.workspace = true
 sui-rest-api.workspace = true
 sui-swarm-config.workspace = true
-sui-config.workspace = true
 sui-framework.workspace = true
 sui-protocol-config.workspace = true
 sui-types = { workspace = true, features = ["test-utils"]}

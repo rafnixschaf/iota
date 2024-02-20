@@ -26,7 +26,6 @@ hdrhistogram.workspace = true
 comfy-table.workspace = true
 bcs.workspace = true
 tokio-util.workspace = true
-sui-config.workspace = true
 sui-network.workspace = true
 sui-storage.workspace = true
 sui-types.workspace = true

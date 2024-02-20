@@ -22,7 +22,6 @@ tracing.workspace = true
 prometheus.workspace = true
 
 shared-crypto.workspace = true
-sui-config.workspace = true
 sui-execution.workspace = true
 sui-framework.workspace = true
 sui-framework-snapshot.workspace = true

@@ -23,7 +23,6 @@ futures.workspace = true
 object_store.workspace = true
 prometheus.workspace = true
 sui-types.workspace = true
-sui-config.workspace = true
 sui-storage.workspace = true
 sui-protocol-config.workspace = true
 fastcrypto = { workspace = true, features = ["copy_key"] }

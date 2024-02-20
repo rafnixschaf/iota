@@ -10,7 +10,6 @@ move-binary-format.workspace = true
 move-bytecode-utils.workspace = true
 move-core-types.workspace = true
 move-package.workspace = true
-sui-config.workspace = true
 sui-move-build.workspace = true
 sui-test-transaction-builder.workspace = true
 sui-transaction-checks.workspace = true

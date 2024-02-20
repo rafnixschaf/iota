@@ -29,7 +29,6 @@ humantime.workspace = true
 
 sui-tls.workspace = true
 sui-macros.workspace = true
-sui-config.workspace = true
 sui-rest-api.workspace = true
 sui-storage.workspace = true
 sui-network.workspace = true

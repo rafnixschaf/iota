@@ -38,7 +38,6 @@ tokio = { workspace = true, features = ["full"] }
 typed-store.workspace = true
 fastcrypto.workspace = true
 
-sui-config.workspace = true
 sui-indexer.workspace = true
 sui-network.workspace = true
 sui-snapshot.workspace = true

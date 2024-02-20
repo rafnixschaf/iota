@@ -83,7 +83,6 @@ members = [
   "crates/sui-bridge",
   "crates/sui-cluster-test",
   "crates/sui-common",
-  "crates/sui-config",
   "crates/sui-cost",
   "crates/sui-data-ingestion",
   "crates/sui-data-ingestion-core",
@@ -549,7 +548,6 @@ sui-analytics-indexer-derive = { path = "crates/sui-analytics-indexer-derive" }
 sui-benchmark = { path = "crates/sui-benchmark" }
 sui-cluster-test = { path = "crates/sui-cluster-test" }
 sui-common = { path = "crates/sui-common" }
-sui-config = { path = "crates/sui-config" }
 sui-cost = { path = "crates/sui-cost" }
 sui-data-ingestion = { path = "crates/sui-data-ingestion" }
 sui-data-ingestion-core = { path = "crates/sui-data-ingestion-core" }

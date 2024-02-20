@@ -13,7 +13,6 @@ tracing.workspace = true
 jsonrpsee.workspace = true
 tokio = { workspace = true, features = ["full", "tracing", "test-util"] }
 rand.workspace = true
-sui-config.workspace = true
 sui-framework.workspace = true
 sui-swarm-config.workspace = true
 sui-json-rpc.workspace = true

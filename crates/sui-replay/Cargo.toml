@@ -37,7 +37,6 @@ tokio.workspace = true
 tabled.workspace = true
 
 shared-crypto.workspace = true
-sui-config.workspace = true
 sui-execution.workspace = true
 sui-framework.workspace = true
 sui-json-rpc.workspace = true

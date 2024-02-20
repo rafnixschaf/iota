@@ -17,7 +17,6 @@ tower.workspace = true
 
 sui-storage.workspace = true
 sui-types.workspace = true
-sui-config.workspace = true
 sui-swarm-config.workspace = true
 
 tokio = { workspace = true, features = ["full"] }
