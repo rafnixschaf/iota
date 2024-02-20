@@ -11268,18 +11268,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-authority-aggregation"
-version = "0.1.0"
-dependencies = [
- "futures",
- "mysten-metrics",
- "sui-types",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-aws-orchestrator"
 version = "0.0.1"
 dependencies = [
