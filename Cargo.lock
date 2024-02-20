@@ -7418,35 +7418,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mysten-util-mem"
-version = "0.11.0"
-dependencies = [
- "cfg-if",
- "ed25519-consensus",
- "fastcrypto",
- "fastcrypto-tbls",
- "hashbrown 0.12.3",
- "impl-trait-for-tuples",
- "indexmap 2.1.0",
- "mysten-util-mem-derive",
- "once_cell",
- "parking_lot 0.12.1",
- "roaring",
- "smallvec",
- "workspace-hack",
-]
-
-[[package]]
-name = "mysten-util-mem-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2 1.0.66",
- "syn 1.0.107",
- "synstructure",
- "workspace-hack",
-]
-
-[[package]]
 name = "mysticeti-core"
 version = "0.1.0"
 source = "git+https://github.com/MystenLabs/mysticeti?rev=318d61d27f47d257d99a86983d835e9e9756bc59#318d61d27f47d257d99a86983d835e9e9756bc59"

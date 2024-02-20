@@ -72,8 +72,6 @@ members = [
   "crates/mysten-metrics",
   "crates/mysten-service",
   "crates/mysten-service-boilerplate",
-  "crates/mysten-util-mem",
-  "crates/mysten-util-mem-derive",
   "crates/prometheus-closure-metric",
   "crates/shared-crypto",
   "crates/simulacrum",
@@ -545,8 +543,6 @@ anemo-benchmark = { path = "crates/anemo-benchmark" }
 mysten-metrics = { path = "crates/mysten-metrics" }
 mysten-service = { path = "crates/mysten-service" }
 mysten-service-boilerplate = { path = "crates/mysten-service-boilerplate" }
-mysten-util-mem = { path = "crates/mysten-util-mem" }
-mysten-util-mem-derive = { path = "crates/mysten-util-mem-derive" }
 prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
 simulacrum = { path = "crates/simulacrum" }
