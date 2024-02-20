@@ -24,7 +24,3 @@ sui-types.workspace = true
 mysten-metrics.workspace = true
 telemetry-subscribers.workspace = true
 workspace-hack.workspace = true
-
-[target.'cfg(msim)'.dependencies]
-sui-simulator.workspace = true
-

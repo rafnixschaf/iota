@@ -35,4 +35,3 @@ workspace-hack.workspace = true
 [dev-dependencies]
 sui-macros.workspace = true
 sui-protocol-config.workspace = true
-sui-simulator.workspace = true

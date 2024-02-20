@@ -11095,7 +11095,6 @@ dependencies = [
  "sui-protocol-config",
  "sui-replay",
  "sui-sdk",
- "sui-simulator",
  "sui-source-validation",
  "sui-swarm",
  "sui-swarm-config",
@@ -11327,7 +11326,6 @@ dependencies = [
  "sui-macros",
  "sui-protocol-config",
  "sui-sdk",
- "sui-simulator",
  "sui-storage",
  "sui-swarm-config",
  "sui-test-transaction-builder",
@@ -11557,7 +11555,6 @@ dependencies = [
  "sui-move-build",
  "sui-protocol-config",
  "sui-sdk",
- "sui-simulator",
  "sui-storage",
  "sui-swarm",
  "sui-swarm-config",
@@ -11735,7 +11732,6 @@ dependencies = [
  "sui-framework",
  "sui-framework-snapshot",
  "sui-protocol-config",
- "sui-simulator",
  "sui-types",
  "tempfile",
  "tracing",
@@ -12012,7 +12008,6 @@ dependencies = [
  "sui-open-rpc-macros",
  "sui-protocol-config",
  "sui-sdk",
- "sui-simulator",
  "sui-swarm-config",
  "sui-test-transaction-builder",
  "sui-types",
@@ -12161,7 +12156,6 @@ dependencies = [
  "sui-move-build",
  "sui-move-natives-latest",
  "sui-protocol-config",
- "sui-simulator",
  "sui-types",
  "telemetry-subscribers",
  "tempfile",
@@ -12600,29 +12594,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-simulator"
-version = "0.7.0"
-dependencies = [
- "anemo",
- "anemo-tower",
- "bcs",
- "fastcrypto",
- "lru 0.10.0",
- "move-package",
- "msim",
- "rand 0.8.5",
- "serde",
- "sui-framework",
- "sui-move-build",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tower",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-single-node-benchmark"
 version = "0.1.0"
 dependencies = [
@@ -12644,7 +12615,6 @@ dependencies = [
  "sui-macros",
  "sui-move-build",
  "sui-protocol-config",
- "sui-simulator",
  "sui-storage",
  "sui-test-transaction-builder",
  "sui-transaction-checks",
@@ -12795,7 +12765,6 @@ dependencies = [
  "sui-json-rpc-types",
  "sui-macros",
  "sui-protocol-config",
- "sui-simulator",
  "sui-test-transaction-builder",
  "sui-types",
  "tap",
@@ -12828,7 +12797,6 @@ dependencies = [
  "sui-macros",
  "sui-move-build",
  "sui-protocol-config",
- "sui-simulator",
  "sui-swarm-config",
  "sui-types",
  "telemetry-subscribers",
@@ -12849,7 +12817,6 @@ dependencies = [
  "rand 0.8.5",
  "sui-macros",
  "sui-protocol-config",
- "sui-simulator",
  "sui-swarm-config",
  "sui-types",
  "tap",
@@ -12880,7 +12847,6 @@ dependencies = [
  "sui-genesis-builder",
  "sui-macros",
  "sui-protocol-config",
- "sui-simulator",
  "sui-types",
  "tempfile",
  "tracing",
@@ -13530,7 +13496,6 @@ dependencies = [
  "sui-macros",
  "sui-protocol-config",
  "sui-sdk",
- "sui-simulator",
  "sui-swarm",
  "sui-swarm-config",
  "sui-test-transaction-builder",

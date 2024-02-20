@@ -122,7 +122,6 @@ members = [
   "crates/sui-rosetta",
   "crates/sui-rpc-loadgen",
   "crates/sui-sdk",
-  "crates/sui-simulator",
   "crates/sui-single-node-benchmark",
   "crates/sui-snapshot",
   "crates/sui-source-validation",
@@ -580,7 +579,6 @@ sui-replay = { path = "crates/sui-replay" }
 sui-rosetta = { path = "crates/sui-rosetta" }
 sui-rpc-loadgen = { path = "crates/sui-rpc-loadgen" }
 sui-sdk = { path = "crates/sui-sdk" }
-sui-simulator = { path = "crates/sui-simulator" }
 sui-snapshot = { path = "crates/sui-snapshot" }
 sui-source-validation = { path = "crates/sui-source-validation" }
 sui-source-validation-service = { path = "crates/sui-source-validation-service" }

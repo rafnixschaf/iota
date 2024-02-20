@@ -29,7 +29,6 @@ move-binary-format.workspace = true
 workspace-hack.workspace = true
 
 [target.'cfg(msim)'.dependencies]
-sui-simulator.workspace = true
 fastcrypto-zkp.workspace = true
 
 [dev-dependencies]
