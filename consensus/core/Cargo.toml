@@ -21,7 +21,6 @@ fastcrypto.workspace = true
 futures.workspace = true
 mockall.workspace = true
 mysten-metrics.workspace = true
-mysten-network.workspace = true
 parking_lot.workspace = true
 prometheus.workspace = true
 rand.workspace = true

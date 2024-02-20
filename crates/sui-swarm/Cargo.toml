@@ -24,7 +24,6 @@ sui-node.workspace = true
 sui-protocol-config.workspace = true
 sui-types.workspace = true
 mysten-metrics.workspace = true
-mysten-network.workspace = true
 telemetry-subscribers.workspace = true
 workspace-hack.workspace = true
 

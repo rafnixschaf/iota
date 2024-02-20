@@ -21,7 +21,6 @@ sui-types.workspace = true
 sui-config.workspace = true
 sui-swarm-config.workspace = true
 
-mysten-network.workspace = true
 tokio = { workspace = true, features = ["full"] }
 tracing.workspace = true
 futures.workspace = true

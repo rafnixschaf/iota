@@ -193,7 +193,6 @@ dependencies = [
  "anemo",
  "anemo-build",
  "clap",
- "mysten-network",
  "rand 0.8.5",
  "telemetry-subscribers",
  "tokio",
@@ -2601,7 +2600,6 @@ version = "0.1.0"
 dependencies = [
  "fastcrypto",
  "insta",
- "mysten-network",
  "rand 0.8.5",
  "serde",
  "shared-crypto",
@@ -2627,7 +2625,6 @@ dependencies = [
  "futures",
  "mockall",
  "mysten-metrics",
- "mysten-network",
  "parking_lot 0.12.1",
  "prometheus",
  "rand 0.8.5",
@@ -7390,30 +7387,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mysten-network"
-version = "0.2.0"
-dependencies = [
- "anemo",
- "bcs",
- "bytes",
- "eyre",
- "futures",
- "http",
- "multiaddr",
- "pin-project-lite",
- "serde",
- "snap",
- "tokio",
- "tokio-stream",
- "tonic 0.10.0",
- "tonic-health",
- "tower",
- "tower-http",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "mysten-service"
 version = "0.0.1"
 dependencies = [
@@ -11958,7 +11931,6 @@ dependencies = [
  "move-disassembler",
  "move-ir-types",
  "mysten-metrics",
- "mysten-network",
  "once_cell",
  "prometheus",
  "rand 0.8.5",
@@ -12450,7 +12422,6 @@ dependencies = [
  "futures",
  "governor",
  "mysten-metrics",
- "mysten-network",
  "prometheus",
  "rand 0.8.5",
  "serde",
@@ -12488,7 +12459,6 @@ dependencies = [
  "humantime",
  "move-vm-profiler",
  "mysten-metrics",
- "mysten-network",
  "prometheus",
  "reqwest",
  "serde",
@@ -13114,7 +13084,6 @@ dependencies = [
  "anyhow",
  "futures",
  "mysten-metrics",
- "mysten-network",
  "prometheus",
  "rand 0.8.5",
  "sui-config",
@@ -13383,7 +13352,6 @@ dependencies = [
  "move-vm-test-utils",
  "move-vm-types",
  "mysten-metrics",
- "mysten-network",
  "nonempty",
  "once_cell",
  "prometheus",
