@@ -36,7 +36,6 @@ serde_json.workspace = true
 
 tap.workspace = true
 
-sui-storage.workspace = true
 sui-types.workspace = true
 sui-json.workspace = true
 sui-json-rpc-api.workspace = true

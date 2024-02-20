@@ -125,7 +125,6 @@ members = [
   "crates/sui-single-node-benchmark",
   "crates/sui-source-validation",
   "crates/sui-source-validation-service",
-  "crates/sui-storage",
   "crates/sui-surfer",
   "crates/sui-swarm",
   "crates/sui-swarm-config",
@@ -580,7 +579,6 @@ sui-rpc-loadgen = { path = "crates/sui-rpc-loadgen" }
 sui-sdk = { path = "crates/sui-sdk" }
 sui-source-validation = { path = "crates/sui-source-validation" }
 sui-source-validation-service = { path = "crates/sui-source-validation-service" }
-sui-storage = { path = "crates/sui-storage" }
 sui-surfer = { path = "crates/sui-surfer" }
 sui-swarm = { path = "crates/sui-swarm" }
 sui-swarm-config = { path = "crates/sui-swarm-config" }
