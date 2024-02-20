@@ -37,7 +37,6 @@ fastcrypto.workspace = true
 fastcrypto-zkp.workspace = true
 move-core-types.workspace = true
 
-sui-core.workspace = true
 sui-framework.workspace = true
 sui-json-rpc.workspace = true
 sui-json-rpc-api.workspace = true

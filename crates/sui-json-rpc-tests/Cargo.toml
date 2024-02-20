@@ -12,7 +12,6 @@ workspace-hack.workspace = true
 [dev-dependencies]
 move-package.workspace = true
 sui-config.workspace = true
-sui-core.workspace = true
 sui-keys.workspace = true
 sui-move-build.workspace = true
 sui-test-transaction-builder.workspace = true
