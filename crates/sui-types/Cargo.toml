@@ -57,7 +57,6 @@ fastcrypto = { workspace = true, features = ["copy_key"] }
 fastcrypto-tbls.workspace = true
 fastcrypto-zkp.workspace = true
 
-typed-store-error.workspace = true
 derive_more.workspace = true
 proptest.workspace = true
 proptest-derive.workspace = true

@@ -2639,7 +2639,6 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
- "typed-store",
  "workspace-hack",
 ]
 
@@ -11244,8 +11243,6 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
- "typed-store",
- "typed-store-derive",
  "url",
  "workspace-hack",
 ]
@@ -11328,7 +11325,6 @@ dependencies = [
  "tokio",
  "tokio-util 0.7.4",
  "tracing",
- "typed-store",
  "workspace-hack",
 ]
 
@@ -11373,8 +11369,6 @@ dependencies = [
  "tokio",
  "tokio-retry",
  "tracing",
- "typed-store",
- "typed-store-derive",
  "url",
  "workspace-hack",
 ]
@@ -11632,8 +11626,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "ttl_cache",
- "typed-store",
- "typed-store-derive",
  "uuid 1.2.2",
  "workspace-hack",
 ]
@@ -11935,7 +11927,6 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "typed-store-error",
  "workspace-hack",
 ]
 
@@ -12493,7 +12484,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "typed-store",
  "workspace-hack",
 ]
 
@@ -12757,7 +12747,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "tracing",
- "typed-store",
  "workspace-hack",
 ]
 
@@ -12830,8 +12819,6 @@ dependencies = [
  "telemetry-subscribers",
  "tempfile",
  "tokio",
- "typed-store",
- "typed-store-derive",
  "workspace-hack",
 ]
 
@@ -12892,7 +12879,6 @@ dependencies = [
  "thiserror",
  "tonic 0.10.0",
  "tracing",
- "typed-store-error",
  "workspace-hack",
 ]
 
@@ -14052,65 +14038,6 @@ dependencies = [
  "cfg-if",
  "rand 0.7.3",
  "static_assertions",
-]
-
-[[package]]
-name = "typed-store"
-version = "0.4.0"
-dependencies = [
- "async-trait",
- "bcs",
- "bincode",
- "collectable",
- "eyre",
- "fdlimit",
- "hdrhistogram",
- "itertools 0.10.5",
- "msim",
- "once_cell",
- "ouroboros",
- "proc-macro2 1.0.66",
- "prometheus",
- "quote 1.0.33",
- "rand 0.8.5",
- "rocksdb",
- "rstest",
- "serde",
- "sui-macros",
- "syn 1.0.107",
- "tap",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "typed-store-derive",
- "typed-store-error",
- "uint",
- "workspace-hack",
-]
-
-[[package]]
-name = "typed-store-derive"
-version = "0.3.0"
-dependencies = [
- "eyre",
- "proc-macro2 1.0.66",
- "quote 1.0.33",
- "rocksdb",
- "syn 1.0.107",
- "tempfile",
- "tokio",
- "typed-store",
- "workspace-hack",
-]
-
-[[package]]
-name = "typed-store-error"
-version = "0.4.0"
-dependencies = [
- "serde",
- "thiserror",
- "workspace-hack",
 ]
 
 [[package]]

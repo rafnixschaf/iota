@@ -35,7 +35,6 @@ anemo-cli.workspace = true
 anemo.workspace = true
 telemetry-subscribers.workspace = true
 tokio = { workspace = true, features = ["full"] }
-typed-store.workspace = true
 fastcrypto.workspace = true
 
 sui-indexer.workspace = true

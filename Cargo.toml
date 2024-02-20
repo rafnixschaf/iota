@@ -139,9 +139,6 @@ members = [
   "crates/suiop-cli",
   "crates/telemetry-subscribers",
   "crates/transaction-fuzzer",
-  "crates/typed-store",
-  "crates/typed-store-derive",
-  "crates/typed-store-error",
   "crates/workspace-hack",
   "crates/x",
   "sui-execution",
@@ -587,9 +584,6 @@ sui-upgrade-compatibility-transactional-tests = { path = "crates/sui-upgrade-com
 sui-verifier-transactional-tests = { path = "crates/sui-verifier-transactional-tests" }
 telemetry-subscribers = { path = "crates/telemetry-subscribers" }
 transaction-fuzzer = { path = "crates/transaction-fuzzer" }
-typed-store = { path = "crates/typed-store" }
-typed-store-derive = { path = "crates/typed-store-derive" }
-typed-store-error = { path = "crates/typed-store-error" }
 workspace-hack = "0.1.0"
 x = { path = "crates/x" }
 
