@@ -138,7 +138,6 @@ members = [
   "crates/suins-indexer",
   "crates/suiop-cli",
   "crates/telemetry-subscribers",
-  "crates/test-cluster",
   "crates/transaction-fuzzer",
   "crates/typed-store",
   "crates/typed-store-derive",
@@ -587,7 +586,6 @@ sui-types = { path = "crates/sui-types" }
 sui-upgrade-compatibility-transactional-tests = { path = "crates/sui-upgrade-compatibility-transactional-tests" }
 sui-verifier-transactional-tests = { path = "crates/sui-verifier-transactional-tests" }
 telemetry-subscribers = { path = "crates/telemetry-subscribers" }
-test-cluster = { path = "crates/test-cluster" }
 transaction-fuzzer = { path = "crates/transaction-fuzzer" }
 typed-store = { path = "crates/typed-store" }
 typed-store-derive = { path = "crates/typed-store-derive" }

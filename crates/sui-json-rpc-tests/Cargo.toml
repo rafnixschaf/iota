@@ -24,7 +24,6 @@ sui-open-rpc.workspace = true
 sui-open-rpc-macros.workspace = true
 sui-protocol-config.workspace = true
 sui-types.workspace = true
-test-cluster.workspace = true
 telemetry-subscribers.workspace = true
 
 anyhow.workspace = true

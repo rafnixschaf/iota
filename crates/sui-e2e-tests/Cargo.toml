@@ -17,7 +17,6 @@ fs_extra.workspace = true
 indexmap.workspace = true
 insta.workspace = true
 jsonrpsee.workspace = true
-test-cluster.workspace = true
 rand.workspace = true
 expect-test.workspace = true
 tokio.workspace = true

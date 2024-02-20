@@ -34,7 +34,6 @@ strum_macros.workspace = true
 workspace-hack.workspace = true
 
 [dev-dependencies]
-test-cluster.workspace = true
 
 
 [[bin]]
