@@ -27,7 +27,6 @@ itertools.workspace = true
 rand.workspace = true
 reqwest.workspace = true
 hyper.workspace = true
-sui-tls.workspace = true
 sui-types.workspace = true
 mysten-metrics.workspace = true
 multiaddr.workspace = true

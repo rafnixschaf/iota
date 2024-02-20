@@ -12395,7 +12395,6 @@ dependencies = [
  "serde_with",
  "serde_yaml 0.8.26",
  "snap",
- "sui-tls",
  "sui-types",
  "telemetry-subscribers",
  "tokio",
@@ -12732,28 +12731,6 @@ dependencies = [
  "tower-http",
  "uuid 1.2.2",
  "workspace-hack",
-]
-
-[[package]]
-name = "sui-tls"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "axum-server",
- "ed25519 1.5.3",
- "fastcrypto",
- "pkcs8 0.9.0",
- "rand 0.8.5",
- "rcgen",
- "reqwest",
- "rustls 0.21.6",
- "rustls-webpki",
- "tokio",
- "tokio-rustls 0.24.0",
- "tower-layer",
- "workspace-hack",
- "x509-parser",
 ]
 
 [[package]]
