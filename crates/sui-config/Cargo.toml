@@ -24,7 +24,6 @@ clap.workspace = true
 object_store.workspace = true
 reqwest.workspace = true
 
-narwhal-config.workspace = true
 sui-keys.workspace = true
 sui-protocol-config.workspace = true
 sui-types.workspace = true

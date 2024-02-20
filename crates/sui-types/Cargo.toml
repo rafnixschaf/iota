@@ -47,8 +47,6 @@ move-vm-test-utils.workspace = true
 move-vm-types.workspace = true
 move-vm-profiler.workspace = true
 
-narwhal-config.workspace = true
-narwhal-crypto.workspace = true
 sui-protocol-config.workspace = true
 shared-crypto.workspace = true
 mysten-network.workspace = true
