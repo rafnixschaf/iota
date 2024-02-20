@@ -11325,7 +11325,6 @@ dependencies = [
  "sui-json-rpc-types",
  "sui-keys",
  "sui-macros",
- "sui-network",
  "sui-protocol-config",
  "sui-sdk",
  "sui-simulator",
@@ -12260,37 +12259,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-network"
-version = "0.0.0"
-dependencies = [
- "anemo",
- "anemo-build",
- "anemo-tower",
- "anyhow",
- "dashmap",
- "ed25519-consensus",
- "fastcrypto",
- "futures",
- "governor",
- "mysten-metrics",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "sui-storage",
- "sui-swarm-config",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tonic 0.10.0",
- "tonic-build",
- "tower",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-node"
 version = "1.19.0"
 dependencies = [
@@ -12315,7 +12283,6 @@ dependencies = [
  "sui-json-rpc",
  "sui-json-rpc-api",
  "sui-macros",
- "sui-network",
  "sui-protocol-config",
  "sui-rest-api",
  "sui-simulator",
@@ -13062,7 +13029,6 @@ dependencies = [
  "strum 0.24.1",
  "strum_macros 0.24.3",
  "sui-indexer",
- "sui-network",
  "sui-protocol-config",
  "sui-replay",
  "sui-sdk",

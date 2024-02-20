@@ -109,7 +109,6 @@ members = [
   "crates/sui-metric-checker",
   "crates/sui-move",
   "crates/sui-move-build",
-  "crates/sui-network",
   "crates/sui-node",
   "crates/sui-open-rpc",
   "crates/sui-open-rpc-macros",
@@ -571,7 +570,6 @@ sui-macros = { path = "crates/sui-macros" }
 sui-metric-checker = { path = "crates/sui-metric-checker" }
 sui-move = { path = "crates/sui-move" }
 sui-move-build = { path = "crates/sui-move-build" }
-sui-network = { path = "crates/sui-network" }
 sui-node = { path = "crates/sui-node" }
 sui-open-rpc = { path = "crates/sui-open-rpc" }
 sui-open-rpc-macros = { path = "crates/sui-open-rpc-macros" }
