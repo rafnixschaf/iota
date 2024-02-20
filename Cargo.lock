@@ -11268,39 +11268,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-archival"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "byteorder",
- "bytes",
- "ed25519-consensus",
- "fastcrypto",
- "futures",
- "indicatif",
- "more-asserts",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "num_enum 0.6.1",
- "object_store 0.7.0",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "sui-config",
- "sui-macros",
- "sui-simulator",
- "sui-storage",
- "sui-swarm-config",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-authority-aggregation"
 version = "0.1.0"
 dependencies = [
@@ -11566,7 +11533,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml 0.8.26",
- "sui-archival",
  "sui-data-ingestion-core",
  "sui-storage",
  "sui-types",
@@ -12362,7 +12328,6 @@ dependencies = [
  "prometheus",
  "rand 0.8.5",
  "serde",
- "sui-archival",
  "sui-config",
  "sui-storage",
  "sui-swarm-config",
@@ -12400,7 +12365,6 @@ dependencies = [
  "reqwest",
  "serde",
  "snap",
- "sui-archival",
  "sui-config",
  "sui-json-rpc",
  "sui-json-rpc-api",
@@ -13160,7 +13124,6 @@ dependencies = [
  "serde_json",
  "strum 0.24.1",
  "strum_macros 0.24.3",
- "sui-archival",
  "sui-config",
  "sui-indexer",
  "sui-network",

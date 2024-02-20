@@ -15,7 +15,6 @@ tonic.workspace = true
 dashmap.workspace = true
 tower.workspace = true
 
-sui-archival.workspace = true
 sui-storage.workspace = true
 sui-types.workspace = true
 sui-config.workspace = true

@@ -47,7 +47,6 @@ sui-replay.workspace = true
 sui-sdk.workspace = true
 sui-storage.workspace = true
 sui-types.workspace = true
-sui-archival.workspace = true
 workspace-hack.workspace = true
 git-version.workspace = true
 const-str = "0.5.6"
