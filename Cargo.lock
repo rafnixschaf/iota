@@ -187,19 +187,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anemo-benchmark"
-version = "0.0.0"
-dependencies = [
- "anemo",
- "anemo-build",
- "clap",
- "rand 0.8.5",
- "telemetry-subscribers",
- "tokio",
- "workspace-hack",
-]
-
-[[package]]
 name = "anemo-build"
 version = "0.0.0"
 source = "git+https://github.com/mystenlabs/anemo.git?rev=26d415eb9aa6a2417be3c03c57d6e93c30bd1ad7#26d415eb9aa6a2417be3c03c57d6e93c30bd1ad7"
@@ -7338,37 +7325,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mysten-service"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "mysten-metrics",
- "prometheus",
- "serde",
- "serde_json",
- "telemetry-subscribers",
- "tokio",
- "tower",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "mysten-service-boilerplate"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum",
- "mysten-service",
- "prometheus",
- "serde",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "mysticeti-core"
 version = "0.1.0"
 source = "git+https://github.com/MystenLabs/mysticeti?rev=318d61d27f47d257d99a86983d835e9e9756bc59#318d61d27f47d257d99a86983d835e9e9756bc59"
@@ -11147,65 +11103,6 @@ dependencies = [
  "sui-types",
  "sui-verifier-v1",
  "tracing",
- "workspace-hack",
-]
-
-[[package]]
-name = "sui-analytics-indexer"
-version = "1.19.0"
-dependencies = [
- "anyhow",
- "arrow",
- "arrow-array",
- "async-trait",
- "axum",
- "bcs",
- "byteorder",
- "bytes",
- "chrono",
- "clap",
- "csv",
- "eyre",
- "fastcrypto",
- "gcp-bigquery-client",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "mysten-metrics",
- "num_enum 0.6.1",
- "object_store 0.7.0",
- "parquet",
- "prometheus",
- "rocksdb",
- "serde",
- "serde_json",
- "snowflake-api",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-analytics-indexer-derive",
- "sui-indexer",
- "sui-json-rpc-types",
- "sui-package-resolver",
- "sui-rest-api",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-stream",
- "tracing",
- "url",
- "workspace-hack",
-]
-
-[[package]]
-name = "sui-analytics-indexer-derive"
-version = "1.19.0"
-dependencies = [
- "proc-macro2 1.0.66",
- "quote 1.0.33",
- "syn 1.0.107",
  "workspace-hack",
 ]
 
