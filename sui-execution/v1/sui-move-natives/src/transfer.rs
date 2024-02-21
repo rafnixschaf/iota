@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use super::object_runtime::{ObjectRuntime, TransferResult};
 use crate::{
     get_receiver_object_id, get_tag_and_layouts, object_runtime::object_store::ObjectResult,

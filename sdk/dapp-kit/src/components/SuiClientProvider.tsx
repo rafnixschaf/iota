@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { getFullnodeUrl, isSuiClient, SuiClient } from '@mysten/sui.js/client';
 import type { SuiClientOptions } from '@mysten/sui.js/client';
 import { createContext, useMemo, useState } from 'react';

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use anyhow::Result;
 use sui_types::base_types::{ObjectID, SequenceNumber};
 use sui_types::full_checkpoint_content::CheckpointData;

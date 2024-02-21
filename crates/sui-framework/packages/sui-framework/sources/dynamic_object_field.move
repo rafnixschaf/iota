@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Similar to `sui::dynamic_field`, this module allows for the access of dynamic fields. But
 /// unlike, `sui::dynamic_field` the values bound to these dynamic fields _must_ be objects
 /// themselves. This allows for the objects to still exist within in storage, which may be important

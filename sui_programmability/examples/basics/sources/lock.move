@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// An example of a module that uses Shared Objects and ID linking/access.
 ///
 /// This module allows any content to be locked inside a 'virtual chest' and later

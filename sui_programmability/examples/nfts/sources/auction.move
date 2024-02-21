@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 ///  This module is an implementation of an English auction
 ///  (https://en.wikipedia.org/wiki/English_auction) using single-owner
 ///  objects only. There are three types of parties participating in an

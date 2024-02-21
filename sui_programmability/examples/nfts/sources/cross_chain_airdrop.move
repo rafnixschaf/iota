@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Allow a trusted oracle to mint a copy of NFT from a different chain. There can
 /// only be one copy for each unique pair of contract_address and token_id. We only
 /// support a single chain(Ethereum) right now, but this can be extended to other

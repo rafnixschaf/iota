@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import 'tsconfig-paths/register';
 
 import { requestSuiFromFaucetV0 } from '@mysten/sui.js/faucet';

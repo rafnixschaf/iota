@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // Simple test case to check that object pagination is bounded by the checkpoint in the cursor. Use
 // one object as a cursor to view the other object that gets mutated per checkpoint. The ordering is
 // consistent even if the cursor object is mutated.

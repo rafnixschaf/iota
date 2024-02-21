@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use move_cli::base::test::UnitTestResult;
 use move_unit_test::UnitTestingConfig;
 use std::{fs, io, path::PathBuf};

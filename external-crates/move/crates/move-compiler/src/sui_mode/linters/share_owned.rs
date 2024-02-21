@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! This analysis flags making objects passed as function parameters or resulting from unpacking
 //! (likely already owned) shareable which would lead to an abort. A typical patterns is to create a
 //! fresh object and share it within the same function

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This is an implementation of an English auction
 /// (https://en.wikipedia.org/wiki/English_auction) using shared
 /// objects. There are types of participants:

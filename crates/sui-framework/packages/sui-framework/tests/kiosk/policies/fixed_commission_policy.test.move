@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 /// An example module implementing a fixed commission for the `TransferPolicy`.
 /// Follows the "transfer rules" layout and implements each of the steps.

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// A table is a map-like collection. But unlike a traditional collection, it's keys and values are
 /// not stored within the `Table` value, but instead are stored using Sui's object system. The
 /// `Table` struct acts only as a handle into the object system to retrieve those keys and values.

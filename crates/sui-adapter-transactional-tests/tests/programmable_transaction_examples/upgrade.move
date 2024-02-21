@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // simple test of upgrade
 
 //# init --addresses p=0x0 q=0x0 q_2=0x0 r=0x0 s=0x0 --accounts A

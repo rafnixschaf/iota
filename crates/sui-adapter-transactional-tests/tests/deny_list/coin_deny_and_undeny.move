@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // This test verifies the basic e2e work flow of coin deny list.
 // A newly created regulated coin type should come with the deny cap object.
 // Coin isser can use the deny cap to deny addresses, which will no longer be able to

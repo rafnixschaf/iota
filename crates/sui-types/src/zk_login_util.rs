@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
 
 // Used in tests or anywhere that fetching up to date JWKs is not possible. This is an example response from https://id.twitch.tv/oauth2/keys

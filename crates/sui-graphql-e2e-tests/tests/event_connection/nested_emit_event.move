@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // This test demonstrates that one can search for events emitted by a package or module.
 // The emitting module is where the entrypoint function is defined -
 // in other words, the function called by a programmable transaction block.

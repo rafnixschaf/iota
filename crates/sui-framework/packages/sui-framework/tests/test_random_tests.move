@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 module sui::test_random_tests {
     use sui::test_random::{new, next_bool, next_u8, next_u8_in_range, next_u16, next_u16_in_range, next_u32, next_u32_in_range, next_u64, next_u64_in_range, next_u128, next_u128_in_range, next_u256, next_u256_in_range};

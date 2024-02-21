@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use axum::extract::{Path, State};
 use sui_types::{full_checkpoint_content::CheckpointData, messages_checkpoint::CheckpointDigest};
 use sui_types::{

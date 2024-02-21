@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { DEFAULT_API_ENV, walletApiProvider } from '_app/ApiProvider';
 import type { RootState } from '_redux/RootReducer';
 import type { API_ENV, NetworkEnvType } from '_src/shared/api-env';

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //# init --simulator --accounts C O P Q R S
 
 //# programmable --sender C --inputs @C 1000 2000 3000 4000 5000

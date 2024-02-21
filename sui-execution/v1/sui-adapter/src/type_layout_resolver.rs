@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::programmable_transactions::context::load_type_from_struct;
 use crate::programmable_transactions::linkage_view::LinkageView;
 use move_core_types::account_address::AccountAddress;

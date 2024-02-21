@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// An example of a Rule for the Closed Loop Token which limits the amount per
 /// operation. Can be used to limit any action (eg transfer, toCoin, fromCoin).
 module examples::limiter_rule {

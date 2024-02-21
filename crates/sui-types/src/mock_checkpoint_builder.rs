@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::base_types::{AuthorityName, VerifiedExecutionData};
 use crate::committee::Committee;
 use crate::crypto::{AuthoritySignInfo, AuthoritySignature, SuiAuthoritySignature};

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Store for Capys. Unlike Marketplace, Store sells identical items
 /// in the limit specified quantity or, if quantity is not set, unlimited.
 ///

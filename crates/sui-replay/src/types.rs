@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use jsonrpsee::core::Error as JsonRpseeError;
 use move_binary_format::CompiledModule;
 use move_core_types::account_address::AccountAddress;

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 module dynamic_fields::dynamic_fields_test {
     use sui::dynamic_field as dfield;
     use sui::dynamic_object_field as dof;

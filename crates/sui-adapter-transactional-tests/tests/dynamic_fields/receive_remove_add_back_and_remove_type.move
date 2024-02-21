@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // This test attempts to receive two objects, remove a child, add it back, remove it again, and then transfer/delete it.
 // This is an interesting test case because when child objects are removed, added back and removed again,
 // they won't show up in the child_object_effects in the object runtiem. We must look at either transfers

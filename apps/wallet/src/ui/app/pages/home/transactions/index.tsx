@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import FiltersPortal from '_components/filters-tags';
 import { isQredoAccountSerializedUI } from '_src/background/accounts/QredoAccount';
 import { useActiveAccount } from '_src/ui/app/hooks/useActiveAccount';

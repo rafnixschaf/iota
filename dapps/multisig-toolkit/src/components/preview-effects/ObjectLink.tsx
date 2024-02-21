@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 import { useSuiClientContext } from '@mysten/dapp-kit';
 import { ObjectOwner, SuiObjectChange } from '@mysten/sui.js/src/client';
 import { CheckIcon, CopyIcon } from 'lucide-react';

@@ -3,6 +3,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // note: intentionally using 0xa here to test non-0x1 module addresses
 module 0xA::type_name_tests {
     #[test_only]

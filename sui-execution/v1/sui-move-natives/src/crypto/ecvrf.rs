@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 use crate::NativesCostTable;
 use fastcrypto::vrf::ecvrf::{ECVRFProof, ECVRFPublicKey};
 use fastcrypto::vrf::VRFProof;

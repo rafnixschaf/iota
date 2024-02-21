@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Events module. Defines the `sui::event::emit` function which
 /// creates and sends a custom MoveEvent as a part of the effects
 /// certificate of the transaction.

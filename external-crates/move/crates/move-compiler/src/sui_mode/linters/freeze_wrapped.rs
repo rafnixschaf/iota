@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! This analysis flags freezing instances of structs containing (transitively or not) other structs
 //! with the key ability. In other words flags freezing of structs whose fields (directly or not)
 //! wrap objects.

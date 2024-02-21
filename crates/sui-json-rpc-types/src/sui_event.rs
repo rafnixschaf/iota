@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use fastcrypto::encoding::{Base58, Base64};
 use move_core_types::annotated_value::MoveStructLayout;
 use move_core_types::identifier::Identifier;

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use super::string_input::impl_string_input;
 use async_graphql::*;
 use fastcrypto::encoding::{Base58, Encoding};

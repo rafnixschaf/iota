@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::context_data::db_data_provider::{convert_to_validators, PgManager};
 use crate::data::{Db, DbConnection, QueryExecutor};
 use crate::error::Error;

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import {SuiClient} from '@mysten/sui.js/client';
 import {BCS, fromB58, fromB64, getSuiMoveConfig} from "@mysten/bcs";
 import {TransactionBlock} from "@mysten/sui.js/transactions";

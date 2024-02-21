@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use super::cursor::{self, Page, RawPaginated, Target};
 use super::{big_int::BigInt, move_type::MoveType, sui_address::SuiAddress};
 use crate::consistency::{consistent_range, Checkpointed};

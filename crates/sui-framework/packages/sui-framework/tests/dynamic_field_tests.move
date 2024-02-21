@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 module sui::dynamic_field_tests {
     use sui::dynamic_field::{add, exists_with_type, borrow, borrow_mut, remove};

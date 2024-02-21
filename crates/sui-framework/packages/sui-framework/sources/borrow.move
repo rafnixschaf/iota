@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// A simple library that enables hot-potato-locked borrow mechanics.
 ///
 /// With Programmable transactions, it is possible to borrow a value within

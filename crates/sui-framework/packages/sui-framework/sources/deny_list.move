@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Defines the `DenyList` type. The `DenyList` shared object is used to restrict access to
 /// instances of certain core types from being used as inputs by specified addresses in the deny
 /// list.

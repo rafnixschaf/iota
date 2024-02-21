@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type ZkLoginProvider } from '_src/background/accounts/zklogin/providers';
 import { type Wallet } from '_src/shared/qredo-api';
 import {

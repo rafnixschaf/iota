@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use insta::assert_json_snapshot;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::PathBuf};

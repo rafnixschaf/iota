@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 pub(crate) use coin_api_v2::CoinReadApiV2;
 pub(crate) use extended_api_v2::ExtendedApiV2;
 pub use governance_api_v2::GovernanceReadApiV2;

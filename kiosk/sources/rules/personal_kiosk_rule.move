@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Description:
 /// This module defines a Rule which checks that the Kiosk is "personal" meaning
 /// that the owner cannot change. By default, `KioskOwnerCap` can be transferred

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use fastcrypto::hash::MultisetHash;
 use sui_types::accumulator::Accumulator;
 use sui_types::base_types::ObjectDigest;

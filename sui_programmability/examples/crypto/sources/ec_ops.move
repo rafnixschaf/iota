@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // Examples of cryptographic primitives that can be implemented in Move using group operations.
 //
 // Functions with the prefix "insecure" are here for testing, but should be called off-chain (probably implemented in

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Similar to `sui::bag`, an `ObjectBag` is a heterogeneous map-like collection. But unlike
 /// `sui::bag`, the values bound to these dynamic fields _must_ be objects themselves. This allows
 /// for the objects to still exist in storage, which may be important for external tools.

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Tab } from '@headlessui/react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { formatAddress } from '@mysten/sui.js/utils';

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! This analysis flags uses of the sui::coin::Coin struct in fields of other structs. In most cases
 //! it's preferable to use sui::balance::Balance instead to save space.
 

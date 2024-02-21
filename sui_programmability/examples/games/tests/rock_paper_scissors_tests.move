@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 module games::rock_paper_scissors_tests {
     use games::rock_paper_scissors::{Self as Game, Game, PlayerTurn, Secret, ThePrize};

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This test exists to make sure that the feature gating for all the code under `gas-profiler`
 /// remains fully connected such that if and only if we enable the feature here, the `gas-profiler`
 /// feature gets enabled anywhere.

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 module sui::zklogin_verified_id_tests {
     use sui::zklogin_verified_id::{check_zklogin_id, verify_zklogin_id};

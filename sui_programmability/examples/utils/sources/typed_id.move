@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Typed wrappers around Sui object IDs
 /// While not always necessary, this is helpful for indicating the type of an object, particularly
 /// when storing its ID in another object.

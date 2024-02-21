@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Defines the `TransferPolicy` type and the logic to approve `TransferRequest`s.
 ///
 /// - TransferPolicy - is a highly customizable primitive, which provides an

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Kiosk is a primitive for building safe, decentralized and trustless trading
 /// experiences. It allows storing and trading any types of assets as long as
 /// the creator of these assets implements a `TransferPolicy` for them.

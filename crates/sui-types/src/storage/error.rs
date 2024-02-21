@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use typed_store_error::TypedStoreError;
 
 pub type Result<T, E = Error> = ::std::result::Result<T, E>;

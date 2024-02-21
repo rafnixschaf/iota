@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // Test creating objects just below the size limit, and above it
 
 //# init --addresses Test=0x0 --accounts A --max-gas 100000000000000

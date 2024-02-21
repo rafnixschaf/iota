@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { toUtf8OrB64 } from '_src/shared/utils';
 import LoadingIndicator from '_src/ui/app/components/loading/LoadingIndicator';
 import { TxnIcon } from '_src/ui/app/components/transactions-card/TxnIcon';

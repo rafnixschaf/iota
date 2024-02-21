@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Tests for the `personal_kiosk` module.
 module kiosk::personal_kiosk_tests {
     use sui::transfer::public_share_object as share;

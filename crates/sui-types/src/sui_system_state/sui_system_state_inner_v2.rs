@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::balance::Balance;
 use crate::base_types::SuiAddress;
 use crate::collection_types::{Bag, Table, TableVec, VecMap, VecSet};

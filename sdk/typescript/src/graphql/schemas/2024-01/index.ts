@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { initGraphQLTada } from 'gql.tada';
 
 import type { introspection } from '../../generated/2024-01/tada-env.js';

@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 import { decrypt, encrypt } from '_src/shared/cryptography/keystore';
 import { QredoAPI } from '_src/shared/qredo-api';
 import Dexie from 'dexie';

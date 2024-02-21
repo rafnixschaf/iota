@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Implements a soul-bound primitive for objects. Unlike a typical Soulbound
 /// concept used with accounts, the object bound can not be directly referenced
 /// or mutated by its object owner.

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // This file contains tests testing functionalities in `sui_system` that are not
 // already tested by the other more themed tests such as `stake_tests` or
 // `rewards_distribution_tests`.

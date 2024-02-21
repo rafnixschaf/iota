@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { DryRunTransactionBlockResponse } from '@mysten/sui.js/src/client';
 import * as Tabs from '@radix-ui/react-tabs';
 import { useState } from 'react';

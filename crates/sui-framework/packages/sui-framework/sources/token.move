@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// The Token module which implements a Closed Loop Token with a configurable
 /// policy. The policy is defined by a set of rules that must be satisfied for
 /// an action to be performed on the token.

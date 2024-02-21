@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This is a helper module for implementing two versions of an
 /// English auction (https://en.wikipedia.org/wiki/English_auction),
 /// one using single-owner objects only and the other using shared

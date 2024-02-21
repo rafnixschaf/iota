@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{accept::AcceptFormat, response::ResponseContent, types::JsonObject, Result};
 use axum::extract::{Path, State};
 use sui_types::{

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Mod of the economics of the SeaHero game. In the game, a `Hero` can only
 /// slay a `SeaMonster` if they have sufficient strength. This mod allows a
 /// player with a weak `Hero` to ask a player with a stronger `Hero` to slay

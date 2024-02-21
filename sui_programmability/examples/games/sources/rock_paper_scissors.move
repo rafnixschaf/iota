@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // This is an idea of a module which will allow some asset to be
 // won by playing a rock-paper-scissors (then lizard-spoke) game.
 //
