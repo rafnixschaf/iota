@@ -7774,36 +7774,6 @@ dependencies = [
 
 [[package]]
 name = "object_store"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d359e231e5451f4f9fa889d56e3ce34f8724f1a61db2107739359717cf2bbf08"
-dependencies = [
- "async-trait",
- "base64 0.21.2",
- "bytes",
- "chrono",
- "futures",
- "humantime",
- "hyper",
- "itertools 0.10.5",
- "parking_lot 0.12.1",
- "percent-encoding",
- "quick-xml 0.28.2",
- "rand 0.8.5",
- "reqwest",
- "ring 0.16.20",
- "rustls-pemfile",
- "serde",
- "serde_json",
- "snafu",
- "tokio",
- "tracing",
- "url",
- "walkdir",
-]
-
-[[package]]
-name = "object_store"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d139f545f64630e2e3688fd9f81c470888ab01edeb72d13b4e86c566f1130000"
@@ -7818,7 +7788,7 @@ dependencies = [
  "itertools 0.12.0",
  "parking_lot 0.12.1",
  "percent-encoding",
- "quick-xml 0.31.0",
+ "quick-xml",
  "rand 0.8.5",
  "reqwest",
  "ring 0.17.3",
@@ -9042,16 +9012,6 @@ name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
-
-[[package]]
-name = "quick-xml"
-version = "0.28.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ce5e73202a820a31f8a0ee32ada5e21029c81fd9e3ebf668a40832e4219d9d1"
-dependencies = [
- "memchr",
- "serde",
-]
 
 [[package]]
 name = "quick-xml"
@@ -10746,7 +10706,7 @@ dependencies = [
  "bytes",
  "futures",
  "log",
- "object_store 0.9.0",
+ "object_store",
  "regex",
  "reqwest",
  "reqwest-middleware",
@@ -12249,41 +12209,6 @@ dependencies = [
  "move-core-types",
  "move-vm-config",
  "sui-types",
- "workspace-hack",
-]
-
-[[package]]
-name = "suins-indexer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-s3",
- "backoff",
- "base64-url",
- "bcs",
- "bytes",
- "diesel",
- "dotenvy",
- "futures",
- "move-core-types",
- "mysten-metrics",
- "notify",
- "object_store 0.7.0",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-json-rpc",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "url",
  "workspace-hack",
 ]
 
