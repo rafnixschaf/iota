@@ -67,8 +67,6 @@ exclude = [
 members = [
   "crates/data-transform",
   "crates/mysten-metrics",
-  "crates/mysten-service",
-  "crates/mysten-service-boilerplate",
   "crates/prometheus-closure-metric",
   "crates/shared-crypto",
   "crates/sui",
@@ -520,8 +518,6 @@ anemo-tower = { git = "https://github.com/mystenlabs/anemo.git", rev = "26d415eb
 
 ### Workspace Members ###
 mysten-metrics = { path = "crates/mysten-metrics" }
-mysten-service = { path = "crates/mysten-service" }
-mysten-service-boilerplate = { path = "crates/mysten-service-boilerplate" }
 prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
 sui = { path = "crates/sui" }
