@@ -72,7 +72,6 @@ members = [
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
   "crates/sui-cost",
-  "crates/sui-e2e-tests",
   "crates/sui-enum-compat-util",
   "crates/sui-faucet",
   "crates/sui-framework",
@@ -514,7 +513,6 @@ shared-crypto = { path = "crates/shared-crypto" }
 sui = { path = "crates/sui" }
 sui-adapter-transactional-tests = { path = "crates/sui-adapter-transactional-tests" }
 sui-cost = { path = "crates/sui-cost" }
-sui-e2e-tests = { path = "crates/sui-e2e-tests" }
 sui-enum-compat-util = { path = "crates/sui-enum-compat-util" }
 sui-faucet = { path = "crates/sui-faucet" }
 sui-framework = { path = "crates/sui-framework" }
