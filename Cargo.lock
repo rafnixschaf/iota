@@ -11107,51 +11107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-bridge"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "async-trait",
- "axum",
- "bcs",
- "clap",
- "const-str",
- "ethers",
- "eyre",
- "fastcrypto",
- "futures",
- "git-version",
- "hex-literal 0.3.4",
- "lru 0.10.0",
- "move-core-types",
- "mysten-metrics",
- "num_enum 0.6.1",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "reqwest",
- "rocksdb",
- "serde",
- "serde_json",
- "serde_with",
- "shared-crypto",
- "sui-common",
- "sui-json-rpc-types",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tokio-retry",
- "tracing",
- "url",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-cluster-test"
 version = "0.1.0"
 dependencies = [

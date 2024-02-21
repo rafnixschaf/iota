@@ -71,7 +71,6 @@ members = [
   "crates/shared-crypto",
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
-  "crates/sui-bridge",
   "crates/sui-cluster-test",
   "crates/sui-common",
   "crates/sui-cost",
