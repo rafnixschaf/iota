@@ -102,7 +102,6 @@ members = [
   "crates/sui-replay",
   "crates/sui-rest-api",
   "crates/sui-sdk",
-  "crates/sui-single-node-benchmark",
   "crates/sui-source-validation",
   "crates/sui-source-validation-service",
   "crates/sui-surfer",

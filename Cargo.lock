@@ -11971,37 +11971,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-single-node-benchmark"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bcs",
- "clap",
- "fs_extra",
- "futures",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-package",
- "once_cell",
- "prometheus",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-macros",
- "sui-move-build",
- "sui-protocol-config",
- "sui-test-transaction-builder",
- "sui-transaction-checks",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-source-validation"
 version = "1.19.0"
 dependencies = [
