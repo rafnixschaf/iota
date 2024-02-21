@@ -11936,44 +11936,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-rosetta"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "axum-extra",
- "bcs",
- "clap",
- "eyre",
- "fastcrypto",
- "futures",
- "hyper",
- "move-core-types",
- "mysten-metrics",
- "once_cell",
- "rand 0.8.5",
- "reqwest",
- "serde",
- "serde_json",
- "shared-crypto",
- "signature 1.6.4",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-move-build",
- "sui-sdk",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-rpc-loadgen"
 version = "1.19.0"
 dependencies = [
