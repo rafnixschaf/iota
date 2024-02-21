@@ -11127,63 +11127,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-data-ingestion"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-s3",
- "backoff",
- "base64-url",
- "bcs",
- "byteorder",
- "bytes",
- "futures",
- "mysten-metrics",
- "notify",
- "object_store 0.7.0",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-data-ingestion-core",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "url",
- "workspace-hack",
-]
-
-[[package]]
-name = "sui-data-ingestion-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "backoff",
- "futures",
- "mysten-metrics",
- "notify",
- "object_store 0.7.0",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "url",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-e2e-tests"
 version = "0.1.0"
 dependencies = [
@@ -12659,7 +12602,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml 0.8.26",
- "sui-data-ingestion-core",
  "sui-json-rpc",
  "sui-types",
  "telemetry-subscribers",
