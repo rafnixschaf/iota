@@ -11872,49 +11872,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-proxy"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "axum",
- "axum-server",
- "bytes",
- "clap",
- "const-str",
- "fastcrypto",
- "git-version",
- "hex",
- "http-body",
- "hyper",
- "ipnetwork",
- "itertools 0.10.5",
- "mime",
- "multiaddr",
- "mysten-metrics",
- "once_cell",
- "prometheus",
- "prost 0.12.1",
- "prost-build",
- "protobuf",
- "rand 0.8.5",
- "reqwest",
- "rustls 0.21.6",
- "rustls-pemfile",
- "serde",
- "serde_json",
- "serde_with",
- "serde_yaml 0.8.26",
- "snap",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tower",
- "tower-http",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-replay"
 version = "0.1.0"
 dependencies = [
