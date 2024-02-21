@@ -11107,41 +11107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-cluster-test"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "derivative",
- "fastcrypto",
- "futures",
- "jsonrpsee",
- "move-core-types",
- "prometheus",
- "regex",
- "reqwest",
- "serde_json",
- "shared-crypto",
- "sui",
- "sui-faucet",
- "sui-graphql-rpc",
- "sui-indexer",
- "sui-json",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "uuid 1.2.2",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-common"
 version = "0.1.0"
 dependencies = [
@@ -12431,7 +12396,6 @@ dependencies = [
  "axum",
  "clap",
  "http",
- "sui-cluster-test",
  "sui-faucet",
  "telemetry-subscribers",
  "tokio",
