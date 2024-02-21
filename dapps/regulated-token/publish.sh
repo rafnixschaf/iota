@@ -2,7 +2,7 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Copyright (c) 2024 IOTA Stiftung
+# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
 PUBLISH=$(sui client publish --gas-budget 100000000 --skip-dependency-verification --with-unpublished-dependencies --json);
