@@ -11107,35 +11107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-aws-orchestrator"
-version = "0.0.1"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-sdk-ec2",
- "aws-smithy-http",
- "aws-smithy-runtime-api",
- "clap",
- "color-eyre",
- "crossterm 0.25.0",
- "eyre",
- "futures",
- "mysten-metrics",
- "prettytable-rs",
- "prometheus-parse",
- "reqwest",
- "russh",
- "russh-keys",
- "serde",
- "serde_json",
- "sui-types",
- "tempfile",
- "thiserror",
- "tokio",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-benchmark"
 version = "0.0.0"
 dependencies = [
