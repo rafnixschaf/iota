@@ -12054,48 +12054,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-tool"
-version = "1.19.0"
-dependencies = [
- "anemo",
- "anemo-cli",
- "anyhow",
- "bcs",
- "clap",
- "colored",
- "comfy-table",
- "const-str",
- "diesel",
- "eyre",
- "fastcrypto",
- "futures",
- "git-version",
- "hex",
- "indicatif",
- "itertools 0.10.5",
- "move-core-types",
- "num_cpus",
- "object_store 0.7.0",
- "prometheus",
- "rocksdb",
- "ron",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-indexer",
- "sui-protocol-config",
- "sui-replay",
- "sui-sdk",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-transaction-builder"
 version = "0.0.0"
 dependencies = [
