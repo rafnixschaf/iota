@@ -71,7 +71,6 @@ members = [
   "crates/shared-crypto",
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
-  "crates/sui-common",
   "crates/sui-cost",
   "crates/sui-data-ingestion",
   "crates/sui-data-ingestion-core",
@@ -516,7 +515,6 @@ prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
 sui = { path = "crates/sui" }
 sui-adapter-transactional-tests = { path = "crates/sui-adapter-transactional-tests" }
-sui-common = { path = "crates/sui-common" }
 sui-cost = { path = "crates/sui-cost" }
 sui-data-ingestion = { path = "crates/sui-data-ingestion" }
 sui-data-ingestion-core = { path = "crates/sui-data-ingestion-core" }

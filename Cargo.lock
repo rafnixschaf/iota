@@ -11107,18 +11107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-common"
-version = "0.1.0"
-dependencies = [
- "futures",
- "mysten-metrics",
- "sui-types",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-cost"
 version = "0.1.0"
 dependencies = [
