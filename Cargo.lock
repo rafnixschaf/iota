@@ -11107,48 +11107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-benchmark"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "clap",
- "comfy-table",
- "duration-str",
- "fastcrypto-zkp",
- "futures",
- "hdrhistogram",
- "indicatif",
- "itertools 0.10.5",
- "move-core-types",
- "mysten-metrics",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "roaring",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-framework",
- "sui-framework-snapshot",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-protocol-config",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "sysinfo",
- "telemetry-subscribers",
- "tokio",
- "tokio-util 0.7.4",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-bridge"
 version = "0.1.0"
 dependencies = [
