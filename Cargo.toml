@@ -105,7 +105,6 @@ members = [
   "crates/sui-source-validation",
   "crates/sui-source-validation-service",
   "crates/sui-test-transaction-builder",
-  "crates/sui-test-validator",
   "crates/sui-tool",
   "crates/sui-transaction-builder",
   "crates/sui-transaction-checks",
@@ -536,7 +535,6 @@ sui-sdk = { path = "crates/sui-sdk" }
 sui-source-validation = { path = "crates/sui-source-validation" }
 sui-source-validation-service = { path = "crates/sui-source-validation-service" }
 sui-test-transaction-builder = { path = "crates/sui-test-transaction-builder" }
-sui-test-validator = { path = "crates/sui-test-validator" }
 sui-rest-api = { path = "crates/sui-rest-api" }
 sui-tool = { path = "crates/sui-tool" }
 sui-transaction-builder = { path = "crates/sui-transaction-builder" }
