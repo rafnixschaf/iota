@@ -12040,31 +12040,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui-surfer"
-version = "1.19.0"
-dependencies = [
- "async-trait",
- "bcs",
- "clap",
- "futures",
- "indexmap 2.1.0",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "prometheus",
- "rand 0.8.5",
- "sui-json-rpc-types",
- "sui-macros",
- "sui-move-build",
- "sui-protocol-config",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tracing",
- "workspace-hack",
-]
-
-[[package]]
 name = "sui-test-transaction-builder"
 version = "0.1.0"
 dependencies = [
