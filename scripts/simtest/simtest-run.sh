@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 echo "Running simulator tests at commit $(git rev-parse HEAD)"
 
 # Function to handle SIGINT signal (Ctrl+C)

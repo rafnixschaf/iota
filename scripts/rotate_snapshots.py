@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 """
 Script to be used for deleting old snapshots on a host. Given a root dir,
 for example, /opt/sui, it assumes snapshots are staged in /opt/sui/snapshots,

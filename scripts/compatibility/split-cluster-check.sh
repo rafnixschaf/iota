@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 # Runs a cluster with 2 validators built at one commit, and 2 at another, and
 # verifies that the cluster can produce checkpoints and reconfigure
 #

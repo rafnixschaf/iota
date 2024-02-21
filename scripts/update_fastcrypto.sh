@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 # shellcheck disable=SC2181
 # This script attempts to update the Fastcrypto pointer in Sui
 # It is expected to fail in some cases, notably when those updates require code changes 

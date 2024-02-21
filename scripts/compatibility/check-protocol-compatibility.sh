@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 # check if API_USER and API_KEY env vars are set
 if [ -z "$API_USER" ] || [ -z "$API_KEY" ]; then
   echo "Error: API_USER and API_KEY environment variables must be set"
