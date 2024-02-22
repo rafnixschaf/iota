@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // A basic ECDSA utility contract to do the following:
 // 1) Hash a piece of data using Keccak256, output an object with hashed data.
 // 2) Recover a Secp256k1 signature to its public key, output an object with the public key.

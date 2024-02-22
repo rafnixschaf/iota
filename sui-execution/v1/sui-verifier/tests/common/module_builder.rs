@@ -2,6 +2,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use move_binary_format::file_format::*;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use sui_types::SUI_FRAMEWORK_ADDRESS;

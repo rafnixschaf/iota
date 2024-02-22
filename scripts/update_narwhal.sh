@@ -2,6 +2,9 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+# Modifications Copyright (c) 2024 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
 # shellcheck disable=SC2181
 # This script attempts to update the Narwhal pointer in Sui
 # It is expected to fail in cases 

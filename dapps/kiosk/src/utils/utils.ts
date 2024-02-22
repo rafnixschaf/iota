@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { KioskListing, KioskOwnerCap } from '@mysten/kiosk';
 import { SuiObjectResponse } from '@mysten/sui.js/client';
 import { MIST_PER_SUI, normalizeSuiAddress } from '@mysten/sui.js/utils';

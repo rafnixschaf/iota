@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::gas_charger::GasCharger;
 use move_core_types::account_address::AccountAddress;
 use move_core_types::language_storage::StructTag;

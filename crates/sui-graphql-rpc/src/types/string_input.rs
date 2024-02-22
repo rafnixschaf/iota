@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Opt-in to an implementation of `ScalarType` for a `$Type` that implements `FromStr`, solely for
 /// use as an input (not an output). The type masquarades as a `String` in the GraphQL schema, to
 /// avoid adding a new scalar.

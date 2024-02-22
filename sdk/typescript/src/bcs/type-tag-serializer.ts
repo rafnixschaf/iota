@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { splitGenericParameters } from '@mysten/bcs';
 
 import { normalizeSuiAddress } from '../utils/sui-types.js';

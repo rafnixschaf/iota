@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { SuiTransactionBlockResponse } from '../../src/client';

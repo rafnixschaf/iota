@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[allow(unused_const)]
 /// In addition to the fields declared in its type definition, a Sui object can have dynamic fields
 /// that can be added after the object has been constructed. Unlike ordinary field names

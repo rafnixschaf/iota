@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::object_runtime::get_all_uids;
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{

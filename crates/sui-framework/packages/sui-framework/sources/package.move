@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Functions for operating on Move packages from within Move:
 /// - Creating proof-of-publish objects from one-time witnesses
 /// - Administering package upgrades through upgrade policies.

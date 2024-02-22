@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! Objects whose struct type has key ability represent Sui objects.
 //! They have unique IDs that should never be reused. This verifier makes
 //! sure that the id field of Sui objects never get leaked.

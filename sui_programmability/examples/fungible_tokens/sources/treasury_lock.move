@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// WARNING: Like all files in the examples section, this code is unaudited
 /// and should NOT be running in production. Using the code unaudited could potentially
 /// result in lost of funds from hacks, and leakage of transaction amounts.

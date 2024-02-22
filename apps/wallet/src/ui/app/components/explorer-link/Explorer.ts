@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { DEFAULT_API_ENV } from '_app/ApiProvider';
 import { getUrlWithDeviceId } from '_src/shared/analytics/amplitude';
 import { API_ENV } from '_src/shared/api-env';

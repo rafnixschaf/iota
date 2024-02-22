@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use super::object_runtime::{ObjectRuntime, TransferResult};
 use crate::NativesCostTable;
 use move_binary_format::errors::{PartialVMError, PartialVMResult};

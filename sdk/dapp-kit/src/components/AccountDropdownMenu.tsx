@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { formatAddress } from '@mysten/sui.js/utils';
 import type { WalletAccount } from '@mysten/wallet-standard';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';

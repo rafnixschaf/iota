@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Executing a swap of two objects via a third party, using object wrapping to
 /// hand ownership of the objects to swap to the third party without giving them
 /// the ability to modify those objects.

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 pub use crate::json_rpc_error::Error as JsonRpcError;
 use sui_types::base_types::{SuiAddress, TransactionDigest};
 use sui_types::error::UserInputError;

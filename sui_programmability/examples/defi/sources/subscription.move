@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This example introduces a `Subscription` type - a `Capability`-like object
 /// with a limited number of uses. Once all of them are used, the subscription can
 /// be renewed or destroyed.

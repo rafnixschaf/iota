@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::base_types::{AuthorityName, ObjectID, SuiAddress};
 use crate::committee::{Committee, CommitteeWithNetworkMetadata, NetworkMetadata};
 use crate::dynamic_field::get_dynamic_field_from_store;

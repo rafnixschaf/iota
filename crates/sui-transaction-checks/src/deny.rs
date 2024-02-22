@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use fastcrypto_zkp::bn254::zk_login::OIDCProvider;
 use sui_config::transaction_deny_config::TransactionDenyConfig;
 use sui_types::{

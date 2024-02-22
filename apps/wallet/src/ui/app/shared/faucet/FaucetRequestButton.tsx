@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { API_ENV_TO_INFO } from '_app/ApiProvider';
 import { Button, type ButtonProps } from '_app/shared/ButtonUI';
 import { useAppSelector } from '_hooks';

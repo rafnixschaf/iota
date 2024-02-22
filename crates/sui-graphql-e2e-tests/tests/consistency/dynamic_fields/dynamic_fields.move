@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // chkpt1: create parent and child @ version 2
 // chkpt1: add dof to parent @ version 3
 // chkpt2: PTB(mutate dof, add df1, 2, 3) - parent and dof @ version 4

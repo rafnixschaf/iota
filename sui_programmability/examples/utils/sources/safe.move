@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// The Safe standard is a minimalistic shared wrapper around a coin. It provides a way for users to provide third-party dApps with
 /// the capability to transfer coins away from their wallets, if they are provided with the correct permission.
 module utils::safe {

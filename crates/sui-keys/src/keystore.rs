@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::key_derive::{derive_key_pair_from_path, generate_new_key};
 use crate::random_names::{random_name, random_names};
 use anyhow::{anyhow, bail, ensure, Context};

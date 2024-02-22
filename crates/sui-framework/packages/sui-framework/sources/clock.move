@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// APIs for accessing time from move calls, via the `Clock`: a unique
 /// shared object that is created at 0x6 during genesis.
 module sui::clock {

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use anyhow::anyhow;
 use fastcrypto::ed25519::Ed25519KeyPair;
 use fastcrypto::encoding::{Base64, Encoding};

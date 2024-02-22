@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use async_graphql::*;
 use sui_json_rpc_types::BalanceChange as StoredBalanceChange;
 use sui_types::object::Owner as NativeOwner;

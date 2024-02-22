@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Encapsulates CapyAdmin functionality allowing for faster
 /// txs and lower gas fees for new capy / item batches.
 module capy::capy_admin {

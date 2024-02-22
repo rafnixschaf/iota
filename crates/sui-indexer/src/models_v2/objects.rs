@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use sui_json_rpc::coin_api::parse_to_struct_tag;

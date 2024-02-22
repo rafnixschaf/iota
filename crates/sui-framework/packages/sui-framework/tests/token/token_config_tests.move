@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 /// The goal of this module is to test Rule configuration setting and how Rules
 /// can read / modify the configuration in 'em.

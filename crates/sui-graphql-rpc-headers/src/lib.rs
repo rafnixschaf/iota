@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use axum::http::HeaderName;
 
 pub static VERSION_HEADER: HeaderName = HeaderName::from_static("x-sui-rpc-version");
