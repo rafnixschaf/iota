@@ -10,6 +10,7 @@ use crate::crypto::AuthorityPublicKeyBytes;
 use crate::error::SuiError;
 use crate::id::ID;
 use crate::multiaddr::Multiaddr;
+use crate::narwhal_crypto;
 use crate::storage::ObjectStore;
 use crate::sui_system_state::epoch_start_sui_system_state::EpochStartSystemState;
 use anyhow::Result;

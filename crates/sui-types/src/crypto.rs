@@ -44,6 +44,7 @@ use strum::EnumString;
 use crate::base_types::{AuthorityName, ConciseableName, SuiAddress};
 use crate::committee::{Committee, EpochId, StakeUnit};
 use crate::error::{SuiError, SuiResult};
+use crate::narwhal_crypto;
 use crate::signature::GenericSignature;
 use crate::sui_serde::{Readable, SuiBitmap};
 pub use enum_dispatch::enum_dispatch;
