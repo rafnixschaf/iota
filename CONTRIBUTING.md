@@ -1,6 +1,6 @@
 # Contributors
 
-Thanks for considering making a contribution to Kinesis or it's documentation.
+Thanks for considering making a contribution to Kinesis or its documentation.
 
 ## Contribute to Kinesis
 
