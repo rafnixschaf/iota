@@ -4,8 +4,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use typed_store_error::TypedStoreError;
-
 pub type Result<T, E = Error> = ::std::result::Result<T, E>;
 
 #[derive(Debug)]
@@ -65,11 +63,5 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // TODO: change output based on kind?
         write!(f, "{:?}", self)
-    }
-}
-
-impl From<TypedStoreError> for Error {
-    fn from(e: TypedStoreError) -> Self {
-        Self::custom(e)
     }
 }
