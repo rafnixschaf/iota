@@ -4,6 +4,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::sui_client_config::Config;
+use crate::sui_client_config::PersistedConfig;
 use crate::sui_client_config::SuiClientConfig;
 use crate::SuiClient;
 use anyhow::anyhow;
@@ -12,7 +14,6 @@ use shared_crypto::intent::Intent;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
-use sui_config::{Config, PersistedConfig};
 use sui_json_rpc_types::{
     SuiObjectData, SuiObjectDataFilter, SuiObjectDataOptions, SuiObjectResponse,
     SuiObjectResponseQuery, SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
