@@ -32,19 +32,15 @@ parking_lot.workspace = true
 sui.workspace = true
 sui-json-rpc-types.workspace = true
 sui-types.workspace = true
-sui-config.workspace = true
 sui-keys.workspace = true
 sui-sdk.workspace = true
 mysten-metrics.workspace = true
 telemetry-subscribers.workspace = true
-typed-store.workspace = true
-typed-store-derive.workspace = true
 shared-crypto.workspace = true
 async-recursion.workspace = true
 workspace-hack.workspace = true
 
 [dev-dependencies]
-test-cluster.workspace = true
 
 [[bin]]
 name = "sui-faucet"

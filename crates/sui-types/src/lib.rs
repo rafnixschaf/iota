@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 #![warn(
     future_incompatible,
     nonstandard_style,
@@ -17,8 +20,6 @@ pub use move_core_types::{identifier::Identifier, language_storage::TypeTag};
 use object::OBJECT_START_VERSION;
 
 use base_types::ObjectID;
-
-pub use mysten_network::multiaddr;
 
 use crate::base_types::{RESOLVED_ASCII_STR, RESOLVED_UTF8_STR};
 use crate::{base_types::RESOLVED_STD_OPTION, id::RESOLVED_SUI_ID};
@@ -63,8 +64,10 @@ pub mod messages_safe_client;
 pub mod metrics;
 pub mod mock_checkpoint_builder;
 pub mod move_package;
+pub mod multiaddr;
 pub mod multisig;
 pub mod multisig_legacy;
+pub mod narwhal_crypto;
 pub mod object;
 pub mod programmable_transaction_builder;
 pub mod quorum_driver_types;

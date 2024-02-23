@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use clap::*;
 use colored::Colorize;
 use sui::client_commands::SuiClientCommands::{ProfileTransaction, ReplayTransaction};

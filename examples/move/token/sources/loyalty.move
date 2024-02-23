@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This module illustrates a Closed Loop Loyalty Token. The `Token` is sent to
 /// users as a reward for their loyalty by the application Admin. The `Token`
 /// can be used to buy a `Gift` in the shop.

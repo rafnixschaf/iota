@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use proptest::arbitrary::*;
 use proptest::test_runner::TestCaseError;
 use sui_types::base_types::dbg_addr;

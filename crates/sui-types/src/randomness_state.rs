@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use move_core_types::{account_address::AccountAddress, ident_str, identifier::IdentStr};
 
 use crate::base_types::SequenceNumber;

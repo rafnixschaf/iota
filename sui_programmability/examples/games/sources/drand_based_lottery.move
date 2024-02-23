@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// A basic game that depends on randomness from drand.
 ///
 /// The quicknet chain chain of drand creates random 32 bytes every 3 seconds. This randomness is verifiable in the sense

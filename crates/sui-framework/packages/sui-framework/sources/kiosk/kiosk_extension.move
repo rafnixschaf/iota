@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// This module implements the Kiosk Extensions functionality. It allows
 /// exposing previously protected (only-owner) methods to third-party apps.
 ///

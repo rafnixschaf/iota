@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use move_bytecode_verifier::meter::Scope;
 use prometheus::Registry;
 use std::{path::PathBuf, sync::Arc, time::Instant};

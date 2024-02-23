@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Merges two filter fields. If both values exist, `merge` is used to combine them, which returns
 /// some combined value if there is some consistent combination, and `None` otherwise. The overall
 /// function returns `Some(None)`, if the filters combined to no filter, `Some(Some(f))` if the

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// A synthetic fungible token backed by a basket of other tokens.
 /// Here, we use a basket that is 1:1 SUI and MANAGED,
 /// but this approach would work for a basket with arbitrary assets/ratios.

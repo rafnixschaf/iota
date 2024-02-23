@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{
     schema::{tx_calls, tx_changed_objects, tx_input_objects, tx_recipients, tx_senders},
     types::TxIndex,

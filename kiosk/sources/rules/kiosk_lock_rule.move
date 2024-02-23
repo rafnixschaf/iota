@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Description:
 /// This module defines a Rule which forces buyers to put the purchased
 /// item into the Kiosk and lock it. The most common use case for the

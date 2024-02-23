@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Description:
 /// This module defines a Rule which requires a payment on a purchase.
 /// The payment amount can be either a fixed amount (min_amount) or a

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /// Defines a Display struct which defines the way an Object
 /// should be displayed. The intention is to keep data as independent
 /// from its display as possible, protecting the development process

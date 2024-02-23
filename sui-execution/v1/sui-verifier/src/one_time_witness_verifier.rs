@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 //! A module can define a one-time witness type, that is a type that is instantiated only once, and
 //! this property is enforced by the system. We define a one-time witness type as a struct type that
 //! has the same name as the module that defines it but with all the letters capitalized, and

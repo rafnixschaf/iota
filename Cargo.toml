@@ -65,37 +65,13 @@ exclude = [
 ]
 
 members = [
-  "consensus/config",
-  "consensus/core",
-  "crates/anemo-benchmark",
   "crates/data-transform",
-  "crates/mysten-common",
   "crates/mysten-metrics",
-  "crates/mysten-network",
-  "crates/mysten-service",
-  "crates/mysten-service-boilerplate",
-  "crates/mysten-util-mem",
-  "crates/mysten-util-mem-derive",
   "crates/prometheus-closure-metric",
   "crates/shared-crypto",
-  "crates/simulacrum",
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
-  "crates/sui-analytics-indexer",
-  "crates/sui-analytics-indexer-derive",
-  "crates/sui-archival",
-  "crates/sui-authority-aggregation",
-  "crates/sui-aws-orchestrator",
-  "crates/sui-benchmark",
-  "crates/sui-bridge",
-  "crates/sui-cluster-test",
-  "crates/sui-common",
-  "crates/sui-config",
-  "crates/sui-core",
   "crates/sui-cost",
-  "crates/sui-data-ingestion",
-  "crates/sui-data-ingestion-core",
-  "crates/sui-e2e-tests",
   "crates/sui-enum-compat-util",
   "crates/sui-faucet",
   "crates/sui-framework",
@@ -113,66 +89,32 @@ members = [
   "crates/sui-json-rpc-tests",
   "crates/sui-json-rpc-types",
   "crates/sui-keys",
-  "crates/sui-light-client",
   "crates/sui-macros",
   "crates/sui-metric-checker",
   "crates/sui-move",
   "crates/sui-move-build",
-  "crates/sui-network",
-  "crates/sui-node",
   "crates/sui-open-rpc",
   "crates/sui-open-rpc-macros",
-  "crates/sui-oracle",
   "crates/sui-package-resolver",
   "crates/sui-proc-macros",
   "crates/sui-protocol-config",
   "crates/sui-protocol-config-macros",
-  "crates/sui-proxy",
   "crates/sui-replay",
   "crates/sui-rest-api",
-  "crates/sui-rosetta",
-  "crates/sui-rpc-loadgen",
   "crates/sui-sdk",
-  "crates/sui-simulator",
-  "crates/sui-single-node-benchmark",
-  "crates/sui-snapshot",
   "crates/sui-source-validation",
   "crates/sui-source-validation-service",
-  "crates/sui-storage",
-  "crates/sui-surfer",
-  "crates/sui-swarm",
-  "crates/sui-swarm-config",
-  "crates/sui-telemetry",
   "crates/sui-test-transaction-builder",
-  "crates/sui-test-validator",
-  "crates/sui-tls",
-  "crates/sui-tool",
   "crates/sui-transaction-builder",
   "crates/sui-transaction-checks",
   "crates/sui-transactional-test-runner",
   "crates/sui-types",
   "crates/sui-upgrade-compatibility-transactional-tests",
   "crates/sui-verifier-transactional-tests",
-  "crates/suins-indexer",
-  "crates/suiop-cli",
   "crates/telemetry-subscribers",
-  "crates/test-cluster",
   "crates/transaction-fuzzer",
-  "crates/typed-store",
-  "crates/typed-store-derive",
-  "crates/typed-store-error",
   "crates/workspace-hack",
   "crates/x",
-  "narwhal/config",
-  "narwhal/crypto",
-  "narwhal/executor",
-  "narwhal/network",
-  "narwhal/node",
-  "narwhal/primary",
-  "narwhal/storage",
-  "narwhal/test-utils",
-  "narwhal/types",
-  "narwhal/worker",
   "sui-execution",
   "sui-execution/cut",
   "sui-execution/latest/sui-adapter",
@@ -554,32 +496,12 @@ anemo-cli = { git = "https://github.com/mystenlabs/anemo.git", rev = "26d415eb9a
 anemo-tower = { git = "https://github.com/mystenlabs/anemo.git", rev = "26d415eb9aa6a2417be3c03c57d6e93c30bd1ad7" }
 
 ### Workspace Members ###
-anemo-benchmark = { path = "crates/anemo-benchmark" }
-mysten-common = { path = "crates/mysten-common" }
 mysten-metrics = { path = "crates/mysten-metrics" }
-mysten-network = { path = "crates/mysten-network" }
-mysten-service = { path = "crates/mysten-service" }
-mysten-service-boilerplate = { path = "crates/mysten-service-boilerplate" }
-mysten-util-mem = { path = "crates/mysten-util-mem" }
-mysten-util-mem-derive = { path = "crates/mysten-util-mem-derive" }
 prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
-simulacrum = { path = "crates/simulacrum" }
 sui = { path = "crates/sui" }
 sui-adapter-transactional-tests = { path = "crates/sui-adapter-transactional-tests" }
-sui-analytics-indexer = { path = "crates/sui-analytics-indexer" }
-sui-analytics-indexer-derive = { path = "crates/sui-analytics-indexer-derive" }
-sui-archival = { path = "crates/sui-archival" }
-sui-authority-aggregation = { path = "crates/sui-authority-aggregation" }
-sui-benchmark = { path = "crates/sui-benchmark" }
-sui-cluster-test = { path = "crates/sui-cluster-test" }
-sui-common = { path = "crates/sui-common" }
-sui-config = { path = "crates/sui-config" }
-sui-core = { path = "crates/sui-core" }
 sui-cost = { path = "crates/sui-cost" }
-sui-data-ingestion = { path = "crates/sui-data-ingestion" }
-sui-data-ingestion-core = { path = "crates/sui-data-ingestion-core" }
-sui-e2e-tests = { path = "crates/sui-e2e-tests" }
 sui-enum-compat-util = { path = "crates/sui-enum-compat-util" }
 sui-faucet = { path = "crates/sui-faucet" }
 sui-framework = { path = "crates/sui-framework" }
@@ -599,33 +521,18 @@ sui-macros = { path = "crates/sui-macros" }
 sui-metric-checker = { path = "crates/sui-metric-checker" }
 sui-move = { path = "crates/sui-move" }
 sui-move-build = { path = "crates/sui-move-build" }
-sui-network = { path = "crates/sui-network" }
-sui-node = { path = "crates/sui-node" }
 sui-open-rpc = { path = "crates/sui-open-rpc" }
 sui-open-rpc-macros = { path = "crates/sui-open-rpc-macros" }
 sui-package-resolver = { path = "crates/sui-package-resolver" }
 sui-proc-macros = { path = "crates/sui-proc-macros" }
 sui-protocol-config = { path = "crates/sui-protocol-config" }
 sui-protocol-config-macros = { path = "crates/sui-protocol-config-macros" }
-sui-proxy = { path = "crates/sui-proxy" }
 sui-replay = { path = "crates/sui-replay" }
-sui-rosetta = { path = "crates/sui-rosetta" }
-sui-rpc-loadgen = { path = "crates/sui-rpc-loadgen" }
 sui-sdk = { path = "crates/sui-sdk" }
-sui-simulator = { path = "crates/sui-simulator" }
-sui-snapshot = { path = "crates/sui-snapshot" }
 sui-source-validation = { path = "crates/sui-source-validation" }
 sui-source-validation-service = { path = "crates/sui-source-validation-service" }
-sui-storage = { path = "crates/sui-storage" }
-sui-surfer = { path = "crates/sui-surfer" }
-sui-swarm = { path = "crates/sui-swarm" }
-sui-swarm-config = { path = "crates/sui-swarm-config" }
-sui-telemetry = { path = "crates/sui-telemetry" }
 sui-test-transaction-builder = { path = "crates/sui-test-transaction-builder" }
-sui-test-validator = { path = "crates/sui-test-validator" }
-sui-tls = { path = "crates/sui-tls" }
 sui-rest-api = { path = "crates/sui-rest-api" }
-sui-tool = { path = "crates/sui-tool" }
 sui-transaction-builder = { path = "crates/sui-transaction-builder" }
 sui-transaction-checks = { path = "crates/sui-transaction-checks" }
 sui-transactional-test-runner = { path = "crates/sui-transactional-test-runner" }
@@ -633,27 +540,9 @@ sui-types = { path = "crates/sui-types" }
 sui-upgrade-compatibility-transactional-tests = { path = "crates/sui-upgrade-compatibility-transactional-tests" }
 sui-verifier-transactional-tests = { path = "crates/sui-verifier-transactional-tests" }
 telemetry-subscribers = { path = "crates/telemetry-subscribers" }
-test-cluster = { path = "crates/test-cluster" }
 transaction-fuzzer = { path = "crates/transaction-fuzzer" }
-typed-store = { path = "crates/typed-store" }
-typed-store-derive = { path = "crates/typed-store-derive" }
-typed-store-error = { path = "crates/typed-store-error" }
 workspace-hack = "0.1.0"
 x = { path = "crates/x" }
-
-consensus-config = { path = "consensus/config" }
-consensus-core = { path = "consensus/core" }
-
-narwhal-config = { path = "narwhal/config" }
-narwhal-crypto = { path = "narwhal/crypto" }
-narwhal-executor = { path = "narwhal/executor" }
-narwhal-network = { path = "narwhal/network" }
-narwhal-node = { path = "narwhal/node" }
-narwhal-primary = { path = "narwhal/primary" }
-narwhal-storage = { path = "narwhal/storage" }
-narwhal-test-utils = { path = "narwhal/test-utils" }
-narwhal-types = { path = "narwhal/types" }
-narwhal-worker = { path = "narwhal/worker" }
 
 sui-execution = { path = "sui-execution" }
 # sui-move-natives = { path = "sui-execution/latest/sui-move-natives", package = "sui-move-natives-latest" }

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::balance::Balance;
 use crate::base_types::{ObjectID, SuiAddress};
 use crate::collection_types::{Bag, Table, TableVec, VecMap, VecSet};
@@ -10,6 +13,7 @@ use crate::crypto::AuthorityPublicKeyBytes;
 use crate::error::SuiError;
 use crate::id::ID;
 use crate::multiaddr::Multiaddr;
+use crate::narwhal_crypto;
 use crate::storage::ObjectStore;
 use crate::sui_system_state::epoch_start_sui_system_state::EpochStartSystemState;
 use anyhow::Result;

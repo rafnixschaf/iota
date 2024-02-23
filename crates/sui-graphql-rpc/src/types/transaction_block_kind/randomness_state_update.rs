@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::types::{base64::Base64, epoch::Epoch};
 use async_graphql::*;
 use sui_types::transaction::RandomnessStateUpdate as NativeRandomnessStateUpdate;

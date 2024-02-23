@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // tests shared object scenarios as part of programmable transactions
 
 //# init --addresses t2=0x0 --accounts A B --shared-object-deletion true

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { format } from 'prettier';
@@ -25,6 +28,9 @@ const openRpcSpec: OpenRpcSpec = JSON.parse(
 );
 export const LICENSE_HEADER = `
 // Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /**

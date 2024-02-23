@@ -1,7 +1,7 @@
 ---
-name: Sui Code Bug
-about: Create a new software bug for issues encountered running Sui
-title: 'Sui Code Bug or Feature Request'
+name: Bugs
+about: Create a new bug report for issues encountered running Kinesis
+title: 'Kinesis bug report or feature request'
 labels: bug
 assignees: ''
 ---

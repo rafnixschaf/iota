@@ -2,6 +2,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{
     base_types::*,
     committee::{Committee, EpochId, StakeUnit},
@@ -17,7 +20,6 @@ use std::{collections::BTreeMap, fmt::Debug};
 use strum_macros::{AsRefStr, IntoStaticStr};
 use thiserror::Error;
 use tonic::Status;
-use typed_store_error::TypedStoreError;
 
 pub const TRANSACTION_NOT_FOUND_MSG_PREFIX: &str = "Could not find the referenced transaction";
 pub const TRANSACTIONS_NOT_FOUND_MSG_PREFIX: &str = "Could not find the referenced transactions";
@@ -664,12 +666,6 @@ impl From<Status> for SuiError {
                 status.code().description().to_owned(),
             )
         }
-    }
-}
-
-impl From<TypedStoreError> for SuiError {
-    fn from(e: TypedStoreError) -> Self {
-        Self::Storage(e.to_string())
     }
 }
 

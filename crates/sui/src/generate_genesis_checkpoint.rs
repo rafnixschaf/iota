@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use camino::Utf8PathBuf;
 use sui_config::local_ip_utils;
 use sui_genesis_builder::validator_info::ValidatorInfo;

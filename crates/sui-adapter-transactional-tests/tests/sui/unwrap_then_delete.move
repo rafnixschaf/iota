@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // Exercise test functions that wrap an object and subsequently unwrap and delete it.
 // There are two cases:
 // 1. In the first case, we first create the object, wrap it in a separate transaction (so that there will be a wrapped

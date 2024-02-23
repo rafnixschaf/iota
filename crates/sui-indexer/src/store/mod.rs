@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 pub(crate) use indexer_analytical_store::*;
 pub(crate) use indexer_store_v2::*;
 pub use pg_indexer_analytical_store::PgIndexerAnalyticalStore;

@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 use crate::unix_seconds_to_timestamp_string;
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};

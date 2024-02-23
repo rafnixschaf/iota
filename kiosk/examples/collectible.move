@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #[test_only]
 /// The module which defines the `Collectible` type. It is an all-in-one
 /// package to create a `Display`, a `Publisher` and a `TransferPolicy` to

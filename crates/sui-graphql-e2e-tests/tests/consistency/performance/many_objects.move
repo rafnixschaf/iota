@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // Transfer 500 objects to A. The first graphql query fetches the last 4 objects owned by A. Then
 // transfer the last 3 objects from A to B. Make a graphql query for the `last: 1` - this is to test
 // that we return the next valid result even if the first `limit` rows that match the filtering

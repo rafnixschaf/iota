@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // chkpt 1 | chkpt 2 | chkpt 3 | chkpt 4 | chkpt 5 | snapshot [0, 4)
 // -----------------------------------------------------------------
 // coin1@A | coin1@B | coin1@B | coin1@B | coin1@B | coin1@B
