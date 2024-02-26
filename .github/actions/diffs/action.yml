@@ -27,15 +27,10 @@ runs:
     with:
       filters: |
         isRust:
-          - 'consensus/**'
           - 'crates/**'
           - 'external-crates/**'
-          - 'narwhal/**'
           - 'sui-execution/**'
-          - '.github/workflows/bench.yml'
-          - '.github/workflows/codecov.yml'
           - '.github/workflows/rust.yml'
-          - '.github/workflows/external.yml'
         isDoc:
           - 'docs/content/**'
           - '*.mdx'
@@ -47,18 +42,16 @@ runs:
           - 'crates/sui-framework/**'
           - 'crates/sui-framework-build/**'
           - 'crates/sui-framework-tests/**'
-          - 'crates/sui_move/**'
+          - 'crates/sui-move/**'
           - 'Cargo.toml'
           - 'examples/**'
           - 'sui_programmability/**'
         isReleaseNotesEligible:
-          - 'consensus/**'
           - 'crates/**'
           - 'dashboards/**'
           - 'doc/**'
           - 'docker/**'
           - 'external-crates/**'
           - 'kiosk/**'
-          - 'narwhal/**'
           - 'nre/**'
           - 'sui-execution/**'
