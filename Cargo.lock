@@ -11649,6 +11649,7 @@ dependencies = [
  "anyhow",
  "bcs",
  "camino",
+ "csv",
  "fastcrypto",
  "insta",
  "move-binary-format",
