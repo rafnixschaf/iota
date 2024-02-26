@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 bcs.workspace = true
+csv.workspace = true
 camino.workspace = true
 fastcrypto.workspace = true
 move-binary-format.workspace = true
