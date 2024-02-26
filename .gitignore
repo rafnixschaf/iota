@@ -13,9 +13,7 @@
 # Move build directory
 build
 storage
-!consensus/core/src/storage
 !crates/sui-types/src/storage
-!narwhal/storage
 
 # Move-related files
 Move.lock
@@ -66,6 +64,3 @@ yarn-error.log*
 # misc
 *.key
 .env
-checkpoints_dir/*
-light_client.yaml
-docs/content/references/sui-graphql/*
