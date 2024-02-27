@@ -84,7 +84,7 @@ pub mod zk_login_authenticator;
 pub mod zk_login_util;
 
 #[cfg(any(test, feature = "test-utils"))]
-#[path = "./unit_tests/utils.rs"]
+#[path = "./unit_tests/utils/mod.rs"]
 pub mod utils;
 
 /// 0x1-- account address where Move stdlib modules are stored

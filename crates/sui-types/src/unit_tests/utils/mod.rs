@@ -34,6 +34,8 @@ use serde::Deserialize;
 use shared_crypto::intent::{Intent, IntentMessage};
 use std::collections::BTreeMap;
 
+pub mod local_ip;
+
 #[derive(Deserialize)]
 pub struct TestData {
     pub zklogin_inputs: String,

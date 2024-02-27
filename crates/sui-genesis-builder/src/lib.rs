@@ -6,6 +6,10 @@
 
 use anyhow::{bail, Context};
 use camino::Utf8Path;
+use config::{
+    Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
+    UnsignedGenesis,
+};
 use fastcrypto::hash::HashFunction;
 use fastcrypto::traits::KeyPair;
 use move_binary_format::CompiledModule;
@@ -15,10 +19,6 @@ use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
-use sui_config::genesis::{
-    Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
-    UnsignedGenesis,
-};
 use sui_execution::{self, Executor};
 use sui_framework::{BuiltInFramework, SystemPackage};
 use sui_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
@@ -54,6 +54,7 @@ use sui_types::{SUI_FRAMEWORK_ADDRESS, SUI_SYSTEM_ADDRESS};
 use tracing::trace;
 use validator_info::{GenesisValidatorInfo, GenesisValidatorMetadata, ValidatorInfo};
 
+pub mod config;
 pub mod validator_info;
 
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
@@ -1136,18 +1137,16 @@ pub fn generate_genesis_system_object(
 
 #[cfg(test)]
 mod test {
+    use crate::config::*;
     use crate::validator_info::ValidatorInfo;
     use crate::Builder;
     use fastcrypto::traits::KeyPair;
-    use sui_config::genesis::*;
-    use sui_config::local_ip_utils;
-    use sui_config::node::DEFAULT_COMMISSION_RATE;
-    use sui_config::node::DEFAULT_VALIDATOR_GAS_PRICE;
     use sui_types::base_types::SuiAddress;
     use sui_types::crypto::{
         generate_proof_of_possession, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
         NetworkKeyPair,
     };
+    use sui_types::utils::local_ip;
 
     #[test]
     fn allocation_csv() {
@@ -1167,7 +1166,6 @@ mod test {
     }
 
     #[test]
-    #[cfg_attr(msim, ignore)]
     fn ceremony() {
         let dir = tempfile::TempDir::new().unwrap();
 
@@ -1181,12 +1179,12 @@ mod test {
             worker_key: worker_key.public().clone(),
             account_address: SuiAddress::from(account_key.public()),
             network_key: network_key.public().clone(),
-            gas_price: DEFAULT_VALIDATOR_GAS_PRICE,
-            commission_rate: DEFAULT_COMMISSION_RATE,
-            network_address: local_ip_utils::new_local_tcp_address_for_testing(),
-            p2p_address: local_ip_utils::new_local_udp_address_for_testing(),
-            narwhal_primary_address: local_ip_utils::new_local_udp_address_for_testing(),
-            narwhal_worker_address: local_ip_utils::new_local_udp_address_for_testing(),
+            gas_price: Default::default(),
+            commission_rate: Default::default(),
+            network_address: local_ip::new_local_tcp_address_for_testing(),
+            p2p_address: local_ip::new_local_udp_address_for_testing(),
+            narwhal_primary_address: local_ip::new_local_udp_address_for_testing(),
+            narwhal_worker_address: local_ip::new_local_udp_address_for_testing(),
             description: String::new(),
             image_url: String::new(),
             project_url: String::new(),
