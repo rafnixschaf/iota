@@ -4,29 +4,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::legacy::authority_per_epoch_store::AuthorityPerEpochStore;
+use crate::legacy::authority_state::AuthorityState;
+use crate::legacy::execution_cache::ExecutionCacheRead;
+use crate::legacy::index_store::TotalBalance;
+use crate::legacy::subscription_handler::SubscriptionHandler;
+use crate::legacy::transaction_key_value_store::{
+    KVStoreCheckpointData, KVStoreTransactionData, TransactionKeyValueStore,
+    TransactionKeyValueStoreTrait,
+};
 use anyhow::anyhow;
 use arc_swap::Guard;
 use async_trait::async_trait;
 use move_core_types::language_storage::TypeTag;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
-use sui_core::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use sui_core::authority::AuthorityState;
-use sui_core::execution_cache::ExecutionCacheRead;
-use sui_core::subscription_handler::SubscriptionHandler;
 use sui_json_rpc_types::{
     Coin as SuiCoin, DevInspectResults, DryRunTransactionBlockResponse, EventFilter, SuiEvent,
     SuiObjectDataFilter, TransactionFilter,
 };
-use sui_storage::indexes::TotalBalance;
-use sui_storage::key_value_store::{
-    KVStoreCheckpointData, KVStoreTransactionData, TransactionKeyValueStore,
-    TransactionKeyValueStoreTrait,
-};
 use sui_types::base_types::{
     MoveObjectType, ObjectID, ObjectInfo, ObjectRef, SequenceNumber, SuiAddress,
 };
-use sui_types::committee::{Committee, EpochId};
+use sui_types::committee::Committee;
 use sui_types::digests::{ChainIdentifier, TransactionDigest, TransactionEventsDigest};
 use sui_types::dynamic_field::DynamicFieldInfo;
 use sui_types::effects::TransactionEffects;
@@ -209,16 +209,6 @@ pub trait StateRead: Send + Sync {
         &self,
         digest: CheckpointDigest,
     ) -> StateReadResult<VerifiedCheckpoint>;
-
-    fn deprecated_multi_get_transaction_checkpoint(
-        &self,
-        digests: &[TransactionDigest],
-    ) -> StateReadResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>>;
-
-    fn deprecated_get_transaction_checkpoint(
-        &self,
-        digest: &TransactionDigest,
-    ) -> StateReadResult<Option<(EpochId, CheckpointSequenceNumber)>>;
 
     fn multi_get_checkpoint_by_sequence_number(
         &self,
@@ -517,24 +507,6 @@ impl StateRead for AuthorityState {
         digest: CheckpointDigest,
     ) -> StateReadResult<VerifiedCheckpoint> {
         Ok(self.get_verified_checkpoint_summary_by_digest(digest)?)
-    }
-
-    fn deprecated_multi_get_transaction_checkpoint(
-        &self,
-        digests: &[TransactionDigest],
-    ) -> StateReadResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>> {
-        Ok(self
-            .get_checkpoint_cache()
-            .deprecated_multi_get_transaction_checkpoint(digests)?)
-    }
-
-    fn deprecated_get_transaction_checkpoint(
-        &self,
-        digest: &TransactionDigest,
-    ) -> StateReadResult<Option<(EpochId, CheckpointSequenceNumber)>> {
-        Ok(self
-            .get_checkpoint_cache()
-            .deprecated_get_transaction_checkpoint(digest)?)
     }
 
     fn multi_get_checkpoint_by_sequence_number(

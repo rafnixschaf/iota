@@ -7,23 +7,23 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::legacy::index_store::TotalBalance;
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use cached::SizedCache;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 use move_core_types::language_storage::{StructTag, TypeTag};
-use sui_storage::indexes::TotalBalance;
 use tap::TapFallible;
 use tracing::{debug, info, instrument};
 
+use crate::legacy::authority_state::AuthorityState;
+use crate::legacy::transaction_key_value_store::TransactionKeyValueStore;
 use mysten_metrics::spawn_monitored_task;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{cap_page_limit, CoinReadApiOpenRpc, CoinReadApiServer, JsonRpcMetrics};
 use sui_json_rpc_types::Balance;
 use sui_json_rpc_types::{CoinPage, SuiCoinMetadata};
 use sui_open_rpc::Module;
-use sui_storage::key_value_store::TransactionKeyValueStore;
 use sui_types::balance::Supply;
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::coin::{CoinMetadata, TreasuryCap};
@@ -403,6 +403,10 @@ impl CoinReadInternal for CoinReadInternalImpl {
 mod tests {
     use super::*;
     use crate::authority_state::{MockStateRead, StateReadError};
+    use crate::legacy::transaction_key_value_store::KeyValueStoreMetrics;
+    use crate::legacy::transaction_key_value_store::{
+        KVStoreCheckpointData, KVStoreTransactionData, TransactionKeyValueStoreTrait,
+    };
     use expect_test::expect;
     use jsonrpsee::types::ErrorObjectOwned;
     use mockall::mock;
@@ -410,10 +414,6 @@ mod tests {
     use move_core_types::account_address::AccountAddress;
     use move_core_types::language_storage::StructTag;
     use sui_json_rpc_types::Coin;
-    use sui_storage::key_value_store::{
-        KVStoreCheckpointData, KVStoreTransactionData, TransactionKeyValueStoreTrait,
-    };
-    use sui_storage::key_value_store_metrics::KeyValueStoreMetrics;
     use sui_types::balance::Supply;
     use sui_types::base_types::{ObjectID, SequenceNumber, SuiAddress};
     use sui_types::coin::TreasuryCap;

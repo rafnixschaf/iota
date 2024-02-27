@@ -38,6 +38,7 @@ pub mod coin_api;
 pub mod error;
 pub mod governance_api;
 pub mod indexer_api;
+mod legacy;
 pub mod logger;
 mod metrics;
 pub mod move_utils;

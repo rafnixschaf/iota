@@ -12,7 +12,7 @@ use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 use move_core_types::language_storage::StructTag;
 
-use sui_core::authority::AuthorityState;
+use crate::legacy::authority_state::AuthorityState;
 use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{TransactionBuilderOpenRpc, TransactionBuilderServer};
 use sui_json_rpc_types::{RPCTransactionRequestParams, SuiObjectDataFilter};

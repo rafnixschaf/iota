@@ -16,8 +16,8 @@ use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 use tracing::{info, instrument};
 
+use crate::legacy::authority_state::AuthorityState;
 use mysten_metrics::spawn_monitored_task;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics};
 use sui_json_rpc_types::{DelegatedStake, Stake, StakeStatus};
 use sui_json_rpc_types::{SuiCommittee, ValidatorApy, ValidatorApys};

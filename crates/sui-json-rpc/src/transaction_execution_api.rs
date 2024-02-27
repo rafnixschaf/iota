@@ -13,11 +13,10 @@ use fastcrypto::traits::ToFromBytes;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 
+use crate::legacy::authority_state::AuthorityState;
+use crate::legacy::transaction_orchestrator::TransactiondOrchestrator;
 use mysten_metrics::spawn_monitored_task;
 use shared_crypto::intent::{AppId, Intent, IntentMessage, IntentScope, IntentVersion};
-use sui_core::authority::AuthorityState;
-use sui_core::authority_client::NetworkAuthorityClient;
-use sui_core::transaction_orchestrator::TransactiondOrchestrator;
 use sui_json_rpc_api::{JsonRpcMetrics, WriteApiOpenRpc, WriteApiServer};
 use sui_json_rpc_types::{
     DevInspectArgs, DevInspectResults, DryRunTransactionBlockResponse, SuiTransactionBlock,
@@ -47,14 +46,14 @@ use crate::{
 
 pub struct TransactionExecutionApi {
     state: Arc<dyn StateRead>,
-    transaction_orchestrator: Arc<TransactiondOrchestrator<NetworkAuthorityClient>>,
+    transaction_orchestrator: Arc<TransactiondOrchestrator>,
     metrics: Arc<JsonRpcMetrics>,
 }
 
 impl TransactionExecutionApi {
     pub fn new(
         state: Arc<AuthorityState>,
-        transaction_orchestrator: Arc<TransactiondOrchestrator<NetworkAuthorityClient>>,
+        transaction_orchestrator: Arc<TransactiondOrchestrator>,
         metrics: Arc<JsonRpcMetrics>,
     ) -> Self {
         Self {

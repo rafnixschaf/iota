@@ -4,6 +4,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::legacy::authority_state::AuthorityState;
+use crate::legacy::transaction_key_value_store::TransactionKeyValueStore;
 use anyhow::bail;
 use async_trait::async_trait;
 use futures::{future, Stream};
@@ -17,7 +19,6 @@ use move_core_types::language_storage::TypeTag;
 use mysten_metrics::spawn_monitored_task;
 use serde::Serialize;
 use std::sync::Arc;
-use sui_core::authority::AuthorityState;
 use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{
     cap_page_limit, validate_limit, IndexerApiOpenRpc, IndexerApiServer, JsonRpcMetrics,
@@ -29,7 +30,6 @@ use sui_json_rpc_types::{
     SuiTransactionBlockResponseQuery, TransactionBlocksPage, TransactionFilter,
 };
 use sui_open_rpc::Module;
-use sui_storage::key_value_store::TransactionKeyValueStore;
 use sui_types::{
     base_types::{ObjectID, SuiAddress},
     digests::TransactionDigest,

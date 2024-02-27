@@ -6,6 +6,7 @@
 
 use crate::authority_state::StateRead;
 use crate::error::{Error, SuiRpcInputError};
+use crate::legacy::authority_state::AuthorityState;
 use crate::{with_tracing, SuiRpcModule};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
@@ -19,7 +20,6 @@ use move_binary_format::{
 use move_core_types::identifier::Identifier;
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{MoveUtilsOpenRpc, MoveUtilsServer};
 use sui_json_rpc_types::{
     MoveFunctionArgType, ObjectValueKind, SuiMoveNormalizedFunction, SuiMoveNormalizedModule,

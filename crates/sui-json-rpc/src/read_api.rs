@@ -20,8 +20,9 @@ use move_core_types::language_storage::StructTag;
 use tap::TapFallible;
 use tracing::{debug, error, info, instrument, trace, warn};
 
+use crate::legacy::authority_state::AuthorityState;
+use crate::legacy::transaction_key_value_store::TransactionKeyValueStore;
 use mysten_metrics::spawn_monitored_task;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{
     validate_limit, JsonRpcMetrics, ReadApiOpenRpc, ReadApiServer, QUERY_MAX_RESULT_LIMIT,
     QUERY_MAX_RESULT_LIMIT_CHECKPOINTS,
@@ -36,7 +37,6 @@ use sui_json_rpc_types::{
 use sui_json_rpc_types::{SuiLoadedChildObject, SuiLoadedChildObjectsResponse};
 use sui_open_rpc::Module;
 use sui_protocol_config::{ProtocolConfig, ProtocolVersion};
-use sui_storage::key_value_store::TransactionKeyValueStore;
 use sui_types::base_types::{ObjectID, SequenceNumber, TransactionDigest};
 use sui_types::collection_types::VecMap;
 use sui_types::crypto::AggregateAuthoritySignature;
