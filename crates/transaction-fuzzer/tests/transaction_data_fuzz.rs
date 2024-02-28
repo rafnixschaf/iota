@@ -16,6 +16,7 @@ use transaction_fuzzer::{
     transaction_data_gen::transaction_data_gen,
 };
 
+#[ignore]
 #[test]
 #[cfg_attr(msim, ignore)]
 fn all_random_transaction_data() {

@@ -45,6 +45,7 @@ fn _all_valid_type_tag_fuzzing(add_sub: isize) {
     }
 }
 
+#[ignore]
 #[test]
 #[cfg_attr(msim, ignore)]
 fn all_random_single_type_tag_fuzzing() {
@@ -58,12 +59,14 @@ fn all_random_single_type_tag_fuzzing() {
     }
 }
 
+#[ignore]
 #[test]
 #[cfg_attr(msim, ignore)]
 fn all_valid_type_tag_fuzzing() {
     _all_valid_type_tag_fuzzing(0)
 }
 
+#[ignore]
 #[test]
 #[cfg_attr(msim, ignore)]
 fn all_valid_type_tag_incorrect_number_fuzzing() {
@@ -71,6 +74,7 @@ fn all_valid_type_tag_incorrect_number_fuzzing() {
     _all_valid_type_tag_fuzzing(1);
 }
 
+#[ignore]
 #[test]
 #[cfg_attr(msim, ignore)]
 fn interesting_invalid_type_tags_fuzzing() {

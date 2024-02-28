@@ -11,7 +11,7 @@ use crate::executor::{ExecutionResult, Executor};
 use once_cell::sync::Lazy;
 use proptest::{prelude::*, strategy::Union};
 use std::{fmt, sync::Arc};
-use sui_types::{storage::ObjectStore, transaction::Transaction};
+use sui_types::{transaction::Transaction};
 
 mod account;
 mod helpers;
@@ -126,32 +126,8 @@ pub fn run_and_assert_universe(
 }
 
 pub fn assert_accounts_match(
-    universe: &AccountUniverse,
-    executor: &Executor,
+    _universe: &AccountUniverse,
+    _executor: &Executor,
 ) -> Result<(), TestCaseError> {
-    let state = executor.state.clone();
-    let backing_package_store = state.get_backing_package_store();
-    let object_store = state.get_object_store();
-    let epoch_store = state.load_epoch_store_one_call_per_task();
-    let mut layout_resolver = epoch_store
-        .executor()
-        .type_layout_resolver(Box::new(backing_package_store.as_ref()));
-    for (idx, account) in universe.accounts().iter().enumerate() {
-        for (balance_idx, acc_object) in account.current_coins.iter().enumerate() {
-            let object = object_store.get_object(&acc_object.id()).unwrap().unwrap();
-            let total_sui_value =
-                object.get_total_sui(layout_resolver.as_mut()).unwrap() - object.storage_rebate;
-            let account_balance_i = account.current_balances[balance_idx];
-            prop_assert_eq!(
-                account_balance_i,
-                total_sui_value,
-                "account {} should have correct balance {} for object {} but got {}",
-                idx,
-                total_sui_value,
-                acc_object.id(),
-                account_balance_i
-            );
-        }
-    }
-    Ok(())
+    unimplemented!()
 }

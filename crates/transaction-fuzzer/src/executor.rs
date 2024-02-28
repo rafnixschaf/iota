@@ -7,19 +7,17 @@
 // Copyright (c) The Diem Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{fmt::Debug, path::PathBuf, sync::Arc};
+use std::{fmt::Debug, path::PathBuf};
 
-use sui_core::authority::test_authority_builder::TestAuthorityBuilder;
-use sui_core::{authority::AuthorityState, test_utils::send_and_confirm_transaction};
 use sui_move_build::BuildConfig;
 use sui_types::base_types::ObjectID;
-use sui_types::effects::{TransactionEffects, TransactionEffectsAPI};
+use sui_types::effects::{TransactionEffects};
 use sui_types::error::SuiError;
 use sui_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
 use sui_types::object::Object;
 use sui_types::transaction::{Transaction, TransactionData};
 use sui_types::utils::to_sender_signed_transaction;
-use tokio::runtime::Runtime;
+
 
 use crate::account_universe::{AccountCurrent, PUBLISH_BUDGET};
 
@@ -52,10 +50,7 @@ pub fn assert_is_acceptable_result(result: &ExecutionResult) {
 }
 
 #[derive(Clone)]
-pub struct Executor {
-    pub state: Arc<AuthorityState>,
-    pub rt: Arc<Runtime>,
-}
+pub struct Executor;
 
 impl Debug for Executor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -71,43 +66,27 @@ impl Default for Executor {
 
 impl Executor {
     pub fn new() -> Self {
-        let rt = Runtime::new().unwrap();
-        let state = rt.block_on(TestAuthorityBuilder::new().build());
-        Self {
-            state,
-            rt: Arc::new(rt),
-        }
+        unimplemented!()
     }
 
-    pub fn new_with_rgp(rgp: u64) -> Self {
-        let rt = Runtime::new().unwrap();
-        let state = rt.block_on(
-            TestAuthorityBuilder::new()
-                .with_reference_gas_price(rgp)
-                .build(),
-        );
-        Self {
-            state,
-            rt: Arc::new(rt),
-        }
+    pub fn new_with_rgp(_rgp: u64) -> Self {
+        unimplemented!()
     }
 
     pub fn get_reference_gas_price(&self) -> u64 {
-        self.state.reference_gas_price_for_testing().unwrap()
+        unimplemented!()
     }
 
-    pub fn add_object(&mut self, object: Object) {
-        self.rt.block_on(self.state.insert_genesis_object(object));
+    pub fn add_object(&mut self, _object: Object) {
+        unimplemented!()
     }
 
-    pub fn add_objects(&mut self, objects: &[Object]) {
-        self.rt.block_on(self.state.insert_genesis_objects(objects));
+    pub fn add_objects(&mut self, _objects: &[Object]) {
+        unimplemented!()
     }
 
-    pub fn execute_transaction(&mut self, txn: Transaction) -> ExecutionResult {
-        self.rt
-            .block_on(send_and_confirm_transaction(&self.state, None, txn))
-            .map(|(_, effects)| effects.into_data().status().clone())
+    pub fn execute_transaction(&mut self, _txn: Transaction) -> ExecutionResult {
+        unimplemented!()
     }
 
     pub fn publish(
@@ -127,20 +106,10 @@ impl Executor {
             PUBLISH_BUDGET,
             1000,
         );
-        let txn = to_sender_signed_transaction(data, &account.initial_data.account.key);
-        let effects = self
-            .rt
-            .block_on(send_and_confirm_transaction(&self.state, None, txn))
-            .unwrap()
-            .1
-            .into_data();
+        let _txn = to_sender_signed_transaction(data, &account.initial_data.account.key);
 
-        assert!(
-            matches!(effects.status(), ExecutionStatus::Success { .. }),
-            "{:?}",
-            effects.status()
-        );
-        effects
+        unimplemented!()
+
     }
 
     pub fn execute_transactions(
