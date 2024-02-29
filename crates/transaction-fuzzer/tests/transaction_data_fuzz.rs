@@ -18,7 +18,6 @@ use transaction_fuzzer::{
 
 #[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn all_random_transaction_data() {
     let mut exec = Executor::new();
     let account = AccountCurrent::new(AccountData::new_random());

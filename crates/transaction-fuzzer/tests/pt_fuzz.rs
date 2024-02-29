@@ -23,7 +23,6 @@ use sui_types::{MOVE_STDLIB_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID};
 
 #[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn invalid_pt_fuzz() {
     let mut exec = Executor::new();
     let mut runner = proptest::test_runner::TestRunner::deterministic();
@@ -94,7 +93,6 @@ pub fn run_pt_success(
 
 #[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn pt_fuzz_input_match() {
     let mut exec = Executor::new();
     let mut runner = proptest::test_runner::TestRunner::deterministic();
