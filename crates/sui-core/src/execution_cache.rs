@@ -20,7 +20,7 @@ use sui_types::{
 };
 use tracing::instrument;
 
-use crate::object_lock_status::SuiLockResult;
+use crate::object_lock::SuiLockResult;
 
 pub trait ExecutionCacheRead: Send + Sync {
     fn get_package_object(&self, id: &ObjectID) -> SuiResult<Option<PackageObject>>;

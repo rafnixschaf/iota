@@ -11484,6 +11484,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "sui-core"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "futures",
+ "move-core-types",
+ "mysten-metrics",
+ "parking_lot 0.12.1",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "sui-json-rpc-types",
+ "sui-types",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+]
+
+[[package]]
 name = "sui-cost"
 version = "0.1.0"
 dependencies = [
@@ -11868,12 +11887,12 @@ dependencies = [
  "move-package",
  "mysten-metrics",
  "once_cell",
- "parking_lot 0.12.1",
  "prometheus",
  "serde",
  "serde_json",
  "shared-crypto",
  "signature 1.6.4",
+ "sui-core",
  "sui-json",
  "sui-json-rpc-api",
  "sui-json-rpc-types",
@@ -11886,7 +11905,6 @@ dependencies = [
  "telemetry-subscribers",
  "thiserror",
  "tokio",
- "tokio-stream",
  "tower",
  "tower-http",
  "tracing",

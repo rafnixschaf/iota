@@ -71,6 +71,7 @@ members = [
   "crates/shared-crypto",
   "crates/sui",
   "crates/sui-adapter-transactional-tests",
+  "crates/sui-core",
   "crates/sui-cost",
   "crates/sui-enum-compat-util",
   "crates/sui-faucet",
@@ -499,6 +500,7 @@ anemo-tower = { git = "https://github.com/mystenlabs/anemo.git", rev = "26d415eb
 mysten-metrics = { path = "crates/mysten-metrics" }
 prometheus-closure-metric = { path = "crates/prometheus-closure-metric" }
 shared-crypto = { path = "crates/shared-crypto" }
+sui-core = { path = "crates/sui-core" }
 sui = { path = "crates/sui" }
 sui-adapter-transactional-tests = { path = "crates/sui-adapter-transactional-tests" }
 sui-cost = { path = "crates/sui-cost" }
