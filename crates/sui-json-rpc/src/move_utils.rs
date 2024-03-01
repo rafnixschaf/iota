@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::error::{Error, SuiRpcInputError};
+use crate::state::StateRead;
 use crate::{with_tracing, SuiRpcModule};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
@@ -27,11 +28,14 @@ use sui_open_rpc::Module;
 use sui_types::base_types::ObjectID;
 use sui_types::move_package::normalize_modules;
 use sui_types::object::{Data, ObjectRead};
-use tracing::{error, instrument};
+use tap::TapFallible;
+use tracing::{error, instrument, warn};
 
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait MoveUtilsInternalTrait {
+    fn get_state(&self) -> &dyn StateRead;
+
     async fn get_move_module(
         &self,
         package: ObjectID,
@@ -46,39 +50,76 @@ pub trait MoveUtilsInternalTrait {
     fn get_object_read(&self, package: ObjectID) -> Result<ObjectRead, Error>;
 }
 
-pub struct MoveUtilsInternal {}
-
-impl MoveUtilsInternal {
-    pub fn new() -> Self {
-        Self {}
-    }
+pub struct MoveUtilsInternal {
+    state: Arc<dyn StateRead>,
 }
 
-impl Default for MoveUtilsInternal {
-    fn default() -> Self {
-        Self::new()
+impl MoveUtilsInternal {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
+        Self { state }
     }
 }
 
 #[async_trait]
 impl MoveUtilsInternalTrait for MoveUtilsInternal {
+    fn get_state(&self) -> &dyn StateRead {
+        Arc::as_ref(&self.state)
+    }
+
     async fn get_move_module(
         &self,
-        _package: ObjectID,
-        _module_name: String,
+        package: ObjectID,
+        module_name: String,
     ) -> Result<NormalizedModule, Error> {
-        unimplemented!()
+        let normalized = self.get_move_modules_by_package(package).await?;
+        Ok(match normalized.get(&module_name) {
+            Some(module) => Ok(module.clone()),
+            None => Err(SuiRpcInputError::GenericNotFound(format!(
+                "No module found with module name {}",
+                module_name
+            ))),
+        }?)
     }
 
     async fn get_move_modules_by_package(
         &self,
-        _package: ObjectID,
+        package: ObjectID,
     ) -> Result<BTreeMap<String, NormalizedModule>, Error> {
-        unimplemented!()
+        let object_read = self.get_state().get_object_read(&package).tap_err(|_| {
+            warn!("Failed to call get_move_modules_by_package for package: {package:?}");
+        })?;
+
+        match object_read {
+            ObjectRead::Exists(_obj_ref, object, _layout) => {
+                match object.into_inner().data {
+                    Data::Package(p) => {
+                        // we are on the read path - it's OK to use VERSION_MAX of the supported Move
+                        // binary format
+                        normalize_modules(
+                        p.serialized_module_map().values(),
+                        /* max_binary_format_version */ VERSION_MAX,
+                        /* no_extraneous_module_bytes */ false,
+                    )
+                    .map_err(|e| {
+                        error!("Failed to call get_move_modules_by_package for package: {package:?}");
+                        Error::from(e)
+                    })
+                    }
+                    _ => Err(SuiRpcInputError::GenericInvalid(format!(
+                        "Object is not a package with ID {}",
+                        package
+                    )))?,
+                }
+            }
+            _ => Err(SuiRpcInputError::GenericNotFound(format!(
+                "Package object does not exist with ID {}",
+                package
+            )))?,
+        }
     }
 
-    fn get_object_read(&self, _package: ObjectID) -> Result<ObjectRead, Error> {
-        unimplemented!()
+    fn get_object_read(&self, package: ObjectID) -> Result<ObjectRead, Error> {
+        self.state.get_object_read(&package).map_err(Error::from)
     }
 }
 
@@ -87,17 +128,11 @@ pub struct MoveUtils {
 }
 
 impl MoveUtils {
-    pub fn new() -> Self {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
         Self {
-            internal: Arc::new(MoveUtilsInternal::new())
+            internal: Arc::new(MoveUtilsInternal::new(state))
                 as Arc<dyn MoveUtilsInternalTrait + Send + Sync>,
         }
-    }
-}
-
-impl Default for MoveUtils {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

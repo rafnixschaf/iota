@@ -18,6 +18,7 @@ use thiserror::Error;
 use tokio::task::JoinError;
 
 use crate::name_service::NameServiceError;
+use crate::state::StateReadError;
 
 pub type RpcInterimResult<T = ()> = Result<T, Error>;
 
@@ -60,6 +61,10 @@ pub enum Error {
 
     #[error(transparent)]
     SuiRpcInputError(#[from] SuiRpcInputError),
+
+    // TODO(wlmyng): convert StateReadError::Internal message to generic internal error message.
+    #[error(transparent)]
+    StateReadError(#[from] StateReadError),
 
     #[error("Unsupported Feature: {0}")]
     UnsupportedFeature(String),
@@ -116,6 +121,17 @@ impl From<Error> for RpcError {
                     RpcError::Call(CallError::InvalidParams(sui_error.into()))
                 }
                 _ => RpcError::Call(CallError::Failed(sui_error.into())),
+            },
+            Error::StateReadError(err) => match err {
+                StateReadError::Client(_) => RpcError::Call(CallError::InvalidParams(err.into())),
+                _ => {
+                    let error_object = ErrorObject::owned(
+                        jsonrpsee::types::error::INTERNAL_ERROR_CODE,
+                        err.to_string(),
+                        None::<()>,
+                    );
+                    RpcError::Call(CallError::Custom(error_object))
+                }
             },
             Error::QuorumDriverError(err) => {
                 match err {

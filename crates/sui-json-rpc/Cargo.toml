@@ -20,6 +20,7 @@ move-binary-format.workspace = true
 move-core-types.workspace = true
 move-package.workspace = true
 move-bytecode-utils.workspace = true
+parking_lot.workspace = true
 prometheus.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
@@ -27,6 +28,7 @@ async-trait.workspace = true
 serde.workspace = true
 futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
+tokio-stream.workspace = true
 signature.workspace = true
 thiserror.workspace = true
 bcs.workspace = true

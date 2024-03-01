@@ -10,33 +10,73 @@ use async_trait::async_trait;
 use fastcrypto::encoding::Base64;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
+use move_core_types::language_storage::StructTag;
 
 use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{TransactionBuilderOpenRpc, TransactionBuilderServer};
-use sui_json_rpc_types::RPCTransactionRequestParams;
-use sui_json_rpc_types::{SuiTransactionBlockBuilderMode, SuiTypeTag, TransactionBlockBytes};
+use sui_json_rpc_types::{RPCTransactionRequestParams, SuiObjectDataFilter};
+use sui_json_rpc_types::{
+    SuiObjectDataOptions, SuiObjectResponse, SuiTransactionBlockBuilderMode, SuiTypeTag,
+    TransactionBlockBytes,
+};
 use sui_open_rpc::Module;
-use sui_transaction_builder::DataReader;
+use sui_transaction_builder::{DataReader, TransactionBuilder};
+use sui_types::base_types::ObjectInfo;
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::sui_serde::BigInt;
 
+use crate::state::StateRead;
 use crate::SuiRpcModule;
 
-pub struct TransactionBuilderApi();
+pub struct TransactionBuilderApi(TransactionBuilder);
 
 impl TransactionBuilderApi {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
+        let reader = Arc::new(AuthorityStateDataReader::new(state));
+        Self(TransactionBuilder::new(reader))
     }
 
-    pub fn new_with_data_reader(_data_reader: Arc<dyn DataReader + Sync + Send>) -> Self {
-        Self {}
+    pub fn new_with_data_reader(data_reader: Arc<dyn DataReader + Sync + Send>) -> Self {
+        Self(TransactionBuilder::new(data_reader))
     }
 }
 
-impl Default for TransactionBuilderApi {
-    fn default() -> Self {
-        Self::new()
+pub struct AuthorityStateDataReader(Arc<dyn StateRead>);
+
+impl AuthorityStateDataReader {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
+        Self(state)
+    }
+}
+
+#[async_trait]
+impl DataReader for AuthorityStateDataReader {
+    async fn get_owned_objects(
+        &self,
+        address: SuiAddress,
+        object_type: StructTag,
+    ) -> Result<Vec<ObjectInfo>, anyhow::Error> {
+        Ok(self
+            .0
+            // DataReader is used internally, don't need a limit
+            .get_owner_objects(
+                address,
+                None,
+                Some(SuiObjectDataFilter::StructType(object_type)),
+            )?)
+    }
+
+    async fn get_object_with_options(
+        &self,
+        object_id: ObjectID,
+        options: SuiObjectDataOptions,
+    ) -> Result<SuiObjectResponse, anyhow::Error> {
+        let result = self.0.get_object_read(&object_id)?;
+        Ok((result, options).try_into()?)
+    }
+
+    async fn get_reference_gas_price(&self) -> Result<u64, anyhow::Error> {
+        unimplemented!()
     }
 }
 
@@ -44,149 +84,235 @@ impl Default for TransactionBuilderApi {
 impl TransactionBuilderServer for TransactionBuilderApi {
     async fn transfer_object(
         &self,
-        _signer: SuiAddress,
-        _object_id: ObjectID,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
-        _recipient: SuiAddress,
+        signer: SuiAddress,
+        object_id: ObjectID,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
+        recipient: SuiAddress,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .transfer_object(signer, object_id, gas, *gas_budget, recipient)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn transfer_sui(
         &self,
-        _signer: SuiAddress,
-        _sui_object_id: ObjectID,
-        _gas_budget: BigInt<u64>,
-        _recipient: SuiAddress,
-        _amount: Option<BigInt<u64>>,
+        signer: SuiAddress,
+        sui_object_id: ObjectID,
+        gas_budget: BigInt<u64>,
+        recipient: SuiAddress,
+        amount: Option<BigInt<u64>>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .transfer_sui(
+                signer,
+                sui_object_id,
+                *gas_budget,
+                recipient,
+                amount.map(|a| *a),
+            )
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn pay(
         &self,
-        _signer: SuiAddress,
-        _input_coins: Vec<ObjectID>,
-        _recipients: Vec<SuiAddress>,
-        _amounts: Vec<BigInt<u64>>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        input_coins: Vec<ObjectID>,
+        recipients: Vec<SuiAddress>,
+        amounts: Vec<BigInt<u64>>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .pay(
+                signer,
+                input_coins,
+                recipients,
+                amounts.into_iter().map(|a| *a).collect(),
+                gas,
+                *gas_budget,
+            )
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn pay_sui(
         &self,
-        _signer: SuiAddress,
-        _input_coins: Vec<ObjectID>,
-        _recipients: Vec<SuiAddress>,
-        _amounts: Vec<BigInt<u64>>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        input_coins: Vec<ObjectID>,
+        recipients: Vec<SuiAddress>,
+        amounts: Vec<BigInt<u64>>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .pay_sui(
+                signer,
+                input_coins,
+                recipients,
+                amounts.into_iter().map(|a| *a).collect(),
+                *gas_budget,
+            )
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn pay_all_sui(
         &self,
-        _signer: SuiAddress,
-        _input_coins: Vec<ObjectID>,
-        _recipient: SuiAddress,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        input_coins: Vec<ObjectID>,
+        recipient: SuiAddress,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .pay_all_sui(signer, input_coins, recipient, *gas_budget)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn publish(
         &self,
-        _sender: SuiAddress,
-        _compiled_modules: Vec<Base64>,
-        _dependencies: Vec<ObjectID>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        sender: SuiAddress,
+        compiled_modules: Vec<Base64>,
+        dependencies: Vec<ObjectID>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let compiled_modules = compiled_modules
+            .into_iter()
+            .map(|data| data.to_vec().map_err(|e| anyhow::anyhow!(e)))
+            .collect::<Result<Vec<_>, _>>()?;
+        let data = self
+            .0
+            .publish(sender, compiled_modules, dependencies, gas, *gas_budget)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn split_coin(
         &self,
-        _signer: SuiAddress,
-        _coin_object_id: ObjectID,
-        _split_amounts: Vec<BigInt<u64>>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        coin_object_id: ObjectID,
+        split_amounts: Vec<BigInt<u64>>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let split_amounts = split_amounts.into_iter().map(|a| *a).collect();
+        let data = self
+            .0
+            .split_coin(signer, coin_object_id, split_amounts, gas, *gas_budget)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn split_coin_equal(
         &self,
-        _signer: SuiAddress,
-        _coin_object_id: ObjectID,
-        _split_count: BigInt<u64>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        coin_object_id: ObjectID,
+        split_count: BigInt<u64>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .split_coin_equal(signer, coin_object_id, *split_count, gas, *gas_budget)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn merge_coin(
         &self,
-        _signer: SuiAddress,
-        _primary_coin: ObjectID,
-        _coin_to_merge: ObjectID,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        primary_coin: ObjectID,
+        coin_to_merge: ObjectID,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let data = self
+            .0
+            .merge_coins(signer, primary_coin, coin_to_merge, gas, *gas_budget)
+            .await?;
+        Ok(TransactionBlockBytes::from_data(data)?)
     }
 
     async fn move_call(
         &self,
-        _signer: SuiAddress,
-        _package_object_id: ObjectID,
-        _module: String,
-        _function: String,
-        _type_arguments: Vec<SuiTypeTag>,
-        _rpc_arguments: Vec<SuiJsonValue>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        package_object_id: ObjectID,
+        module: String,
+        function: String,
+        type_arguments: Vec<SuiTypeTag>,
+        rpc_arguments: Vec<SuiJsonValue>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
         _txn_builder_mode: Option<SuiTransactionBlockBuilderMode>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .move_call(
+                    signer,
+                    package_object_id,
+                    &module,
+                    &function,
+                    type_arguments,
+                    rpc_arguments,
+                    gas,
+                    *gas_budget,
+                )
+                .await?,
+        )?)
     }
 
     async fn batch_transaction(
         &self,
-        _signer: SuiAddress,
-        _params: Vec<RPCTransactionRequestParams>,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        params: Vec<RPCTransactionRequestParams>,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
         _txn_builder_mode: Option<SuiTransactionBlockBuilderMode>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .batch_transaction(signer, params, gas, *gas_budget)
+                .await?,
+        )?)
     }
 
     async fn request_add_stake(
         &self,
-        _signer: SuiAddress,
-        _coins: Vec<ObjectID>,
-        _amount: Option<BigInt<u64>>,
-        _validator: SuiAddress,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        coins: Vec<ObjectID>,
+        amount: Option<BigInt<u64>>,
+        validator: SuiAddress,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        let amount = amount.map(|a| *a);
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .request_add_stake(signer, coins, amount, validator, gas, *gas_budget)
+                .await?,
+        )?)
     }
 
     async fn request_withdraw_stake(
         &self,
-        _signer: SuiAddress,
-        _staked_sui: ObjectID,
-        _gas: Option<ObjectID>,
-        _gas_budget: BigInt<u64>,
+        signer: SuiAddress,
+        staked_sui: ObjectID,
+        gas: Option<ObjectID>,
+        gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        unimplemented!()
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .request_withdraw_stake(signer, staked_sui, gas, *gas_budget)
+                .await?,
+        )?)
     }
 }
 
