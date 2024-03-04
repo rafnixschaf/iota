@@ -4,6 +4,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! `sui_replay` exposes the functionality to create state sandboxes by
+//! replaying a single or multiple transactions. These can be used for inspection
+//! of the transaction effects, and furthermore for testing.
+//!
+//! It requires that, for any executed transaction, all touched objects should be available in
+//! storage at the version before the execution of the transaction.
+//!
+//! The library supports fuzzing the resulting sandbox state, according to the following scheme:
+//!
+//! Step 1: Get a transaction T from the network
+//! Step 2: Create the sandbox and verify the TX does not fork locally
+//! Step 3: Create desired mutations of T in set S
+//! Step 4: For each mutation in S, replay the transaction with the sandbox state from T
+//!         and verify no panic or invariant violation
+
 use async_recursion::async_recursion;
 use clap::Parser;
 use config::ReplayableNetworkConfigSet;
