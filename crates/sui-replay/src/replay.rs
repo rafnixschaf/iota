@@ -19,25 +19,13 @@ use move_core_types::{
     language_storage::{ModuleId, StructTag},
     resolver::{ModuleResolver, ResourceResolver},
 };
-use prometheus::Registry;
 use serde::{Deserialize, Serialize};
-use shared_crypto::intent::Intent;
 use similar::{ChangeTag, TextDiff};
 use std::{
     collections::{BTreeMap, HashSet},
     path::PathBuf,
     sync::Arc,
     sync::Mutex,
-};
-use sui_core::{
-    authority::{
-        authority_per_epoch_store::AuthorityPerEpochStore,
-        epoch_start_configuration::EpochStartConfiguration,
-        test_authority_builder::TestAuthorityBuilder, AuthorityState, NodeStateDump,
-    },
-    epoch::epoch_metrics::EpochMetrics,
-    module_cache_metrics::ResolverMetrics,
-    signature_verifier::SignatureVerifierMetrics,
 };
 use sui_execution::Executor;
 use sui_framework::BuiltInFramework;
@@ -49,20 +37,17 @@ use sui_types::transaction::TransactionKind::ProgrammableTransaction;
 use sui_types::{
     base_types::{ObjectID, ObjectRef, SequenceNumber, SuiAddress, VersionNumber},
     committee::EpochId,
-    digests::{ChainIdentifier, CheckpointDigest, ObjectDigest, TransactionDigest},
+    digests::{ObjectDigest, TransactionDigest},
     error::{ExecutionError, SuiError, SuiResult},
-    executable_transaction::VerifiedExecutableTransaction,
     gas::SuiGasStatus,
     inner_temporary_store::InnerTemporaryStore,
     metrics::LimitsMetrics,
     object::{Data, Object, Owner},
     storage::get_module_by_id,
     storage::{BackingPackageStore, ChildObjectResolver, ObjectStore, ParentSync},
-    sui_system_state::epoch_start_sui_system_state::EpochStartSystemState,
     transaction::{
-        CertifiedTransaction, CheckedInputObjects, InputObjectKind, InputObjects, ObjectReadResult,
-        ObjectReadResultKind, SenderSignedData, Transaction, TransactionData, TransactionDataAPI,
-        TransactionKind, VerifiedCertificate, VerifiedTransaction,
+        CheckedInputObjects, InputObjectKind, InputObjects, ObjectReadResult, ObjectReadResultKind,
+        SenderSignedData, TransactionData, TransactionDataAPI, TransactionKind,
     },
     DEEPBOOK_PACKAGE_ID,
 };
@@ -757,125 +742,11 @@ impl LocalExec {
     /// If no transaction is provided, the transaction in the sandbox state is used
     /// Currently if the transaction is provided, the signing will fail, so this feature is TBD
     pub async fn certificate_execute_with_sandbox_state(
-        pre_run_sandbox: &ExecutionSandboxState,
-        override_transaction_data: Option<TransactionData>,
-        pre_exec_diag: &DiagInfo,
+        _pre_run_sandbox: &ExecutionSandboxState,
+        _override_transaction_data: Option<TransactionData>,
+        _pre_exec_diag: &DiagInfo,
     ) -> Result<ExecutionSandboxState, ReplayEngineError> {
-        assert!(
-            override_transaction_data.is_none(),
-            "Custom transaction data is not supported yet"
-        );
-
-        // These cannot be changed and are inherited from the sandbox state
-        let executed_epoch = pre_run_sandbox.transaction_info.executed_epoch;
-        let reference_gas_price = pre_run_sandbox.transaction_info.reference_gas_price;
-        let epoch_start_timestamp = pre_run_sandbox.transaction_info.epoch_start_timestamp;
-        let protocol_config = ProtocolConfig::get_for_version(
-            pre_run_sandbox.transaction_info.protocol_version,
-            pre_run_sandbox.transaction_info.chain,
-        );
-        let required_objects = pre_run_sandbox.required_objects.clone();
-        let shared_object_refs = pre_run_sandbox.transaction_info.shared_object_refs.clone();
-
-        assert_eq!(
-            pre_run_sandbox
-                .transaction_info
-                .sender_signed_data
-                .intent_message()
-                .intent,
-            Intent::sui_transaction()
-        );
-        let transaction_signatures = pre_run_sandbox
-            .transaction_info
-            .sender_signed_data
-            .tx_signatures()
-            .to_vec();
-
-        // This must be provided
-        let transaction_data = override_transaction_data.unwrap_or(
-            pre_run_sandbox
-                .transaction_info
-                .sender_signed_data
-                .transaction_data()
-                .clone(),
-        );
-
-        // Begin state prep
-        let (authority_state, epoch_store) = prep_network(
-            &required_objects,
-            reference_gas_price,
-            executed_epoch,
-            epoch_start_timestamp,
-            &protocol_config,
-        )
-        .await;
-
-        let sender_signed_tx =
-            Transaction::from_generic_sig_data(transaction_data, transaction_signatures);
-        let sender_signed_tx = VerifiedTransaction::new_unchecked(
-            VerifiedTransaction::new_unchecked(sender_signed_tx).into(),
-        );
-
-        let response = authority_state
-            .handle_transaction(&epoch_store, sender_signed_tx.clone())
-            .await?;
-
-        let auth_vote = response.status.into_signed_for_testing();
-
-        let mut committee = authority_state.clone_committee_for_testing();
-        committee.epoch = executed_epoch;
-        let certificate = CertifiedTransaction::new(
-            sender_signed_tx.clone().into_message(),
-            vec![auth_vote.clone()],
-            &committee,
-        )
-        .unwrap();
-
-        certificate.verify_committee_sigs_only(&committee).unwrap();
-
-        let certificate = &VerifiedExecutableTransaction::new_from_certificate(
-            VerifiedCertificate::new_unchecked(certificate.clone()),
-        );
-
-        let new_tx_digest = certificate.digest();
-
-        epoch_store
-            .set_shared_object_versions_for_testing(
-                new_tx_digest,
-                &shared_object_refs
-                    .iter()
-                    .map(|(id, version, _)| (*id, *version))
-                    .collect::<Vec<_>>(),
-            )
-            .unwrap();
-
-        // hack to simulate an epoch change just for this transaction
-        {
-            let mut execution_lock = authority_state.execution_lock_for_reconfiguration().await;
-            *execution_lock = executed_epoch;
-            drop(execution_lock);
-        }
-
-        let res = authority_state
-            .try_execute_immediately(certificate, None, &epoch_store)
-            .await
-            .map_err(ReplayEngineError::from)?;
-
-        let exec_res = match res.1 {
-            Some(q) => Err(q),
-            None => Ok(()),
-        };
-        let effects =
-            SuiTransactionBlockEffects::try_from(res.0).map_err(ReplayEngineError::from)?;
-
-        Ok(ExecutionSandboxState {
-            transaction_info: pre_run_sandbox.transaction_info.clone(),
-            required_objects,
-            local_exec_temporary_store: None, // We dont capture it for cert exec run
-            local_exec_effects: effects,
-            local_exec_status: Some(exec_res),
-            pre_exec_diag: pre_exec_diag.clone(),
-        })
+        unimplemented!()
     }
 
     /// Must be called after `init_for_execution`
@@ -979,14 +850,6 @@ impl LocalExec {
                 })?
                 .clone()
                 .into_iter()
-                .collect()),
-
-            Fetchers::NodeStateDump(d) => Ok(d
-                .node_state_dump
-                .relevant_system_packages
-                .iter()
-                .map(|w| w.compute_object_reference())
-                .map(|q| (q.0, q.1))
                 .collect()),
         }
     }
@@ -1891,95 +1754,4 @@ pub fn get_executor(
     let silent = true;
     sui_execution::executor(&protocol_config, silent, enable_profiler)
         .expect("Creating an executor should not fail here")
-}
-
-async fn prep_network(
-    objects: &[Object],
-    reference_gas_price: u64,
-    executed_epoch: u64,
-    epoch_start_timestamp: u64,
-    protocol_config: &ProtocolConfig,
-) -> (Arc<AuthorityState>, Arc<AuthorityPerEpochStore>) {
-    let authority_state = authority_state(protocol_config, objects, reference_gas_price).await;
-    let epoch_store = create_epoch_store(
-        &authority_state,
-        reference_gas_price,
-        executed_epoch,
-        epoch_start_timestamp,
-        protocol_config.version.as_u64(),
-    )
-    .await;
-
-    (authority_state, epoch_store)
-}
-
-async fn authority_state(
-    protocol_config: &ProtocolConfig,
-    objects: &[Object],
-    reference_gas_price: u64,
-) -> Arc<AuthorityState> {
-    // Initiaize some network
-    TestAuthorityBuilder::new()
-        .with_protocol_config(protocol_config.clone())
-        .with_reference_gas_price(reference_gas_price)
-        .with_starting_objects(objects)
-        .build()
-        .await
-}
-
-async fn create_epoch_store(
-    authority_state: &Arc<AuthorityState>,
-    reference_gas_price: u64,
-    executed_epoch: u64,
-    epoch_start_timestamp: u64,
-    protocol_version: u64,
-) -> Arc<AuthorityPerEpochStore> {
-    let sys_state = EpochStartSystemState::new_v1(
-        executed_epoch,
-        protocol_version,
-        reference_gas_price,
-        false,
-        epoch_start_timestamp,
-        ONE_DAY_MS,
-        vec![], // TODO: add validators
-    );
-
-    let path = {
-        let dir = std::env::temp_dir();
-        let store_base_path = dir.join(format!("DB_{:?}", ObjectID::random()));
-        std::fs::create_dir(&store_base_path).unwrap();
-        store_base_path
-    };
-
-    let epoch_start_config = EpochStartConfiguration::new(
-        sys_state,
-        CheckpointDigest::random(),
-        &authority_state.get_object_store(),
-    )
-    .unwrap();
-
-    let registry = Registry::new();
-    let cache_metrics = Arc::new(ResolverMetrics::new(&registry));
-    let signature_verifier_metrics = SignatureVerifierMetrics::new(&registry);
-    let mut committee = authority_state.committee_store().get_latest_committee();
-
-    // Overwrite the epoch so it matches this TXs
-    committee.epoch = executed_epoch;
-
-    let name = committee.names().next().unwrap();
-    AuthorityPerEpochStore::new(
-        *name,
-        Arc::new(committee.clone()),
-        &path,
-        None,
-        EpochMetrics::new(&registry),
-        epoch_start_config,
-        authority_state.get_execution_cache(),
-        cache_metrics,
-        signature_verifier_metrics,
-        &ExpensiveSafetyCheckConfig::default(),
-        // TODO(william) use correct chain ID and generally make replayer
-        // work with chain specific configs
-        ChainIdentifier::from(CheckpointDigest::random()),
-    )
 }

@@ -12,7 +12,6 @@ use fuzz::ReplayFuzzerConfig;
 use fuzz_mutations::base_fuzzers;
 use sui_types::digests::get_mainnet_chain_identifier;
 use sui_types::digests::get_testnet_chain_identifier;
-use sui_types::message_envelope::Message;
 use tracing::warn;
 use transaction_provider::{FuzzStartPoint, TransactionSource};
 
