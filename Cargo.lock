@@ -12455,6 +12455,7 @@ version = "0.1.0"
 dependencies = [
  "fastcrypto-zkp",
  "once_cell",
+ "serde",
  "sui-execution",
  "sui-macros",
  "sui-protocol-config",
