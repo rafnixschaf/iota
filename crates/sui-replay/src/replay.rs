@@ -29,7 +29,6 @@ use std::{
     sync::Arc,
     sync::Mutex,
 };
-use sui_config::node::ExpensiveSafetyCheckConfig;
 use sui_core::{
     authority::{
         authority_per_epoch_store::AuthorityPerEpochStore,
@@ -320,8 +319,6 @@ impl LocalExec {
         rpc_url: Option<String>,
         path: Option<String>,
         tx_digest: TransactionDigest,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-        use_authority: bool,
         executor_version: Option<i64>,
         protocol_version: Option<i64>,
         enable_profiler: Option<PathBuf>,
@@ -329,8 +326,6 @@ impl LocalExec {
         async fn inner_exec(
             rpc_url: String,
             tx_digest: TransactionDigest,
-            expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-            use_authority: bool,
             executor_version: Option<i64>,
             protocol_version: Option<i64>,
             enable_profiler: Option<PathBuf>,
@@ -341,8 +336,6 @@ impl LocalExec {
                 .await?
                 .execute_transaction(
                     &tx_digest,
-                    expensive_safety_check_config,
-                    use_authority,
                     executor_version,
                     protocol_version,
                     enable_profiler,
@@ -355,8 +348,6 @@ impl LocalExec {
             return match inner_exec(
                 url,
                 tx_digest,
-                expensive_safety_check_config.clone(),
-                use_authority,
                 executor_version,
                 protocol_version,
                 enable_profiler,
@@ -382,8 +373,6 @@ impl LocalExec {
             match inner_exec(
                 cfg.public_full_node.clone(),
                 tx_digest,
-                expensive_safety_check_config.clone(),
-                use_authority,
                 executor_version,
                 protocol_version,
                 enable_profiler.clone(),
@@ -610,9 +599,7 @@ impl LocalExec {
     pub async fn execute_all_in_checkpoints(
         &mut self,
         checkpoint_ids: &[u64],
-        expensive_safety_check_config: &ExpensiveSafetyCheckConfig,
         terminate_early: bool,
-        use_authority: bool,
     ) -> Result<(u64, u64), ReplayEngineError> {
         // Get all the TXs at this checkpoint
         let mut txs = Vec::new();
@@ -623,14 +610,7 @@ impl LocalExec {
         let mut succeeded = 0;
         for tx in txs {
             match self
-                .execute_transaction(
-                    &tx,
-                    expensive_safety_check_config.clone(),
-                    use_authority,
-                    None,
-                    None,
-                    None,
-                )
+                .execute_transaction(&tx, None, None, None)
                 .await
                 .map(|q| q.check_effects())
             {
@@ -653,7 +633,6 @@ impl LocalExec {
         &mut self,
         tx_info: &OnChainTransactionInfo,
         override_transaction_kind: Option<TransactionKind>,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
     ) -> Result<ExecutionSandboxState, ReplayEngineError> {
         let tx_digest = &tx_info.tx_digest;
         // A lot of the logic here isnt designed for genesis
@@ -702,12 +681,7 @@ impl LocalExec {
         let ov = self.executor_version;
 
         // We could probably cache the executor per protocol config
-        let executor = get_executor(
-            ov,
-            protocol_config,
-            expensive_safety_check_config,
-            self.enable_profiler.clone(),
-        );
+        let executor = get_executor(ov, protocol_config, self.enable_profiler.clone());
 
         // All prep done
         let expensive_checks = true;
@@ -759,7 +733,6 @@ impl LocalExec {
     pub async fn execution_engine_execute_impl(
         &mut self,
         tx_digest: &TransactionDigest,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
     ) -> Result<ExecutionSandboxState, ReplayEngineError> {
         if self.is_remote_replay() {
             assert!(
@@ -774,12 +747,8 @@ impl LocalExec {
         } else {
             unimplemented!()
         };
-        self.execution_engine_execute_with_tx_info_impl(
-            &tx_info,
-            None,
-            expensive_safety_check_config,
-        )
-        .await
+        self.execution_engine_execute_with_tx_info_impl(&tx_info, None)
+            .await
     }
 
     /// Executes a transaction with the state specified in `pre_run_sandbox`
@@ -910,29 +879,12 @@ impl LocalExec {
     }
 
     /// Must be called after `init_for_execution`
-    /// This executes from `sui_core::authority::AuthorityState::try_execute_immediately`
-    pub async fn certificate_execute(
-        &mut self,
-        tx_digest: &TransactionDigest,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-    ) -> Result<ExecutionSandboxState, ReplayEngineError> {
-        // Use the lighterweight execution engine to get the pre-run state
-        let pre_run_sandbox = self
-            .execution_engine_execute_impl(tx_digest, expensive_safety_check_config)
-            .await?;
-        Self::certificate_execute_with_sandbox_state(&pre_run_sandbox, None, &self.diag).await
-    }
-
-    /// Must be called after `init_for_execution`
     /// This executes from `sui_adapter::execution_engine::execute_transaction_to_effects`
     pub async fn execution_engine_execute(
         &mut self,
         tx_digest: &TransactionDigest,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
     ) -> Result<ExecutionSandboxState, ReplayEngineError> {
-        let sandbox_state = self
-            .execution_engine_execute_impl(tx_digest, expensive_safety_check_config)
-            .await?;
+        let sandbox_state = self.execution_engine_execute_impl(tx_digest).await?;
 
         Ok(sandbox_state)
     }
@@ -940,8 +892,6 @@ impl LocalExec {
     pub async fn execute_transaction(
         &mut self,
         tx_digest: &TransactionDigest,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-        use_authority: bool,
         executor_version: Option<i64>,
         protocol_version: Option<i64>,
         enable_profiler: Option<PathBuf>,
@@ -949,13 +899,7 @@ impl LocalExec {
         self.executor_version = executor_version;
         self.protocol_version = protocol_version;
         self.enable_profiler = enable_profiler;
-        if use_authority {
-            self.certificate_execute(tx_digest, expensive_safety_check_config.clone())
-                .await
-        } else {
-            self.execution_engine_execute(tx_digest, expensive_safety_check_config)
-                .await
-        }
+        self.execution_engine_execute(tx_digest).await
     }
     fn system_package_ids(protocol_version: u64) -> Vec<ObjectID> {
         let mut ids = BuiltInFramework::all_package_ids();
@@ -1928,7 +1872,6 @@ impl GetModule for LocalExec {
 pub fn get_executor(
     executor_version_override: Option<i64>,
     protocol_config: &ProtocolConfig,
-    _expensive_safety_check_config: ExpensiveSafetyCheckConfig,
     enable_profiler: Option<PathBuf>,
 ) -> Arc<dyn Executor + Send + Sync> {
     let protocol_config = executor_version_override

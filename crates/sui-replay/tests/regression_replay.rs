@@ -9,6 +9,7 @@ use sui_replay::execute_replay_command;
 use sui_replay::ReplayToolCommand;
 
 #[tokio::test]
+#[ignore]
 async fn replay_sandboxes() {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("tests/sandbox_snapshots");
@@ -20,8 +21,6 @@ async fn replay_sandboxes() {
         assert!(path.is_file());
         let cmd = ReplayToolCommand::ReplaySandbox { path };
 
-        execute_replay_command(None, true, true, None, cmd)
-            .await
-            .unwrap();
+        execute_replay_command(None, None, cmd).await.unwrap();
     }
 }

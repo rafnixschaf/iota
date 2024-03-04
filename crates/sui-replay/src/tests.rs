@@ -8,7 +8,6 @@ use crate::config::ReplayableNetworkConfigSet;
 use crate::types::ReplayEngineError;
 use crate::types::{MAX_CONCURRENT_REQUESTS, RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD};
 use crate::LocalExec;
-use sui_config::node::ExpensiveSafetyCheckConfig;
 use sui_json_rpc_api::QUERY_MAX_RESULT_LIMIT;
 use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
 use sui_sdk::{SuiClient, SuiClientBuilder};
@@ -144,14 +143,7 @@ async fn execute_replay(url: &str, tx: &TransactionDigest) -> Result<(), ReplayE
         .await?
         .init_for_execution()
         .await?
-        .execute_transaction(
-            tx,
-            ExpensiveSafetyCheckConfig::default(),
-            true,
-            None,
-            None,
-            None,
-        )
+        .execute_transaction(tx, None, None, None)
         .await?
         .check_effects()?;
     tokio::task::yield_now().await;
@@ -159,14 +151,7 @@ async fn execute_replay(url: &str, tx: &TransactionDigest) -> Result<(), ReplayE
         .await?
         .init_for_execution()
         .await?
-        .execute_transaction(
-            tx,
-            ExpensiveSafetyCheckConfig::default(),
-            false,
-            None,
-            None,
-            None,
-        )
+        .execute_transaction(tx, None, None, None)
         .await?
         .check_effects()?;
     tokio::task::yield_now().await;

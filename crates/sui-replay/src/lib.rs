@@ -24,7 +24,6 @@ use std::env;
 use std::io::BufRead;
 use std::path::PathBuf;
 use std::str::FromStr;
-use sui_config::node::ExpensiveSafetyCheckConfig;
 use sui_protocol_config::Chain;
 use sui_types::digests::TransactionDigest;
 use tracing::{error, info};
@@ -153,16 +152,9 @@ pub enum ReplayToolCommand {
 #[async_recursion]
 pub async fn execute_replay_command(
     rpc_url: Option<String>,
-    safety_checks: bool,
-    use_authority: bool,
     cfg_path: Option<PathBuf>,
     cmd: ReplayToolCommand,
 ) -> anyhow::Result<Option<(u64, u64)>> {
-    let safety = if safety_checks {
-        ExpensiveSafetyCheckConfig::new_enable_all()
-    } else {
-        ExpensiveSafetyCheckConfig::default()
-    };
     Ok(match cmd {
         ReplayToolCommand::ReplaySandbox { path } => {
             let contents = std::fs::read_to_string(path)?;
@@ -188,8 +180,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 None,
                 None,
                 None,
@@ -218,7 +208,6 @@ pub async fn execute_replay_command(
                 mutator: Box::new(base_fuzzers(num_mutations_per_base)),
                 tx_source: TransactionSource::TailLatest { start },
                 fail_over_on_err: false,
-                expensive_safety_check_config: Default::default(),
             };
             let fuzzer = ReplayFuzzer::new(rpc_url.expect("Url must be provided"), config)
                 .await
@@ -233,8 +222,6 @@ pub async fn execute_replay_command(
         } => {
             async fn exec_batch(
                 rpc_url: Option<String>,
-                safety: ExpensiveSafetyCheckConfig,
-                use_authority: bool,
                 cfg_path: Option<PathBuf>,
                 tx_digests: &[TransactionDigest],
             ) -> anyhow::Result<()> {
@@ -243,15 +230,12 @@ pub async fn execute_replay_command(
                     let tx_digest = *tx_digest;
                     let rpc_url = rpc_url.clone();
                     let cfg_path = cfg_path.clone();
-                    let safety = safety.clone();
                     handles.push(tokio::spawn(async move {
                         info!("Executing tx: {}", tx_digest);
                         let sandbox_state = LocalExec::replay_with_network_config(
                             rpc_url,
                             cfg_path.map(|p| p.to_str().unwrap().to_string()),
                             tx_digest,
-                            safety,
-                            use_authority,
                             None,
                             None,
                             None,
@@ -291,15 +275,7 @@ pub async fn execute_replay_command(
                 if chunk.len() == batch_size as usize {
                     println!("Executing batch: {:?}", chunk);
                     // execute all in chunk
-                    match exec_batch(
-                        rpc_url.clone(),
-                        safety.clone(),
-                        use_authority,
-                        cfg_path.clone(),
-                        &chunk,
-                    )
-                    .await
-                    {
+                    match exec_batch(rpc_url.clone(), cfg_path.clone(), &chunk).await {
                         Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                         Err(e) => {
                             error!("Error executing batch: {:?}", e);
@@ -315,15 +291,7 @@ pub async fn execute_replay_command(
             }
             if !chunk.is_empty() {
                 println!("Executing batch: {:?}", chunk);
-                match exec_batch(
-                    rpc_url.clone(),
-                    safety,
-                    use_authority,
-                    cfg_path.clone(),
-                    &chunk,
-                )
-                .await
-                {
+                match exec_batch(rpc_url.clone(), cfg_path.clone(), &chunk).await {
                     Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                     Err(e) => {
                         error!("Error executing batch: {:?}", e);
@@ -352,8 +320,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 executor_version,
                 protocol_version,
                 output_path,
@@ -377,8 +343,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 executor_version,
                 protocol_version,
                 None,
@@ -461,7 +425,6 @@ pub async fn execute_replay_command(
             for (task_count, checkpoints) in range.chunks(checkpoints_per_task).enumerate() {
                 let checkpoints = checkpoints.to_vec();
                 let rpc_url = rpc_url.clone();
-                let safety = safety.clone();
                 handles.push(tokio::spawn(async move {
                     info!("Spawning task {task_count} for checkpoints {checkpoints:?}");
                     let time = std::time::Instant::now();
@@ -471,7 +434,7 @@ pub async fn execute_replay_command(
                         .init_for_execution()
                         .await
                         .unwrap()
-                        .execute_all_in_checkpoints(&checkpoints, &safety, terminate_early, use_authority)
+                        .execute_all_in_checkpoints(&checkpoints, terminate_early)
                         .await
                         .unwrap();
                     let time = time.elapsed();
@@ -525,8 +488,6 @@ pub async fn execute_replay_command(
             );
             let status = execute_replay_command(
                 rpc_url,
-                safety_checks,
-                use_authority,
                 cfg_path,
                 ReplayToolCommand::ReplayCheckpoints {
                     start,
