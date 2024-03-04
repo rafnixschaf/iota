@@ -12,10 +12,8 @@ use lru::LruCache;
 use move_core_types::parser::parse_struct_tag;
 use parking_lot::RwLock;
 use rand::Rng;
-use std::collections::BTreeMap;
 use std::num::NonZeroUsize;
 use std::str::FromStr;
-use sui_core::authority::NodeStateDump;
 use sui_json_rpc_api::QUERY_MAX_RESULT_LIMIT;
 use sui_json_rpc_types::EventFilter;
 use sui_json_rpc_types::SuiEvent;
@@ -93,28 +91,18 @@ pub(crate) trait DataFetcher {
 #[derive(Clone)]
 pub enum Fetchers {
     Remote(RemoteFetcher),
-    NodeStateDump(NodeStateDumpFetcher),
 }
 
 impl Fetchers {
     pub fn as_remote(&self) -> &RemoteFetcher {
         match self {
             Fetchers::Remote(q) => q,
-            Fetchers::NodeStateDump(_) => panic!("not a remote fetcher"),
         }
     }
 
     pub fn into_remote(self) -> RemoteFetcher {
         match self {
             Fetchers::Remote(q) => q,
-            Fetchers::NodeStateDump(_) => panic!("not a remote fetcher"),
-        }
-    }
-
-    pub fn as_node_state_dump(&self) -> &NodeStateDumpFetcher {
-        match self {
-            Fetchers::Remote(_) => panic!("not a node state dump fetcher"),
-            Fetchers::NodeStateDump(q) => q,
         }
     }
 }
@@ -128,7 +116,6 @@ impl DataFetcher for Fetchers {
     ) -> Result<Vec<Object>, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.multi_get_versioned(objects).await,
-            Fetchers::NodeStateDump(q) => q.multi_get_versioned(objects).await,
         }
     }
 
@@ -138,7 +125,6 @@ impl DataFetcher for Fetchers {
     ) -> Result<Vec<Object>, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.multi_get_latest(objects).await,
-            Fetchers::NodeStateDump(q) => q.multi_get_latest(objects).await,
         }
     }
 
@@ -148,7 +134,6 @@ impl DataFetcher for Fetchers {
     ) -> Result<Vec<TransactionDigest>, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_checkpoint_txs(id).await,
-            Fetchers::NodeStateDump(q) => q.get_checkpoint_txs(id).await,
         }
     }
 
@@ -158,7 +143,6 @@ impl DataFetcher for Fetchers {
     ) -> Result<SuiTransactionBlockResponse, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_transaction(tx_digest).await,
-            Fetchers::NodeStateDump(q) => q.get_transaction(tx_digest).await,
         }
     }
 
@@ -168,14 +152,12 @@ impl DataFetcher for Fetchers {
     ) -> Result<Vec<(ObjectID, SequenceNumber)>, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_loaded_child_objects(tx_digest).await,
-            Fetchers::NodeStateDump(q) => q.get_loaded_child_objects(tx_digest).await,
         }
     }
 
     async fn get_latest_checkpoint_sequence_number(&self) -> Result<u64, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_latest_checkpoint_sequence_number().await,
-            Fetchers::NodeStateDump(q) => q.get_latest_checkpoint_sequence_number().await,
         }
     }
 
@@ -189,10 +171,6 @@ impl DataFetcher for Fetchers {
                 q.fetch_random_transaction(checkpoint_id_start, checkpoint_id_end)
                     .await
             }
-            Fetchers::NodeStateDump(q) => {
-                q.fetch_random_transaction(checkpoint_id_start, checkpoint_id_end)
-                    .await
-            }
         }
     }
 
@@ -202,7 +180,6 @@ impl DataFetcher for Fetchers {
     ) -> Result<(u64, u64), ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_epoch_start_timestamp_and_rgp(epoch_id).await,
-            Fetchers::NodeStateDump(q) => q.get_epoch_start_timestamp_and_rgp(epoch_id).await,
         }
     }
 
@@ -212,13 +189,11 @@ impl DataFetcher for Fetchers {
     ) -> Result<Vec<SuiEvent>, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_epoch_change_events(reverse).await,
-            Fetchers::NodeStateDump(q) => q.get_epoch_change_events(reverse).await,
         }
     }
     async fn get_chain_id(&self) -> Result<String, ReplayEngineError> {
         match self {
             Fetchers::Remote(q) => q.get_chain_id().await,
-            Fetchers::NodeStateDump(q) => q.get_chain_id().await,
         }
     }
 }
@@ -634,168 +609,4 @@ pub fn extract_epoch_and_version(ev: SuiEvent) -> Result<(u64, u64), ReplayEngin
     }
 
     Err(ReplayEngineError::UnexpectedEventFormat { event: ev })
-}
-
-#[derive(Clone)]
-pub struct NodeStateDumpFetcher {
-    pub node_state_dump: NodeStateDump,
-    pub object_ref_pool: BTreeMap<(ObjectID, SequenceNumber), Object>,
-    pub latest_object_version_pool: BTreeMap<ObjectID, Object>,
-
-    // Used when we need to fetch data from remote such as
-    pub backup_remote_fetcher: Option<RemoteFetcher>,
-}
-
-impl From<NodeStateDump> for NodeStateDumpFetcher {
-    fn from(node_state_dump: NodeStateDump) -> Self {
-        let mut object_ref_pool = BTreeMap::new();
-        let mut latest_object_version_pool: BTreeMap<ObjectID, Object> = BTreeMap::new();
-
-        node_state_dump
-            .all_objects()
-            .iter()
-            .for_each(|current_obj| {
-                // Dense storage
-                object_ref_pool.insert(
-                    (current_obj.id(), current_obj.version()),
-                    current_obj.clone(),
-                );
-
-                // Only most recent
-                if let Some(last_seen_obj) = latest_object_version_pool.get(&current_obj.id()) {
-                    if current_obj.version() <= last_seen_obj.version() {
-                        return;
-                    }
-                };
-                latest_object_version_pool.insert(current_obj.id(), current_obj.clone());
-            });
-        Self {
-            node_state_dump,
-            object_ref_pool,
-            latest_object_version_pool,
-            backup_remote_fetcher: None,
-        }
-    }
-}
-
-impl NodeStateDumpFetcher {
-    pub fn new(
-        node_state_dump: NodeStateDump,
-        backup_remote_fetcher: Option<RemoteFetcher>,
-    ) -> Self {
-        let mut s = Self::from(node_state_dump);
-        s.backup_remote_fetcher = backup_remote_fetcher;
-        s
-    }
-}
-
-#[async_trait]
-impl DataFetcher for NodeStateDumpFetcher {
-    async fn multi_get_versioned(
-        &self,
-        objects: &[(ObjectID, SequenceNumber)],
-    ) -> Result<Vec<Object>, ReplayEngineError> {
-        let mut resp = vec![];
-        match objects.iter().try_for_each(|(id, version)| {
-            if let Some(obj) = self.object_ref_pool.get(&(*id, *version)) {
-                resp.push(obj.clone());
-                return Ok(());
-            }
-            Err(ReplayEngineError::ObjectVersionNotFound {
-                id: *id,
-                version: *version,
-            })
-        }) {
-            Ok(_) => return Ok(resp),
-            Err(e) => {
-                if let Some(backup_remote_fetcher) = &self.backup_remote_fetcher {
-                    return backup_remote_fetcher.multi_get_versioned(objects).await;
-                }
-                return Err(e);
-            }
-        };
-    }
-
-    async fn multi_get_latest(
-        &self,
-        objects: &[ObjectID],
-    ) -> Result<Vec<Object>, ReplayEngineError> {
-        let mut resp = vec![];
-        match objects.iter().try_for_each(|id| {
-            if let Some(obj) = self.latest_object_version_pool.get(id) {
-                resp.push(obj.clone());
-                return Ok(());
-            }
-            Err(ReplayEngineError::ObjectNotExist { id: *id })
-        }) {
-            Ok(_) => return Ok(resp),
-            Err(e) => {
-                if let Some(backup_remote_fetcher) = &self.backup_remote_fetcher {
-                    return backup_remote_fetcher.multi_get_latest(objects).await;
-                }
-                return Err(e);
-            }
-        };
-    }
-
-    async fn get_checkpoint_txs(
-        &self,
-        _id: u64,
-    ) -> Result<Vec<TransactionDigest>, ReplayEngineError> {
-        unimplemented!("get_checkpoint_txs for state dump is not implemented")
-    }
-
-    async fn get_transaction(
-        &self,
-        _tx_digest: &TransactionDigest,
-    ) -> Result<SuiTransactionBlockResponse, ReplayEngineError> {
-        unimplemented!("get_transaction for state dump is not implemented")
-    }
-
-    async fn get_loaded_child_objects(
-        &self,
-        _tx_digest: &TransactionDigest,
-    ) -> Result<Vec<(ObjectID, SequenceNumber)>, ReplayEngineError> {
-        Ok(self
-            .node_state_dump
-            .loaded_child_objects
-            .iter()
-            .map(|q| q.compute_object_reference())
-            .map(|w| (w.0, w.1))
-            .collect())
-    }
-
-    async fn get_latest_checkpoint_sequence_number(&self) -> Result<u64, ReplayEngineError> {
-        unimplemented!("get_latest_checkpoint_sequence_number for state dump is not implemented")
-    }
-
-    async fn fetch_random_transaction(
-        &self,
-        // TODO: add more params
-        _checkpoint_id_start: Option<u64>,
-        _checkpoint_id_end: Option<u64>,
-    ) -> Result<TransactionDigest, ReplayEngineError> {
-        unimplemented!("fetch_random_tx for state dump is not implemented")
-    }
-
-    async fn get_epoch_start_timestamp_and_rgp(
-        &self,
-        _epoch_id: u64,
-    ) -> Result<(u64, u64), ReplayEngineError> {
-        Ok((
-            self.node_state_dump.epoch_start_timestamp_ms,
-            self.node_state_dump.reference_gas_price,
-        ))
-    }
-
-    async fn get_epoch_change_events(
-        &self,
-        _reverse: bool,
-    ) -> Result<Vec<SuiEvent>, ReplayEngineError> {
-        unimplemented!("get_epoch_change_events for state dump is not implemented")
-    }
-
-    async fn get_chain_id(&self) -> Result<String, ReplayEngineError> {
-        unimplemented!("get_chain_id for state dump is not implemented")
-    }
 }

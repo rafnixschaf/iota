@@ -111,15 +111,6 @@ pub enum ReplayToolCommand {
         batch_size: u64,
     },
 
-    /// Replay a transaction from a node state dump
-    #[command(name = "rd")]
-    ReplayDump {
-        #[arg(long, short)]
-        path: String,
-        #[arg(long, short)]
-        show_effects: bool,
-    },
-
     /// Replay all transactions in a range of checkpoints
     #[command(name = "ch")]
     ReplayCheckpoints {
@@ -234,27 +225,6 @@ pub async fn execute_replay_command(
                 .unwrap();
             fuzzer.run(num_base_transactions).await.unwrap();
             None
-        }
-        ReplayToolCommand::ReplayDump { path, show_effects } => {
-            let mut lx = LocalExec::new_for_state_dump(&path, rpc_url).await?;
-            let (sandbox_state, node_dump_state) = lx.execute_state_dump(safety).await?;
-            if show_effects {
-                println!("{:#?}", sandbox_state.local_exec_effects);
-            }
-
-            sandbox_state.check_effects()?;
-
-            let effects = node_dump_state.computed_effects.digest();
-            if effects != node_dump_state.expected_effects_digest {
-                error!(
-                    "Effects digest mismatch for {}: expected: {:?}, got: {:?}",
-                    node_dump_state.tx_digest, node_dump_state.expected_effects_digest, effects,
-                );
-                anyhow::bail!("Effects mismatch");
-            }
-
-            info!("Execution finished successfully. Local and on-chain effects match.");
-            Some((1u64, 1u64))
         }
         ReplayToolCommand::ReplayBatch {
             path,

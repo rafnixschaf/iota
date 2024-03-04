@@ -7,9 +7,7 @@
 use crate::chain_from_chain_id;
 use crate::{
     config::ReplayableNetworkConfigSet,
-    data_fetcher::{
-        extract_epoch_and_version, DataFetcher, Fetchers, NodeStateDumpFetcher, RemoteFetcher,
-    },
+    data_fetcher::{extract_epoch_and_version, DataFetcher, Fetchers, RemoteFetcher},
     displays::Pretty,
     types::*,
 };
@@ -452,49 +450,6 @@ impl LocalExec {
         })
     }
 
-    pub async fn new_for_state_dump(
-        path: &str,
-        backup_rpc_url: Option<String>,
-    ) -> Result<Self, ReplayEngineError> {
-        // Use a throwaway metrics registry for local execution.
-        let registry = prometheus::Registry::new();
-        let metrics = Arc::new(LimitsMetrics::new(&registry));
-
-        let state = NodeStateDump::read_from_file(&PathBuf::from(path))?;
-        let current_protocol_version = state.protocol_version;
-        let fetcher = match backup_rpc_url {
-            Some(url) => NodeStateDumpFetcher::new(
-                state,
-                Some(RemoteFetcher::new(
-                    SuiClientBuilder::default()
-                        .request_timeout(RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD)
-                        .max_concurrent_requests(MAX_CONCURRENT_REQUESTS)
-                        .build(url)
-                        .await?,
-                )),
-            ),
-            None => NodeStateDumpFetcher::new(state, None),
-        };
-
-        Ok(Self {
-            client: None,
-            protocol_version_epoch_table: BTreeMap::new(),
-            protocol_version_system_package_table: BTreeMap::new(),
-            current_protocol_version,
-            exec_store_events: Arc::new(Mutex::new(Vec::new())),
-            metrics,
-            storage: Storage::default(),
-            fetcher: Fetchers::NodeStateDump(fetcher),
-            // TODO: make these configurable
-            num_retries_for_timeout: RPC_TIMEOUT_ERR_NUM_RETRIES,
-            sleep_period_for_timeout: RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD,
-            diag: Default::default(),
-            executor_version: None,
-            protocol_version: None,
-            enable_profiler: None,
-        })
-    }
-
     pub async fn multi_download_and_store(
         &mut self,
         objs: &[(ObjectID, SequenceNumber)],
@@ -817,7 +772,7 @@ impl LocalExec {
         let tx_info = if self.is_remote_replay() {
             self.resolve_tx_components(tx_digest).await?
         } else {
-            self.resolve_tx_components_from_dump(tx_digest).await?
+            unimplemented!()
         };
         self.execution_engine_execute_with_tx_info_impl(
             &tx_info,
@@ -980,24 +935,6 @@ impl LocalExec {
             .await?;
 
         Ok(sandbox_state)
-    }
-
-    pub async fn execute_state_dump(
-        &mut self,
-        expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-    ) -> Result<(ExecutionSandboxState, NodeStateDump), ReplayEngineError> {
-        assert!(!self.is_remote_replay());
-
-        let d = match self.fetcher.clone() {
-            Fetchers::NodeStateDump(d) => d,
-            _ => panic!("Invalid fetcher for state dump"),
-        };
-        let tx_digest = d.node_state_dump.clone().tx_digest;
-        let sandbox_state = self
-            .execution_engine_execute_impl(&tx_digest, expensive_safety_check_config)
-            .await?;
-
-        Ok((sandbox_state, d.node_state_dump))
     }
 
     pub async fn execute_transaction(
@@ -1489,82 +1426,6 @@ impl LocalExec {
             // Find the protocol version for this epoch
             // This assumes we already initialized the protocol version table `protocol_version_epoch_table`
             protocol_version: self.get_protocol_config(epoch_id, chain).await?.version,
-            tx_digest: *tx_digest,
-            epoch_start_timestamp,
-            sender_signed_data: orig_tx.clone(),
-            reference_gas_price,
-            chain,
-        })
-    }
-
-    async fn resolve_tx_components_from_dump(
-        &self,
-        tx_digest: &TransactionDigest,
-    ) -> Result<OnChainTransactionInfo, ReplayEngineError> {
-        assert!(!self.is_remote_replay());
-
-        let dp = self.fetcher.as_node_state_dump();
-
-        let sender = dp
-            .node_state_dump
-            .sender_signed_data
-            .transaction_data()
-            .sender();
-        let orig_tx = dp.node_state_dump.sender_signed_data.clone();
-        let effects = dp.node_state_dump.computed_effects.clone();
-        let effects = SuiTransactionBlockEffects::try_from(effects).unwrap();
-
-        // Fetch full transaction content
-        //let tx_info = self.fetcher.get_transaction(tx_digest).await?;
-
-        let input_objs = orig_tx
-            .transaction_data()
-            .input_objects()
-            .map_err(|e| ReplayEngineError::UserInputError { err: e })?;
-        let tx_kind_orig = orig_tx.transaction_data().kind();
-
-        // Download the objects at the version right before the execution of this TX
-        let modified_at_versions: Vec<(ObjectID, SequenceNumber)> = effects.modified_at_versions();
-
-        let shared_object_refs: Vec<ObjectRef> = effects
-            .shared_objects()
-            .iter()
-            .map(|so_ref| {
-                if so_ref.digest == ObjectDigest::OBJECT_DIGEST_DELETED {
-                    unimplemented!(
-                        "Replay of deleted shared object transactions is not supported yet"
-                    );
-                } else {
-                    so_ref.to_object_ref()
-                }
-            })
-            .collect();
-        let gas_data = orig_tx.transaction_data().gas_data();
-        let gas_object_refs: Vec<_> = gas_data.clone().payment.into_iter().collect();
-
-        let epoch_id = dp.node_state_dump.executed_epoch;
-
-        let chain = chain_from_chain_id(self.fetcher.get_chain_id().await?.as_str());
-
-        let protocol_config =
-            ProtocolConfig::get_for_version(dp.node_state_dump.protocol_version.into(), chain);
-        // Extract the epoch start timestamp
-        let (epoch_start_timestamp, reference_gas_price) =
-            self.get_epoch_start_timestamp_and_rgp(epoch_id).await?;
-
-        Ok(OnChainTransactionInfo {
-            kind: tx_kind_orig.clone(),
-            sender,
-            modified_at_versions,
-            input_objects: input_objs,
-            shared_object_refs,
-            gas: gas_object_refs,
-            gas_budget: gas_data.budget,
-            gas_price: gas_data.price,
-            executed_epoch: epoch_id,
-            dependencies: effects.dependencies().to_vec(),
-            effects,
-            protocol_version: protocol_config.version,
             tx_digest: *tx_digest,
             epoch_start_timestamp,
             sender_signed_data: orig_tx.clone(),
