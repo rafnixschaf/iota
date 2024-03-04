@@ -24,10 +24,6 @@ Postgres must run as a service in the background for other tools to communicate 
 brew services start postgresql@version
 ```
 
-### Local Development(Recommended)
-
-Use [sui-test-validator](../../crates/sui-test-validator/README.md)
-
 ### Running standalone indexer
 1. DB setup, under `sui/crates/sui-indexer` run:
 ```sh
@@ -47,13 +43,13 @@ git fetch upstream devnet && git reset --hard upstream/devnet
 - run indexer as a writer, which pulls data from fullnode and writes data to DB
 ```sh
 # Change the RPC_CLIENT_URL to http://0.0.0.0:9000 to run indexer against local validator & fullnode
-cargo run --bin sui-indexer -- --db-url "<DATABASE_URL>" --rpc-client-url "https://fullnode.devnet.sui.io:443" --fullnode-sync-worker --use-v2 --reset-db
+cargo run --bin sui-indexer -- --db-url "<DATABASE_URL>" --rpc-client-url "https://fullnode.devnet.sui.io:443" --fullnode-sync-worker --reset-db
 ```
 - run indexer as a reader, which is a JSON RPC server with the [interface](https://docs.sui.io/sui-api-ref#suix_getallbalances)
+```sh
+cargo run --bin sui-indexer -- --db-url "<DATABASE_URL>" --rpc-client-url "https://fullnode.devnet.sui.io:443" --rpc-server-worker
 ```
-cargo run --bin sui-indexer -- --db-url "<DATABASE_URL>" --rpc-client-url "https://fullnode.devnet.sui.io:443" --rpc-server-worker --use-v2
-```
-More flags info can be found in this [file](https://github.com/MystenLabs/sui/blob/main/crates/sui-indexer/src/lib.rs#L83-L123).
+More flags info can be found in this [file](https://github.com/iotaledger/kinesis/blob/develop/crates/sui-indexer/src/lib.rs#L51-L82).
 ### DB reset
 Run this command under `sui/crates/sui-indexer`, which will wipe DB; In case of schema changes in `.sql` files, this will also update corresponding `schema.rs` file.
 ```sh
