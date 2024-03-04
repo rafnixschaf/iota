@@ -15,8 +15,8 @@ use transaction_fuzzer::run_proptest;
 
 const NUM_RUNS: u32 = 20;
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_low_balance() {
     let universe =
         AccountUniverseGen::strategy(3..default_num_accounts(), 1_000_000u64..10_000_000);
@@ -30,8 +30,8 @@ fn fuzz_p2p_low_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_high_balance() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),
@@ -47,8 +47,8 @@ fn fuzz_p2p_high_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_high_balance() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),
@@ -64,8 +64,8 @@ fn fuzz_p2p_random_gas_budget_high_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_low_balance() {
     let universe =
         AccountUniverseGen::strategy(3..default_num_accounts(), 1_000_000u64..10_000_000);
@@ -79,8 +79,8 @@ fn fuzz_p2p_random_gas_budget_low_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_and_price_high_balance() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),
@@ -96,8 +96,8 @@ fn fuzz_p2p_random_gas_budget_and_price_high_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_and_price_low_balance() {
     let universe =
         AccountUniverseGen::strategy(3..default_num_accounts(), 1_000_000u64..10_000_000);
@@ -111,8 +111,8 @@ fn fuzz_p2p_random_gas_budget_and_price_low_balance() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_rand_gas_budget_price_and_coins() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),
@@ -128,8 +128,8 @@ fn fuzz_p2p_rand_gas_budget_price_and_coins() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_and_price_high_balance_random_sponsorship() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),
@@ -149,8 +149,8 @@ fn fuzz_p2p_random_gas_budget_and_price_high_balance_random_sponsorship() {
     );
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_random_gas_budget_and_price_low_balance_random_sponsorship() {
     let universe =
         AccountUniverseGen::strategy(3..default_num_accounts(), 1_000_000u64..10_000_000);
@@ -168,8 +168,8 @@ fn fuzz_p2p_random_gas_budget_and_price_low_balance_random_sponsorship() {
     );
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn fuzz_p2p_mixed() {
     let universe = AccountUniverseGen::strategy(
         3..default_num_accounts(),

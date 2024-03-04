@@ -17,7 +17,7 @@ tracing.workspace = true
 
 once_cell.workspace = true
 sui-protocol-config.workspace = true
-sui-types = { workspace = true, features = ["fuzzing"] }
+sui-types = { workspace = true, features = ["fuzzing", "test-utils"] }
 sui-move-build.workspace = true
 workspace-hack.workspace = true
 

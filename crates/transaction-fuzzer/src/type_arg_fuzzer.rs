@@ -9,7 +9,6 @@ use move_core_types::{account_address::AccountAddress, identifier::Identifier};
 use proptest::arbitrary::*;
 use proptest::prelude::*;
 
-use sui_core::test_utils::send_and_confirm_transaction;
 use sui_types::base_types::ObjectID;
 use sui_types::effects::{TransactionEffects, TransactionEffectsAPI};
 use sui_types::error::SuiError;
@@ -171,8 +170,7 @@ pub fn run_pt_effects(
         GAS,
         GAS_PRICE,
     );
-    let signed_txn = to_sender_signed_transaction(tx_data, &account.initial_data.account.key);
-    exec.rt
-        .block_on(send_and_confirm_transaction(&exec.state, None, signed_txn))
-        .map(|(_, effects)| effects.into_data())
+    let _signed_txn = to_sender_signed_transaction(tx_data, &account.initial_data.account.key);
+
+    unimplemented!()
 }

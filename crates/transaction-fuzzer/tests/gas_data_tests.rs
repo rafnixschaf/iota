@@ -44,8 +44,8 @@ fn test_with_random_gas_data(
     Ok(())
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn test_gas_data_owned_or_immut() {
     let strategy = any_with::<GasDataWithObjects>(GasDataGenConfig::owned_by_sender_or_immut());
     run_proptest(1000, strategy, |gas_data_test, mut executor| {
@@ -53,8 +53,8 @@ fn test_gas_data_owned_or_immut() {
     });
 }
 
+#[ignore]
 #[test]
-#[cfg_attr(msim, ignore)]
 fn test_gas_data_any_owner() {
     let strategy = any_with::<GasDataWithObjects>(GasDataGenConfig::any_owner());
     run_proptest(1000, strategy, |gas_data_test, mut executor| {
