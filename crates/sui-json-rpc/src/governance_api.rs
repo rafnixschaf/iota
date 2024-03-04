@@ -17,7 +17,6 @@ use jsonrpsee::RpcModule;
 use tracing::{info, instrument};
 
 use mysten_metrics::spawn_monitored_task;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics};
 use sui_json_rpc_types::{DelegatedStake, Stake, StakeStatus};
 use sui_json_rpc_types::{SuiCommittee, ValidatorApy, ValidatorApys};
@@ -35,8 +34,8 @@ use sui_types::sui_system_state::PoolTokenExchangeRate;
 use sui_types::sui_system_state::SuiSystemStateTrait;
 use sui_types::sui_system_state::{get_validator_from_table, SuiSystemState};
 
-use crate::authority_state::StateRead;
 use crate::error::{Error, RpcInterimResult, SuiRpcInputError};
+use crate::state::StateRead;
 use crate::{with_tracing, ObjectProvider, SuiRpcModule};
 
 #[derive(Clone)]
@@ -46,7 +45,7 @@ pub struct GovernanceReadApi {
 }
 
 impl GovernanceReadApi {
-    pub fn new(state: Arc<AuthorityState>, metrics: Arc<JsonRpcMetrics>) -> Self {
+    pub fn new(state: Arc<dyn StateRead>, metrics: Arc<JsonRpcMetrics>) -> Self {
         Self { state, metrics }
     }
 
@@ -252,10 +251,7 @@ impl GovernanceReadApiServer for GovernanceReadApi {
 
     #[instrument(skip(self))]
     async fn get_reference_gas_price(&self) -> RpcResult<BigInt<u64>> {
-        with_tracing!(async move {
-            let epoch_store = self.state.load_epoch_store_one_call_per_task();
-            Ok(epoch_store.reference_gas_price().into())
-        })
+        unimplemented!()
     }
 
     #[instrument(skip(self))]

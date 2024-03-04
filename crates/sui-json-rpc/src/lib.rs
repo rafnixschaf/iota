@@ -31,7 +31,6 @@ use crate::error::Error;
 use crate::metrics::MetricsLogger;
 use crate::routing_layer::RpcRouter;
 
-pub mod authority_state;
 pub mod axum_router;
 mod balance_changes;
 pub mod coin_api;
@@ -45,6 +44,7 @@ pub mod name_service;
 mod object_changes;
 pub mod read_api;
 mod routing_layer;
+pub mod state;
 pub mod transaction_builder_api;
 pub mod transaction_execution_api;
 
