@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use camino::Utf8PathBuf;
-use sui_config::local_ip_utils;
 use sui_genesis_builder::validator_info::ValidatorInfo;
 use sui_genesis_builder::Builder;
 use sui_types::base_types::SuiAddress;
@@ -13,6 +12,7 @@ use sui_types::crypto::{
     generate_proof_of_possession, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
     KeypairTraits, NetworkKeyPair,
 };
+use sui_types::utils::local_ip;
 
 #[tokio::main]
 async fn main() {
@@ -32,12 +32,12 @@ async fn main() {
             worker_key: worker_key.public().clone(),
             account_address: SuiAddress::from(account_key.public()),
             network_key: network_key.public().clone(),
-            gas_price: sui_config::node::DEFAULT_VALIDATOR_GAS_PRICE,
-            commission_rate: sui_config::node::DEFAULT_COMMISSION_RATE,
-            network_address: local_ip_utils::new_local_tcp_address_for_testing(),
-            p2p_address: local_ip_utils::new_local_udp_address_for_testing(),
-            narwhal_primary_address: local_ip_utils::new_local_udp_address_for_testing(),
-            narwhal_worker_address: local_ip_utils::new_local_udp_address_for_testing(),
+            gas_price: Default::default(),
+            commission_rate: Default::default(),
+            network_address: local_ip::new_local_tcp_address_for_testing(),
+            p2p_address: local_ip::new_local_udp_address_for_testing(),
+            narwhal_primary_address: local_ip::new_local_udp_address_for_testing(),
+            narwhal_worker_address: local_ip::new_local_udp_address_for_testing(),
             description: String::new(),
             image_url: String::new(),
             project_url: String::new(),

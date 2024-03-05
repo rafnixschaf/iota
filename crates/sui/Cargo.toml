@@ -16,7 +16,6 @@ serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 signature.workspace = true
-camino.workspace = true
 tokio = { workspace = true, features = ["full"] }
 async-trait.workspace = true
 tracing.workspace = true
@@ -83,11 +82,6 @@ serde_json.workspace = true
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["jemalloc-ctl"]
-
-[[example]]
-name = "generate-genesis-checkpoint"
-path = "src/generate_genesis_checkpoint.rs"
-test = false
 
 [features]
 gas-profiler = [

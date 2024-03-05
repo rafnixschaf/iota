@@ -8085,7 +8085,6 @@ dependencies = [
  "async-trait",
  "bcs",
  "bip32",
- "camino",
  "clap",
  "colored",
  "const-str",
@@ -8370,6 +8369,7 @@ dependencies = [
  "sui-protocol-config",
  "sui-types",
  "tempfile",
+ "tokio",
  "tracing",
  "workspace-hack",
 ]
