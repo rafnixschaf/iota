@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::client_commands::SuiClientCommands;
+use crate::config::{sui_config_dir, SUI_CLIENT_CONFIG, SUI_KEYSTORE_FILENAME};
 use crate::console::start_console;
 use crate::keytool::KeyToolCommand;
 use anyhow::anyhow;
@@ -16,7 +17,7 @@ use std::path::{Path, PathBuf};
 use sui_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
 use sui_move::{self, execute_move_command};
 use sui_move_build::SuiPackageHooks;
-use sui_sdk::sui_client_config::{SuiClientConfig, SuiEnv};
+use sui_sdk::sui_client_config::{Config, SuiClientConfig, SuiEnv};
 use sui_sdk::wallet_context::WalletContext;
 use sui_types::crypto::SignatureScheme;
 
