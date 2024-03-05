@@ -4,6 +4,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! `sui_replay` exposes the functionality to create state sandboxes by
+//! replaying a single or multiple transactions. These can be used for inspection
+//! of the transaction effects, and furthermore for testing.
+//!
+//! It requires that, for any executed transaction, all touched objects should be available in
+//! storage at the version before the execution of the transaction.
+//!
+//! The library supports fuzzing the resulting sandbox state, according to the following scheme:
+//!
+//! Step 1: Get a transaction T from the network
+//! Step 2: Create the sandbox and verify the TX does not fork locally
+//! Step 3: Create desired mutations of T in set S
+//! Step 4: For each mutation in S, replay the transaction with the sandbox state from T
+//!         and verify no panic or invariant violation
+
 use async_recursion::async_recursion;
 use clap::Parser;
 use config::ReplayableNetworkConfigSet;
@@ -12,7 +27,6 @@ use fuzz::ReplayFuzzerConfig;
 use fuzz_mutations::base_fuzzers;
 use sui_types::digests::get_mainnet_chain_identifier;
 use sui_types::digests::get_testnet_chain_identifier;
-use sui_types::message_envelope::Message;
 use tracing::warn;
 use transaction_provider::{FuzzStartPoint, TransactionSource};
 
@@ -24,7 +38,6 @@ use std::env;
 use std::io::BufRead;
 use std::path::PathBuf;
 use std::str::FromStr;
-use sui_config::node::ExpensiveSafetyCheckConfig;
 use sui_protocol_config::Chain;
 use sui_types::digests::TransactionDigest;
 use tracing::{error, info};
@@ -111,15 +124,6 @@ pub enum ReplayToolCommand {
         batch_size: u64,
     },
 
-    /// Replay a transaction from a node state dump
-    #[command(name = "rd")]
-    ReplayDump {
-        #[arg(long, short)]
-        path: String,
-        #[arg(long, short)]
-        show_effects: bool,
-    },
-
     /// Replay all transactions in a range of checkpoints
     #[command(name = "ch")]
     ReplayCheckpoints {
@@ -162,16 +166,9 @@ pub enum ReplayToolCommand {
 #[async_recursion]
 pub async fn execute_replay_command(
     rpc_url: Option<String>,
-    safety_checks: bool,
-    use_authority: bool,
     cfg_path: Option<PathBuf>,
     cmd: ReplayToolCommand,
 ) -> anyhow::Result<Option<(u64, u64)>> {
-    let safety = if safety_checks {
-        ExpensiveSafetyCheckConfig::new_enable_all()
-    } else {
-        ExpensiveSafetyCheckConfig::default()
-    };
     Ok(match cmd {
         ReplayToolCommand::ReplaySandbox { path } => {
             let contents = std::fs::read_to_string(path)?;
@@ -197,8 +194,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 None,
                 None,
                 None,
@@ -227,34 +222,12 @@ pub async fn execute_replay_command(
                 mutator: Box::new(base_fuzzers(num_mutations_per_base)),
                 tx_source: TransactionSource::TailLatest { start },
                 fail_over_on_err: false,
-                expensive_safety_check_config: Default::default(),
             };
             let fuzzer = ReplayFuzzer::new(rpc_url.expect("Url must be provided"), config)
                 .await
                 .unwrap();
             fuzzer.run(num_base_transactions).await.unwrap();
             None
-        }
-        ReplayToolCommand::ReplayDump { path, show_effects } => {
-            let mut lx = LocalExec::new_for_state_dump(&path, rpc_url).await?;
-            let (sandbox_state, node_dump_state) = lx.execute_state_dump(safety).await?;
-            if show_effects {
-                println!("{:#?}", sandbox_state.local_exec_effects);
-            }
-
-            sandbox_state.check_effects()?;
-
-            let effects = node_dump_state.computed_effects.digest();
-            if effects != node_dump_state.expected_effects_digest {
-                error!(
-                    "Effects digest mismatch for {}: expected: {:?}, got: {:?}",
-                    node_dump_state.tx_digest, node_dump_state.expected_effects_digest, effects,
-                );
-                anyhow::bail!("Effects mismatch");
-            }
-
-            info!("Execution finished successfully. Local and on-chain effects match.");
-            Some((1u64, 1u64))
         }
         ReplayToolCommand::ReplayBatch {
             path,
@@ -263,8 +236,6 @@ pub async fn execute_replay_command(
         } => {
             async fn exec_batch(
                 rpc_url: Option<String>,
-                safety: ExpensiveSafetyCheckConfig,
-                use_authority: bool,
                 cfg_path: Option<PathBuf>,
                 tx_digests: &[TransactionDigest],
             ) -> anyhow::Result<()> {
@@ -273,15 +244,12 @@ pub async fn execute_replay_command(
                     let tx_digest = *tx_digest;
                     let rpc_url = rpc_url.clone();
                     let cfg_path = cfg_path.clone();
-                    let safety = safety.clone();
                     handles.push(tokio::spawn(async move {
                         info!("Executing tx: {}", tx_digest);
                         let sandbox_state = LocalExec::replay_with_network_config(
                             rpc_url,
                             cfg_path.map(|p| p.to_str().unwrap().to_string()),
                             tx_digest,
-                            safety,
-                            use_authority,
                             None,
                             None,
                             None,
@@ -321,15 +289,7 @@ pub async fn execute_replay_command(
                 if chunk.len() == batch_size as usize {
                     println!("Executing batch: {:?}", chunk);
                     // execute all in chunk
-                    match exec_batch(
-                        rpc_url.clone(),
-                        safety.clone(),
-                        use_authority,
-                        cfg_path.clone(),
-                        &chunk,
-                    )
-                    .await
-                    {
+                    match exec_batch(rpc_url.clone(), cfg_path.clone(), &chunk).await {
                         Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                         Err(e) => {
                             error!("Error executing batch: {:?}", e);
@@ -345,15 +305,7 @@ pub async fn execute_replay_command(
             }
             if !chunk.is_empty() {
                 println!("Executing batch: {:?}", chunk);
-                match exec_batch(
-                    rpc_url.clone(),
-                    safety,
-                    use_authority,
-                    cfg_path.clone(),
-                    &chunk,
-                )
-                .await
-                {
+                match exec_batch(rpc_url.clone(), cfg_path.clone(), &chunk).await {
                     Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                     Err(e) => {
                         error!("Error executing batch: {:?}", e);
@@ -382,8 +334,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 executor_version,
                 protocol_version,
                 output_path,
@@ -407,8 +357,6 @@ pub async fn execute_replay_command(
                 rpc_url,
                 cfg_path.map(|p| p.to_str().unwrap().to_string()),
                 tx_digest,
-                safety,
-                use_authority,
                 executor_version,
                 protocol_version,
                 None,
@@ -491,7 +439,6 @@ pub async fn execute_replay_command(
             for (task_count, checkpoints) in range.chunks(checkpoints_per_task).enumerate() {
                 let checkpoints = checkpoints.to_vec();
                 let rpc_url = rpc_url.clone();
-                let safety = safety.clone();
                 handles.push(tokio::spawn(async move {
                     info!("Spawning task {task_count} for checkpoints {checkpoints:?}");
                     let time = std::time::Instant::now();
@@ -501,7 +448,7 @@ pub async fn execute_replay_command(
                         .init_for_execution()
                         .await
                         .unwrap()
-                        .execute_all_in_checkpoints(&checkpoints, &safety, terminate_early, use_authority)
+                        .execute_all_in_checkpoints(&checkpoints, terminate_early)
                         .await
                         .unwrap();
                     let time = time.elapsed();
@@ -555,8 +502,6 @@ pub async fn execute_replay_command(
             );
             let status = execute_replay_command(
                 rpc_url,
-                safety_checks,
-                use_authority,
                 cfg_path,
                 ReplayToolCommand::ReplayCheckpoints {
                     start,
