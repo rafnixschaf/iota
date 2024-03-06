@@ -20,6 +20,7 @@ IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap'
 
 # This mapping allows a simple replace mechanism for certain keywords, it's executed in order
 REPLACE_MAP = (
+    ('MystenLabs/sui', 'iotaledger/kinesis'),
     ('SUI', 'IOTA'),
     ('Sui', 'Iota'),
     ('sui', 'iota'),
@@ -29,9 +30,7 @@ REPLACE_MAP = (
 )
 
 # I list of things to not replace if they occur, especially if they are links
-CASE_INSENSITIVE_IGNORE_REPLACE = (
-    'MystenLabs/sui',
-)
+CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes',)
 
 WARN_ABOUT = (
     'suiprivkey',
@@ -122,8 +121,6 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
                     for word in content.split():
                         if '://' in word and kw in word:
                             suspicious.append((fn, line, 'PART_OF_URL', content.strip(), word, '://'))
-                            ignored_word = True
-                            continue
 
                         for ignore_part in CASE_INSENSITIVE_IGNORE_REPLACE:
                             if ignore_part.lower() in word.lower():
