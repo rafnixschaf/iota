@@ -8,7 +8,14 @@ import glob, os
 from gitignore_parser import parse_gitignore
 
 # Anything in ignored paths, including what is inside in case of a directory, will be ignored regardless of gitignore
-IGNORED_PATHS = ('pnpm-lock.yaml', 'crates/sui-light-client/example_config/20873329.yaml', 'crates/sui-framework-snapshot/bytecode_snapshot/')
+IGNORED_PATHS = (
+    'pnpm-lock.yaml', 
+    'crates/sui-light-client/example_config/20873329.yaml', 
+    'crates/sui-framework-snapshot/bytecode_snapshot/',
+    'crates/iota-light-client/example_config/20873329.yaml', 
+    'crates/iota-framework-snapshot/bytecode_snapshot/',
+)
+
 IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap', 'bcs', 'chk', 'pdf', 'ai', 'mp3', 'wav', 'ico', 'ttf', 'otf', 'woff', 'woff2')
 
 # This mapping allows a simple replace mechanism for certain keywords, it's executed in order
@@ -24,6 +31,9 @@ REPLACE_MAP = (
 # I list of things to not replace if they occur, especially if they are links
 CASE_INSENSITIVE_IGNORE_REPLACE = (
     'MystenLabs/sui',
+)
+
+WARN_ABOUT = (
     'suiprivkey',
 )
 
@@ -119,6 +129,10 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
                             if ignore_part.lower() in word.lower():
                                 suspicious.append((fn, line, 'IGNORE_LIST', content.strip(), word, ignore_part))
                                 ignored_word = True
+                        
+                        for ignore_part in WARN_ABOUT:
+                            if ignore_part in word:
+                                suspicious.append((fn, line, 'REPLACED_BUT_POSSIBLE_BREAKING_TESTS', content.strip(), word, ignore_part))
 
                     if ignored_word:
                         continue
