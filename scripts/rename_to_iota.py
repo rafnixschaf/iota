@@ -29,8 +29,8 @@ REPLACE_MAP = (
     ('mist', 'micros')
 )
 
-# I list of things to not replace if they occur, especially if they are links
-CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes',)
+# I list of things to not replace if they occur, especially words containing 'mist'
+CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes', 'optimistic', 'optimist', 'optimistically', 'suite')
 
 WARN_ABOUT = (
     'suiprivkey',
