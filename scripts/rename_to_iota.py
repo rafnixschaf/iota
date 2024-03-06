@@ -29,8 +29,18 @@ REPLACE_MAP = (
     ('mist', 'micros')
 )
 
+REPLACE_DICT = dict(REPLACE_MAP)
+
 # I list of things to not replace if they occur, especially words containing 'mist'
 CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes', 'optimistic', 'optimist', 'optimistically', 'suite')
+
+# Make a mapping of to ignore file name replacements for use later on
+skip_replace_mapping = []
+
+for x in CASE_INSENSITIVE_IGNORE_REPLACE:
+    for k, _ in REPLACE_MAP:
+        if k in x:
+            skip_replace_mapping.append((k, x))
 
 WARN_ABOUT = (
     'suiprivkey',
@@ -77,15 +87,10 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
     
     to_process = []
     ignored = []
-    renames = []
     suspicious = []
 
     for filename in glob.iglob(os.path.join(path, '**'), recursive=True):
-
-        for kw, replacement in REPLACE_MAP:
-            if kw in os.path.basename(filename):
-                renames.append((filename, filename.replace(kw, replacement)))
-
+        
         if gitignore(filename) or any([filename.startswith(p) for p in ignored_paths]) or any([filename.lower().endswith('.%s' % ext) for ext in IGNORED_EXTENSIONS]):
             ignored.append(filename)
         else:
@@ -186,7 +191,17 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
 
             for kw, replacement in REPLACE_MAP:
                 if kw in os.path.basename(filename):
-                    renames.append((filename, filename.replace(kw, replacement)))
+                    
+                    newfn = filename.replace(kw, replacement)
+                    # Exceptions to rule out, like `testsuite`
+                    for orig, case in skip_replace_mapping:
+                        if case in filename:
+                            reversal = REPLACE_DICT[orig]
+                            newfn = newfn.replace(case.replace(orig, replacement), case)
+                            print('# Edge case: %s (o: %s, case: %s) -> %s -> %s' % (filename, orig, case, replacement, newfn))
+            
+                    if filename != newfn:
+                        renames.append((filename, newfn))
 
         # Make sure we sort it by shortest path first so that we don't end up with non-existing not-yet-renamed paths
         for fn, to_fn in sorted(renames, key=lambda x: len(x[0]), reverse=False):
