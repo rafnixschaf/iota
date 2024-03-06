@@ -155,36 +155,10 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
                 fn, line, reason, content, word, extra = sus
                 print('# - %s (line: %s):  %s (%s: %s `%s`)' % (fn, line, content, reason, word, extra))
 
-    # Make sure we sort it by shortest path first so that we don't end up with non-existing not-yet-renamed paths
-    '''
-    renamed_already = []
-    
-    for fn, to_fn in sorted(renames, key=lambda x: len(x[0]), reverse=False):
-        print('# `%s` -> `%s`' % (fn, to_fn))
-        if not dry_run:
-
-            # If we already renamed something before make sure we update the from path as well
-            for from_x, to_x in reversed(renamed_already):
-                if fn.startswith(from_x + '/'):
-                    fn = fn.replace(from_x, to_x, 1)
-                if to_fn.startswith(to_x + '/'):
-                    to_fn = to_fn.replace(from_x, to_x, 1)
-                    break
-            
-            try:
-                os.rename(fn, to_fn)
-            except Exception as e:
-                print(e, fn, to_fn)
-                print("Replaces:")
-                print(renamed_already)
-
-            renamed_already.append((fn, to_fn))
-    '''
-    
-    # Dirty loop to try several times in a row instead of implementing logic to deal with partial renames and their exceptions
     
     print('\n\n# Renaming files...\n\n')
 
+    # Dirty loop to try several times in a row instead of implementing logic to deal with partial renames and their exceptions
     cnt = 0
     while True:
 
@@ -192,7 +166,7 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
         if cnt > 10:
             break
 
-        print('# Round #%d' %cnt) 
+        print('\n# Round #%d\n' %cnt) 
     
         renames = []
         errors = []
@@ -203,6 +177,7 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
                 if kw in os.path.basename(filename):
                     renames.append((filename, filename.replace(kw, replacement)))
 
+        # Make sure we sort it by shortest path first so that we don't end up with non-existing not-yet-renamed paths
         for fn, to_fn in sorted(renames, key=lambda x: len(x[0]), reverse=False):
             print('# `%s` -> `%s`' % (fn, to_fn))
             if not dry_run:
