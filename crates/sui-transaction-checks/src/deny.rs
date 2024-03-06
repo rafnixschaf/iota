@@ -4,8 +4,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::TransactionDenyConfig;
 use fastcrypto_zkp::bn254::zk_login::OIDCProvider;
-use sui_config::transaction_deny_config::TransactionDenyConfig;
 use sui_types::{
     base_types::ObjectRef,
     error::{SuiError, SuiResult, UserInputError},
