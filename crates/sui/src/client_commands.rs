@@ -767,7 +767,7 @@ impl SuiClientCommands {
                 };
                 let rpc = context.config.get_active_env()?.rpc.clone();
                 let _command_result =
-                    sui_replay::execute_replay_command(Some(rpc), false, false, None, cmd).await?;
+                    sui_replay::execute_replay_command(Some(rpc), None, cmd).await?;
                 // this will be displayed via trace info, so no output is needed here
                 SuiClientCommandResult::NoOutput
             }
@@ -788,7 +788,7 @@ impl SuiClientCommands {
 
                 let rpc = context.config.get_active_env()?.rpc.clone();
                 let _command_result =
-                    sui_replay::execute_replay_command(Some(rpc), false, false, None, cmd).await?;
+                    sui_replay::execute_replay_command(Some(rpc), None, cmd).await?;
                 // this will be displayed via trace info, so no output is needed here
                 SuiClientCommandResult::NoOutput
             }
@@ -803,7 +803,7 @@ impl SuiClientCommands {
                 };
                 let rpc = context.config.get_active_env()?.rpc.clone();
                 let _command_result =
-                    sui_replay::execute_replay_command(Some(rpc), false, false, None, cmd).await?;
+                    sui_replay::execute_replay_command(Some(rpc), None, cmd).await?;
                 // this will be displayed via trace info, so no output is needed here
                 SuiClientCommandResult::NoOutput
             }
@@ -820,7 +820,7 @@ impl SuiClientCommands {
                 };
                 let rpc = context.config.get_active_env()?.rpc.clone();
                 let _command_result =
-                    sui_replay::execute_replay_command(Some(rpc), false, false, None, cmd).await?;
+                    sui_replay::execute_replay_command(Some(rpc), None, cmd).await?;
                 // this will be displayed via trace info, so no output is needed here
                 SuiClientCommandResult::NoOutput
             }
