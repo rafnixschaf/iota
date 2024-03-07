@@ -12,7 +12,6 @@ use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 use move_core_types::language_storage::StructTag;
 
-use sui_core::authority::AuthorityState;
 use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{TransactionBuilderOpenRpc, TransactionBuilderServer};
 use sui_json_rpc_types::{RPCTransactionRequestParams, SuiObjectDataFilter};
@@ -26,13 +25,13 @@ use sui_types::base_types::ObjectInfo;
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::sui_serde::BigInt;
 
-use crate::authority_state::StateRead;
+use crate::state::StateRead;
 use crate::SuiRpcModule;
 
 pub struct TransactionBuilderApi(TransactionBuilder);
 
 impl TransactionBuilderApi {
-    pub fn new(state: Arc<AuthorityState>) -> Self {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
         let reader = Arc::new(AuthorityStateDataReader::new(state));
         Self(TransactionBuilder::new(reader))
     }
@@ -45,7 +44,7 @@ impl TransactionBuilderApi {
 pub struct AuthorityStateDataReader(Arc<dyn StateRead>);
 
 impl AuthorityStateDataReader {
-    pub fn new(state: Arc<AuthorityState>) -> Self {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
         Self(state)
     }
 }
@@ -77,8 +76,7 @@ impl DataReader for AuthorityStateDataReader {
     }
 
     async fn get_reference_gas_price(&self) -> Result<u64, anyhow::Error> {
-        let epoch_store = self.0.load_epoch_store_one_call_per_task();
-        Ok(epoch_store.reference_gas_price())
+        unimplemented!()
     }
 }
 

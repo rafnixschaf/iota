@@ -4,7 +4,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use sui_config::node::ExpensiveSafetyCheckConfig;
 use sui_types::{
     digests::TransactionDigest, execution_status::ExecutionFailureStatus,
     transaction::TransactionKind,
@@ -29,7 +28,6 @@ pub struct ReplayFuzzerConfig {
     pub mutator: Box<dyn TransactionKindMutator + Send + Sync>,
     pub tx_source: TransactionSource,
     pub fail_over_on_err: bool,
-    pub expensive_safety_check_config: ExpensiveSafetyCheckConfig,
 }
 
 /// Provides the starting transaction for a fuzz session
@@ -71,14 +69,7 @@ impl ReplayFuzzer {
             )
         });
         let sandbox_state = local_exec
-            .execute_transaction(
-                &base_transaction,
-                config.expensive_safety_check_config.clone(),
-                false,
-                None,
-                None,
-                None,
-            )
+            .execute_transaction(&base_transaction, None, None, None)
             .await?;
 
         Ok(Self {
@@ -109,7 +100,6 @@ impl ReplayFuzzer {
             .execution_engine_execute_with_tx_info_impl(
                 &self.sandbox_state.transaction_info,
                 Some(transaction_kind.clone()),
-                ExpensiveSafetyCheckConfig::new_enable_all(),
             )
             .await
     }

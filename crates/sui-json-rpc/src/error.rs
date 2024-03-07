@@ -17,8 +17,8 @@ use sui_types::quorum_driver_types::QuorumDriverError;
 use thiserror::Error;
 use tokio::task::JoinError;
 
-use crate::authority_state::StateReadError;
 use crate::name_service::NameServiceError;
+use crate::state::StateReadError;
 
 pub type RpcInterimResult<T = ()> = Result<T, Error>;
 

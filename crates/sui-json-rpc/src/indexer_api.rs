@@ -12,13 +12,10 @@ use jsonrpsee::{
     types::SubscriptionResult,
     RpcModule, SubscriptionSink,
 };
-use move_bytecode_utils::layout::TypeLayoutBuilder;
 use move_core_types::language_storage::TypeTag;
 use mysten_metrics::spawn_monitored_task;
 use serde::Serialize;
 use std::sync::Arc;
-use sui_core::authority::AuthorityState;
-use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{
     cap_page_limit, validate_limit, IndexerApiOpenRpc, IndexerApiServer, JsonRpcMetrics,
     ReadApiServer, QUERY_MAX_RESULT_LIMIT,
@@ -29,7 +26,6 @@ use sui_json_rpc_types::{
     SuiTransactionBlockResponseQuery, TransactionBlocksPage, TransactionFilter,
 };
 use sui_open_rpc::Module;
-use sui_storage::key_value_store::TransactionKeyValueStore;
 use sui_types::{
     base_types::{ObjectID, SuiAddress},
     digests::TransactionDigest,
@@ -41,9 +37,9 @@ use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tracing::{debug, instrument, warn};
 
 use crate::{
-    authority_state::{StateRead, StateReadResult},
     error::{Error, SuiRpcInputError},
     name_service::{Domain, NameRecord, NameServiceConfig, NameServiceError},
+    state::{StateRead, StateReadResult},
     with_tracing, SuiRpcModule,
 };
 
@@ -78,7 +74,6 @@ const DEFAULT_MAX_SUBSCRIPTIONS: usize = 100;
 pub struct IndexerApi<R> {
     state: Arc<dyn StateRead>,
     read_api: R,
-    transaction_kv_store: Arc<TransactionKeyValueStore>,
     name_service_config: NameServiceConfig,
     pub metrics: Arc<JsonRpcMetrics>,
     subscription_semaphore: Arc<Semaphore>,
@@ -86,9 +81,8 @@ pub struct IndexerApi<R> {
 
 impl<R: ReadApiServer> IndexerApi<R> {
     pub fn new(
-        state: Arc<AuthorityState>,
+        state: Arc<dyn StateRead>,
         read_api: R,
-        transaction_kv_store: Arc<TransactionKeyValueStore>,
         name_service_config: NameServiceConfig,
         metrics: Arc<JsonRpcMetrics>,
         max_subscriptions: Option<usize>,
@@ -96,7 +90,6 @@ impl<R: ReadApiServer> IndexerApi<R> {
         let max_subscriptions = max_subscriptions.unwrap_or(DEFAULT_MAX_SUBSCRIPTIONS);
         Self {
             state,
-            transaction_kv_store,
             read_api,
             name_service_config,
             metrics,
@@ -106,17 +99,9 @@ impl<R: ReadApiServer> IndexerApi<R> {
 
     fn extract_values_from_dynamic_field_name(
         &self,
-        name: DynamicFieldName,
+        _name: DynamicFieldName,
     ) -> Result<(TypeTag, Vec<u8>), SuiRpcInputError> {
-        let DynamicFieldName {
-            type_: name_type,
-            value,
-        } = name;
-        let epoch_store = self.state.load_epoch_store_one_call_per_task();
-        let layout = TypeLayoutBuilder::build_with_types(&name_type, epoch_store.module_cache())?;
-        let sui_json_value = SuiJsonValue::new(value)?;
-        let name_bcs_value = sui_json_value.to_bcs_bytes(&layout)?;
-        Ok((name_type, name_bcs_value))
+        unimplemented!()
     }
 
     fn acquire_subscribe_permit(&self) -> anyhow::Result<OwnedSemaphorePermit> {
@@ -211,13 +196,7 @@ impl<R: ReadApiServer> IndexerApiServer for IndexerApi<R> {
             // Retrieve 1 extra item for next cursor
             let mut digests = self
                 .state
-                .get_transactions(
-                    &self.transaction_kv_store,
-                    query.filter,
-                    cursor,
-                    Some(limit + 1),
-                    descending,
-                )
+                .get_transactions(query.filter, cursor, Some(limit + 1), descending)
                 .await
                 .map_err(Error::from)?;
 
@@ -266,13 +245,7 @@ impl<R: ReadApiServer> IndexerApiServer for IndexerApi<R> {
             // Retrieve 1 extra item for next cursor
             let mut data = self
                 .state
-                .query_events(
-                    &self.transaction_kv_store,
-                    query,
-                    cursor,
-                    limit + 1,
-                    descending,
-                )
+                .query_events(query, cursor, limit + 1, descending)
                 .await
                 .map_err(Error::from)?;
             let has_next_page = data.len() > limit;

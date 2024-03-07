@@ -4,8 +4,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority_state::StateRead;
 use crate::error::{Error, SuiRpcInputError};
+use crate::state::StateRead;
 use crate::{with_tracing, SuiRpcModule};
 use async_trait::async_trait;
 use jsonrpsee::core::RpcResult;
@@ -19,7 +19,6 @@ use move_binary_format::{
 use move_core_types::identifier::Identifier;
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{MoveUtilsOpenRpc, MoveUtilsServer};
 use sui_json_rpc_types::{
     MoveFunctionArgType, ObjectValueKind, SuiMoveNormalizedFunction, SuiMoveNormalizedModule,
@@ -56,7 +55,7 @@ pub struct MoveUtilsInternal {
 }
 
 impl MoveUtilsInternal {
-    pub fn new(state: Arc<AuthorityState>) -> Self {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
         Self { state }
     }
 }
@@ -129,7 +128,7 @@ pub struct MoveUtils {
 }
 
 impl MoveUtils {
-    pub fn new(state: Arc<AuthorityState>) -> Self {
+    pub fn new(state: Arc<dyn StateRead>) -> Self {
         Self {
             internal: Arc::new(MoveUtilsInternal::new(state))
                 as Arc<dyn MoveUtilsInternalTrait + Send + Sync>,

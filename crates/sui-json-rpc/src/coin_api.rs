@@ -13,17 +13,14 @@ use cached::SizedCache;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
 use move_core_types::language_storage::{StructTag, TypeTag};
-use sui_storage::indexes::TotalBalance;
 use tap::TapFallible;
 use tracing::{debug, info, instrument};
 
 use mysten_metrics::spawn_monitored_task;
-use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{cap_page_limit, CoinReadApiOpenRpc, CoinReadApiServer, JsonRpcMetrics};
 use sui_json_rpc_types::Balance;
 use sui_json_rpc_types::{CoinPage, SuiCoinMetadata};
 use sui_open_rpc::Module;
-use sui_storage::key_value_store::TransactionKeyValueStore;
 use sui_types::balance::Supply;
 use sui_types::base_types::{ObjectID, SuiAddress};
 use sui_types::coin::{CoinMetadata, TreasuryCap};
@@ -35,8 +32,8 @@ use sui_types::parse_sui_struct_tag;
 #[cfg(test)]
 use mockall::automock;
 
-use crate::authority_state::StateRead;
 use crate::error::{Error, RpcInterimResult, SuiRpcInputError};
+use crate::state::StateRead;
 use crate::{with_tracing, SuiRpcModule};
 
 pub fn parse_to_struct_tag(coin_type: &str) -> Result<StructTag, SuiRpcInputError> {
@@ -57,17 +54,9 @@ pub struct CoinReadApi {
 }
 
 impl CoinReadApi {
-    pub fn new(
-        state: Arc<AuthorityState>,
-        transaction_kv_store: Arc<TransactionKeyValueStore>,
-        metrics: Arc<JsonRpcMetrics>,
-    ) -> Self {
+    pub fn new(state: Arc<dyn StateRead>, metrics: Arc<JsonRpcMetrics>) -> Self {
         Self {
-            internal: Box::new(CoinReadInternalImpl::new(
-                state,
-                transaction_kv_store,
-                metrics,
-            )),
+            internal: Box::new(CoinReadInternalImpl::new(state, metrics)),
         }
     }
 }
@@ -172,8 +161,8 @@ impl CoinReadApiServer for CoinReadApi {
                 })?;
             Ok(Balance {
                 coin_type: coin_type_tag.to_string(),
-                coin_object_count: balance.num_coins as usize,
-                total_balance: balance.balance as u128,
+                coin_object_count: 0,
+                total_balance: balance,
                 // note: LockedCoin is deprecated
                 locked_balance: Default::default(),
             })
@@ -191,8 +180,8 @@ impl CoinReadApiServer for CoinReadApi {
                 .map(|(coin_type, balance)| {
                     Balance {
                         coin_type: coin_type.to_string(),
-                        coin_object_count: balance.num_coins as usize,
-                        total_balance: balance.balance as u128,
+                        coin_object_count: 0,
+                        total_balance: *balance,
                         // note: LockedCoin is deprecated
                         locked_balance: Default::default(),
                     }
@@ -253,13 +242,12 @@ async fn find_package_object_id(
     state: Arc<dyn StateRead>,
     package_id: ObjectID,
     object_struct_tag: StructTag,
-    kv_store: Arc<TransactionKeyValueStore>,
 ) -> RpcInterimResult<ObjectID> {
     spawn_monitored_task!(async move {
         let publish_txn_digest = state.find_publish_txn_digest(package_id)?;
 
         let (_, effect) = state
-            .get_executed_transaction_and_effects(publish_txn_digest, kv_store)
+            .get_executed_transaction_and_effects(publish_txn_digest)
             .await?;
 
         for ((id, _, _), _) in effect.created() {
@@ -287,15 +275,11 @@ async fn find_package_object_id(
 pub trait CoinReadInternal {
     fn get_state(&self) -> Arc<dyn StateRead>;
     async fn get_object(&self, object_id: &ObjectID) -> RpcInterimResult<Option<Object>>;
-    async fn get_balance(
-        &self,
-        owner: SuiAddress,
-        coin_type: TypeTag,
-    ) -> RpcInterimResult<TotalBalance>;
+    async fn get_balance(&self, owner: SuiAddress, coin_type: TypeTag) -> RpcInterimResult<u128>;
     async fn get_all_balance(
         &self,
         owner: SuiAddress,
-    ) -> RpcInterimResult<Arc<HashMap<TypeTag, TotalBalance>>>;
+    ) -> RpcInterimResult<Arc<HashMap<TypeTag, u128>>>;
     async fn find_package_object(
         &self,
         package_id: &ObjectID,
@@ -313,21 +297,12 @@ pub trait CoinReadInternal {
 pub struct CoinReadInternalImpl {
     // Trait object w/ Arc as we have methods that require sharing this across multiple threads
     state: Arc<dyn StateRead>,
-    transaction_kv_store: Arc<TransactionKeyValueStore>,
     pub metrics: Arc<JsonRpcMetrics>,
 }
 
 impl CoinReadInternalImpl {
-    pub fn new(
-        state: Arc<AuthorityState>,
-        transaction_kv_store: Arc<TransactionKeyValueStore>,
-        metrics: Arc<JsonRpcMetrics>,
-    ) -> Self {
-        Self {
-            state,
-            transaction_kv_store,
-            metrics,
-        }
+    pub fn new(state: Arc<dyn StateRead>, metrics: Arc<JsonRpcMetrics>) -> Self {
+        Self { state, metrics }
     }
 }
 
@@ -341,18 +316,14 @@ impl CoinReadInternal for CoinReadInternalImpl {
         Ok(self.state.get_object(object_id).await?)
     }
 
-    async fn get_balance(
-        &self,
-        owner: SuiAddress,
-        coin_type: TypeTag,
-    ) -> RpcInterimResult<TotalBalance> {
+    async fn get_balance(&self, owner: SuiAddress, coin_type: TypeTag) -> RpcInterimResult<u128> {
         Ok(self.state.get_balance(owner, coin_type).await?)
     }
 
     async fn get_all_balance(
         &self,
         owner: SuiAddress,
-    ) -> RpcInterimResult<Arc<HashMap<TypeTag, TotalBalance>>> {
+    ) -> RpcInterimResult<Arc<HashMap<TypeTag, u128>>> {
         Ok(self.state.get_all_balance(owner).await?)
     }
 
@@ -362,9 +333,7 @@ impl CoinReadInternal for CoinReadInternalImpl {
         object_struct_tag: StructTag,
     ) -> RpcInterimResult<Object> {
         let state = self.get_state();
-        let kv_store = self.transaction_kv_store.clone();
-        let object_id =
-            find_package_object_id(state, *package_id, object_struct_tag, kv_store).await?;
+        let object_id = find_package_object_id(state, *package_id, object_struct_tag).await?;
         Ok(self.state.get_object_read(&object_id)?.into_object()?)
     }
 
@@ -402,91 +371,38 @@ impl CoinReadInternal for CoinReadInternalImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::authority_state::{MockStateRead, StateReadError};
+    use crate::state::{MockStateRead, StateReadError};
     use expect_test::expect;
     use jsonrpsee::types::ErrorObjectOwned;
-    use mockall::mock;
     use mockall::predicate;
     use move_core_types::account_address::AccountAddress;
     use move_core_types::language_storage::StructTag;
     use sui_json_rpc_types::Coin;
-    use sui_storage::key_value_store::{
-        KVStoreCheckpointData, KVStoreTransactionData, TransactionKeyValueStoreTrait,
-    };
-    use sui_storage::key_value_store_metrics::KeyValueStoreMetrics;
     use sui_types::balance::Supply;
     use sui_types::base_types::{ObjectID, SequenceNumber, SuiAddress};
     use sui_types::coin::TreasuryCap;
-    use sui_types::digests::{ObjectDigest, TransactionDigest, TransactionEventsDigest};
+    use sui_types::digests::{ObjectDigest, TransactionDigest};
     use sui_types::effects::TransactionEffects;
-    use sui_types::error::{SuiError, SuiResult};
+    use sui_types::error::SuiError;
     use sui_types::gas_coin::GAS;
     use sui_types::id::UID;
-    use sui_types::messages_checkpoint::{
-        CheckpointContentsDigest, CheckpointDigest, CheckpointSequenceNumber,
-    };
     use sui_types::object::Object;
     use sui_types::utils::create_fake_transaction;
     use sui_types::{parse_sui_struct_tag, TypeTag};
 
-    mock! {
-        pub KeyValueStore {}
-        #[async_trait]
-        impl TransactionKeyValueStoreTrait for KeyValueStore {
-            async fn multi_get(
-                &self,
-                transactions: &[TransactionDigest],
-                effects: &[TransactionDigest],
-                events: &[TransactionEventsDigest],
-            ) -> SuiResult<KVStoreTransactionData>;
-
-            async fn multi_get_checkpoints(
-                &self,
-                checkpoint_summaries: &[CheckpointSequenceNumber],
-                checkpoint_contents: &[CheckpointSequenceNumber],
-                checkpoint_summaries_by_digest: &[CheckpointDigest],
-                checkpoint_contents_by_digest: &[CheckpointContentsDigest],
-            ) -> SuiResult<KVStoreCheckpointData>;
-
-            async fn deprecated_get_transaction_checkpoint(
-                &self,
-                digest: TransactionDigest,
-            ) -> SuiResult<Option<CheckpointSequenceNumber>>;
-
-            async fn get_object(&self, object_id: ObjectID, version: SequenceNumber) -> SuiResult<Option<Object>>;
-
-            async fn multi_get_transaction_checkpoint(
-                &self,
-                digests: &[TransactionDigest],
-            ) -> SuiResult<Vec<Option<CheckpointSequenceNumber>>>;
-        }
-    }
-
     impl CoinReadInternalImpl {
-        pub fn new_for_tests(
-            state: Arc<MockStateRead>,
-            kv_store: Option<Arc<MockKeyValueStore>>,
-        ) -> Self {
-            let kv_store = kv_store.unwrap_or_else(|| Arc::new(MockKeyValueStore::new()));
-            let metrics = KeyValueStoreMetrics::new_for_tests();
-            let transaction_kv_store =
-                Arc::new(TransactionKeyValueStore::new("rocksdb", metrics, kv_store));
+        pub fn new_for_tests(state: Arc<MockStateRead>) -> Self {
             Self {
                 state,
-                transaction_kv_store,
                 metrics: Arc::new(JsonRpcMetrics::new_for_tests()),
             }
         }
     }
 
     impl CoinReadApi {
-        pub fn new_for_tests(
-            state: Arc<MockStateRead>,
-            kv_store: Option<Arc<MockKeyValueStore>>,
-        ) -> Self {
-            let kv_store = kv_store.unwrap_or_else(|| Arc::new(MockKeyValueStore::new()));
+        pub fn new_for_tests(state: Arc<MockStateRead>) -> Self {
             Self {
-                internal: Box::new(CoinReadInternalImpl::new_for_tests(state, Some(kv_store))),
+                internal: Box::new(CoinReadInternalImpl::new_for_tests(state)),
             }
         }
     }
@@ -582,7 +498,7 @@ mod tests {
                 )
                 .return_once(move |_, _, _, _| Ok(vec![gas_coin_clone]));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api.get_coins(owner, None, None, None).await;
             assert!(response.is_ok());
             let result = response.unwrap();
@@ -617,7 +533,7 @@ mod tests {
                 )
                 .return_once(move |_, _, _, _| Ok(coins_clone));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, None, Some(coins[0].coin_object_id), Some(limit))
                 .await;
@@ -654,7 +570,7 @@ mod tests {
                 )
                 .return_once(move |_, _, _, _| Ok(vec![coin_clone]));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type), None, None)
                 .await;
@@ -698,7 +614,7 @@ mod tests {
                 )
                 .return_once(move |_, _, _, _| Ok(coins_clone));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type), Some(cursor), Some(limit))
                 .await;
@@ -721,7 +637,7 @@ mod tests {
             let owner = get_test_owner();
             let coin_type = "0x2::invalid::struct::tag";
             let mock_state = MockStateRead::new();
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type.to_string()), None, None)
                 .await;
@@ -740,7 +656,7 @@ mod tests {
             let owner = get_test_owner();
             let coin_type = "0x2::sui:🤵";
             let mock_state = MockStateRead::new();
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type.to_string()), None, None)
                 .await;
@@ -768,7 +684,7 @@ mod tests {
                         SuiError::IndexStoreNotAvailable.into(),
                     ))
                 });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type.to_string()), None, None)
                 .await;
@@ -794,7 +710,7 @@ mod tests {
                 .returning(move |_, _, _, _| {
                     Err(SuiError::Storage("mock rocksdb error".to_string()).into())
                 });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coins(owner, Some(coin_type.to_string()), None, None)
                 .await;
@@ -833,7 +749,7 @@ mod tests {
                     predicate::eq(false),
                 )
                 .return_once(move |_, _, _, _| Ok(vec![gas_coin_clone]));
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_all_coins(owner, None, Some(51))
                 .await
@@ -875,7 +791,7 @@ mod tests {
                     predicate::eq(false),
                 )
                 .return_once(move |_, _, _, _| Ok(coins_clone));
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_all_coins(owner, Some(coins[0].coin_object_id), Some(limit))
                 .await
@@ -898,7 +814,7 @@ mod tests {
                     panic!("should not be called with any other object id")
                 }
             });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_all_coins(owner, Some(object_id), None)
                 .await;
@@ -920,7 +836,7 @@ mod tests {
             let mut mock_state = MockStateRead::new();
             mock_state.expect_get_object().returning(move |_| Ok(None));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_all_coins(owner, Some(object_id), None)
                 .await;
@@ -952,13 +868,8 @@ mod tests {
                     predicate::eq(owner),
                     predicate::eq(get_test_coin_type_tag(gas_coin_clone.coin_type)),
                 )
-                .return_once(move |_, _| {
-                    Ok(TotalBalance {
-                        balance: 7,
-                        num_coins: 9,
-                    })
-                });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+                .return_once(move |_, _| Ok(7));
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api.get_balance(owner, None).await;
 
             assert!(response.is_ok());
@@ -967,7 +878,7 @@ mod tests {
                 result,
                 Balance {
                     coin_type: gas_coin.coin_type,
-                    coin_object_count: 9,
+                    coin_object_count: 0,
                     total_balance: 7,
                     locked_balance: Default::default()
                 }
@@ -986,13 +897,8 @@ mod tests {
                     predicate::eq(owner),
                     predicate::eq(get_test_coin_type_tag(coin_clone.coin_type)),
                 )
-                .return_once(move |_, _| {
-                    Ok(TotalBalance {
-                        balance: 10,
-                        num_coins: 11,
-                    })
-                });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+                .return_once(move |_, _| Ok(10));
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_balance(owner, Some(coin.coin_type.clone()))
                 .await;
@@ -1003,7 +909,7 @@ mod tests {
                 result,
                 Balance {
                     coin_type: coin.coin_type,
-                    coin_object_count: 11,
+                    coin_object_count: 0,
                     total_balance: 10,
                     locked_balance: Default::default()
                 }
@@ -1016,7 +922,7 @@ mod tests {
             let owner = get_test_owner();
             let coin_type = "0x2::invalid::struct::tag";
             let mock_state = MockStateRead::new();
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_balance(owner, Some(coin_type.to_string()))
                 .await;
@@ -1041,7 +947,7 @@ mod tests {
                     SuiError::IndexStoreNotAvailable.into(),
                 ))
             });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_balance(owner, Some(coin_type.to_string()))
                 .await;
@@ -1066,7 +972,7 @@ mod tests {
             mock_state.expect_get_balance().returning(move |_, _| {
                 Err(SuiError::ExecutionError("mock db error".to_string()).into())
             });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_balance(owner, Some(coin_type.to_string()))
                 .await;
@@ -1103,36 +1009,24 @@ mod tests {
                 .with(predicate::eq(owner))
                 .return_once(move |_| {
                     let mut hash_map = HashMap::new();
-                    hash_map.insert(
-                        gas_coin_type_tag,
-                        TotalBalance {
-                            balance: 7,
-                            num_coins: 9,
-                        },
-                    );
-                    hash_map.insert(
-                        usdc_coin_type_tag,
-                        TotalBalance {
-                            balance: 10,
-                            num_coins: 11,
-                        },
-                    );
+                    hash_map.insert(gas_coin_type_tag, 7);
+                    hash_map.insert(usdc_coin_type_tag, 10);
                     Ok(Arc::new(hash_map))
                 });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api.get_all_balances(owner).await;
 
             assert!(response.is_ok());
             let expected_result = vec![
                 Balance {
                     coin_type: gas_coin.coin_type,
-                    coin_object_count: 9,
+                    coin_object_count: 0,
                     total_balance: 7,
                     locked_balance: Default::default(),
                 },
                 Balance {
                     coin_type: usdc_coin.coin_type,
-                    coin_object_count: 11,
+                    coin_object_count: 0,
                     total_balance: 10,
                     locked_balance: Default::default(),
                 },
@@ -1159,7 +1053,7 @@ mod tests {
                     SuiError::IndexStoreNotAvailable.into(),
                 ))
             });
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api.get_all_balances(owner).await;
 
             assert!(response.is_err());
@@ -1232,9 +1126,9 @@ mod tests {
                 .return_once(move |_| Ok(transaction_digest));
             mock_state
                 .expect_get_executed_transaction_and_effects()
-                .return_once(move |_, _| Ok((create_fake_transaction(), transaction_effects)));
+                .return_once(move |_| Ok((create_fake_transaction(), transaction_effects)));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api
                 .get_coin_metadata("0x2::sui::SUI".to_string())
                 .await;
@@ -1342,9 +1236,9 @@ mod tests {
                 .return_once(move |_| Ok(transaction_digest));
             mock_state
                 .expect_get_executed_transaction_and_effects()
-                .return_once(move |_, _| Ok((create_fake_transaction(), transaction_effects)));
+                .return_once(move |_| Ok((create_fake_transaction(), transaction_effects)));
 
-            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state), None);
+            let coin_read_api = CoinReadApi::new_for_tests(Arc::new(mock_state));
             let response = coin_read_api.get_total_supply(coin_name.clone()).await;
 
             assert!(response.is_err());
