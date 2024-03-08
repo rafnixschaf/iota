@@ -6,6 +6,7 @@
 import argparse
 import glob, os
 from gitignore_parser import parse_gitignore
+from git import Repo
 
 # Anything in ignored paths, including what is inside in case of a directory, will be ignored regardless of gitignore
 IGNORED_PATHS = (
@@ -52,7 +53,7 @@ It's highly recommended to run a dry run and manually check the results before a
 
 The path defaults to the full repo, unless specified otherwise
 '''
-def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
+def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False, use_git_mv=False):
     if not path:
         path = os.path.join(os.path.dirname(__file__), '../..')
 
@@ -208,7 +209,12 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
             print('# `%s` -> `%s`' % (fn, to_fn))
             if not dry_run:
                 try:
-                    os.rename(fn, to_fn)
+                    if use_git_mv:
+                        repo = Repo.init(path)
+                        git = repo.git()
+                        git.mv((fn, to_fn))
+                    else:
+                        os.rename(fn, to_fn)
                 except Exception as e:
                     errors.append((fn, to_fn))
             
@@ -227,11 +233,12 @@ def main():
     parser.add_argument('--execute', action='store_true', default=False, help='Flag to execute the replacements, if omitted it will just be a dry-run')
     parser.add_argument('--respect-gitignore', action='store_true', default=True, help='Respect what is set in .gitignore to be ignored, defaults to True')
     parser.add_argument('--skip-filemod', action='store_true', default=False, help='Skip file modifcation and only do the rename part')
+    parser.add_argument('--use-git-mv', action='store_true', default=False, help='Use git mv instead of a normal mv, for same repo modifications')
 
     args = parser.parse_args()
 
 
-    rename(path=args.path, dry_run=(not args.execute), respect_gitignore=args.respect_gitignore, skip_filemod=args.skip_filemod)
+    rename(path=args.path, dry_run=(not args.execute), respect_gitignore=args.respect_gitignore, skip_filemod=args.skip_filemod, use_git_mv=args.use_git_mv)
 
 
 if __name__ == '__main__':
