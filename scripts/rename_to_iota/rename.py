@@ -54,7 +54,7 @@ The path defaults to the full repo, unless specified otherwise
 '''
 def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False):
     if not path:
-        path = os.path.join(os.path.dirname(__file__), '..')
+        path = os.path.join(os.path.dirname(__file__), '../..')
 
     path = os.path.abspath(path)
     
