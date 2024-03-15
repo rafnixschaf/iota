@@ -15,6 +15,7 @@ IGNORED_PATHS = (
     'crates/sui-framework-snapshot/bytecode_snapshot/',
     'crates/iota-light-client/example_config/20873329.yaml', 
     'crates/iota-framework-snapshot/bytecode_snapshot/',
+    'scripts/rename_to_iota/rename.py',
 )
 
 IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap', 'bcs', 'chk', 'pdf', 'ai', 'mp3', 'wav', 'ico', 'ttf', 'otf', 'woff', 'woff2')
@@ -150,9 +151,49 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False, 
 
                 new_content.append(content)
             
+            # Check for copyrights and add our own
+
+            fix_copyright = False
+            last_copyright_line = 0
+            copyright_prefix = None
+
+            for i, line in enumerate(new_content):
+                if 'SPDX-License-Identifier' in line:
+                    fix_copyright = True
+                    last_copyright_line = i
+                    if line.strip().startswith('#'):
+                        copyright_prefix = '#'
+                    elif line.strip().startswith('//'):
+                        copyright_prefix = '//'
+                    elif line.strip().startswith('f.write("//'):
+                        copyright_prefix = '     f.write("//'
+                    else:
+                        print('# Copyright addition edge case for %s: `%s` (line %s)' % (fn, line, i))
+                        suspicious.append((fn, i, 'COPYRIGHT_EDGE_CASE', line, '', ''))
+                        fix_copyright = False
+                        break
+            
+                if fn.endswith('.patch') or fn.endswith('.md') or fn.endswith('lint.rs'):
+                    fix_copyright = False
+                    break
+
+                if 'Modifications Copyright (c) 2024 IOTA Stiftung' in line:
+                    fix_copyright = False
+                    break
+
+            if fix_copyright:
+                file_changed = True
+                to_add = ['\n', '%s Modifications Copyright (c) 2024 IOTA Stiftung' % copyright_prefix, '\n', '%s SPDX-License-Identifier: Apache-2.0' % copyright_prefix, '\n']
+                new_content = new_content[:last_copyright_line+1] + to_add + new_content[last_copyright_line+1:]
+                
+                prefix_line = last_copyright_line - 3
+                if prefix_line < 0:
+                    prefix_line = 0
+
+                print('# Copyright added to %s: \n%s\n' % (fn, ''.join(new_content[prefix_line:last_copyright_line+10])))
+        
             if file_changed:
                 fcontent = ''.join(new_content)
-                #print('\nNew file contents for `%s`: \n```\n%s```\n' % (fn, fcontent))
                 if not dry_run:
                     fh.seek(0)
                     fh.write(fcontent)
@@ -170,7 +211,7 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False, 
 
             for sus in suspicious:
                 fn, line, reason, content, word, extra = sus
-                print('# - %s (line: %s):  %s (%s: %s `%s`)' % (fn, line, content, reason, word, extra))
+                print('# - %s (line: %s):  %s (%s: %s `%s`)' % (fn, line, content.strip(), reason, word, extra))
 
     
     print('\n\n# Renaming files...\n\n')
