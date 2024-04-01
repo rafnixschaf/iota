@@ -8,6 +8,7 @@ import { SentryHttpTransport } from '@mysten/core';
 import { SuiClient, SuiHTTPTransport, getFullnodeUrl } from '@mysten/sui.js/client';
 
 export enum Network {
+	ALPHANET = 'ALPHANET',
 	LOCAL = 'LOCAL',
 	DEVNET = 'DEVNET',
 	TESTNET = 'TESTNET',
@@ -15,6 +16,7 @@ export enum Network {
 }
 
 export const NetworkConfigs: Record<Network, { url: string }> = {
+	[Network.ALPHANET]: { url: 'https://api.kinesis-alpha.if4testing.rocks' },
 	[Network.LOCAL]: { url: getFullnodeUrl('localnet') },
 	[Network.DEVNET]: { url: 'https://explorer-rpc.devnet.sui.io:443' },
 	[Network.TESTNET]: { url: 'https://sui-testnet.mystenlabs.com/json-rpc' },
