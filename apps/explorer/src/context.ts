@@ -14,7 +14,7 @@ import { growthbook } from './utils/growthbook';
 import { queryClient } from './utils/queryClient';
 
 export const DEFAULT_NETWORK =
-	import.meta.env.VITE_NETWORK || (import.meta.env.DEV ? Network.LOCAL : Network.MAINNET);
+	import.meta.env.VITE_NETWORK || (import.meta.env.DEV ? Network.LOCAL : Network.ALPHANET);
 
 export const NetworkContext = createContext<
 	[Network | string, (network: Network | string) => void]
