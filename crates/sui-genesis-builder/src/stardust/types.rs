@@ -1,52 +1,26 @@
-use std::{
-    convert::Infallible,
-    fs::File,
-    io::{BufRead, Read},
-    mem::size_of,
-};
+//! Types representing blocks of data in a Stardust snapshot.
+use std::mem::size_of;
 
 use anyhow::Result;
 use iota_sdk::types::block::{
-    output::{Output, OutputId},
+    output::OutputId,
     payload::milestone::{MilestoneId, MilestoneIndex, MilestoneOption},
     protocol::ProtocolParameters,
     BlockId,
 };
 use packable::{
-    error::{UnknownTagError, UnpackError, UnpackErrorExt},
+    error::{UnpackError, UnpackErrorExt},
     packer::Packer,
     unpacker::Unpacker,
     Packable, PackableExt,
 };
-use thiserror::Error;
 
-const TOTAL_SUPPLY_IOTA: u64 = 4_600_000_000_000_000;
-const SNAPSHOT_HEADER_LENGTH: usize = std::mem::size_of::<FullSnapshotHeader>();
+use super::error::StardustError;
+
+/// The snapshot version supported currently
 const SNAPSHOT_VERSION: u8 = 2;
-
-#[derive(Debug, Error)]
-pub enum StardustError {
-    #[error("unsupported snapshot version: expected {0}, got {1}")]
-    UnsupportedSnapshotVersion(u8, u8),
-    #[error("invalid snapshot kind: {0}")]
-    InvalidSnapshotKind(u8),
-    #[error("block error: {0}")]
-    BlockError(#[from] iota_sdk::types::block::Error),
-    #[error("unknown tag: {0}")]
-    UnknownTag(u8),
-}
-
-impl From<Infallible> for StardustError {
-    fn from(_: Infallible) -> Self {
-        unreachable!()
-    }
-}
-
-impl From<UnknownTagError<u8>> for StardustError {
-    fn from(err: UnknownTagError<u8>) -> Self {
-        Self::UnknownTag(err.0)
-    }
-}
+/// The total supply on the iota-mainnet
+pub const TOTAL_SUPPLY_IOTA: u64 = 4_600_000_000_000_000;
 
 /// The kind of a snapshot.
 #[repr(u8)]
@@ -61,6 +35,7 @@ pub enum SnapshotKind {
     Delta = 1,
 }
 
+/// The header of an [`Output`] in the snapshot
 #[derive(Debug, Clone, Packable)]
 pub struct OutputHeader {
     output_id: OutputId,
@@ -71,10 +46,34 @@ pub struct OutputHeader {
 }
 
 impl OutputHeader {
+    /// The length of the header in bytes
     pub const LENGTH: usize = OutputId::LENGTH
         + size_of::<BlockId>()
         + size_of::<MilestoneIndex>()
         + 2 * size_of::<u32>();
+
+    pub fn output_id(&self) -> OutputId {
+        self.output_id
+    }
+
+    pub fn block_id(&self) -> BlockId {
+        self.block_id
+    }
+
+    /// Get the milestone index
+    pub fn ms_index(&self) -> MilestoneIndex {
+        self.ms_index
+    }
+
+    /// Get the milestone timestamp in Unix time
+    pub fn ms_timestamp(&self) -> u32 {
+        self.ms_ts
+    }
+
+    /// The length of the output in bytes.
+    pub fn length(&self) -> u32 {
+        self.length
+    }
 }
 
 /// Describes a snapshot header specific to full snapshots.
@@ -94,6 +93,9 @@ pub struct FullSnapshotHeader {
 }
 
 impl FullSnapshotHeader {
+    /// The lengt of the header in bytes
+    pub const LENGTH: usize = std::mem::size_of::<Self>();
+
     /// Returns the genesis milestone index of a [`FullSnapshotHeader`].
     pub fn genesis_milestone_index(&self) -> MilestoneIndex {
         self.genesis_milestone_index
@@ -207,7 +209,6 @@ impl Packable for FullSnapshotHeader {
         // This is only required in Hornet.
         let _parameters_milestone_option_length =
             u16::unpack::<_, VERIFY>(unpacker, &()).coerce()?;
-        // TODO: Verify that the provided protocol parameters milestone are valid.
         let parameters_milestone_option =
             MilestoneOption::unpack::<_, true>(unpacker, &ProtocolParameters::default())
                 .coerce()?;
@@ -229,46 +230,4 @@ impl Packable for FullSnapshotHeader {
             sep_count,
         })
     }
-}
-
-pub fn parse_full_snapshot() -> Result<()> {
-    let Some(path) = std::env::args().nth(1) else {
-        anyhow::bail!("please provide path to the full-snapshot file");
-    };
-
-    let snapshot_file = File::open(path)?;
-    let mut reader = std::io::BufReader::new(snapshot_file);
-    let mut buf = [0_u8; SNAPSHOT_HEADER_LENGTH];
-    reader.read_exact(&mut buf)?;
-
-    let full_header = FullSnapshotHeader::unpack_verified(buf.as_slice(), &())?;
-
-    println!("Output count: {}", full_header.output_count());
-
-    let total_supply = iterate_on_outputs(&mut reader, full_header.output_count())
-        .try_fold(0, |acc, output| {
-            Ok::<_, anyhow::Error>(acc + output?.amount())
-        })?;
-    assert_eq!(total_supply, TOTAL_SUPPLY_IOTA);
-    println!("Total supply: {total_supply}");
-    Ok(())
-}
-
-pub fn iterate_on_outputs(
-    src: &mut impl BufRead,
-    output_count: u64,
-) -> impl Iterator<Item = Result<Output, anyhow::Error>> + '_ {
-    let mut header_buf = [0_u8; OutputHeader::LENGTH];
-    let mut output_buf = [0_u8; u16::MAX as usize];
-
-    (0..output_count).map(move |_| {
-        src.read_exact(&mut header_buf)?;
-        let header = OutputHeader::unpack_verified(header_buf.as_slice(), &())?;
-        src.read_exact(&mut output_buf[0..header.length as usize])?;
-        let output = Output::unpack_verified(
-            &output_buf[0..header.length as usize],
-            &ProtocolParameters::default(),
-        )?;
-        Ok(output)
-    })
 }
