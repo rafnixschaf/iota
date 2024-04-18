@@ -1,25 +1,26 @@
+use std::{
+    convert::Infallible,
+    fs::File,
+    io::{BufRead, Read},
+    mem::size_of,
+};
+
 use anyhow::Result;
-use iota_sdk::types::block::output::Output;
-use iota_sdk::types::block::output::OutputId;
-use iota_sdk::types::block::payload::milestone::MilestoneId;
-use iota_sdk::types::block::payload::milestone::MilestoneIndex;
-use iota_sdk::types::block::payload::milestone::MilestoneOption;
-use iota_sdk::types::block::protocol::ProtocolParameters;
-use iota_sdk::types::block::BlockId;
-use packable::error::UnknownTagError;
-use packable::error::UnpackError;
-use packable::error::UnpackErrorExt;
-use packable::packer::Packer;
-use packable::unpacker::SliceUnpacker;
-use packable::unpacker::Unpacker;
-use packable::Packable;
-use packable::PackableExt;
-use std::convert::Infallible;
-use std::fs::File;
-use std::io::{BufRead, Read};
-use std::mem::size_of;
+use iota_sdk::types::block::{
+    output::{Output, OutputId},
+    payload::milestone::{MilestoneId, MilestoneIndex, MilestoneOption},
+    protocol::ProtocolParameters,
+    BlockId,
+};
+use packable::{
+    error::{UnknownTagError, UnpackError, UnpackErrorExt},
+    packer::Packer,
+    unpacker::Unpacker,
+    Packable, PackableExt,
+};
 use thiserror::Error;
 
+const TOTAL_SUPPLY_IOTA: u64 = 4_600_000_000_000_000;
 const SNAPSHOT_HEADER_LENGTH: usize = std::mem::size_of::<FullSnapshotHeader>();
 const SNAPSHOT_VERSION: u8 = 2;
 
@@ -208,7 +209,7 @@ impl Packable for FullSnapshotHeader {
             u16::unpack::<_, VERIFY>(unpacker, &()).coerce()?;
         // TODO: Verify that the provided protocol parameters milestone are valid.
         let parameters_milestone_option =
-            MilestoneOption::unpack::<_, false>(unpacker, &ProtocolParameters::default())
+            MilestoneOption::unpack::<_, true>(unpacker, &ProtocolParameters::default())
                 .coerce()?;
         let output_count = u64::unpack::<_, VERIFY>(unpacker, &()).coerce()?;
         let milestone_diff_count = u32::unpack::<_, VERIFY>(unpacker, &()).coerce()?;
@@ -240,32 +241,34 @@ pub fn parse_full_snapshot() -> Result<()> {
     let mut buf = [0_u8; SNAPSHOT_HEADER_LENGTH];
     reader.read_exact(&mut buf)?;
 
-    let full_header =
-        FullSnapshotHeader::unpack::<_, true>(&mut SliceUnpacker::new(buf.as_slice()), &())?;
+    let full_header = FullSnapshotHeader::unpack_verified(buf.as_slice(), &())?;
 
-    println!("Output count:\t\t\t{}", full_header.output_count());
+    println!("Output count: {}", full_header.output_count());
 
-    for _ in iterate_on_outputs(&mut reader, full_header.output_count())? { /* do something */ }
+    let total_supply = iterate_on_outputs(&mut reader, full_header.output_count())
+        .try_fold(0, |acc, output| {
+            Ok::<_, anyhow::Error>(acc + output?.amount())
+        })?;
+    assert_eq!(total_supply, TOTAL_SUPPLY_IOTA);
+    println!("Total supply: {total_supply}");
     Ok(())
 }
 
 pub fn iterate_on_outputs(
     src: &mut impl BufRead,
     output_count: u64,
-) -> Result<impl Iterator<Item = Result<Output, anyhow::Error>> + '_> {
+) -> impl Iterator<Item = Result<Output, anyhow::Error>> + '_ {
     let mut header_buf = [0_u8; OutputHeader::LENGTH];
     let mut output_buf = [0_u8; u16::MAX as usize];
 
-    let iter = (0..output_count).map(move |_| {
+    (0..output_count).map(move |_| {
         src.read_exact(&mut header_buf)?;
-        let header =
-            OutputHeader::unpack::<_, false>(&mut SliceUnpacker::new(header_buf.as_slice()), &())?;
-        println!("header {:?}", header);
+        let header = OutputHeader::unpack_verified(header_buf.as_slice(), &())?;
         src.read_exact(&mut output_buf[0..header.length as usize])?;
-        // TODO: Use the [iota_sdk::types::block::Output] to unpack the `output_buf`
-        // let output = Output::unpack::<_, true>(&mut output_buf.as_slice())?;
-        let output = unimplemented!();
+        let output = Output::unpack_verified(
+            &output_buf[0..header.length as usize],
+            &ProtocolParameters::default(),
+        )?;
         Ok(output)
-    });
-    Ok(iter)
+    })
 }
