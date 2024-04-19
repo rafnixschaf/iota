@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 module stardust::irc27 {
 
     use std::fixed_point32::FixedPoint32;

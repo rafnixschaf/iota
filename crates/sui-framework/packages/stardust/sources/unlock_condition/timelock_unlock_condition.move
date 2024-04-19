@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 module stardust::timelock_unlock_condition {
 
     /// The timelock is not expired error.

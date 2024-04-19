@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 module stardust::expiration_unlock_condition {
 
     /// The output can not be unlocked by the sender error.

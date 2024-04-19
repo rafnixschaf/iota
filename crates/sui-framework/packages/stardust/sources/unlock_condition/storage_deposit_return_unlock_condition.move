@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 module stardust::storage_deposit_return_unlock_condition {
 
     use sui::balance::{Balance, split};
