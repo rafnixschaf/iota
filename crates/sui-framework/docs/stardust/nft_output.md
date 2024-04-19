@@ -136,6 +136,10 @@ The function extracts assets from a legacy NFT output.
     };
 
     // Destroy the output.
+    <a href="../move-stdlib/option.md#0x1_option_destroy_none">option::destroy_none</a>(timelock);
+    <a href="../move-stdlib/option.md#0x1_option_destroy_none">option::destroy_none</a>(expiration);
+    <a href="../move-stdlib/option.md#0x1_option_destroy_none">option::destroy_none</a>(storage_deposit_return);
+
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
     <b>return</b> (iota, <a href="nft.md#0x107a_nft">nft</a>)

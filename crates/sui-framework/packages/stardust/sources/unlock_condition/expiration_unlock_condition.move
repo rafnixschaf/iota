@@ -7,7 +7,7 @@ module stardust::expiration_unlock_condition {
     const EWrongSender: u64 = 0;
 
     /// The Stardust expiration unlock condition.
-    public struct ExpirationUnlockCondition has store, drop {
+    public struct ExpirationUnlockCondition has store {
         /// The address who owns the output before the timestamp has passed.
         owner: address,
         /// The address that is allowed to spend the locked funds after the timestamp has passed.
@@ -17,9 +17,16 @@ module stardust::expiration_unlock_condition {
     }
 
     /// Check the unlock condition.
-    public fun unlock(condition: &ExpirationUnlockCondition, ctx: &mut TxContext) {
+    public fun unlock(condition: ExpirationUnlockCondition, ctx: &mut TxContext) {
         let unlock_address = condition.can_be_unlocked_by(ctx);
+        
         assert!(unlock_address == ctx.sender(), EWrongSender);
+
+        let ExpirationUnlockCondition {
+            owner: _,
+            return_address: _,
+            unix_time: _,
+        } = condition;
     }
 
     /// Return the address that can unlock the related output.

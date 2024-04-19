@@ -7,14 +7,18 @@ module stardust::timelock_unlock_condition {
     const ETimelockNotExpired: u64 = 0;
 
     /// The Stardust timelock unlock condition.
-    public struct TimelockUnlockCondition has store, drop {
+    public struct TimelockUnlockCondition has store {
         /// The unix time (seconds since Unix epoch) starting from which the output can be consumed.
         unix_time: u32
     }
 
     /// Check the unlock condition.
-    public fun unlock(condition: &TimelockUnlockCondition, ctx: &TxContext) {
-        assert!(!is_timelocked(condition, ctx), ETimelockNotExpired);
+    public fun unlock(condition: TimelockUnlockCondition, ctx: &TxContext) {
+        assert!(!is_timelocked(&condition, ctx), ETimelockNotExpired);
+
+        let TimelockUnlockCondition {
+            unix_time: _,
+        } = condition;
     }
 
     /// Check if the output is locked by the `Timelock` condition.

@@ -26,7 +26,7 @@ title: Module `0x107a::storage_deposit_return_unlock_condition`
 The Stardust storage deposit return unlock condition.
 
 
-<pre><code><b>struct</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a> <b>has</b> drop, store
+<pre><code><b>struct</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a> <b>has</b> store
 </code></pre>
 
 
@@ -60,7 +60,7 @@ The Stardust storage deposit return unlock condition.
 Check the unlock condition.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_unlock">unlock</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">storage_deposit_return_unlock_condition::StorageDepositReturnUnlockCondition</a>, funding: &<b>mut</b> <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_unlock">unlock</a>(condition: <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">storage_deposit_return_unlock_condition::StorageDepositReturnUnlockCondition</a>, funding: &<b>mut</b> <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -69,11 +69,17 @@ Check the unlock condition.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_unlock">unlock</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a>, funding: &<b>mut</b> Balance&lt;SUI&gt;, ctx: &<b>mut</b> TxContext) {
+<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_unlock">unlock</a>(condition: <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a>, funding: &<b>mut</b> Balance&lt;SUI&gt;, ctx: &<b>mut</b> TxContext) {
     // Aborts <b>if</b> `funding` is not enough.
     <b>let</b> return_balance = funding.split(condition.<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_amount">return_amount</a>());
+
     // Recipient will need <b>to</b> <a href="../sui-framework/transfer.md#0x2_transfer">transfer</a> the <a href="../sui-framework/coin.md#0x2_coin">coin</a> <b>to</b> a normal ed25519 <b>address</b> instead of legacy.
     public_transfer(from_balance(return_balance, ctx), condition.<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_address">return_address</a>());
+
+    <b>let</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a> {
+        return_address: _,
+        return_amount: _,
+    } = condition;
 }
 </code></pre>
 

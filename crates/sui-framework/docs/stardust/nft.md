@@ -43,7 +43,7 @@ The Stardust NFT representation.
 <code>id: <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a></code>
 </dt>
 <dd>
-
+ The Nft's ID is nested from Stardust for the migrated NFTs.
 </dd>
 <dt>
 <code>sender: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>

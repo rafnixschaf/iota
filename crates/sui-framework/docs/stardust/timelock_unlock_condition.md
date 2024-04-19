@@ -22,7 +22,7 @@ title: Module `0x107a::timelock_unlock_condition`
 The Stardust timelock unlock condition.
 
 
-<pre><code><b>struct</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a> <b>has</b> drop, store
+<pre><code><b>struct</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a> <b>has</b> store
 </code></pre>
 
 
@@ -65,7 +65,7 @@ The timelock is not expired error.
 Check the unlock condition.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unlock">unlock</a>(condition: &<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">timelock_unlock_condition::TimelockUnlockCondition</a>, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unlock">unlock</a>(condition: <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">timelock_unlock_condition::TimelockUnlockCondition</a>, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -74,8 +74,12 @@ Check the unlock condition.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unlock">unlock</a>(condition: &<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a>, ctx: &TxContext) {
-    <b>assert</b>!(!<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_is_timelocked">is_timelocked</a>(condition, ctx), <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_ETimelockNotExpired">ETimelockNotExpired</a>);
+<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unlock">unlock</a>(condition: <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a>, ctx: &TxContext) {
+    <b>assert</b>!(!<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_is_timelocked">is_timelocked</a>(&condition, ctx), <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_ETimelockNotExpired">ETimelockNotExpired</a>);
+
+    <b>let</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a> {
+        unix_time: _,
+    } = condition;
 }
 </code></pre>
 

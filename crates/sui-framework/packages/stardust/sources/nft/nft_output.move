@@ -61,6 +61,10 @@ module stardust::nft_output {
         };
 
         // Destroy the output.
+        option::destroy_none(timelock);
+        option::destroy_none(expiration);
+        option::destroy_none(storage_deposit_return);
+
         object::delete(id);
 
         return (iota, nft)
@@ -69,5 +73,27 @@ module stardust::nft_output {
     /// Loads the related `Nft` object.
     fun load_nft(output: &mut NftOutput): Nft {
         dynamic_field::remove(&mut output.id, NFT_NAME)
+    }
+
+    #[test_only]
+    public fun attach_nft(output: &mut NftOutput, nft: Nft) {
+        dynamic_field::add(&mut output.id, NFT_NAME, nft)
+    }
+
+    #[test_only]
+    public fun create_for_testing(
+        iota: Balance<SUI>,
+        storage_deposit_return: Option<StorageDepositReturnUnlockCondition>,
+        timelock: Option<TimelockUnlockCondition>,
+        expiration: Option<ExpirationUnlockCondition>,
+        ctx: &mut TxContext,
+    ): NftOutput {
+        NftOutput {
+            id: object::new(ctx),
+            iota,
+            storage_deposit_return,
+            timelock,
+            expiration,
+        }
     }
 }

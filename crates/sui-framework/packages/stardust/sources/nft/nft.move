@@ -7,7 +7,7 @@ module stardust::nft {
 
     /// The Stardust NFT representation.
     public struct Nft has key, store {
-        // The Nft's ID is nested from Stardust
+        /// The Nft's ID is nested from Stardust for the migrated NFTs.
         id: UID,
 
         /// The sender features.

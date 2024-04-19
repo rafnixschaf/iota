@@ -22,7 +22,7 @@ title: Module `0x107a::expiration_unlock_condition`
 The Stardust expiration unlock condition.
 
 
-<pre><code><b>struct</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">ExpirationUnlockCondition</a> <b>has</b> drop, store
+<pre><code><b>struct</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">ExpirationUnlockCondition</a> <b>has</b> store
 </code></pre>
 
 
@@ -77,7 +77,7 @@ The output can not be unlocked by the sender error.
 Check the unlock condition.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_unlock">unlock</a>(condition: &<a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">expiration_unlock_condition::ExpirationUnlockCondition</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_unlock">unlock</a>(condition: <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">expiration_unlock_condition::ExpirationUnlockCondition</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -86,9 +86,16 @@ Check the unlock condition.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_unlock">unlock</a>(condition: &<a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">ExpirationUnlockCondition</a>, ctx: &<b>mut</b> TxContext) {
+<pre><code><b>public</b> <b>fun</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_unlock">unlock</a>(condition: <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">ExpirationUnlockCondition</a>, ctx: &<b>mut</b> TxContext) {
     <b>let</b> unlock_address = condition.<a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_can_be_unlocked_by">can_be_unlocked_by</a>(ctx);
+
     <b>assert</b>!(unlock_address == ctx.sender(), <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_EWrongSender">EWrongSender</a>);
+
+    <b>let</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">ExpirationUnlockCondition</a> {
+        owner: _,
+        return_address: _,
+        unix_time: _,
+    } = condition;
 }
 </code></pre>
 
