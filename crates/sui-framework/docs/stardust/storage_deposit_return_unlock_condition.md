@@ -6,8 +6,8 @@ title: Module `0x107a::storage_deposit_return_unlock_condition`
 
 -  [Struct `StorageDepositReturnUnlockCondition`](#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition)
 -  [Function `unlock`](#0x107a_storage_deposit_return_unlock_condition_unlock)
--  [Function `return_amount`](#0x107a_storage_deposit_return_unlock_condition_return_amount)
 -  [Function `return_address`](#0x107a_storage_deposit_return_unlock_condition_return_address)
+-  [Function `return_amount`](#0x107a_storage_deposit_return_unlock_condition_return_amount)
 
 
 <pre><code><b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
@@ -87,31 +87,6 @@ Check the unlock condition.
 
 </details>
 
-<a name="0x107a_storage_deposit_return_unlock_condition_return_amount"></a>
-
-## Function `return_amount`
-
-Get the unlock condition's <code>return_amount</code>.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_amount">return_amount</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">storage_deposit_return_unlock_condition::StorageDepositReturnUnlockCondition</a>): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_amount">return_amount</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a>): u64 {
-    condition.return_amount
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x107a_storage_deposit_return_unlock_condition_return_address"></a>
 
 ## Function `return_address`
@@ -130,6 +105,31 @@ Get the unlock condition's <code>return_address</code>.
 
 <pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_address">return_address</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a>): <b>address</b> {
     condition.return_address
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_storage_deposit_return_unlock_condition_return_amount"></a>
+
+## Function `return_amount`
+
+Get the unlock condition's <code>return_amount</code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_amount">return_amount</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">storage_deposit_return_unlock_condition::StorageDepositReturnUnlockCondition</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_return_amount">return_amount</a>(condition: &<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">StorageDepositReturnUnlockCondition</a>): u64 {
+    condition.return_amount
 }
 </code></pre>
 

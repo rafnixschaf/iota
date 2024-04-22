@@ -23,7 +23,12 @@ module stardust::timelock_unlock_condition {
 
     /// Check if the output is locked by the `Timelock` condition.
     public fun is_timelocked(condition: &TimelockUnlockCondition, ctx: &TxContext): bool {
-        condition.unix_time > ((tx_context::epoch_timestamp_ms(ctx) / 1000) as u32)
+        condition.unix_time() > ((tx_context::epoch_timestamp_ms(ctx) / 1000) as u32)
+    }
+
+    /// Get the unlock condition's `unix_time`.
+    public fun unix_time(condition: &TimelockUnlockCondition): u32 {
+        condition.unix_time
     }
 
     #[test_only]

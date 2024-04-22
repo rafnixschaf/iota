@@ -30,14 +30,14 @@ module stardust::storage_deposit_return_unlock_condition {
         } = condition;
     }
 
-    /// Get the unlock condition's `return_amount`.
-    public fun return_amount(condition: &StorageDepositReturnUnlockCondition): u64 {
-        condition.return_amount
-    }
-
     /// Get the unlock condition's `return_address`.
     public fun return_address(condition: &StorageDepositReturnUnlockCondition): address {
         condition.return_address
+    }
+
+    /// Get the unlock condition's `return_amount`.
+    public fun return_amount(condition: &StorageDepositReturnUnlockCondition): u64 {
+        condition.return_amount
     }
 
     #[test_only]

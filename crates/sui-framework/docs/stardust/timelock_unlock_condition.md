@@ -8,6 +8,7 @@ title: Module `0x107a::timelock_unlock_condition`
 -  [Constants](#@Constants_0)
 -  [Function `unlock`](#0x107a_timelock_unlock_condition_unlock)
 -  [Function `is_timelocked`](#0x107a_timelock_unlock_condition_is_timelocked)
+-  [Function `unix_time`](#0x107a_timelock_unlock_condition_unix_time)
 
 
 <pre><code><b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -104,7 +105,32 @@ Check if the output is locked by the <code>Timelock</code> condition.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_is_timelocked">is_timelocked</a>(condition: &<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a>, ctx: &TxContext): bool {
-    condition.unix_time &gt; ((<a href="../sui-framework/tx_context.md#0x2_tx_context_epoch_timestamp_ms">tx_context::epoch_timestamp_ms</a>(ctx) / 1000) <b>as</b> u32)
+    condition.<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unix_time">unix_time</a>() &gt; ((<a href="../sui-framework/tx_context.md#0x2_tx_context_epoch_timestamp_ms">tx_context::epoch_timestamp_ms</a>(ctx) / 1000) <b>as</b> u32)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_timelock_unlock_condition_unix_time"></a>
+
+## Function `unix_time`
+
+Get the unlock condition's <code>unix_time</code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unix_time">unix_time</a>(condition: &<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">timelock_unlock_condition::TimelockUnlockCondition</a>): u32
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_unix_time">unix_time</a>(condition: &<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">TimelockUnlockCondition</a>): u32 {
+    condition.unix_time
 }
 </code></pre>
 

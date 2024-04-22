@@ -34,11 +34,26 @@ module stardust::expiration_unlock_condition {
         // Unix time in seconds.
         let current_time = ((tx_context::epoch_timestamp_ms(ctx) / 1000) as u32);
 
-        if (condition.unix_time < current_time) {
-            condition.return_address
+        if (condition.unix_time() < current_time) {
+            condition.return_address()
         } else {
-            condition.owner
+            condition.owner()
         }
+    }
+
+    /// Get the unlock condition's `owner`.
+    public fun owner(condition: &ExpirationUnlockCondition): address {
+        condition.owner
+    }
+
+    /// Get the unlock condition's `return_address`.
+    public fun return_address(condition: &ExpirationUnlockCondition): address {
+        condition.return_address
+    }
+
+    /// Get the unlock condition's `unix_time`.
+    public fun unix_time(condition: &ExpirationUnlockCondition): u32 {
+        condition.unix_time
     }
 
     #[test_only]
