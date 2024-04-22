@@ -67,7 +67,7 @@ use sui_types::{
         ObjectReadResultKind, SenderSignedData, Transaction, TransactionData, TransactionDataAPI,
         TransactionKind, VerifiedCertificate, VerifiedTransaction,
     },
-    DEEPBOOK_PACKAGE_ID, STARDUST_PACKAGE_ID,
+    DEEPBOOK_PACKAGE_ID,
 };
 use tracing::{error, info, trace, warn};
 
@@ -1049,10 +1049,6 @@ impl LocalExec {
 
         if protocol_version < 5 {
             ids.retain(|id| *id != DEEPBOOK_PACKAGE_ID)
-        }
-
-        if protocol_version < 43 {
-            ids.retain(|id| *id != STARDUST_PACKAGE_ID)
         }
 
         ids

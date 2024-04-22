@@ -7,8 +7,7 @@ use std::{fs, io::Read, path::PathBuf};
 use sui_framework::SystemPackage;
 use sui_types::base_types::ObjectID;
 use sui_types::{
-    DEEPBOOK_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID,
-    SUI_SYSTEM_PACKAGE_ID,
+    DEEPBOOK_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID, SUI_SYSTEM_PACKAGE_ID,
 };
 
 pub type SnapshotManifest = BTreeMap<u64, SingleSnapshot>;
@@ -35,7 +34,6 @@ const SYSTEM_PACKAGE_PUBLISH_ORDER: &[ObjectID] = &[
     SUI_FRAMEWORK_PACKAGE_ID,
     SUI_SYSTEM_PACKAGE_ID,
     DEEPBOOK_PACKAGE_ID,
-    STARDUST_PACKAGE_ID,
 ];
 
 pub fn load_bytecode_snapshot_manifest() -> SnapshotManifest {

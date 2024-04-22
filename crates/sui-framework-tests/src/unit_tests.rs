@@ -42,6 +42,16 @@ fn run_deepbook_tests() {
 
 #[test]
 #[cfg_attr(msim, ignore)]
+fn run_stardust_tests() {
+    check_move_unit_tests({
+        let mut buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        buf.extend(["..", "sui-framework", "packages", "stardust"]);
+        buf
+    });
+}
+
+#[test]
+#[cfg_attr(msim, ignore)]
 fn run_examples_move_unit_tests() {
     for example in [
         "basics",
