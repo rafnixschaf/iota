@@ -41,7 +41,7 @@ The Stardust NFT representation.
 <code>id: <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a></code>
 </dt>
 <dd>
- The Nft's ID is nested from Stardust for the migrated NFTs.
+ The Nft's ID is nested from Stardust.
 </dd>
 <dt>
 <code>sender: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
@@ -85,7 +85,7 @@ The Stardust NFT representation.
 Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> object.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(output: <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(<a href="nft.md#0x107a_nft">nft</a>: <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>)
 </code></pre>
 
 
@@ -94,7 +94,7 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(output: <a href="nft.md#0x107a_nft_Nft">Nft</a>) {
+<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(<a href="nft.md#0x107a_nft">nft</a>: <a href="nft.md#0x107a_nft_Nft">Nft</a>) {
     <b>let</b> <a href="nft.md#0x107a_nft_Nft">Nft</a> {
         id: id,
         sender: _,
@@ -102,7 +102,7 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
         tag: _,
         immutable_issuer: _,
         immutable_metadata: immutable_metadata,
-    } = output;
+    } = <a href="nft.md#0x107a_nft">nft</a>;
 
     <a href="irc27.md#0x107a_irc27_destroy">irc27::destroy</a>(immutable_metadata);
 

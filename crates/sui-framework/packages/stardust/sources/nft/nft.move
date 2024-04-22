@@ -7,7 +7,7 @@ module stardust::nft {
 
     /// The Stardust NFT representation.
     public struct Nft has key, store {
-        /// The Nft's ID is nested from Stardust for the migrated NFTs.
+        /// The Nft's ID is nested from Stardust.
         id: UID,
 
         /// The sender feature.
@@ -24,7 +24,7 @@ module stardust::nft {
     }
 
     /// Permanently destroy an `Nft` object.
-    public fun destroy(output: Nft) {
+    public fun destroy(nft: Nft) {
         let Nft {
             id: id,
             sender: _,
@@ -32,7 +32,7 @@ module stardust::nft {
             tag: _,
             immutable_issuer: _,
             immutable_metadata: immutable_metadata,
-        } = output;
+        } = nft;
 
         irc27::destroy(immutable_metadata);
 
