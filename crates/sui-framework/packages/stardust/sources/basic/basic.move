@@ -1,4 +1,6 @@
 module stardust::basic{
+    // === Imports ===
+
     // std imports
     use std::option::{is_some,none, fill};
     // sui imports
@@ -12,8 +14,7 @@ module stardust::basic{
     use stardust::storage_deposit_return_unlock_condition::{StorageDepositReturnUnlockCondition as StorageDepositReturn};
     use stardust::timelock_unlock_condition::{TimelockUnlockCondition as Timelock};
 
-    // errors
-
+    // === Structs ===
 
     // a basic output that has unlock conditions/features
     //   - basic outputs with expiration unlock condition must be a shared object, since that's the only
@@ -41,6 +42,8 @@ module stardust::basic{
         tag: Option<vector<u8>>,
         sender: Option<address>
     }
+
+    // === Public-Mutative Functions ===
 
     // extract the assets inside the output, respecting the unlock conditions
     //  - the object will be deleted
@@ -106,6 +109,8 @@ module stardust::basic{
         return (extracted_base_token, tokens)
     }
 
+    // === Public-Package Functions ===
+
     // utility function to receive a basic output in other stardust models
     // since BasicOutput only has `key`, it can not be received via `public_receive`
     // the private receiver must be implemented in its defining module (here)
@@ -113,6 +118,8 @@ module stardust::basic{
     public(package) fun receive(parent: &mut UID, basic: Receiving<BasicOutput>) : BasicOutput {
         transfer::receive(parent, basic)
     }
+
+    // === Test Functions ===
 
     // test only function to create a basic output
     #[test_only]

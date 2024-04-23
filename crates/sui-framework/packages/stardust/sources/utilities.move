@@ -1,4 +1,5 @@
 module stardust::utilities{
+    // === Imports ===
     use std::type_name::get;
     
     use sui::{
@@ -8,10 +9,16 @@ module stardust::utilities{
         transfer::{public_transfer},
     };
 
+    // === Errors ===
+
     // returned when trying to extract a balance<T> from a bag and the balance is zero
     const EZeroNativeTokenBalance: u64 = 0;
 
+    // === Public-Mutative Functions ===
+
     // utility function for the claiming flow that can be called in a PTB
+    // it creates a coin from an option<balance<T>>
+    // aborts, if the balance is none
     public fun create_coin_from_option_balance<T>(mut b: Option<Balance<T>>, ctx: &mut TxContext) : Coin<T> {
         assert!(b.is_some(), 0);
         let eb = b.extract();
