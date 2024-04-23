@@ -6,7 +6,7 @@ title: Module `0x107a::nft`
 
 -  [Resource `Nft`](#0x107a_nft_Nft)
 -  [Function `destroy`](#0x107a_nft_destroy)
--  [Function `sender`](#0x107a_nft_sender)
+-  [Function `legacy_sender`](#0x107a_nft_legacy_sender)
 -  [Function `metadata`](#0x107a_nft_metadata)
 -  [Function `tag`](#0x107a_nft_tag)
 -  [Function `immutable_issuer`](#0x107a_nft_immutable_issuer)
@@ -44,10 +44,11 @@ The Stardust NFT representation.
  The Nft's ID is nested from Stardust.
 </dd>
 <dt>
-<code>sender: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
+<code>legacy_sender: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
 </dt>
 <dd>
- The sender feature.
+ The sender feature holds the last sender address assigned before the migration and
+ is not supported by the protocol after it.
 </dd>
 <dt>
 <code>metadata: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;</code>
@@ -97,7 +98,7 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(<a href="nft.md#0x107a_nft">nft</a>: <a href="nft.md#0x107a_nft_Nft">Nft</a>) {
     <b>let</b> <a href="nft.md#0x107a_nft_Nft">Nft</a> {
         id: id,
-        sender: _,
+        legacy_sender: _,
         metadata: _,
         tag: _,
         immutable_issuer: _,
@@ -114,14 +115,14 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
 
 </details>
 
-<a name="0x107a_nft_sender"></a>
+<a name="0x107a_nft_legacy_sender"></a>
 
-## Function `sender`
+## Function `legacy_sender`
 
-Get the NFT's <code>sender</code>.
+Get the NFT's <code>legacy_sender</code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_sender">sender</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_legacy_sender">legacy_sender</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;
 </code></pre>
 
 
@@ -130,8 +131,8 @@ Get the NFT's <code>sender</code>.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_sender">sender</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">Nft</a>): &Option&lt;<b>address</b>&gt; {
-    &<a href="nft.md#0x107a_nft">nft</a>.sender
+<pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_legacy_sender">legacy_sender</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">Nft</a>): &Option&lt;<b>address</b>&gt; {
+    &<a href="nft.md#0x107a_nft">nft</a>.legacy_sender
 }
 </code></pre>
 

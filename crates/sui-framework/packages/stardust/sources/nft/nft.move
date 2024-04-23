@@ -10,8 +10,9 @@ module stardust::nft {
         /// The Nft's ID is nested from Stardust.
         id: UID,
 
-        /// The sender feature.
-        sender: Option<address>,
+        /// The sender feature holds the last sender address assigned before the migration and
+        /// is not supported by the protocol after it.
+        legacy_sender: Option<address>,
         /// The metadata feature.
         metadata: Option<vector<u8>>,
         /// The tag feature.
@@ -27,7 +28,7 @@ module stardust::nft {
     public fun destroy(nft: Nft) {
         let Nft {
             id: id,
-            sender: _,
+            legacy_sender: _,
             metadata: _,
             tag: _,
             immutable_issuer: _,
@@ -39,9 +40,9 @@ module stardust::nft {
         object::delete(id);
     }
 
-    /// Get the NFT's `sender`.
-    public fun sender(nft: &Nft): &Option<address> {
-        &nft.sender
+    /// Get the NFT's `legacy_sender`.
+    public fun legacy_sender(nft: &Nft): &Option<address> {
+        &nft.legacy_sender
     }
 
     /// Get the NFT's `metadata`.
@@ -66,7 +67,7 @@ module stardust::nft {
 
     #[test_only]
     public fun create_for_testing(
-        sender: Option<address>,
+        legacy_sender: Option<address>,
         metadata: Option<vector<u8>>,
         tag: Option<vector<u8>>,
         immutable_issuer: Option<address>,
@@ -75,7 +76,7 @@ module stardust::nft {
     ): Nft {
         Nft {
             id: object::new(ctx),
-            sender,
+            legacy_sender,
             metadata,
             tag,
             immutable_issuer,

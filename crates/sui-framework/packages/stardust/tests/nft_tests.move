@@ -45,9 +45,9 @@ module stardust::nft_tests {
 
         let mut attributes = vec_set::empty();
         attributes.insert(string::utf8(b"attribute"));
-        
-        let mut legacy_fields = table::new(scenario.ctx());
-        legacy_fields.add(string::utf8(b"non-standard-field"), string::utf8(b"non-standard-field-value"));
+
+        let mut non_standard_fields = table::new(scenario.ctx());
+        non_standard_fields.add(string::utf8(b"field"), string::utf8(b"value"));
 
         let nft = nft::create_for_testing(
             option::some(sender),
@@ -64,7 +64,7 @@ module stardust::nft_tests {
                 option::some(string::utf8(b"issuer")),
                 option::some(string::utf8(b"description")),
                 attributes,
-                legacy_fields,
+                non_standard_fields,
             ),
             scenario.ctx(),
         );
@@ -82,7 +82,7 @@ module stardust::nft_tests {
         assert!(iota.value() == 9000, 0);
 
         // Check the extracted NFT.
-        assert!(nft.sender().contains(&sender), 1);
+        assert!(nft.legacy_sender().contains(&sender), 1);
         assert!(nft.metadata().contains(&b"metadata"), 2);
         assert!(nft.tag().contains(&b"tag"), 3);
         assert!(nft.immutable_issuer().contains(&sender), 4);
@@ -99,8 +99,8 @@ module stardust::nft_tests {
         assert!(nft.immutable_metadata().attributes().size() == 1, 14);
         assert!(nft.immutable_metadata().attributes().contains(&string::utf8(b"attribute")), 15);
 
-        assert!(nft.immutable_metadata().legacy_fields().length() == 1, 16);
-        assert!(nft.immutable_metadata().legacy_fields()[string::utf8(b"non-standard-field")] == string::utf8(b"non-standard-field-value"), 17);
+        assert!(nft.immutable_metadata().non_standard_fields().length() == 1, 16);
+        assert!(nft.immutable_metadata().non_standard_fields()[string::utf8(b"field")] == string::utf8(b"value"), 17);
 
         // Check the storage deposit return.
         scenario.next_tx(sender);

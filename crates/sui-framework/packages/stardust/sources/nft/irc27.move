@@ -35,6 +35,8 @@ module stardust::irc27 {
         collection_name: Option<String>,
 
         /// Royalty payment addresses mapped to the payout percentage.
+        /// Contains a hash of the 32 bytes parsed from the BECH32 encoded IOTA address in the metadata, it is a legacy address.
+        /// Royalties are not supported by the protocol and needed to be processed by an integrator.
         royalties: Table<address, FixedPoint32>,
 
         /// The human-readable name of the native token creator.
@@ -47,7 +49,7 @@ module stardust::irc27 {
         attributes: VecSet<String>,
 
         /// Legacy non-standard metadata fields.
-        legacy_fields: Table<String, String>,
+        non_standard_fields: Table<String, String>,
     }
 
     /// Permanently destroy a `Irc27Metadata` object.
@@ -62,12 +64,12 @@ module stardust::irc27 {
             issuer_name: _,
             description: _,
             attributes: _,
-            legacy_fields: legacy_fields,
+            non_standard_fields: non_standard_fields,
         } = irc27;
 
         royalties.drop();
 
-        legacy_fields.drop();
+        non_standard_fields.drop();
     }
 
     /// Get the metadata's `version`.
@@ -115,9 +117,9 @@ module stardust::irc27 {
         &irc27.attributes
     }
 
-    /// Get the metadata's `legacy_fields`.
-    public fun legacy_fields(irc27: &Irc27Metadata): &Table<String, String> {
-        &irc27.legacy_fields
+    /// Get the metadata's `non_standard_fields`.
+    public fun non_standard_fields(irc27: &Irc27Metadata): &Table<String, String> {
+        &irc27.non_standard_fields
     }
 
     #[test_only]
@@ -131,7 +133,7 @@ module stardust::irc27 {
         issuer_name: Option<String>,
         description: Option<String>,
         attributes: VecSet<String>,
-        legacy_fields: Table<String, String>,
+        non_standard_fields: Table<String, String>,
     ): Irc27Metadata {
         Irc27Metadata {
             version,
@@ -143,7 +145,7 @@ module stardust::irc27 {
             issuer_name,
             description,
             attributes,
-            legacy_fields
+            non_standard_fields
         }
     }
 }

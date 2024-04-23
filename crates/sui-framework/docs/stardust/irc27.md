@@ -15,7 +15,7 @@ title: Module `0x107a::irc27`
 -  [Function `issuer_name`](#0x107a_irc27_issuer_name)
 -  [Function `description`](#0x107a_irc27_description)
 -  [Function `attributes`](#0x107a_irc27_attributes)
--  [Function `legacy_fields`](#0x107a_irc27_legacy_fields)
+-  [Function `non_standard_fields`](#0x107a_irc27_non_standard_fields)
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/fixed_point32.md#0x1_fixed_point32">0x1::fixed_point32</a>;
@@ -87,6 +87,8 @@ The IRC27 NFT metadata standard schema.
 </dt>
 <dd>
  Royalty payment addresses mapped to the payout percentage.
+ Contains a hash of the 32 bytes parsed from the BECH32 encoded IOTA address in the metadata, it is a legacy address.
+ Royalties are not supported by the protocol and needed to be processed by an integrator.
 </dd>
 <dt>
 <code>issuer_name: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;</code>
@@ -107,7 +109,7 @@ The IRC27 NFT metadata standard schema.
  Additional attributes which follow [OpenSea Metadata standards](https://docs.opensea.io/docs/metadata-standards).
 </dd>
 <dt>
-<code>legacy_fields: <a href="../sui-framework/table.md#0x2_table_Table">table::Table</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;</code>
+<code>non_standard_fields: <a href="../sui-framework/table.md#0x2_table_Table">table::Table</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;</code>
 </dt>
 <dd>
  Legacy non-standard metadata fields.
@@ -144,12 +146,12 @@ Permanently destroy a <code><a href="irc27.md#0x107a_irc27_Irc27Metadata">Irc27M
         issuer_name: _,
         description: _,
         attributes: _,
-        legacy_fields: legacy_fields,
+        non_standard_fields: non_standard_fields,
     } = <a href="irc27.md#0x107a_irc27">irc27</a>;
 
     royalties.drop();
 
-    legacy_fields.drop();
+    non_standard_fields.drop();
 }
 </code></pre>
 
@@ -382,14 +384,14 @@ Get the metadata's <code>attributes</code>.
 
 </details>
 
-<a name="0x107a_irc27_legacy_fields"></a>
+<a name="0x107a_irc27_non_standard_fields"></a>
 
-## Function `legacy_fields`
+## Function `non_standard_fields`
 
-Get the metadata's <code>legacy_fields</code>.
+Get the metadata's <code>non_standard_fields</code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="irc27.md#0x107a_irc27_legacy_fields">legacy_fields</a>(<a href="irc27.md#0x107a_irc27">irc27</a>: &<a href="irc27.md#0x107a_irc27_Irc27Metadata">irc27::Irc27Metadata</a>): &<a href="../sui-framework/table.md#0x2_table_Table">table::Table</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="irc27.md#0x107a_irc27_non_standard_fields">non_standard_fields</a>(<a href="irc27.md#0x107a_irc27">irc27</a>: &<a href="irc27.md#0x107a_irc27_Irc27Metadata">irc27::Irc27Metadata</a>): &<a href="../sui-framework/table.md#0x2_table_Table">table::Table</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;
 </code></pre>
 
 
@@ -398,8 +400,8 @@ Get the metadata's <code>legacy_fields</code>.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="irc27.md#0x107a_irc27_legacy_fields">legacy_fields</a>(<a href="irc27.md#0x107a_irc27">irc27</a>: &<a href="irc27.md#0x107a_irc27_Irc27Metadata">Irc27Metadata</a>): &Table&lt;String, String&gt; {
-    &<a href="irc27.md#0x107a_irc27">irc27</a>.legacy_fields
+<pre><code><b>public</b> <b>fun</b> <a href="irc27.md#0x107a_irc27_non_standard_fields">non_standard_fields</a>(<a href="irc27.md#0x107a_irc27">irc27</a>: &<a href="irc27.md#0x107a_irc27_Irc27Metadata">Irc27Metadata</a>): &Table&lt;String, String&gt; {
+    &<a href="irc27.md#0x107a_irc27">irc27</a>.non_standard_fields
 }
 </code></pre>
 
