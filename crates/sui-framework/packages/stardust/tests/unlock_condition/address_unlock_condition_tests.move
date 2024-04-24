@@ -10,6 +10,7 @@ module stardust::address_unlock_condition_tests{
     };
     use stardust::{
         alias::{Self},
+        alias_output::{Self},
         basic::{Self},
         expiration_unlock_condition::{Self as expiration},
         storage_deposit_return_unlock_condition::{Self as sdruc},
@@ -47,12 +48,16 @@ module stardust::address_unlock_condition_tests{
             0,
         );
 
-        let sui_balance = balance::create_for_testing<SUI>(initial_iota_in_output);
-        //let token_bag = bag::new(&mut ctx);
-        let (mut alias_output, governor_cap, state_cap) = alias::create_for_testing(
-            sui_balance,
-            // state cap version
-            0,
+        let mut alias_output = alias_output::create_for_testing(
+            // iota
+            balance::create_for_testing<SUI>(initial_iota_in_output),
+            // tokens
+            bag::new(&mut ctx),
+            &mut ctx,
+        );
+        let alias = alias::create_for_testing(
+            // legacy state controller
+            some(owner),
             // state index
             0,
             // state metadata
@@ -66,8 +71,8 @@ module stardust::address_unlock_condition_tests{
             // immutable metadata
             some(b"immutable metadata content"),
             &mut ctx,
-        );
-        //alias_output.attach_tokens(token_bag);
+        );    
+        alias_output.attach_alias(alias);
 
         // Basic Output owned by the alias
         let basic_sui_balance = balance::create_for_testing<SUI>(initial_iota_in_output);
@@ -93,8 +98,8 @@ module stardust::address_unlock_condition_tests{
 
         // command 1: unlock the basic token
         // TODO: is it possible to create a Receiving object?
-        // transfer::transfer(basic_output,alias_output.id().uid_to_address());
-        // let basic_output = unlock_alias_address_owned_basic(&mut alias_output,&state_cap,basic_output);
+        // transfer::transfer(basic_output,alias.id().uid_to_address());
+        // let basic_output = unlock_alias_address_owned_basic(&mut alias,basic_output);
 
         // command 2: extract the base token and native token bag
         let (extracted_base_token_option, native_token_bag) = basic_output.extract_assets(&mut ctx);
@@ -111,21 +116,20 @@ module stardust::address_unlock_condition_tests{
         transfer::public_transfer(iota_coin, migrate_to);
 
         // command 7: extract the base token and native token bag
-        let (extracted_base_token, native_token_bag) = alias_output.extract_assets(&state_cap);
-        assert!(native_token_bag.is_none(), ENativeTokenBagNonEmpty);
-        option::destroy_none(native_token_bag);
+        let (extracted_base_token, native_token_bag, extracted_alias) = alias_output.extract_assets();
 
-        // comand 8: create coin from the extracted iota balance
+        // command 8: delete the bag
+        assert!(native_token_bag.is_empty(), ENativeTokenBagNonEmpty);
+        native_token_bag.destroy_empty();
+
+        // comand 9: create coin from the extracted iota balance
         let iota_coin = coin::from_balance(extracted_base_token, &mut ctx);
 
-        // command 9: send back the base token coin to the user
+        // command 10: send back the base token coin to the user
         transfer::public_transfer(iota_coin, migrate_to);
 
-        // command 10: destroy state cap
-        alias_output.destroy_state_cap(state_cap);
-
-        // command 11: destroy the alias alias_output
-        alias_output.destroy(governor_cap);
+        // command 10: destroy alias
+        extracted_alias.destroy();
 
         // !!! migration complete !!! 
     }

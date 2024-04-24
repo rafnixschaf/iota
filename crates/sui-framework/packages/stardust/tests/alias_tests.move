@@ -11,10 +11,10 @@ module stardust::alias_tests{
     };
     use stardust::{
         alias::{Self},
+        alias_output::{Self},
         utilities::{Self as utils},
     };
         
-    const ENativeTokenBagEmpty: u64 = 0;
     const ENativeTokenBagNonEmpty: u64 = 1;
     
     // one time witness for a coin used in tests
@@ -56,10 +56,16 @@ module stardust::alias_tests{
         token_bag.add(get<TEST_A>().into_string(), test_a_balance);
         token_bag.add(get<TEST_B>().into_string(), test_b_balance);
 
-        let (mut output, governor_cap, state_cap) = alias::create_for_testing(
+        let mut alias_output = alias_output::create_for_testing(
+            // iota
             sui_balance,
-            // state cap version
-            0,
+            // tokens
+            token_bag,
+            &mut ctx,
+        );
+        let alias = alias::create_for_testing(
+            // legacy state controller
+            some(owner),
             // state index
             0,
             // state metadata
@@ -73,15 +79,12 @@ module stardust::alias_tests{
             // immutable metadata
             some(b"immutable metadata content"),
             &mut ctx,
-        );
-        output.attach_tokens(token_bag);
+        );    
+        alias_output.attach_alias(alias);
 
         // command 1: extract the base token and native token bag
-        let (extracted_base_token, mut native_token_bag_option) = output.extract_assets(&state_cap);
-        assert!(native_token_bag_option.is_some(), ENativeTokenBagEmpty);
-        let mut native_token_bag = native_token_bag_option.extract();
-        option::destroy_none(native_token_bag_option);
-
+        let (extracted_base_token, mut native_token_bag, extracted_alias) = alias_output.extract_assets();
+        
         // command 2: extract asset A and send to user
         native_token_bag = utils::extract_and_send_to<TEST_A>(native_token_bag, migrate_to, &mut ctx);
 
@@ -98,11 +101,8 @@ module stardust::alias_tests{
         // command 6: send back the base token coin to the user
         transfer::public_transfer(iota_coin, migrate_to);
 
-        // command 7: destroy state cap
-        output.destroy_state_cap(state_cap);
-
-        // command 8: destroy the alias output
-        output.destroy(governor_cap);
+        // command 7: destroy alias
+        extracted_alias.destroy();
 
         // !!! migration complete !!! 
     }
