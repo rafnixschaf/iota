@@ -83,10 +83,10 @@ module stardust::alias_tests{
         option::destroy_none(native_token_bag_option);
 
         // command 2: extract asset A and send to user
-        utils::extract_and_send_to<TEST_A>(&mut native_token_bag, migrate_to, &mut ctx);
+        native_token_bag = utils::extract_and_send_to<TEST_A>(native_token_bag, migrate_to, &mut ctx);
 
         // command 3: extract asset B and send to user
-        utils::extract_and_send_to<TEST_B>(&mut native_token_bag, migrate_to, &mut ctx);
+        native_token_bag = utils::extract_and_send_to<TEST_B>(native_token_bag, migrate_to, &mut ctx);
         assert!(native_token_bag.is_empty(), ENativeTokenBagNonEmpty);
         
         // command 4: delete the bag
