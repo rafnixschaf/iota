@@ -78,12 +78,6 @@ module stardust::nft_output {
 
     // === Public-Package Functions ===
 
-
-    /// Get the alias id.
-    public(package) fun id(self: &mut NftOutput): &mut UID {
-        &mut self.id
-    }
-
     // utility function to receive a nft output in other stardust models
     // other modules in the stardust pacakge can call this function to receive a nft output (alias)
     public(package) fun receive(parent: &mut UID, nft: Receiving<NftOutput>) : NftOutput {
@@ -91,7 +85,6 @@ module stardust::nft_output {
     }
 
     // === Test Functions ===
-
 
     #[test_only]
     public fun attach_nft(output: &mut NftOutput, nft: Nft) {
