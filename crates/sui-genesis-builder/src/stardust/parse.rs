@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Types and logic to parse a full Stardust snapshot.
 use std::io::{BufReader, Read};
 

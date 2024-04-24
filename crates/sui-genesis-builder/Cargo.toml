@@ -34,6 +34,7 @@ sui-move-build.workspace = true
 sui-move-natives-v2 = { path = "../../sui-execution/v2/sui-move-natives" }
 sui-framework.workspace = true
 sui-framework-snapshot.workspace = true
+sui-move-build.workspace = true
 sui-protocol-config.workspace = true
 sui-types.workspace = true
 [target.'cfg(msim)'.dependencies]

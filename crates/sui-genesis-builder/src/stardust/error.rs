@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Error types pertaining to deserializing Stardust snapshots
 use std::convert::Infallible;
 
