@@ -7,7 +7,6 @@ module stardust::capped_coin {
     use sui::balance::{Supply, Balance};
     use std::string::{Self};
     use std::ascii;
-    use sui::url::Url;
 
     /// The policy wrapper that ensures the supply of a Coin never exceeds the maximum supply
     public struct MaxSupplyPolicy<phantom T> has key, store {
