@@ -88,17 +88,14 @@ module stardust::basic_tests{
         assert!(extracted_base_token_option.is_some(), ENoBaseTokenBalance);
 
         // command 2: extract asset A and send to user
-        utils::extract_and_send_to<TEST_A>(&mut native_token_bag, migrate_to, &mut ctx);
-
-        // TODO: can we actually pass around a mutable reference in a PTB multiple times? Is it consumed after the first use? Do we have to return it and pass it back in the next function?
+        native_token_bag = utils::extract_and_send_to<TEST_A>(native_token_bag, migrate_to, &mut ctx);
 
         // command 3: extract asset B and send to user
-        utils::extract_and_send_to<TEST_B>(&mut native_token_bag, migrate_to, &mut ctx);
+        native_token_bag = utils::extract_and_send_to<TEST_B>(native_token_bag, migrate_to, &mut ctx);
         assert!(native_token_bag.is_empty(), ENativeTokenBagNonEmpty);
         
         // command 4: delete the bag
         native_token_bag.destroy_empty();
-
 
         // comand 5: create coin from the extracted iota balance
         let iota_coin = utils::create_coin_from_option_balance(extracted_base_token_option, &mut ctx);
