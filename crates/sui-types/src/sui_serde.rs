@@ -23,8 +23,8 @@ use serde_with::{Bytes, DeserializeAs, SerializeAs};
 use sui_protocol_config::ProtocolVersion;
 
 use crate::{
-    parse_sui_struct_tag, parse_sui_type_tag, DEEPBOOK_ADDRESS, SUI_CLOCK_ADDRESS,
-    SUI_FRAMEWORK_ADDRESS, SUI_SYSTEM_ADDRESS, SUI_SYSTEM_STATE_ADDRESS,
+    parse_sui_struct_tag, parse_sui_type_tag, DEEPBOOK_ADDRESS, STARDUST_ADDRESS,
+    SUI_CLOCK_ADDRESS, SUI_FRAMEWORK_ADDRESS, SUI_SYSTEM_ADDRESS, SUI_SYSTEM_STATE_ADDRESS,
 };
 
 #[inline]
@@ -165,11 +165,12 @@ impl SerializeAs<StructTag> for SuiStructTag {
     }
 }
 
-const SUI_ADDRESSES: [AccountAddress; 7] = [
+const SUI_ADDRESSES: [AccountAddress; 8] = [
     AccountAddress::ZERO,
     AccountAddress::ONE,
     SUI_FRAMEWORK_ADDRESS,
     SUI_SYSTEM_ADDRESS,
+    STARDUST_ADDRESS,
     DEEPBOOK_ADDRESS,
     SUI_SYSTEM_STATE_ADDRESS,
     SUI_CLOCK_ADDRESS,

@@ -1050,6 +1050,7 @@ impl LocalExec {
         if protocol_version < 5 {
             ids.retain(|id| *id != DEEPBOOK_PACKAGE_ID)
         }
+
         ids
     }
 
