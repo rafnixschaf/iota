@@ -3,7 +3,7 @@
 
 use iota_sdk::Url;
 
-pub struct NativeTokenModule {
+pub struct NativeTokenModuleData {
     native_token_id: String,
     module_name: String,
     otw_name: String,
@@ -15,7 +15,7 @@ pub struct NativeTokenModule {
     alias_address: String,
 }
 
-impl NativeTokenModule {
+impl NativeTokenModuleData {
     pub fn new(
         native_token_id: String,
         module_name: String,

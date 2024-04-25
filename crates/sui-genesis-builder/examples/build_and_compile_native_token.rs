@@ -4,13 +4,18 @@
 //! Example demonstrating building and compiling two native token packages.
 
 use iota_sdk::Url;
-use sui_genesis_builder::stardust::native_token::module::NativeTokenModule;
-use sui_genesis_builder::stardust::native_token::package::{MoveTomlManifest, NativeTokenPackage};
+use sui_genesis_builder::stardust::native_token::module_data::NativeTokenModuleData;
+use sui_genesis_builder::stardust::native_token::package_builder::PackageBuilder;
+use sui_genesis_builder::stardust::native_token::package_data::{
+    MoveTomlManifest, NativeTokenPackageData,
+};
 
 fn main() -> anyhow::Result<()> {
-    let native_token_a = NativeTokenPackage::new(
+    let package_builder = PackageBuilder::new();
+
+    let native_token_a = NativeTokenPackageData::new(
         MoveTomlManifest::new("native_token_example".to_string()),
-        NativeTokenModule::new(
+        NativeTokenModuleData::new(
             "324823948".to_string(),
             "doge".to_string(),
             "DOGE".to_string(),
@@ -23,12 +28,12 @@ fn main() -> anyhow::Result<()> {
         ),
     );
 
-    let compiled_package_a = native_token_a.build_and_compile()?;
+    let compiled_package_a = package_builder.build_and_compile(native_token_a)?;
     println!("Compiled package: {:?}", compiled_package_a);
 
-    let native_token_b = NativeTokenPackage::new(
+    let native_token_b = NativeTokenPackageData::new(
         MoveTomlManifest::new("native_token_example".to_string()),
-        NativeTokenModule::new(
+        NativeTokenModuleData::new(
             "34543525".to_string(),
             "smr".to_string(),
             "SMR".to_string(),
@@ -41,7 +46,7 @@ fn main() -> anyhow::Result<()> {
         ),
     );
 
-    let compiled_package_b = native_token_b.build_and_compile()?;
+    let compiled_package_b = package_builder.build_and_compile(native_token_b)?;
     println!("Compiled package: {:?}", compiled_package_b);
 
     Ok(())
