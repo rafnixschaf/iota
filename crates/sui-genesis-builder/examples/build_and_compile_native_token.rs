@@ -4,14 +4,13 @@
 //! Example demonstrating building and compiling two native token packages.
 
 use iota_sdk::Url;
-use sui_genesis_builder::stardust::native_token::module_data::NativeTokenModuleData;
 use sui_genesis_builder::stardust::native_token::package_builder::PackageBuilder;
 use sui_genesis_builder::stardust::native_token::package_data::{
-    MoveTomlManifest, NativeTokenPackageData,
+    MoveTomlManifest, NativeTokenModuleData, NativeTokenPackageData,
 };
 
 fn main() -> anyhow::Result<()> {
-    let package_builder = PackageBuilder::new();
+    let package_builder = PackageBuilder;
 
     let native_token_a = NativeTokenPackageData::new(
         MoveTomlManifest::new("native_token_example".to_string()),

@@ -1,4 +1,3 @@
-// Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 //! The [`stardust`] module incorporates all the logic necessary for
