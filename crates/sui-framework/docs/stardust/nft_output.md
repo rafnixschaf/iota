@@ -17,7 +17,7 @@ title: Module `0x107a::nft_output`
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
 <b>use</b> <a href="../sui-framework/bag.md#0x2_bag">0x2::bag</a>;
 <b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
-<b>use</b> <a href="../sui-framework/dynamic_field.md#0x2_dynamic_field">0x2::dynamic_field</a>;
+<b>use</b> <a href="../sui-framework/dynamic_object_field.md#0x2_dynamic_object_field">0x2::dynamic_object_field</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/sui.md#0x2_sui">0x2::sui</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -175,7 +175,7 @@ Loads the related <code>Nft</code> object.
 
 
 <pre><code><b>fun</b> <a href="nft_output.md#0x107a_nft_output_load_nft">load_nft</a>(output: &<b>mut</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>): Nft {
-    <a href="../sui-framework/dynamic_field.md#0x2_dynamic_field_remove">dynamic_field::remove</a>(&<b>mut</b> output.id, <a href="nft_output.md#0x107a_nft_output_NFT_NAME">NFT_NAME</a>)
+    <a href="../sui-framework/dynamic_object_field.md#0x2_dynamic_object_field_remove">dynamic_object_field::remove</a>(&<b>mut</b> output.id, <a href="nft_output.md#0x107a_nft_output_NFT_NAME">NFT_NAME</a>)
 }
 </code></pre>
 

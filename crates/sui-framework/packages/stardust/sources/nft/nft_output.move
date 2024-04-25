@@ -5,7 +5,7 @@ module stardust::nft_output {
 
     use sui::bag::Bag;
     use sui::balance::Balance;
-    use sui::dynamic_field;
+    use sui::dynamic_object_field;
     use sui::sui::SUI;
 
     use stardust::nft::Nft;
@@ -78,12 +78,12 @@ module stardust::nft_output {
 
     /// Loads the related `Nft` object.
     fun load_nft(output: &mut NftOutput): Nft {
-        dynamic_field::remove(&mut output.id, NFT_NAME)
+        dynamic_object_field::remove(&mut output.id, NFT_NAME)
     }
 
     #[test_only]
     public fun attach_nft(output: &mut NftOutput, nft: Nft) {
-        dynamic_field::add(&mut output.id, NFT_NAME, nft)
+        dynamic_object_field::add(&mut output.id, NFT_NAME, nft)
     }
 
     #[test_only]
