@@ -120,7 +120,10 @@ impl NativeTokenPackage {
         let contents = fs::read_to_string(&new_move_file_path)?;
 
         let icon_url = match &self.module.icon_url() {
-            Some(url) => format!("option::some<Url>(\"{}\")", url),
+            Some(url) => format!(
+                "option::some<Url>(sui::url::new_unsafe_from_bytes(b\"{}\"))",
+                url
+            ),
             None => "option::none<Url>()".to_string(),
         };
 

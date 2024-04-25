@@ -3,6 +3,7 @@
 
 //! Example demonstrating building and compiling two native token packages.
 
+use iota_sdk::Url;
 use sui_genesis_builder::stardust::native_token::module::NativeTokenModule;
 use sui_genesis_builder::stardust::native_token::package::{MoveTomlManifest, NativeTokenPackage};
 
@@ -17,7 +18,7 @@ fn main() -> anyhow::Result<()> {
             "DOGE".to_string(),
             "Dogecoin".to_string(),
             "Much wow".to_string(),
-            Option::None,
+            Some(Url::parse("https://raw.githubusercontent.com/dogecoin/dogecoin/master/share/pixmaps/dogecoin256.png").unwrap()),
             "0x54654".to_string(),
         ),
     );

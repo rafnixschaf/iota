@@ -31,10 +31,8 @@ module 0x0::$MODULE_NAME {
         // Freeze the coin metadata
         transfer::public_freeze_object(metadata);
 
-        let alias_address = @alias;
-
         // Transfer the TreasuryCap to the alias address
-        transfer::public_transfer(treasury_cap, alias_address);
+        transfer::public_transfer(treasury_cap, @alias);
     }
 
 }
