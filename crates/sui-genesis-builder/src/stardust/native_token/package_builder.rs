@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The [`package_builder`] module provides the [`PackageBuilder`] struct, which is responsible for building and compiling Stardust native token packages.
+use std::fs;
 use std::path::{Path, PathBuf};
-use std::{fs, io};
 
 use anyhow::Result;
-use tracing::warn;
+use fs_extra::dir::{copy, CopyOptions};
 
 use sui_move_build::{BuildConfig, CompiledPackage};
 
@@ -15,20 +15,21 @@ use crate::stardust::native_token::package_data::NativeTokenPackageData;
 /// The [`PackageBuilder`] struct is responsible for building and compiling Stardust native token packages.
 pub struct PackageBuilder;
 impl PackageBuilder {
-
     /// Builds and compiles a Stardust native token package.
     pub fn build_and_compile(&self, package: NativeTokenPackageData) -> Result<CompiledPackage> {
-        let package_template_path =
-            Path::new("crates/sui-genesis-builder/src/stardust/native_token/package_template");
+        let crate_root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
-        let new_package_path = Path::new("crates/sui-genesis-builder/src/stardust/native_token")
+        let package_template_path =
+            crate_root_path.join("src/stardust/native_token/package_template");
+        let new_package_path = crate_root_path
+            .join("src/stardust/native_token")
             .join(format!(
                 "native_token_package_{}",
                 package.module().native_token_id()
             ));
 
         // Step 1: Copy the template package directory
-        Self::copy_template_dir(package_template_path, &new_package_path)?;
+        Self::copy_template_dir(&package_template_path, &new_package_path)?;
 
         // Step 2: Adjust the Move.toml file
         Self::adjust_move_toml(&new_package_path, &package)?;
@@ -42,37 +43,9 @@ impl PackageBuilder {
         Ok(compiled_package)
     }
 
-    // Copies the contents of a directory to a new location.
-    fn copy_template_dir(from: &Path, to: &PathBuf) -> Result<()> {
-        // Step 1: Create a new folder for the package and copy the contents
-        if to.exists() {
-            warn!(
-                "Path {} already exists. Deleting the existing directory.",
-                to.display()
-            );
-            fs::remove_dir_all(to)?;
-        }
-        fs::create_dir_all(to.join("sources"))?;
-
-        // Recursive copy function to handle directories and files
-        fn recursive_copy(src: &Path, dst: &Path) -> io::Result<()> {
-            if src.is_dir() {
-                if !dst.exists() {
-                    fs::create_dir(dst)?;
-                }
-                for entry in fs::read_dir(src)? {
-                    let entry = entry?;
-                    let file_type = entry.file_type()?;
-                    if file_type.is_dir() {
-                        recursive_copy(&entry.path(), &dst.join(entry.file_name()))?;
-                    } else {
-                        fs::copy(&entry.path(), dst.join(entry.file_name()))?;
-                    }
-                }
-            }
-            Ok(())
-        }
-        recursive_copy(from, to)?;
+    fn copy_template_dir(src_dir: &Path, target_dir: &Path) -> Result<()> {
+        let copy_options = CopyOptions::new().overwrite(true).content_only(true);
+        copy(src_dir, target_dir, &copy_options)?;
 
         Ok(())
     }

@@ -12706,6 +12706,7 @@ dependencies = [
  "bcs",
  "camino",
  "fastcrypto",
+ "fs_extra",
  "insta",
  "iota-sdk",
  "move-binary-format",
