@@ -8,7 +8,6 @@ title: Module `0x107a::nft_output`
 -  [Constants](#@Constants_0)
 -  [Function `extract_assets`](#0x107a_nft_output_extract_assets)
 -  [Function `load_nft`](#0x107a_nft_output_load_nft)
--  [Function `id`](#0x107a_nft_output_id)
 -  [Function `receive`](#0x107a_nft_output_receive)
 
 
@@ -171,31 +170,6 @@ Loads the related <code>Nft</code> object.
 
 <pre><code><b>fun</b> <a href="nft_output.md#0x107a_nft_output_load_nft">load_nft</a>(output: &<b>mut</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>): Nft {
     <a href="../sui-framework/dynamic_field.md#0x2_dynamic_field_remove">dynamic_field::remove</a>(&<b>mut</b> output.id, <a href="nft_output.md#0x107a_nft_output_NFT_NAME">NFT_NAME</a>)
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x107a_nft_output_id"></a>
-
-## Function `id`
-
-Get the alias id.
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_id">id</a>(self: &<b>mut</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">nft_output::NftOutput</a>): &<b>mut</b> <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a>
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(package) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_id">id</a>(self: &<b>mut</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>): &<b>mut</b> UID {
-    &<b>mut</b> self.id
 }
 </code></pre>
 

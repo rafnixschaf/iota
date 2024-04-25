@@ -1,32 +1,34 @@
 module stardust::alias{
   
-    /// Shared Object that can be controlled with the GovernorCap and StateControllerCap.
+    /// The persisted Alias object from stardust, without tokens and assets
+    /// Outputs owned the the AliasID/Address in stardust will be sent to this object and
+    /// they have to be received via this object once extracted from `AliasOutput`.
     public struct Alias has key, store {
       /// The ID of the Alias = hash of the Output ID that created the Alias Output in Stardust.
+      /// This is the AliasID from stardust.
       id: UID,
-
       // State representation
       /// The last State Controller address assigned before the migration.
       legacy_state_controller: Option<address>,
-      // A counter increased by 1 every time the alias was state transitioned.
+      /// A counter increased by 1 every time the alias was state transitioned.
       state_index: u32,
-      // Metadata that can only be changed by the state controller. 
+      /// State metadata that can be used to store additional information.
       state_metadata: Option<vector<u8>>,
 
       // Features
-      // sender feature
+      /// The sender feature
       sender: Option<address>,
-      // The metadata feature.
+      /// The metadata feature.
       metadata: Option<vector<u8>>,
 
-      // Immutable Features
+      /// Immutable Features
       immutable_issuer: Option<address>,
       immutable_metadata: Option<vector<u8>>,
     }
 
     // === Public-Mutative Functions ===
 
-    /// Destroy the AliasOutput Object and return IOTA balance and Bag of tokens
+    /// Destroy the Alias Object, equivalent to `burning` an Alias Output in Stardust.
     public fun destroy(self: Alias) {
       let Alias {
         id,
