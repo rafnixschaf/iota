@@ -13,7 +13,9 @@ use sui_move_build::{BuildConfig, CompiledPackage};
 use crate::stardust::native_token::package_data::NativeTokenPackageData;
 
 /// The [`PackageBuilder`] struct is responsible for building and compiling Stardust native token packages.
+#[derive(Default)]
 pub struct PackageBuilder;
+
 impl PackageBuilder {
     /// Builds and compiles a Stardust native token package.
     pub fn build_and_compile(&self, package: NativeTokenPackageData) -> Result<CompiledPackage> {
