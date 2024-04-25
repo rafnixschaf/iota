@@ -44,36 +44,40 @@ impl NativeTokenPackage {
     }
 
     pub fn build_and_compile(&self) -> Result<CompiledPackage> {
+        let package_template_path =
+            Path::new("crates/sui-genesis-builder/src/stardust/native_token/package_template");
+
+        let new_package_path = Path::new("crates/sui-genesis-builder/src/stardust/native_token")
+            .join(&format!(
+                "native_token_package_{}",
+                self.module.native_token_id()
+            ));
+
         // Step 1: Copy the template package directory
-        let package_path = self.copy_template_dir()?;
+        self.copy_template_dir(package_template_path, &new_package_path)?;
 
         // Step 2: Adjust the Move.toml file
-        self.adjust_move_toml(&package_path)?;
+        self.adjust_move_toml(&new_package_path)?;
 
         // Step 3: Replace template variables in the .move file
-        self.adjust_native_token_module(&package_path)?;
+        self.adjust_native_token_module(&new_package_path)?;
 
         // Step 4: Compile the package
-        let compiled_package = BuildConfig::default().build(package_path)?;
+        let compiled_package = BuildConfig::default().build(new_package_path)?;
 
         Ok(compiled_package)
     }
 
-    fn copy_template_dir(&self) -> Result<PathBuf> {
+    fn copy_template_dir(&self, from: &Path, to: &PathBuf) -> Result<()> {
         // Step 1: Create a new folder for the package and copy the contents
-        let package_template_path =
-            Path::new("crates/sui-genesis-builder/src/stardust/native_token/package_template");
-        let new_package_name = format!("native_token_package_{}", self.module.native_token_id());
-        let new_package_path = Path::new("crates/sui-genesis-builder/src/stardust/native_token")
-            .join(&new_package_name);
-        if new_package_path.exists() {
+        if to.exists() {
             warn!(
-                "Package with name {} already exists. Deleting the existing package.",
-                new_package_name
+                "Package {} already exists. Deleting the existing package.",
+                to.display()
             );
-            fs::remove_dir_all(&new_package_path)?;
+            fs::remove_dir_all(&to)?;
         }
-        fs::create_dir_all(&new_package_path.join("sources"))?;
+        fs::create_dir_all(&to.join("sources"))?;
 
         // Recursive copy function to handle directories and files
         fn recursive_copy(src: &Path, dst: &Path) -> io::Result<()> {
@@ -93,9 +97,9 @@ impl NativeTokenPackage {
             }
             Ok(())
         }
-        recursive_copy(&package_template_path, &new_package_path)?;
+        recursive_copy(&from, &to)?;
 
-        Ok(new_package_path)
+        Ok(())
     }
 
     fn adjust_move_toml(&self, package_path: &PathBuf) -> Result<()> {
