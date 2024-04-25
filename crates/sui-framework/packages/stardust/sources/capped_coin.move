@@ -63,10 +63,8 @@ module stardust::capped_coin {
         coin::burn(&mut policy.treasury_cap, c)
     }
 
-    // === Entrypoints ===
-
     /// Mint `amount` of `Coin` and send it to `recipient`. Invokes `mint()`.
-    public entry fun mint_and_transfer<T>(
+    public fun mint_and_transfer<T>(
        policy: &mut MaxSupplyPolicy<T>, amount: u64, recipient: address, ctx: &mut TxContext
     ) {
         assert!(total_supply(policy) + amount <= policy.maximum_supply, EMaximumSupplyReached);
@@ -76,28 +74,28 @@ module stardust::capped_coin {
     // === Update coin metadata ===
 
     /// Update name of the coin in `CoinMetadata`
-    public entry fun update_name<T>(
+    public fun update_name<T>(
         policy: &mut MaxSupplyPolicy<T>, metadata: &mut CoinMetadata<T>, name: string::String
     ) {
         coin::update_name(&policy.treasury_cap, metadata, name)
     }
 
     /// Update the symbol of the coin in `CoinMetadata`
-    public entry fun update_symbol<T>(
+    public fun update_symbol<T>(
         policy: &mut MaxSupplyPolicy<T>, metadata: &mut CoinMetadata<T>, symbol: ascii::String
     ) {
         coin::update_symbol(&policy.treasury_cap, metadata, symbol)
     }
 
     /// Update the description of the coin in `CoinMetadata`
-    public entry fun update_description<T>(
+    public fun update_description<T>(
         policy: &mut MaxSupplyPolicy<T>, metadata: &mut CoinMetadata<T>, description: string::String
     ) {
         coin::update_description(&policy.treasury_cap, metadata, description)
     }
 
     /// Update the url of the coin in `CoinMetadata`
-    public entry fun update_icon_url<T>(
+    public fun update_icon_url<T>(
         policy: &mut MaxSupplyPolicy<T>, metadata: &mut CoinMetadata<T>, url: ascii::String
     ) {
         coin::update_icon_url(&policy.treasury_cap, metadata, url)
