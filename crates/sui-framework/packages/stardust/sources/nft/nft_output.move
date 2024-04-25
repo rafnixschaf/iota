@@ -3,6 +3,7 @@
 
 module stardust::nft_output {
 
+    use sui::bag::Bag;
     use sui::balance::Balance;
     use sui::dynamic_field;
     use sui::sui::SUI;
@@ -23,6 +24,10 @@ module stardust::nft_output {
         /// The amount of IOTA tokens held by the output.
         iota: Balance<SUI>,
 
+        // The bag holds native tokens, key-ed by the stringified type of the asset.
+        // Example: key: "0xabcded::soon::SOON", value: Balance<0xabcded::soon::SOON>
+        native_tokens: Bag,
+
         // The storage deposit return unlock condition.
         storage_deposit_return: Option<StorageDepositReturnUnlockCondition>,
         // The timelock unlock condition.
@@ -32,7 +37,7 @@ module stardust::nft_output {
     }
 
     /// The function extracts assets from a legacy NFT output.
-    public fun extract_assets(mut output: NftOutput, ctx: &mut TxContext): (Balance<SUI>, Nft) {
+    public fun extract_assets(mut output: NftOutput, ctx: &mut TxContext): (Balance<SUI>, Bag, Nft) {
         // Load the related Nft object.
         let nft = load_nft(&mut output);
 
@@ -40,6 +45,7 @@ module stardust::nft_output {
         let NftOutput {
             id: id,
             iota: mut iota,
+            native_tokens: native_tokens,
             storage_deposit_return: mut storage_deposit_return,
             timelock: mut timelock,
             expiration: mut expiration
@@ -67,7 +73,7 @@ module stardust::nft_output {
 
         object::delete(id);
 
-        return (iota, nft)
+        return (iota, native_tokens, nft)
     }
 
     /// Loads the related `Nft` object.
@@ -83,6 +89,7 @@ module stardust::nft_output {
     #[test_only]
     public fun create_for_testing(
         iota: Balance<SUI>,
+        native_tokens: Bag,
         storage_deposit_return: Option<StorageDepositReturnUnlockCondition>,
         timelock: Option<TimelockUnlockCondition>,
         expiration: Option<ExpirationUnlockCondition>,
@@ -91,6 +98,7 @@ module stardust::nft_output {
         NftOutput {
             id: object::new(ctx),
             iota,
+            native_tokens,
             storage_deposit_return,
             timelock,
             expiration,

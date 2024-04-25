@@ -15,6 +15,7 @@ title: Module `0x107a::nft_output`
 <b>use</b> <a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition">0x107a::storage_deposit_return_unlock_condition</a>;
 <b>use</b> <a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition">0x107a::timelock_unlock_condition</a>;
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../sui-framework/bag.md#0x2_bag">0x2::bag</a>;
 <b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
 <b>use</b> <a href="../sui-framework/dynamic_field.md#0x2_dynamic_field">0x2::dynamic_field</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
@@ -52,6 +53,12 @@ The Stardust NFT output representation.
 </dt>
 <dd>
  The amount of IOTA tokens held by the output.
+</dd>
+<dt>
+<code>native_tokens: <a href="../sui-framework/bag.md#0x2_bag_Bag">bag::Bag</a></code>
+</dt>
+<dd>
+
 </dd>
 <dt>
 <code>storage_deposit_return: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="storage_deposit_return_unlock_condition.md#0x107a_storage_deposit_return_unlock_condition_StorageDepositReturnUnlockCondition">storage_deposit_return_unlock_condition::StorageDepositReturnUnlockCondition</a>&gt;</code>
@@ -98,7 +105,7 @@ The NFT dynamic field name.
 The function extracts assets from a legacy NFT output.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft_output.md#0x107a_nft_output_extract_assets">extract_assets</a>(output: <a href="nft_output.md#0x107a_nft_output_NftOutput">nft_output::NftOutput</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="nft_output.md#0x107a_nft_output_extract_assets">extract_assets</a>(output: <a href="nft_output.md#0x107a_nft_output_NftOutput">nft_output::NftOutput</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, <a href="../sui-framework/bag.md#0x2_bag_Bag">bag::Bag</a>, <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>)
 </code></pre>
 
 
@@ -107,7 +114,7 @@ The function extracts assets from a legacy NFT output.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="nft_output.md#0x107a_nft_output_extract_assets">extract_assets</a>(<b>mut</b> output: <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>, ctx: &<b>mut</b> TxContext): (Balance&lt;SUI&gt;, Nft) {
+<pre><code><b>public</b> <b>fun</b> <a href="nft_output.md#0x107a_nft_output_extract_assets">extract_assets</a>(<b>mut</b> output: <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>, ctx: &<b>mut</b> TxContext): (Balance&lt;SUI&gt;, Bag, Nft) {
     // Load the related Nft <a href="../sui-framework/object.md#0x2_object">object</a>.
     <b>let</b> <a href="nft.md#0x107a_nft">nft</a> = <a href="nft_output.md#0x107a_nft_output_load_nft">load_nft</a>(&<b>mut</b> output);
 
@@ -115,6 +122,7 @@ The function extracts assets from a legacy NFT output.
     <b>let</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a> {
         id: id,
         iota: <b>mut</b> iota,
+        native_tokens: native_tokens,
         storage_deposit_return: <b>mut</b> storage_deposit_return,
         timelock: <b>mut</b> timelock,
         expiration: <b>mut</b> expiration
@@ -142,7 +150,7 @@ The function extracts assets from a legacy NFT output.
 
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
-    <b>return</b> (iota, <a href="nft.md#0x107a_nft">nft</a>)
+    <b>return</b> (iota, native_tokens, <a href="nft.md#0x107a_nft">nft</a>)
 }
 </code></pre>
 
