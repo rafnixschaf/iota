@@ -65,6 +65,11 @@ module stardust::nft {
         &nft.immutable_metadata
     }
 
+    /// Get the Nft id.
+    public(package) fun id(self: &mut Nft): &mut UID {
+        &mut self.id
+    }
+
     #[test_only]
     public fun create_for_testing(
         legacy_sender: Option<address>,

@@ -11,6 +11,7 @@ title: Module `0x107a::nft`
 -  [Function `tag`](#0x107a_nft_tag)
 -  [Function `immutable_issuer`](#0x107a_nft_immutable_issuer)
 -  [Function `immutable_metadata`](#0x107a_nft_immutable_metadata)
+-  [Function `id`](#0x107a_nft_id)
 
 
 <pre><code><b>use</b> <a href="irc27.md#0x107a_irc27">0x107a::irc27</a>;
@@ -233,6 +234,31 @@ Get the NFT's <code>immutable_metadata</code>.
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_immutable_metadata">immutable_metadata</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">Nft</a>): &Irc27Metadata {
     &<a href="nft.md#0x107a_nft">nft</a>.immutable_metadata
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_nft_id"></a>
+
+## Function `id`
+
+Get the Nft id.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="nft.md#0x107a_nft_id">id</a>(self: &<b>mut</b> <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<b>mut</b> <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="nft.md#0x107a_nft_id">id</a>(self: &<b>mut</b> <a href="nft.md#0x107a_nft_Nft">Nft</a>): &<b>mut</b> UID {
+    &<b>mut</b> self.id
 }
 </code></pre>
 

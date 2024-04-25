@@ -23,4 +23,4 @@ If a user does not end up with such coin objects at migration, we will have to s
 - State Controller is represented as a `StateCap` that can be updated by the governor. This happens by increasing the `StateCap` version.
 - The Governor Capability contains the ID of the alias which it controls. This is needed such that not _any_ `GovernorCap` can be used to update _any_ Alias.
 - No way for user to create a new Alias in Move by not providing a constructor. These are only created during the migration.
-- We would most likely want to receive Basic and NFT Output objects or Treasury Caps objects and return them in a receiving function (`unlock_alias_address_owned_output`), so we do not have to store them in the Alias itself. Then they can be transferred somewhere else in the calling PTB.
+- We would most likely want to receive Alias, Basic and NFT Output objects or Treasury Caps objects and return them in a receiving function (`unlock_alias_address_owned_output`), so we do not have to store them in the Alias itself. Then they can be transferred somewhere else in the calling PTB.

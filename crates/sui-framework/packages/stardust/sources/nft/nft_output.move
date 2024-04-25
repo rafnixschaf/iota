@@ -7,6 +7,7 @@ module stardust::nft_output {
     use sui::balance::Balance;
     use sui::dynamic_object_field;
     use sui::sui::SUI;
+    use sui::transfer::Receiving;
 
     use stardust::nft::Nft;
 
@@ -80,6 +81,16 @@ module stardust::nft_output {
     fun load_nft(output: &mut NftOutput): Nft {
         dynamic_object_field::remove(&mut output.id, NFT_NAME)
     }
+
+    // === Public-Package Functions ===
+
+    // utility function to receive a nft output in other stardust models
+    // other modules in the stardust pacakge can call this function to receive a nft output (alias)
+    public(package) fun receive(parent: &mut UID, nft: Receiving<NftOutput>) : NftOutput {
+        transfer::receive(parent, nft)
+    }
+
+    // === Test Functions ===
 
     #[test_only]
     public fun attach_nft(output: &mut NftOutput, nft: Nft) {

@@ -8,6 +8,7 @@ title: Module `0x107a::nft_output`
 -  [Constants](#@Constants_0)
 -  [Function `extract_assets`](#0x107a_nft_output_extract_assets)
 -  [Function `load_nft`](#0x107a_nft_output_load_nft)
+-  [Function `receive`](#0x107a_nft_output_receive)
 
 
 <pre><code><b>use</b> <a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition">0x107a::expiration_unlock_condition</a>;
@@ -20,6 +21,7 @@ title: Module `0x107a::nft_output`
 <b>use</b> <a href="../sui-framework/dynamic_object_field.md#0x2_dynamic_object_field">0x2::dynamic_object_field</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/sui.md#0x2_sui">0x2::sui</a>;
+<b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
 </code></pre>
 
@@ -176,6 +178,30 @@ Loads the related <code>Nft</code> object.
 
 <pre><code><b>fun</b> <a href="nft_output.md#0x107a_nft_output_load_nft">load_nft</a>(output: &<b>mut</b> <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>): Nft {
     <a href="../sui-framework/dynamic_object_field.md#0x2_dynamic_object_field_remove">dynamic_object_field::remove</a>(&<b>mut</b> output.id, <a href="nft_output.md#0x107a_nft_output_NFT_NAME">NFT_NAME</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_nft_output_receive"></a>
+
+## Function `receive`
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_receive">receive</a>(parent: &<b>mut</b> <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a>, <a href="nft.md#0x107a_nft">nft</a>: <a href="../sui-framework/transfer.md#0x2_transfer_Receiving">transfer::Receiving</a>&lt;<a href="nft_output.md#0x107a_nft_output_NftOutput">nft_output::NftOutput</a>&gt;): <a href="nft_output.md#0x107a_nft_output_NftOutput">nft_output::NftOutput</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_receive">receive</a>(parent: &<b>mut</b> UID, <a href="nft.md#0x107a_nft">nft</a>: Receiving&lt;<a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>&gt;) : <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a> {
+    <a href="../sui-framework/transfer.md#0x2_transfer_receive">transfer::receive</a>(parent, <a href="nft.md#0x107a_nft">nft</a>)
 }
 </code></pre>
 
