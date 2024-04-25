@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+//! The [`module_data`] module provides the [`NativeTokenModuleData`] struct, which encapsulates all the data necessary to build a Stardust native token module.
 use iota_sdk::Url;
 
 pub struct NativeTokenModuleData {
