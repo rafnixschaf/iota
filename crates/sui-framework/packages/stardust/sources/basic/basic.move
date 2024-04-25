@@ -53,9 +53,7 @@ module stardust::basic{
         // the output to be migrated
         output: BasicOutput,
         ctx: &mut TxContext
-    ) : (Option<Balance<SUI>>, Bag) {
-        let mut extracted_base_token : Option<Balance<SUI>> = none();
-
+    ) : (Balance<SUI>, Bag) {
         // unpack the output into its basic part
         let BasicOutput {
             id: id_to_delete,
@@ -93,20 +91,10 @@ module stardust::basic{
         option::destroy_none(expiration);
         option::destroy_none(sdr);
 
-        // fil lthe return value with the remaining IOTA balance
-        let iotas = iota_balance.value();
-        if (iotas > 0) {
-            // there is a balance remaining after fuflilling SDRUC
-            extracted_base_token.fill(iota_balance);
-        } else {
-            // SDRUC consumed all the balance of the output
-            iota_balance.destroy_zero();
-        };
-
         // delete the output object's UID
         delete_object(id_to_delete);
 
-        return (extracted_base_token, tokens)
+        return (iota_balance, tokens)
     }
 
     // === Public-Package Functions ===

@@ -5,6 +5,7 @@ module stardust::basic_tests{
     };
     use sui::{
         sui::{SUI},
+        coin::{Self},
         balance::{Self},
         bag::{Self},
     };
@@ -84,8 +85,8 @@ module stardust::basic_tests{
         // PTB inputs: basic output ID (`basic`) and addredd to migrate to (`migrate_to`)
 
         // command 1: extract the base token and native token bag
-        let (extracted_base_token_option, mut native_token_bag) = output.extract_assets(&mut ctx);
-        assert!(extracted_base_token_option.is_some(), ENoBaseTokenBalance);
+        let (base_token_balance, mut native_token_bag) = output.extract_assets(&mut ctx);
+        assert!(base_token_balance.value() == 0, ENoBaseTokenBalance);
 
         // command 2: extract asset A and send to user
         native_token_bag = utils::extract_and_send_to<TEST_A>(native_token_bag, migrate_to, &mut ctx);
@@ -98,7 +99,7 @@ module stardust::basic_tests{
         native_token_bag.destroy_empty();
 
         // comand 5: create coin from the extracted iota balance
-        let iota_coin = utils::create_coin_from_option_balance(extracted_base_token_option, &mut ctx);
+        let iota_coin = coin::from_balance(base_token_balance, &mut ctx);
         // we should have `initial_iota_in_output` - `sdruc_return_amount` left in the coin
         assert!(iota_coin.value() == (initial_iota_in_output - sdruc_return_amount), EIotaBlanceMismatch);
 
