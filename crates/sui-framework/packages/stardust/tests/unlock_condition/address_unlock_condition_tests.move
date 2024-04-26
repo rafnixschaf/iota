@@ -1,32 +1,25 @@
-module stardust::address_unlock_condition_tests{
-    use std::{
-        option::{some},
-    };
-    use sui::{
-        sui::{SUI},
-        balance::{Self},
-        bag::{Self},
-        coin::{Self},
-    };
-    use stardust::{
-        alias::{Self},
-        alias_output::{Self},
-        basic::{Self},
-        expiration_unlock_condition::{Self as expiration},
-        storage_deposit_return_unlock_condition::{Self as sdruc},
-        timelock_unlock_condition::{Self as timelock},
-        utilities::{Self as utils},
-    };
+module stardust::address_unlock_condition_tests {
+
+    use sui::bag;
+    use sui::balance;
+    use sui::coin;
+    use sui::sui::SUI;
+
+    use stardust::alias;
+    use stardust::alias_output;
+    use stardust::basic_output;
+    use stardust::expiration_unlock_condition;
+    use stardust::storage_deposit_return_unlock_condition;
+    use stardust::timelock_unlock_condition;
         
     const ENativeTokenBagNonEmpty: u64 = 1;
     const EIotaBlanceMismatch: u64 = 3;
     
-    // one time witness for a coin used in tests
-    // we can not declare these inside the test function, and there is no constructor for Basic so we can't test it in a test module
+    // One Time Witness for coins used in the tests.
     public struct TEST_A has drop {}
     public struct TEST_B has drop {}
 
-    // demonstration on how to claim the assets from a basic alias_output with all unlock conditions inside one PTB
+    // Demonstration on how to claim the assets from a basic alias_output with all unlock conditions inside one PTB.
     #[test]
     fun demonstrate_alias_address_unlocking() {
         let initial_iota_in_output = 10000;
@@ -34,7 +27,7 @@ module stardust::address_unlock_condition_tests{
         let owner = @0xA;
         let migrate_to = @0xD; 
 
-        // create a new tx context
+        // Create a new tx context.
         let mut ctx = tx_context::new(
             // sender
             @0xA,
@@ -55,81 +48,84 @@ module stardust::address_unlock_condition_tests{
             bag::new(&mut ctx),
             &mut ctx,
         );
+
         let alias = alias::create_for_testing(
             // legacy state controller
-            some(owner),
+            option::some(owner),
             // state index
             0,
             // state metadata
-            some(b"state metadata content"),
+            option::some(b"state metadata content"),
             // sender feature
-            some(owner),
+            option::some(owner),
             // metadata feature
-            some(b"metadata content"),
+            option::some(b"metadata content"),
             // issuer feature
-            some(owner),
+            option::some(owner),
             // immutable metadata
-            some(b"immutable metadata content"),
+            option::some(b"immutable metadata content"),
             &mut ctx,
-        );    
+        );
+
         alias_output.attach_alias(alias);
 
-        // Basic Output owned by the alias
+        // `BasicOutput` owned by the alias.
         let basic_sui_balance = balance::create_for_testing<SUI>(initial_iota_in_output);
         let timelocked_until = 5;
         let expiration_after = 20;
         let sdruc_return_address = @0xB;
         let sdruc_return_amount = 1000;
         let expiration_return_address = @0xC;
-        let basic_output = basic::create_for_testing(
+
+        let basic_output = basic_output::create_for_testing(
             basic_sui_balance,
             bag::new(&mut ctx),
-            some(sdruc::create_for_testing(sdruc_return_address, sdruc_return_amount)),
-            some(timelock::create_for_testing(timelocked_until)),
-            some(expiration::create_for_testing(owner, expiration_return_address, expiration_after)),
+            option::some(storage_deposit_return_unlock_condition::create_for_testing(sdruc_return_address, sdruc_return_amount)),
+            option::some(timelock_unlock_condition::create_for_testing(timelocked_until)),
+            option::some(expiration_unlock_condition::create_for_testing(owner, expiration_return_address, expiration_after)),
             // metadata feature
-            some(b"metadata content"),
+            option::some(b"metadata content"),
             // tag feature
-            some(b"tag content"),
+            option::some(b"tag content"),
             // sender feature
-            some(owner),
+            option::some(owner),
             &mut ctx,
         );
 
-        // command 1: unlock the basic token
+        // Command 1: unlock the basic token.
         // TODO: is it possible to create a Receiving object?
-        // transfer::transfer(basic_output,alias.id().uid_to_address());
-        // let basic_output = unlock_alias_address_owned_basic(&mut alias,basic_output);
+        // transfer::transfer(basic_output, alias.id().uid_to_address());
+        // let basic_output = unlock_alias_address_owned_basic(&mut alias, basic_output);
 
-        // command 2: extract the base token and native token bag
-        let (extracted_base_token_option, native_token_bag) = basic_output.extract_assets(&mut ctx);
-        
-        // command 3: delete the bag
-        native_token_bag.destroy_empty();
+        // Command 2: extract the base token and native token bag.
+        let (extracted_base_token, extracted_native_tokens) = basic_output.extract_assets(&mut ctx);
 
-        // comand 4: create coin from the extracted iota balance
-        let iota_coin = utils::create_coin_from_option_balance(extracted_base_token_option, &mut ctx);
-        // we should have `initial_iota_in_output` - `sdruc_return_amount` left in the coin
+        // Command 3: delete the bag.
+        extracted_native_tokens.destroy_empty();
+
+        // Command 4: create a coin from the extracted IOTA balance.
+        let iota_coin = coin::from_balance(extracted_base_token, &mut ctx);
+        // We should have `initial_iota_in_output` - `sdruc_return_amount` left in the coin.
         assert!(iota_coin.value() == (initial_iota_in_output - sdruc_return_amount), EIotaBlanceMismatch);
 
-        // command 6: send back the base token coin to the user
+        // Command 6: send back the base token coin to the user.
         transfer::public_transfer(iota_coin, migrate_to);
 
-        // command 7: extract the base token and native token bag
+        // Command 7: extract the base token and native tokens bag.
         let (extracted_base_token, native_token_bag, extracted_alias) = alias_output.extract_assets();
 
-        // command 8: delete the bag
+        // Command 8: delete the bag.
         assert!(native_token_bag.is_empty(), ENativeTokenBagNonEmpty);
-        native_token_bag.destroy_empty();
+        bag::destroy_empty(native_token_bag);
 
-        // comand 9: create coin from the extracted iota balance
+        // Command 9: create a coin from the extracted iota balance.
         let iota_coin = coin::from_balance(extracted_base_token, &mut ctx);
 
-        // command 10: send back the base token coin to the user
+        // Command 11: send back the base token coin to the user.
         transfer::public_transfer(iota_coin, migrate_to);
 
-        // command 10: destroy alias
-        extracted_alias.destroy();
+        // Command 12: destroy the alias.
+        alias::destroy(extracted_alias);
 
         // !!! migration complete !!! 
     }

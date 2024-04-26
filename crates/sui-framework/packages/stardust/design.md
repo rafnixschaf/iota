@@ -14,7 +14,7 @@ Majority of user funds are sitting in Basic Outputs without unlock conditions. S
 If a user does not end up with such coin objects at migration, we will have to sponsor their transaction to extract assets.
 
 - We can directly ask back the gas fee from the migrated object
-- Take a look at the `test` function inside [`stardust::basic`](./sources/basic.move) on how to construct a PTB for a user to claim all assets and fuflill unlock conditions.
+- Take a look at the `test` function inside [`stardust::basic_output`](./sources/basic/basic_output.move) on how to construct a PTB for a user to claim all assets and fuflill unlock conditions.
 
 ## Alias Object
 

@@ -25,7 +25,7 @@ module stardust::nft_tests {
     use stardust::storage_deposit_return_unlock_condition;
     use stardust::timelock_unlock_condition;
 
-    // One time witness for coins used in tests.
+    // One time witness for coins used in the tests.
     public struct TEST_A has drop {}
     public struct TEST_B has drop {}
 

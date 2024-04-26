@@ -98,12 +98,12 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_destroy">destroy</a>(<a href="nft.md#0x107a_nft">nft</a>: <a href="nft.md#0x107a_nft_Nft">Nft</a>) {
     <b>let</b> <a href="nft.md#0x107a_nft_Nft">Nft</a> {
-        id: id,
+        id,
         legacy_sender: _,
         metadata: _,
         tag: _,
         immutable_issuer: _,
-        immutable_metadata: immutable_metadata,
+        immutable_metadata,
     } = <a href="nft.md#0x107a_nft">nft</a>;
 
     <a href="irc27.md#0x107a_irc27_destroy">irc27::destroy</a>(immutable_metadata);
@@ -120,7 +120,7 @@ Permanently destroy an <code><a href="nft.md#0x107a_nft_Nft">Nft</a></code> obje
 
 ## Function `legacy_sender`
 
-Get the NFT's <code>legacy_sender</code>.
+Get the Nft's <code>legacy_sender</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_legacy_sender">legacy_sender</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;
@@ -145,7 +145,7 @@ Get the NFT's <code>legacy_sender</code>.
 
 ## Function `metadata`
 
-Get the NFT's <code>metadata</code>.
+Get the Nft's <code>metadata</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_metadata">metadata</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;
@@ -170,7 +170,7 @@ Get the NFT's <code>metadata</code>.
 
 ## Function `tag`
 
-Get the NFT's <code>tag</code>.
+Get the Nft's <code>tag</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_tag">tag</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;
@@ -195,7 +195,7 @@ Get the NFT's <code>tag</code>.
 
 ## Function `immutable_issuer`
 
-Get the NFT's <code>immutable_sender</code>.
+Get the Nft's <code>immutable_sender</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_immutable_issuer">immutable_issuer</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;
@@ -220,7 +220,7 @@ Get the NFT's <code>immutable_sender</code>.
 
 ## Function `immutable_metadata`
 
-Get the NFT's <code>immutable_metadata</code>.
+Get the Nft's <code>immutable_metadata</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="nft.md#0x107a_nft_immutable_metadata">immutable_metadata</a>(<a href="nft.md#0x107a_nft">nft</a>: &<a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<a href="irc27.md#0x107a_irc27_Irc27Metadata">irc27::Irc27Metadata</a>
@@ -245,7 +245,7 @@ Get the NFT's <code>immutable_metadata</code>.
 
 ## Function `id`
 
-Get the Nft id.
+Get the Nft's id.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="nft.md#0x107a_nft_id">id</a>(self: &<b>mut</b> <a href="nft.md#0x107a_nft_Nft">nft::Nft</a>): &<b>mut</b> <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a>
