@@ -3,9 +3,12 @@
 
 use std::collections::BTreeSet;
 use std::io::Read;
-use std::os::unix::prelude::FileExt;
 use std::str::FromStr;
 use std::{fmt::Write, fs::read_dir, path::PathBuf, str, thread, time::Duration};
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::FileExt;
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::FileExt;
 
 use expect_test::expect;
 use move_package::BuildConfig as MoveBuildConfig;
@@ -1739,6 +1742,9 @@ async fn test_package_upgrade_command() -> Result<(), anyhow::Error> {
         ),
     );
     let new = lines.join("\n");
+    #[cfg(target_os = "windows")]
+    move_toml.seek_write(new.as_bytes(), 0).unwrap();
+    #[cfg(not(target_os = "windows"))]
     move_toml.write_at(new.as_bytes(), 0).unwrap();
 
     // Now run the upgrade

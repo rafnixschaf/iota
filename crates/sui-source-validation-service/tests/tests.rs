@@ -5,6 +5,9 @@ use expect_test::expect;
 use reqwest::Client;
 use std::fs;
 use std::io::Read;
+#[cfg(target_os = "windows")]
+use std::os::windows::fs::FileExt;
+#[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::FileExt;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
@@ -260,7 +263,13 @@ fn copy_with_published_at_manifest(
         format!("published-at = \"{}\"", package_id.to_hex_uncompressed()),
     );
     let new = lines.join("\n");
+
+    #[cfg(target_os = "windows")]
+    move_toml.seek_write(new.as_bytes(), 0).unwrap();
+
+    #[cfg(not(target_os = "windows"))]
     move_toml.write_at(new.as_bytes(), 0).unwrap();
+
     upgrade_pkg_path
 }
 
