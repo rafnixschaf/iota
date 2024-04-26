@@ -1,47 +1,47 @@
-module stardust::alias{
-  
-    /// The persisted Alias object from stardust, without tokens and assets
-    /// Outputs owned the the AliasID/Address in stardust will be sent to this object and
-    /// they have to be received via this object once extracted from `AliasOutput`.
+module stardust::alias {
+
+    /// The persisted Alias object from Stardust, without tokens and assets.
+    /// Outputs owned the AliasID/Address in Stardust will be sent to this object and
+    /// have to be received via this object once extracted from `AliasOutput`.
     public struct Alias has key, store {
-      /// The ID of the Alias = hash of the Output ID that created the Alias Output in Stardust.
-      /// This is the AliasID from stardust.
-      id: UID,
-      // State representation
-      /// The last State Controller address assigned before the migration.
-      legacy_state_controller: Option<address>,
-      /// A counter increased by 1 every time the alias was state transitioned.
-      state_index: u32,
-      /// State metadata that can be used to store additional information.
-      state_metadata: Option<vector<u8>>,
+        /// The ID of the Alias = hash of the Output ID that created the Alias Output in Stardust.
+        /// This is the AliasID from Stardust.
+        id: UID,
 
-      // Features
-      /// The sender feature
-      sender: Option<address>,
-      /// The metadata feature.
-      metadata: Option<vector<u8>>,
+        /// The last State Controller address assigned before the migration.
+        legacy_state_controller: Option<address>,
+        /// A counter increased by 1 every time the alias was state transitioned.
+        state_index: u32,
+        /// State metadata that can be used to store additional information.
+        state_metadata: Option<vector<u8>>,
 
-      /// Immutable Features
-      immutable_issuer: Option<address>,
-      immutable_metadata: Option<vector<u8>>,
+        /// The sender feature.
+        sender: Option<address>,
+        /// The metadata feature.
+        metadata: Option<vector<u8>>,
+
+        /// The immutable issuer feature.
+        immutable_issuer: Option<address>,
+        /// The immutable metadata feature.
+        immutable_metadata: Option<vector<u8>>,
     }
 
     // === Public-Mutative Functions ===
 
-    /// Destroy the Alias Object, equivalent to `burning` an Alias Output in Stardust.
+    /// Destroy the `Alias` object, equivalent to `burning` an Alias Output in Stardust.
     public fun destroy(self: Alias) {
-      let Alias {
-        id,
-        legacy_state_controller: _,
-        state_index: _,
-        state_metadata: _,
-        sender: _,
-        metadata: _,
-        immutable_issuer: _,
-        immutable_metadata: _,
-      } = self;
-      
-      object::delete(id);
+        let Alias {
+            id,
+            legacy_state_controller: _,
+            state_index: _,
+            state_metadata: _,
+            sender: _,
+            metadata: _,
+            immutable_issuer: _,
+            immutable_metadata: _,
+        } = self;
+
+        object::delete(id);
     }
 
     // === Public-Mutative Functions ===
@@ -83,7 +83,7 @@ module stardust::alias{
 
     // === Public-Package Functions ===
 
-    /// Get the alias id.
+    /// Get the Alias's id.
     public(package) fun id(self: &mut Alias): &mut UID {
         &mut self.id
     }
@@ -101,7 +101,7 @@ module stardust::alias{
         immutable_metadata: Option<vector<u8>>,
         ctx: &mut TxContext
     ): Alias  {
-      Alias {
+        Alias {
             id: object::new(ctx),
             legacy_state_controller,
             state_index,

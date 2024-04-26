@@ -26,9 +26,9 @@ title: Module `0x107a::alias`
 
 ## Resource `Alias`
 
-The persisted Alias object from stardust, without tokens and assets
-Outputs owned the the AliasID/Address in stardust will be sent to this object and
-they have to be received via this object once extracted from <code>AliasOutput</code>.
+The persisted Alias object from Stardust, without tokens and assets.
+Outputs owned the AliasID/Address in Stardust will be sent to this object and
+have to be received via this object once extracted from <code>AliasOutput</code>.
 
 
 <pre><code><b>struct</b> <a href="alias.md#0x107a_alias_Alias">Alias</a> <b>has</b> store, key
@@ -46,7 +46,7 @@ they have to be received via this object once extracted from <code>AliasOutput</
 </dt>
 <dd>
  The ID of the Alias = hash of the Output ID that created the Alias Output in Stardust.
- This is the AliasID from stardust.
+ This is the AliasID from Stardust.
 </dd>
 <dt>
 <code>legacy_state_controller: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
@@ -70,7 +70,7 @@ they have to be received via this object once extracted from <code>AliasOutput</
 <code>sender: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
 </dt>
 <dd>
- The sender feature
+ The sender feature.
 </dd>
 <dt>
 <code>metadata: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;</code>
@@ -82,13 +82,13 @@ they have to be received via this object once extracted from <code>AliasOutput</
 <code>immutable_issuer: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<b>address</b>&gt;</code>
 </dt>
 <dd>
- Immutable Features
+ The immutable issuer feature.
 </dd>
 <dt>
 <code>immutable_metadata: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;</code>
 </dt>
 <dd>
-
+ The immutable metadata feature.
 </dd>
 </dl>
 
@@ -99,7 +99,7 @@ they have to be received via this object once extracted from <code>AliasOutput</
 
 ## Function `destroy`
 
-Destroy the Alias Object, equivalent to <code>burning</code> an Alias Output in Stardust.
+Destroy the <code><a href="alias.md#0x107a_alias_Alias">Alias</a></code> object, equivalent to <code>burning</code> an Alias Output in Stardust.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="alias.md#0x107a_alias_destroy">destroy</a>(self: <a href="alias.md#0x107a_alias_Alias">alias::Alias</a>)
@@ -112,18 +112,18 @@ Destroy the Alias Object, equivalent to <code>burning</code> an Alias Output in 
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="alias.md#0x107a_alias_destroy">destroy</a>(self: <a href="alias.md#0x107a_alias_Alias">Alias</a>) {
-  <b>let</b> <a href="alias.md#0x107a_alias_Alias">Alias</a> {
-    id,
-    legacy_state_controller: _,
-    state_index: _,
-    state_metadata: _,
-    sender: _,
-    metadata: _,
-    immutable_issuer: _,
-    immutable_metadata: _,
-  } = self;
+    <b>let</b> <a href="alias.md#0x107a_alias_Alias">Alias</a> {
+        id,
+        legacy_state_controller: _,
+        state_index: _,
+        state_metadata: _,
+        sender: _,
+        metadata: _,
+        immutable_issuer: _,
+        immutable_metadata: _,
+    } = self;
 
-  <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
+    <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
 }
 </code></pre>
 
@@ -310,7 +310,7 @@ Get the Alias's <code>immutable_metadata</code>.
 
 ## Function `id`
 
-Get the alias id.
+Get the Alias's id.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="alias.md#0x107a_alias_id">id</a>(self: &<b>mut</b> <a href="alias.md#0x107a_alias_Alias">alias::Alias</a>): &<b>mut</b> <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a>

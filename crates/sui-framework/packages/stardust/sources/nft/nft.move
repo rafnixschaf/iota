@@ -27,12 +27,12 @@ module stardust::nft {
     /// Permanently destroy an `Nft` object.
     public fun destroy(nft: Nft) {
         let Nft {
-            id: id,
+            id,
             legacy_sender: _,
             metadata: _,
             tag: _,
             immutable_issuer: _,
-            immutable_metadata: immutable_metadata,
+            immutable_metadata,
         } = nft;
 
         irc27::destroy(immutable_metadata);
@@ -40,32 +40,32 @@ module stardust::nft {
         object::delete(id);
     }
 
-    /// Get the NFT's `legacy_sender`.
+    /// Get the Nft's `legacy_sender`.
     public fun legacy_sender(nft: &Nft): &Option<address> {
         &nft.legacy_sender
     }
 
-    /// Get the NFT's `metadata`.
+    /// Get the Nft's `metadata`.
     public fun metadata(nft: &Nft): &Option<vector<u8>> {
         &nft.metadata
     }
 
-    /// Get the NFT's `tag`.
+    /// Get the Nft's `tag`.
     public fun tag(nft: &Nft): &Option<vector<u8>> {
         &nft.tag
     }
 
-    /// Get the NFT's `immutable_sender`.
+    /// Get the Nft's `immutable_sender`.
     public fun immutable_issuer(nft: &Nft): &Option<address> {
         &nft.immutable_issuer
     }
 
-    /// Get the NFT's `immutable_metadata`.
+    /// Get the Nft's `immutable_metadata`.
     public fun immutable_metadata(nft: &Nft): &Irc27Metadata {
         &nft.immutable_metadata
     }
 
-    /// Get the Nft id.
+    /// Get the Nft's id.
     public(package) fun id(self: &mut Nft): &mut UID {
         &mut self.id
     }

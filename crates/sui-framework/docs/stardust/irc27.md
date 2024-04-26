@@ -142,11 +142,11 @@ Permanently destroy a <code><a href="irc27.md#0x107a_irc27_Irc27Metadata">Irc27M
         uri: _,
         name: _,
         collection_name: _,
-        royalties: royalties,
+        royalties,
         issuer_name: _,
         description: _,
         attributes: _,
-        non_standard_fields: non_standard_fields,
+        non_standard_fields,
     } = <a href="irc27.md#0x107a_irc27">irc27</a>;
 
     royalties.drop();

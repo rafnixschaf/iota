@@ -20,20 +20,21 @@ module stardust::nft_output {
 
     /// The Stardust NFT output representation.
     public struct NftOutput has key {
+        /// This is a "random" UID, not the NFTID from Stardust.
         id: UID,
 
         /// The amount of IOTA tokens held by the output.
         iota: Balance<SUI>,
 
-        // The bag holds native tokens, key-ed by the stringified type of the asset.
-        // Example: key: "0xabcded::soon::SOON", value: Balance<0xabcded::soon::SOON>
+        /// The `Bag` holds native tokens, key-ed by the stringified type of the asset.
+        /// Example: key: "0xabcded::soon::SOON", value: Balance<0xabcded::soon::SOON>.
         native_tokens: Bag,
 
-        // The storage deposit return unlock condition.
+        /// The storage deposit return unlock condition.
         storage_deposit_return: Option<StorageDepositReturnUnlockCondition>,
-        // The timelock unlock condition.
+        /// The timelock unlock condition.
         timelock: Option<TimelockUnlockCondition>,
-        // The expiration unlock condition.
+        /// The expiration unlock condition.
         expiration: Option<ExpirationUnlockCondition>,
     }
 
@@ -44,9 +45,9 @@ module stardust::nft_output {
 
         // Unpuck the output.
         let NftOutput {
-            id: id,
+            id,
             iota: mut iota,
-            native_tokens: native_tokens,
+            native_tokens,
             storage_deposit_return: mut storage_deposit_return,
             timelock: mut timelock,
             expiration: mut expiration
@@ -84,8 +85,8 @@ module stardust::nft_output {
 
     // === Public-Package Functions ===
 
-    // utility function to receive a nft output in other stardust models
-    // other modules in the stardust pacakge can call this function to receive a nft output (alias)
+    /// Utility function to receive an `NftOutput` in other Stardust modules.
+    /// Other modules in the stardust package can call this function to receive an `NftOutput` (alias).
     public(package) fun receive(parent: &mut UID, nft: Receiving<NftOutput>) : NftOutput {
         transfer::receive(parent, nft)
     }

@@ -60,11 +60,11 @@ module stardust::irc27 {
             uri: _,
             name: _,
             collection_name: _,
-            royalties: royalties,
+            royalties,
             issuer_name: _,
             description: _,
             attributes: _,
-            non_standard_fields: non_standard_fields,
+            non_standard_fields,
         } = irc27;
 
         royalties.drop();
