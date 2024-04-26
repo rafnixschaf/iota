@@ -188,7 +188,7 @@ Other modules in the Stardust package can call this function to receive a basic 
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="basic_output.md#0x107a_basic_output_receive">receive</a>(parent: &<b>mut</b> UID, output: Receiving&lt;<a href="basic_output.md#0x107a_basic_output_BasicOutput">BasicOutput</a>&gt;) : <a href="basic_output.md#0x107a_basic_output_BasicOutput">BasicOutput</a> {
+<pre><code><b>public</b>(<a href="../sui-framework/package.md#0x2_package">package</a>) <b>fun</b> <a href="basic_output.md#0x107a_basic_output_receive">receive</a>(parent: &<b>mut</b> UID, output: Receiving&lt;<a href="basic_output.md#0x107a_basic_output_BasicOutput">BasicOutput</a>&gt;) : <a href="basic_output.md#0x107a_basic_output_BasicOutput">BasicOutput</a> {
     <a href="../sui-framework/transfer.md#0x2_transfer_receive">transfer::receive</a>(parent, output)
 }
 </code></pre>

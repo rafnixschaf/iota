@@ -322,7 +322,7 @@ Get the Alias's id.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="alias.md#0x107a_alias_id">id</a>(self: &<b>mut</b> <a href="alias.md#0x107a_alias_Alias">Alias</a>): &<b>mut</b> UID {
+<pre><code><b>public</b>(<a href="../sui-framework/package.md#0x2_package">package</a>) <b>fun</b> <a href="alias.md#0x107a_alias_id">id</a>(self: &<b>mut</b> <a href="alias.md#0x107a_alias_Alias">Alias</a>): &<b>mut</b> UID {
     &<b>mut</b> self.id
 }
 </code></pre>
