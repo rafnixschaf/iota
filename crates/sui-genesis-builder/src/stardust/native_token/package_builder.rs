@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use fs_extra::dir::{copy, CopyOptions};
+use tempfile::tempdir;
 
 use sui_move_build::{BuildConfig, CompiledPackage};
 
@@ -20,27 +21,32 @@ impl PackageBuilder {
     /// Builds and compiles a Stardust native token package.
     pub fn build_and_compile(&self, package: NativeTokenPackageData) -> Result<CompiledPackage> {
         let crate_root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let template_path = crate_root_path.join("src/stardust/native_token/package_template");
 
-        let package_template_path =
-            crate_root_path.join("src/stardust/native_token/package_template");
-        let new_package_path = crate_root_path
-            .join("src/stardust/native_token")
-            .join(format!(
-                "native_token_package_{}",
-                package.module().native_token_id()
-            ));
+        // Set up a temporary directory to build the native token package
+        let tmp_dir = tempdir()?;
+        let package_path = tmp_dir.path().join(format!(
+            "native_token_package_{}",
+            package.module().native_token_id()
+        ));
+
+        // Define the path to the framework packages directory
+        let framework_packages_path = crate_root_path
+            .parent()
+            .expect("parent should exist")
+            .join("sui-framework/packages");
 
         // Step 1: Copy the template package directory
-        Self::copy_template_dir(&package_template_path, &new_package_path)?;
+        Self::copy_template_dir(&template_path, &package_path)?;
 
         // Step 2: Adjust the Move.toml file
-        Self::adjust_move_toml(&new_package_path, &package)?;
+        Self::adjust_move_toml(&package_path, &framework_packages_path, &package)?;
 
         // Step 3: Replace template variables in the .move file
-        Self::adjust_native_token_module(&new_package_path, &package)?;
+        Self::adjust_native_token_module(&package_path, &package)?;
 
         // Step 4: Compile the package
-        let compiled_package = BuildConfig::default().build(new_package_path)?;
+        let compiled_package = BuildConfig::default().build(package_path)?;
 
         Ok(compiled_package)
     }
@@ -53,11 +59,21 @@ impl PackageBuilder {
     }
 
     // Adjusts the Move.toml file with the package name and alias address.
-    fn adjust_move_toml(package_path: &Path, package: &NativeTokenPackageData) -> Result<()> {
+    fn adjust_move_toml(
+        package_path: &Path,
+        framework_packages_path: &Path,
+        package: &NativeTokenPackageData,
+    ) -> Result<()> {
         let cargo_toml_path = package_path.join("Move.toml");
         let contents = fs::read_to_string(&cargo_toml_path)?;
         let new_contents = contents
             .replace("$PACKAGE_NAME", package.move_toml().package_name())
+            .replace(
+                "$FRAMEWORK_PACKAGES_PATH",
+                framework_packages_path
+                    .to_str()
+                    .expect("path should be valid"),
+            )
             .replace("$ALIAS", package.module().alias_address());
         fs::write(&cargo_toml_path, new_contents)?;
 

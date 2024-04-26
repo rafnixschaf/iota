@@ -4,9 +4,9 @@ version = "0.0.1"
 edition = "2024.beta"
 
 [dependencies]
-MoveStdlib = { local = "../../../../../sui-framework/packages/move-stdlib" }
-Sui = { local = "../../../../../sui-framework/packages/sui-framework" }
-Stardust = { local = "../../../../../sui-framework/packages/stardust" }
+MoveStdlib = { local = "$FRAMEWORK_PACKAGES_PATH/move-stdlib" }
+Sui = { local = "$FRAMEWORK_PACKAGES_PATH/sui-framework" }
+Stardust = { local = "$FRAMEWORK_PACKAGES_PATH/stardust" }
 
 [addresses]
 alias = "$ALIAS"
