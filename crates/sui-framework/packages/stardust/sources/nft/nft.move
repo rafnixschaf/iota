@@ -3,7 +3,15 @@
 
 module stardust::nft {
 
+    use std::string;
+
+    use sui::display;
+    use sui::package;
+
     use stardust::irc27::{Self, Irc27Metadata};
+
+    /// One Time Witness.
+    public struct NFT has drop {}
 
     /// The Stardust NFT representation.
     public struct Nft has key, store {
@@ -22,6 +30,55 @@ module stardust::nft {
         immutable_issuer: Option<address>,
         /// The immutable metadata feature.
         immutable_metadata: Irc27Metadata,
+    }
+
+    /// The `Nft` module initializer.
+    fun init(otw: NFT, ctx: &mut TxContext) {
+        // Claim the module publisher.
+        let publisher = package::claim(otw, ctx);
+
+        // Build a `Display` object.
+        let keys = vector[
+            // The Sui standard fields.
+            string::utf8(b"name"),
+            string::utf8(b"image_url"),
+            string::utf8(b"description"),
+            string::utf8(b"creator"),
+
+            // The extra IRC27-nested fileds.
+            string::utf8(b"version"),
+            string::utf8(b"media_type"),
+            string::utf8(b"collection_name"),
+        ];
+
+        let values = vector[
+            // The Sui standard fields.
+            string::utf8(b"{immutable_metadata.name}"),
+            string::utf8(b"{immutable_metadata.uri}"),
+            string::utf8(b"{immutable_metadata.description}"),
+            string::utf8(b"{immutable_metadata.issuer_name}"),
+
+            // The extra IRC27-nested fileds.
+            string::utf8(b"{immutable_metadata.version}"),
+            string::utf8(b"{immutable_metadata.media_type}"),
+            string::utf8(b"{immutable_metadata.collection_name}"),
+        ];
+
+        let mut display = display::new_with_fields<Nft>(
+            &publisher,
+            keys,
+            values,
+            ctx
+        );
+
+        // Commit the first version of `Display` to apply changes.
+        display.update_version();
+
+        // Burn the publisher object.
+        package::burn_publisher(publisher);
+
+        // Freeze the display object.
+        sui::transfer::public_freeze_object(display);
     }
 
     /// Permanently destroy an `Nft` object.

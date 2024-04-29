@@ -203,7 +203,7 @@ Other modules in the stardust package can call this function to receive an <code
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_receive">receive</a>(parent: &<b>mut</b> UID, <a href="nft.md#0x107a_nft">nft</a>: Receiving&lt;<a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>&gt;) : <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a> {
+<pre><code><b>public</b>(<a href="../sui-framework/package.md#0x2_package">package</a>) <b>fun</b> <a href="nft_output.md#0x107a_nft_output_receive">receive</a>(parent: &<b>mut</b> UID, <a href="nft.md#0x107a_nft">nft</a>: Receiving&lt;<a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a>&gt;) : <a href="nft_output.md#0x107a_nft_output_NftOutput">NftOutput</a> {
     <a href="../sui-framework/transfer.md#0x2_transfer_receive">transfer::receive</a>(parent, <a href="nft.md#0x107a_nft">nft</a>)
 }
 </code></pre>
