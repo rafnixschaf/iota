@@ -107,6 +107,10 @@ impl PackageBuilder {
             .replace("$OTW", package.module().otw_name())
             .replace("$COIN_DECIMALS", &package.module().decimals().to_string())
             .replace("$COIN_SYMBOL", package.module().symbol())
+            .replace(
+                "$MAXIMUM_SUPPLY",
+                &package.module().maximum_supply().to_string(),
+            )
             .replace("$COIN_NAME", package.module().coin_name())
             .replace("$COIN_DESCRIPTION", package.module().coin_description())
             .replace("$ICON_URL", &icon_url)

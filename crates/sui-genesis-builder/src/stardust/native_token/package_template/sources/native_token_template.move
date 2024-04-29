@@ -6,6 +6,7 @@ module 0x0::$MODULE_NAME {
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use sui::url::Url;
+    use stardust::capped_coin;
 
     /// The type identifier of coin. The coin will have a type
     /// tag of kind: `Coin<package_object::$MODULE_NAME::$OTW`
@@ -28,11 +29,14 @@ module 0x0::$MODULE_NAME {
             ctx
         );
 
+        // Create the max supply policy
+        let policy = capped_coin::create_max_supply_policy(treasury_cap, $MAXIMUM_SUPPLY, ctx);
+
         // Freeze the coin metadata
         transfer::public_freeze_object(metadata);
 
-        // Transfer the TreasuryCap to the alias address
-        transfer::public_transfer(treasury_cap, @alias);
+        // Transfer the policy as a cap to the alias address
+        transfer::public_transfer(policy, @alias);
     }
 
 }

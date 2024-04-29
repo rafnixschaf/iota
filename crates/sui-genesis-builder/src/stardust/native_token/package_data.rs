@@ -54,6 +54,7 @@ pub struct NativeTokenModuleData {
     otw_name: String,
     decimals: u8,
     symbol: String,
+    maximum_supply: u64,
     coin_name: String,
     coin_description: String,
     icon_url: Option<Url>,
@@ -68,6 +69,7 @@ impl NativeTokenModuleData {
         otw_name: String,
         decimals: u8,
         symbol: String,
+        maximum_supply: u64,
         coin_name: String,
         coin_description: String,
         icon_url: Option<Url>,
@@ -79,6 +81,7 @@ impl NativeTokenModuleData {
             otw_name,
             decimals,
             symbol,
+            maximum_supply,
             coin_name,
             coin_description,
             icon_url,
@@ -109,6 +112,11 @@ impl NativeTokenModuleData {
     /// Returns the symbol.
     pub fn symbol(&self) -> &str {
         &self.symbol
+    }
+
+    /// Returns the maximum supply.
+    pub fn maximum_supply(&self) -> u64 {
+        self.maximum_supply
     }
 
     /// Returns the coin name.
