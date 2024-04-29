@@ -8,7 +8,7 @@ use std::{
 use anyhow::Result;
 use fastcrypto::hash::HashFunction;
 use iota_sdk::types::block::output::{
-    AliasOutput, BasicOutput, FoundryOutput, NftOutput, TokenId, TreasuryOutput,
+    AliasOutput, BasicOutput, FoundryOutput, NftOutput, Output, TokenId, TreasuryOutput,
 };
 use move_vm_runtime_v2::move_vm::MoveVM;
 use sui_adapter_v2::{
@@ -37,6 +37,7 @@ use sui_types::{
     MOVE_STDLIB_PACKAGE_ID, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID,
 };
 
+use super::types::OutputHeader;
 use crate::process_package;
 
 /// The dependencies of the generated packages for native tokens.
@@ -46,6 +47,95 @@ pub const PACKAGE_DEPS: [ObjectID; 3] = [
     STARDUST_PACKAGE_ID,
 ];
 
+/// We fix the protocol version used in the migration.
+pub const MIGRATION_PROTOCOL_VERSION: u64 = 42;
+
+/// The orchestrator of the migration process.
+///
+/// It is constructed by an [`Iterator`] of stardust UTXOs, and holds an inner executor
+/// and in-memory object storage for their conversion into objects.
+///
+/// It guarantees the following:
+///
+/// * That foundry UTXOs are sorted by `(milestone_timestamp, output_id)`.
+/// * That the foundry packages and total supplies are created first
+/// * That all other outputs are created in a second iteration over the original UTXOs.
+/// * That the resulting ledger state is valid.
+///
+/// The migration process results in the generation of a snapshot file with the generated
+/// objects serialized.
+pub struct Migration {
+    executor: Executor,
+}
+
+impl Migration {
+    /// Try to setup the migration process by creating the inner executor
+    /// and bootstraping the in-memory storage.
+    pub fn new() -> Result<Self> {
+        let executor = Executor::new(ProtocolVersion::new(MIGRATION_PROTOCOL_VERSION))?;
+        Ok(Self { executor })
+    }
+
+    /// Create the packages, and associated objects representing foundry outputs.
+    fn migrate_foundries(
+        &mut self,
+        foundries: impl Iterator<Item = (OutputHeader, FoundryOutput)>,
+    ) -> Result<()> {
+        let mut foundries: Vec<(OutputHeader, FoundryOutput)> = foundries.collect();
+        // We sort the outputs to make sure the order of outputs up to
+        // a certain milestone timestamp remains the same between runs.
+        foundries.sort_by_key(|(header, _)| (header.ms_timestamp(), header.output_id()));
+        let compiled = foundries
+            .into_iter()
+            .map(|(_, output)| {
+                let pkg = generate_package(&output)?;
+                Ok((output, pkg))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        self.executor.create_foundries(compiled.into_iter())
+    }
+
+    /// Create objects for all outputs except for foundry outputs.
+    fn migrate_outputs(&mut self, outputs: impl Iterator<Item = Output>) -> Result<()> {
+        for output in outputs {
+            let objects = match output {
+                Output::Alias(alias) => self.executor.create_alias_objects(alias)?,
+                Output::Basic(basic) => self.executor.create_basic_objects(basic)?,
+                Output::Nft(nft) => self.executor.create_nft_objects(nft)?,
+                Output::Treasury(treasury) => self.executor.create_treasury_objects(treasury)?,
+                Output::Foundry(_) => {
+                    continue;
+                }
+            };
+            self.executor.update_store(objects);
+        }
+        Ok(())
+    }
+
+    /// Run all stages of the migration.
+    ///
+    /// * Generate and build the foundry packages
+    /// * Create the foundry packages, and associated objects.
+    /// * Create all other objects.
+    /// * Validate the resulting object-based ledger state.
+    /// * Create the snapshot file.
+    pub fn run(
+        mut self,
+        foundries: impl Iterator<Item = (OutputHeader, FoundryOutput)>,
+        outputs: impl Iterator<Item = Output>,
+        writer: impl Write,
+    ) -> Result<()> {
+        self.migrate_foundries(foundries)?;
+        self.migrate_outputs(outputs)?;
+        let stardust_object_ledger = self.executor.store;
+        verify_ledger_state(&stardust_object_ledger)?;
+        create_snapshot(stardust_object_ledger, writer)
+    }
+}
+
+// stub of package generation and build logic
+fn generate_package(_foundry: &FoundryOutput) -> Result<CompiledPackage> {
+    todo!()
 }
 
 /// Creates the objects that map to the stardust UTXO ledger.
@@ -71,7 +161,7 @@ impl Executor {
         let metrics = Arc::new(LimitsMetrics::new(&prometheus::Registry::new()));
         let mut store = InMemoryStorage::new(Vec::new());
         // We don't know the chain ID here since we haven't yet created the genesis checkpoint.
-        // However since we know there are no chain specific protool config options in genesis,
+        // However since we know there are no chain specific protocol config options in genesis,
         // we use Chain::Unknown here.
         let protocol_config = ProtocolConfig::get_for_version(protocol_version, Chain::Unknown);
         // Get the correct system packages for our protocol version. If we cannot find the snapshot
