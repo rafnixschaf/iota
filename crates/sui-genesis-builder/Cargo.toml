@@ -13,6 +13,7 @@ camino.workspace = true
 fastcrypto.workspace = true
 move-binary-format.workspace = true
 move-core-types.workspace = true
+move-vm-runtime-v2 = { path = "../../external-crates/move/move-execution/v2/crates/move-vm-runtime" }
 rand.workspace = true
 serde.workspace = true
 serde_with.workspace = true
@@ -28,6 +29,9 @@ packable = { version = "0.8.3", default-features = false }
 shared-crypto.workspace = true
 sui-config.workspace = true
 sui-execution.workspace = true
+sui-adapter-v2 = { path = "../../sui-execution/v2/sui-adapter/" }
+sui-move-build.workspace = true
+sui-move-natives-v2 = { path = "../../sui-execution/v2/sui-move-natives" }
 sui-framework.workspace = true
 sui-framework-snapshot.workspace = true
 sui-protocol-config.workspace = true
