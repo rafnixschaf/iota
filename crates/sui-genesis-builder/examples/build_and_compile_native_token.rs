@@ -3,6 +3,8 @@
 
 //! Example demonstrating building and compiling two native token packages.
 
+use iota_sdk::types::block::address::AliasAddress;
+use iota_sdk::types::block::output::{AliasId, FoundryId};
 use iota_sdk::Url;
 use sui_genesis_builder::stardust::native_token::package_builder::PackageBuilder;
 use sui_genesis_builder::stardust::native_token::package_data::{
@@ -13,42 +15,54 @@ fn main() -> anyhow::Result<()> {
     let package_builder = PackageBuilder;
 
     let native_token_a = NativeTokenPackageData::new(
-        MoveTomlManifest::new("native_token_example".to_string()),
+        MoveTomlManifest::new("doge_coin".to_string()),
         NativeTokenModuleData::new(
-            "324823948".to_string(),
+            FoundryId::new([0; FoundryId::LENGTH]),
             "doge".to_string(),
             "DOGE".to_string(),
             0,
             "DOGE".to_string(),
+            0,
             100_000_000_000,
             "Dogecoin".to_string(),
             "Much wow".to_string(),
             Some(Url::parse("https://raw.githubusercontent.com/dogecoin/dogecoin/master/share/pixmaps/dogecoin256.png").unwrap()),
-            "0x54654".to_string(),
+            AliasAddress::new(AliasId::new([0; AliasId::LENGTH]))
         ),
     );
 
+    println!("DOGE token: {:?}", native_token_a);
+
     let compiled_package_a = package_builder.build_and_compile(native_token_a)?;
-    println!("Compiled package: {:?}", compiled_package_a);
+    println!(
+        "Compiled package: {:?}",
+        compiled_package_a.package.compiled_package_info
+    );
 
     let native_token_b = NativeTokenPackageData::new(
-        MoveTomlManifest::new("native_token_example".to_string()),
+        MoveTomlManifest::new("shimmer_coin".to_string()),
         NativeTokenModuleData::new(
-            "34543525".to_string(),
+            FoundryId::new([1; FoundryId::LENGTH]),
             "smr".to_string(),
             "SMR".to_string(),
             0,
             "SMR".to_string(),
             10_000_000_000,
+            10_000_000_000,
             "Shimmer".to_string(),
             "Shimmy Shimmy Ya".to_string(),
             Option::None,
-            "0x54654".to_string(),
+            AliasAddress::new(AliasId::new([1; AliasId::LENGTH])),
         ),
     );
 
+    println!("SMR token: {:?}", native_token_b);
+
     let compiled_package_b = package_builder.build_and_compile(native_token_b)?;
-    println!("Compiled package: {:?}", compiled_package_b);
+    println!(
+        "Compiled package: {:?}",
+        compiled_package_b.package.compiled_package_info
+    );
 
     Ok(())
 }

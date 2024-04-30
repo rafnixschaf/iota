@@ -7,6 +7,3 @@ edition = "2024.beta"
 MoveStdlib = { local = "$FRAMEWORK_PACKAGES_PATH/move-stdlib" }
 Sui = { local = "$FRAMEWORK_PACKAGES_PATH/sui-framework" }
 Stardust = { local = "$FRAMEWORK_PACKAGES_PATH/stardust" }
-
-[addresses]
-alias = "$ALIAS"

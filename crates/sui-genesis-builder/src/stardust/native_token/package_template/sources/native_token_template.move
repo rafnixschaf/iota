@@ -3,8 +3,6 @@
 
 module 0x0::$MODULE_NAME {
     use sui::coin;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
     use sui::url::Url;
     use stardust::capped_coin;
 
@@ -19,7 +17,7 @@ module 0x0::$MODULE_NAME {
         let icon_url = $ICON_URL;
 
         // Create the currency
-        let (treasury_cap, metadata) = coin::create_currency<$OTW>(
+        let (mut treasury_cap, metadata) = coin::create_currency<$OTW>(
             witness,
             $COIN_DECIMALS,
             b"$COIN_SYMBOL",
@@ -29,6 +27,10 @@ module 0x0::$MODULE_NAME {
             ctx
         );
 
+        // Mint the tokens and transfer them to the publisher
+        let minted_coins = coin::mint(&mut treasury_cap, $MINTED_TOKENS, ctx);
+        transfer::public_transfer(minted_coins, ctx.sender());
+
         // Create the max supply policy
         let policy = capped_coin::create_max_supply_policy(treasury_cap, $MAXIMUM_SUPPLY, ctx);
 
@@ -36,7 +38,7 @@ module 0x0::$MODULE_NAME {
         transfer::public_freeze_object(metadata);
 
         // Transfer the policy as a cap to the alias address
-        transfer::public_transfer(policy, @alias);
+        transfer::public_transfer(policy, sui::address::from_ascii_bytes(&b"$ALIAS"));
     }
 
 }

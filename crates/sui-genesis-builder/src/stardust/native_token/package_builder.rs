@@ -25,10 +25,7 @@ impl PackageBuilder {
 
         // Set up a temporary directory to build the native token package
         let tmp_dir = tempdir()?;
-        let package_path = tmp_dir.path().join(format!(
-            "native_token_package_{}",
-            package.module().native_token_id()
-        ));
+        let package_path = tmp_dir.path().join("native_token_package");
 
         // Define the path to the framework packages directory
         let framework_packages_path = crate_root_path
@@ -47,6 +44,9 @@ impl PackageBuilder {
 
         // Step 4: Compile the package
         let compiled_package = BuildConfig::default().build(package_path)?;
+
+        // Clean up the temporary directory
+        tmp_dir.close()?;
 
         Ok(compiled_package)
     }
@@ -73,8 +73,7 @@ impl PackageBuilder {
                 framework_packages_path
                     .to_str()
                     .expect("path should be valid"),
-            )
-            .replace("$ALIAS", package.module().alias_address());
+            );
         fs::write(&cargo_toml_path, new_contents)?;
 
         Ok(())
@@ -108,13 +107,17 @@ impl PackageBuilder {
             .replace("$COIN_DECIMALS", &package.module().decimals().to_string())
             .replace("$COIN_SYMBOL", package.module().symbol())
             .replace(
+                "$MINTED_TOKENS",
+                &package.module().minted_tokens().to_string(),
+            )
+            .replace(
                 "$MAXIMUM_SUPPLY",
                 &package.module().maximum_supply().to_string(),
             )
             .replace("$COIN_NAME", package.module().coin_name())
             .replace("$COIN_DESCRIPTION", package.module().coin_description())
             .replace("$ICON_URL", &icon_url)
-            .replace("$ALIAS_ADDRESS", package.module().alias_address());
+            .replace("$ALIAS", &package.module().alias_address().to_string());
 
         fs::write(&new_move_file_path, new_contents)?;
 
