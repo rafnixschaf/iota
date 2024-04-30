@@ -105,6 +105,11 @@ pub const SUI_SYSTEM_PACKAGE_ID: ObjectID = ObjectID::from_address(SUI_SYSTEM_AD
 pub const DEEPBOOK_ADDRESS: AccountAddress = deepbook_addr();
 pub const DEEPBOOK_PACKAGE_ID: ObjectID = ObjectID::from_address(DEEPBOOK_ADDRESS);
 
+/// 0x107a-- account address where Stardust modules are stored
+/// Same as the ObjectID
+pub const STARDUST_ADDRESS: AccountAddress = stardust_addr();
+pub const STARDUST_PACKAGE_ID: ObjectID = ObjectID::from_address(STARDUST_ADDRESS);
+
 /// 0xb-- account address where Bridge modules are stored
 /// Same as the ObjectID
 pub const BRIDGE_ADDRESS: AccountAddress = address_from_single_byte(11);
@@ -148,6 +153,7 @@ pub fn is_system_package(addr: impl Into<AccountAddress>) -> bool {
             | SUI_FRAMEWORK_ADDRESS
             | SUI_SYSTEM_ADDRESS
             | DEEPBOOK_ADDRESS
+            | STARDUST_ADDRESS
             | BRIDGE_ADDRESS
     )
 }
@@ -163,6 +169,14 @@ const fn deepbook_addr() -> AccountAddress {
     let mut addr = [0u8; AccountAddress::LENGTH];
     addr[AccountAddress::LENGTH - 2] = 0xde;
     addr[AccountAddress::LENGTH - 1] = 0xe9;
+    AccountAddress::new(addr)
+}
+
+/// return 0x0...107a
+const fn stardust_addr() -> AccountAddress {
+    let mut addr = [0u8; AccountAddress::LENGTH];
+    addr[AccountAddress::LENGTH - 2] = 0x10;
+    addr[AccountAddress::LENGTH - 1] = 0x7a;
     AccountAddress::new(addr)
 }
 
@@ -233,6 +247,7 @@ pub fn resolve_address(addr: &str) -> Option<AccountAddress> {
         "std" => Some(MOVE_STDLIB_ADDRESS),
         "sui" => Some(SUI_FRAMEWORK_ADDRESS),
         "sui_system" => Some(SUI_SYSTEM_ADDRESS),
+        "stardust" => Some(STARDUST_ADDRESS),
         "bridge" => Some(BRIDGE_ADDRESS),
         _ => None,
     }
