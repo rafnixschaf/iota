@@ -76,11 +76,14 @@ module isc::anchor {
     // Generate event upon `send_request`? Or call periodically? Or both?
 
     /// chain governor calls this to receive a request and add it to the request pool
-    public fun receive_request(anchor: &mut Anchor, governor: &GovernorCap, request: transfer::Receiving<Request>, ctx: &mut TxContext){
+    public fun receive_request(anchor: &mut Anchor, governor: &GovernorCap, request: transfer::Receiving<Request>, _ctx: &mut TxContext){
         check_governor(anchor, governor);
         let mut req = transfer::public_receive(&mut anchor.id, request);
-        let assets = isc::request::get_assets(&mut req, ctx);
-        anchor.assets.join(assets, ctx);
+        let assets = isc::request::get_assets(&mut req);
+        anchor.assets.join(assets);
+        //TODO assets.join() should create Mutations we can save per Request
+        // Mutations are string/amount combinations.
+        // 0x... strings indicate nft ids. Otherwise native token type names. "" for base tokens.
         anchor.requests.push_back<Request>(req);
     }
 
