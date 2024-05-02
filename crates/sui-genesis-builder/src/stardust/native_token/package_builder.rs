@@ -107,8 +107,8 @@ impl PackageBuilder {
             .replace("$COIN_DECIMALS", &package.module().decimals().to_string())
             .replace("$COIN_SYMBOL", package.module().symbol())
             .replace(
-                "$MINTED_TOKENS",
-                &package.module().minted_tokens().to_string(),
+                "$CIRCULATING_TOKENS",
+                &package.module().circulating_tokens().to_string(),
             )
             .replace(
                 "$MAXIMUM_SUPPLY",

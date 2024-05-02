@@ -63,7 +63,7 @@ pub struct NativeTokenModuleData {
     otw_name: String,
     decimals: u8,
     symbol: String,
-    minted_tokens: u64,
+    circulating_tokens: u64,
     maximum_supply: u64,
     coin_name: String,
     coin_description: String,
@@ -79,7 +79,7 @@ impl NativeTokenModuleData {
         otw_name: String,
         decimals: u8,
         symbol: String,
-        minted_tokens: u64,
+        circulating_tokens: u64,
         maximum_supply: u64,
         coin_name: String,
         coin_description: String,
@@ -92,7 +92,7 @@ impl NativeTokenModuleData {
             otw_name,
             decimals,
             symbol,
-            minted_tokens,
+            circulating_tokens,
             maximum_supply,
             coin_name,
             coin_description,
@@ -127,8 +127,8 @@ impl NativeTokenModuleData {
     }
 
     /// Returns the number of minted tokens.
-    pub fn minted_tokens(&self) -> u64 {
-        self.minted_tokens
+    pub fn circulating_tokens(&self) -> u64 {
+        self.circulating_tokens
     }
 
     /// Returns the maximum supply.
@@ -203,7 +203,8 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
                 otw_name: symbol.clone(),
                 decimals,
                 symbol,
-                minted_tokens: output.token_scheme().as_simple().minted_tokens().as_u64(),
+                circulating_tokens: output.token_scheme().as_simple().minted_tokens().as_u64()
+                    - output.token_scheme().as_simple().melted_tokens().as_u64(), //we know that "Melted Tokens must not be greater than Minted Tokens"
                 maximum_supply: maximum_supply.as_u64(),
                 coin_name: irc_30_metadata.name().to_owned(),
                 coin_description: irc_30_metadata.description().clone().unwrap_or_default(),
