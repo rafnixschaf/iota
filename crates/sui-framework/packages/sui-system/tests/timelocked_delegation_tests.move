@@ -8,7 +8,8 @@ module sui_system::timelocked_stake_tests {
     use sui_system::sui_system::SuiSystemState;
     use sui_system::time_lock;
     use sui_system::timelocked_staked_sui::{Self, TimelockedStakedSui};
-    use sui_system::staking_pool::PoolTokenExchangeRate;
+    use sui_system::timelocked_staking;
+    use sui_system::staking_pool::{Self, PoolTokenExchangeRate};
     use sui::test_utils::assert_eq;
     use sui_system::validator_set;
     use sui::test_utils;
@@ -52,7 +53,7 @@ module sui_system::timelocked_stake_tests {
         set_up_sui_system_state();
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
         scenario.next_tx(STAKER_ADDR_1);
         {
@@ -85,15 +86,15 @@ module sui_system::timelocked_stake_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_staked_sui::EIncompatibleStakedSui)]
+    #[expected_failure(abort_code = timelocked_staked_sui::EIncompatibleTimelockedStakedSui)]
     fun test_join_different_epochs() {
         set_up_sui_system_state();
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
         // Create two instances of staked sui w/ different epoch activations
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
         advance_epoch(scenario);
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
         // Verify that these cannot be merged
         scenario.next_tx(STAKER_ADDR_1);
@@ -110,13 +111,38 @@ module sui_system::timelocked_stake_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_staked_sui::EStakedSuiBelowThreshold)]
+    #[expected_failure(abort_code = timelocked_staked_sui::EIncompatibleTimelockedStakedSui)]
+    fun test_join_different_timestamps() {
+        set_up_sui_system_state();
+        let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
+        let scenario = &mut scenario_val;
+        // Create two instances of staked sui w/ different epoch activations
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
+        advance_epoch(scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 20, scenario);
+
+        // Verify that these cannot be merged
+        scenario.next_tx(STAKER_ADDR_1);
+        {
+            let staked_sui_ids = scenario.ids_for_sender<TimelockedStakedSui>();
+            let mut part1 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[0]);
+            let part2 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[1]);
+
+            part1.join(part2);
+
+            scenario.return_to_sender(part1);
+        };
+        scenario_val.end();
+    }
+
+    #[test]
+    #[expected_failure(abort_code = staking_pool::EStakedSuiBelowThreshold)]
     fun test_split_below_threshold() {
         set_up_sui_system_state();
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
         // Stake 2 SUI
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 2, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 2, 10, scenario);
 
         scenario.next_tx(STAKER_ADDR_1);
         {
@@ -130,13 +156,13 @@ module sui_system::timelocked_stake_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_staked_sui::EStakedSuiBelowThreshold)]
+    #[expected_failure(abort_code = staking_pool::EStakedSuiBelowThreshold)]
     fun test_split_nonentry_below_threshold() {
         set_up_sui_system_state();
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
         // Stake 2 SUI
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 2, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 2, 10, scenario);
 
         scenario.next_tx(STAKER_ADDR_1);
         {
@@ -164,7 +190,8 @@ module sui_system::timelocked_stake_tests {
             let ctx = scenario.ctx();
 
             // Create a stake to VALIDATOR_ADDR_1.
-            system_state_mut_ref.request_add_timelocked_stake(
+            timelocked_staking::request_add_stake(
+                system_state_mut_ref,
                 time_lock::lock(balance::create_for_testing(60 * MIST_PER_SUI), 10, ctx),
                 VALIDATOR_ADDR_1,
                 ctx
@@ -194,7 +221,7 @@ module sui_system::timelocked_stake_tests {
             let ctx = scenario.ctx();
 
             // Unstake from VALIDATOR_ADDR_1
-            system_state_mut_ref.request_withdraw_timelocked_stake(staked_sui, ctx);
+            timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_sui, ctx);
 
             assert!(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1) == 160 * MIST_PER_SUI, 107);
             test_scenario::return_shared(system_state);
@@ -226,7 +253,7 @@ module sui_system::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, 10, scenario);
 
         advance_epoch(scenario);
 
@@ -264,7 +291,7 @@ module sui_system::timelocked_stake_tests {
             // Unstake from VALIDATOR_ADDR_1
             assert_eq(total_sui_balance(STAKER_ADDR_1, scenario), 0);
             let ctx = scenario.ctx();
-            system_state_mut_ref.request_withdraw_timelocked_stake(staked_sui, ctx);
+            timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_sui, ctx);
 
             // Make sure they have all of their stake.
             assert_eq(total_timelocked_sui_balance(STAKER_ADDR_1, scenario), 100 * MIST_PER_SUI); 
@@ -290,7 +317,7 @@ module sui_system::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, 10, scenario);
 
         advance_epoch(scenario);
 
@@ -318,7 +345,7 @@ module sui_system::timelocked_stake_tests {
             assert_eq(total_timelocked_sui_balance(STAKER_ADDR_1, scenario), 0);
             assert_eq(total_sui_balance(STAKER_ADDR_1, scenario), 0);
             let ctx = scenario.ctx();
-            system_state_mut_ref.request_withdraw_timelocked_stake(staked_sui, ctx);
+            timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_sui, ctx);
 
             // Make sure they have all of their stake.
             assert_eq(total_timelocked_sui_balance(STAKER_ADDR_1, scenario), 100 * MIST_PER_SUI);
@@ -345,7 +372,7 @@ module sui_system::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, 10, scenario);
 
         advance_epoch(scenario);
 
@@ -365,7 +392,7 @@ module sui_system::timelocked_stake_tests {
         };
 
         // Now try and stake to the old validator/staking pool. This should fail!
-        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
         scenario_val.end();
     }
@@ -379,7 +406,7 @@ module sui_system::timelocked_stake_tests {
         add_validator_candidate(NEW_VALIDATOR_ADDR, b"name5", b"/ip4/127.0.0.1/udp/85", NEW_VALIDATOR_PUBKEY, NEW_VALIDATOR_POP, scenario);
 
         // Delegate 100 MIST to the preactive validator
-        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, 10, scenario);
 
         // Advance epoch twice with some rewards
         advance_epoch_with_reward_amounts(0, 400, scenario);
@@ -406,7 +433,7 @@ module sui_system::timelocked_stake_tests {
 
         // Delegate 100 SUI to the pending validator. This should fail because pending active validators don't accept
         // new stakes or withdraws.
-        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, 10, scenario);
 
         scenario_val.end();
     }
@@ -420,13 +447,13 @@ module sui_system::timelocked_stake_tests {
         add_validator_candidate(NEW_VALIDATOR_ADDR, b"name3", b"/ip4/127.0.0.1/udp/83", NEW_VALIDATOR_PUBKEY, NEW_VALIDATOR_POP, scenario);
 
         // Delegate 100 SUI to the preactive validator
-        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, 10, scenario);
         advance_epoch_with_reward_amounts(0, 300, scenario);
         // At this point we got the following distribution of stake:
         // V1: 250, V2: 250, storage fund: 100
 
-        stake_timelocked_with(STAKER_ADDR_2, NEW_VALIDATOR_ADDR, 50, scenario);
-        stake_timelocked_with(STAKER_ADDR_3, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_2, NEW_VALIDATOR_ADDR, 50, 10, scenario);
+        stake_timelocked_with(STAKER_ADDR_3, NEW_VALIDATOR_ADDR, 100, 10, scenario);
 
         // Now the preactive becomes active
         add_validator(NEW_VALIDATOR_ADDR, scenario);
@@ -469,7 +496,7 @@ module sui_system::timelocked_stake_tests {
         add_validator_candidate(NEW_VALIDATOR_ADDR, b"name1", b"/ip4/127.0.0.1/udp/81", NEW_VALIDATOR_PUBKEY, NEW_VALIDATOR_POP, scenario);
 
         // Delegate 100 SUI to the preactive validator
-        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, 10, scenario);
 
         // Now the preactive becomes active
         add_validator(NEW_VALIDATOR_ADDR, scenario);
@@ -500,7 +527,7 @@ module sui_system::timelocked_stake_tests {
         add_validator_candidate(NEW_VALIDATOR_ADDR, b"name2", b"/ip4/127.0.0.1/udp/82", NEW_VALIDATOR_PUBKEY, NEW_VALIDATOR_POP, scenario);
 
         // Delegate 100 MIST to the preactive validator
-        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, scenario);
+        stake_timelocked_with(STAKER_ADDR_1, NEW_VALIDATOR_ADDR, 100, 10, scenario);
 
         // Advance epoch and give out some rewards. The candidate should get nothing, of course.
         advance_epoch_with_reward_amounts(0, 800, scenario);
@@ -526,7 +553,7 @@ module sui_system::timelocked_stake_tests {
         set_up_sui_system_state();
         let mut scenario_val = test_scenario::begin(@0x0);
         let scenario = &mut scenario_val;
-        stake_timelocked_with(@0x42, @0x2, 100, scenario); // stakes 100 SUI with 0x2
+        stake_timelocked_with(@0x42, @0x2, 100, 10, scenario); // stakes 100 SUI with 0x2
         scenario.next_tx(@0x42);
         let staked_sui = scenario.take_from_address<TimelockedStakedSui>(@0x42);
         let pool_id = staked_sui.pool_id();

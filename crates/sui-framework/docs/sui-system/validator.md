@@ -17,8 +17,6 @@ title: Module `0x3::validator`
 -  [Function `request_add_stake`](#0x3_validator_request_add_stake)
 -  [Function `request_add_stake_at_genesis`](#0x3_validator_request_add_stake_at_genesis)
 -  [Function `request_withdraw_stake`](#0x3_validator_request_withdraw_stake)
--  [Function `request_add_timelocked_stake`](#0x3_validator_request_add_timelocked_stake)
--  [Function `request_withdraw_timelocked_stake`](#0x3_validator_request_withdraw_timelocked_stake)
 -  [Function `request_set_gas_price`](#0x3_validator_request_set_gas_price)
 -  [Function `set_candidate_gas_price`](#0x3_validator_set_candidate_gas_price)
 -  [Function `request_set_commission_rate`](#0x3_validator_request_set_commission_rate)
@@ -103,8 +101,6 @@ title: Module `0x3::validator`
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
 <b>use</b> <a href="../sui-framework/url.md#0x2_url">0x2::url</a>;
 <b>use</b> <a href="staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
-<b>use</b> <a href="time_lock.md#0x3_time_lock">0x3::time_lock</a>;
-<b>use</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">0x3::timelocked_staked_sui</a>;
 <b>use</b> <a href="validator_cap.md#0x3_validator_cap">0x3::validator_cap</a>;
 </code></pre>
 
@@ -1007,100 +1003,6 @@ Request to withdraw stake from the validator's staking pool, processed at the en
         }
     );
     withdrawn_stake
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_validator_request_add_timelocked_stake"></a>
-
-## Function `request_add_timelocked_stake`
-
-Request to add timelocked stake to the validator's staking pool, processed at the end of the epoch.
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="validator.md#0x3_validator_request_add_timelocked_stake">request_add_timelocked_stake</a>(self: &<b>mut</b> <a href="validator.md#0x3_validator_Validator">validator::Validator</a>, timelocked_stake: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, staker_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(package) <b>fun</b> <a href="validator.md#0x3_validator_request_add_timelocked_stake">request_add_timelocked_stake</a>(
-    self: &<b>mut</b> <a href="validator.md#0x3_validator_Validator">Validator</a>,
-    timelocked_stake: TimeLock&lt;Balance&lt;SUI&gt;&gt;,
-    staker_address: <b>address</b>,
-    ctx: &<b>mut</b> TxContext,
-) : TimelockedStakedSui {
-    <b>let</b> stake_amount = timelocked_stake.locked().value();
-    <b>assert</b>!(stake_amount &gt; 0, <a href="validator.md#0x3_validator_EInvalidStakeAmount">EInvalidStakeAmount</a>);
-    <b>let</b> stake_epoch = ctx.epoch() + 1;
-    <b>let</b> staked_sui = self.<a href="staking_pool.md#0x3_staking_pool">staking_pool</a>.<a href="validator.md#0x3_validator_request_add_timelocked_stake">request_add_timelocked_stake</a>(timelocked_stake, stake_epoch, ctx);
-    // Process stake right away <b>if</b> staking pool is preactive.
-    <b>if</b> (self.<a href="staking_pool.md#0x3_staking_pool">staking_pool</a>.<a href="validator.md#0x3_validator_is_preactive">is_preactive</a>()) {
-        self.<a href="staking_pool.md#0x3_staking_pool">staking_pool</a>.process_pending_stake();
-    };
-    self.next_epoch_stake = self.next_epoch_stake + stake_amount;
-    <a href="../sui-framework/event.md#0x2_event_emit">event::emit</a>(
-        <a href="validator.md#0x3_validator_StakingRequestEvent">StakingRequestEvent</a> {
-            pool_id: <a href="validator.md#0x3_validator_staking_pool_id">staking_pool_id</a>(self),
-            validator_address: self.metadata.sui_address,
-            staker_address,
-            epoch: ctx.epoch(),
-            amount: stake_amount,
-        }
-    );
-    staked_sui
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_validator_request_withdraw_timelocked_stake"></a>
-
-## Function `request_withdraw_timelocked_stake`
-
-Request to withdraw timelocked stake from the validator's staking pool, processed at the end of the epoch.
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="validator.md#0x3_validator_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(self: &<b>mut</b> <a href="validator.md#0x3_validator_Validator">validator::Validator</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(package) <b>fun</b> <a href="validator.md#0x3_validator_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(
-    self: &<b>mut</b> <a href="validator.md#0x3_validator_Validator">Validator</a>,
-    <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: TimelockedStakedSui,
-    ctx: &<b>mut</b> TxContext,
-) : (TimeLock&lt;Balance&lt;SUI&gt;&gt;, Balance&lt;SUI&gt;) {
-    <b>let</b> principal_amount = <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>.staked_sui_amount();
-    <b>let</b> stake_activation_epoch = <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>.stake_activation_epoch();
-    <b>let</b> (withdrawn_stake, reward) = self.<a href="staking_pool.md#0x3_staking_pool">staking_pool</a>.<a href="validator.md#0x3_validator_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>, ctx);
-    <b>let</b> withdraw_amount = withdrawn_stake.locked().value();
-    <b>let</b> reward_amount = reward.value();
-    self.next_epoch_stake = self.next_epoch_stake - withdraw_amount - reward_amount;
-    <a href="../sui-framework/event.md#0x2_event_emit">event::emit</a>(
-        <a href="validator.md#0x3_validator_UnstakingRequestEvent">UnstakingRequestEvent</a> {
-            pool_id: <a href="validator.md#0x3_validator_staking_pool_id">staking_pool_id</a>(self),
-            validator_address: self.metadata.sui_address,
-            staker_address: ctx.sender(),
-            stake_activation_epoch,
-            unstaking_epoch: ctx.epoch(),
-            principal_amount,
-            reward_amount,
-        }
-    );
-    (withdrawn_stake, reward)
 }
 </code></pre>
 

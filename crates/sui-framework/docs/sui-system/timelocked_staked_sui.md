@@ -7,7 +7,7 @@ title: Module `0x3::timelocked_staked_sui`
 -  [Resource `TimelockedStakedSui`](#0x3_timelocked_staked_sui_TimelockedStakedSui)
 -  [Constants](#@Constants_0)
 -  [Function `create`](#0x3_timelocked_staked_sui_create)
--  [Function `unwrap_timelocked_staked_sui`](#0x3_timelocked_staked_sui_unwrap_timelocked_staked_sui)
+-  [Function `unpack`](#0x3_timelocked_staked_sui_unpack)
 -  [Function `pool_id`](#0x3_timelocked_staked_sui_pool_id)
 -  [Function `staked_sui_amount`](#0x3_timelocked_staked_sui_staked_sui_amount)
 -  [Function `stake_activation_epoch`](#0x3_timelocked_staked_sui_stake_activation_epoch)
@@ -18,11 +18,10 @@ title: Module `0x3::timelocked_staked_sui`
 -  [Function `is_equal_staking_metadata`](#0x3_timelocked_staked_sui_is_equal_staking_metadata)
 
 
-<pre><code><b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
-<b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
-<b>use</b> <a href="../sui-framework/sui.md#0x2_sui">0x2::sui</a>;
+<pre><code><b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
+<b>use</b> <a href="staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
 </code></pre>
 
 
@@ -51,22 +50,10 @@ A self-custodial object holding the timelocked staked SUI tokens.
 
 </dd>
 <dt>
-<code>pool_id: <a href="../sui-framework/object.md#0x2_object_ID">object::ID</a></code>
+<code>staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a></code>
 </dt>
 <dd>
- ID of the staking pool we are staking with.
-</dd>
-<dt>
-<code>stake_activation_epoch: u64</code>
-</dt>
-<dd>
- The epoch at which the stake becomes active.
-</dd>
-<dt>
-<code>principal: <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;</code>
-</dt>
-<dd>
- The staked SUI tokens.
+ A self-custodial object holding the staked SUI tokens.
 </dd>
 <dt>
 <code>expire_timestamp_ms: u64</code>
@@ -84,39 +71,11 @@ A self-custodial object holding the timelocked staked SUI tokens.
 ## Constants
 
 
-<a name="0x3_timelocked_staked_sui_EIncompatibleStakedSui"></a>
+<a name="0x3_timelocked_staked_sui_EIncompatibleTimelockedStakedSui"></a>
 
 
 
-<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EIncompatibleStakedSui">EIncompatibleStakedSui</a>: u64 = 12;
-</code></pre>
-
-
-
-<a name="0x3_timelocked_staked_sui_EInsufficientSuiTokenBalance"></a>
-
-
-
-<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EInsufficientSuiTokenBalance">EInsufficientSuiTokenBalance</a>: u64 = 3;
-</code></pre>
-
-
-
-<a name="0x3_timelocked_staked_sui_EStakedSuiBelowThreshold"></a>
-
-
-
-<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EStakedSuiBelowThreshold">EStakedSuiBelowThreshold</a>: u64 = 18;
-</code></pre>
-
-
-
-<a name="0x3_timelocked_staked_sui_MIN_STAKING_THRESHOLD"></a>
-
-TimelockedStakedSui objects cannot be split to below this amount.
-
-
-<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>: u64 = 1000000000;
+<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EIncompatibleTimelockedStakedSui">EIncompatibleTimelockedStakedSui</a>: u64 = 1;
 </code></pre>
 
 
@@ -125,9 +84,10 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `create`
 
+Create a new instance of <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_create">create</a>(pool_id: <a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>, stake_activation_epoch: u64, principal: <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, expire_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_create">create</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, expire_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
 </code></pre>
 
 
@@ -137,17 +97,13 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_create">create</a>(
-    pool_id: ID,
-    stake_activation_epoch: u64,
-    principal: Balance&lt;SUI&gt;,
+    staked_sui: StakedSui,
     expire_timestamp_ms: u64,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
     <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
         id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
-        pool_id,
-        stake_activation_epoch,
-        principal,
+        staked_sui,
         expire_timestamp_ms
     }
 }
@@ -157,13 +113,14 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 </details>
 
-<a name="0x3_timelocked_staked_sui_unwrap_timelocked_staked_sui"></a>
+<a name="0x3_timelocked_staked_sui_unpack"></a>
 
-## Function `unwrap_timelocked_staked_sui`
+## Function `unpack`
+
+Destroy a <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code> instance.
 
 
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_unwrap_timelocked_staked_sui">unwrap_timelocked_staked_sui</a>(staked_sui: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): (<a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>, u64, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;, u64)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): (<a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, u64)
 </code></pre>
 
 
@@ -172,16 +129,16 @@ TimelockedStakedSui objects cannot be split to below this amount.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_unwrap_timelocked_staked_sui">unwrap_timelocked_staked_sui</a>(staked_sui: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): (ID, u64, Balance&lt;SUI&gt;, u64) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): (StakedSui, u64) {
     <b>let</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
         id,
-        pool_id,
-        stake_activation_epoch,
-        principal,
+        staked_sui,
         expire_timestamp_ms,
-    } = staked_sui;
+    } = self;
+
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
-    (pool_id, stake_activation_epoch, principal, expire_timestamp_ms)
+
+    (staked_sui, expire_timestamp_ms)
 }
 </code></pre>
 
@@ -193,9 +150,10 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `pool_id`
 
+Function to get the pool id of a <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_pool_id">pool_id</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): <a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_pool_id">pool_id</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): <a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>
 </code></pre>
 
 
@@ -204,7 +162,7 @@ TimelockedStakedSui objects cannot be split to below this amount.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_pool_id">pool_id</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): ID { staked_sui.pool_id }
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_pool_id">pool_id</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): ID { self.staked_sui.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_pool_id">pool_id</a>() }
 </code></pre>
 
 
@@ -215,9 +173,10 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `staked_sui_amount`
 
+Function to get the staked sui amount of a <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_staked_sui_amount">staked_sui_amount</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_staked_sui_amount">staked_sui_amount</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
 </code></pre>
 
 
@@ -226,7 +185,7 @@ TimelockedStakedSui objects cannot be split to below this amount.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_staked_sui_amount">staked_sui_amount</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 { staked_sui.principal.value() }
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_staked_sui_amount">staked_sui_amount</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 { self.staked_sui.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_staked_sui_amount">staked_sui_amount</a>() }
 </code></pre>
 
 
@@ -237,9 +196,10 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `stake_activation_epoch`
 
+Function to get the stake activation epoch of a <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_stake_activation_epoch">stake_activation_epoch</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_stake_activation_epoch">stake_activation_epoch</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
 </code></pre>
 
 
@@ -248,8 +208,8 @@ TimelockedStakedSui objects cannot be split to below this amount.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_stake_activation_epoch">stake_activation_epoch</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 {
-    staked_sui.stake_activation_epoch
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_stake_activation_epoch">stake_activation_epoch</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 {
+    self.staked_sui.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_stake_activation_epoch">stake_activation_epoch</a>()
 }
 </code></pre>
 
@@ -261,9 +221,10 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `expire_timestamp_ms`
 
+Function to get the expire timestamp of a <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_expire_timestamp_ms">expire_timestamp_ms</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_expire_timestamp_ms">expire_timestamp_ms</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): u64
 </code></pre>
 
 
@@ -272,8 +233,8 @@ TimelockedStakedSui objects cannot be split to below this amount.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_expire_timestamp_ms">expire_timestamp_ms</a>(staked_sui: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 {
-    staked_sui.expire_timestamp_ms
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_expire_timestamp_ms">expire_timestamp_ms</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): u64 {
+    self.expire_timestamp_ms
 }
 </code></pre>
 
@@ -285,9 +246,9 @@ TimelockedStakedSui objects cannot be split to below this amount.
 
 ## Function `split`
 
-Split TimelockedStakedSui <code>self</code> to two parts, one with principal <code>split_amount</code>,
+Split <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code> into two parts, one with principal <code>split_amount</code>,
 and the remaining principal is left in <code>self</code>.
-All the other parameters of the TimelockedStakedSui like <code>stake_activation_epoch</code> or <code>pool_id</code> remain the same.
+All the other parameters of the <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code> like <code>stake_activation_epoch</code> or <code>pool_id</code> remain the same.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_split">split</a>(self: &<b>mut</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, split_amount: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
@@ -300,17 +261,11 @@ All the other parameters of the TimelockedStakedSui like <code>stake_activation_
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_split">split</a>(self: &<b>mut</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>, split_amount: u64, ctx: &<b>mut</b> TxContext): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
-    <b>let</b> original_amount = self.principal.value();
-    <b>assert</b>!(split_amount &lt;= original_amount, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EInsufficientSuiTokenBalance">EInsufficientSuiTokenBalance</a>);
-    <b>let</b> remaining_amount = original_amount - split_amount;
-    // Both resulting parts should have at least <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>.
-    <b>assert</b>!(remaining_amount &gt;= <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EStakedSuiBelowThreshold">EStakedSuiBelowThreshold</a>);
-    <b>assert</b>!(split_amount &gt;= <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EStakedSuiBelowThreshold">EStakedSuiBelowThreshold</a>);
+    <b>let</b> splitted_stake = self.staked_sui.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_split">split</a>(split_amount, ctx);
+
     <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
         id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
-        pool_id: self.pool_id,
-        stake_activation_epoch: self.stake_activation_epoch,
-        principal: self.principal.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_split">split</a>(split_amount),
+        staked_sui: splitted_stake,
         expire_timestamp_ms: self.expire_timestamp_ms,
     }
 }
@@ -324,7 +279,7 @@ All the other parameters of the TimelockedStakedSui like <code>stake_activation_
 
 ## Function `split_staked_sui`
 
-Split the given TimelockedStakedSui to the two parts, one with principal <code>split_amount</code>,
+Split the given <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code> to the two parts, one with principal <code>split_amount</code>,
 transfer the newly split part to the sender address.
 
 
@@ -364,17 +319,17 @@ Aborts if some of the staking parameters are incompatible (pool id, stake activa
 
 
 <pre><code><b>public</b> entry <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_join_staked_sui">join_staked_sui</a>(self: &<b>mut</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>, other: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>) {
-    <b>assert</b>!(<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_is_equal_staking_metadata">is_equal_staking_metadata</a>(self, &other), <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EIncompatibleStakedSui">EIncompatibleStakedSui</a>);
+    <b>assert</b>!(self.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_is_equal_staking_metadata">is_equal_staking_metadata</a>(&other), <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_EIncompatibleTimelockedStakedSui">EIncompatibleTimelockedStakedSui</a>);
+
     <b>let</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
         id,
-        pool_id: _,
-        stake_activation_epoch: _,
-        principal,
+        staked_sui,
         expire_timestamp_ms: _,
     } = other;
 
     id.delete();
-    self.principal.join(principal);
+
+    self.staked_sui.join(staked_sui);
 }
 </code></pre>
 
@@ -399,8 +354,7 @@ Returns true if all the staking parameters of the staked sui except the principa
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_is_equal_staking_metadata">is_equal_staking_metadata</a>(self: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>, other: &<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): bool {
-    (self.pool_id == other.pool_id) &&
-    (self.stake_activation_epoch == other.stake_activation_epoch) &&
+    self.staked_sui.<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_is_equal_staking_metadata">is_equal_staking_metadata</a>(&other.staked_sui) &&
     (self.expire_timestamp_ms == other.expire_timestamp_ms)
 }
 </code></pre>

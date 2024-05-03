@@ -56,10 +56,6 @@ the SuiSystemStateInner version, or vice versa.
 -  [Function `request_add_stake_mul_coin`](#0x3_sui_system_request_add_stake_mul_coin)
 -  [Function `request_withdraw_stake`](#0x3_sui_system_request_withdraw_stake)
 -  [Function `request_withdraw_stake_non_entry`](#0x3_sui_system_request_withdraw_stake_non_entry)
--  [Function `request_add_timelocked_stake`](#0x3_sui_system_request_add_timelocked_stake)
--  [Function `request_add_timelocked_stake_non_entry`](#0x3_sui_system_request_add_timelocked_stake_non_entry)
--  [Function `request_withdraw_timelocked_stake`](#0x3_sui_system_request_withdraw_timelocked_stake)
--  [Function `request_withdraw_timelocked_stake_non_entry`](#0x3_sui_system_request_withdraw_timelocked_stake_non_entry)
 -  [Function `report_validator`](#0x3_sui_system_report_validator)
 -  [Function `undo_report_validator`](#0x3_sui_system_undo_report_validator)
 -  [Function `rotate_operation_cap`](#0x3_sui_system_rotate_operation_cap)
@@ -101,8 +97,6 @@ the SuiSystemStateInner version, or vice versa.
 <b>use</b> <a href="stake_subsidy.md#0x3_stake_subsidy">0x3::stake_subsidy</a>;
 <b>use</b> <a href="staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
 <b>use</b> <a href="sui_system_state_inner.md#0x3_sui_system_state_inner">0x3::sui_system_state_inner</a>;
-<b>use</b> <a href="time_lock.md#0x3_time_lock">0x3::time_lock</a>;
-<b>use</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">0x3::timelocked_staked_sui</a>;
 <b>use</b> <a href="validator.md#0x3_validator">0x3::validator</a>;
 <b>use</b> <a href="validator_cap.md#0x3_validator_cap">0x3::validator_cap</a>;
 </code></pre>
@@ -644,129 +638,6 @@ Non-entry version of <code>request_withdraw_stake</code> that returns the withdr
 ) : Balance&lt;SUI&gt; {
     <b>let</b> self = <a href="sui_system.md#0x3_sui_system_load_system_state_mut">load_system_state_mut</a>(wrapper);
     self.<a href="sui_system.md#0x3_sui_system_request_withdraw_stake">request_withdraw_stake</a>(staked_sui, ctx)
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_sui_system_request_add_timelocked_stake"></a>
-
-## Function `request_add_timelocked_stake`
-
-Add timelocked stake to a validator's staking pool.
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake">request_add_timelocked_stake</a>(wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, timelocked_stake: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, validator_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake">request_add_timelocked_stake</a>(
-    wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">SuiSystemState</a>,
-    timelocked_stake: TimeLock&lt;Balance&lt;SUI&gt;&gt;,
-    validator_address: <b>address</b>,
-    ctx: &<b>mut</b> TxContext,
-) {
-    <b>let</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a> = <a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake_non_entry">request_add_timelocked_stake_non_entry</a>(wrapper, timelocked_stake, validator_address, ctx);
-    <a href="../sui-framework/transfer.md#0x2_transfer_public_transfer">transfer::public_transfer</a>(<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>, ctx.sender());
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_sui_system_request_add_timelocked_stake_non_entry"></a>
-
-## Function `request_add_timelocked_stake_non_entry`
-
-The non-entry version of <code>request_add_timelocked_stake</code>, which returns the timelocked staked SUI instead of transferring it to the sender.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake_non_entry">request_add_timelocked_stake_non_entry</a>(wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, timelocked_stake: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, validator_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake_non_entry">request_add_timelocked_stake_non_entry</a>(
-    wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">SuiSystemState</a>,
-    timelocked_stake: TimeLock&lt;Balance&lt;SUI&gt;&gt;,
-    validator_address: <b>address</b>,
-    ctx: &<b>mut</b> TxContext,
-): TimelockedStakedSui {
-    <b>let</b> self = <a href="sui_system.md#0x3_sui_system_load_system_state_mut">load_system_state_mut</a>(wrapper);
-    self.<a href="sui_system.md#0x3_sui_system_request_add_timelocked_stake">request_add_timelocked_stake</a>(timelocked_stake, validator_address, ctx)
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_sui_system_request_withdraw_timelocked_stake"></a>
-
-## Function `request_withdraw_timelocked_stake`
-
-Withdraw timelocked stake from a validator's staking pool.
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(
-    wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">SuiSystemState</a>,
-    <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: TimelockedStakedSui,
-    ctx: &<b>mut</b> TxContext,
-) {
-    <b>let</b> (timelocked_withdrawn_stake, reward) = <a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake_non_entry">request_withdraw_timelocked_stake_non_entry</a>(wrapper, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>, ctx);
-    <a href="../sui-framework/transfer.md#0x2_transfer_public_transfer">transfer::public_transfer</a>(timelocked_withdrawn_stake, ctx.sender());
-    <a href="../sui-framework/transfer.md#0x2_transfer_public_transfer">transfer::public_transfer</a>(reward.into_coin(ctx), ctx.sender());
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_sui_system_request_withdraw_timelocked_stake_non_entry"></a>
-
-## Function `request_withdraw_timelocked_stake_non_entry`
-
-Non-entry version of <code>request_withdraw_timelocked_stake</code> that returns the withdrawn timelocked SUI instead of transferring it to the sender.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake_non_entry">request_withdraw_timelocked_stake_non_entry</a>(wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake_non_entry">request_withdraw_timelocked_stake_non_entry</a>(
-    wrapper: &<b>mut</b> <a href="sui_system.md#0x3_sui_system_SuiSystemState">SuiSystemState</a>,
-    <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: TimelockedStakedSui,
-    ctx: &<b>mut</b> TxContext,
-) : (TimeLock&lt;Balance&lt;SUI&gt;&gt;, Balance&lt;SUI&gt;) {
-    <b>let</b> self = <a href="sui_system.md#0x3_sui_system_load_system_state_mut">load_system_state_mut</a>(wrapper);
-    self.<a href="sui_system.md#0x3_sui_system_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>, ctx)
 }
 </code></pre>
 

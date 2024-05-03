@@ -4,15 +4,14 @@
 module sui_system::sui_system_state_inner {
     use sui::balance::{Self, Balance};
     use sui::coin::Coin;
-    use sui_system::timelocked_staked_sui::TimelockedStakedSui;
+    use sui_system::staking_pool::{stake_activation_epoch, StakedSui};
     use sui::sui::SUI;
     use sui_system::validator::{Self, Validator};
     use sui_system::validator_set::{Self, ValidatorSet};
     use sui_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
     use sui_system::stake_subsidy::StakeSubsidy;
     use sui_system::storage_fund::{Self, StorageFund};
-    use sui_system::staking_pool::{PoolTokenExchangeRate, StakedSui};
-    use sui_system::time_lock::TimeLock;
+    use sui_system::staking_pool::PoolTokenExchangeRate;
     use sui::vec_map::{Self, VecMap};
     use sui::vec_set::{Self, VecSet};
     use sui::event;
@@ -524,37 +523,10 @@ module sui_system::sui_system_state_inner {
         ctx: &TxContext,
     ) : Balance<SUI> {
         assert!(
-            staked_sui.stake_activation_epoch() <= ctx.epoch(),
+            stake_activation_epoch(&staked_sui) <= ctx.epoch(),
             EStakeWithdrawBeforeActivation
         );
         self.validators.request_withdraw_stake(staked_sui, ctx)
-    }
-
-    /// Add timelocked stake to a validator's staking pool.
-    public(package) fun request_add_timelocked_stake(
-        self: &mut SuiSystemStateInnerV2,
-        timelocked_stake: TimeLock<Balance<SUI>>,
-        validator_address: address,
-        ctx: &mut TxContext,
-    ) : TimelockedStakedSui {
-        self.validators.request_add_timelocked_stake(
-            validator_address,
-            timelocked_stake,
-            ctx,
-        )
-    }
-
-    /// Withdraw some portion of a timelocked stake from a validator's staking pool.
-    public(package) fun request_withdraw_timelocked_stake(
-        self: &mut SuiSystemStateInnerV2,
-        timelocked_staked_sui: TimelockedStakedSui,
-        ctx: &mut TxContext,
-    ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
-        assert!(
-            timelocked_staked_sui.stake_activation_epoch() <= ctx.epoch(),
-            EStakeWithdrawBeforeActivation
-        );
-        self.validators.request_withdraw_timelocked_stake(timelocked_staked_sui, ctx)
     }
 
     /// Report a validator as a bad or non-performant actor in the system.

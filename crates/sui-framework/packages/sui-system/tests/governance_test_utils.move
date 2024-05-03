@@ -15,6 +15,7 @@ module sui_system::governance_test_utils {
     use sui_system::stake_subsidy;
     use sui_system::time_lock::{Self, TimeLock};
     use sui_system::timelocked_staked_sui::TimelockedStakedSui;
+    use sui_system::timelocked_staking;
     use sui::test_scenario::{Self, Scenario};
     use sui::test_utils;
     use sui::balance::Balance;
@@ -186,6 +187,7 @@ module sui_system::governance_test_utils {
         staker: address,
         validator: address,
         amount: u64,
+        expire_timestamp_ms: u64,
         scenario: &mut Scenario
     ) {
         scenario.next_tx(staker);
@@ -193,8 +195,9 @@ module sui_system::governance_test_utils {
 
         let ctx = scenario.ctx();
 
-        system_state.request_add_timelocked_stake(
-            time_lock::lock(balance::create_for_testing(amount * MIST_PER_SUI), 10, ctx),
+        timelocked_staking::request_add_stake(
+            &mut system_state,
+            time_lock::lock(balance::create_for_testing(amount * MIST_PER_SUI), expire_timestamp_ms, ctx),
             validator,
             ctx);
         test_scenario::return_shared(system_state);
@@ -209,7 +212,7 @@ module sui_system::governance_test_utils {
         let mut system_state = scenario.take_shared<SuiSystemState>();
 
         let ctx = scenario.ctx();
-        system_state.request_withdraw_timelocked_stake(staked_sui, ctx);
+        timelocked_staking::request_withdraw_stake(&mut system_state, staked_sui, ctx);
         test_scenario::return_shared(system_state);
     }
 
