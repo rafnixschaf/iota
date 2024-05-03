@@ -9,7 +9,12 @@ use iota_sdk::types::block::address::AliasAddress;
 use iota_sdk::types::block::output::feature::Irc30Metadata;
 use iota_sdk::types::block::output::{FoundryId, FoundryOutput};
 use iota_sdk::Url;
+use rand::Rng;
+use regex::Regex;
 use std::fmt;
+
+static ALLOWED_NO_SELF_IDENTIFIERS: &str =
+    r"[a-zA-Z]+(?:[a-zA-Z][a-zA-Z0-9_]*)|[a-zA-Z]+(?:_[a-zA-Z0-9_]+)";
 
 /// The [`NativeTokenPackageData`] struct encapsulates all the data necessary to build a Stardust native token package.
 #[derive(Debug)]
@@ -176,7 +181,7 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
                 }
             })?;
 
-        let symbol = irc_30_metadata.symbol().to_string();
+        let symbol = check_identifier(irc_30_metadata.symbol().to_string().to_ascii_lowercase());
 
         let decimals = u8::try_from(*irc_30_metadata.decimals()).map_err(|e| {
             StardustError::FoundryConversionError {
@@ -200,7 +205,7 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
             module: NativeTokenModuleData {
                 foundry_id: output.id(),
                 module_name: symbol.to_lowercase(),
-                otw_name: symbol.clone(),
+                otw_name: symbol.clone().to_ascii_uppercase(),
                 decimals,
                 symbol,
                 circulating_tokens: output.token_scheme().as_simple().minted_tokens().as_u64()
@@ -220,6 +225,29 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
 impl fmt::Display for NativeTokenPackageData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "NativeTokenPackageData: {:?}", self)
+    }
+}
+
+fn check_identifier(identifier: String) -> String {
+    // If it is a valid Move idenfier return it
+    if move_core_types::identifier::is_valid(&identifier) {
+        identifier
+    } else {
+        // Else try to remove the unvalid characters
+        let re: Regex = Regex::new(ALLOWED_NO_SELF_IDENTIFIERS).unwrap();
+        if let Some(mat) = re.find(&identifier) {
+            mat.as_str().to_owned()
+        } else {
+            // Generate a new valid random identifier
+            let mut rng = rand::thread_rng();
+            let gen = rand_regex::Regex::compile(ALLOWED_NO_SELF_IDENTIFIERS, 100).unwrap();
+            let res: String = (&mut rng).sample(&gen);
+            if res.len() > 7 {
+                res[..7].to_string()
+            } else {
+                res
+            }
+        }
     }
 }
 
@@ -246,7 +274,7 @@ mod tests {
         )
         .unwrap();
 
-        let irc_30_metadata = Irc30Metadata::new("Dogecoin", "DOGE", 0);
+        let irc_30_metadata = Irc30Metadata::new("Dogecoin", "DOGE❤", 0);
 
         let alias_id = AliasId::new([0; AliasId::LENGTH]);
         let builder = FoundryOutputBuilder::new_with_amount(
