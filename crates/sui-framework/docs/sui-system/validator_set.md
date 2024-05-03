@@ -18,6 +18,8 @@ title: Module `0x3::validator_set`
 -  [Function `request_remove_validator`](#0x3_validator_set_request_remove_validator)
 -  [Function `request_add_stake`](#0x3_validator_set_request_add_stake)
 -  [Function `request_withdraw_stake`](#0x3_validator_set_request_withdraw_stake)
+-  [Function `request_add_timelocked_stake`](#0x3_validator_set_request_add_timelocked_stake)
+-  [Function `request_withdraw_timelocked_stake`](#0x3_validator_set_request_withdraw_timelocked_stake)
 -  [Function `request_set_commission_rate`](#0x3_validator_set_request_set_commission_rate)
 -  [Function `advance_epoch`](#0x3_validator_set_advance_epoch)
 -  [Function `update_and_process_low_stake_departures`](#0x3_validator_set_update_and_process_low_stake_departures)
@@ -86,6 +88,8 @@ title: Module `0x3::validator_set`
 <b>use</b> <a href="../sui-framework/vec_map.md#0x2_vec_map">0x2::vec_map</a>;
 <b>use</b> <a href="../sui-framework/vec_set.md#0x2_vec_set">0x2::vec_set</a>;
 <b>use</b> <a href="staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
+<b>use</b> <a href="time_lock.md#0x3_time_lock">0x3::time_lock</a>;
+<b>use</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">0x3::timelocked_staked_sui</a>;
 <b>use</b> <a href="validator.md#0x3_validator">0x3::validator</a>;
 <b>use</b> <a href="validator_cap.md#0x3_validator_cap">0x3::validator_cap</a>;
 <b>use</b> <a href="validator_wrapper.md#0x3_validator_wrapper">0x3::validator_wrapper</a>;
@@ -931,10 +935,10 @@ the stake and any rewards corresponding to it will be immediately processed.
     staked_sui: StakedSui,
     ctx: &TxContext,
 ) : Balance&lt;SUI&gt; {
-    <b>let</b> staking_pool_id = pool_id(&staked_sui);
+    <b>let</b> staking_pool_id = staked_sui.pool_id();
     <b>let</b> <a href="validator.md#0x3_validator">validator</a> =
         <b>if</b> (self.staking_pool_mappings.contains(staking_pool_id)) { // This is an active <a href="validator.md#0x3_validator">validator</a>.
-            <b>let</b> validator_address = self.staking_pool_mappings[pool_id(&staked_sui)];
+            <b>let</b> validator_address = self.staking_pool_mappings[staked_sui.pool_id()];
             <a href="validator_set.md#0x3_validator_set_get_candidate_or_active_validator_mut">get_candidate_or_active_validator_mut</a>(self, validator_address)
         } <b>else</b> { // This is an inactive pool.
             <b>assert</b>!(self.inactive_validators.contains(staking_pool_id), <a href="validator_set.md#0x3_validator_set_ENoPoolFound">ENoPoolFound</a>);
@@ -942,6 +946,86 @@ the stake and any rewards corresponding to it will be immediately processed.
             wrapper.load_validator_maybe_upgrade()
         };
     <a href="validator.md#0x3_validator">validator</a>.<a href="validator_set.md#0x3_validator_set_request_withdraw_stake">request_withdraw_stake</a>(staked_sui, ctx)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_validator_set_request_add_timelocked_stake"></a>
+
+## Function `request_add_timelocked_stake`
+
+Called by <code><a href="sui_system.md#0x3_sui_system">sui_system</a></code>, to add a new timelocked stake to the validator.
+This request is added to the validator's staking pool's pending stake entries, processed at the end
+of the epoch.
+Aborts in case the staking amount is smaller than MIN_STAKING_THRESHOLD
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="validator_set.md#0x3_validator_set_request_add_timelocked_stake">request_add_timelocked_stake</a>(self: &<b>mut</b> <a href="validator_set.md#0x3_validator_set_ValidatorSet">validator_set::ValidatorSet</a>, validator_address: <b>address</b>, timelocked_stake: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="validator_set.md#0x3_validator_set_request_add_timelocked_stake">request_add_timelocked_stake</a>(
+    self: &<b>mut</b> <a href="validator_set.md#0x3_validator_set_ValidatorSet">ValidatorSet</a>,
+    validator_address: <b>address</b>,
+    timelocked_stake: TimeLock&lt;Balance&lt;SUI&gt;&gt;,
+    ctx: &<b>mut</b> TxContext,
+) : TimelockedStakedSui {
+    <b>let</b> sui_amount = timelocked_stake.locked().value();
+    <b>assert</b>!(sui_amount &gt;= <a href="validator_set.md#0x3_validator_set_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>, <a href="validator_set.md#0x3_validator_set_EStakingBelowThreshold">EStakingBelowThreshold</a>);
+    <b>let</b> <a href="validator.md#0x3_validator">validator</a> = <a href="validator_set.md#0x3_validator_set_get_candidate_or_active_validator_mut">get_candidate_or_active_validator_mut</a>(self, validator_address);
+    <a href="validator.md#0x3_validator">validator</a>.<a href="validator_set.md#0x3_validator_set_request_add_timelocked_stake">request_add_timelocked_stake</a>(timelocked_stake, ctx.sender(), ctx)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_validator_set_request_withdraw_timelocked_stake"></a>
+
+## Function `request_withdraw_timelocked_stake`
+
+Called by <code><a href="sui_system.md#0x3_sui_system">sui_system</a></code>, to withdraw some share of a timelocked stake from the validator. The share to withdraw
+is denoted by <code>principal_withdraw_amount</code>. One of two things occurs in this function:
+1. If the <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a></code> is staked with an active validator, the request is added to the validator's
+staking pool's pending stake withdraw entries, processed at the end of the epoch.
+2. If the <code><a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a></code> was staked with a validator that is no longer active,
+the stake and any rewards corresponding to it will be immediately processed.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="validator_set.md#0x3_validator_set_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(self: &<b>mut</b> <a href="validator_set.md#0x3_validator_set_ValidatorSet">validator_set::ValidatorSet</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="validator_set.md#0x3_validator_set_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(
+    self: &<b>mut</b> <a href="validator_set.md#0x3_validator_set_ValidatorSet">ValidatorSet</a>,
+    <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: TimelockedStakedSui,
+    ctx: &<b>mut</b> TxContext,
+) : (TimeLock&lt;Balance&lt;SUI&gt;&gt;, Balance&lt;SUI&gt;) {
+    <b>let</b> staking_pool_id = <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>.pool_id();
+    <b>let</b> <a href="validator.md#0x3_validator">validator</a> =
+        <b>if</b> (self.staking_pool_mappings.contains(staking_pool_id)) { // This is an active <a href="validator.md#0x3_validator">validator</a>.
+            <b>let</b> validator_address = self.staking_pool_mappings[<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>.pool_id()];
+            <a href="validator_set.md#0x3_validator_set_get_candidate_or_active_validator_mut">get_candidate_or_active_validator_mut</a>(self, validator_address)
+        } <b>else</b> { // This is an inactive pool.
+            <b>assert</b>!(self.inactive_validators.contains(staking_pool_id), <a href="validator_set.md#0x3_validator_set_ENoPoolFound">ENoPoolFound</a>);
+            <b>let</b> wrapper = &<b>mut</b> self.inactive_validators[staking_pool_id];
+            wrapper.load_validator_maybe_upgrade()
+        };
+    <a href="validator.md#0x3_validator">validator</a>.<a href="validator_set.md#0x3_validator_set_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(<a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>, ctx)
 }
 </code></pre>
 

@@ -12,7 +12,10 @@ title: Module `0x3::staking_pool`
 -  [Function `request_add_stake`](#0x3_staking_pool_request_add_stake)
 -  [Function `request_withdraw_stake`](#0x3_staking_pool_request_withdraw_stake)
 -  [Function `withdraw_from_principal`](#0x3_staking_pool_withdraw_from_principal)
+-  [Function `request_add_timelocked_stake`](#0x3_staking_pool_request_add_timelocked_stake)
+-  [Function `request_withdraw_timelocked_stake`](#0x3_staking_pool_request_withdraw_timelocked_stake)
 -  [Function `unwrap_staked_sui`](#0x3_staking_pool_unwrap_staked_sui)
+-  [Function `into_balance`](#0x3_staking_pool_into_balance)
 -  [Function `deposit_rewards`](#0x3_staking_pool_deposit_rewards)
 -  [Function `process_pending_stakes_and_withdraws`](#0x3_staking_pool_process_pending_stakes_and_withdraws)
 -  [Function `process_pending_stake_withdraw`](#0x3_staking_pool_process_pending_stake_withdraw)
@@ -52,6 +55,8 @@ title: Module `0x3::staking_pool`
 <b>use</b> <a href="../sui-framework/table.md#0x2_table">0x2::table</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
+<b>use</b> <a href="time_lock.md#0x3_time_lock">0x3::time_lock</a>;
+<b>use</b> <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">0x3::timelocked_staked_sui</a>;
 </code></pre>
 
 
@@ -235,6 +240,43 @@ A self-custodial object holding the staked SUI tokens.
 ## Constants
 
 
+<a name="0x3_staking_pool_EIncompatibleStakedSui"></a>
+
+
+
+<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EIncompatibleStakedSui">EIncompatibleStakedSui</a>: u64 = 12;
+</code></pre>
+
+
+
+<a name="0x3_staking_pool_EInsufficientSuiTokenBalance"></a>
+
+
+
+<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EInsufficientSuiTokenBalance">EInsufficientSuiTokenBalance</a>: u64 = 3;
+</code></pre>
+
+
+
+<a name="0x3_staking_pool_EStakedSuiBelowThreshold"></a>
+
+
+
+<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EStakedSuiBelowThreshold">EStakedSuiBelowThreshold</a>: u64 = 18;
+</code></pre>
+
+
+
+<a name="0x3_staking_pool_MIN_STAKING_THRESHOLD"></a>
+
+StakedSui objects cannot be split to below this amount.
+
+
+<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>: u64 = 1000000000;
+</code></pre>
+
+
+
 <a name="0x3_staking_pool_EActivationOfInactivePool"></a>
 
 
@@ -280,15 +322,6 @@ A self-custodial object holding the staked SUI tokens.
 
 
 
-<a name="0x3_staking_pool_EIncompatibleStakedSui"></a>
-
-
-
-<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EIncompatibleStakedSui">EIncompatibleStakedSui</a>: u64 = 12;
-</code></pre>
-
-
-
 <a name="0x3_staking_pool_EInsufficientPoolTokenBalance"></a>
 
 
@@ -303,15 +336,6 @@ A self-custodial object holding the staked SUI tokens.
 
 
 <pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EInsufficientRewardsPoolBalance">EInsufficientRewardsPoolBalance</a>: u64 = 4;
-</code></pre>
-
-
-
-<a name="0x3_staking_pool_EInsufficientSuiTokenBalance"></a>
-
-
-
-<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EInsufficientSuiTokenBalance">EInsufficientSuiTokenBalance</a>: u64 = 3;
 </code></pre>
 
 
@@ -343,11 +367,11 @@ A self-custodial object holding the staked SUI tokens.
 
 
 
-<a name="0x3_staking_pool_EStakedSuiBelowThreshold"></a>
+<a name="0x3_staking_pool_ETimeLockShouldNotBeExpired"></a>
 
 
 
-<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EStakedSuiBelowThreshold">EStakedSuiBelowThreshold</a>: u64 = 18;
+<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_ETimeLockShouldNotBeExpired">ETimeLockShouldNotBeExpired</a>: u64 = 100;
 </code></pre>
 
 
@@ -402,16 +426,6 @@ A self-custodial object holding the staked SUI tokens.
 
 
 <pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_EWrongPool">EWrongPool</a>: u64 = 1;
-</code></pre>
-
-
-
-<a name="0x3_staking_pool_MIN_STAKING_THRESHOLD"></a>
-
-StakedSui objects cannot be split to below this amount.
-
-
-<pre><code><b>const</b> <a href="staking_pool.md#0x3_staking_pool_MIN_STAKING_THRESHOLD">MIN_STAKING_THRESHOLD</a>: u64 = 1000000000;
 </code></pre>
 
 
@@ -517,8 +531,10 @@ A proportional amount of pool token withdraw is recorded and processed at epoch 
     staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a>,
     ctx: &TxContext
 ) : Balance&lt;SUI&gt; {
+    <b>let</b> (pool_id, stake_activation_epoch, principal) = staked_sui.<a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>();
+
     <b>let</b> (pool_token_withdraw_amount, <b>mut</b> principal_withdraw) =
-        <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(pool, staked_sui);
+        <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(pool, pool_id, stake_activation_epoch, principal);
     <b>let</b> principal_withdraw_amount = principal_withdraw.value();
 
     <b>let</b> rewards_withdraw = <a href="staking_pool.md#0x3_staking_pool_withdraw_rewards">withdraw_rewards</a>(
@@ -551,7 +567,7 @@ tokens using exchange rate at staking epoch.
 Returns values are amount of pool tokens withdrawn and withdrawn principal portion of SUI.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(pool: &<a href="staking_pool.md#0x3_staking_pool_StakingPool">staking_pool::StakingPool</a>, staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>): (u64, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(pool: &<a href="staking_pool.md#0x3_staking_pool_StakingPool">staking_pool::StakingPool</a>, pool_id: <a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>, stake_activation_epoch: u64, principal: <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;): (u64, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
 </code></pre>
 
 
@@ -562,23 +578,121 @@ Returns values are amount of pool tokens withdrawn and withdrawn principal porti
 
 <pre><code><b>public</b>(package) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(
     pool: &<a href="staking_pool.md#0x3_staking_pool_StakingPool">StakingPool</a>,
-    staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a>,
+    pool_id: ID,
+    stake_activation_epoch: u64,
+    principal: Balance&lt;SUI&gt;,
 ) : (u64, Balance&lt;SUI&gt;) {
 
     // Check that the stake information matches the pool.
-    <b>assert</b>!(staked_sui.pool_id == <a href="../sui-framework/object.md#0x2_object_id">object::id</a>(pool), <a href="staking_pool.md#0x3_staking_pool_EWrongPool">EWrongPool</a>);
+    <b>assert</b>!(pool_id == <a href="../sui-framework/object.md#0x2_object_id">object::id</a>(pool), <a href="staking_pool.md#0x3_staking_pool_EWrongPool">EWrongPool</a>);
 
-    <b>let</b> exchange_rate_at_staking_epoch = <a href="staking_pool.md#0x3_staking_pool_pool_token_exchange_rate_at_epoch">pool_token_exchange_rate_at_epoch</a>(pool, staked_sui.stake_activation_epoch);
-    <b>let</b> principal_withdraw = <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui);
+    <b>let</b> exchange_rate_at_staking_epoch = <a href="staking_pool.md#0x3_staking_pool_pool_token_exchange_rate_at_epoch">pool_token_exchange_rate_at_epoch</a>(pool, stake_activation_epoch);
     <b>let</b> pool_token_withdraw_amount = <a href="staking_pool.md#0x3_staking_pool_get_token_amount">get_token_amount</a>(
-		&exchange_rate_at_staking_epoch,
-		principal_withdraw.value()
-	);
+        &exchange_rate_at_staking_epoch,
+        principal.value()
+    );
 
     (
         pool_token_withdraw_amount,
-        principal_withdraw,
+        principal,
     )
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_staking_pool_request_add_timelocked_stake"></a>
+
+## Function `request_add_timelocked_stake`
+
+Request to stake a timelocked stake to a staking pool. The stake starts counting at the beginning of the next epoch,
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_request_add_timelocked_stake">request_add_timelocked_stake</a>(pool: &<b>mut</b> <a href="staking_pool.md#0x3_staking_pool_StakingPool">staking_pool::StakingPool</a>, timelocked_stake: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, stake_activation_epoch: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_request_add_timelocked_stake">request_add_timelocked_stake</a>(
+    pool: &<b>mut</b> <a href="staking_pool.md#0x3_staking_pool_StakingPool">StakingPool</a>,
+    timelocked_stake: TimeLock&lt;Balance&lt;SUI&gt;&gt;,
+    stake_activation_epoch: u64,
+    ctx: &<b>mut</b> TxContext
+) : TimelockedStakedSui {
+    <b>assert</b>!(timelocked_stake.is_locked(ctx), <a href="staking_pool.md#0x3_staking_pool_ETimeLockShouldNotBeExpired">ETimeLockShouldNotBeExpired</a>);
+
+    <b>let</b> (stake, expire_timestamp_ms) = <a href="time_lock.md#0x3_time_lock_unpack">time_lock::unpack</a>(timelocked_stake);
+
+    <b>let</b> sui_amount = stake.value();
+
+    <b>assert</b>!(!<a href="staking_pool.md#0x3_staking_pool_is_inactive">is_inactive</a>(pool), <a href="staking_pool.md#0x3_staking_pool_EDelegationToInactivePool">EDelegationToInactivePool</a>);
+    <b>assert</b>!(sui_amount &gt; 0, <a href="staking_pool.md#0x3_staking_pool_EDelegationOfZeroSui">EDelegationOfZeroSui</a>);
+
+    <b>let</b> staked_sui = <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_create">timelocked_staked_sui::create</a>(
+        <a href="../sui-framework/object.md#0x2_object_id">object::id</a>(pool),
+        stake_activation_epoch,
+        stake,
+        expire_timestamp_ms,
+        ctx,
+    );
+
+    pool.pending_stake = pool.pending_stake + sui_amount;
+
+    staked_sui
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_staking_pool_request_withdraw_timelocked_stake"></a>
+
+## Function `request_withdraw_timelocked_stake`
+
+Request to withdraw the given timelocked stake plus rewards from a staking pool.
+Both the principal and corresponding rewards in SUI are withdrawn.
+A proportional amount of pool token withdraw is recorded and processed at epoch change time.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(pool: &<b>mut</b> <a href="staking_pool.md#0x3_staking_pool_StakingPool">staking_pool::StakingPool</a>, <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_request_withdraw_timelocked_stake">request_withdraw_timelocked_stake</a>(
+    pool: &<b>mut</b> <a href="staking_pool.md#0x3_staking_pool_StakingPool">StakingPool</a>,
+    <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>: TimelockedStakedSui,
+    ctx: &<b>mut</b> TxContext
+) : (TimeLock&lt;Balance&lt;SUI&gt;&gt;, Balance&lt;SUI&gt;) {
+    <b>let</b> (pool_id, stake_activation_epoch, principal, expire_timestamp_ms) = <a href="timelocked_staked_sui.md#0x3_timelocked_staked_sui">timelocked_staked_sui</a>.unwrap_timelocked_staked_sui();
+
+    <b>let</b> (pool_token_withdraw_amount, principal_withdraw) =
+        <a href="staking_pool.md#0x3_staking_pool_withdraw_from_principal">withdraw_from_principal</a>(pool, pool_id, stake_activation_epoch, principal);
+    <b>let</b> principal_withdraw_amount = principal_withdraw.value();
+
+    <b>let</b> rewards_withdraw = <a href="staking_pool.md#0x3_staking_pool_withdraw_rewards">withdraw_rewards</a>(
+        pool, principal_withdraw_amount, pool_token_withdraw_amount, ctx.epoch()
+    );
+    <b>let</b> total_sui_withdraw_amount = principal_withdraw_amount + rewards_withdraw.value();
+
+    pool.pending_total_sui_withdraw = pool.pending_total_sui_withdraw + total_sui_withdraw_amount;
+    pool.pending_pool_token_withdraw = pool.pending_pool_token_withdraw + pool_token_withdraw_amount;
+
+    // If the pool is inactive, we immediately process the withdrawal.
+    <b>if</b> (<a href="staking_pool.md#0x3_staking_pool_is_inactive">is_inactive</a>(pool)) <a href="staking_pool.md#0x3_staking_pool_process_pending_stake_withdraw">process_pending_stake_withdraw</a>(pool);
+
+    (<a href="time_lock.md#0x3_time_lock_pack">time_lock::pack</a>(principal_withdraw, expire_timestamp_ms, ctx), rewards_withdraw)
 }
 </code></pre>
 
@@ -592,7 +706,7 @@ Returns values are amount of pool tokens withdrawn and withdrawn principal porti
 
 
 
-<pre><code><b>fun</b> <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>): <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;
+<pre><code><b>fun</b> <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>): (<a href="../sui-framework/object.md#0x2_object_ID">object::ID</a>, u64, <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;)
 </code></pre>
 
 
@@ -601,14 +715,39 @@ Returns values are amount of pool tokens withdrawn and withdrawn principal porti
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a>): Balance&lt;SUI&gt; {
+<pre><code><b>fun</b> <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a>): (ID, u64, Balance&lt;SUI&gt;) {
     <b>let</b> <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a> {
         id,
-        pool_id: _,
-        stake_activation_epoch: _,
+        pool_id,
+        stake_activation_epoch,
         principal,
     } = staked_sui;
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
+    (pool_id, stake_activation_epoch, principal)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_staking_pool_into_balance"></a>
+
+## Function `into_balance`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_into_balance">into_balance</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>): <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="staking_pool.md#0x3_staking_pool_into_balance">into_balance</a>(staked_sui: <a href="staking_pool.md#0x3_staking_pool_StakedSui">StakedSui</a>): Balance&lt;SUI&gt; {
+    <b>let</b> (_, _, principal) = <a href="staking_pool.md#0x3_staking_pool_unwrap_staked_sui">unwrap_staked_sui</a>(staked_sui);
     principal
 }
 </code></pre>

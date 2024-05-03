@@ -8,7 +8,9 @@ module sui_system::validator {
     use sui::balance::Balance;
     use sui::sui::SUI;
     use sui_system::validator_cap::{Self, ValidatorOperationCap};
-    use sui_system::staking_pool::{Self, PoolTokenExchangeRate, StakedSui, StakingPool};
+    use sui_system::time_lock::TimeLock;
+    use sui_system::timelocked_staked_sui::TimelockedStakedSui;
+    use sui_system::staking_pool::{Self, PoolTokenExchangeRate, StakingPool, StakedSui};
     use std::string::String;
     use sui::url::Url;
     use sui::url;
@@ -368,6 +370,60 @@ module sui_system::validator {
             }
         );
         withdrawn_stake
+    }
+
+    /// Request to add timelocked stake to the validator's staking pool, processed at the end of the epoch.
+    public(package) fun request_add_timelocked_stake(
+        self: &mut Validator,
+        timelocked_stake: TimeLock<Balance<SUI>>,
+        staker_address: address,
+        ctx: &mut TxContext,
+    ) : TimelockedStakedSui {
+        let stake_amount = timelocked_stake.locked().value();
+        assert!(stake_amount > 0, EInvalidStakeAmount);
+        let stake_epoch = ctx.epoch() + 1;
+        let staked_sui = self.staking_pool.request_add_timelocked_stake(timelocked_stake, stake_epoch, ctx);
+        // Process stake right away if staking pool is preactive.
+        if (self.staking_pool.is_preactive()) {
+            self.staking_pool.process_pending_stake();
+        };
+        self.next_epoch_stake = self.next_epoch_stake + stake_amount;
+        event::emit(
+            StakingRequestEvent {
+                pool_id: staking_pool_id(self),
+                validator_address: self.metadata.sui_address,
+                staker_address,
+                epoch: ctx.epoch(),
+                amount: stake_amount,
+            }
+        );
+        staked_sui
+    }
+
+    /// Request to withdraw timelocked stake from the validator's staking pool, processed at the end of the epoch.
+    public(package) fun request_withdraw_timelocked_stake(
+        self: &mut Validator,
+        timelocked_staked_sui: TimelockedStakedSui,
+        ctx: &mut TxContext,
+    ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
+        let principal_amount = timelocked_staked_sui.staked_sui_amount();
+        let stake_activation_epoch = timelocked_staked_sui.stake_activation_epoch();
+        let (withdrawn_stake, reward) = self.staking_pool.request_withdraw_timelocked_stake(timelocked_staked_sui, ctx);
+        let withdraw_amount = withdrawn_stake.locked().value();
+        let reward_amount = reward.value();
+        self.next_epoch_stake = self.next_epoch_stake - withdraw_amount - reward_amount;
+        event::emit(
+            UnstakingRequestEvent {
+                pool_id: staking_pool_id(self),
+                validator_address: self.metadata.sui_address,
+                staker_address: ctx.sender(),
+                stake_activation_epoch,
+                unstaking_epoch: ctx.epoch(),
+                principal_amount,
+                reward_amount,
+            }
+        );
+        (withdrawn_stake, reward)
     }
 
     /// Request to set new gas price for the next epoch.

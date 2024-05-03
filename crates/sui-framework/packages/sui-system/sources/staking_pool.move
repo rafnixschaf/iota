@@ -3,6 +3,9 @@
 
 #[allow(unused_const)]
 module sui_system::staking_pool {
+    use sui_system::timelocked_staked_sui::{Self, TimelockedStakedSui};
+    use sui_system::time_lock::{Self, TimeLock};
+
     use sui::balance::{Self, Balance};
     use sui::sui::SUI;
     use sui::math;
@@ -35,6 +38,8 @@ module sui_system::staking_pool {
     const EActivationOfInactivePool: u64 = 16;
     const EDelegationOfZeroSui: u64 = 17;
     const EStakedSuiBelowThreshold: u64 = 18;
+
+    const ETimeLockShouldNotBeExpired: u64 = 100;
 
     /// A staking pool embedded in each validator struct in the system state object.
     public struct StakingPool has key, store {
@@ -134,8 +139,10 @@ module sui_system::staking_pool {
         staked_sui: StakedSui,
         ctx: &TxContext
     ) : Balance<SUI> {
+        let (pool_id, stake_activation_epoch, principal) = staked_sui.unwrap_staked_sui();
+
         let (pool_token_withdraw_amount, mut principal_withdraw) =
-            withdraw_from_principal(pool, staked_sui);
+            withdraw_from_principal(pool, pool_id, stake_activation_epoch, principal);
         let principal_withdraw_amount = principal_withdraw.value();
 
         let rewards_withdraw = withdraw_rewards(
@@ -159,38 +166,98 @@ module sui_system::staking_pool {
     /// Returns values are amount of pool tokens withdrawn and withdrawn principal portion of SUI.
     public(package) fun withdraw_from_principal(
         pool: &StakingPool,
-        staked_sui: StakedSui,
+        pool_id: ID,
+        stake_activation_epoch: u64,
+        principal: Balance<SUI>,
     ) : (u64, Balance<SUI>) {
 
         // Check that the stake information matches the pool.
-        assert!(staked_sui.pool_id == object::id(pool), EWrongPool);
+        assert!(pool_id == object::id(pool), EWrongPool);
 
-        let exchange_rate_at_staking_epoch = pool_token_exchange_rate_at_epoch(pool, staked_sui.stake_activation_epoch);
-        let principal_withdraw = unwrap_staked_sui(staked_sui);
+        let exchange_rate_at_staking_epoch = pool_token_exchange_rate_at_epoch(pool, stake_activation_epoch);
         let pool_token_withdraw_amount = get_token_amount(
-		&exchange_rate_at_staking_epoch,
-		principal_withdraw.value()
-	);
+            &exchange_rate_at_staking_epoch,
+            principal.value()
+        );
 
         (
             pool_token_withdraw_amount,
-            principal_withdraw,
+            principal,
         )
     }
 
-    fun unwrap_staked_sui(staked_sui: StakedSui): Balance<SUI> {
+    /// Request to stake a timelocked stake to a staking pool. The stake starts counting at the beginning of the next epoch,
+    public(package) fun request_add_timelocked_stake(
+        pool: &mut StakingPool,
+        timelocked_stake: TimeLock<Balance<SUI>>,
+        stake_activation_epoch: u64,
+        ctx: &mut TxContext
+    ) : TimelockedStakedSui {
+        assert!(timelocked_stake.is_locked(ctx), ETimeLockShouldNotBeExpired);
+
+        let (stake, expire_timestamp_ms) = time_lock::unpack(timelocked_stake);
+
+        let sui_amount = stake.value();
+
+        assert!(!is_inactive(pool), EDelegationToInactivePool);
+        assert!(sui_amount > 0, EDelegationOfZeroSui);
+
+        let staked_sui = timelocked_staked_sui::create(
+            object::id(pool),
+            stake_activation_epoch,
+            stake,
+            expire_timestamp_ms,
+            ctx,
+        );
+
+        pool.pending_stake = pool.pending_stake + sui_amount;
+
+        staked_sui
+    }
+
+    /// Request to withdraw the given timelocked stake plus rewards from a staking pool.
+    /// Both the principal and corresponding rewards in SUI are withdrawn.
+    /// A proportional amount of pool token withdraw is recorded and processed at epoch change time.
+    public(package) fun request_withdraw_timelocked_stake(
+        pool: &mut StakingPool,
+        timelocked_staked_sui: TimelockedStakedSui,
+        ctx: &mut TxContext
+    ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
+        let (pool_id, stake_activation_epoch, principal, expire_timestamp_ms) = timelocked_staked_sui.unwrap_timelocked_staked_sui();
+
+        let (pool_token_withdraw_amount, principal_withdraw) =
+            withdraw_from_principal(pool, pool_id, stake_activation_epoch, principal);
+        let principal_withdraw_amount = principal_withdraw.value();
+
+        let rewards_withdraw = withdraw_rewards(
+            pool, principal_withdraw_amount, pool_token_withdraw_amount, ctx.epoch()
+        );
+        let total_sui_withdraw_amount = principal_withdraw_amount + rewards_withdraw.value();
+
+        pool.pending_total_sui_withdraw = pool.pending_total_sui_withdraw + total_sui_withdraw_amount;
+        pool.pending_pool_token_withdraw = pool.pending_pool_token_withdraw + pool_token_withdraw_amount;
+
+        // If the pool is inactive, we immediately process the withdrawal.
+        if (is_inactive(pool)) process_pending_stake_withdraw(pool);
+
+        (time_lock::pack(principal_withdraw, expire_timestamp_ms, ctx), rewards_withdraw)
+    }
+
+    fun unwrap_staked_sui(staked_sui: StakedSui): (ID, u64, Balance<SUI>) {
         let StakedSui {
             id,
-            pool_id: _,
-            stake_activation_epoch: _,
+            pool_id,
+            stake_activation_epoch,
             principal,
         } = staked_sui;
         object::delete(id);
-        principal
+        (pool_id, stake_activation_epoch, principal)
     }
 
-    /// Allows calling `.into_balance()` on `StakedSui` to invoke `unwrap_staked_sui`
-    public use fun unwrap_staked_sui as StakedSui.into_balance;
+    public fun into_balance(staked_sui: StakedSui): Balance<SUI> {
+        let (_, _, principal) = unwrap_staked_sui(staked_sui);
+        principal
+    }
 
     // ==== functions called at epoch boundaries ===
 
@@ -452,9 +519,9 @@ module sui_system::staking_pool {
         staked_sui: &StakedSui,
         current_epoch: u64,
     ): u64 {
-        let staked_amount = staked_sui_amount(staked_sui);
+        let staked_amount = staked_sui.staked_sui_amount();
         let pool_token_withdraw_amount = {
-            let exchange_rate_at_staking_epoch = pool_token_exchange_rate_at_epoch(pool, staked_sui.stake_activation_epoch);
+            let exchange_rate_at_staking_epoch = pool_token_exchange_rate_at_epoch(pool, staked_sui.stake_activation_epoch());
             get_token_amount(&exchange_rate_at_staking_epoch, staked_amount)
         };
 

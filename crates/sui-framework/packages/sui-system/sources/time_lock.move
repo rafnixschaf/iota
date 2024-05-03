@@ -62,7 +62,7 @@ module sui_system::time_lock {
     }
 
     /// Function to get the locked object of a `TimeLock`.
-    public fun get_locked<T: store>(self: &TimeLock<T>): &T {
+    public fun locked<T: store>(self: &TimeLock<T>): &T {
         &self.locked
     }
 

@@ -11,7 +11,7 @@ A time lock implementation.
 -  [Function `unlock`](#0x3_time_lock_unlock)
 -  [Function `is_locked`](#0x3_time_lock_is_locked)
 -  [Function `get_remaining_time`](#0x3_time_lock_get_remaining_time)
--  [Function `get_locked`](#0x3_time_lock_get_locked)
+-  [Function `locked`](#0x3_time_lock_locked)
 -  [Function `pack`](#0x3_time_lock_pack)
 -  [Function `unpack`](#0x3_time_lock_unpack)
 
@@ -210,14 +210,14 @@ Returns 0 if the lock has expired.
 
 </details>
 
-<a name="0x3_time_lock_get_locked"></a>
+<a name="0x3_time_lock_locked"></a>
 
-## Function `get_locked`
+## Function `locked`
 
 Function to get the locked object of a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_locked">get_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;): &T
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_locked">locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;): &T
 </code></pre>
 
 
@@ -226,7 +226,7 @@ Function to get the locked object of a <code><a href="time_lock.md#0x3_time_lock
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_locked">get_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;): &T {
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_locked">locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;): &T {
     &self.locked
 }
 </code></pre>

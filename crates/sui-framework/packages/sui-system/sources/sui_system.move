@@ -48,8 +48,9 @@ module sui_system::sui_system {
 
     use sui_system::validator::Validator;
     use sui_system::validator_cap::UnverifiedValidatorOperationCap;
-    use sui_system::sui_system_state_inner::{Self, SystemParameters, SuiSystemStateInner, SuiSystemStateInnerV2, TimelockedStakedSui};
+    use sui_system::sui_system_state_inner::{Self, SystemParameters, SuiSystemStateInner, SuiSystemStateInnerV2};
     use sui_system::stake_subsidy::StakeSubsidy;
+    use sui_system::timelocked_staked_sui::TimelockedStakedSui;
     use sui_system::staking_pool::{PoolTokenExchangeRate, StakedSui};
     use sui_system::time_lock::TimeLock;
 
@@ -310,8 +311,9 @@ module sui_system::sui_system {
         timelocked_staked_sui: TimelockedStakedSui,
         ctx: &mut TxContext,
     ) {
-        let timelocked_withdrawn_stake = request_withdraw_timelocked_stake_non_entry(wrapper, timelocked_staked_sui, ctx);
+        let (timelocked_withdrawn_stake, reward) = request_withdraw_timelocked_stake_non_entry(wrapper, timelocked_staked_sui, ctx);
         transfer::public_transfer(timelocked_withdrawn_stake, ctx.sender());
+        transfer::public_transfer(reward.into_coin(ctx), ctx.sender());
     }
 
     /// Non-entry version of `request_withdraw_timelocked_stake` that returns the withdrawn timelocked SUI instead of transferring it to the sender.
@@ -319,7 +321,7 @@ module sui_system::sui_system {
         wrapper: &mut SuiSystemState,
         timelocked_staked_sui: TimelockedStakedSui,
         ctx: &mut TxContext,
-    ) : TimeLock<Balance<SUI>> {
+    ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
         let self = load_system_state_mut(wrapper);
         self.request_withdraw_timelocked_stake(timelocked_staked_sui, ctx)
     }
