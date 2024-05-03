@@ -1,0 +1,301 @@
+---
+title: Module `0x3::time_lock`
+---
+
+A time lock implementation.
+
+
+-  [Resource `TimeLock`](#0x3_time_lock_TimeLock)
+-  [Constants](#@Constants_0)
+-  [Function `lock`](#0x3_time_lock_lock)
+-  [Function `unlock`](#0x3_time_lock_unlock)
+-  [Function `is_locked`](#0x3_time_lock_is_locked)
+-  [Function `get_remaining_time`](#0x3_time_lock_get_remaining_time)
+-  [Function `get_locked`](#0x3_time_lock_get_locked)
+-  [Function `pack`](#0x3_time_lock_pack)
+-  [Function `unpack`](#0x3_time_lock_unpack)
+
+
+<pre><code><b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
+<b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
+</code></pre>
+
+
+
+<a name="0x3_time_lock_TimeLock"></a>
+
+## Resource `TimeLock`
+
+<code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code> struct that holds a locked object.
+
+
+<pre><code><b>struct</b> <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T: store&gt; <b>has</b> store, key
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>id: <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a></code>
+</dt>
+<dd>
+
+</dd>
+<dt>
+<code>locked: T</code>
+</dt>
+<dd>
+ The locked object.
+</dd>
+<dt>
+<code>expire_timestamp_ms: u64</code>
+</dt>
+<dd>
+ This is the epoch time stamp of when the lock expires.
+</dd>
+</dl>
+
+
+</details>
+
+<a name="@Constants_0"></a>
+
+## Constants
+
+
+<a name="0x3_time_lock_EExpireEpochIsPast"></a>
+
+Error code for when the expire timestamp of the lock is in the past.
+
+
+<pre><code><b>const</b> <a href="time_lock.md#0x3_time_lock_EExpireEpochIsPast">EExpireEpochIsPast</a>: u64 = 0;
+</code></pre>
+
+
+
+<a name="0x3_time_lock_ENotExpiredYet"></a>
+
+Error code for when the lock has not expired yet.
+
+
+<pre><code><b>const</b> <a href="time_lock.md#0x3_time_lock_ENotExpiredYet">ENotExpiredYet</a>: u64 = 1;
+</code></pre>
+
+
+
+<a name="0x3_time_lock_lock"></a>
+
+## Function `lock`
+
+Function to lock an object till a unix timestamp in milliseconds.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_lock">lock</a>&lt;T: store&gt;(locked: T, expire_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_lock">lock</a>&lt;T: store&gt;(locked: T, expire_timestamp_ms: u64, ctx: &<b>mut</b> TxContext): <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt; {
+    // Get the epoch timestamp.
+    <b>let</b> epoch_timestamp_ms = ctx.epoch_timestamp_ms();
+
+    // Check that `expire_timestamp_ms` is valid.
+    <b>assert</b>!(expire_timestamp_ms &gt; epoch_timestamp_ms, <a href="time_lock.md#0x3_time_lock_EExpireEpochIsPast">EExpireEpochIsPast</a>);
+
+    // Create a timelock.
+    <a href="time_lock.md#0x3_time_lock_pack">pack</a>(locked, expire_timestamp_ms, ctx)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_unlock"></a>
+
+## Function `unlock`
+
+Function to unlock the object from a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): T {
+    // Unpack the timelock.
+    <b>let</b> (locked, expire_timestamp_ms) = <a href="time_lock.md#0x3_time_lock_unpack">unpack</a>(self);
+
+    // Check <b>if</b> the lock <b>has</b> expired.
+    <b>assert</b>!(expire_timestamp_ms &lt;= ctx.epoch_timestamp_ms(), <a href="time_lock.md#0x3_time_lock_ENotExpiredYet">ENotExpiredYet</a>);
+
+    locked
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_is_locked"></a>
+
+## Function `is_locked`
+
+Function to check if a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code> is locked.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): bool {
+    self.<a href="time_lock.md#0x3_time_lock_get_remaining_time">get_remaining_time</a>(ctx) &gt; 0
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_get_remaining_time"></a>
+
+## Function `get_remaining_time`
+
+Function to get the remaining time of a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
+Returns 0 if the lock has expired.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_remaining_time">get_remaining_time</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_remaining_time">get_remaining_time</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): u64 {
+    // Get the epoch timestamp.
+    <b>let</b> current_timestamp_ms = ctx.epoch_timestamp_ms();
+
+    // Check <b>if</b> the lock <b>has</b> expired.
+    <b>if</b> (self.expire_timestamp_ms &lt; current_timestamp_ms) {
+        <b>return</b> 0
+    };
+
+    // Calculate the remaining time.
+    self.expire_timestamp_ms - current_timestamp_ms
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_get_locked"></a>
+
+## Function `get_locked`
+
+Function to get the locked object of a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_locked">get_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;): &T
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="time_lock.md#0x3_time_lock_get_locked">get_locked</a>&lt;T: store&gt;(self: &<a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;): &T {
+    &self.locked
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_pack"></a>
+
+## Function `pack`
+
+An utility function to pack a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="time_lock.md#0x3_time_lock_pack">pack</a>&lt;T: store&gt;(locked: T, expire_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="time_lock.md#0x3_time_lock_pack">pack</a>&lt;T: store&gt;(locked: T, expire_timestamp_ms: u64, ctx: &<b>mut</b> TxContext): <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt; {
+    // Create a timelock.
+    <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a> {
+        id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
+        locked,
+        expire_timestamp_ms
+    }
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_time_lock_unpack"></a>
+
+## Function `unpack`
+
+An utility function to unpack a <code><a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a></code>.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="time_lock.md#0x3_time_lock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="time_lock.md#0x3_time_lock_TimeLock">time_lock::TimeLock</a>&lt;T&gt;): (T, u64)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="time_lock.md#0x3_time_lock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64) {
+    // Unpack the timelock.
+    <b>let</b> <a href="time_lock.md#0x3_time_lock_TimeLock">TimeLock</a> {
+        id,
+        locked,
+        expire_timestamp_ms
+    } = lock;
+
+    // Delete the timelock.
+    <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
+
+    (locked, expire_timestamp_ms)
+}
+</code></pre>
+
+
+
+</details>

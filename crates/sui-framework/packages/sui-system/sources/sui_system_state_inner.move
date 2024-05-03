@@ -12,6 +12,7 @@ module sui_system::sui_system_state_inner {
     use sui_system::stake_subsidy::StakeSubsidy;
     use sui_system::storage_fund::{Self, StorageFund};
     use sui_system::staking_pool::PoolTokenExchangeRate;
+    use sui_system::time_lock::{Self, TimeLock};
     use sui::vec_map::{Self, VecMap};
     use sui::vec_set::{Self, VecSet};
     use sui::event;
@@ -212,6 +213,15 @@ module sui_system::sui_system_state_inner {
         leftover_storage_fund_inflow: u64,
     }
 
+    /// A self-custodial object holding the timelocked staked SUI tokens.
+    public struct TimelockedStakedSui has key, store {
+        id: UID,
+        /// A self-custodial object holding the staked SUI tokens.
+        staked_sui: StakedSui,
+        /// This is the epoch time stamp of when the lock expires.
+        expire_timestamp_ms: u64,
+    }
+
     // Errors
     const ENotValidator: u64 = 0;
     const ELimitExceeded: u64 = 1;
@@ -223,6 +233,8 @@ module sui_system::sui_system_state_inner {
     const EStakeWithdrawBeforeActivation: u64 = 6;
     const ESafeModeGasNotProcessed: u64 = 7;
     const EAdvancedToWrongEpoch: u64 = 8;
+
+    const ETimeLockShouldNotBeExpired: u64 = 100;
 
     const BASIS_POINT_DENOMINATOR: u128 = 10000;
 
@@ -504,6 +516,30 @@ module sui_system::sui_system_state_inner {
         )
     }
 
+    /// Add timelocked stake to a validator's staking pool.
+    public(package) fun request_add_timelocked_stake(
+        self: &mut SuiSystemStateInnerV2,
+        timelocked_stake: TimeLock<Balance<SUI>>,
+        validator_address: address,
+        ctx: &mut TxContext,
+    ) : TimelockedStakedSui {
+        assert!(timelocked_stake.is_locked(ctx), ETimeLockShouldNotBeExpired);
+
+        let (stake, expire_timestamp_ms) = time_lock::unpack(timelocked_stake);
+
+        let staked_sui = self.validators.request_add_stake(
+            validator_address,
+            stake,
+            ctx,
+        );
+
+        TimelockedStakedSui {
+            id: object::new(ctx),
+            staked_sui,
+            expire_timestamp_ms
+        }
+    }
+
     /// Add stake to a validator's staking pool using multiple coins.
     public(package) fun request_add_stake_mul_coin(
         self: &mut SuiSystemStateInnerV2,
@@ -527,6 +563,19 @@ module sui_system::sui_system_state_inner {
             EStakeWithdrawBeforeActivation
         );
         self.validators.request_withdraw_stake(staked_sui, ctx)
+    }
+
+    /// Withdraw some portion of a timelocked stake from a validator's staking pool.
+    public(package) fun request_withdraw_timelocked_stake(
+        self: &mut SuiSystemStateInnerV2,
+        timelocked_staked_sui: TimelockedStakedSui,
+        ctx: &mut TxContext,
+    ) : TimeLock<Balance<SUI>> {
+        let (staked_sui, expire_timestamp_ms) = unpack_timelocked_staked_sui(timelocked_staked_sui);
+
+        let balance = request_withdraw_stake(self, staked_sui, ctx);
+
+        time_lock::pack(balance, expire_timestamp_ms, ctx)
     }
 
     /// Report a validator as a bad or non-performant actor in the system.
@@ -1055,6 +1104,18 @@ module sui_system::sui_system_state_inner {
         } else {
             total_balance
         }
+    }
+
+    fun unpack_timelocked_staked_sui(timelocked_sui: TimelockedStakedSui): (StakedSui, u64) {
+        let TimelockedStakedSui {
+            id,
+            staked_sui,
+            expire_timestamp_ms,
+        } = timelocked_sui;
+
+        object::delete(id);
+
+        (staked_sui, expire_timestamp_ms)
     }
 
     #[test_only]

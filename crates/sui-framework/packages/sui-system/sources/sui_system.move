@@ -42,15 +42,16 @@ module sui_system::sui_system {
     use sui::balance::Balance;
 
     use sui::coin::Coin;
-    use sui_system::staking_pool::StakedSui;
+    use sui::dynamic_field;
     use sui::sui::SUI;
     use sui::table::Table;
+
     use sui_system::validator::Validator;
     use sui_system::validator_cap::UnverifiedValidatorOperationCap;
-    use sui_system::sui_system_state_inner::{Self, SystemParameters, SuiSystemStateInner, SuiSystemStateInnerV2};
+    use sui_system::sui_system_state_inner::{Self, SystemParameters, SuiSystemStateInner, SuiSystemStateInnerV2, TimelockedStakedSui};
     use sui_system::stake_subsidy::StakeSubsidy;
-    use sui_system::staking_pool::PoolTokenExchangeRate;
-    use sui::dynamic_field;
+    use sui_system::staking_pool::{PoolTokenExchangeRate, StakedSui};
+    use sui_system::time_lock::TimeLock;
 
     #[test_only] use sui::balance;
     #[test_only] use sui_system::validator_set::ValidatorSet;
@@ -279,6 +280,48 @@ module sui_system::sui_system {
     ) : Balance<SUI> {
         let self = load_system_state_mut(wrapper);
         self.request_withdraw_stake(staked_sui, ctx)
+    }
+
+    /// Add timelocked stake to a validator's staking pool.
+    public entry fun request_add_timelocked_stake(
+        wrapper: &mut SuiSystemState,
+        timelocked_stake: TimeLock<Balance<SUI>>,
+        validator_address: address,
+        ctx: &mut TxContext,
+    ) {
+        let timelocked_staked_sui = request_add_timelocked_stake_non_entry(wrapper, timelocked_stake, validator_address, ctx);
+        transfer::public_transfer(timelocked_staked_sui, ctx.sender());
+    }
+
+    /// The non-entry version of `request_add_timelocked_stake`, which returns the timelocked staked SUI instead of transferring it to the sender.
+    public fun request_add_timelocked_stake_non_entry(
+        wrapper: &mut SuiSystemState,
+        timelocked_stake: TimeLock<Balance<SUI>>,
+        validator_address: address,
+        ctx: &mut TxContext,
+    ): TimelockedStakedSui {
+        let self = load_system_state_mut(wrapper);
+        self.request_add_timelocked_stake(timelocked_stake, validator_address, ctx)
+    }
+
+    /// Withdraw timelocked stake from a validator's staking pool.
+    public entry fun request_withdraw_timelocked_stake(
+        wrapper: &mut SuiSystemState,
+        timelocked_staked_sui: TimelockedStakedSui,
+        ctx: &mut TxContext,
+    ) {
+        let timelocked_withdrawn_stake = request_withdraw_timelocked_stake_non_entry(wrapper, timelocked_staked_sui, ctx);
+        transfer::public_transfer(timelocked_withdrawn_stake, ctx.sender());
+    }
+
+    /// Non-entry version of `request_withdraw_timelocked_stake` that returns the withdrawn timelocked SUI instead of transferring it to the sender.
+    public fun request_withdraw_timelocked_stake_non_entry(
+        wrapper: &mut SuiSystemState,
+        timelocked_staked_sui: TimelockedStakedSui,
+        ctx: &mut TxContext,
+    ) : TimeLock<Balance<SUI>> {
+        let self = load_system_state_mut(wrapper);
+        self.request_withdraw_timelocked_stake(timelocked_staked_sui, ctx)
     }
 
     /// Report a validator as a bad or non-performant actor in the system.
