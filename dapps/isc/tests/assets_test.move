@@ -1,7 +1,7 @@
 #[test_only]
-module isc::assets_tests {
-    use isc::assets::{Self,Assets};
-    use sui::coin::{Self, Coin};
+module isc::assets_test {
+    use isc::assets;
+    use sui::coin;
     use sui::sui::SUI;
     use sui::test_utils;
 
@@ -15,25 +15,27 @@ module isc::assets_tests {
         let iota = coin::mint_for_testing<IOTA>(10, ctx);
 
         let mut assets = assets::new(ctx);
-        assets.add_base_tokens(sui);
-        assets.add_native_tokens(iota);
-        let suis = assets.take_base_tokens(5);
-        let iotas = assets.take_native_tokens<IOTA>(10);
-        assets.destroy_empty();
+        assert!(!assets.has_tokens<SUI>(), 0);
+        assert!(!assets.has_tokens<IOTA>(), 0);
+
+        assets.add_tokens(sui.into_balance());
+        assert!(assets.has_tokens<SUI>(), 0);
+
+        assets.add_tokens(iota.into_balance());
+        assert!(assets.has_tokens<IOTA>(), 0);
+
+        let suis = assets.take_tokens<SUI>(5);
         test_utils::destroy(suis);
+        assert!(!assets.has_tokens<SUI>(), 0);
+
+        let iotas = assets.take_tokens<IOTA>(4);
         test_utils::destroy(iotas);
+        assert!(assets.has_tokens<IOTA>(), 0);
+
+        let iotas2 = assets.take_tokens<IOTA>(6);
+        test_utils::destroy(iotas2);
+        assert!(!assets.has_tokens<IOTA>(), 0);
+
+        assets.destroy_empty();
    }
-
-    // #[test, expected_failure(abort_code = isc::assets::EDuplicateNft)]
-    // fun test_assets_xxx() {
-    //     let mut ctx = tx_context::dummy();
-
-    //     let uid = object::new(&mut ctx);
-    //     let nft_id = uid.to_inner();
-    //     object::delete(uid);
-
-    //     let mut a = assets::new();
-    //     a.add_nft(nft_id);
-    //     a.add_nft(nft_id);
-    // }
 }

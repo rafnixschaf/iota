@@ -1,5 +1,5 @@
 #[test_only]
-module isc::ledger_tests {
+module isc::ledger_test {
     use isc::ledger::{Self,Ledger};
     use sui::sui::SUI;
     use std::type_name;
@@ -17,18 +17,16 @@ module isc::ledger_tests {
         object::delete(uid2);
         
         let mut a = ledger::new();
-        a.add_base_tokens(123);
-
+    
         let name = type_name::get<SUI>().into_string();
         std::debug::print(&name);
-        a.add_native_tokens(&name, 100);
+        a.add_tokens(&name, 100);
 
         a.add_nft(nft_id);
 
-        assert!(a.get_base_tokens() == 123, 1);
-        assert!(a.get_native_token_amount(&name) == 100, 2);
+        assert!(a.get_token_amount(&name) == 100, 2);
         let dummy = type_name::get<Ledger>().into_string();
-        assert!(a.get_native_token_amount(&dummy) == 0, 3);
+        assert!(a.get_token_amount(&dummy) == 0, 3);
         assert!(a.has_nft(nft_id), 4);
         assert!(!a.has_nft(nft_id2), 5);
     }
