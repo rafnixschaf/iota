@@ -13,9 +13,6 @@ use rand::Rng;
 use regex::Regex;
 use std::fmt;
 
-static ALLOWED_NO_SELF_IDENTIFIERS: &str =
-    r"[a-zA-Z]+(?:[a-zA-Z][a-zA-Z0-9_]*)|[a-zA-Z]+(?:_[a-zA-Z0-9_]+)";
-
 /// The [`NativeTokenPackageData`] struct encapsulates all the data necessary to build a Stardust native token package.
 #[derive(Debug)]
 pub struct NativeTokenPackageData {
@@ -229,24 +226,31 @@ impl fmt::Display for NativeTokenPackageData {
 }
 
 fn check_identifier(identifier: String) -> String {
-    // If it is a valid Move idenfier return it
-    if move_core_types::identifier::is_valid(&identifier) {
-        identifier
+    static VALID_IDENTIFIER_PATTERN: &str = r"[a-zA-Z][a-zA-Z0-9_]*";
+
+    // Define a regex pattern to capture the valid parts of the identifier
+    let valid_parts_re = Regex::new(VALID_IDENTIFIER_PATTERN).unwrap();
+    let valid_parts: Vec<&str> = valid_parts_re
+        .find_iter(&identifier)
+        .map(|mat| mat.as_str())
+        .collect();
+    let concatenated = valid_parts.concat();
+
+    // Ensure no trailing underscore at the end of the identifier
+    let final_identifier = concatenated.trim_end_matches('_').to_string();
+
+    // Check if the final identifier is valid
+    if move_core_types::identifier::is_valid(&final_identifier) {
+        final_identifier
     } else {
-        // Else try to remove the unvalid characters
-        let re: Regex = Regex::new(ALLOWED_NO_SELF_IDENTIFIERS).unwrap();
-        if let Some(mat) = re.find(&identifier) {
-            mat.as_str().to_owned()
+        // Generate a new valid random identifier if still invalid
+        let mut rng = rand::thread_rng();
+        let gen = rand_regex::Regex::compile(VALID_IDENTIFIER_PATTERN, 100).unwrap();
+        let res: String = rng.sample(&gen);
+        if res.len() > 7 {
+            res[..7].to_string()
         } else {
-            // Generate a new valid random identifier
-            let mut rng = rand::thread_rng();
-            let gen = rand_regex::Regex::compile(ALLOWED_NO_SELF_IDENTIFIERS, 100).unwrap();
-            let res: String = (&mut rng).sample(&gen);
-            if res.len() > 7 {
-                res[..7].to_string()
-            } else {
-                res
-            }
+            res
         }
     }
 }
@@ -338,5 +342,51 @@ mod tests {
         assert!(package_builder.build_and_compile(native_token_data).is_ok());
 
         Ok(())
+    }
+
+    #[test]
+    fn test_empty_identifier() {
+        let identifier = "".to_string();
+        let result = check_identifier(identifier.clone());
+        assert_eq!(7, result.len());
+    }
+
+    #[test]
+    fn test_identifier_with_only_invalid_chars() {
+        let identifier = "!@#$%^".to_string();
+        let result = check_identifier(identifier.clone());
+        assert_eq!(7, result.len());
+    }
+
+    #[test]
+    fn test_identifier_with_only_one_char() {
+        let identifier = "a".to_string();
+        assert_eq!(check_identifier(identifier.clone()), "a".to_string());
+    }
+
+    #[test]
+    fn test_identifier_with_whitespaces_and_ending_underscore() {
+        let identifier = " a bc-d e_".to_string();
+        assert_eq!(check_identifier(identifier.clone()), "abcde".to_string());
+    }
+
+    #[test]
+    fn test_identifier_with_minus() {
+        let identifier = "hello-world".to_string();
+        assert_eq!(
+            check_identifier(identifier.clone()),
+            "helloworld".to_string()
+        );
+    }
+
+    #[test]
+    fn test_identifier_with_multiple_invalid_chars() {
+        let identifier = "#hello-move_world/token&".to_string();
+        assert_eq!(check_identifier(identifier.clone()), "hellomove_worldtoken");
+    }
+    #[test]
+    fn test_valid_identifier() {
+        let identifier = "valid_identifier".to_string();
+        assert_eq!(check_identifier(identifier.clone()), identifier);
     }
 }
