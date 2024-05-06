@@ -1,8 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// A time lock implementation.
-module sui_system::time_lock {
+/// A timelock implementation.
+module stardust::timelock {
     /// Error code for when the expire timestamp of the lock is in the past.
     const EExpireEpochIsPast: u64 = 0;
 

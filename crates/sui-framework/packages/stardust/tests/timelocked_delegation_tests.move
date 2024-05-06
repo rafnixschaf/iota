@@ -5,15 +5,18 @@
 module sui_system::timelocked_stake_tests {
     use sui::balance;
     use sui::test_scenario;
+    use stardust::timelock::{Self, TimeLock};
+    use stardust::timelocked_staked_sui::{Self, TimelockedStakedSui};
+    use stardust::timelocked_staking;
     use sui_system::sui_system::SuiSystemState;
-    use sui_system::time_lock;
-    use sui_system::timelocked_staked_sui::{Self, TimelockedStakedSui};
-    use sui_system::timelocked_staking;
     use sui_system::staking_pool::{Self, PoolTokenExchangeRate};
+    use sui_system::validator_set::{Self, ValidatorSet};
+    use sui::balance::Balance;
+    use sui::sui::SUI;
     use sui::test_utils::assert_eq;
-    use sui_system::validator_set;
     use sui::test_utils;
     use sui::table::Table;
+    use sui::test_scenario::{Scenario};
 
     use sui_system::governance_test_utils::{
         add_validator,
@@ -23,13 +26,10 @@ module sui_system::timelocked_stake_tests {
         assert_validator_total_stake_amounts,
         create_validator_for_testing,
         create_sui_system_state_for_testing,
-        stake_timelocked_with,
         remove_validator,
         remove_validator_candidate,
         total_sui_balance,
-        total_timelocked_sui_balance,
         unstake,
-        unstake_timelocked,
     };
 
     const VALIDATOR_ADDR_1: address = @0x1;
@@ -192,7 +192,7 @@ module sui_system::timelocked_stake_tests {
             // Create a stake to VALIDATOR_ADDR_1.
             timelocked_staking::request_add_stake(
                 system_state_mut_ref,
-                time_lock::lock(balance::create_for_testing(60 * MIST_PER_SUI), 10, ctx),
+                timelock::lock(balance::create_for_testing(60 * MIST_PER_SUI), 10, ctx),
                 VALIDATOR_ADDR_1,
                 ctx
             );
@@ -283,7 +283,7 @@ module sui_system::timelocked_stake_tests {
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
 
-            assert!(!system_state_mut_ref.validators().is_active_validator_by_sui_address(VALIDATOR_ADDR_1), 0);
+            assert!(!is_active_validator_by_sui_address(system_state_mut_ref.validators(), VALIDATOR_ADDR_1), 0);
 
             let staked_sui = scenario.take_from_sender<TimelockedStakedSui>();
             assert_eq(staked_sui.amount(), 100 * MIST_PER_SUI);
@@ -386,7 +386,7 @@ module sui_system::timelocked_stake_tests {
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
 
-            assert!(!system_state_mut_ref.validators().is_active_validator_by_sui_address(VALIDATOR_ADDR_1), 0);
+            assert!(!is_active_validator_by_sui_address(system_state_mut_ref.validators(), VALIDATOR_ADDR_1), 0);
 
             test_scenario::return_shared(system_state);
         };
@@ -604,4 +604,68 @@ module sui_system::timelocked_stake_tests {
         create_sui_system_state_for_testing(validators, 300, 100, ctx);
         scenario_val.end();
     }
+
+
+    public fun stake_timelocked_with(
+        staker: address,
+        validator: address,
+        amount: u64,
+        expire_timestamp_ms: u64,
+        scenario: &mut Scenario
+    ) {
+        scenario.next_tx(staker);
+        let mut system_state = scenario.take_shared<SuiSystemState>();
+
+        let ctx = scenario.ctx();
+
+        timelocked_staking::request_add_stake(
+            &mut system_state,
+            timelock::lock(balance::create_for_testing(amount * MIST_PER_SUI), expire_timestamp_ms, ctx),
+            validator,
+            ctx);
+        test_scenario::return_shared(system_state);
+    }
+
+    public fun unstake_timelocked(
+        staker: address, staked_sui_idx: u64, scenario: &mut Scenario
+    ) {
+        scenario.next_tx(staker);
+        let stake_sui_ids = scenario.ids_for_sender<TimelockedStakedSui>();
+        let staked_sui = scenario.take_from_sender_by_id(stake_sui_ids[staked_sui_idx]);
+        let mut system_state = scenario.take_shared<SuiSystemState>();
+
+        let ctx = scenario.ctx();
+        timelocked_staking::request_withdraw_stake(&mut system_state, staked_sui, ctx);
+        test_scenario::return_shared(system_state);
+    }
+
+
+    public fun total_timelocked_sui_balance(addr: address, scenario: &mut Scenario): u64 {
+        let mut sum = 0;
+        scenario.next_tx(addr);
+        let lock_ids = scenario.ids_for_sender<TimeLock<Balance<SUI>>>();
+        let mut i = 0;
+        while (i < lock_ids.length()) {
+            let coin = scenario.take_from_sender_by_id<TimeLock<Balance<SUI>>>(lock_ids[i]);
+            sum = sum + coin.locked().value();
+            scenario.return_to_sender(coin);
+            i = i + 1;
+        };
+        sum
+    }
+
+    public fun is_active_validator_by_sui_address(set: &ValidatorSet, validator_address: address): bool {
+        let validators = set.active_validators();
+        let length = validators.length();
+        let mut i = 0;
+        while (i < length) {
+            let v = &validators[i];
+            if (v.sui_address() == validator_address) {
+                return true
+            };
+            i = i + 1;
+        };
+        false
+    }
+
 }
