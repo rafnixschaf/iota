@@ -32,9 +32,9 @@ module stardust::nft_output {
 
         /// The storage deposit return unlock condition.
         storage_deposit_return_uc: Option<StorageDepositReturnUnlockCondition>,
-        /// The timelock_uc unlock condition.
+        /// The timelock unlock condition.
         timelock_uc: Option<TimelockUnlockCondition>,
-        /// The expiration_uc unlock condition.
+        /// The expiration unlock condition.
         expiration_uc: Option<ExpirationUnlockCondition>,
     }
 
@@ -53,17 +53,17 @@ module stardust::nft_output {
             expiration_uc: mut expiration_uc
         } = output;
 
-        // If the output has a timelock_uc, then we need to check if the timelock_uc has expired.
+        // If the output has a timelock unlock condition, then we need to check if the timelock_uc has expired.
         if (timelock_uc.is_some()) {
             timelock_uc.extract().unlock(ctx);
         };
 
-        // If the output has an expiration_uc, then we need to check who can unlock the output.
+        // If the output has an expiration unlock condition, then we need to check who can unlock the output.
         if (expiration_uc.is_some()) {
             expiration_uc.extract().unlock(ctx);
         };
 
-        // If the output has an SDRUC, then we need to return the deposit.
+        // If the output has a storage deposit return unlock condition, then we need to return the deposit.
         if (storage_deposit_return_uc.is_some()) {
             storage_deposit_return_uc.extract().unlock(&mut iota, ctx);
         };

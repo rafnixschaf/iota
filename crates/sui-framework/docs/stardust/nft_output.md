@@ -73,13 +73,13 @@ The Stardust NFT output representation.
 <code>timelock_uc: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="timelock_unlock_condition.md#0x107a_timelock_unlock_condition_TimelockUnlockCondition">timelock_unlock_condition::TimelockUnlockCondition</a>&gt;</code>
 </dt>
 <dd>
- The timelock_uc unlock condition.
+ The timelock unlock condition.
 </dd>
 <dt>
 <code>expiration_uc: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="expiration_unlock_condition.md#0x107a_expiration_unlock_condition_ExpirationUnlockCondition">expiration_unlock_condition::ExpirationUnlockCondition</a>&gt;</code>
 </dt>
 <dd>
- The expiration_uc unlock condition.
+ The expiration unlock condition.
 </dd>
 </dl>
 
@@ -131,17 +131,17 @@ The function extracts assets from a legacy NFT output.
         expiration_uc: <b>mut</b> expiration_uc
     } = output;
 
-    // If the output <b>has</b> a timelock_uc, then we need <b>to</b> check <b>if</b> the timelock_uc <b>has</b> expired.
+    // If the output <b>has</b> a <a href="timelock.md#0x107a_timelock">timelock</a> unlock condition, then we need <b>to</b> check <b>if</b> the timelock_uc <b>has</b> expired.
     <b>if</b> (timelock_uc.is_some()) {
         timelock_uc.extract().unlock(ctx);
     };
 
-    // If the output <b>has</b> an expiration_uc, then we need <b>to</b> check who can unlock the output.
+    // If the output <b>has</b> an expiration unlock condition, then we need <b>to</b> check who can unlock the output.
     <b>if</b> (expiration_uc.is_some()) {
         expiration_uc.extract().unlock(ctx);
     };
 
-    // If the output <b>has</b> an SDRUC, then we need <b>to</b> <b>return</b> the deposit.
+    // If the output <b>has</b> a storage deposit <b>return</b> unlock condition, then we need <b>to</b> <b>return</b> the deposit.
     <b>if</b> (storage_deposit_return_uc.is_some()) {
         storage_deposit_return_uc.extract().unlock(&<b>mut</b> iota, ctx);
     };

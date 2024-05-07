@@ -19,8 +19,9 @@ module stardust::timelocked_staking {
         validator_address: address,
         ctx: &mut TxContext,
     ) {
-        let staked_sui = request_add_stake_non_entry(sui_system, timelocked_stake, validator_address, ctx);
-        transfer::public_transfer(staked_sui, ctx.sender());
+        let timelocked_staked_sui = request_add_stake_non_entry(sui_system, timelocked_stake, validator_address, ctx);
+
+        transfer::public_transfer(timelocked_staked_sui, ctx.sender());
     }
 
     /// The non-entry version of `request_add_stake`, which returns the timelocked staked SUI instead of transferring it to the sender.

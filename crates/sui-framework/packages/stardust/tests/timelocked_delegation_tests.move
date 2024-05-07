@@ -606,7 +606,7 @@ module sui_system::timelocked_stake_tests {
     }
 
 
-    public fun stake_timelocked_with(
+    fun stake_timelocked_with(
         staker: address,
         validator: address,
         amount: u64,
@@ -626,7 +626,7 @@ module sui_system::timelocked_stake_tests {
         test_scenario::return_shared(system_state);
     }
 
-    public fun unstake_timelocked(
+    fun unstake_timelocked(
         staker: address, staked_sui_idx: u64, scenario: &mut Scenario
     ) {
         scenario.next_tx(staker);
@@ -640,7 +640,7 @@ module sui_system::timelocked_stake_tests {
     }
 
 
-    public fun total_timelocked_sui_balance(addr: address, scenario: &mut Scenario): u64 {
+    fun total_timelocked_sui_balance(addr: address, scenario: &mut Scenario): u64 {
         let mut sum = 0;
         scenario.next_tx(addr);
         let lock_ids = scenario.ids_for_sender<TimeLock<Balance<SUI>>>();
@@ -654,7 +654,7 @@ module sui_system::timelocked_stake_tests {
         sum
     }
 
-    public fun is_active_validator_by_sui_address(set: &ValidatorSet, validator_address: address): bool {
+    fun is_active_validator_by_sui_address(set: &ValidatorSet, validator_address: address): bool {
         let validators = set.active_validators();
         let length = validators.length();
         let mut i = 0;

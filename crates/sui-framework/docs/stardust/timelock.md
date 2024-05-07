@@ -10,7 +10,7 @@ A timelock implementation.
 -  [Function `lock`](#0x107a_timelock_lock)
 -  [Function `unlock`](#0x107a_timelock_unlock)
 -  [Function `is_locked`](#0x107a_timelock_is_locked)
--  [Function `get_remaining_time`](#0x107a_timelock_get_remaining_time)
+-  [Function `remaining_time`](#0x107a_timelock_remaining_time)
 -  [Function `locked`](#0x107a_timelock_locked)
 -  [Function `pack`](#0x107a_timelock_pack)
 -  [Function `unpack`](#0x107a_timelock_unpack)
@@ -167,7 +167,7 @@ Function to check if a <code><a href="timelock.md#0x107a_timelock_TimeLock">Time
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x107a_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): bool {
-    self.<a href="timelock.md#0x107a_timelock_get_remaining_time">get_remaining_time</a>(ctx) &gt; 0
+    self.<a href="timelock.md#0x107a_timelock_remaining_time">remaining_time</a>(ctx) &gt; 0
 }
 </code></pre>
 
@@ -175,15 +175,15 @@ Function to check if a <code><a href="timelock.md#0x107a_timelock_TimeLock">Time
 
 </details>
 
-<a name="0x107a_timelock_get_remaining_time"></a>
+<a name="0x107a_timelock_remaining_time"></a>
 
-## Function `get_remaining_time`
+## Function `remaining_time`
 
 Function to get the remaining time of a <code><a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a></code>.
 Returns 0 if the lock has expired.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x107a_timelock_get_remaining_time">get_remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x107a_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
 </code></pre>
 
 
@@ -192,7 +192,7 @@ Returns 0 if the lock has expired.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x107a_timelock_get_remaining_time">get_remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): u64 {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x107a_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): u64 {
     // Get the epoch timestamp.
     <b>let</b> current_timestamp_ms = ctx.epoch_timestamp_ms();
 

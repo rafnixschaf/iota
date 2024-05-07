@@ -15,7 +15,7 @@ module stardust::basic_output {
     // === Structs ===
 
     /// A basic output that has unlock conditions/features.
-    ///   - basic outputs with expiration_uc unlock condition must be a shared object, since that's the only
+    ///   - basic outputs with expiration unlock condition must be a shared object, since that's the only
     ///     way to handle the two possible addresses that can unlock the output.
     ///   - notice that there is no `store` ability and there is no custom transfer function:
     ///       -  you can call `extract_assets`,
@@ -33,9 +33,9 @@ module stardust::basic_output {
 
         /// The storage deposit return unlock condition.
         storage_deposit_return_uc: Option<StorageDepositReturnUnlockCondition>,
-        /// The timelock_uc unlock condition.
+        /// The timelock unlock condition.
         timelock_uc: Option<TimelockUnlockCondition>,
-        /// The expiration_uc unlock condition.
+        /// The expiration unlock condition.
         expiration_uc: Option<ExpirationUnlockCondition>,
 
         // Possible features, they have no effect and only here to hold data until the object is deleted.
@@ -68,17 +68,17 @@ module stardust::basic_output {
             tag: _
         } = output;
 
-        // If the output has a timelock_uc, then we need to check if the timelock_uc has expired.
+        // If the output has a timelock unlock condition, then we need to check if the timelock_uc has expired.
         if (timelock_uc.is_some()) {
             timelock_uc.extract().unlock(ctx);
         };
 
-        // If the output has an expiration_uc, then we need to check who can unlock the output.
+        // If the output has an expiration unlock condition, then we need to check who can unlock the output.
         if (expiration_uc.is_some()) {
             expiration_uc.extract().unlock(ctx);
         };
 
-        // If the output has an storage deposit return, then we need to return the deposit.
+        // If the output has an storage deposit return unlock condition, then we need to return the deposit.
         if (storage_deposit_return_uc.is_some()) {
             storage_deposit_return_uc.extract().unlock(&mut iota, ctx);
         };

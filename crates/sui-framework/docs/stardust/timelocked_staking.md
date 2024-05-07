@@ -60,8 +60,9 @@ Add stake to a validator's staking pool.
     validator_address: <b>address</b>,
     ctx: &<b>mut</b> TxContext,
 ) {
-    <b>let</b> staked_sui = <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_non_entry">request_add_stake_non_entry</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>, timelocked_stake, validator_address, ctx);
-    <a href="../sui-framework/transfer.md#0x2_transfer_public_transfer">transfer::public_transfer</a>(staked_sui, ctx.sender());
+    <b>let</b> <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui">timelocked_staked_sui</a> = <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_non_entry">request_add_stake_non_entry</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>, timelocked_stake, validator_address, ctx);
+
+    <a href="../sui-framework/transfer.md#0x2_transfer_public_transfer">transfer::public_transfer</a>(<a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui">timelocked_staked_sui</a>, ctx.sender());
 }
 </code></pre>
 

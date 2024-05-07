@@ -43,12 +43,12 @@ module stardust::timelock {
 
     /// Function to check if a `TimeLock` is locked.
     public fun is_locked<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): bool {
-        self.get_remaining_time(ctx) > 0
+        self.remaining_time(ctx) > 0
     }
 
     /// Function to get the remaining time of a `TimeLock`.
     /// Returns 0 if the lock has expired.
-    public fun get_remaining_time<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): u64 {
+    public fun remaining_time<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): u64 {
         // Get the epoch timestamp.
         let current_timestamp_ms = ctx.epoch_timestamp_ms();
 
