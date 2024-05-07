@@ -221,9 +221,10 @@ fn derive_lowercase_identifier(input: &String) -> Result<String, StardustError> 
         if move_core_types::identifier::is_valid(&final_identifier) {
             Ok(final_identifier)
         } else {
-            Err(StardustError::InvalidMoveIdentifierDerived(
-                final_identifier,
-            ))
+            Err(StardustError::InvalidMoveIdentifierDerived {
+                symbol: input,
+                identifier: final_identifier,
+            })
         }
     } else {
         // Generate a new valid random identifier if still invalid
