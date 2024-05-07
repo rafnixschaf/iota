@@ -1011,22 +1011,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-tungstenite"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1e9efbe14612da0a19fb983059a0b621e9cf6225d7018ecab4f9988215540dc"
-dependencies = [
- "futures-io",
- "futures-util",
- "log",
- "pin-project-lite",
- "rustls-native-certs",
- "tokio",
- "tokio-rustls 0.24.0",
- "tungstenite",
-]
-
-[[package]]
 name = "async_io_stream"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1035,7 +1019,6 @@ dependencies = [
  "futures",
  "pharos",
  "rustc_version",
- "tokio",
 ]
 
 [[package]]
@@ -4706,17 +4689,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "flume"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55ac459de2512911e4b674ce33cf20befaba382d05b62b008afc1c8b57cbf181"
-dependencies = [
- "futures-core",
- "futures-sink",
- "spin 0.9.8",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4804,7 +4776,6 @@ dependencies = [
  "futures-core",
  "futures-task",
  "futures-util",
- "num_cpus",
 ]
 
 [[package]]
@@ -5246,7 +5217,6 @@ checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 dependencies = [
  "ahash 0.8.11",
  "allocator-api2",
- "serde",
 ]
 
 [[package]]
@@ -5820,39 +5790,27 @@ version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76d62d16468c4bc555cac621734b5aa4fa971341f8fe3938d4481f7f394b9167"
 dependencies = [
- "async-trait",
  "bech32",
  "bitflags 2.4.1",
  "bytemuck",
  "derive_more",
- "futures",
  "getset",
  "gloo-timers 0.3.0",
  "hashbrown 0.14.3",
  "hex",
- "instant",
  "iota-crypto",
  "iota_stronghold",
  "iterator-sorted",
  "itertools 0.12.0",
  "lazy_static",
- "log",
- "num_cpus",
  "once_cell",
  "packable",
  "prefix-hex",
  "primitive-types 0.12.2",
  "rand 0.8.5",
  "regex",
- "reqwest",
- "rumqttc",
  "serde",
  "serde_json",
- "serde_repr",
- "thiserror",
- "tokio",
- "url",
- "zeroize",
 ]
 
 [[package]]
@@ -10384,27 +10342,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rumqttc"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d8941c6791801b667d52bfe9ff4fc7c968d4f3f9ae8ae7abdaaa1c966feafc8"
-dependencies = [
- "async-tungstenite",
- "bytes",
- "flume",
- "futures-util",
- "http",
- "log",
- "rustls-native-certs",
- "rustls-pemfile 1.0.2",
- "rustls-webpki 0.101.7",
- "thiserror",
- "tokio",
- "tokio-rustls 0.24.0",
- "ws_stream_tungstenite",
-]
-
-[[package]]
 name = "rusoto_core"
 version = "0.48.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11674,9 +11611,6 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
-dependencies = [
- "lock_api",
-]
 
 [[package]]
 name = "spinners"
@@ -12776,6 +12710,7 @@ dependencies = [
  "iota-sdk",
  "move-binary-format",
  "move-core-types",
+ "move-vm-runtime-v2",
  "packable",
  "prometheus",
  "rand 0.8.5",
@@ -12783,10 +12718,13 @@ dependencies = [
  "serde_with",
  "serde_yaml 0.8.26",
  "shared-crypto",
+ "sui-adapter-v2",
  "sui-config",
  "sui-execution",
  "sui-framework",
  "sui-framework-snapshot",
+ "sui-move-build",
+ "sui-move-natives-v2",
  "sui-protocol-config",
  "sui-simulator",
  "sui-types",
@@ -15586,7 +15524,6 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.8.5",
- "rustls 0.21.6",
  "sha1",
  "thiserror",
  "url",
@@ -16463,26 +16400,6 @@ checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "ws_stream_tungstenite"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e283cc794a890f5bdc01e358ad7c34535025f79ba83c1b5c7e01e5d6c60b336d"
-dependencies = [
- "async-tungstenite",
- "async_io_stream",
- "bitflags 2.4.1",
- "futures-core",
- "futures-io",
- "futures-sink",
- "futures-util",
- "pharos",
- "rustc_version",
- "tokio",
- "tracing",
- "tungstenite",
 ]
 
 [[package]]

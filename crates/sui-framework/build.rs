@@ -184,7 +184,7 @@ fn build_packages_with_move_config(
     let sui_framework = framework_pkg.get_sui_framework_modules();
     let deepbook = deepbook_pkg.get_deepbook_modules();
     let move_stdlib = framework_pkg.get_stdlib_modules();
-    let stardust = stardust_pkg.get_stdlib_modules();
+    let stardust = stardust_pkg.get_stardust_modules();
 
     serialize_modules_to_file(sui_system, &out_dir.join(system_dir)).unwrap();
     serialize_modules_to_file(sui_framework, &out_dir.join(framework_dir)).unwrap();

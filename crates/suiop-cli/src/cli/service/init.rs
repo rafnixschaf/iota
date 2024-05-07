@@ -15,6 +15,11 @@ use tracing::debug;
 use tracing::info;
 
 // include the boilerplate code in this binary
+
+// hardcode the 'boilerplate' symlink in the Windows compilation for now
+#[cfg(target_os = "windows")]
+static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/../mysten-service-boilerplate");
+#[cfg(not(target_os = "windows"))]
 static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/boilerplate");
 
 #[derive(ValueEnum, Parser, Debug, Clone)]

@@ -943,7 +943,7 @@ fn create_genesis_objects(
     store.into_inner().into_values().collect()
 }
 
-fn process_package(
+pub(crate) fn process_package(
     store: &mut InMemoryStorage,
     executor: &dyn Executor,
     ctx: &mut TxContext,

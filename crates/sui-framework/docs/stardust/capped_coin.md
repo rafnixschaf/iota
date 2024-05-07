@@ -33,7 +33,7 @@ title: Module `0x107a::capped_coin`
 
 ## Resource `MaxSupplyPolicy`
 
-The policy wrapper that ensures the supply of a Coin never exceeds the maximum supply
+The policy wrapper that ensures the supply of a <code>Coin</code> never exceeds the maximum supply.
 
 
 <pre><code><b>struct</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt; <b>has</b> store, key
@@ -56,13 +56,13 @@ The policy wrapper that ensures the supply of a Coin never exceeds the maximum s
 <code>maximum_supply: u64</code>
 </dt>
 <dd>
-
+ The maximum supply.
 </dd>
 <dt>
 <code>treasury_cap: <a href="../sui-framework/coin.md#0x2_coin_TreasuryCap">coin::TreasuryCap</a>&lt;T&gt;</code>
 </dt>
 <dd>
-
+ The wrapped <code>TreasuryCap</code>.
 </dd>
 </dl>
 
@@ -76,6 +76,7 @@ The policy wrapper that ensures the supply of a Coin never exceeds the maximum s
 
 <a name="0x107a_capped_coin_EMaximumSupplyReached"></a>
 
+The error returned when the maximum supply reached.
 
 
 <pre><code><b>const</b> <a href="capped_coin.md#0x107a_capped_coin_EMaximumSupplyReached">EMaximumSupplyReached</a>: u64 = 0;
@@ -87,9 +88,9 @@ The policy wrapper that ensures the supply of a Coin never exceeds the maximum s
 
 ## Function `create_max_supply_policy`
 
-Wrap a Treasury Cap into a Max Supply Policy to prevent minting of tokens > max supply
+Wrap a <code>TreasuryCap</code> into a <code><a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a></code> to prevent minting of tokens > max supply.
 Be careful, once you add a maximum supply you will not be able to change it or get rid of it!
-This gives coin holders a guarantee that the maximum supply of that specific coin will never change
+This gives coin holders a guarantee that the maximum supply of that specific coin will never change.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_create_max_supply_policy">create_max_supply_policy</a>&lt;T&gt;(treasury_cap: <a href="../sui-framework/coin.md#0x2_coin_TreasuryCap">coin::TreasuryCap</a>&lt;T&gt;, maximum_supply: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;
@@ -101,11 +102,15 @@ This gives coin holders a guarantee that the maximum supply of that specific coi
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_create_max_supply_policy">create_max_supply_policy</a>&lt;T&gt;(treasury_cap: TreasuryCap&lt;T&gt;, maximum_supply: u64, ctx: &<b>mut</b> TxContext): <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt; {
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_create_max_supply_policy">create_max_supply_policy</a>&lt;T&gt;(
+    treasury_cap: TreasuryCap&lt;T&gt;,
+    maximum_supply: u64,
+    ctx: &<b>mut</b> TxContext
+): <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt; {
     <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a> {
         id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
         maximum_supply,
-        treasury_cap,
+        treasury_cap
     }
 }
 </code></pre>
@@ -168,8 +173,7 @@ Get immutable reference to the treasury's <code>Supply</code>.
 
 ## Function `mint`
 
-Create a coin worth <code>value</code> and increase the total supply
-in <code>cap</code> accordingly.
+Create a <code>Coin</code> worth <code>value</code> and increase the total supply in <code>cap</code> accordingly.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint">mint</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, value: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="../sui-framework/coin.md#0x2_coin_Coin">coin::Coin</a>&lt;T&gt;
@@ -182,7 +186,9 @@ in <code>cap</code> accordingly.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint">mint</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, value: u64, ctx: &<b>mut</b> TxContext,
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    value: u64,
+    ctx: &<b>mut</b> TxContext
 ): Coin&lt;T&gt; {
     <b>assert</b>!(<a href="capped_coin.md#0x107a_capped_coin_total_supply">total_supply</a>(policy) + value &lt;= policy.maximum_supply, <a href="capped_coin.md#0x107a_capped_coin_EMaximumSupplyReached">EMaximumSupplyReached</a>);
     <a href="../sui-framework/coin.md#0x2_coin_mint">coin::mint</a>(&<b>mut</b> policy.treasury_cap, value, ctx)
@@ -197,9 +203,8 @@ in <code>cap</code> accordingly.
 
 ## Function `mint_balance`
 
-Mint some amount of T as a <code>Balance</code> and increase the total
-supply in <code>cap</code> accordingly.
-Aborts if <code>value</code> + <code>cap.total_supply</code> >= U64_MAX
+Mint some amount of <code>T</code> as a <code>Balance</code> and increase the total supply in <code>cap</code> accordingly.
+Aborts if <code>value</code> + <code>cap.total_supply</code> >= <code>U64_MAX</code>.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_balance">mint_balance</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, value: u64): <a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;T&gt;
@@ -212,7 +217,8 @@ Aborts if <code>value</code> + <code>cap.total_supply</code> >= U64_MAX
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_balance">mint_balance</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, value: u64
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    value: u64
 ): Balance&lt;T&gt; {
     <b>assert</b>!(<a href="capped_coin.md#0x107a_capped_coin_total_supply">total_supply</a>(policy) + value &lt;= policy.maximum_supply, <a href="capped_coin.md#0x107a_capped_coin_EMaximumSupplyReached">EMaximumSupplyReached</a>);
     <a href="../sui-framework/coin.md#0x2_coin_mint_balance">coin::mint_balance</a>(&<b>mut</b> policy.treasury_cap, value)
@@ -227,8 +233,7 @@ Aborts if <code>value</code> + <code>cap.total_supply</code> >= U64_MAX
 
 ## Function `burn`
 
-Destroy the coin <code>c</code> and decrease the total supply in <code>cap</code>
-accordingly.
+Destroy the coin <code>c</code> and decrease the total supply in <code>cap</code> accordingly.
 
 
 <pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_burn">burn</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, c: <a href="../sui-framework/coin.md#0x2_coin_Coin">coin::Coin</a>&lt;T&gt;): u64
@@ -253,10 +258,10 @@ accordingly.
 
 ## Function `mint_and_transfer`
 
-Mint <code>amount</code> of <code>Coin</code> and send it to <code>recipient</code>. Invokes <code><a href="capped_coin.md#0x107a_capped_coin_mint">mint</a>()</code>.
+Mint <code>amount</code> of <code>Coin</code> and send it to the <code>recipient</code>. Invokes <code><a href="capped_coin.md#0x107a_capped_coin_mint">mint</a>()</code>.
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_and_transfer">mint_and_transfer</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, amount: u64, recipient: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_and_transfer">mint_and_transfer</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, amount: u64, recipient: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -265,8 +270,11 @@ Mint <code>amount</code> of <code>Coin</code> and send it to <code>recipient</co
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_and_transfer">mint_and_transfer</a>&lt;T&gt;(
-   policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, amount: u64, recipient: <b>address</b>, ctx: &<b>mut</b> TxContext
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_mint_and_transfer">mint_and_transfer</a>&lt;T&gt;(
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    amount: u64,
+    recipient: <b>address</b>,
+    ctx: &<b>mut</b> TxContext
 ) {
     <b>assert</b>!(<a href="capped_coin.md#0x107a_capped_coin_total_supply">total_supply</a>(policy) + amount &lt;= policy.maximum_supply, <a href="capped_coin.md#0x107a_capped_coin_EMaximumSupplyReached">EMaximumSupplyReached</a>);
     <a href="../sui-framework/coin.md#0x2_coin_mint_and_transfer">coin::mint_and_transfer</a>(&<b>mut</b> policy.treasury_cap, amount, recipient, ctx)
@@ -281,10 +289,10 @@ Mint <code>amount</code> of <code>Coin</code> and send it to <code>recipient</co
 
 ## Function `update_name`
 
-Update name of the coin in <code>CoinMetadata</code>
+Update the <code>name</code> of the coin in the <code>CoinMetadata</code>.
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_name">update_name</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, name: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_name">update_name</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, name: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
 </code></pre>
 
 
@@ -293,8 +301,10 @@ Update name of the coin in <code>CoinMetadata</code>
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_name">update_name</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> CoinMetadata&lt;T&gt;, name: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_name">update_name</a>&lt;T&gt;(
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    metadata: &<b>mut</b> CoinMetadata&lt;T&gt;,
+    name: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>
 ) {
     <a href="../sui-framework/coin.md#0x2_coin_update_name">coin::update_name</a>(&policy.treasury_cap, metadata, name)
 }
@@ -308,10 +318,10 @@ Update name of the coin in <code>CoinMetadata</code>
 
 ## Function `update_symbol`
 
-Update the symbol of the coin in <code>CoinMetadata</code>
+Update the <code>symbol</code> of the coin in the <code>CoinMetadata</code>.
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_symbol">update_symbol</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, symbol: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_symbol">update_symbol</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, symbol: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>)
 </code></pre>
 
 
@@ -320,8 +330,10 @@ Update the symbol of the coin in <code>CoinMetadata</code>
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_symbol">update_symbol</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> CoinMetadata&lt;T&gt;, symbol: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_symbol">update_symbol</a>&lt;T&gt;(
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    metadata: &<b>mut</b> CoinMetadata&lt;T&gt;,
+    symbol: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>
 ) {
     <a href="../sui-framework/coin.md#0x2_coin_update_symbol">coin::update_symbol</a>(&policy.treasury_cap, metadata, symbol)
 }
@@ -335,10 +347,10 @@ Update the symbol of the coin in <code>CoinMetadata</code>
 
 ## Function `update_description`
 
-Update the description of the coin in <code>CoinMetadata</code>
+Update the <code>description</code> of the coin in the <code>CoinMetadata</code>.
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_description">update_description</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, description: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_description">update_description</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, description: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
 </code></pre>
 
 
@@ -347,8 +359,10 @@ Update the description of the coin in <code>CoinMetadata</code>
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_description">update_description</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> CoinMetadata&lt;T&gt;, description: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_description">update_description</a>&lt;T&gt;(
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    metadata: &<b>mut</b> CoinMetadata&lt;T&gt;,
+    description: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>
 ) {
     <a href="../sui-framework/coin.md#0x2_coin_update_description">coin::update_description</a>(&policy.treasury_cap, metadata, description)
 }
@@ -362,10 +376,10 @@ Update the description of the coin in <code>CoinMetadata</code>
 
 ## Function `update_icon_url`
 
-Update the url of the coin in <code>CoinMetadata</code>
+Update the <code><a href="../sui-framework/url.md#0x2_url">url</a></code> of the coin in the <code>CoinMetadata</code>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_icon_url">update_icon_url</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, <a href="../sui-framework/url.md#0x2_url">url</a>: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_icon_url">update_icon_url</a>&lt;T&gt;(policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">capped_coin::MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> <a href="../sui-framework/coin.md#0x2_coin_CoinMetadata">coin::CoinMetadata</a>&lt;T&gt;, <a href="../sui-framework/url.md#0x2_url">url</a>: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>)
 </code></pre>
 
 
@@ -374,8 +388,10 @@ Update the url of the coin in <code>CoinMetadata</code>
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> entry <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_icon_url">update_icon_url</a>&lt;T&gt;(
-    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;, metadata: &<b>mut</b> CoinMetadata&lt;T&gt;, <a href="../sui-framework/url.md#0x2_url">url</a>: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>
+<pre><code><b>public</b> <b>fun</b> <a href="capped_coin.md#0x107a_capped_coin_update_icon_url">update_icon_url</a>&lt;T&gt;(
+    policy: &<b>mut</b> <a href="capped_coin.md#0x107a_capped_coin_MaxSupplyPolicy">MaxSupplyPolicy</a>&lt;T&gt;,
+    metadata: &<b>mut</b> CoinMetadata&lt;T&gt;,
+    <a href="../sui-framework/url.md#0x2_url">url</a>: <a href="../move-stdlib/ascii.md#0x1_ascii_String">ascii::String</a>
 ) {
     <a href="../sui-framework/coin.md#0x2_coin_update_icon_url">coin::update_icon_url</a>(&policy.treasury_cap, metadata, <a href="../sui-framework/url.md#0x2_url">url</a>)
 }
