@@ -25,6 +25,8 @@ pub enum StardustError {
     },
     #[error("framework packages path not found")]
     FrameworkPackagesPathNotFound,
+    #[error("failed to derive valid move identifier: {0}")]
+    InvalidMoveIdentifierDerived(String),
 }
 
 impl From<Infallible> for StardustError {

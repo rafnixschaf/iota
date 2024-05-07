@@ -160,7 +160,8 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
                 }
             })?;
 
-        let symbol = check_identifier(irc_30_metadata.symbol().to_string().to_ascii_lowercase());
+        // Derive a valid, lowercase move identifier from the symbol field in the irc30 metadata
+        let identifier = derive_lowercase_identifier(&irc_30_metadata.symbol())?;
 
         let decimals = u8::try_from(*irc_30_metadata.decimals()).map_err(|e| {
             StardustError::FoundryConversionError {
@@ -178,15 +179,15 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
         }
 
         let native_token_data = NativeTokenPackageData {
-            package_name: symbol.to_lowercase(),
+            package_name: identifier.clone(),
             module: NativeTokenModuleData {
                 foundry_id: output.id(),
-                module_name: symbol.to_lowercase(),
-                otw_name: symbol.clone().to_ascii_uppercase(),
+                module_name: identifier.clone(),
+                otw_name: identifier.clone().to_ascii_uppercase(),
                 decimals,
-                symbol,
+                symbol: identifier,
                 circulating_tokens: output.token_scheme().as_simple().minted_tokens().as_u64()
-                    - output.token_scheme().as_simple().melted_tokens().as_u64(), //we know that "Melted Tokens must not be greater than Minted Tokens"
+                    - output.token_scheme().as_simple().melted_tokens().as_u64(), // we know that "Melted Tokens must not be greater than Minted Tokens"
                 maximum_supply: maximum_supply.as_u64(),
                 coin_name: irc_30_metadata.name().to_owned(),
                 coin_description: irc_30_metadata.description().clone().unwrap_or_default(),
@@ -199,13 +200,16 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
     }
 }
 
-fn check_identifier(identifier: String) -> String {
-    static VALID_IDENTIFIER_PATTERN: &str = r"[a-zA-Z][a-zA-Z0-9_]*";
+fn derive_lowercase_identifier(input: &String) -> Result<String, StardustError> {
+    let input = input.to_ascii_lowercase();
+
+    static VALID_IDENTIFIER_PATTERN: &str = r"[a-z][a-z0-9_]*";
 
     // Define a regex pattern to capture the valid parts of the identifier
-    let valid_parts_re = Regex::new(VALID_IDENTIFIER_PATTERN).unwrap();
+    let valid_parts_re =
+        Regex::new(VALID_IDENTIFIER_PATTERN).expect("should be valid regex pattern");
     let valid_parts: Vec<&str> = valid_parts_re
-        .find_iter(&identifier)
+        .find_iter(&input)
         .map(|mat| mat.as_str())
         .collect();
     let concatenated = valid_parts.concat();
@@ -213,18 +217,23 @@ fn check_identifier(identifier: String) -> String {
     // Ensure no trailing underscore at the end of the identifier
     let final_identifier = concatenated.trim_end_matches('_').to_string();
 
-    // Check if the final identifier is valid
-    if move_core_types::identifier::is_valid(&final_identifier) {
-        final_identifier
+    if final_identifier.len() > 0 {
+        if move_core_types::identifier::is_valid(&final_identifier) {
+            Ok(final_identifier)
+        } else {
+            Err(StardustError::InvalidMoveIdentifierDerived(
+                final_identifier,
+            ))
+        }
     } else {
         // Generate a new valid random identifier if still invalid
         let mut rng = rand::thread_rng();
         let gen = rand_regex::Regex::compile(VALID_IDENTIFIER_PATTERN, 100).unwrap();
         let res: String = rng.sample(&gen);
         if res.len() > 7 {
-            res[..7].to_string()
+            Ok(res[..7].to_string())
         } else {
-            res
+            Ok(res)
         }
     }
 }
@@ -319,34 +328,40 @@ mod tests {
     #[test]
     fn test_empty_identifier() {
         let identifier = "".to_string();
-        let result = check_identifier(identifier.clone());
+        let result = derive_lowercase_identifier(&identifier).unwrap();
         assert_eq!(7, result.len());
     }
 
     #[test]
     fn test_identifier_with_only_invalid_chars() {
         let identifier = "!@#$%^".to_string();
-        let result = check_identifier(identifier.clone());
+        let result = derive_lowercase_identifier(&identifier).unwrap();
         assert_eq!(7, result.len());
     }
 
     #[test]
     fn test_identifier_with_only_one_char() {
         let identifier = "a".to_string();
-        assert_eq!(check_identifier(identifier.clone()), "a".to_string());
+        assert_eq!(
+            derive_lowercase_identifier(&identifier).unwrap(),
+            "a".to_string()
+        );
     }
 
     #[test]
     fn test_identifier_with_whitespaces_and_ending_underscore() {
         let identifier = " a bc-d e_".to_string();
-        assert_eq!(check_identifier(identifier.clone()), "abcde".to_string());
+        assert_eq!(
+            derive_lowercase_identifier(&identifier).unwrap(),
+            "abcde".to_string()
+        );
     }
 
     #[test]
     fn test_identifier_with_minus() {
         let identifier = "hello-world".to_string();
         assert_eq!(
-            check_identifier(identifier.clone()),
+            derive_lowercase_identifier(&identifier).unwrap(),
             "helloworld".to_string()
         );
     }
@@ -354,11 +369,17 @@ mod tests {
     #[test]
     fn test_identifier_with_multiple_invalid_chars() {
         let identifier = "#hello-move_world/token&".to_string();
-        assert_eq!(check_identifier(identifier.clone()), "hellomove_worldtoken");
+        assert_eq!(
+            derive_lowercase_identifier(&identifier).unwrap(),
+            "hellomove_worldtoken"
+        );
     }
     #[test]
     fn test_valid_identifier() {
         let identifier = "valid_identifier".to_string();
-        assert_eq!(check_identifier(identifier.clone()), identifier);
+        assert_eq!(
+            derive_lowercase_identifier(&identifier).unwrap(),
+            identifier
+        );
     }
 }
