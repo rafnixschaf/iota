@@ -18,6 +18,7 @@ pub struct NativeTokenPackageData {
     move_toml: MoveTomlManifest,
     module: NativeTokenModuleData,
 }
+
 impl NativeTokenPackageData {
     /// Creates a new [`NativeTokenPackageData`] instance.
     pub fn new(cargo_toml_manifest: MoveTomlManifest, module: NativeTokenModuleData) -> Self {

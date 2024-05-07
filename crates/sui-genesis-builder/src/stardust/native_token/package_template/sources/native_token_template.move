@@ -37,7 +37,7 @@ module 0x0::$MODULE_NAME {
         // Freeze the coin metadata
         transfer::public_freeze_object(metadata);
 
-        // Transfer the policy as a cap to the alias address
+        // Transfer the policy as a capability to the alias address
         transfer::public_transfer(policy, sui::address::from_ascii_bytes(&b"$ALIAS"));
     }
 
