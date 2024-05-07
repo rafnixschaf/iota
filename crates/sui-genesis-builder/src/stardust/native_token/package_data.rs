@@ -15,45 +15,27 @@ use regex::Regex;
 /// The [`NativeTokenPackageData`] struct encapsulates all the data necessary to build a Stardust native token package.
 #[derive(Debug)]
 pub struct NativeTokenPackageData {
-    move_toml: MoveTomlManifest,
+    package_name: String,
     module: NativeTokenModuleData,
 }
 
 impl NativeTokenPackageData {
     /// Creates a new [`NativeTokenPackageData`] instance.
-    pub fn new(cargo_toml_manifest: MoveTomlManifest, module: NativeTokenModuleData) -> Self {
+    pub fn new(package_name: String, module: NativeTokenModuleData) -> Self {
         Self {
-            move_toml: cargo_toml_manifest,
+            package_name,
             module,
         }
     }
 
     /// Returns the Move.toml manifest.
-    pub fn move_toml(&self) -> &MoveTomlManifest {
-        &self.move_toml
+    pub fn package_name(&self) -> &String {
+        &self.package_name
     }
 
     /// Returns the native token module data.
     pub fn module(&self) -> &NativeTokenModuleData {
         &self.module
-    }
-}
-
-/// The [`MoveTomlManifest`] struct encapsulates all the data necessary to build a Move.toml manifest.
-#[derive(Debug)]
-pub struct MoveTomlManifest {
-    package_name: String,
-}
-
-impl MoveTomlManifest {
-    /// Creates a new [`MoveTomlManifest`] instance.
-    pub fn new(package_name: String) -> Self {
-        Self { package_name }
-    }
-
-    /// Returns the package name.
-    pub fn package_name(&self) -> &str {
-        &self.package_name
     }
 }
 
@@ -196,9 +178,7 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
         }
 
         let native_token_data = NativeTokenPackageData {
-            move_toml: MoveTomlManifest {
-                package_name: symbol.to_lowercase(),
-            },
+            package_name: symbol.to_lowercase(),
             module: NativeTokenModuleData {
                 foundry_id: output.id(),
                 module_name: symbol.to_lowercase(),

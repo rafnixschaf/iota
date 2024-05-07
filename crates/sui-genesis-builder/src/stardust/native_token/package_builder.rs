@@ -62,7 +62,7 @@ fn adjust_move_toml(
     let cargo_toml_path = package_path.join("Move.toml");
     let contents = fs::read_to_string(&cargo_toml_path)?;
     let new_contents = contents
-        .replace("$PACKAGE_NAME", package.move_toml().package_name())
+        .replace("$PACKAGE_NAME", package.package_name())
         .replace(
             "$FRAMEWORK_PACKAGES_PATH",
             framework_packages_path

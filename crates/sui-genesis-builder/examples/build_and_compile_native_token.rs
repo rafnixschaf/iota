@@ -8,12 +8,12 @@ use iota_sdk::types::block::output::{AliasId, FoundryId};
 use iota_sdk::Url;
 use sui_genesis_builder::stardust::native_token::package_builder;
 use sui_genesis_builder::stardust::native_token::package_data::{
-    MoveTomlManifest, NativeTokenModuleData, NativeTokenPackageData,
+    NativeTokenModuleData, NativeTokenPackageData,
 };
 
 fn main() -> anyhow::Result<()> {
     let native_token_a = NativeTokenPackageData::new(
-        MoveTomlManifest::new("doge_coin".to_string()),
+        "doge_coin".to_string(),
         NativeTokenModuleData::new(
             FoundryId::new([0; FoundryId::LENGTH]),
             "doge".to_string(),
@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
     );
 
     let native_token_b = NativeTokenPackageData::new(
-        MoveTomlManifest::new("shimmer_coin".to_string()),
+        "shimmer_coin".to_string(),
         NativeTokenModuleData::new(
             FoundryId::new([1; FoundryId::LENGTH]),
             "smr".to_string(),
