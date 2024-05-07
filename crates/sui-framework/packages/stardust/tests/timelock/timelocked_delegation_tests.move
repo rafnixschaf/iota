@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
-module sui_system::timelocked_stake_tests {
+module stardust::timelocked_stake_tests {
     use sui::balance;
     use sui::test_scenario;
     use stardust::timelock::{Self, TimeLock};
