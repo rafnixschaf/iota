@@ -9,6 +9,7 @@ use anyhow::Result;
 use fs_extra::dir::{copy, CopyOptions};
 use tempfile::tempdir;
 
+use crate::stardust::error::StardustError;
 use sui_move_build::{BuildConfig, CompiledPackage};
 
 use crate::stardust::native_token::package_data::NativeTokenPackageData;
@@ -67,7 +68,7 @@ fn adjust_move_toml(
             "$FRAMEWORK_PACKAGES_PATH",
             framework_packages_path
                 .to_str()
-                .expect("path should be valid"),
+                .ok_or(StardustError::FrameworkPackagesPathNotFound)?,
         );
     fs::write(&cargo_toml_path, new_contents)?;
 

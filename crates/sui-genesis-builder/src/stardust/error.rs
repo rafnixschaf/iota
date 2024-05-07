@@ -23,6 +23,8 @@ pub enum StardustError {
         foundry_id: FoundryId,
         err: anyhow::Error,
     },
+    #[error("framework packages path not found")]
+    FrameworkPackagesPathNotFound,
 }
 
 impl From<Infallible> for StardustError {
