@@ -8,7 +8,7 @@ module stardust::timelocked_staked_sui {
     const EIncompatibleTimelockedStakedSui: u64 = 1;
 
     /// A self-custodial object holding the timelocked staked SUI tokens.
-    public struct TimelockedStakedSui has key, store {
+    public struct TimelockedStakedSui has key {
         id: UID,
         /// A self-custodial object holding the staked SUI tokens.
         staked_sui: StakedSui,
@@ -27,19 +27,6 @@ module stardust::timelocked_staked_sui {
             staked_sui,
             expire_timestamp_ms
         }
-    }
-
-    /// Destroy a `TimelockedStakedSui` instance.
-    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64) {
-        let TimelockedStakedSui {
-            id,
-            staked_sui,
-            expire_timestamp_ms,
-        } = self;
-
-        object::delete(id);
-
-        (staked_sui, expire_timestamp_ms)
     }
 
     /// Function to get the pool id of a `TimelockedStakedSui`.
@@ -106,5 +93,23 @@ module stardust::timelocked_staked_sui {
     public fun is_equal_staking_metadata(self: &TimelockedStakedSui, other: &TimelockedStakedSui): bool {
         self.staked_sui.is_equal_staking_metadata(&other.staked_sui) &&
         (self.expire_timestamp_ms == other.expire_timestamp_ms)
+    }
+
+    /// An utility function to destroy a `TimelockedStakedSui`.
+    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64) {
+        let TimelockedStakedSui {
+            id,
+            staked_sui,
+            expire_timestamp_ms,
+        } = self;
+
+        object::delete(id);
+
+        (staked_sui, expire_timestamp_ms)
+    }
+
+    /// An utility function to transfer a `TimelockedStakedSui`.
+    public(package) fun transfer(stake: TimelockedStakedSui, recipient: address) {
+        transfer::transfer(stake, recipient);
     }
 }

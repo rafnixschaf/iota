@@ -10,7 +10,7 @@ module stardust::timelock {
     const ENotExpiredYet: u64 = 1;
 
     /// `TimeLock` struct that holds a locked object.
-    public struct TimeLock<T: store> has key, store {
+    public struct TimeLock<T: store> has key {
         id: UID,
         /// The locked object.
         locked: T,
@@ -89,5 +89,10 @@ module stardust::timelock {
         object::delete(id);
 
         (locked, expire_timestamp_ms)
+    }
+
+    /// An utility function to transfer a `TimeLock`.
+    public(package) fun transfer<T: store>(lock: TimeLock<T>, recipient: address) {
+        transfer::transfer(lock, recipient);
     }
 }

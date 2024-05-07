@@ -14,9 +14,11 @@ A timelock implementation.
 -  [Function `locked`](#0x107a_timelock_locked)
 -  [Function `pack`](#0x107a_timelock_pack)
 -  [Function `unpack`](#0x107a_timelock_unpack)
+-  [Function `transfer`](#0x107a_timelock_transfer)
 
 
 <pre><code><b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
+<b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
 </code></pre>
 
@@ -29,7 +31,7 @@ A timelock implementation.
 <code><a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a></code> struct that holds a locked object.
 
 
-<pre><code><b>struct</b> <a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T: store&gt; <b>has</b> store, key
+<pre><code><b>struct</b> <a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T: store&gt; <b>has</b> key
 </code></pre>
 
 
@@ -293,6 +295,31 @@ An utility function to unpack a <code><a href="timelock.md#0x107a_timelock_TimeL
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
     (locked, expire_timestamp_ms)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_timelock_transfer"></a>
+
+## Function `transfer`
+
+An utility function to transfer a <code><a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a></code>.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="../sui-framework/transfer.md#0x2_transfer">transfer</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, recipient: <b>address</b>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(<a href="../sui-framework/package.md#0x2_package">package</a>) <b>fun</b> <a href="../sui-framework/transfer.md#0x2_transfer">transfer</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x107a_timelock_TimeLock">TimeLock</a>&lt;T&gt;, recipient: <b>address</b>) {
+    <a href="../sui-framework/transfer.md#0x2_transfer_transfer">transfer::transfer</a>(lock, recipient);
 }
 </code></pre>
 

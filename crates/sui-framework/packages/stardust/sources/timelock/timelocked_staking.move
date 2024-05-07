@@ -21,11 +21,11 @@ module stardust::timelocked_staking {
     ) {
         let timelocked_staked_sui = request_add_stake_non_entry(sui_system, timelocked_stake, validator_address, ctx);
 
-        transfer::public_transfer(timelocked_staked_sui, ctx.sender());
+        timelocked_staked_sui::transfer(timelocked_staked_sui, ctx.sender());
     }
 
     /// The non-entry version of `request_add_stake`, which returns the timelocked staked SUI instead of transferring it to the sender.
-    public(package) fun request_add_stake_non_entry(
+    public fun request_add_stake_non_entry(
         sui_system: &mut SuiSystemState,
         timelocked_stake: TimeLock<Balance<SUI>>,
         validator_address: address,
@@ -55,8 +55,8 @@ module stardust::timelocked_staking {
         ctx: &mut TxContext,
     ) {
         let (timelocked_sui, reward) = request_withdraw_stake_non_entry(sui_system, timelocked_staked_sui, ctx);
-    
-        transfer::public_transfer(timelocked_sui, ctx.sender());
+
+        timelock::transfer(timelocked_sui, ctx.sender());
         transfer::public_transfer(reward.into_coin(ctx), ctx.sender());
     }
 
@@ -71,6 +71,9 @@ module stardust::timelocked_staking {
         let principal = staked_sui.staked_sui_amount();
 
         let mut withdraw_stake = sui_system.request_withdraw_stake_non_entry(staked_sui, ctx);
+
+        // The sui_system withdraw functions return a balance that consists of the original staked amount plus the reward amount;
+        // In here, it splits the original staked balance to timelock it again.
         let principal = withdraw_stake.split(principal);
 
         (timelock::pack(principal, expire_timestamp_ms, ctx), withdraw_stake)
