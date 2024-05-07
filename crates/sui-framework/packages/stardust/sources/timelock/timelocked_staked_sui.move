@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-module sui_system::timelocked_staked_sui {
+module stardust::timelocked_staked_sui {
 
     use sui_system::staking_pool::StakedSui;
 

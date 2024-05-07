@@ -1,14 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-module sui_system::timelocked_staking {
+module stardust::timelocked_staking {
 
     use sui::balance::Balance;
     use sui::sui::SUI;
 
-    use sui_system::sui_system::SuiSystemState;
-    use sui_system::time_lock::{Self, TimeLock};
-    use sui_system::timelocked_staked_sui::{Self, TimelockedStakedSui};
+    use sui_system::sui_system::{SuiSystemState};
+    use stardust::timelock::{Self, TimeLock};
+    use stardust::timelocked_staked_sui::{Self, TimelockedStakedSui};
 
     const ETimeLockShouldNotBeExpired: u64 = 1;
 
@@ -32,7 +32,7 @@ module sui_system::timelocked_staking {
     ) : TimelockedStakedSui {
         assert!(timelocked_stake.is_locked(ctx), ETimeLockShouldNotBeExpired);
 
-        let (stake, expire_timestamp_ms) = time_lock::unpack(timelocked_stake);
+        let (stake, expire_timestamp_ms) = timelock::unpack(timelocked_stake);
 
         let staked_sui = sui_system.request_add_stake_non_entry(
             stake.into_coin(ctx),
@@ -72,6 +72,6 @@ module sui_system::timelocked_staking {
         let mut withdraw_stake = sui_system.request_withdraw_stake_non_entry(staked_sui, ctx);
         let principal = withdraw_stake.split(principal);
 
-        (time_lock::pack(principal, expire_timestamp_ms, ctx), withdraw_stake)
+        (timelock::pack(principal, expire_timestamp_ms, ctx), withdraw_stake)
     }
 }
