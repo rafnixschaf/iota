@@ -13,17 +13,17 @@ use sui_genesis_builder::stardust::native_token::package_data::{
 
 fn main() -> anyhow::Result<()> {
     let native_token_a = NativeTokenPackageData::new(
-        "doge_coin".to_string(),
+        "doge_coin",
         NativeTokenModuleData::new(
             FoundryId::new([0; FoundryId::LENGTH]),
-            "doge".to_string(),
-            "DOGE".to_string(),
+            "doge",
+            "DOGE",
             0,
-            "DOGE".to_string(),
+            "DOGE",
             0,
             100_000_000_000,
-            "Dogecoin".to_string(),
-            "Much wow".to_string(),
+            "Dogecoin",
+            "Much wow",
             Some(Url::parse("https://raw.githubusercontent.com/dogecoin/dogecoin/master/share/pixmaps/dogecoin256.png").unwrap()),
             AliasAddress::new(AliasId::new([0; AliasId::LENGTH]))
         ),
@@ -41,14 +41,14 @@ fn main() -> anyhow::Result<()> {
         "shimmer_coin".to_string(),
         NativeTokenModuleData::new(
             FoundryId::new([1; FoundryId::LENGTH]),
-            "smr".to_string(),
-            "SMR".to_string(),
+            "smr",
+            "SMR",
             0,
-            "SMR".to_string(),
+            "SMR",
             10_000_000_000,
             10_000_000_000,
-            "Shimmer".to_string(),
-            "Shimmy Shimmy Ya".to_string(),
+            "Shimmer",
+            "Shimmy Shimmy Ya",
             Option::None,
             AliasAddress::new(AliasId::new([1; AliasId::LENGTH])),
         ),

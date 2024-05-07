@@ -21,9 +21,9 @@ pub struct NativeTokenPackageData {
 
 impl NativeTokenPackageData {
     /// Creates a new [`NativeTokenPackageData`] instance.
-    pub fn new(package_name: String, module: NativeTokenModuleData) -> Self {
+    pub fn new(package_name: impl Into<String>, module: NativeTokenModuleData) -> Self {
         Self {
-            package_name,
+            package_name: package_name.into(),
             module,
         }
     }
@@ -59,27 +59,27 @@ impl NativeTokenModuleData {
     /// Creates a new [`NativeTokenModuleData`] instance.
     pub fn new(
         foundry_id: FoundryId,
-        module_name: String,
-        otw_name: String,
+        module_name: impl Into<String>,
+        otw_name: impl Into<String>,
         decimals: u8,
-        symbol: String,
+        symbol: impl Into<String>,
         circulating_tokens: u64,
         maximum_supply: u64,
-        coin_name: String,
-        coin_description: String,
+        coin_name: impl Into<String>,
+        coin_description: impl Into<String>,
         icon_url: Option<Url>,
         alias_address: AliasAddress,
     ) -> Self {
         Self {
             foundry_id,
-            module_name,
-            otw_name,
+            module_name: module_name.into(),
+            otw_name: otw_name.into(),
             decimals,
-            symbol,
+            symbol: symbol.into(),
             circulating_tokens,
             maximum_supply,
-            coin_name,
-            coin_description,
+            coin_name: coin_name.into(),
+            coin_description: coin_description.into(),
             icon_url,
             alias_address,
         }
