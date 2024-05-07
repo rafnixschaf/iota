@@ -6,14 +6,12 @@
 use iota_sdk::types::block::address::AliasAddress;
 use iota_sdk::types::block::output::{AliasId, FoundryId};
 use iota_sdk::Url;
-use sui_genesis_builder::stardust::native_token::package_builder::PackageBuilder;
+use sui_genesis_builder::stardust::native_token::package_builder;
 use sui_genesis_builder::stardust::native_token::package_data::{
     MoveTomlManifest, NativeTokenModuleData, NativeTokenPackageData,
 };
 
 fn main() -> anyhow::Result<()> {
-    let package_builder = PackageBuilder;
-
     let native_token_a = NativeTokenPackageData::new(
         MoveTomlManifest::new("doge_coin".to_string()),
         NativeTokenModuleData::new(
@@ -33,7 +31,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("DOGE token: {:?}", native_token_a);
 
-    let compiled_package_a = package_builder.build_and_compile(native_token_a)?;
+    let compiled_package_a = package_builder::build_and_compile(native_token_a)?;
     println!(
         "Compiled package: {:?}",
         compiled_package_a.package.compiled_package_info
@@ -58,7 +56,7 @@ fn main() -> anyhow::Result<()> {
 
     println!("SMR token: {:?}", native_token_b);
 
-    let compiled_package_b = package_builder.build_and_compile(native_token_b)?;
+    let compiled_package_b = package_builder::build_and_compile(native_token_b)?;
     println!(
         "Compiled package: {:?}",
         compiled_package_b.package.compiled_package_info

@@ -11,7 +11,6 @@ use iota_sdk::types::block::output::{FoundryId, FoundryOutput};
 use iota_sdk::Url;
 use rand::Rng;
 use regex::Regex;
-use std::fmt;
 
 /// The [`NativeTokenPackageData`] struct encapsulates all the data necessary to build a Stardust native token package.
 #[derive(Debug)]
@@ -219,12 +218,6 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
     }
 }
 
-impl fmt::Display for NativeTokenPackageData {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "NativeTokenPackageData: {:?}", self)
-    }
-}
-
 fn check_identifier(identifier: String) -> String {
     static VALID_IDENTIFIER_PATTERN: &str = r"[a-zA-Z][a-zA-Z0-9_]*";
 
@@ -257,7 +250,7 @@ fn check_identifier(identifier: String) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::stardust::native_token::package_builder::PackageBuilder;
+    use crate::stardust::native_token::package_builder;
     use iota_sdk::types::block::address::AliasAddress;
     use iota_sdk::types::block::output::feature::MetadataFeature;
     use iota_sdk::types::block::output::unlock_condition::ImmutableAliasAddressUnlockCondition;
@@ -298,8 +291,7 @@ mod tests {
         let native_token_data = NativeTokenPackageData::try_from(output)?;
 
         // Step 3: Verify the conversion
-        let package_builder = PackageBuilder;
-        assert!(package_builder.build_and_compile(native_token_data).is_ok());
+        assert!(package_builder::build_and_compile(native_token_data).is_ok());
 
         Ok(())
     }
@@ -338,8 +330,7 @@ mod tests {
         let native_token_data = NativeTokenPackageData::try_from(output)?;
 
         // Step 3: Verify the conversion
-        let package_builder = PackageBuilder;
-        assert!(package_builder.build_and_compile(native_token_data).is_ok());
+        assert!(package_builder::build_and_compile(native_token_data).is_ok());
 
         Ok(())
     }
