@@ -42,17 +42,17 @@ impl NativeTokenPackageData {
 /// The [`NativeTokenModuleData`] struct encapsulates all the data necessary to build a Stardust native token module.
 #[derive(Debug)]
 pub struct NativeTokenModuleData {
-    foundry_id: FoundryId,
-    module_name: String,
-    otw_name: String,
-    decimals: u8,
-    symbol: String,
-    circulating_tokens: u64,
-    maximum_supply: u64,
-    coin_name: String,
-    coin_description: String,
-    icon_url: Option<Url>,
-    alias_address: AliasAddress,
+    pub foundry_id: FoundryId,
+    pub module_name: String,
+    pub otw_name: String,
+    pub decimals: u8,
+    pub symbol: String,
+    pub circulating_tokens: u64,
+    pub maximum_supply: u64,
+    pub coin_name: String,
+    pub coin_description: String,
+    pub icon_url: Option<Url>,
+    pub alias_address: AliasAddress,
 }
 
 impl NativeTokenModuleData {
@@ -83,61 +83,6 @@ impl NativeTokenModuleData {
             icon_url,
             alias_address,
         }
-    }
-
-    /// Returns the foundry ID.
-    pub fn foundry_id(&self) -> &FoundryId {
-        &self.foundry_id
-    }
-
-    /// Returns the module name.
-    pub fn module_name(&self) -> &str {
-        &self.module_name
-    }
-
-    /// Returns the One-Time-Witness (OTW) name.
-    pub fn otw_name(&self) -> &str {
-        &self.otw_name
-    }
-
-    /// Returns the number of decimals.
-    pub fn decimals(&self) -> u8 {
-        self.decimals
-    }
-
-    /// Returns the symbol.
-    pub fn symbol(&self) -> &str {
-        &self.symbol
-    }
-
-    /// Returns the number of minted tokens.
-    pub fn circulating_tokens(&self) -> u64 {
-        self.circulating_tokens
-    }
-
-    /// Returns the maximum supply.
-    pub fn maximum_supply(&self) -> u64 {
-        self.maximum_supply
-    }
-
-    /// Returns the coin name.
-    pub fn coin_name(&self) -> &str {
-        &self.coin_name
-    }
-
-    /// Returns the coin description.
-    pub fn coin_description(&self) -> &str {
-        &self.coin_description
-    }
-
-    /// Returns the icon URL.
-    pub fn icon_url(&self) -> &Option<Url> {
-        &self.icon_url
-    }
-
-    /// Returns the alias address.
-    pub fn alias_address(&self) -> &AliasAddress {
-        &self.alias_address
     }
 }
 

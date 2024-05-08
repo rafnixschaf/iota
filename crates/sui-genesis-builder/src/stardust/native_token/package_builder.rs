@@ -78,7 +78,7 @@ fn adjust_move_toml(
 // Replaces template variables in the .move file with the actual values.
 fn adjust_native_token_module(package_path: &Path, package: &NativeTokenPackageData) -> Result<()> {
     let old_move_file_path = package_path.join("sources/native_token_template.move");
-    let new_move_file_name = format!("{}.move", package.module().module_name());
+    let new_move_file_name = format!("{}.move", package.module().module_name);
     let new_move_file_path = package_path.join("sources").join(new_move_file_name);
 
     // Rename the template .move file
@@ -86,7 +86,7 @@ fn adjust_native_token_module(package_path: &Path, package: &NativeTokenPackageD
 
     let contents = fs::read_to_string(&new_move_file_path)?;
 
-    let icon_url = match &package.module().icon_url() {
+    let icon_url = match &package.module().icon_url {
         Some(url) => format!(
             "option::some<Url>(sui::url::new_unsafe_from_bytes(b\"{}\"))",
             url
@@ -95,22 +95,22 @@ fn adjust_native_token_module(package_path: &Path, package: &NativeTokenPackageD
     };
 
     let new_contents = contents
-        .replace("$MODULE_NAME", package.module().module_name())
-        .replace("$OTW", package.module().otw_name())
-        .replace("$COIN_DECIMALS", &package.module().decimals().to_string())
-        .replace("$COIN_SYMBOL", package.module().symbol())
+        .replace("$MODULE_NAME", &package.module().module_name)
+        .replace("$OTW", &package.module().otw_name)
+        .replace("$COIN_DECIMALS", &package.module().decimals.to_string())
+        .replace("$COIN_SYMBOL", &package.module().symbol)
         .replace(
             "$CIRCULATING_TOKENS",
-            &package.module().circulating_tokens().to_string(),
+            &package.module().circulating_tokens.to_string(),
         )
         .replace(
             "$MAXIMUM_SUPPLY",
-            &package.module().maximum_supply().to_string(),
+            &package.module().maximum_supply.to_string(),
         )
-        .replace("$COIN_NAME", package.module().coin_name())
-        .replace("$COIN_DESCRIPTION", package.module().coin_description())
+        .replace("$COIN_NAME", &package.module().coin_name)
+        .replace("$COIN_DESCRIPTION", &package.module().coin_description)
         .replace("$ICON_URL", &icon_url)
-        .replace("$ALIAS", &package.module().alias_address().to_string());
+        .replace("$ALIAS", &package.module().alias_address.to_string());
 
     fs::write(&new_move_file_path, new_contents)?;
 
