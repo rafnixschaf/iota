@@ -46,6 +46,9 @@ module stardust::timelock_tests {
         // Unlock the IOTA balance.
         let balance = timelock::unlock(timelock, scenario.ctx());
 
+        // Check the unlocked IOTA balance.
+        assert!(balance.value() == 10, 7);
+
         // Cleanup.
         balance::destroy_for_testing(balance);
 
