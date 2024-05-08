@@ -170,13 +170,12 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
             }
         })?;
 
-        let maximum_supply = output.token_scheme().as_simple().maximum_supply();
-        if maximum_supply.bits() > 64 {
-            return Err(StardustError::FoundryConversionError {
-                foundry_id: output.id(),
-                err: anyhow::anyhow!("maximum supply exceeds u64"),
-            });
-        }
+        let maximum_supply_u256 = output.token_scheme().as_simple().maximum_supply();
+        let maximum_supply_u64 = if output.token_scheme().as_simple().maximum_supply().bits() > 64 {
+            u64::MAX
+        } else {
+            maximum_supply_u256.as_u64()
+        };
 
         let native_token_data = NativeTokenPackageData {
             package_name: identifier.clone(),
@@ -188,7 +187,7 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
                 symbol: identifier,
                 circulating_tokens: output.token_scheme().as_simple().minted_tokens().as_u64()
                     - output.token_scheme().as_simple().melted_tokens().as_u64(), // we know that "Melted Tokens must not be greater than Minted Tokens"
-                maximum_supply: maximum_supply.as_u64(),
+                maximum_supply: maximum_supply_u64,
                 coin_name: irc_30_metadata.name().to_owned(),
                 coin_description: irc_30_metadata.description().clone().unwrap_or_default(),
                 icon_url: irc_30_metadata.url().clone(),
