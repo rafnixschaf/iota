@@ -116,7 +116,7 @@ impl TryFrom<FoundryOutput> for NativeTokenPackageData {
         })?;
 
         let maximum_supply_u256 = output.token_scheme().as_simple().maximum_supply();
-        let maximum_supply_u64 = if output.token_scheme().as_simple().maximum_supply().bits() > 64 {
+        let maximum_supply_u64 = if maximum_supply_u256.bits() > 64 {
             u64::MAX
         } else {
             maximum_supply_u256.as_u64()
