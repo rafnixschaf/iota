@@ -125,11 +125,6 @@ export interface CompletedSearchProperties {
 	searchQuery: string;
 }
 
-export interface RedirectToExternalExplorerProperties {
-	name: string;
-	url: string;
-}
-
 export interface SwitchedNetworkProperties {
 	toNetwork: string;
 }
@@ -184,14 +179,6 @@ export class CompletedSearch implements BaseEvent {
 
 export class OpenedSuiExplorer implements BaseEvent {
 	event_type = 'opened sui explorer';
-}
-
-export class RedirectToExternalExplorer implements BaseEvent {
-	event_type = 'redirect to external explorer';
-
-	constructor(public event_properties: RedirectToExternalExplorerProperties) {
-		this.event_properties = event_properties;
-	}
 }
 
 export class SwitchedNetwork implements BaseEvent {
@@ -292,17 +279,6 @@ export class Ampli {
       amplitudeIdentify,
       options,
     );
-  }
-
- /**
-  * Flush the event.
-  */
-  flush() : PromiseResult<Result> {
-    if (!this.isInitializedAndEnabled()) {
-      return getVoidPromiseResult();
-    }
-
-    return this.amplitude!.flush();
   }
 
   /**
@@ -429,23 +405,6 @@ export class Ampli {
     options?: EventOptions,
   ) {
     return this.track(new OpenedSuiExplorer(), options);
-  }
-
-  /**
-   * redirect to external explorer
-   *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/redirect%20to%20external%20explorer)
-   *
-   * Metric to track which external explorers are being used, currently have suiscan and suivision
-   *
-   * @param properties The event's properties (e.g. name)
-   * @param options Amplitude event options.
-   */
-  redirectToExternalExplorer(
-    properties: RedirectToExternalExplorerProperties,
-    options?: EventOptions,
-  ) {
-    return this.track(new RedirectToExternalExplorer(properties), options);
   }
 
   /**
