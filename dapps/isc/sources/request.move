@@ -41,9 +41,8 @@ module isc::request {
         req.data.allowance = option::some(allowance);
     }
 
-    #[allow(unused_variable)]
     public fun destroy_request(req: Request) {
-        let Request { id, data } = req;
+        let Request { id, data: _ } = req;
         object::delete(id)
     }
 }
