@@ -25,8 +25,8 @@ import * as amplitude from '@amplitude/analytics-browser';
 export type Environment = 'production' | 'development';
 
 export const ApiKey: Record<Environment, string> = {
-	production: '1c341785c734c98d9f2dca06128b914a',
-	development: '94db6502f3853b6f35ccd070f6d37082',
+	production: import.meta.env.VITE_AMPLI_PROD_API_KEY,
+	development: import.meta.env.VITE_AMPLI_DEV_API_KEY,
 };
 
 /**
