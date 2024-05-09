@@ -401,7 +401,7 @@ export class Ampli {
    *
    * @param options Amplitude event options.
    */
-  openedSuiExplorer(
+  openedIotaExplorer(
     options?: EventOptions,
   ) {
     return this.track(new OpenedSuiExplorer(), options);

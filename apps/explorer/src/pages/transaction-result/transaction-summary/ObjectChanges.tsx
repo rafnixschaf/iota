@@ -242,7 +242,7 @@ function ObjectChangeEntriesCardFooter({
 	ownerType: string;
 	ownerAddress: string;
 }) {
-	const { data: suinsDomainName } = useResolveSuiNSName(ownerAddress);
+	const { data: iotansDomainName } = useResolveSuiNSName(ownerAddress);
 
 	return (
 		<div className="flex flex-wrap items-center justify-between">
@@ -251,7 +251,7 @@ function ObjectChangeEntriesCardFooter({
 			</Text>
 
 			{ownerType === 'AddressOwner' && (
-				<AddressLink label={suinsDomainName || undefined} address={ownerAddress} />
+				<AddressLink label={iotansDomainName || undefined} address={ownerAddress} />
 			)}
 
 			{ownerType === 'ObjectOwner' && <ObjectLink objectId={ownerAddress} />}

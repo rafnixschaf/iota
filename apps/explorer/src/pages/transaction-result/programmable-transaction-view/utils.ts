@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { type SuiArgument } from '@mysten/sui.js/client';
 
-export function flattenSuiArguments(data: (SuiArgument | SuiArgument[])[]): string {
+export function flattenIOTAArguments(data: (SuiArgument | SuiArgument[])[]): string {
 	if (!data) {
 		return '';
 	}
@@ -12,7 +12,7 @@ export function flattenSuiArguments(data: (SuiArgument | SuiArgument[])[]): stri
 			if (value === 'GasCoin') {
 				return value;
 			} else if (Array.isArray(value)) {
-				return `[${flattenSuiArguments(value)}]`;
+				return `[${flattenIOTAArguments(value)}]`;
 			} else if (value === null) {
 				return 'Null';
 			} else if (typeof value === 'object') {

@@ -5,7 +5,7 @@ import { getTotalGasUsed } from '@mysten/core';
 import { X12, Dot12 } from '@mysten/icons';
 import { type SuiClient, type SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
-import { SuiAmount } from '../Table/SuiAmount';
+import { TokenAmount } from '../Table/TokenAmount';
 import { TxTimeType } from '../tx-time/TxTimeType';
 import { HighlightedTableCol } from '~/components/Table/HighlightedTableCol';
 import { AddressLink, TransactionLink } from '~/ui/InternalLink';
@@ -43,7 +43,7 @@ export const genTableDataFromTxData = (results: SuiTransactionBlockResponse[]) =
 						: '--'}
 				</div>
 			),
-			gas: <SuiAmount amount={transaction.effects && getTotalGasUsed(transaction.effects!)} />,
+			gas: <TokenAmount amount={transaction.effects && getTotalGasUsed(transaction.effects!)} />,
 			sender: (
 				<HighlightedTableCol>{sender ? <AddressLink address={sender} /> : '-'}</HighlightedTableCol>
 			),

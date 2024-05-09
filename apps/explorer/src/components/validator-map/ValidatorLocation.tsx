@@ -21,7 +21,7 @@ const MAX_VALIDATOR_OPACITY = 0.5;
 export function ValidatorLocation({ validator, projection, onMouseOut, onMouseOver }: Props) {
 	const handleMouseOver = useCallback(
 		(e: React.MouseEvent) => {
-			validator && onMouseOver(e, validator.suiAddress);
+			validator && onMouseOver(e, validator.iotaAddress);
 		},
 		[validator, onMouseOver],
 	);

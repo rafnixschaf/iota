@@ -22,8 +22,8 @@ type OwnedCoinViewProps = {
 };
 
 export default function OwnedCoinView({ coin, id }: OwnedCoinViewProps) {
-	const isSuiCoin = coin.coinType === SUI_TYPE_ARG;
-	const [open, setOpen] = useState(isSuiCoin);
+	const isIOTACoin = coin.coinType === SUI_TYPE_ARG;
+	const [open, setOpen] = useState(isIOTACoin);
 	const [formattedTotalBalance, symbol] = useFormatCoin(coin.totalBalance, coin.coinType);
 
 	return (
@@ -52,7 +52,7 @@ export default function OwnedCoinView({ coin, id }: OwnedCoinViewProps) {
 
 					{!coin.isRecognized && (
 						<Tooltip
-							tip="This coin has not been recognized by Sui Foundation."
+							tip="This coin has not been recognized by IOTA Foundation."
 							onOpen={() =>
 								ampli.activatedTooltip({
 									tooltipLabel: 'unrecognizedCoinWarning',

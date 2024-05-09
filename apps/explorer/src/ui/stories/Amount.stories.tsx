@@ -12,7 +12,7 @@ export default {
 export const Default: StoryObj<AmountProps> = {
 	args: {
 		amount: 1000,
-		symbol: 'SUI',
+		symbol: 'IOTA',
 	},
 };
 

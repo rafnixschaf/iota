@@ -22,17 +22,17 @@ const imageStyle = cva(['flex rounded-2xl'], {
 	},
 });
 
-function SuiCoin() {
+function IOTACoin() {
 	return (
 		<Sui className="flex h-full w-full items-center justify-center rounded-2xl bg-sui p-1.5 text-body text-white" />
 	);
 }
 
-type NonSuiCoinProps = {
+type NonIOTACoinProps = {
 	coinType: string;
 };
 
-function NonSuiCoin({ coinType }: NonSuiCoinProps) {
+function NonIOTACoin({ coinType }: NonIOTACoinProps) {
 	const { data: coinMeta } = useCoinMetadata(coinType);
 	return (
 		<div className="flex h-full w-full items-center justify-center rounded-2xl bg-gray-40 text-hero-darkest text-opacity-30">
@@ -60,7 +60,7 @@ export interface CoinIconProps extends VariantProps<typeof imageStyle> {
 export function CoinIcon({ coinType, ...styleProps }: CoinIconProps) {
 	return (
 		<div className={imageStyle(styleProps)}>
-			{coinType === SUI_TYPE_ARG ? <SuiCoin /> : <NonSuiCoin coinType={coinType} />}
+			{coinType === SUI_TYPE_ARG ? <IOTACoin /> : <NonIOTACoin coinType={coinType} />}
 		</div>
 	);
 }

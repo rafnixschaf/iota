@@ -8,7 +8,7 @@ import { Text } from '@mysten/ui';
 import { Card } from '~/ui/Card';
 import { ButtonOrLink } from '~/ui/utils/ButtonOrLink';
 
-export function SuiTokenCard() {
+export function TokenCard() {
 	const { data } = useSuiCoinData();
 	const { currentPrice } = data || {};
 

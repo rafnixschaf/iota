@@ -36,7 +36,7 @@ function AddressResultPageHeader({ address, loading }: { address: string; loadin
 	);
 }
 
-function SuiNSAddressResultPageHeader({ name }: { name: string }) {
+function IOTANSAddressResultPageHeader({ name }: { name: string }) {
 	const { data: address, isLoading } = useResolveSuiNSAddress(name);
 
 	return <AddressResultPageHeader address={address ?? name} loading={isLoading} />;
@@ -126,7 +126,7 @@ function AddressResult({ address }: { address: string }) {
 	);
 }
 
-function SuiNSAddressResult({ name }: { name: string }) {
+function IOTANSAddressResult({ name }: { name: string }) {
 	const { isFetched, data } = useResolveSuiNSAddress(name);
 
 	if (!isFetched) {
@@ -139,19 +139,21 @@ function SuiNSAddressResult({ name }: { name: string }) {
 
 export default function AddressResultPage() {
 	const { id } = useParams();
-	const isSuiNSAddress = isSuiNSName(id!);
+	const isIOTANSAddress = isSuiNSName(id!);
 
 	return (
 		<PageLayout
 			gradient={{
 				size: 'md',
-				content: isSuiNSAddress ? (
-					<SuiNSAddressResultPageHeader name={id!} />
+				content: isIOTANSAddress ? (
+					<IOTANSAddressResultPageHeader name={id!} />
 				) : (
 					<AddressResultPageHeader address={id!} />
 				),
 			}}
-			content={isSuiNSAddress ? <SuiNSAddressResult name={id!} /> : <AddressResult address={id!} />}
+			content={
+				isIOTANSAddress ? <IOTANSAddressResult name={id!} /> : <AddressResult address={id!} />
+			}
 		/>
 	);
 }

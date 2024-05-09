@@ -52,10 +52,10 @@ export function OwnedCoins({ id }: { id: string }) {
 		) ?? { recognizedBalances: [], unrecognizedBalances: [] };
 
 		const recognizedBalances = balanceData.recognizedBalances.sort((a, b) => {
-			// Make sure SUI always comes first
-			if (getCoinSymbol(a.coinType) === 'SUI') {
+			// Make sure IOTA always comes first
+			if (getCoinSymbol(a.coinType) === 'IOTA') {
 				return -1;
-			} else if (getCoinSymbol(b.coinType) === 'SUI') {
+			} else if (getCoinSymbol(b.coinType) === 'IOTA') {
 				return 1;
 			} else {
 				return getCoinSymbol(a.coinType).localeCompare(getCoinSymbol(b.coinType), undefined, {
@@ -132,7 +132,7 @@ export function OwnedCoins({ id }: { id: string }) {
 								<Info16 width="16px" />
 							</div>
 							<Text color="steel-darker" variant="body/medium">
-								These coins have not been recognized by Sui Foundation.
+								These coins have not been recognized by IOTA Foundation.
 							</Text>
 						</div>
 					)}

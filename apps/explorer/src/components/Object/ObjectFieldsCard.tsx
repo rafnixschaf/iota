@@ -20,7 +20,7 @@ const DEFAULT_FIELDS_COUNT_TO_SHOW_SEARCH = 10;
 interface ObjectFieldsProps {
 	id: string;
 	normalizedStructData?: SuiMoveNormalizedStruct;
-	suiObjectResponseData?: SuiObjectResponse;
+	iotaObjectResponseData?: SuiObjectResponse;
 	loading: boolean;
 	error: boolean;
 	objectType?: string;
@@ -29,7 +29,7 @@ interface ObjectFieldsProps {
 export function ObjectFieldsCard({
 	id,
 	normalizedStructData,
-	suiObjectResponseData,
+	iotaObjectResponseData,
 	loading,
 	error,
 	objectType,
@@ -88,8 +88,8 @@ export function ObjectFieldsCard({
 	}
 
 	const fieldsData =
-		suiObjectResponseData?.data?.content?.dataType === 'moveObject'
-			? (suiObjectResponseData?.data?.content?.fields as Record<string, string | number | object>)
+		iotaObjectResponseData?.data?.content?.dataType === 'moveObject'
+			? (iotaObjectResponseData?.data?.content?.fields as Record<string, string | number | object>)
 			: null;
 
 	// Return null if there are no fields

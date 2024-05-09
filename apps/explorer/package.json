@@ -1,5 +1,5 @@
 {
-	"name": "sui-explorer",
+	"name": "iota-explorer",
 	"private": true,
 	"scripts": {
 		"dev": "vite --port 3000",

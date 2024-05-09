@@ -120,7 +120,7 @@ function ValidatorDetails() {
 								}
 							>
 								<Text variant="bodySmall/medium">
-									Staked SUI is below the minimum SUI stake threshold to remain a validator.
+									Staked IOTA is below the minimum IOTA stake threshold to remain a validator.
 								</Text>
 							</Banner>
 						</div>

@@ -67,7 +67,7 @@ export default function ValidatorMap({ minHeight }: Props) {
 		const countryMap: Record<string, number> = {};
 		validatorData.forEach((validator) => {
 			if (validator) {
-				validatorMap[validator.suiAddress] ??= {
+				validatorMap[validator.iotaAddress] ??= {
 					...validator,
 				};
 

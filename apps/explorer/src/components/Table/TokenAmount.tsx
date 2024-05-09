@@ -5,7 +5,7 @@ import { CoinFormat, useFormatCoin } from '@mysten/core';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { Text } from '@mysten/ui';
 
-export function SuiAmount({
+export function TokenAmount({
 	amount,
 	full = false,
 }: {

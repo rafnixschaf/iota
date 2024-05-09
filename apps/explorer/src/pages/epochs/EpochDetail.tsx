@@ -22,7 +22,7 @@ import { TableCard } from '~/ui/TableCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/ui/Tabs';
 import { getEpochStorageFundFlow } from '~/utils/getStorageFundFlow';
 
-function SuiStats({
+function IOTAStats({
 	amount,
 	...props
 }: Omit<StatsProps, 'children'> & {
@@ -104,27 +104,27 @@ export default function EpochDetail() {
 						</div>
 
 						<EpochStats label="Rewards">
-							<SuiStats
+							<IOTAStats
 								label="Total Stake"
 								tooltip=""
 								amount={epochData.endOfEpochInfo?.totalStake}
 							/>
-							<SuiStats
+							<IOTAStats
 								label="Stake Subsidies"
 								amount={epochData.endOfEpochInfo?.stakeSubsidyAmount}
 							/>
-							<SuiStats
+							<IOTAStats
 								label="Stake Rewards"
 								amount={epochData.endOfEpochInfo?.totalStakeRewardsDistributed}
 							/>
-							<SuiStats label="Gas Fees" amount={epochData.endOfEpochInfo?.totalGasFees} />
+							<IOTAStats label="Gas Fees" amount={epochData.endOfEpochInfo?.totalGasFees} />
 						</EpochStats>
 
 						<EpochStats label="Storage Fund Balance">
-							<SuiStats label="Fund Size" amount={epochData.endOfEpochInfo?.storageFundBalance} />
-							<SuiStats label="Net Inflow" amount={netInflow} />
-							<SuiStats label="Fund Inflow" amount={fundInflow} />
-							<SuiStats label="Fund Outflow" amount={fundOutflow} />
+							<IOTAStats label="Fund Size" amount={epochData.endOfEpochInfo?.storageFundBalance} />
+							<IOTAStats label="Net Inflow" amount={netInflow} />
+							<IOTAStats label="Fund Inflow" amount={fundInflow} />
+							<IOTAStats label="Fund Outflow" amount={fundOutflow} />
 						</EpochStats>
 
 						{isCurrentEpoch ? <ValidatorStatus /> : null}

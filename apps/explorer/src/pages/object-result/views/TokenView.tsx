@@ -26,13 +26,13 @@ enum TABS_VALUES {
 }
 
 function useObjectFieldsCard(id: string) {
-	const { data: suiObjectResponseData, isPending, isError } = useGetObject(id);
+	const { data: iotaObjectResponseData, isPending, isError } = useGetObject(id);
 
 	const objectType =
-		suiObjectResponseData?.data?.type ??
-		suiObjectResponseData?.data?.content?.dataType === 'package'
-			? suiObjectResponseData.data.type
-			: suiObjectResponseData?.data?.content?.type;
+		iotaObjectResponseData?.data?.type ??
+		iotaObjectResponseData?.data?.content?.dataType === 'package'
+			? iotaObjectResponseData.data.type
+			: iotaObjectResponseData?.data?.content?.type;
 
 	const [packageId, moduleName, functionName] = objectType?.split('<')[0]?.split('::') || [];
 
@@ -57,7 +57,7 @@ function useObjectFieldsCard(id: string) {
 		loading: isPending || loadingNormalizedStruct,
 		isError: isError || errorNormalizedMoveStruct,
 		normalizedStructData,
-		suiObjectResponseData,
+		iotaObjectResponseData: iotaObjectResponseData,
 		objectType,
 	};
 }
@@ -65,7 +65,7 @@ function useObjectFieldsCard(id: string) {
 export function FieldsContent({ objectId }: { objectId: string }) {
 	const {
 		normalizedStructData,
-		suiObjectResponseData,
+		iotaObjectResponseData,
 		objectType,
 		loading: objectFieldsCardLoading,
 		isError: objectFieldsCardError,
@@ -98,7 +98,7 @@ export function FieldsContent({ objectId }: { objectId: string }) {
 					<ObjectFieldsCard
 						objectType={objectType || ''}
 						normalizedStructData={normalizedStructData}
-						suiObjectResponseData={suiObjectResponseData}
+						iotaObjectResponseData={iotaObjectResponseData}
 						loading={objectFieldsCardLoading}
 						error={objectFieldsCardError}
 						id={objectId}

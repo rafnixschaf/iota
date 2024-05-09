@@ -42,7 +42,7 @@ interface ValidatorIpInfo {
 
 export interface ValidatorMapValidator {
 	ipInfo?: ValidatorIpInfo;
-	suiAddress: string;
+	iotaAddress: string;
 	name: string;
 	votingPower: string;
 }

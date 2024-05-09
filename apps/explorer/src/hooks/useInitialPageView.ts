@@ -21,6 +21,6 @@ export function useInitialPageView(activeNetwork: string) {
 
 	// Log an initial page view event
 	useEffect(() => {
-		ampli.openedSuiExplorer();
+		ampli.openedIotaExplorer();
 	}, []);
 }

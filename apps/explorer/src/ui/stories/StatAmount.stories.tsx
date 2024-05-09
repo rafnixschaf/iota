@@ -12,7 +12,7 @@ export default {
 export const defaultAmount: StoryObj<StatAmountProps> = {
 	args: {
 		amount: 9740991,
-		symbol: 'SUI',
+		symbol: 'IOTA',
 		dollarAmount: 123.56,
 		date: 1667942429177,
 	},

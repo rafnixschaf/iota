@@ -8,7 +8,7 @@ import { useParams } from 'react-router-dom';
 
 import { CheckpointTransactionBlocks } from './CheckpointTransactionBlocks';
 import { PageLayout } from '~/components/Layout/PageLayout';
-import { SuiAmount } from '~/components/Table/SuiAmount';
+import { TokenAmount } from '~/components/Table/TokenAmount';
 import { Banner } from '~/ui/Banner';
 import { DescriptionList, DescriptionItem } from '~/ui/DescriptionList';
 import { EpochLink } from '~/ui/InternalLink';
@@ -92,13 +92,13 @@ export default function CheckpointDetail() {
 							<TabHeader title="Gas & Storage Fees">
 								<DescriptionList>
 									<DescriptionItem title="Computation Fee">
-										<SuiAmount full amount={data.epochRollingGasCostSummary.computationCost} />
+										<TokenAmount full amount={data.epochRollingGasCostSummary.computationCost} />
 									</DescriptionItem>
 									<DescriptionItem title="Storage Fee">
-										<SuiAmount full amount={data.epochRollingGasCostSummary.storageCost} />
+										<TokenAmount full amount={data.epochRollingGasCostSummary.storageCost} />
 									</DescriptionItem>
 									<DescriptionItem title="Storage Rebate">
-										<SuiAmount full amount={data.epochRollingGasCostSummary.storageRebate} />
+										<TokenAmount full amount={data.epochRollingGasCostSummary.storageRebate} />
 									</DescriptionItem>
 								</DescriptionList>
 							</TabHeader>

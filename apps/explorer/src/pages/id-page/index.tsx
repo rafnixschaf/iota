@@ -25,10 +25,10 @@ function Header({
 	loading?: boolean;
 	error?: Error | null;
 }) {
-	const { data: domainName, isLoading, error: resolveSuinsError } = useResolveSuiNSName(address);
+	const { data: domainName, isLoading, error: resolveIOTAnsError } = useResolveSuiNSName(address);
 	const { data, isPending, error: getObjectError } = useGetObject(address!);
 	const isObject = !!data?.data;
-	const errorText = getObjectError?.message ?? resolveSuinsError?.message ?? error?.message;
+	const errorText = getObjectError?.message ?? resolveIOTAnsError?.message ?? error?.message;
 
 	return (
 		<div>
@@ -55,22 +55,22 @@ function Header({
 
 function PageLayoutContainer({ address }: { address: string }) {
 	const { id } = useParams();
-	const isSuiNSAddress = isSuiNSName(id!);
+	const isIOTANSAddress = isSuiNSName(id!);
 	const {
 		data,
 		isLoading,
-		error: suinsAddressError,
-	} = useResolveSuiNSAddress(address, isSuiNSAddress);
+		error: iotansAddressError,
+	} = useResolveSuiNSAddress(address, isIOTANSAddress);
 
 	return (
 		<PageLayout
 			loading={isLoading}
-			isError={!!suinsAddressError}
+			isError={!!iotansAddressError}
 			gradient={{
 				size: 'md',
 				content: <Header address={address} />,
 			}}
-			content={<PageContent address={data || address} error={suinsAddressError} />}
+			content={<PageContent address={data || address} error={iotansAddressError} />}
 		/>
 	);
 }

@@ -9,7 +9,7 @@ import {
 import { Text } from '@mysten/ui';
 import { type ReactNode } from 'react';
 
-import { flattenSuiArguments } from './utils';
+import { flattenIOTAArguments } from './utils';
 import { ErrorBoundary } from '~/components/error-boundary/ErrorBoundary';
 import { ObjectLink } from '~/ui/InternalLink';
 
@@ -31,7 +31,7 @@ function ArrayArgument({ data }: TransactionProps<(SuiArgument | SuiArgument[])[
 		<TransactionContent>
 			{data && (
 				<span className="break-all">
-					<Text variant="pBody/medium">({flattenSuiArguments(data)})</Text>
+					<Text variant="pBody/medium">({flattenIOTAArguments(data)})</Text>
 				</span>
 			)}
 		</TransactionContent>
@@ -53,7 +53,7 @@ function MoveCall({ data }: TransactionProps<MoveCallSuiTransaction>) {
 				(package: <ObjectLink objectId={movePackage} />, module:{' '}
 				<ObjectLink objectId={`${movePackage}?module=${module}`} label={`'${module}'`} />, function:{' '}
 				<span className="break-all text-hero-dark">{func}</span>
-				{args && <span className="break-all">, arguments: [{flattenSuiArguments(args!)}]</span>}
+				{args && <span className="break-all">, arguments: [{flattenIOTAArguments(args!)}]</span>}
 				{typeArgs && <span className="break-all">, type_arguments: [{typeArgs.join(', ')}]</span>}
 			</Text>
 		</TransactionContent>

@@ -196,7 +196,7 @@ export function validatorsTableData(
 					const label = 'At Risk';
 					return atRisk !== null ? (
 						<Tooltip
-							tip="Staked SUI is below the minimum SUI stake threshold to remain a validator."
+							tip="Staked IOTA is below the minimum IOTA stake threshold to remain a validator."
 							onOpen={() =>
 								ampli.activatedTooltip({
 									tooltipLabel: label,
@@ -320,8 +320,8 @@ function ValidatorPageResult() {
 										</div>
 										<div className="flex flex-col gap-8">
 											<Stats
-												label="Total SUI Staked"
-												tooltip="The total SUI staked on the network by validators and delegators to validate the network and earn rewards."
+												label="Total IOTA Staked"
+												tooltip="The total IOTA staked on the network by validators and delegators to validate the network and earn rewards."
 												unavailable={totalStaked <= 0}
 											>
 												<DelegationAmount amount={totalStaked || 0n} isStats />

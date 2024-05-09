@@ -141,7 +141,7 @@ function NetworkVersion({
 	return (
 		<div className="flex flex-col justify-between gap-1 px-4 py-3">
 			<Text variant="subtitleSmall/medium" color="steel-dark">
-				Sui {label}
+				IOTA {label}
 			</Text>
 			<Text variant="subtitleSmall/medium" color="steel-dark">
 				v{binaryVersion} (Protocol {version})

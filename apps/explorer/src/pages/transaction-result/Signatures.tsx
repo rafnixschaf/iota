@@ -44,7 +44,7 @@ function SignaturePanel({
 					/>
 				</DescriptionItem>
 				{'publicKey' in data ? (
-					<DescriptionItem title="Sui Public Key" align="start" labelWidth="sm">
+					<DescriptionItem title="IOTA Public Key" align="start" labelWidth="sm">
 						<Text variant="pBody/medium" color="steel-darker">
 							{data.publicKey.toSuiPublicKey()}
 						</Text>
@@ -60,22 +60,22 @@ function SignaturePanel({
 	);
 }
 
-function getSignatureFromAddress(signatures: SignaturePubkeyPair[], suiAddress: string) {
+function getSignatureFromAddress(signatures: SignaturePubkeyPair[], iotaAddress: string) {
 	return signatures.find(
 		(signature) =>
 			('address' in signature ? signature.address : signature.publicKey.toSuiAddress()) ===
-			normalizeSuiAddress(suiAddress),
+			normalizeSuiAddress(iotaAddress),
 	);
 }
 
 function getSignaturesExcludingAddress(
 	signatures: SignaturePubkeyPair[],
-	suiAddress: string,
+	iotaAddress: string,
 ): SignaturePubkeyPair[] {
 	return signatures.filter(
 		(signature) =>
 			('address' in signature ? signature.address : signature.publicKey.toSuiAddress()) !==
-			normalizeSuiAddress(suiAddress),
+			normalizeSuiAddress(iotaAddress),
 	);
 }
 interface Props {

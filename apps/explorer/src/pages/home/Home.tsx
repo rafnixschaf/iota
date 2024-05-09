@@ -8,7 +8,7 @@ import { AccountsCardGraph } from '~/components/AccountCardGraph';
 import { Activity } from '~/components/Activity';
 import { CurrentEpoch, OnTheNetwork } from '~/components/HomeMetrics';
 import { PageLayout } from '~/components/Layout/PageLayout';
-import { SuiTokenCard } from '~/components/SuiTokenCard';
+import { TokenCard } from '~/components/TokenCard';
 import { TransactionsCardGraph } from '~/components/TransactionsCardGraph';
 import { ErrorBoundary } from '~/components/error-boundary/ErrorBoundary';
 import { TopPackagesCard } from '~/components/top-packages/TopPackagesCard';
@@ -24,14 +24,14 @@ const TRANSACTIONS_LIMIT = 25;
 
 function Home() {
 	const [network] = useNetwork();
-	const isSuiTokenCardEnabled = network === Network.Mainnet;
+	const isIOTATokenCardEnabled = network === Network.Mainnet;
 	return (
 		<PageLayout
 			gradient={{
 				content: (
 					<div
 						data-testid="home-page"
-						className={clsx('home-page-grid-container-top', isSuiTokenCardEnabled && 'with-token')}
+						className={clsx('home-page-grid-container-top', isIOTATokenCardEnabled && 'with-token')}
 					>
 						<div style={{ gridArea: 'network' }} className="overflow-hidden">
 							<OnTheNetwork />
@@ -39,9 +39,9 @@ function Home() {
 						<div style={{ gridArea: 'epoch' }}>
 							<CurrentEpoch />
 						</div>
-						{isSuiTokenCardEnabled ? (
+						{isIOTATokenCardEnabled ? (
 							<div style={{ gridArea: 'token' }}>
-								<SuiTokenCard />
+								<TokenCard />
 							</div>
 						) : null}
 						<div style={{ gridArea: 'transactions' }}>

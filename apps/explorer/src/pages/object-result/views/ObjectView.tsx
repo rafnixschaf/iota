@@ -174,9 +174,9 @@ function VersionCard({ version, digest }: { version?: string; digest: string }) 
 }
 
 function AddressOwner({ address }: { address: string }) {
-	const { data: suinsDomainName } = useResolveSuiNSName(address);
+	const { data: iotansDomainName } = useResolveSuiNSName(address);
 
-	return <AddressLink address={address} label={suinsDomainName} />;
+	return <AddressLink address={address} label={iotansDomainName} />;
 }
 
 function OwnerCard({
@@ -238,7 +238,7 @@ function OwnerCard({
 
 			<Description title="Storage Rebate">
 				<Text variant="pBodySmall/medium" color="steel-darker">
-					-{storageRebateFormatted} SUI
+					-{storageRebateFormatted} IOTA
 				</Text>
 			</Description>
 		</ObjectViewCard>
