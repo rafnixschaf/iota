@@ -10,7 +10,7 @@ module stardust::timelocked_staking {
     use stardust::timelock::{Self, TimeLock};
     use stardust::timelocked_staked_sui::{Self, TimelockedStakedSui};
 
-    const ETimeLockShouldNotBeExpired: u64 = 1;
+    const ETimeLockShouldNotBeExpired: u64 = 0;
 
     /// Add stake to a validator's staking pool.
     public entry fun request_add_stake(

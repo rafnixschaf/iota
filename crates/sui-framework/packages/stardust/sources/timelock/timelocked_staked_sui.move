@@ -5,7 +5,7 @@ module stardust::timelocked_staked_sui {
 
     use sui_system::staking_pool::StakedSui;
 
-    const EIncompatibleTimelockedStakedSui: u64 = 1;
+    const EIncompatibleTimelockedStakedSui: u64 = 0;
 
     /// A self-custodial object holding the timelocked staked SUI tokens.
     public struct TimelockedStakedSui has key {

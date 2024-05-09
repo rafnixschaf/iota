@@ -33,7 +33,7 @@ title: Module `0x107a::timelocked_staking`
 
 
 
-<pre><code><b>const</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_ETimeLockShouldNotBeExpired">ETimeLockShouldNotBeExpired</a>: u64 = 1;
+<pre><code><b>const</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_ETimeLockShouldNotBeExpired">ETimeLockShouldNotBeExpired</a>: u64 = 0;
 </code></pre>
 
 

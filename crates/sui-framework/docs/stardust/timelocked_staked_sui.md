@@ -76,7 +76,7 @@ A self-custodial object holding the timelocked staked SUI tokens.
 
 
 
-<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui_EIncompatibleTimelockedStakedSui">EIncompatibleTimelockedStakedSui</a>: u64 = 1;
+<pre><code><b>const</b> <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui_EIncompatibleTimelockedStakedSui">EIncompatibleTimelockedStakedSui</a>: u64 = 0;
 </code></pre>
 
 
