@@ -5,6 +5,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import { useState } from 'react';
 
 import { NetworkSelect, type NetworkSelectProps } from '~/ui/header/NetworkSelect';
+import { Network } from '~/utils/api/DefaultRpcClient';
 
 export default {
 	component: NetworkSelect,
@@ -17,15 +18,14 @@ export default {
 	],
 } as Meta;
 
-const NETWORKS = [
-	{ id: 'DEVNET', label: 'Devnet' },
-	{ id: 'TESTNET', label: 'Testnet' },
-	{ id: 'LOCAL', label: 'Local' },
-];
+const NETWORKS = Object.entries(Network).map(([label, id]) => ({
+	id,
+	label,
+}));
 
 export const Default: StoryObj<NetworkSelectProps> = {
 	render: (args) => {
-		const [network, setNetwork] = useState(NETWORKS[0].id);
+		const [network, setNetwork] = useState<string>(NETWORKS[0].id);
 
 		return <NetworkSelect {...args} value={network} version="1" onChange={setNetwork} />;
 	},

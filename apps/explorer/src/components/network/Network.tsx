@@ -14,13 +14,10 @@ export default function WrappedNetworkSelect() {
 	const { data } = useSuiClientQuery('getLatestSuiSystemState');
 	const { data: binaryVersion } = useSuiClientQuery('getRpcApiVersion');
 
-	const networks: { id: Network; label: string }[] = [
-		{ id: Network.MAINNET, label: 'Mainnet' },
-		{ id: Network.TESTNET, label: 'Testnet' },
-		{ id: Network.DEVNET, label: 'Devnet' },
-		{ id: Network.LOCAL, label: 'Local' },
-		{ id: Network.ALPHANET, label: 'Alphanet' },
-	].filter(Boolean);
+	const networks = Object.entries(Network).map(([label, id]) => ({
+		id,
+		label,
+	}));
 
 	const filteredNetworks = networks.filter((network) => Boolean(NetworkConfigs[network.id].url));
 
