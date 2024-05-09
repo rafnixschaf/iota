@@ -5,8 +5,8 @@ import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { useContext } from 'react';
 
 import { NetworkContext } from '../../context';
-import { Network } from '../../utils/api/DefaultRpcClient';
-import { NetworkSelect, type NetworkOption } from '~/ui/header/NetworkSelect';
+import { Network, NetworkConfigs } from '../../utils/api/DefaultRpcClient';
+import { NetworkSelect } from '~/ui/header/NetworkSelect';
 import { ampli } from '~/utils/analytics/ampli';
 
 export default function WrappedNetworkSelect() {
@@ -14,12 +14,15 @@ export default function WrappedNetworkSelect() {
 	const { data } = useSuiClientQuery('getLatestSuiSystemState');
 	const { data: binaryVersion } = useSuiClientQuery('getRpcApiVersion');
 
-	const networks = [
+	const networks: { id: Network; label: string }[] = [
 		{ id: Network.MAINNET, label: 'Mainnet' },
 		{ id: Network.TESTNET, label: 'Testnet' },
 		{ id: Network.DEVNET, label: 'Devnet' },
 		{ id: Network.LOCAL, label: 'Local' },
-	].filter(Boolean) as NetworkOption[];
+		{ id: Network.ALPHANET, label: 'Alphanet' },
+	].filter(Boolean);
+
+	const filteredNetworks = networks.filter((network) => Boolean(NetworkConfigs[network.id].url));
 
 	return (
 		<NetworkSelect
@@ -28,7 +31,7 @@ export default function WrappedNetworkSelect() {
 				ampli.switchedNetwork({ toNetwork: networkId });
 				setNetwork(networkId);
 			}}
-			networks={networks}
+			networks={filteredNetworks}
 			version={data?.protocolVersion}
 			binaryVersion={binaryVersion}
 		/>

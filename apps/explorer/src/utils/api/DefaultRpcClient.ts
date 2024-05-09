@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { SentryHttpTransport } from '@mysten/core';
+import { ALPHANET_URL, SentryHttpTransport } from '@mysten/core';
 import { SuiClient, SuiHTTPTransport, getFullnodeUrl } from '@mysten/sui.js/client';
 
 export enum Network {
@@ -9,13 +9,15 @@ export enum Network {
 	DEVNET = 'DEVNET',
 	TESTNET = 'TESTNET',
 	MAINNET = 'MAINNET',
+	ALPHANET = 'ALPHANET',
 }
 
 export const NetworkConfigs: Record<Network, { url: string }> = {
 	[Network.LOCAL]: { url: getFullnodeUrl('localnet') },
-	[Network.DEVNET]: { url: 'https://sui-devnet.mystenlabs.com/json-rpc' },
-	[Network.TESTNET]: { url: 'https://sui-testnet.mystenlabs.com/json-rpc' },
-	[Network.MAINNET]: { url: 'https://sui-mainnet.mystenlabs.com/json-rpc' },
+	[Network.DEVNET]: { url: '' },
+	[Network.TESTNET]: { url: '' },
+	[Network.MAINNET]: { url: '' },
+	[Network.ALPHANET]: { url: ALPHANET_URL },
 };
 
 const defaultClientMap: Map<Network | string, SuiClient> = new Map();
