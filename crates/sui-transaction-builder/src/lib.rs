@@ -29,10 +29,16 @@ use sui_types::move_package::MovePackage;
 use sui_types::object::{Object, Owner};
 use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use sui_types::sui_system_state::SUI_SYSTEM_MODULE_NAME;
+use sui_types::timelocked_staking::{
+    ADD_TIMELOCKED_STAKE_MUL_BAL_FUN_NAME, TIMELOCKED_STAKING_MODULE_NAME,
+    WITHDRAW_TIMELOCKED_STAKE_FUN_NAME,
+};
 use sui_types::transaction::{
     Argument, CallArg, Command, InputObjectKind, ObjectArg, TransactionData, TransactionKind,
 };
-use sui_types::{coin, fp_ensure, SUI_FRAMEWORK_PACKAGE_ID, SUI_SYSTEM_PACKAGE_ID};
+use sui_types::{
+    coin, fp_ensure, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID, SUI_SYSTEM_PACKAGE_ID,
+};
 
 #[async_trait]
 pub trait DataReader {
@@ -769,6 +775,104 @@ impl TransactionBuilder {
             vec![
                 CallArg::SUI_SYSTEM_MUT,
                 CallArg::Object(ObjectArg::ImmOrOwnedObject(staked_sui)),
+            ],
+            gas_budget,
+            gas_price,
+        )
+    }
+
+    pub async fn request_add_timelocked_stake(
+        &self,
+        signer: SuiAddress,
+        mut locked_balances: Vec<ObjectID>,
+        amount: Option<u64>,
+        validator: SuiAddress,
+        gas: ObjectID,
+        gas_budget: u64,
+    ) -> anyhow::Result<TransactionData> {
+        let gas_price = self.0.get_reference_gas_price().await?;
+        let gas = self
+            .select_gas(signer, Some(gas), gas_budget, vec![], gas_price)
+            .await?;
+
+        let mut obj_vec = vec![];
+        let locked_balance = locked_balances
+            .pop()
+            .ok_or_else(|| anyhow!("Locked balances input should contain at lease one object."))?;
+        let (oref, locked_balance_type) = self.get_object_ref_and_type(locked_balance).await?;
+
+        let ObjectType::Struct(type_) = &locked_balance_type else {
+            return Err(anyhow!(
+                "Provided object [{locked_balance}] is not a move object."
+            ));
+        };
+        ensure!(
+            type_.is_timelocked_balance(),
+            "Expecting either TimeLock<Balance<T>> input objects. Received [{type_}]"
+        );
+
+        for locked_balance in locked_balances {
+            let (oref, type_) = self.get_object_ref_and_type(locked_balance).await?;
+            ensure!(
+                type_ == locked_balance_type,
+                "All coins should be the same type, expecting {locked_balance_type}, got {type_}."
+            );
+            obj_vec.push(ObjectArg::ImmOrOwnedObject(oref))
+        }
+        obj_vec.push(ObjectArg::ImmOrOwnedObject(oref));
+
+        let pt = {
+            let mut builder = ProgrammableTransactionBuilder::new();
+            let arguments = vec![
+                builder.input(CallArg::SUI_SYSTEM_MUT).unwrap(),
+                builder.make_obj_vec(obj_vec)?,
+                builder
+                    .input(CallArg::Pure(bcs::to_bytes(&amount)?))
+                    .unwrap(),
+                builder
+                    .input(CallArg::Pure(bcs::to_bytes(&validator)?))
+                    .unwrap(),
+            ];
+            builder.command(Command::move_call(
+                STARDUST_PACKAGE_ID,
+                TIMELOCKED_STAKING_MODULE_NAME.to_owned(),
+                ADD_TIMELOCKED_STAKE_MUL_BAL_FUN_NAME.to_owned(),
+                vec![],
+                arguments,
+            ));
+            builder.finish()
+        };
+        Ok(TransactionData::new_programmable(
+            signer,
+            vec![gas],
+            pt,
+            gas_budget,
+            gas_price,
+        ))
+    }
+
+    pub async fn request_withdraw_timelocked_stake(
+        &self,
+        signer: SuiAddress,
+        timelocked_staked_sui: ObjectID,
+        gas: ObjectID,
+        gas_budget: u64,
+    ) -> anyhow::Result<TransactionData> {
+        let timelocked_staked_sui = self.get_object_ref(timelocked_staked_sui).await?;
+        let gas_price = self.0.get_reference_gas_price().await?;
+        let gas = self
+            .select_gas(signer, Some(gas), gas_budget, vec![], gas_price)
+            .await?;
+        TransactionData::new_move_call(
+            signer,
+            SUI_SYSTEM_PACKAGE_ID,
+            TIMELOCKED_STAKING_MODULE_NAME.to_owned(),
+            WITHDRAW_TIMELOCKED_STAKE_FUN_NAME.to_owned(),
+            vec![],
+            gas,
+            vec![
+                CallArg::SUI_SYSTEM_MUT,
+                CallArg::Object(ObjectArg::ImmOrOwnedObject(timelocked_staked_sui)),
             ],
             gas_budget,
             gas_price,

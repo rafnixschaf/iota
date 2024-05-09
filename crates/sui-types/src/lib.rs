@@ -74,6 +74,8 @@ pub mod signature;
 pub mod storage;
 pub mod sui_serde;
 pub mod sui_system_state;
+pub mod timelock;
+pub mod timelocked_staking;
 pub mod transaction;
 pub mod transfer;
 pub mod type_resolver;
