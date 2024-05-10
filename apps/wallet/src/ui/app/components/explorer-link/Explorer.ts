@@ -6,6 +6,7 @@ import { getUrlWithDeviceId } from '_src/shared/analytics/amplitude';
 import { API_ENV } from '_src/shared/api-env';
 
 const API_ENV_TO_EXPLORER_ENV: Record<API_ENV, string | undefined> = {
+	[API_ENV.alphanet]: 'alphanet',
 	[API_ENV.local]: 'local',
 	[API_ENV.devNet]: 'devnet',
 	[API_ENV.testNet]: 'testnet',
@@ -13,7 +14,7 @@ const API_ENV_TO_EXPLORER_ENV: Record<API_ENV, string | undefined> = {
 	[API_ENV.customRPC]: '',
 };
 
-const EXPLORER_LINK = 'https://suiexplorer.com/';
+const EXPLORER_LINK = 'https://suiexplorer.com/'; // todo: change to explorer link
 
 //TODO - this is a temporary solution, we should have a better way to get the explorer url
 function getExplorerUrl(path: string, apiEnv: API_ENV = DEFAULT_API_ENV, customRPC: string) {

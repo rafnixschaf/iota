@@ -32,6 +32,7 @@ import { isTransactionBlock } from '@mysten/sui.js/transactions';
 import { fromB64, toB64 } from '@mysten/sui.js/utils';
 import {
 	ReadonlyWalletAccount,
+	SUI_ALPHANET_CHAIN,
 	SUI_CHAINS,
 	SUI_DEVNET_CHAIN,
 	SUI_LOCALNET_CHAIN,
@@ -83,6 +84,7 @@ type QredoConnectFeature = {
 };
 type ChainType = Wallet['chains'][number];
 const API_ENV_TO_CHAIN: Record<Exclude<API_ENV, API_ENV.customRPC>, ChainType> = {
+	[API_ENV.alphanet]: SUI_ALPHANET_CHAIN,
 	[API_ENV.local]: SUI_LOCALNET_CHAIN,
 	[API_ENV.devNet]: SUI_DEVNET_CHAIN,
 	[API_ENV.testNet]: SUI_TESTNET_CHAIN,

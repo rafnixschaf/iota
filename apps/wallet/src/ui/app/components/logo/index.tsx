@@ -13,6 +13,7 @@ const networkLogos = {
 	[API_ENV.devNet]: SuiDevnet,
 	[API_ENV.testNet]: SuiTestnet,
 	[API_ENV.local]: SuiLocal,
+	[API_ENV.alphanet]: SuiMainnet,
 	[API_ENV.customRPC]: SuiCustomRpc,
 };
 

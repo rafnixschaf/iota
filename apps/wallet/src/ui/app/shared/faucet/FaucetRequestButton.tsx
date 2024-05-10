@@ -21,6 +21,7 @@ export const FAUCET_HOSTS = {
 	[API_ENV.local]: getFaucetHost('localnet'),
 	[API_ENV.devNet]: getFaucetHost('devnet'),
 	[API_ENV.testNet]: getFaucetHost('testnet'),
+	[API_ENV.alphanet]: process.env.API_ENDPOINT_ALPHANET_FAUCET ?? '', //todo: rpleane with getFaucetHost('alphanet')
 };
 
 function FaucetRequestButton({ variant = 'primary', size = 'narrow' }: FaucetRequestButtonProps) {

@@ -17,6 +17,7 @@ type EnvInfo = {
 };
 
 export const API_ENV_TO_INFO: Record<API_ENV, EnvInfo> = {
+	[API_ENV.alphanet]: { name: 'Alphanet', env: API_ENV.alphanet },
 	[API_ENV.local]: { name: 'Local', env: API_ENV.local },
 	[API_ENV.devNet]: { name: 'Devnet', env: API_ENV.devNet },
 	[API_ENV.customRPC]: { name: 'Custom RPC', env: API_ENV.customRPC },
