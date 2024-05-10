@@ -318,23 +318,14 @@ impl TransactionBuilderServer for TransactionBuilderApi {
     async fn request_add_timelocked_stake(
         &self,
         signer: SuiAddress,
-        locked_balances: Vec<ObjectID>,
-        amount: Option<BigInt<u64>>,
+        locked_balance: ObjectID,
         validator: SuiAddress,
         gas: ObjectID,
         gas_budget: BigInt<u64>,
     ) -> RpcResult<TransactionBlockBytes> {
-        let amount = amount.map(|a| *a);
         Ok(TransactionBlockBytes::from_data(
             self.0
-                .request_add_timelocked_stake(
-                    signer,
-                    locked_balances,
-                    amount,
-                    validator,
-                    gas,
-                    *gas_budget,
-                )
+                .request_add_timelocked_stake(signer, locked_balance, validator, gas, *gas_budget)
                 .await?,
         )?)
     }

@@ -257,9 +257,7 @@ pub trait TransactionBuilder {
         /// the transaction signer's Sui address
         signer: SuiAddress,
         /// TimeLock<Balance<SUI>> object to stake
-        locked_balances: Vec<ObjectID>,
-        /// stake amount
-        amount: Option<BigInt<u64>>,
+        locked_balance: ObjectID,
         /// the validator's Sui address
         validator: SuiAddress,
         /// gas object to be used in this transaction

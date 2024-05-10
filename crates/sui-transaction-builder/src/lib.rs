@@ -29,7 +29,7 @@ use sui_types::move_package::MovePackage;
 use sui_types::object::{Object, Owner};
 use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use sui_types::stardust::timelocked_staking::{
-    ADD_TIMELOCKED_STAKE_MUL_BAL_FUN_NAME, TIMELOCKED_STAKING_MODULE_NAME,
+    ADD_TIMELOCKED_STAKE_FUN_NAME, TIMELOCKED_STAKING_MODULE_NAME,
     WITHDRAW_TIMELOCKED_STAKE_FUN_NAME,
 };
 use sui_types::sui_system_state::SUI_SYSTEM_MODULE_NAME;
@@ -784,8 +784,7 @@ impl TransactionBuilder {
     pub async fn request_add_timelocked_stake(
         &self,
         signer: SuiAddress,
-        mut locked_balances: Vec<ObjectID>,
-        amount: Option<u64>,
+        locked_balance: ObjectID,
         validator: SuiAddress,
         gas: ObjectID,
         gas_budget: u64,
@@ -795,10 +794,6 @@ impl TransactionBuilder {
             .select_gas(signer, Some(gas), gas_budget, vec![], gas_price)
             .await?;
 
-        let mut obj_vec = vec![];
-        let locked_balance = locked_balances
-            .pop()
-            .ok_or_else(|| anyhow!("Locked balances input should contain at lease one object."))?;
         let (oref, locked_balance_type) = self.get_object_ref_and_type(locked_balance).await?;
 
         let ObjectType::Struct(type_) = &locked_balance_type else {
@@ -811,24 +806,11 @@ impl TransactionBuilder {
             "Expecting either TimeLock<Balance<T>> input objects. Received [{type_}]"
         );
 
-        for locked_balance in locked_balances {
-            let (oref, type_) = self.get_object_ref_and_type(locked_balance).await?;
-            ensure!(
-                type_ == locked_balance_type,
-                "All coins should be the same type, expecting {locked_balance_type}, got {type_}."
-            );
-            obj_vec.push(ObjectArg::ImmOrOwnedObject(oref))
-        }
-        obj_vec.push(ObjectArg::ImmOrOwnedObject(oref));
-
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
             let arguments = vec![
                 builder.input(CallArg::SUI_SYSTEM_MUT).unwrap(),
-                builder.make_obj_vec(obj_vec)?,
-                builder
-                    .input(CallArg::Pure(bcs::to_bytes(&amount)?))
-                    .unwrap(),
+                builder.input(CallArg::Object(ObjectArg::ImmOrOwnedObject(oref)))?,
                 builder
                     .input(CallArg::Pure(bcs::to_bytes(&validator)?))
                     .unwrap(),
@@ -836,7 +818,7 @@ impl TransactionBuilder {
             builder.command(Command::move_call(
                 STARDUST_PACKAGE_ID,
                 TIMELOCKED_STAKING_MODULE_NAME.to_owned(),
-                ADD_TIMELOCKED_STAKE_MUL_BAL_FUN_NAME.to_owned(),
+                ADD_TIMELOCKED_STAKE_FUN_NAME.to_owned(),
                 vec![],
                 arguments,
             ));
