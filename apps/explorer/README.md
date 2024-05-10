@@ -35,7 +35,7 @@ cargo run --bin sui-test-validator
 In a a separate terminal, you can now run the end-to-end tests:
 
 ```bash
-pnpm --filter sui-explorer playwright test
+pnpm --filter iota-explorer playwright test
 ```
 
 # Other pnpm commands

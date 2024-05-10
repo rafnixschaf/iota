@@ -10,7 +10,7 @@
 	"privatePackages": false,
 	"ignore": [
 		"sui-wallet",
-		"sui-explorer",
+		"iota-explorer",
 		"@mysten/core",
 		"@mysten/ui",
 		"sponsored-transactions",

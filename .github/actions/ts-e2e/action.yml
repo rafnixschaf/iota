@@ -57,10 +57,10 @@ runs:
       run: pnpm install --frozen-lockfile
       shell: bash
     - name: Build explorer
-      run: pnpm turbo --filter=sui-explorer build
+      run: pnpm turbo --filter=iota-explorer build
       shell: bash
     - name: Install Playwright Browsers
-      run: pnpm --filter sui-explorer playwright install --with-deps chromium
+      run: pnpm --filter iota-explorer playwright install --with-deps chromium
       shell: bash
 
     - name: Set env
@@ -74,7 +74,7 @@ runs:
       shell: bash
 
     - name: Run Explorer e2e tests
-      run: pnpm --filter sui-explorer playwright test
+      run: pnpm --filter iota-explorer playwright test
       shell: bash
 
     - uses: actions/upload-artifact@v3
