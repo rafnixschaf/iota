@@ -11,6 +11,10 @@ use move_core_types::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+#[path = "../unit_tests/stardust/timelock_tests.rs"]
+mod timelock_tests;
+
 pub const TIMELOCK_MODULE_NAME: &IdentStr = ident_str!("timelock");
 pub const TIMELOCK_STRUCT_NAME: &IdentStr = ident_str!("TimeLock");
 
@@ -37,7 +41,7 @@ where
         }
     }
 
-    /// The `TimeLock` type accessor.
+    /// Get the TimeLock's `type`.
     pub fn type_(type_param: TypeTag) -> StructTag {
         StructTag {
             address: STARDUST_ADDRESS,
@@ -47,14 +51,17 @@ where
         }
     }
 
+    /// Get the TimeLock's `id`.
     pub fn id(&self) -> &ObjectID {
         self.id.object_id()
     }
 
+    /// Get the TimeLock's `locked` object.
     pub fn locked(&self) -> &T {
         &self.locked
     }
 
+    /// Get the TimeLock's `expire_timestamp_ms`.
     pub fn expire_timestamp_ms(&self) -> u64 {
         self.expire_timestamp_ms
     }
@@ -108,9 +115,7 @@ pub fn is_timelocked_balance(other: &StructTag) -> bool {
         return false;
     }
 
-    let param = &other.type_params[0];
-
-    match param {
+    match &other.type_params[0] {
         TypeTag::Struct(tag) => Balance::is_balance(tag),
         _ => false,
     }

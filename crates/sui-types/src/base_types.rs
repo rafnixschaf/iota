@@ -31,9 +31,9 @@ use crate::multisig::MultiSigPublicKey;
 use crate::object::{Object, Owner};
 use crate::parse_sui_struct_tag;
 use crate::signature::GenericSignature;
+use crate::stardust::timelock;
 use crate::sui_serde::Readable;
 use crate::sui_serde::{to_sui_struct_tag_string, HexAccountAddress};
-use crate::timelock;
 use crate::transaction::Transaction;
 use crate::transaction::VerifiedTransaction;
 use crate::zk_login_authenticator::ZkLoginAuthenticator;
@@ -331,6 +331,15 @@ impl MoveObjectType {
                 false
             }
             MoveObjectType_::Other(s) => DynamicFieldInfo::is_dynamic_field(s),
+        }
+    }
+
+    pub fn is_timelock(&self) -> bool {
+        match &self.0 {
+            MoveObjectType_::GasCoin | MoveObjectType_::StakedSui | MoveObjectType_::Coin(_) => {
+                false
+            }
+            MoveObjectType_::Other(s) => timelock::is_timelock(s),
         }
     }
 

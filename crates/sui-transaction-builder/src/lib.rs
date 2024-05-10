@@ -28,11 +28,11 @@ use sui_types::governance::{ADD_STAKE_MUL_COIN_FUN_NAME, WITHDRAW_STAKE_FUN_NAME
 use sui_types::move_package::MovePackage;
 use sui_types::object::{Object, Owner};
 use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use sui_types::sui_system_state::SUI_SYSTEM_MODULE_NAME;
-use sui_types::timelocked_staking::{
+use sui_types::stardust::timelocked_staking::{
     ADD_TIMELOCKED_STAKE_MUL_BAL_FUN_NAME, TIMELOCKED_STAKING_MODULE_NAME,
     WITHDRAW_TIMELOCKED_STAKE_FUN_NAME,
 };
+use sui_types::sui_system_state::SUI_SYSTEM_MODULE_NAME;
 use sui_types::transaction::{
     Argument, CallArg, Command, InputObjectKind, ObjectArg, TransactionData, TransactionKind,
 };
