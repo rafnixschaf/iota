@@ -75,27 +75,6 @@ where
     pub fn to_bcs_bytes(&self) -> Vec<u8> {
         bcs::to_bytes(&self).unwrap()
     }
-
-    // TODO
-    // pub fn layout(type_param: TypeTag) -> MoveStructLayout {
-    //     MoveStructLayout {
-    //         type_: Self::type_(type_param.clone()),
-    //         fields: vec![
-    //             MoveFieldLayout::new(
-    //                 ident_str!("id").to_owned(),
-    //                 MoveTypeLayout::Struct(UID::layout()),
-    //             ),
-    //             // MoveFieldLayout::new(
-    //             //     ident_str!("locked").to_owned(),
-    //             //     MoveTypeLayout::Struct(locked.),
-    //             // ),
-    //             MoveFieldLayout::new(
-    //                 ident_str!("expire_timestamp_ms").to_owned(),
-    //                 MoveTypeLayout::U64,
-    //             ),
-    //         ],
-    //     }
-    // }
 }
 
 /// Is this other StructTag representing a TimeLock?

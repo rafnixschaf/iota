@@ -847,7 +847,7 @@ impl TransactionBuilder {
             .await?;
         TransactionData::new_move_call(
             signer,
-            SUI_SYSTEM_PACKAGE_ID,
+            STARDUST_PACKAGE_ID,
             TIMELOCKED_STAKING_MODULE_NAME.to_owned(),
             WITHDRAW_TIMELOCKED_STAKE_FUN_NAME.to_owned(),
             vec![],
