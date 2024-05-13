@@ -11,23 +11,31 @@ use sui_json_rpc_api::{
     CoinReadApiClient, GovernanceReadApiClient, IndexerApiClient, ReadApiClient,
     TransactionBuilderClient, WriteApiClient,
 };
-use sui_json_rpc_types::ObjectChange;
 use sui_json_rpc_types::ObjectsPage;
 use sui_json_rpc_types::{
     Balance, CoinPage, DelegatedStake, StakeStatus, SuiCoinMetadata, SuiExecutionStatus,
     SuiObjectDataOptions, SuiObjectResponse, SuiObjectResponseQuery, SuiTransactionBlockEffectsAPI,
     SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions, TransactionBlockBytes,
 };
+use sui_json_rpc_types::{DelegatedTimelockedStake, ObjectChange};
 use sui_macros::sim_test;
 use sui_move_build::BuildConfig;
-use sui_swarm_config::genesis_config::{DEFAULT_GAS_AMOUNT, DEFAULT_NUMBER_OF_OBJECT_PER_ACCOUNT};
+use sui_protocol_config::ProtocolConfig;
+use sui_swarm_config::genesis_config::{
+    AccountConfig, DEFAULT_GAS_AMOUNT, DEFAULT_NUMBER_OF_OBJECT_PER_ACCOUNT,
+};
 use sui_types::balance::Supply;
-use sui_types::base_types::ObjectID;
 use sui_types::base_types::SequenceNumber;
+use sui_types::base_types::{MoveObjectType, ObjectID};
 use sui_types::coin::{TreasuryCap, COIN_MODULE_NAME};
-use sui_types::digests::ObjectDigest;
+use sui_types::crypto::deterministic_random_account_key;
+use sui_types::digests::{ObjectDigest, TransactionDigest};
 use sui_types::gas_coin::GAS;
+use sui_types::id::UID;
+use sui_types::object::{Data, MoveObject, ObjectInner, Owner, OBJECT_START_VERSION};
 use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
+use sui_types::stardust::timelock::TimeLock;
+use sui_types::utils::to_sender_signed_transaction;
 use sui_types::{parse_sui_struct_tag, SUI_FRAMEWORK_ADDRESS};
 use test_cluster::TestClusterBuilder;
 use tokio::time::sleep;
@@ -951,5 +959,265 @@ async fn test_staking_multiple_coins() -> Result<(), anyhow::Error> {
         .unwrap();
     assert_eq!((genesis_coin_amount * 3) - 1000000000, new_coin.balance);
 
+    Ok(())
+}
+
+#[sim_test]
+async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
+    let (address, keypair) = deterministic_random_account_key();
+
+    let timelock_sui = unsafe {
+        MoveObject::new_from_execution(
+            MoveObjectType::timelocked_sui_balance(),
+            false,
+            OBJECT_START_VERSION,
+            TimeLock::<sui_types::balance::Balance>::new(
+                UID::new(ObjectID::random()),
+                sui_types::balance::Balance::new(100_000_000_000),
+                u64::MAX,
+            )
+            .to_bcs_bytes(),
+            &ProtocolConfig::get_for_min_version(),
+        )
+        .unwrap()
+    };
+    let timelock_sui = ObjectInner {
+        owner: Owner::AddressOwner(address),
+        data: Data::Move(timelock_sui),
+        previous_transaction: TransactionDigest::genesis_marker(),
+        storage_rebate: 0,
+    };
+
+    let cluster = TestClusterBuilder::new()
+        .with_accounts(
+            [AccountConfig {
+                address: Some(address),
+                gas_amounts: [100_000_000].into(),
+            }]
+            .into(),
+        )
+        .with_objects([timelock_sui.into()])
+        .build()
+        .await;
+
+    let http_client = cluster.rpc_client();
+
+    let objects: ObjectsPage = http_client
+        .get_owned_objects(
+            address,
+            Some(SuiObjectResponseQuery::new_with_options(
+                SuiObjectDataOptions::new()
+                    .with_type()
+                    .with_owner()
+                    .with_previous_transaction(),
+            )),
+            None,
+            None,
+        )
+        .await?;
+    assert_eq!(2, objects.data.len());
+
+    // Check TimelockedStakedSui object before test
+    let staked_sui: Vec<DelegatedTimelockedStake> =
+        http_client.get_timelocked_stakes(address).await?;
+    assert!(staked_sui.is_empty());
+
+    let validator = http_client
+        .get_latest_sui_system_state()
+        .await?
+        .active_validators[0]
+        .sui_address;
+
+    let coin = objects.data[0].object()?.object_id;
+    let timelocked_balance = objects.data[1].object()?.object_id;
+    // Delegate some timelocked SUI
+    let transaction_bytes: TransactionBlockBytes = http_client
+        .request_add_timelocked_stake(
+            address,
+            timelocked_balance,
+            validator,
+            coin,
+            100_000_000.into(),
+        )
+        .await?;
+
+    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+
+    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+
+    http_client
+        .execute_transaction_block(
+            tx_bytes,
+            signatures,
+            Some(SuiTransactionBlockResponseOptions::full_content()),
+            Some(ExecuteTransactionRequestType::WaitForLocalExecution),
+        )
+        .await?;
+
+    // Check DelegatedTimelockedStake object
+    let staked_sui: Vec<DelegatedTimelockedStake> =
+        http_client.get_timelocked_stakes(address).await?;
+    assert_eq!(1, staked_sui.len());
+    assert_eq!(100_000_000_000, staked_sui[0].stakes[0].principal);
+    assert!(matches!(
+        staked_sui[0].stakes[0].status,
+        StakeStatus::Pending
+    ));
+    let staked_sui_copy = http_client
+        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .await?;
+    assert_eq!(
+        staked_sui[0].stakes[0].timelocked_staked_sui_id,
+        staked_sui_copy[0].stakes[0].timelocked_staked_sui_id
+    );
+    Ok(())
+}
+
+#[ignore]
+#[sim_test]
+async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
+    let (address, keypair) = deterministic_random_account_key();
+
+    let timelock_sui = unsafe {
+        MoveObject::new_from_execution(
+            MoveObjectType::timelocked_sui_balance(),
+            false,
+            OBJECT_START_VERSION,
+            TimeLock::<sui_types::balance::Balance>::new(
+                UID::new(ObjectID::random()),
+                sui_types::balance::Balance::new(100_000_000_000),
+                u64::MAX,
+            )
+            .to_bcs_bytes(),
+            &ProtocolConfig::get_for_min_version(),
+        )
+        .unwrap()
+    };
+    let timelock_sui = ObjectInner {
+        owner: Owner::AddressOwner(address),
+        data: Data::Move(timelock_sui),
+        previous_transaction: TransactionDigest::genesis_marker(),
+        storage_rebate: 0,
+    };
+
+    let cluster = TestClusterBuilder::new()
+        .with_accounts(
+            [AccountConfig {
+                address: Some(address),
+                gas_amounts: [100_000_000].into(),
+            }]
+            .into(),
+        )
+        .with_objects([timelock_sui.into()])
+        .with_epoch_duration_ms(10000)
+        .build()
+        .await;
+
+    let http_client = cluster.rpc_client();
+
+    let objects: ObjectsPage = http_client
+        .get_owned_objects(
+            address,
+            Some(SuiObjectResponseQuery::new_with_options(
+                SuiObjectDataOptions::new()
+                    .with_type()
+                    .with_owner()
+                    .with_previous_transaction(),
+            )),
+            None,
+            None,
+        )
+        .await?;
+    assert_eq!(2, objects.data.len());
+
+    // Check TimelockedStakedSui object before test
+    let staked_sui: Vec<DelegatedTimelockedStake> =
+        http_client.get_timelocked_stakes(address).await?;
+    assert!(staked_sui.is_empty());
+
+    let validator = http_client
+        .get_latest_sui_system_state()
+        .await?
+        .active_validators[0]
+        .sui_address;
+
+    let coin = objects.data[0].object()?.object_id;
+    let timelocked_balance = objects.data[1].object()?.object_id;
+    // Delegate some timelocked SUI
+    let transaction_bytes: TransactionBlockBytes = http_client
+        .request_add_timelocked_stake(
+            address,
+            timelocked_balance,
+            validator,
+            coin,
+            100_000_000.into(),
+        )
+        .await?;
+
+    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+
+    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+
+    http_client
+        .execute_transaction_block(
+            tx_bytes,
+            signatures,
+            Some(SuiTransactionBlockResponseOptions::full_content()),
+            Some(ExecuteTransactionRequestType::WaitForLocalExecution),
+        )
+        .await?;
+
+    // Check DelegatedTimelockedStake object
+    let staked_sui: Vec<DelegatedTimelockedStake> =
+        http_client.get_timelocked_stakes(address).await?;
+    assert_eq!(1, staked_sui.len());
+    assert_eq!(100_000_000_000, staked_sui[0].stakes[0].principal);
+
+    sleep(Duration::from_millis(10000)).await;
+
+    let staked_sui_copy = http_client
+        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .await?;
+
+    assert_eq!(100_000_000_000, staked_sui_copy[0].stakes[0].principal);
+    assert!(matches!(
+        &staked_sui_copy[0].stakes[0].status,
+        StakeStatus::Active {
+            estimated_reward: _
+        }
+    ));
+
+    let transaction_bytes: TransactionBlockBytes = http_client
+        .request_withdraw_timelocked_stake(
+            address,
+            staked_sui_copy[0].stakes[0].timelocked_staked_sui_id,
+            coin,
+            1_000_000.into(),
+        )
+        .await?;
+    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+
+    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+
+    http_client
+        .execute_transaction_block(
+            tx_bytes,
+            signatures,
+            Some(SuiTransactionBlockResponseOptions::new()),
+            Some(ExecuteTransactionRequestType::WaitForLocalExecution),
+        )
+        .await?;
+
+    sleep(Duration::from_millis(20000)).await;
+
+    let staked_sui_copy = http_client
+        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .await?;
+
+    assert_eq!(100_000_000_000, staked_sui_copy[0].stakes[0].principal);
+    assert!(matches!(
+        &staked_sui_copy[0].stakes[0].status,
+        StakeStatus::Unstaked
+    ));
     Ok(())
 }

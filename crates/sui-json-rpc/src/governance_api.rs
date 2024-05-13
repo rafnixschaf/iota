@@ -11,12 +11,15 @@ use cached::SizedCache;
 use itertools::Itertools;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
+use sui_types::stardust::timelocked_staked_sui::TimelockedStakedSui;
 use tracing::{info, instrument};
 
 use mysten_metrics::spawn_monitored_task;
 use sui_core::authority::AuthorityState;
 use sui_json_rpc_api::{GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics};
-use sui_json_rpc_types::{DelegatedStake, Stake, StakeStatus};
+use sui_json_rpc_types::{
+    DelegatedStake, DelegatedTimelockedStake, Stake, StakeStatus, TimelockedStake,
+};
 use sui_json_rpc_types::{SuiCommittee, ValidatorApy, ValidatorApys};
 use sui_open_rpc::Module;
 use sui_types::base_types::{ObjectID, SuiAddress};
@@ -51,6 +54,24 @@ impl GovernanceReadApi {
         let state = self.state.clone();
         let result =
             spawn_monitored_task!(async move { state.get_staked_sui(owner).await }).await??;
+
+        self.metrics
+            .get_stake_sui_result_size
+            .report(result.len() as u64);
+        self.metrics
+            .get_stake_sui_result_size_total
+            .inc_by(result.len() as u64);
+        Ok(result)
+    }
+
+    async fn get_timelocked_staked_sui(
+        &self,
+        owner: SuiAddress,
+    ) -> Result<Vec<TimelockedStakedSui>, Error> {
+        let state = self.state.clone();
+        let result =
+            spawn_monitored_task!(async move { state.get_timelocked_staked_sui(owner).await })
+                .await??;
 
         self.metrics
             .get_stake_sui_result_size
@@ -123,6 +144,75 @@ impl GovernanceReadApi {
         spawn_monitored_task!(
             self_clone.get_delegated_stakes(stakes.into_iter().map(|s| (s, true)).collect())
         )
+        .await?
+    }
+
+    async fn get_timelocked_stakes_by_ids(
+        &self,
+        timelocked_staked_sui_ids: Vec<ObjectID>,
+    ) -> Result<Vec<DelegatedTimelockedStake>, Error> {
+        let state = self.state.clone();
+        let stakes_read = spawn_monitored_task!(async move {
+            timelocked_staked_sui_ids
+                .iter()
+                .map(|id| state.get_object_read(id))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .await??;
+
+        if stakes_read.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let mut stakes: Vec<(TimelockedStakedSui, bool)> = vec![];
+        for stake in stakes_read.into_iter() {
+            match stake {
+                ObjectRead::Exists(_, o, _) => {
+                    stakes.push((TimelockedStakedSui::try_from(&o)?, true))
+                }
+                ObjectRead::Deleted(oref) => {
+                    match self
+                        .state
+                        .find_object_lt_or_eq_version(&oref.0, &oref.1.one_before().unwrap())
+                        .await?
+                    {
+                        Some(o) => stakes.push((TimelockedStakedSui::try_from(&o)?, false)),
+                        None => Err(SuiRpcInputError::UserInputError(
+                            UserInputError::ObjectNotFound {
+                                object_id: oref.0,
+                                version: None,
+                            },
+                        ))?,
+                    }
+                }
+                ObjectRead::NotExists(id) => Err(SuiRpcInputError::UserInputError(
+                    UserInputError::ObjectNotFound {
+                        object_id: id,
+                        version: None,
+                    },
+                ))?,
+            }
+        }
+
+        self.get_delegated_timelocked_stakes(stakes).await
+    }
+
+    async fn get_timelocked_stakes(
+        &self,
+        owner: SuiAddress,
+    ) -> Result<Vec<DelegatedTimelockedStake>, Error> {
+        let timer = self.metrics.get_stake_sui_latency.start_timer();
+        let stakes = self.get_timelocked_staked_sui(owner).await?;
+        if stakes.is_empty() {
+            return Ok(vec![]);
+        }
+        drop(timer);
+
+        let _timer = self.metrics.get_delegated_sui_latency.start_timer();
+
+        let self_clone = self.clone();
+        spawn_monitored_task!(self_clone
+            .get_delegated_timelocked_stakes(stakes.into_iter().map(|s| (s, true)).collect()))
         .await?
     }
 
@@ -206,6 +296,87 @@ impl GovernanceReadApi {
         Ok(delegated_stakes)
     }
 
+    async fn get_delegated_timelocked_stakes(
+        &self,
+        stakes: Vec<(TimelockedStakedSui, bool)>,
+    ) -> Result<Vec<DelegatedTimelockedStake>, Error> {
+        let pools = stakes.into_iter().fold(
+            BTreeMap::<_, Vec<_>>::new(),
+            |mut pools, (stake, exists)| {
+                pools
+                    .entry(stake.pool_id())
+                    .or_default()
+                    .push((stake, exists));
+                pools
+            },
+        );
+
+        let system_state = self.get_system_state()?;
+        let system_state_summary: SuiSystemStateSummary =
+            system_state.clone().into_sui_system_state_summary();
+
+        let rates = exchange_rates(&self.state, system_state_summary.epoch)
+            .await?
+            .into_iter()
+            .map(|rates| (rates.pool_id, rates))
+            .collect::<BTreeMap<_, _>>();
+
+        let mut delegated_stakes = vec![];
+        for (pool_id, stakes) in pools {
+            // Rate table and rate can be null when the pool is not active
+            let rate_table = rates.get(&pool_id).ok_or_else(|| {
+                SuiRpcInputError::GenericNotFound(
+                    "Cannot find rates for staking pool {pool_id}".to_string(),
+                )
+            })?;
+            let current_rate = rate_table.rates.first().map(|(_, rate)| rate);
+
+            let mut delegations = vec![];
+            for (stake, exists) in stakes {
+                let status = if !exists {
+                    StakeStatus::Unstaked
+                } else if system_state_summary.epoch >= stake.activation_epoch() {
+                    let estimated_reward = if let Some(current_rate) = current_rate {
+                        let stake_rate = rate_table
+                            .rates
+                            .iter()
+                            .find_map(|(epoch, rate)| {
+                                if *epoch == stake.activation_epoch() {
+                                    Some(rate.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or_default();
+                        let estimated_reward = ((stake_rate.rate() / current_rate.rate()) - 1.0)
+                            * stake.principal() as f64;
+                        max(0, estimated_reward.round() as u64)
+                    } else {
+                        0
+                    };
+                    StakeStatus::Active { estimated_reward }
+                } else {
+                    StakeStatus::Pending
+                };
+                delegations.push(TimelockedStake {
+                    timelocked_staked_sui_id: stake.id(),
+                    // TODO: this might change when we implement warm up period.
+                    stake_request_epoch: stake.activation_epoch() - 1,
+                    stake_active_epoch: stake.activation_epoch(),
+                    principal: stake.principal(),
+                    status,
+                    expire_timestamp_ms: stake.expire_timestamp_ms(),
+                })
+            }
+            delegated_stakes.push(DelegatedTimelockedStake {
+                validator_address: rate_table.address,
+                staking_pool: pool_id,
+                stakes: delegations,
+            })
+        }
+        Ok(delegated_stakes)
+    }
+
     fn get_system_state(&self) -> Result<SuiSystemState, Error> {
         Ok(self.state.get_system_state()?)
     }
@@ -224,6 +395,25 @@ impl GovernanceReadApiServer for GovernanceReadApi {
     #[instrument(skip(self))]
     async fn get_stakes(&self, owner: SuiAddress) -> RpcResult<Vec<DelegatedStake>> {
         with_tracing!(async move { self.get_stakes(owner).await })
+    }
+
+    #[instrument(skip(self))]
+    async fn get_timelocked_stakes_by_ids(
+        &self,
+        timelocked_staked_sui_ids: Vec<ObjectID>,
+    ) -> RpcResult<Vec<DelegatedTimelockedStake>> {
+        with_tracing!(async move {
+            self.get_timelocked_stakes_by_ids(timelocked_staked_sui_ids)
+                .await
+        })
+    }
+
+    #[instrument(skip(self))]
+    async fn get_timelocked_stakes(
+        &self,
+        owner: SuiAddress,
+    ) -> RpcResult<Vec<DelegatedTimelockedStake>> {
+        with_tracing!(async move { self.get_timelocked_stakes(owner).await })
     }
 
     #[instrument(skip(self))]
