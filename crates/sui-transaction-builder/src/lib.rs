@@ -797,9 +797,7 @@ impl TransactionBuilder {
         let (oref, locked_balance_type) = self.get_object_ref_and_type(locked_balance).await?;
 
         let ObjectType::Struct(type_) = &locked_balance_type else {
-            return Err(anyhow!(
-                "Provided object [{locked_balance}] is not a move object."
-            ));
+            anyhow::bail!("Provided object [{locked_balance}] is not a move object.");
         };
         ensure!(
             type_.is_timelocked_balance(),
@@ -809,11 +807,9 @@ impl TransactionBuilder {
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
             let arguments = vec![
-                builder.input(CallArg::SUI_SYSTEM_MUT).unwrap(),
+                builder.input(CallArg::SUI_SYSTEM_MUT)?,
                 builder.input(CallArg::Object(ObjectArg::ImmOrOwnedObject(oref)))?,
-                builder
-                    .input(CallArg::Pure(bcs::to_bytes(&validator)?))
-                    .unwrap(),
+                builder.input(CallArg::Pure(bcs::to_bytes(&validator)?))?,
             ];
             builder.command(Command::move_call(
                 STARDUST_PACKAGE_ID,

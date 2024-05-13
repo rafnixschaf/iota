@@ -42,8 +42,8 @@ impl<T> TimeLock<T> {
     pub fn type_(type_param: TypeTag) -> StructTag {
         StructTag {
             address: STARDUST_ADDRESS,
-            name: TIMELOCK_STRUCT_NAME.to_owned(),
             module: TIMELOCK_MODULE_NAME.to_owned(),
+            name: TIMELOCK_STRUCT_NAME.to_owned(),
             type_params: vec![type_param],
         }
     }
