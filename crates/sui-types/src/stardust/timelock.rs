@@ -28,10 +28,7 @@ pub struct TimeLock<T> {
     pub expire_timestamp_ms: u64,
 }
 
-impl<'de, T> TimeLock<T>
-where
-    T: Serialize + Deserialize<'de>,
-{
+impl<T> TimeLock<T> {
     /// Constructor.
     pub fn new(id: UID, locked: T, expire_timestamp_ms: u64) -> Self {
         Self {
@@ -65,7 +62,12 @@ where
     pub fn expire_timestamp_ms(&self) -> u64 {
         self.expire_timestamp_ms
     }
+}
 
+impl<'de, T> TimeLock<T>
+where
+    T: Serialize + Deserialize<'de>,
+{
     /// Create a `TimeLock` from BCS bytes.
     pub fn from_bcs_bytes(content: &'de [u8]) -> Result<Self, bcs::Error> {
         bcs::from_bytes(content)
