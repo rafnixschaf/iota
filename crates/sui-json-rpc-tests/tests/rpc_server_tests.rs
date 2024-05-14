@@ -962,9 +962,15 @@ async fn test_staking_multiple_coins() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+// Need to be enable when the Stardust package is integrated in the system packages list.
+#[ignore]
 #[sim_test]
 async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
+    // Create a cluster
     let (address, keypair) = deterministic_random_account_key();
+
+    let principal = 100_000_000_000;
+    let expire_timestamp_ms = u64::MAX;
 
     let timelock_sui = unsafe {
         MoveObject::new_from_execution(
@@ -973,8 +979,8 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
             OBJECT_START_VERSION,
             TimeLock::<sui_types::balance::Balance>::new(
                 UID::new(ObjectID::random()),
-                sui_types::balance::Balance::new(100_000_000_000),
-                u64::MAX,
+                sui_types::balance::Balance::new(principal),
+                expire_timestamp_ms,
             )
             .to_bcs_bytes(),
             &ProtocolConfig::get_for_min_version(),
@@ -1000,6 +1006,7 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
         .build()
         .await;
 
+    // Check owned objects
     let http_client = cluster.rpc_client();
 
     let objects: ObjectsPage = http_client
@@ -1017,20 +1024,21 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
         .await?;
     assert_eq!(2, objects.data.len());
 
+    let coin = objects.data[0].object()?.object_id;
+    let timelocked_balance = objects.data[1].object()?.object_id;
+
     // Check TimelockedStakedSui object before test
     let staked_sui: Vec<DelegatedTimelockedStake> =
         http_client.get_timelocked_stakes(address).await?;
     assert!(staked_sui.is_empty());
 
+    // Delegate some timelocked SUI
     let validator = http_client
         .get_latest_sui_system_state()
         .await?
         .active_validators[0]
         .sui_address;
 
-    let coin = objects.data[0].object()?.object_id;
-    let timelocked_balance = objects.data[1].object()?.object_id;
-    // Delegate some timelocked SUI
     let transaction_bytes: TransactionBlockBytes = http_client
         .request_add_timelocked_stake(
             address,
@@ -1041,15 +1049,15 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
         )
         .await?;
 
-    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+    let signed_transaction = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
 
-    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+    let (tx_bytes, signatures) = signed_transaction.to_tx_bytes_and_signatures();
 
     http_client
         .execute_transaction_block(
             tx_bytes,
             signatures,
-            Some(SuiTransactionBlockResponseOptions::full_content()),
+            Some(SuiTransactionBlockResponseOptions::new()),
             Some(ExecuteTransactionRequestType::WaitForLocalExecution),
         )
         .await?;
@@ -1057,26 +1065,56 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
     // Check DelegatedTimelockedStake object
     let staked_sui: Vec<DelegatedTimelockedStake> =
         http_client.get_timelocked_stakes(address).await?;
+
     assert_eq!(1, staked_sui.len());
-    assert_eq!(100_000_000_000, staked_sui[0].stakes[0].principal);
-    assert!(matches!(
-        staked_sui[0].stakes[0].status,
-        StakeStatus::Pending
-    ));
+    let staked_sui = &staked_sui[0];
+    assert_eq!(1, staked_sui.stakes.len());
+    let stake = &staked_sui.stakes[0];
+
+    assert_eq!(validator, staked_sui.validator_address);
+    assert_eq!(principal, stake.principal);
+    assert!(matches!(stake.status, StakeStatus::Pending));
+    assert_eq!(expire_timestamp_ms, stake.expire_timestamp_ms);
+
+    // Request the DelegatedTimelockedStake one more time
     let staked_sui_copy = http_client
-        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .get_timelocked_stakes_by_ids(vec![stake.timelocked_staked_sui_id])
         .await?;
+
+    assert_eq!(1, staked_sui_copy.len());
+    let staked_sui_copy = &staked_sui_copy[0];
+    assert_eq!(1, staked_sui_copy.stakes.len());
+    let stake_copy = &staked_sui_copy.stakes[0];
+
+    // Check both of objects
     assert_eq!(
-        staked_sui[0].stakes[0].timelocked_staked_sui_id,
-        staked_sui_copy[0].stakes[0].timelocked_staked_sui_id
+        staked_sui.validator_address,
+        staked_sui_copy.validator_address
     );
+    assert_eq!(staked_sui.staking_pool, staked_sui_copy.staking_pool);
+    assert_eq!(
+        stake.timelocked_staked_sui_id,
+        stake_copy.timelocked_staked_sui_id
+    );
+    assert_eq!(stake.stake_request_epoch, stake_copy.stake_request_epoch);
+    assert_eq!(stake.stake_active_epoch, stake_copy.stake_active_epoch);
+    assert_eq!(stake.principal, stake_copy.principal);
+    assert!(matches!(stake_copy.status, StakeStatus::Pending));
+    assert_eq!(stake.expire_timestamp_ms, stake_copy.expire_timestamp_ms);
+
     Ok(())
 }
 
+// Ignored because there is a problem with the StakeStatus::Unstaked state.
+// The same behavior reproduces in the original test_unstaking test.
 #[ignore]
 #[sim_test]
 async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
+    // Create a cluster
     let (address, keypair) = deterministic_random_account_key();
+
+    let principal = 100_000_000_000;
+    let expire_timestamp_ms = u64::MAX;
 
     let timelock_sui = unsafe {
         MoveObject::new_from_execution(
@@ -1085,8 +1123,8 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
             OBJECT_START_VERSION,
             TimeLock::<sui_types::balance::Balance>::new(
                 UID::new(ObjectID::random()),
-                sui_types::balance::Balance::new(100_000_000_000),
-                u64::MAX,
+                sui_types::balance::Balance::new(principal),
+                expire_timestamp_ms,
             )
             .to_bcs_bytes(),
             &ProtocolConfig::get_for_min_version(),
@@ -1113,6 +1151,7 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
         .build()
         .await;
 
+    // Check owned objects
     let http_client = cluster.rpc_client();
 
     let objects: ObjectsPage = http_client
@@ -1130,20 +1169,21 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
         .await?;
     assert_eq!(2, objects.data.len());
 
+    let coin = objects.data[0].object()?.object_id;
+    let timelocked_balance = objects.data[1].object()?.object_id;
+
     // Check TimelockedStakedSui object before test
     let staked_sui: Vec<DelegatedTimelockedStake> =
         http_client.get_timelocked_stakes(address).await?;
     assert!(staked_sui.is_empty());
 
+    // Delegate some timelocked SUI
     let validator = http_client
         .get_latest_sui_system_state()
         .await?
         .active_validators[0]
         .sui_address;
 
-    let coin = objects.data[0].object()?.object_id;
-    let timelocked_balance = objects.data[1].object()?.object_id;
-    // Delegate some timelocked SUI
     let transaction_bytes: TransactionBlockBytes = http_client
         .request_add_timelocked_stake(
             address,
@@ -1154,9 +1194,9 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
         )
         .await?;
 
-    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+    let signed_transaction = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
 
-    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+    let (tx_bytes, signatures) = signed_transaction.to_tx_bytes_and_signatures();
 
     http_client
         .execute_transaction_block(
@@ -1170,34 +1210,45 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
     // Check DelegatedTimelockedStake object
     let staked_sui: Vec<DelegatedTimelockedStake> =
         http_client.get_timelocked_stakes(address).await?;
-    assert_eq!(1, staked_sui.len());
-    assert_eq!(100_000_000_000, staked_sui[0].stakes[0].principal);
 
+    assert_eq!(1, staked_sui.len());
+    let staked_sui = &staked_sui[0];
+    assert_eq!(1, staked_sui.stakes.len());
+    let stake = &staked_sui.stakes[0];
+
+    assert_eq!(validator, staked_sui.validator_address);
+    assert_eq!(principal, stake.principal);
+    assert!(matches!(stake.status, StakeStatus::Pending));
+    assert_eq!(expire_timestamp_ms, stake.expire_timestamp_ms);
+
+    // Sleep for 10 seconds
     sleep(Duration::from_millis(10000)).await;
 
+    // Request the DelegatedTimelockedStake one more time
     let staked_sui_copy = http_client
-        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .get_timelocked_stakes_by_ids(vec![stake.timelocked_staked_sui_id])
         .await?;
 
-    assert_eq!(100_000_000_000, staked_sui_copy[0].stakes[0].principal);
-    assert!(matches!(
-        &staked_sui_copy[0].stakes[0].status,
-        StakeStatus::Active {
-            estimated_reward: _
-        }
-    ));
+    assert_eq!(1, staked_sui_copy.len());
+    let staked_sui_copy = &staked_sui_copy[0];
+    assert_eq!(1, staked_sui_copy.stakes.len());
+    let stake_copy = &staked_sui_copy.stakes[0];
 
+    assert_eq!(principal, stake_copy.principal);
+    assert!(matches!(&stake_copy.status, StakeStatus::Active { .. }));
+
+    // Request withdraw timelocked stake
     let transaction_bytes: TransactionBlockBytes = http_client
         .request_withdraw_timelocked_stake(
             address,
-            staked_sui_copy[0].stakes[0].timelocked_staked_sui_id,
+            stake_copy.timelocked_staked_sui_id,
             coin,
-            1_000_000.into(),
+            10_000_000.into(),
         )
         .await?;
-    let tx = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
+    let signed_transaction = to_sender_signed_transaction(transaction_bytes.to_data()?, &keypair);
 
-    let (tx_bytes, signatures) = tx.to_tx_bytes_and_signatures();
+    let (tx_bytes, signatures) = signed_transaction.to_tx_bytes_and_signatures();
 
     http_client
         .execute_transaction_block(
@@ -1208,16 +1259,34 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
         )
         .await?;
 
+    // Sleep for 20 seconds
     sleep(Duration::from_millis(20000)).await;
 
+    // Request the DelegatedTimelockedStake one more time
     let staked_sui_copy = http_client
-        .get_timelocked_stakes_by_ids(vec![staked_sui[0].stakes[0].timelocked_staked_sui_id])
+        .get_timelocked_stakes_by_ids(vec![stake.timelocked_staked_sui_id])
         .await?;
 
-    assert_eq!(100_000_000_000, staked_sui_copy[0].stakes[0].principal);
-    assert!(matches!(
-        &staked_sui_copy[0].stakes[0].status,
-        StakeStatus::Unstaked
-    ));
+    assert_eq!(1, staked_sui_copy.len());
+    let staked_sui_copy = &staked_sui_copy[0];
+    assert_eq!(1, staked_sui_copy.stakes.len());
+    let stake_copy = &staked_sui_copy.stakes[0];
+
+    // Check the result
+    assert_eq!(
+        staked_sui.validator_address,
+        staked_sui_copy.validator_address
+    );
+    assert_eq!(staked_sui.staking_pool, staked_sui_copy.staking_pool);
+    assert_eq!(
+        stake.timelocked_staked_sui_id,
+        stake_copy.timelocked_staked_sui_id
+    );
+    assert_eq!(stake.stake_request_epoch, stake_copy.stake_request_epoch);
+    assert_eq!(stake.stake_active_epoch, stake_copy.stake_active_epoch);
+    assert_eq!(stake.principal, stake_copy.principal);
+    assert!(matches!(stake_copy.status, StakeStatus::Unstaked));
+    assert_eq!(stake.expire_timestamp_ms, stake_copy.expire_timestamp_ms);
+
     Ok(())
 }
