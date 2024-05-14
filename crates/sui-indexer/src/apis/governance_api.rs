@@ -177,29 +177,14 @@ impl GovernanceReadApi {
 
             let mut delegations = vec![];
             for stake in stakes {
-                let status = if epoch >= stake.activation_epoch() {
-                    let estimated_reward = if let Some(current_rate) = current_rate {
-                        let stake_rate = rate_table
-                            .rates
-                            .iter()
-                            .find_map(|(epoch, rate)| {
-                                if *epoch == stake.activation_epoch() {
-                                    Some(rate.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_default();
-                        let estimated_reward = ((stake_rate.rate() / current_rate.rate()) - 1.0)
-                            * stake.principal() as f64;
-                        std::cmp::max(0, estimated_reward.round() as u64)
-                    } else {
-                        0
-                    };
-                    StakeStatus::Active { estimated_reward }
-                } else {
-                    StakeStatus::Pending
-                };
+                let status = stake_status(
+                    epoch,
+                    stake.activation_epoch(),
+                    stake.principal(),
+                    rate_table,
+                    current_rate,
+                );
+
                 delegations.push(sui_json_rpc_types::Stake {
                     staked_sui_id: stake.id(),
                     // TODO: this might change when we implement warm up period.
@@ -250,29 +235,14 @@ impl GovernanceReadApi {
 
             let mut delegations = vec![];
             for stake in stakes {
-                let status = if epoch >= stake.activation_epoch() {
-                    let estimated_reward = if let Some(current_rate) = current_rate {
-                        let stake_rate = rate_table
-                            .rates
-                            .iter()
-                            .find_map(|(epoch, rate)| {
-                                if *epoch == stake.activation_epoch() {
-                                    Some(rate.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_default();
-                        let estimated_reward = ((stake_rate.rate() / current_rate.rate()) - 1.0)
-                            * stake.principal() as f64;
-                        std::cmp::max(0, estimated_reward.round() as u64)
-                    } else {
-                        0
-                    };
-                    StakeStatus::Active { estimated_reward }
-                } else {
-                    StakeStatus::Pending
-                };
+                let status = stake_status(
+                    epoch,
+                    stake.activation_epoch(),
+                    stake.principal(),
+                    rate_table,
+                    current_rate,
+                );
+
                 delegations.push(sui_json_rpc_types::TimelockedStake {
                     timelocked_staked_sui_id: stake.id(),
                     // TODO: this might change when we implement warm up period.
@@ -290,6 +260,38 @@ impl GovernanceReadApi {
             })
         }
         Ok(delegated_stakes)
+    }
+}
+
+fn stake_status(
+    epoch: u64,
+    activation_epoch: u64,
+    principal: u64,
+    rate_table: &ValidatorExchangeRates,
+    current_rate: Option<&PoolTokenExchangeRate>,
+) -> StakeStatus {
+    if epoch >= activation_epoch {
+        let estimated_reward = if let Some(current_rate) = current_rate {
+            let stake_rate = rate_table
+                .rates
+                .iter()
+                .find_map(|(epoch, rate)| {
+                    if *epoch == activation_epoch {
+                        Some(rate.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+            let estimated_reward =
+                ((stake_rate.rate() / current_rate.rate()) - 1.0) * principal as f64;
+            std::cmp::max(0, estimated_reward.round() as u64)
+        } else {
+            0
+        };
+        StakeStatus::Active { estimated_reward }
+    } else {
+        StakeStatus::Pending
     }
 }
 

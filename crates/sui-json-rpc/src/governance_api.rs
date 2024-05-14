@@ -28,7 +28,7 @@ use sui_types::dynamic_field::get_dynamic_field_from_store;
 use sui_types::error::{SuiError, UserInputError};
 use sui_types::governance::StakedSui;
 use sui_types::id::ID;
-use sui_types::object::ObjectRead;
+use sui_types::object::{Object, ObjectRead};
 use sui_types::sui_serde::BigInt;
 use sui_types::sui_system_state::sui_system_state_summary::SuiSystemStateSummary;
 use sui_types::sui_system_state::PoolTokenExchangeRate;
@@ -99,33 +99,17 @@ impl GovernanceReadApi {
             return Ok(vec![]);
         }
 
-        let mut stakes: Vec<(StakedSui, bool)> = vec![];
-        for stake in stakes_read.into_iter() {
-            match stake {
-                ObjectRead::Exists(_, o, _) => stakes.push((StakedSui::try_from(&o)?, true)),
-                ObjectRead::Deleted(oref) => {
-                    match self
-                        .state
-                        .find_object_lt_or_eq_version(&oref.0, &oref.1.one_before().unwrap())
-                        .await?
-                    {
-                        Some(o) => stakes.push((StakedSui::try_from(&o)?, false)),
-                        None => Err(SuiRpcInputError::UserInputError(
-                            UserInputError::ObjectNotFound {
-                                object_id: oref.0,
-                                version: None,
-                            },
-                        ))?,
-                    }
-                }
-                ObjectRead::NotExists(id) => Err(SuiRpcInputError::UserInputError(
-                    UserInputError::ObjectNotFound {
-                        object_id: id,
-                        version: None,
-                    },
-                ))?,
-            }
-        }
+        let stakes: Vec<Result<(StakedSui, bool), SuiError>> = self
+            .stakes_with_status(stakes_read.into_iter())
+            .await?
+            .into_iter()
+            .map(|(o, b)| match StakedSui::try_from(&o) {
+                Ok(stake) => Ok((stake, b)),
+                Err(err) => Err(err),
+            })
+            .collect();
+        let stakes: Result<Vec<(StakedSui, bool)>, SuiError> = stakes.into_iter().collect();
+        let stakes = stakes?;
 
         self.get_delegated_stakes(stakes).await
     }
@@ -164,35 +148,18 @@ impl GovernanceReadApi {
             return Ok(vec![]);
         }
 
-        let mut stakes: Vec<(TimelockedStakedSui, bool)> = vec![];
-        for stake in stakes_read.into_iter() {
-            match stake {
-                ObjectRead::Exists(_, o, _) => {
-                    stakes.push((TimelockedStakedSui::try_from(&o)?, true))
-                }
-                ObjectRead::Deleted(oref) => {
-                    match self
-                        .state
-                        .find_object_lt_or_eq_version(&oref.0, &oref.1.one_before().unwrap())
-                        .await?
-                    {
-                        Some(o) => stakes.push((TimelockedStakedSui::try_from(&o)?, false)),
-                        None => Err(SuiRpcInputError::UserInputError(
-                            UserInputError::ObjectNotFound {
-                                object_id: oref.0,
-                                version: None,
-                            },
-                        ))?,
-                    }
-                }
-                ObjectRead::NotExists(id) => Err(SuiRpcInputError::UserInputError(
-                    UserInputError::ObjectNotFound {
-                        object_id: id,
-                        version: None,
-                    },
-                ))?,
-            }
-        }
+        let stakes: Vec<Result<(TimelockedStakedSui, bool), SuiError>> = self
+            .stakes_with_status(stakes_read.into_iter())
+            .await?
+            .into_iter()
+            .map(|(o, b)| match TimelockedStakedSui::try_from(&o) {
+                Ok(stake) => Ok((stake, b)),
+                Err(err) => Err(err),
+            })
+            .collect();
+        let stakes: Result<Vec<(TimelockedStakedSui, bool)>, SuiError> =
+            stakes.into_iter().collect();
+        let stakes = stakes?;
 
         self.get_delegated_timelocked_stakes(stakes).await
     }
@@ -253,31 +220,14 @@ impl GovernanceReadApi {
 
             let mut delegations = vec![];
             for (stake, exists) in stakes {
-                let status = if !exists {
-                    StakeStatus::Unstaked
-                } else if system_state_summary.epoch >= stake.activation_epoch() {
-                    let estimated_reward = if let Some(current_rate) = current_rate {
-                        let stake_rate = rate_table
-                            .rates
-                            .iter()
-                            .find_map(|(epoch, rate)| {
-                                if *epoch == stake.activation_epoch() {
-                                    Some(rate.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_default();
-                        let estimated_reward = ((stake_rate.rate() / current_rate.rate()) - 1.0)
-                            * stake.principal() as f64;
-                        max(0, estimated_reward.round() as u64)
-                    } else {
-                        0
-                    };
-                    StakeStatus::Active { estimated_reward }
-                } else {
-                    StakeStatus::Pending
-                };
+                let status = stake_status(
+                    system_state_summary.epoch,
+                    stake.activation_epoch(),
+                    stake.principal(),
+                    exists,
+                    current_rate,
+                    rate_table,
+                );
                 delegations.push(Stake {
                     staked_sui_id: stake.id(),
                     // TODO: this might change when we implement warm up period.
@@ -333,31 +283,14 @@ impl GovernanceReadApi {
 
             let mut delegations = vec![];
             for (stake, exists) in stakes {
-                let status = if !exists {
-                    StakeStatus::Unstaked
-                } else if system_state_summary.epoch >= stake.activation_epoch() {
-                    let estimated_reward = if let Some(current_rate) = current_rate {
-                        let stake_rate = rate_table
-                            .rates
-                            .iter()
-                            .find_map(|(epoch, rate)| {
-                                if *epoch == stake.activation_epoch() {
-                                    Some(rate.clone())
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_default();
-                        let estimated_reward = ((stake_rate.rate() / current_rate.rate()) - 1.0)
-                            * stake.principal() as f64;
-                        max(0, estimated_reward.round() as u64)
-                    } else {
-                        0
-                    };
-                    StakeStatus::Active { estimated_reward }
-                } else {
-                    StakeStatus::Pending
-                };
+                let status = stake_status(
+                    system_state_summary.epoch,
+                    stake.activation_epoch(),
+                    stake.principal(),
+                    exists,
+                    current_rate,
+                    rate_table,
+                );
                 delegations.push(TimelockedStake {
                     timelocked_staked_sui_id: stake.id(),
                     // TODO: this might change when we implement warm up period.
@@ -375,6 +308,42 @@ impl GovernanceReadApi {
             })
         }
         Ok(delegated_stakes)
+    }
+
+    async fn stakes_with_status(
+        &self,
+        iter: impl Iterator<Item = ObjectRead>,
+    ) -> Result<Vec<(Object, bool)>, Error> {
+        let mut stakes = vec![];
+
+        for stake in iter {
+            match stake {
+                ObjectRead::Exists(_, o, _) => stakes.push((o, true)),
+                ObjectRead::Deleted(oref) => {
+                    match self
+                        .state
+                        .find_object_lt_or_eq_version(&oref.0, &oref.1.one_before().unwrap())
+                        .await?
+                    {
+                        Some(o) => stakes.push((o, false)),
+                        None => Err(SuiRpcInputError::UserInputError(
+                            UserInputError::ObjectNotFound {
+                                object_id: oref.0,
+                                version: None,
+                            },
+                        ))?,
+                    }
+                }
+                ObjectRead::NotExists(id) => Err(SuiRpcInputError::UserInputError(
+                    UserInputError::ObjectNotFound {
+                        object_id: id,
+                        version: None,
+                    },
+                ))?,
+            }
+        }
+
+        Ok(stakes)
     }
 
     fn get_system_state(&self) -> Result<SuiSystemState, Error> {
@@ -544,6 +513,41 @@ fn test_apys_calculation_filter_outliers() {
 // APY_e = (ER_e+1 / ER_e) ^ 365
 fn calculate_apy((rate_e, rate_e_1): (PoolTokenExchangeRate, PoolTokenExchangeRate)) -> f64 {
     (rate_e.rate() / rate_e_1.rate()).powf(365.0) - 1.0
+}
+
+fn stake_status(
+    epoch: u64,
+    activation_epoch: u64,
+    principal: u64,
+    exists: bool,
+    current_rate: Option<&PoolTokenExchangeRate>,
+    rate_table: &ValidatorExchangeRates,
+) -> StakeStatus {
+    if !exists {
+        StakeStatus::Unstaked
+    } else if epoch >= activation_epoch {
+        let estimated_reward = if let Some(current_rate) = current_rate {
+            let stake_rate = rate_table
+                .rates
+                .iter()
+                .find_map(|(epoch, rate)| {
+                    if *epoch == activation_epoch {
+                        Some(rate.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+            let estimated_reward =
+                ((stake_rate.rate() / current_rate.rate()) - 1.0) * principal as f64;
+            max(0, estimated_reward.round() as u64)
+        } else {
+            0
+        };
+        StakeStatus::Active { estimated_reward }
+    } else {
+        StakeStatus::Pending
+    }
 }
 
 /// Cached exchange rates for validators for the given epoch, the cache size is 1, it will be cleared when the epoch changes.
