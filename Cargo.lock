@@ -12731,6 +12731,7 @@ dependencies = [
  "rand 0.8.5",
  "rand_regex",
  "regex",
+ "schemars",
  "serde",
  "serde_json",
  "serde_with",
