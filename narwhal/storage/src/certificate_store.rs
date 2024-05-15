@@ -180,51 +180,6 @@ impl Cache for CertificateStoreCache {
     }
 }
 
-/// An implementation that basically disables the caching functionality when
-/// used for CertificateStore.
-#[derive(Clone)]
-struct NoCache {}
-
-impl Cache for NoCache {
-    fn write(&self, _certificate: Certificate) {
-        // no-op
-    }
-
-    fn write_all(&self, _certificate: Vec<Certificate>) {
-        // no-op
-    }
-
-    fn read(&self, _digest: &CertificateDigest) -> Option<Certificate> {
-        None
-    }
-
-    fn read_all(
-        &self,
-        digests: Vec<CertificateDigest>,
-    ) -> Vec<(CertificateDigest, Option<Certificate>)> {
-        digests.into_iter().map(|digest| (digest, None)).collect()
-    }
-
-    fn contains(&self, _digest: &CertificateDigest) -> bool {
-        false
-    }
-
-    fn multi_contains<'a>(
-        &self,
-        digests: impl Iterator<Item = &'a CertificateDigest>,
-    ) -> Vec<bool> {
-        digests.map(|_| false).collect()
-    }
-
-    fn remove(&self, _digest: &CertificateDigest) {
-        // no-op
-    }
-
-    fn remove_all(&self, _digests: Vec<CertificateDigest>) {
-        // no-op
-    }
-}
-
 /// The main storage when we have to deal with certificates. It maintains
 /// two storages, one main which saves the certificates by their ids, and a
 /// secondary one which acts as an index to allow us fast retrieval based

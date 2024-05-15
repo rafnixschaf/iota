@@ -161,7 +161,7 @@ impl OnDiskCompiledPackage {
                 p.parent().unwrap(),
             )
         };
-        let package = serde_yaml::from_slice::<OnDiskPackage>(&buf)?;
+        let package = serde_yml::from_slice::<OnDiskPackage>(&buf)?;
         assert!(build_path.ends_with(CompiledPackageLayout::Root.path()));
         let root_path = build_path.join(package.compiled_package_info.package_name.as_str());
         Ok(Self { root_path, package })
@@ -706,7 +706,7 @@ impl CompiledPackage {
 
         on_disk_package.save_under(
             CompiledPackageLayout::BuildInfo.path(),
-            serde_yaml::to_string(&on_disk_package.package)?.as_bytes(),
+            serde_yml::to_string(&on_disk_package.package)?.as_bytes(),
         )?;
 
         Ok(on_disk_package)

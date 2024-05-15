@@ -203,17 +203,17 @@ fn main() {
     let registry = get_registry().unwrap();
     match options.action {
         Action::Print => {
-            let content = serde_yaml::to_string(&registry).unwrap();
+            let content = serde_yml::to_string(&registry).unwrap();
             println!("{content}");
         }
         Action::Record => {
-            let content = serde_yaml::to_string(&registry).unwrap();
+            let content = serde_yml::to_string(&registry).unwrap();
             let mut f = File::create(FILE_PATH).unwrap();
             writeln!(f, "{}", content).unwrap();
         }
         Action::Test => {
             let reference = std::fs::read_to_string(FILE_PATH).unwrap();
-            let content: String = serde_yaml::to_string(&registry).unwrap() + "\n";
+            let content: String = serde_yml::to_string(&registry).unwrap() + "\n";
             assert_str_eq!(&reference, &content);
         }
     }

@@ -21,7 +21,7 @@ jsonrpsee.workspace = true
 serde = { version = "1.0.144", features = ["derive"] }
 tempfile = "3.3.0"
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-toml = { version = "0.7.4", features = ["preserve_order"] }
+toml = { version = "0.8.14", features = ["preserve_order"] }
 tracing = "0.1.36"
 url = "2.3.1"
 

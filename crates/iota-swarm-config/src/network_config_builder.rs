@@ -422,8 +422,8 @@ mod tests {
 
         let g = Genesis::new(genesis);
 
-        let mut s = serde_yaml::to_string(&g).unwrap();
-        let loaded_genesis: Genesis = serde_yaml::from_str(&s).unwrap();
+        let mut s = serde_yml::to_string(&g).unwrap();
+        let loaded_genesis: Genesis = serde_yml::from_str(&s).unwrap();
         loaded_genesis
             .genesis()
             .unwrap()
@@ -433,7 +433,7 @@ mod tests {
 
         // If both in-place and file location are provided, prefer the in-place variant
         s.push_str("\ngenesis-file-location: path/to/file");
-        let loaded_genesis: Genesis = serde_yaml::from_str(&s).unwrap();
+        let loaded_genesis: Genesis = serde_yml::from_str(&s).unwrap();
         loaded_genesis
             .genesis()
             .unwrap()
@@ -476,8 +476,8 @@ mod test {
         let network_config = crate::network_config_builder::ConfigBuilder::new(&dir).build();
         let genesis = network_config.genesis;
 
-        let s = serde_yaml::to_string(&genesis).unwrap();
-        let from_s: Genesis = serde_yaml::from_str(&s).unwrap();
+        let s = serde_yml::to_string(&genesis).unwrap();
+        let from_s: Genesis = serde_yml::from_str(&s).unwrap();
         // cache the digest so that the comparison succeeds.
         from_s.checkpoint_contents().digest();
         assert_eq!(genesis, from_s);

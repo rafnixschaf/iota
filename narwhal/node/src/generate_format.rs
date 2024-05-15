@@ -171,11 +171,11 @@ fn main() {
     let registry = get_registry().unwrap();
     match options.action {
         Action::Print => {
-            let content = serde_yaml::to_string(&registry).unwrap();
+            let content = serde_yml::to_string(&registry).unwrap();
             println!("{content}");
         }
         Action::Record => {
-            let content = serde_yaml::to_string(&registry).unwrap();
+            let content = serde_yml::to_string(&registry).unwrap();
             let mut f = File::create(FILE_PATH).unwrap();
             writeln!(f, "{}", content).unwrap();
         }
@@ -184,7 +184,7 @@ fn main() {
             // cargo -q run --example narwhal-generate-format -- print >
             // tests/staged/narwhal.yaml
             let reference = std::fs::read_to_string(FILE_PATH).unwrap();
-            let reference: Registry = serde_yaml::from_str(&reference).unwrap();
+            let reference: Registry = serde_yml::from_str(&reference).unwrap();
             pretty_assertions::assert_eq!(reference, registry);
         }
     }

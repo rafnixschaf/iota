@@ -290,7 +290,7 @@ impl IotaValidatorCommand {
                 };
                 // TODO set key files permission
                 let validator_info_file_name = dir.join("validator.info");
-                let validator_info_bytes = serde_yaml::to_string(&validator_info)?;
+                let validator_info_bytes = serde_yml::to_string(&validator_info)?;
                 fs::write(validator_info_file_name.clone(), validator_info_bytes)?;
                 println!(
                     "Generated validator info file: {:?}.",
@@ -303,7 +303,7 @@ impl IotaValidatorCommand {
                 let validator_info_bytes = fs::read(file)?;
                 // Note: we should probably rename the struct or evolve it accordingly.
                 let validator_info: GenesisValidatorInfo =
-                    serde_yaml::from_slice(&validator_info_bytes)?;
+                    serde_yml::from_slice(&validator_info_bytes)?;
                 let validator = validator_info.info;
 
                 let args = vec![

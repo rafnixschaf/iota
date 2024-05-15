@@ -21,7 +21,7 @@ rand.workspace = true
 reqwest.workspace = true
 serde = { workspace = true, features = ["derive", "rc"] }
 serde_with.workspace = true
-serde_yaml.workspace = true
+serde_yml.workspace = true
 tracing.workspace = true
 
 iota-keys.workspace = true

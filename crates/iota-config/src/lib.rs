@@ -87,13 +87,13 @@ where
         trace!("Reading config from {}", path.display());
         let reader = fs::File::open(path)
             .with_context(|| format!("Unable to load config from {}", path.display()))?;
-        Ok(serde_yaml::from_reader(reader)?)
+        Ok(serde_yml::from_reader(reader)?)
     }
 
     fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), anyhow::Error> {
         let path = path.as_ref();
         trace!("Writing config to {}", path.display());
-        let config = serde_yaml::to_string(&self)?;
+        let config = serde_yml::to_string(&self)?;
         fs::write(path, config)
             .with_context(|| format!("Unable to save config to {}", path.display()))?;
         Ok(())

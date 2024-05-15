@@ -1020,9 +1020,9 @@ mod tests {
     fn serialize_genesis_from_file() {
         let g = Genesis::new_from_file("path/to/file");
 
-        let s = serde_yaml::to_string(&g).unwrap();
+        let s = serde_yml::to_string(&g).unwrap();
         assert_eq!("---\ngenesis-file-location: path/to/file\n", s);
-        let loaded_genesis: Genesis = serde_yaml::from_str(&s).unwrap();
+        let loaded_genesis: Genesis = serde_yml::from_str(&s).unwrap();
         assert_eq!(g, loaded_genesis);
     }
 
@@ -1030,7 +1030,7 @@ mod tests {
     fn fullnode_template() {
         const TEMPLATE: &str = include_str!("../data/fullnode-template.yaml");
 
-        let _template: NodeConfig = serde_yaml::from_str(TEMPLATE).unwrap();
+        let _template: NodeConfig = serde_yml::from_str(TEMPLATE).unwrap();
     }
 
     #[test]
@@ -1055,7 +1055,7 @@ mod tests {
         .unwrap();
 
         const TEMPLATE: &str = include_str!("../data/fullnode-template-with-path.yaml");
-        let template: NodeConfig = serde_yaml::from_str(TEMPLATE).unwrap();
+        let template: NodeConfig = serde_yml::from_str(TEMPLATE).unwrap();
         assert_eq!(
             template.protocol_key_pair().public(),
             protocol_key_pair.public()

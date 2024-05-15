@@ -52,7 +52,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut file = File::open(opts.config)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let config: Config = serde_yaml::from_str(&contents)?;
+    let config: Config = serde_yml::from_str(&contents)?;
 
     let client = {
         let c = reqwest::Client::builder()

@@ -10,7 +10,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.71"
-base64 = "0.21.2"
+base64 = "0.22.1"
 diesel = { version = "2.1.0", features = ["postgres"] }
 dotenvy = "0.15"
 fastcrypto = { workspace = true, features = ["copy_key"] }

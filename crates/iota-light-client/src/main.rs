@@ -121,7 +121,7 @@ fn read_checkpoint_list(config: &Config) -> anyhow::Result<CheckpointsList> {
     checkpoints_path.push("checkpoints.yaml");
     // Read the resulting file and parse the yaml checkpoint list
     let reader = fs::File::open(checkpoints_path.clone())?;
-    Ok(serde_yaml::from_reader(reader)?)
+    Ok(serde_yml::from_reader(reader)?)
 }
 
 fn read_checkpoint(
@@ -182,7 +182,7 @@ fn write_checkpoint_list(
     let mut checkpoints_path = config.checkpoint_summary_dir.clone();
     checkpoints_path.push("checkpoints.yaml");
     let mut writer = fs::File::create(checkpoints_path.clone())?;
-    let bytes = serde_yaml::to_vec(&checkpoints_list)?;
+    let bytes = serde_yml::to_vec(&checkpoints_list)?;
     writer
         .write_all(&bytes)
         .map_err(|_| anyhow!("Unable to serialize checkpoint list"))
@@ -462,7 +462,7 @@ pub async fn main() {
         .unwrap_or_else(|| panic!("Need a config file path"));
     let reader = fs::File::open(path.clone())
         .unwrap_or_else(|_| panic!("Unable to load config from {}", path.display()));
-    let config: Config = serde_yaml::from_reader(reader).unwrap();
+    let config: Config = serde_yml::from_reader(reader).unwrap();
 
     // Print config parameters
     println!(

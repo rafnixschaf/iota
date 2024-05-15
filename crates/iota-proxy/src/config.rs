@@ -109,7 +109,7 @@ fn remote_write_url() -> String {
 pub fn load<P: AsRef<std::path::Path>, T: DeserializeOwned + Serialize>(path: P) -> Result<T> {
     let path = path.as_ref();
     debug!("Reading config from {:?}", path);
-    Ok(serde_yaml::from_reader(
+    Ok(serde_yml::from_reader(
         std::fs::File::open(path).context(format!("cannot open {:?}", path))?,
     )?)
 }
@@ -121,6 +121,6 @@ mod tests {
     fn config_load() {
         const TEMPLATE: &str = include_str!("./data/config.yaml");
 
-        let _template: ProxyConfig = serde_yaml::from_str(TEMPLATE).unwrap();
+        let _template: ProxyConfig = serde_yml::from_str(TEMPLATE).unwrap();
     }
 }

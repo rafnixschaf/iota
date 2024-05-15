@@ -31,7 +31,7 @@ fn malloc_size_of_derive(s: synstructure::Structure) -> proc_macro2::TokenStream
             .ast()
             .attrs
             .iter()
-            .any(|attr| match attr.parse_meta().unwrap() {
+            .any(|attr| match attr.parse_args().unwrap() {
                 syn::Meta::Path(ref path) | syn::Meta::List(syn::MetaList { ref path, .. })
                     if path.is_ident("ignore_malloc_size_of") =>
                 {

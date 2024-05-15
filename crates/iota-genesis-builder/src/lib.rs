@@ -548,7 +548,7 @@ impl Builder {
 
         // Load parameters
         let parameters_file = path.join(GENESIS_BUILDER_PARAMETERS_FILE);
-        let parameters = serde_yaml::from_slice(
+        let parameters = serde_yml::from_slice(
             &fs::read(parameters_file).context("unable to read genesis parameters file")?,
         )
         .context("unable to deserialize genesis parameters")?;
@@ -573,9 +573,8 @@ impl Builder {
 
             let path = entry.path();
             let validator_info_bytes = fs::read(path)?;
-            let validator_info: GenesisValidatorInfo =
-                serde_yaml::from_slice(&validator_info_bytes)
-                    .with_context(|| format!("unable to load validator info for {path}"))?;
+            let validator_info: GenesisValidatorInfo = serde_yml::from_slice(&validator_info_bytes)
+                .with_context(|| format!("unable to load validator info for {path}"))?;
             committee.insert(validator_info.info.protocol_key(), validator_info);
         }
 
@@ -638,7 +637,7 @@ impl Builder {
 
         // Write parameters
         let parameters_file = path.join(GENESIS_BUILDER_PARAMETERS_FILE);
-        fs::write(parameters_file, serde_yaml::to_string(&self.parameters)?)?;
+        fs::write(parameters_file, serde_yml::to_string(&self.parameters)?)?;
 
         if let Some(token_distribution_schedule) = &self.token_distribution_schedule {
             token_distribution_schedule.to_csv(fs::File::create(
@@ -660,7 +659,7 @@ impl Builder {
         fs::create_dir_all(&committee_dir)?;
 
         for (_pubkey, validator) in self.validators {
-            let validator_info_bytes = serde_yaml::to_string(&validator)?;
+            let validator_info_bytes = serde_yml::to_string(&validator)?;
             fs::write(
                 committee_dir.join(validator.info.name()),
                 validator_info_bytes,

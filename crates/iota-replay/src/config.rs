@@ -76,7 +76,7 @@ impl ReplayableNetworkConfigSet {
             })?;
         let reader = BufReader::new(file);
         let mut config: ReplayableNetworkConfigSet =
-            serde_yaml::from_reader(reader).map_err(|err| {
+            serde_yml::from_reader(reader).map_err(|err| {
                 ReplayEngineError::UnableToOpenYamlFile {
                     path: path.as_os_str().to_string_lossy().to_string(),
                     err: err.to_string(),
@@ -94,7 +94,7 @@ impl ReplayableNetworkConfigSet {
                 path: path.as_os_str().to_string_lossy().to_string(),
                 err: err.to_string(),
             })?;
-        serde_yaml::to_writer(file, self).map_err(|err| {
+        serde_yml::to_writer(file, self).map_err(|err| {
             ReplayEngineError::UnableToWriteYamlFile {
                 path: path.as_os_str().to_string_lossy().to_string(),
                 err: err.to_string(),
