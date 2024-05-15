@@ -48,6 +48,8 @@ use sui_types::{
 
 use super::types::snapshot::OutputHeader;
 use crate::process_package;
+use crate::stardust::native_token::package_builder;
+use crate::stardust::native_token::package_data::NativeTokenPackageData;
 
 /// The dependencies of the generated packages for native tokens.
 pub const PACKAGE_DEPS: [ObjectID; 4] = [
@@ -152,9 +154,10 @@ impl Migration {
     }
 }
 
-// stub of package generation and build logic
-fn generate_package(_foundry: &FoundryOutput) -> Result<CompiledPackage> {
-    todo!()
+// Build a `CompiledPackage` from a given `FoundryOutput`.
+fn generate_package(foundry: &FoundryOutput) -> Result<CompiledPackage> {
+    let native_token_data = NativeTokenPackageData::try_from(foundry)?;
+    package_builder::build_and_compile(native_token_data)
 }
 
 /// Creates the objects that map to the stardust UTXO ledger.
@@ -294,7 +297,12 @@ impl Executor {
             let deps = self.checked_system_packages();
             let pt = {
                 let mut builder = ProgrammableTransactionBuilder::new();
-                builder.command(Command::Publish(modules, PACKAGE_DEPS.into()));
+                let upgrade_cap = builder.command(Command::Publish(modules, PACKAGE_DEPS.into()));
+                // We make a dummy transfer because the `UpgradeCap` does
+                // not have the drop ability.
+                //
+                // We ignore it in the genesis, to render the package immutable.
+                builder.transfer_arg(Default::default(), upgrade_cap);
                 builder.finish()
             };
             let InnerTemporaryStore { written, .. } = self.execute_pt_unmetered(deps, pt)?;
@@ -320,10 +328,8 @@ impl Executor {
                 minted_coin_id.expect("a coin must have been minted"),
                 coin_type_origin.expect("the published package should include a type for the coin"),
             );
-            self.native_tokens.insert(
-                *foundry.native_tokens()[0].token_id(),
-                (minted_coin_id, coin_type_origin),
-            );
+            self.native_tokens
+                .insert(foundry.token_id(), (minted_coin_id, coin_type_origin));
             self.store.finish(
                 written
                     .into_iter()
