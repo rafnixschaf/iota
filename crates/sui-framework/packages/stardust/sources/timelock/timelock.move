@@ -41,6 +41,11 @@ module stardust::timelock {
         locked
     }
 
+    /// Function to get the expiration timestamp of a `TimeLock`.
+    public fun expire_timestamp_ms<T: store>(self: &TimeLock<T>): u64 {
+        self.expire_timestamp_ms
+    }
+
     /// Function to check if a `TimeLock` is locked.
     public fun is_locked<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): bool {
         self.remaining_time(ctx) > 0
@@ -53,7 +58,7 @@ module stardust::timelock {
         let current_timestamp_ms = ctx.epoch_timestamp_ms();
 
         // Check if the lock has expired.
-        if (self.expire_timestamp_ms < current_timestamp_ms) {
+        if (self.expire_timestamp_ms() < current_timestamp_ms) {
             return 0
         };
 
@@ -64,6 +69,11 @@ module stardust::timelock {
     /// Function to get the locked object of a `TimeLock`.
     public fun locked<T: store>(self: &TimeLock<T>): &T {
         &self.locked
+    }
+
+    /// Function to get a mutable reference to the locked object of a `TimeLock`.
+    public(package) fun locked_mut<T: store>(self: &mut TimeLock<T>): &mut T {
+        &mut self.locked
     }
 
     /// An utility function to pack a `TimeLock`.
