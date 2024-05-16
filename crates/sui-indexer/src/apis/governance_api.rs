@@ -24,6 +24,9 @@ use sui_types::{
     sui_system_state::{sui_system_state_summary::SuiSystemStateSummary, PoolTokenExchangeRate},
 };
 
+/// Maximum amount of staked objects for querying.
+const MAX_QUERY_STAKED_OBJECTS: usize = 1000;
+
 #[derive(Clone)]
 pub struct GovernanceReadApi {
     inner: IndexerReader,
@@ -106,8 +109,7 @@ impl GovernanceReadApi {
                     MoveObjectType::staked_sui().into(),
                 )),
                 None,
-                // Allow querying for up to 1000 staked objects
-                1000,
+                MAX_QUERY_STAKED_OBJECTS,
             )
             .await?
         {
@@ -132,8 +134,7 @@ impl GovernanceReadApi {
                     MoveObjectType::timelocked_staked_sui().into(),
                 )),
                 None,
-                // Allow querying for up to 1000 staked objects
-                1000,
+                MAX_QUERY_STAKED_OBJECTS,
             )
             .await?
         {
@@ -275,13 +276,7 @@ fn stake_status(
             let stake_rate = rate_table
                 .rates
                 .iter()
-                .find_map(|(epoch, rate)| {
-                    if *epoch == activation_epoch {
-                        Some(rate.clone())
-                    } else {
-                        None
-                    }
-                })
+                .find_map(|(epoch, rate)| (*epoch == activation_epoch).then(|| rate.clone()))
                 .unwrap_or_default();
             let estimated_reward =
                 ((stake_rate.rate() / current_rate.rate()) - 1.0) * principal as f64;

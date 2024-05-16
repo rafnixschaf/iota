@@ -99,17 +99,12 @@ impl GovernanceReadApi {
             return Ok(vec![]);
         }
 
-        let stakes: Vec<Result<(StakedSui, bool), SuiError>> = self
+        let stakes: Vec<(StakedSui, bool)> = self
             .stakes_with_status(stakes_read.into_iter())
             .await?
             .into_iter()
-            .map(|(o, b)| match StakedSui::try_from(&o) {
-                Ok(stake) => Ok((stake, b)),
-                Err(err) => Err(err),
-            })
-            .collect();
-        let stakes: Result<Vec<(StakedSui, bool)>, SuiError> = stakes.into_iter().collect();
-        let stakes = stakes?;
+            .map(|(o, b)| StakedSui::try_from(&o).map(|stake| (stake, b)))
+            .collect::<Result<_, _>>()?;
 
         self.get_delegated_stakes(stakes).await
     }
@@ -148,18 +143,12 @@ impl GovernanceReadApi {
             return Ok(vec![]);
         }
 
-        let stakes: Vec<Result<(TimelockedStakedSui, bool), SuiError>> = self
+        let stakes: Vec<(TimelockedStakedSui, bool)> = self
             .stakes_with_status(stakes_read.into_iter())
             .await?
             .into_iter()
-            .map(|(o, b)| match TimelockedStakedSui::try_from(&o) {
-                Ok(stake) => Ok((stake, b)),
-                Err(err) => Err(err),
-            })
-            .collect();
-        let stakes: Result<Vec<(TimelockedStakedSui, bool)>, SuiError> =
-            stakes.into_iter().collect();
-        let stakes = stakes?;
+            .map(|(o, b)| TimelockedStakedSui::try_from(&o).map(|stake| (stake, b)))
+            .collect::<Result<_, _>>()?;
 
         self.get_delegated_timelocked_stakes(stakes).await
     }
@@ -319,20 +308,20 @@ impl GovernanceReadApi {
         for stake in iter {
             match stake {
                 ObjectRead::Exists(_, o, _) => stakes.push((o, true)),
-                ObjectRead::Deleted(oref) => {
-                    match self
+                ObjectRead::Deleted((object_id, version, _)) => {
+                    let Some(o) = self
                         .state
-                        .find_object_lt_or_eq_version(&oref.0, &oref.1.one_before().unwrap())
+                        .find_object_lt_or_eq_version(&object_id, &version.one_before().unwrap())
                         .await?
-                    {
-                        Some(o) => stakes.push((o, false)),
-                        None => Err(SuiRpcInputError::UserInputError(
+                    else {
+                        Err(SuiRpcInputError::UserInputError(
                             UserInputError::ObjectNotFound {
-                                object_id: oref.0,
+                                object_id,
                                 version: None,
                             },
-                        ))?,
-                    }
+                        ))?
+                    };
+                    stakes.push((o, false));
                 }
                 ObjectRead::NotExists(id) => Err(SuiRpcInputError::UserInputError(
                     UserInputError::ObjectNotFound {
@@ -530,13 +519,7 @@ fn stake_status(
             let stake_rate = rate_table
                 .rates
                 .iter()
-                .find_map(|(epoch, rate)| {
-                    if *epoch == activation_epoch {
-                        Some(rate.clone())
-                    } else {
-                        None
-                    }
-                })
+                .find_map(|(epoch, rate)| (*epoch == activation_epoch).then(|| rate.clone()))
                 .unwrap_or_default();
             let estimated_reward =
                 ((stake_rate.rate() / current_rate.rate()) - 1.0) * principal as f64;
