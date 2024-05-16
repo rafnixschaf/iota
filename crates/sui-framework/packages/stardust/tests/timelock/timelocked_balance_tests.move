@@ -223,7 +223,7 @@ module stardust::timelocked_balance_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_balance::ENotEnough)]
+    #[expected_failure(abort_code = timelocked_balance::ENotEnoughToSplit)]
     fun test_split_same_value_from_timelocked_balances() {
         // Set up a test environment.
         let sender = @0xA;
@@ -249,7 +249,7 @@ module stardust::timelocked_balance_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_balance::ENotEnough)]
+    #[expected_failure(abort_code = timelocked_balance::ENotEnoughToSplit)]
     fun test_split_bigger_value_from_timelocked_balances() {
         // Set up a test environment.
         let sender = @0xA;
