@@ -26,7 +26,7 @@ pub struct TimelockedStakedSui {
     /// A self-custodial object holding the staked SUI tokens.
     staked_sui: StakedSui,
     /// This is the epoch time stamp of when the lock expires.
-    expire_timestamp_ms: u64,
+    expiration_timestamp_ms: u64,
 }
 
 impl TimelockedStakedSui {
@@ -74,9 +74,9 @@ impl TimelockedStakedSui {
         self.staked_sui.principal()
     }
 
-    /// Get the TimelockedStakedSui's `expire_timestamp_ms`.
-    pub fn expire_timestamp_ms(&self) -> u64 {
-        self.expire_timestamp_ms
+    /// Get the TimelockedStakedSui's `expiration_timestamp_ms`.
+    pub fn expiration_timestamp_ms(&self) -> u64 {
+        self.expiration_timestamp_ms
     }
 }
 

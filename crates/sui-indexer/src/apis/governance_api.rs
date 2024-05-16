@@ -251,7 +251,7 @@ impl GovernanceReadApi {
                     stake_active_epoch: stake.activation_epoch(),
                     principal: stake.principal(),
                     status,
-                    expire_timestamp_ms: stake.expire_timestamp_ms(),
+                    expiration_timestamp_ms: stake.expiration_timestamp_ms(),
                 })
             }
             delegated_stakes.push(DelegatedTimelockedStake {

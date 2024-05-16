@@ -970,7 +970,7 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
     let (address, keypair) = deterministic_random_account_key();
 
     let principal = 100_000_000_000;
-    let expire_timestamp_ms = u64::MAX;
+    let expiration_timestamp_ms = u64::MAX;
 
     let timelock_sui = unsafe {
         MoveObject::new_from_execution(
@@ -980,7 +980,7 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
             TimeLock::<sui_types::balance::Balance>::new(
                 UID::new(ObjectID::random()),
                 sui_types::balance::Balance::new(principal),
-                expire_timestamp_ms,
+                expiration_timestamp_ms,
             )
             .to_bcs_bytes(),
             &ProtocolConfig::get_for_min_version(),
@@ -1074,7 +1074,7 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
     assert_eq!(validator, staked_sui.validator_address);
     assert_eq!(principal, stake.principal);
     assert!(matches!(stake.status, StakeStatus::Pending));
-    assert_eq!(expire_timestamp_ms, stake.expire_timestamp_ms);
+    assert_eq!(expiration_timestamp_ms, stake.expiration_timestamp_ms);
 
     // Request the DelegatedTimelockedStake one more time
     let staked_sui_copy = http_client
@@ -1100,7 +1100,10 @@ async fn test_timelocked_staking() -> Result<(), anyhow::Error> {
     assert_eq!(stake.stake_active_epoch, stake_copy.stake_active_epoch);
     assert_eq!(stake.principal, stake_copy.principal);
     assert!(matches!(stake_copy.status, StakeStatus::Pending));
-    assert_eq!(stake.expire_timestamp_ms, stake_copy.expire_timestamp_ms);
+    assert_eq!(
+        stake.expiration_timestamp_ms,
+        stake_copy.expiration_timestamp_ms
+    );
 
     Ok(())
 }
@@ -1114,7 +1117,7 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
     let (address, keypair) = deterministic_random_account_key();
 
     let principal = 100_000_000_000;
-    let expire_timestamp_ms = u64::MAX;
+    let expiration_timestamp_ms = u64::MAX;
 
     let timelock_sui = unsafe {
         MoveObject::new_from_execution(
@@ -1124,7 +1127,7 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
             TimeLock::<sui_types::balance::Balance>::new(
                 UID::new(ObjectID::random()),
                 sui_types::balance::Balance::new(principal),
-                expire_timestamp_ms,
+                expiration_timestamp_ms,
             )
             .to_bcs_bytes(),
             &ProtocolConfig::get_for_min_version(),
@@ -1219,7 +1222,7 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
     assert_eq!(validator, staked_sui.validator_address);
     assert_eq!(principal, stake.principal);
     assert!(matches!(stake.status, StakeStatus::Pending));
-    assert_eq!(expire_timestamp_ms, stake.expire_timestamp_ms);
+    assert_eq!(expiration_timestamp_ms, stake.expiration_timestamp_ms);
 
     // Sleep for 10 seconds
     sleep(Duration::from_millis(10000)).await;
@@ -1286,7 +1289,10 @@ async fn test_timelocked_unstaking() -> Result<(), anyhow::Error> {
     assert_eq!(stake.stake_active_epoch, stake_copy.stake_active_epoch);
     assert_eq!(stake.principal, stake_copy.principal);
     assert!(matches!(stake_copy.status, StakeStatus::Unstaked));
-    assert_eq!(stake.expire_timestamp_ms, stake_copy.expire_timestamp_ms);
+    assert_eq!(
+        stake.expiration_timestamp_ms,
+        stake_copy.expiration_timestamp_ms
+    );
 
     Ok(())
 }
