@@ -18,7 +18,7 @@ module stardust::timelocked_balance {
     /// Join two `TimeLock<Balance<T>>` together.
     public fun join<T>(self: &mut TimeLock<Balance<T>>, other: TimeLock<Balance<T>>) {
         // Check the preconditions.
-        assert!(self.expire_timestamp_ms() == other.expire_timestamp_ms(), EDifferentExpirationTime);
+        assert!(self.expiration_timestamp_ms() == other.expiration_timestamp_ms(), EDifferentExpirationTime);
 
         // Unpack the time-locked balance.
         let (value, _) = timelock::unpack(other);
@@ -53,6 +53,6 @@ module stardust::timelocked_balance {
         let value = self.locked_mut().split(value);
 
         // Pack the splitted balance into a timelock.
-        timelock::pack(value, self.expire_timestamp_ms(), ctx)
+        timelock::pack(value, self.expiration_timestamp_ms(), ctx)
     }
 }

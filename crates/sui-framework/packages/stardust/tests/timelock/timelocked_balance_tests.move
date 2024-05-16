@@ -29,7 +29,7 @@ module stardust::timelocked_balance_tests {
         timelocked_balance::join(&mut timelock1, timelock2);
     
         // Check the joined timelock.
-        assert!(timelock1.expire_timestamp_ms() == 100, 1);
+        assert!(timelock1.expiration_timestamp_ms() == 100, 1);
         assert!(timelock1.locked().value() == 25, 2);
 
         // Cleanup.
@@ -91,7 +91,7 @@ module stardust::timelocked_balance_tests {
         timelocked_balance::join_vec(&mut timelock1, others);
     
         // Check the joined timelock.
-        assert!(timelock1.expire_timestamp_ms() == 100, 1);
+        assert!(timelock1.expiration_timestamp_ms() == 100, 1);
         assert!(timelock1.locked().value() == 70, 2);
 
         // Cleanup.
@@ -119,7 +119,7 @@ module stardust::timelocked_balance_tests {
         timelocked_balance::join_vec(&mut timelock, others);
     
         // Check the joined timelock.
-        assert!(timelock.expire_timestamp_ms() == 100, 1);
+        assert!(timelock.expiration_timestamp_ms() == 100, 1);
         assert!(timelock.locked().value() == 10, 2);
 
         // Cleanup.
@@ -179,11 +179,11 @@ module stardust::timelocked_balance_tests {
         let splitted = timelocked_balance::split(&mut original, 3, scenario.ctx());
     
         // Check the original timelock.
-        assert!(original.expire_timestamp_ms() == 100, 1);
+        assert!(original.expiration_timestamp_ms() == 100, 1);
         assert!(original.locked().value() == 7, 2);
 
         // Check the splitted timelock.
-        assert!(splitted.expire_timestamp_ms() == 100, 3);
+        assert!(splitted.expiration_timestamp_ms() == 100, 3);
         assert!(splitted.locked().value() == 3, 4);
 
         // Cleanup.

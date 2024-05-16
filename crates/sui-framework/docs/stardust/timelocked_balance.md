@@ -71,7 +71,7 @@ Join two <code>TimeLock&lt;Balance&lt;T&gt;&gt;</code> together.
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelocked_balance.md#0x107a_timelocked_balance_join">join</a>&lt;T&gt;(self: &<b>mut</b> TimeLock&lt;Balance&lt;T&gt;&gt;, other: TimeLock&lt;Balance&lt;T&gt;&gt;) {
     // Check the preconditions.
-    <b>assert</b>!(self.expire_timestamp_ms() == other.expire_timestamp_ms(), <a href="timelocked_balance.md#0x107a_timelocked_balance_EDifferentExpirationTime">EDifferentExpirationTime</a>);
+    <b>assert</b>!(self.expiration_timestamp_ms() == other.expiration_timestamp_ms(), <a href="timelocked_balance.md#0x107a_timelocked_balance_EDifferentExpirationTime">EDifferentExpirationTime</a>);
 
     // Unpack the time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
     <b>let</b> (value, _) = <a href="timelock.md#0x107a_timelock_unpack">timelock::unpack</a>(other);
@@ -146,7 +146,7 @@ Split a <code>TimeLock&lt;Balance&lt;T&gt;&gt;</code> and take a sub balance fro
     <b>let</b> value = self.locked_mut().<a href="timelocked_balance.md#0x107a_timelocked_balance_split">split</a>(value);
 
     // Pack the splitted <a href="../sui-framework/balance.md#0x2_balance">balance</a> into a <a href="timelock.md#0x107a_timelock">timelock</a>.
-    <a href="timelock.md#0x107a_timelock_pack">timelock::pack</a>(value, self.expire_timestamp_ms(), ctx)
+    <a href="timelock.md#0x107a_timelock_pack">timelock::pack</a>(value, self.expiration_timestamp_ms(), ctx)
 }
 </code></pre>
 
