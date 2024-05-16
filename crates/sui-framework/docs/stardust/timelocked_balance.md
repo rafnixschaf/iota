@@ -25,7 +25,7 @@ Utility functions for time-locked balance.
 
 <a name="0x107a_timelocked_balance_ENotEnough"></a>
 
-For when trying to extract more or equal than there is.
+For when trying to extract a balance that is equal to or larger than the locked value.
 
 
 <pre><code><b>const</b> <a href="timelocked_balance.md#0x107a_timelocked_balance_ENotEnough">ENotEnough</a>: u64 = 0;

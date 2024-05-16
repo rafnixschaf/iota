@@ -8,7 +8,7 @@ module stardust::timelocked_balance {
 
     use stardust::timelock::{Self, TimeLock};
 
-    /// For when trying to extract more or equal than there is.
+    /// For when trying to extract a balance that is equal to or larger than the locked value.
     const ENotEnough: u64 = 0;
     /// For when there is an attempt to extract a zero value from a time-locked balance.
     const EZeroValueSubBalance: u64 = 1;
