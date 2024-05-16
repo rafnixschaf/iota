@@ -10,7 +10,6 @@ module isc::request {
         contract: String,
         function: String,
         args: vector<vector<u8>>,
-        sender: address,
         allowance: Option<Allowance>,
     }
 
@@ -28,7 +27,6 @@ module isc::request {
                 contract: contract,
                 function: function,
                 args: args,
-                sender: ctx.sender(),
             };
         Request{
             id: id,
