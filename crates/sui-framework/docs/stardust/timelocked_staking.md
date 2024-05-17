@@ -7,7 +7,8 @@ title: Module `0x107a::timelocked_staking`
 -  [Constants](#@Constants_0)
 -  [Function `request_add_stake`](#0x107a_timelocked_staking_request_add_stake)
 -  [Function `request_add_stake_non_entry`](#0x107a_timelocked_staking_request_add_stake_non_entry)
--  [Function `request_add_stake_mul_coin`](#0x107a_timelocked_staking_request_add_stake_mul_coin)
+-  [Function `request_add_stake_mul_bal`](#0x107a_timelocked_staking_request_add_stake_mul_bal)
+-  [Function `request_add_stake_mul_bal_with_same_ts`](#0x107a_timelocked_staking_request_add_stake_mul_bal_with_same_ts)
 -  [Function `request_withdraw_stake`](#0x107a_timelocked_staking_request_withdraw_stake)
 -  [Function `request_withdraw_stake_non_entry`](#0x107a_timelocked_staking_request_withdraw_stake_non_entry)
 -  [Function `extract_timelocked_balance`](#0x107a_timelocked_staking_extract_timelocked_balance)
@@ -125,14 +126,14 @@ The non-entry version of <code>request_add_stake</code>, which returns the time-
 
 </details>
 
-<a name="0x107a_timelocked_staking_request_add_stake_mul_coin"></a>
+<a name="0x107a_timelocked_staking_request_add_stake_mul_bal"></a>
 
-## Function `request_add_stake_mul_coin`
+## Function `request_add_stake_mul_bal`
 
-Add a time-locked to a validator's staking pool using multiple time-locked balances.
+Add a time-locked stake to a validator's staking pool using multiple time-locked balances.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_coin">request_add_stake_mul_coin</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>: &<b>mut</b> <a href="../sui-system/sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, <a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;&gt;, amount: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;u64&gt;, validator_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> entry <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_bal">request_add_stake_mul_bal</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>: &<b>mut</b> <a href="../sui-system/sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, timelocked_balances: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;&gt;, validator_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 
@@ -141,15 +142,63 @@ Add a time-locked to a validator's staking pool using multiple time-locked balan
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(<a href="../sui-framework/package.md#0x2_package">package</a>) <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_coin">request_add_stake_mul_coin</a>(
+<pre><code><b>public</b> entry <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_bal">request_add_stake_mul_bal</a>(
     <a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>: &<b>mut</b> SuiSystemState,
-    <a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;TimeLock&lt;Balance&lt;SUI&gt;&gt;&gt;,
+    <b>mut</b> timelocked_balances: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;TimeLock&lt;Balance&lt;SUI&gt;&gt;&gt;,
+    validator_address: <b>address</b>,
+    ctx: &<b>mut</b> TxContext,
+) {
+    // Create useful variables.
+    <b>let</b> (<b>mut</b> i, len) = (0, timelocked_balances.length());
+
+    // Stake all the time-locked balances.
+    <b>while</b> (i &lt; len) {
+        // Take a time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
+        <b>let</b> <a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a> = timelocked_balances.pop_back();
+
+        // Stake the time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
+        <b>let</b> <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui">timelocked_staked_sui</a> = <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_non_entry">request_add_stake_non_entry</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>, <a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>, validator_address, ctx);
+
+        // Transfer the receipt <b>to</b> the sender.
+        <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui_transfer">timelocked_staked_sui::transfer</a>(<a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui">timelocked_staked_sui</a>, ctx.sender());
+
+        i = i + 1
+    };
+
+    // Destroy the empty <a href="../move-stdlib/vector.md#0x1_vector">vector</a>.
+    <a href="../move-stdlib/vector.md#0x1_vector_destroy_empty">vector::destroy_empty</a>(timelocked_balances)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x107a_timelocked_staking_request_add_stake_mul_bal_with_same_ts"></a>
+
+## Function `request_add_stake_mul_bal_with_same_ts`
+
+Add a time-locked stake to a validator's staking pool using multiple time-locked balances with the same timestamp.
+
+
+<pre><code><b>public</b> entry <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_bal_with_same_ts">request_add_stake_mul_bal_with_same_ts</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>: &<b>mut</b> <a href="../sui-system/sui_system.md#0x3_sui_system_SuiSystemState">sui_system::SuiSystemState</a>, timelocked_balances: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;&gt;, amount: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;u64&gt;, validator_address: <b>address</b>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> entry <b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_mul_bal_with_same_ts">request_add_stake_mul_bal_with_same_ts</a>(
+    <a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>: &<b>mut</b> SuiSystemState,
+    timelocked_balances: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;TimeLock&lt;Balance&lt;SUI&gt;&gt;&gt;,
     amount: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;u64&gt;,
     validator_address: <b>address</b>,
     ctx: &<b>mut</b> TxContext,
 ) {
     // Extract required amount.
-    <b>let</b> (<a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>, timelocked_remainder_opt) = <a href="timelocked_staking.md#0x107a_timelocked_staking_extract_timelocked_balance">extract_timelocked_balance</a>(<a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>, amount, ctx);
+    <b>let</b> (<a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>, timelocked_remainder_opt) = <a href="timelocked_staking.md#0x107a_timelocked_staking_extract_timelocked_balance">extract_timelocked_balance</a>(timelocked_balances, amount, ctx);
 
     // Stake the time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
     <b>let</b> <a href="timelocked_staked_sui.md#0x107a_timelocked_staked_sui">timelocked_staked_sui</a> = <a href="timelocked_staking.md#0x107a_timelocked_staking_request_add_stake_non_entry">request_add_stake_non_entry</a>(<a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>, <a href="timelocked_balance.md#0x107a_timelocked_balance">timelocked_balance</a>, validator_address, ctx);
@@ -268,7 +317,7 @@ instead of transferring it to the sender.
 
 ## Function `extract_timelocked_balance`
 
-Extract required Balance from vector of <code>TimeLock&lt;Balance&lt;SUI&gt;&gt;</code>, returns the remainder.
+Extract required time-locked balance from a vector of <code>TimeLock&lt;Balance&lt;SUI&gt;&gt;</code>, returns the remainder.
 
 
 <pre><code><b>fun</b> <a href="timelocked_staking.md#0x107a_timelocked_staking_extract_timelocked_balance">extract_timelocked_balance</a>(balances: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;&gt;, amount: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;u64&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): (<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="timelock.md#0x107a_timelock_TimeLock">timelock::TimeLock</a>&lt;<a href="../sui-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../sui-framework/sui.md#0x2_sui_SUI">sui::SUI</a>&gt;&gt;&gt;)

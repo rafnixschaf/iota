@@ -57,16 +57,44 @@ module stardust::timelocked_staking {
         )
     }
 
-    /// Add a time-locked to a validator's staking pool using multiple time-locked balances.
-    public(package) fun request_add_stake_mul_coin(
+    /// Add a time-locked stake to a validator's staking pool using multiple time-locked balances.
+    public entry fun request_add_stake_mul_bal(
         sui_system: &mut SuiSystemState,
-        timelocked_balance: vector<TimeLock<Balance<SUI>>>,
+        mut timelocked_balances: vector<TimeLock<Balance<SUI>>>,
+        validator_address: address,
+        ctx: &mut TxContext,
+    ) {
+        // Create useful variables.
+        let (mut i, len) = (0, timelocked_balances.length());
+
+        // Stake all the time-locked balances.
+        while (i < len) {
+            // Take a time-locked balance.
+            let timelocked_balance = timelocked_balances.pop_back();
+
+            // Stake the time-locked balance.
+            let timelocked_staked_sui = request_add_stake_non_entry(sui_system, timelocked_balance, validator_address, ctx);
+
+            // Transfer the receipt to the sender.
+            timelocked_staked_sui::transfer(timelocked_staked_sui, ctx.sender());
+
+            i = i + 1
+        };
+
+        // Destroy the empty vector.
+        vector::destroy_empty(timelocked_balances)
+    }
+
+    /// Add a time-locked stake to a validator's staking pool using multiple time-locked balances with the same timestamp.
+    public entry fun request_add_stake_mul_bal_with_same_ts(
+        sui_system: &mut SuiSystemState,
+        timelocked_balances: vector<TimeLock<Balance<SUI>>>,
         amount: option::Option<u64>,
         validator_address: address,
         ctx: &mut TxContext,
     ) {
         // Extract required amount.
-        let (timelocked_balance, timelocked_remainder_opt) = extract_timelocked_balance(timelocked_balance, amount, ctx);
+        let (timelocked_balance, timelocked_remainder_opt) = extract_timelocked_balance(timelocked_balances, amount, ctx);
 
         // Stake the time-locked balance.
         let timelocked_staked_sui = request_add_stake_non_entry(sui_system, timelocked_balance, validator_address, ctx);
@@ -136,7 +164,7 @@ module stardust::timelocked_staking {
         (timelock::pack(principal, expiration_timestamp_ms, ctx), withdraw_stake)
     }
 
-    /// Extract required Balance from vector of `TimeLock<Balance<SUI>>`, returns the remainder.
+    /// Extract required time-locked balance from a vector of `TimeLock<Balance<SUI>>`, returns the remainder.
     fun extract_timelocked_balance(
         mut balances: vector<TimeLock<Balance<SUI>>>,
         amount: option::Option<u64>,
