@@ -277,9 +277,9 @@ module stardust::timelocked_stake_tests {
             let stake_sui_ids = scenario.ids_for_sender<TimelockedStakedSui>();
 
             let staked_sui1 = scenario.take_from_sender_by_id<TimelockedStakedSui>(stake_sui_ids[0]);
-            assert_eq(staked_sui1.amount(), 60 * MIST_PER_SUI);
+            assert_eq(staked_sui1.amount(), 30 * MIST_PER_SUI);
             let staked_sui2 = scenario.take_from_sender_by_id<TimelockedStakedSui>(stake_sui_ids[1]);
-            assert_eq(staked_sui2.amount(), 30 * MIST_PER_SUI);
+            assert_eq(staked_sui2.amount(), 60 * MIST_PER_SUI);
 
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
@@ -303,12 +303,12 @@ module stardust::timelocked_stake_tests {
         scenario.next_tx(STAKER_ADDR_1);
         {
             let staked_sui = scenario.take_from_sender<TimelockedStakedSui>();
-            assert_eq(staked_sui.amount(), 30 * MIST_PER_SUI);
+            assert_eq(staked_sui.amount(), 60 * MIST_PER_SUI);
 
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
 
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 130 * MIST_PER_SUI);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MIST_PER_SUI);
             assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MIST_PER_SUI);
 
             let ctx = scenario.ctx();
@@ -316,7 +316,7 @@ module stardust::timelocked_stake_tests {
             // Second unstake from VALIDATOR_ADDR_1
             timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_sui, ctx);
 
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 130 * MIST_PER_SUI);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MIST_PER_SUI);
             test_scenario::return_shared(system_state);
         };
 

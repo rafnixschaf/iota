@@ -60,10 +60,42 @@ module stardust::timelocked_staking {
     /// Add a time-locked stake to a validator's staking pool using multiple time-locked balances.
     public entry fun request_add_stake_mul_bal(
         sui_system: &mut SuiSystemState,
-        mut timelocked_balances: vector<TimeLock<Balance<SUI>>>,
+        timelocked_balances: vector<TimeLock<Balance<SUI>>>,
         validator_address: address,
         ctx: &mut TxContext,
     ) {
+        // Stake the time-locked balances.
+        let mut receipts = request_add_stake_mul_bal_non_entry(sui_system, timelocked_balances, validator_address, ctx);
+
+        // Create useful variables.
+        let (mut i, len) = (0, receipts.length());
+
+        // Send all the receipts to the sender.
+        while (i < len) {
+            // Take a receipt.
+            let receipt = receipts.pop_back();
+
+            // Transfer the receipt to the sender.
+            timelocked_staked_sui::transfer(receipt, ctx.sender());
+
+            i = i + 1
+        };
+
+        // Destroy the empty vector.
+        vector::destroy_empty(receipts)
+    }
+
+    /// The non-entry version of `request_add_stake_mul_bal`,
+    /// which returns a list of the time-locked staked SUIs instead of transferring them to the sender.
+    public fun request_add_stake_mul_bal_non_entry(
+        sui_system: &mut SuiSystemState,
+        mut timelocked_balances: vector<TimeLock<Balance<SUI>>>,
+        validator_address: address,
+        ctx: &mut TxContext,
+    ) : vector<TimelockedStakedSui> {
+        // Create a vector to store the results.
+        let mut result = vector[];
+
         // Create useful variables.
         let (mut i, len) = (0, timelocked_balances.length());
 
@@ -75,14 +107,16 @@ module stardust::timelocked_staking {
             // Stake the time-locked balance.
             let timelocked_staked_sui = request_add_stake_non_entry(sui_system, timelocked_balance, validator_address, ctx);
 
-            // Transfer the receipt to the sender.
-            timelocked_staked_sui::transfer(timelocked_staked_sui, ctx.sender());
+            // Store the created receipt.
+            result.push_back(timelocked_staked_sui);
 
             i = i + 1
         };
 
         // Destroy the empty vector.
-        vector::destroy_empty(timelocked_balances)
+        vector::destroy_empty(timelocked_balances);
+
+        result
     }
 
     /// Add a time-locked stake to a validator's staking pool using multiple time-locked balances with the same timestamp.
