@@ -9,7 +9,8 @@ use sui_types::{
     balance::Balance,
     base_types::{ObjectRef, SequenceNumber},
     collection_types::Bag,
-    move_package::TypeOrigin,
+    id::UID,
+    move_package::{MovePackage, TypeOrigin},
     object::Object,
     transaction::{Argument, InputObjects, ObjectArg},
     TypeTag, TIMELOCK_PACKAGE_ID,
@@ -63,6 +64,8 @@ pub const PACKAGE_DEPS: [ObjectID; 5] = [
 
 /// We fix the protocol version used in the migration.
 pub const MIGRATION_PROTOCOL_VERSION: u64 = 42;
+
+const NATIVE_TOKEN_BAG_KEY_TYPE: &str = "0x01::ascii::String";
 
 /// The orchestrator of the migration process.
 ///
@@ -181,6 +184,30 @@ fn generate_package(foundry: &FoundryOutput) -> Result<CompiledPackage> {
     package_builder::build_and_compile(native_token_data)
 }
 
+/// On-chain data about the objects created while
+/// publishing foundry packages
+struct FoundryLedgerData {
+    minted_coin_id: ObjectID,
+    coin_type_origin: TypeOrigin,
+    package_id: ObjectID,
+}
+
+impl FoundryLedgerData {
+    /// Store the minted coin `ObjectID` and derive data from the foundry package.
+    ///
+    /// # Panic
+    ///
+    /// Panics if the package does not contain any [`TypeOrigin`].
+    fn new(minted_coin_id: ObjectID, foundry_package: &MovePackage) -> Self {
+        Self {
+            minted_coin_id,
+            // There must be only one type created in the foundry package.
+            coin_type_origin: foundry_package.type_origin_table()[0].clone(),
+            package_id: foundry_package.id(),
+        }
+    }
+}
+
 /// Creates the objects that map to the stardust UTXO ledger.
 ///
 /// Internally uses an unmetered Move VM.
@@ -195,9 +222,9 @@ struct Executor {
     system_packages_and_objects: BTreeSet<ObjectID>,
     move_vm: Arc<MoveVM>,
     metrics: Arc<LimitsMetrics>,
-    /// Map the stardust token id [`TokenId`] to the [`ObjectID`] and of the
-    /// coin minted by the foundry and its [`TypeOrigin`].
-    native_tokens: HashMap<TokenId, (ObjectID, TypeOrigin)>,
+    /// Map the stardust token id [`TokenId`] to the on-chain info of the
+    /// published foundry objects.
+    native_tokens: HashMap<TokenId, FoundryLedgerData>,
 }
 
 impl Executor {
@@ -337,28 +364,27 @@ impl Executor {
             let InnerTemporaryStore { written, .. } = self.execute_pt_unmetered(deps, pt)?;
             // Get on-chain info
             let mut minted_coin_id = None::<ObjectID>;
-            let mut coin_type_origin = None::<TypeOrigin>;
+            let mut foundry_package = None::<&MovePackage>;
             for object in written.values() {
                 if object.is_coin() {
                     minted_coin_id = Some(object.id());
                 } else if object.is_package() {
-                    coin_type_origin = Some(
+                    foundry_package = Some(
                         object
                             .data
                             .try_as_package()
-                            .expect("already verified this is a package")
-                            // there must be only one type created in the package
-                            .type_origin_table()[0]
-                            .clone(),
+                            .expect("already verified this is a package"),
                     );
                 }
             }
-            let (minted_coin_id, coin_type_origin) = (
+            let (minted_coin_id, foundry_package) = (
                 minted_coin_id.expect("a coin must have been minted"),
-                coin_type_origin.expect("the published package should include a type for the coin"),
+                foundry_package.expect("there should be a published package"),
             );
-            self.native_tokens
-                .insert(foundry.token_id(), (minted_coin_id, coin_type_origin));
+            self.native_tokens.insert(
+                foundry.token_id(),
+                FoundryLedgerData::new(minted_coin_id, foundry_package),
+            );
             self.store.finish(
                 written
                     .into_iter()
@@ -390,7 +416,7 @@ impl Executor {
         let move_alias_object_ref = move_alias_object.compute_object_reference();
         self.store.insert_object(move_alias_object);
 
-        let (bag, version) = self.create_bag(alias.native_tokens())?;
+        let (bag, version) = self.create_bag_with_pt(alias.native_tokens())?;
         let move_alias_output =
             AliasOutput::try_from_stardust(self.tx_context.fresh_id(), &alias, bag)?;
 
@@ -435,9 +461,13 @@ impl Executor {
         Ok(())
     }
 
-    /// Create a [`Bag`] of balances of native tokens.
-    fn create_bag(&mut self, native_tokens: &NativeTokens) -> Result<(Bag, SequenceNumber)> {
-        let mut dependencies = Vec::with_capacity(native_tokens.len());
+    /// Create a [`Bag`] of balances of native tokens executing a programmable transaction block.
+    fn create_bag_with_pt(
+        &mut self,
+        native_tokens: &NativeTokens,
+    ) -> Result<(Bag, SequenceNumber)> {
+        let mut object_deps = Vec::with_capacity(native_tokens.len());
+        let mut foundry_package_deps = Vec::with_capacity(native_tokens.len());
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
             let bag = pt::bag_new(&mut builder);
@@ -446,21 +476,24 @@ impl Executor {
                     anyhow::bail!("unsupported number of tokens");
                 }
 
-                let Some((object_id, type_origin)) = self.native_tokens.get(token.token_id())
-                else {
+                let Some(foundry_ledger_data) = self.native_tokens.get(token.token_id()) else {
                     anyhow::bail!("foundry for native token has not been published");
                 };
 
-                let Some(foundry_coin) = self.store.get_object(object_id) else {
+                let Some(foundry_coin) = self.store.get_object(&foundry_ledger_data.minted_coin_id)
+                else {
                     anyhow::bail!("foundry coin should exist");
                 };
                 let object_ref = foundry_coin.compute_object_reference();
 
-                dependencies.push(object_ref);
+                object_deps.push(object_ref);
+                foundry_package_deps.push(foundry_ledger_data.package_id);
 
                 let token_type = format!(
                     "{}::{}::{}",
-                    type_origin.package, type_origin.module_name, type_origin.struct_name
+                    foundry_ledger_data.coin_type_origin.package,
+                    foundry_ledger_data.coin_type_origin.module_name,
+                    foundry_ledger_data.coin_type_origin.struct_name
                 );
                 let balance = pt::coin_balance_split(
                     &mut builder,
@@ -482,7 +515,8 @@ impl Executor {
         };
         let checked_input_objects = CheckedInputObjects::new_for_genesis(
             self.load_packages(PACKAGE_DEPS)
-                .chain(self.load_input_objects(dependencies))
+                .chain(self.load_packages(foundry_package_deps))
+                .chain(self.load_input_objects(object_deps))
                 .collect(),
         );
         let InnerTemporaryStore {
@@ -492,7 +526,11 @@ impl Executor {
         } = self.execute_pt_unmetered(checked_input_objects, pt)?;
         let bag_object = written
             .iter()
-            .find_map(|(id, object)| (!input_objects.contains_key(id)).then_some(object.clone()))
+            .filter(|(id, _)| !input_objects.contains_key(id))
+            // We filter out the dynamic-field objects that are owned by the bag
+            // and we should be left with only the bag
+            .find_map(|(_, object)| (!object.is_child_object()).then_some(object))
+            .cloned()
             .expect("the bag should have been created");
         written.remove(&bag_object.id());
         // Save the modified coins
@@ -510,17 +548,13 @@ impl Executor {
     }
 
     /// Create [`Coin`] objects representing native tokens in the ledger.
-    ///
-    /// We set the [`ObjectID`] to the `hash(hash(OutputId) || TokenId)`
-    /// so that we avoid generation based on the [`TxContext`]. The latter
-    /// depends on the order of generation, and implies that the outputs
-    /// should be sorted to attain idempotence.
     fn create_native_token_coins(
         &mut self,
         native_tokens: &NativeTokens,
         owner: SuiAddress,
     ) -> Result<()> {
-        let mut dependencies = Vec::with_capacity(native_tokens.len());
+        let mut object_deps = Vec::with_capacity(native_tokens.len());
+        let mut foundry_package_deps = Vec::with_capacity(native_tokens.len());
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
             for token in native_tokens.iter() {
@@ -528,16 +562,18 @@ impl Executor {
                     anyhow::bail!("unsupported number of tokens");
                 }
 
-                let Some((object_id, _)) = self.native_tokens.get(token.token_id()) else {
+                let Some(foundry_ledger_data) = self.native_tokens.get(token.token_id()) else {
                     anyhow::bail!("foundry for native token has not been published");
                 };
 
-                let Some(foundry_coin) = self.store.get_object(object_id) else {
+                let Some(foundry_coin) = self.store.get_object(&foundry_ledger_data.minted_coin_id)
+                else {
                     anyhow::bail!("foundry coin should exist");
                 };
                 let object_ref = foundry_coin.compute_object_reference();
 
-                dependencies.push(object_ref);
+                object_deps.push(object_ref);
+                foundry_package_deps.push(foundry_ledger_data.package_id);
 
                 // Pay using that object
                 builder.pay(vec![object_ref], vec![owner], vec![token.amount().as_u64()])?;
@@ -547,7 +583,8 @@ impl Executor {
         };
         let checked_input_objects = CheckedInputObjects::new_for_genesis(
             self.load_packages(PACKAGE_DEPS)
-                .chain(self.load_input_objects(dependencies))
+                .chain(self.load_packages(foundry_package_deps))
+                .chain(self.load_input_objects(object_deps))
                 .collect(),
         );
         // Execute
@@ -576,12 +613,15 @@ impl Executor {
             if !basic_output.native_tokens().is_empty() {
                 self.create_native_token_coins(basic_output.native_tokens(), owner)?;
             }
+            // Overwrite the default 0 UID of `Bag::default()`, since we won't be creating a new bag in this code path.
+            data.native_tokens.id = UID::new(self.tx_context.fresh_id());
             data.into_genesis_coin_object(owner, &self.protocol_config, &self.tx_context, version)?
         } else {
             if !basic_output.native_tokens().is_empty() {
                 // The bag will be wrapped into the basic output object, so
                 // by equating their versions we emulate a ptb.
-                (data.native_tokens, version) = self.create_bag(basic_output.native_tokens())?;
+                (data.native_tokens, version) =
+                    self.create_bag_with_pt(basic_output.native_tokens())?;
             }
             data.to_genesis_object(owner, &self.protocol_config, &self.tx_context, version)?
         };
@@ -648,20 +688,20 @@ mod pt {
         amount: u64,
     ) -> Result<Argument> {
         let foundry_coin_ref = builder.obj(ObjectArg::ImmOrOwnedObject(foundry_coin_ref))?;
-        let balance = builder.programmable_move_call(
+        let amount = builder.pure(amount)?;
+        let coin = builder.programmable_move_call(
             SUI_FRAMEWORK_PACKAGE_ID,
             ident_str!("coin").into(),
-            ident_str!("balance_mut").into(),
+            ident_str!("split").into(),
             vec![token_type_tag.clone()],
-            vec![foundry_coin_ref],
+            vec![foundry_coin_ref, amount],
         );
-        let amount = builder.pure(amount)?;
         Ok(builder.programmable_move_call(
             SUI_FRAMEWORK_PACKAGE_ID,
-            ident_str!("balance").into(),
-            ident_str!("split").into(),
+            ident_str!("coin").into(),
+            ident_str!("into_balance").into(),
             vec![token_type_tag],
-            vec![balance, amount],
+            vec![coin],
         ))
     }
 
@@ -671,7 +711,7 @@ mod pt {
         balance: Argument,
         token_type: String,
     ) -> Result<()> {
-        let key_type: StructTag = "0x01::ascii::String".parse()?;
+        let key_type: StructTag = NATIVE_TOKEN_BAG_KEY_TYPE.parse()?;
         let value_type = Balance::type_(token_type.parse::<TypeTag>()?);
         let token_name = builder.pure(token_type)?;
         builder.programmable_move_call(
@@ -697,6 +737,20 @@ mod pt {
 
 #[cfg(test)]
 mod tests {
+    use iota_sdk::types::block::{
+        address::AliasAddress,
+        output::{
+            unlock_condition::ImmutableAliasAddressUnlockCondition, AliasId, FoundryOutputBuilder,
+            NativeToken, SimpleTokenScheme, UnlockCondition,
+        },
+    };
+    use sui_types::{
+        dynamic_field::{derive_dynamic_field_id, Field},
+        object::Owner,
+    };
+
+    use crate::stardust::native_token::package_data::NativeTokenModuleData;
+
     use super::*;
     #[test]
     fn migration_create_and_deserialize_snapshot() {
@@ -707,5 +761,97 @@ mod tests {
         create_snapshot(objects.clone(), &mut persisted).unwrap();
         let snapshot_objects: Vec<Object> = bcs::from_bytes(&persisted).unwrap();
         assert_eq!(objects, snapshot_objects);
+    }
+
+    #[test]
+    fn create_bag_with_pt() {
+        // Mock the foundry
+        let owner = AliasAddress::new(AliasId::new([0; AliasId::LENGTH]));
+        let supply = 1_000_000;
+        let token_scheme = SimpleTokenScheme::new(supply, 0, supply).unwrap();
+        let foundry = FoundryOutputBuilder::new_with_amount(1000, 1, token_scheme.into())
+            .with_unlock_conditions([UnlockCondition::from(
+                ImmutableAliasAddressUnlockCondition::new(owner),
+            )])
+            .finish_with_params(supply)
+            .unwrap();
+        let foundry_id = foundry.id();
+        let foundry_package_data = NativeTokenPackageData::new(
+            "wat",
+            NativeTokenModuleData::new(
+                foundry_id, "wat", "WAT", 0, "WAT", supply, supply, "wat", "wat", None, owner,
+            ),
+        );
+        let foundry_package = package_builder::build_and_compile(foundry_package_data).unwrap();
+
+        // Execution
+        let mut executor = Executor::new(ProtocolVersion::MAX).unwrap();
+        let object_count = executor.store.objects().len();
+        executor
+            .create_foundries([(foundry, foundry_package)].into_iter())
+            .unwrap();
+        // Foundry package publication creates four objects
+        //
+        // * The package
+        // * Coin metadata
+        // * MaxSupplyPolicy
+        // * The total supply coin
+        assert_eq!(executor.store.objects().len() - object_count, 4);
+        assert!(executor.native_tokens.get(&foundry_id.into()).is_some());
+        let initial_supply_coin_object = executor
+            .store
+            .objects()
+            .values()
+            .find_map(|object| object.is_coin().then_some(object))
+            .expect("there should be only a single coin: the total supply of native tokens");
+        let coin_type_tag = initial_supply_coin_object.coin_type_maybe().unwrap();
+        let initial_supply_coin_data = initial_supply_coin_object.as_coin_maybe().unwrap();
+
+        // Mock the native token
+        let token_amount = 10_000;
+        let native_token = NativeToken::new(foundry_id.into(), token_amount).unwrap();
+
+        // Create the bag
+        let (bag, _) = executor
+            .create_bag_with_pt(&NativeTokens::from_vec(vec![native_token]).unwrap())
+            .unwrap();
+        assert!(executor.store.get_object(bag.id.object_id()).is_none());
+
+        // Verify the mutation of the foundry coin with the total supply
+        let mutated_supply_coin = executor
+            .store
+            .get_object(initial_supply_coin_data.id())
+            .unwrap()
+            .as_coin_maybe()
+            .unwrap();
+        assert_eq!(mutated_supply_coin.value(), supply - token_amount);
+
+        // Get the dynamic fields (df)
+        let tokens = executor
+            .store
+            .objects()
+            .values()
+            .filter_map(|object| object.is_child_object().then_some(object))
+            .collect::<Vec<_>>();
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(
+            tokens[0].owner,
+            Owner::ObjectOwner((*bag.id.object_id()).into())
+        );
+        let token_as_df = tokens[0].to_rust::<Field<String, Balance>>().unwrap();
+        // Verify name
+        let expected_name = coin_type_tag.to_canonical_string(true);
+        assert_eq!(token_as_df.name, expected_name);
+        // Verify value
+        let expected_balance = Balance::new(token_amount);
+        assert_eq!(token_as_df.value, expected_balance);
+        // Verify df id
+        let expected_id = derive_dynamic_field_id(
+            *bag.id.object_id(),
+            &NATIVE_TOKEN_BAG_KEY_TYPE.parse().unwrap(),
+            &bcs::to_bytes(&expected_name).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(*token_as_df.id.object_id(), expected_id);
     }
 }
