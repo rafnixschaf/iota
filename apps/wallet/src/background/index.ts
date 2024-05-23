@@ -15,13 +15,13 @@ import { Connections } from './connections';
 import NetworkEnv from './NetworkEnv';
 import Permissions from './Permissions';
 import * as Qredo from './qredo';
-import { initSentry } from './sentry';
+// import { initSentry } from './sentry';
 import Transactions from './Transactions';
 
 growthbook.loadFeatures().catch(() => {
 	// silence the error
 });
-initSentry();
+// initSentry();
 
 Browser.runtime.onInstalled.addListener(async ({ reason, previousVersion }) => {
 	// Skip automatically opening the onboarding in end-to-end tests.
@@ -110,17 +110,17 @@ Browser.alarms.onAlarm.addListener((alarm) => {
 	}
 });
 
-NetworkEnv.getActiveNetwork().then(async ({ env, customRpcUrl }) => {
+NetworkEnv.getActiveNetwork().then(async ({ network, customRpcUrl }) => {
 	setAttributes({
-		apiEnv: env,
-		customRPC: customRpcUrl,
+		network,
+		customRpc: customRpcUrl,
 	});
 });
 
 NetworkEnv.on('changed', async (network) => {
 	setAttributes({
-		apiEnv: network.env,
-		customRPC: network.customRpcUrl,
+		network: network.network,
+		customRpc: network.customRpcUrl,
 	});
 	connections.notifyUI({ event: 'networkChanged', network });
 	connections.notifyContentScript({
