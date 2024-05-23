@@ -6,7 +6,6 @@ module isc::request {
     use std::ascii::String;
 
     public struct RequestData has copy, drop, store {
-        id: ID,
         contract: String,
         function: String,
         args: vector<vector<u8>>,
@@ -20,17 +19,14 @@ module isc::request {
 
     /// creates a request to call a specific SC function
     public fun create_request(contract: String, function: String, args: vector<vector<u8>>, ctx: &mut TxContext): Request {
-        let id = object::new(ctx);
-        let data = RequestData {
-                id: id.uid_to_inner(),
+         Request{
+            id: object::new(ctx),
+            data: RequestData {
                 allowance: option::none(),
                 contract: contract,
                 function: function,
                 args: args,
-            };
-        Request{
-            id: id,
-            data: move data,
+            },
         }
     }
 
