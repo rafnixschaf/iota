@@ -66,7 +66,7 @@ module examples::exampletoken {
 
 There's a lot to unpack here, let's look at it piece by piece. In IOTA Move there is no 'compiler version' defined like in Solidity within the module itself.
 
-A `module` is defined (`exampletoken`) which is part of the `examples` package (modules always reside in packages, a package can have 1 or more modules in 1 file, or spread out over several files). Within the `module` we first alias the functionality we wish to use from other modules with `use`; If you don't do this you would have to explicitly call other modules through their full package path which would be very verbose and cumbersome. We import a `option` module from the `std` package, and some modules from the `sui` package. The `std` and `sui` names are actually mappings as well to other modules defined in the `Move.toml` file of the package as described in the [Documentation](#TODO).
+A `module` is defined (`exampletoken`) which is part of the `examples` package (modules always reside in packages, a package can have 1 or more modules in 1 file, or spread out over several files). Within the `module` we first alias the functionality we wish to use from other modules with `use`; If you don't do this you would have to explicitly call other modules through their full package path which would be very verbose and cumbersome. We import a `option` module from the `std` package, and some modules from the `sui` package. The `std` and `sui` names are actually mappings as well to other modules defined in the `Move.toml` file of the package as described in the [documentation](/guides/developer/first-app/write-package).
 
 After the aliases we see a empty struct defined:
 
@@ -74,7 +74,7 @@ After the aliases we see a empty struct defined:
 struct EXAMPLETOKEN has drop {}
 ```
 
-This is the definition of the so called [One-Time-Witness](#TODO). This ensures, together with the `init` function definition, that this `Coin` will only be created once and never more on this chain. 
+This is the definition of the so called [One-Time-Witness](/concepts/sui-move-concepts/one-time-witness). This ensures, together with the `init` function definition, that this `Coin` will only be created once and never more on this chain. 
 
 The `init`  function is called automatically when a package is published for every module. The One-Time-Witness is passed automatically as well as a `TxContext` object containing more information about the function call itself; Like the address deploying the package (sender).
 
@@ -86,7 +86,7 @@ After publishing this package the `init` functionality is called and we now have
 ./iota client call --function mint_and_transfer --module coin --package 0x...<package_address>... --args 0x...<owned_cap_object_addr>... 5 "0x...receiver..." --type-args $0x...<deployed_token_addr>...::exampletoken::EXAMPLETOKEN --gas-budget 10000
 ```
 
-A important thing to note here is that unlike with ERC-20 a `Coin` has some properties that hold true for every `Coin` type, including the ability to freely transfer `Coin` objects without limitation (with the exception of [Regulated Coins](#TODO) which can block transfers on a per-address base). You can't simply add limiting logic to your module like you can with a ERC-20 contract but you would need to wrap the `Coin` in another module that does hold these constraints to implement this logic.
+A important thing to note here is that unlike with ERC-20 a `Coin` has some properties that hold true for every `Coin` type, including the ability to freely transfer `Coin` objects without limitation (with the exception of [Regulated Coins](/standards/coin#regulated-coins) which can block transfers on a per-address base). You can't simply add limiting logic to your module like you can with a ERC-20 contract but you would need to wrap the `Coin` in another module that does hold these constraints to implement this logic.
 
 ### Using `CoinManager`
 
@@ -127,7 +127,7 @@ fun init(witness: EXAMPLETOKEN, ctx: &mut TxContext) {
 
 ### Using Closed-Loop tokens
 
-While the `CoinManager` can limit and expand upon the management capabilities of a `Coin` type, the same rules of using a `Coin` still apply; Unrestricted freedom to transfer tokens. If you need to limit this you can either wrap the `Coin` instances in another object that adds limitations, or you can use the Closed-Loop `Token` standard which does this in a comprehensive and standardised way. You can read more about Closed-Loop tokens work in [the documentation](#TODO).
+While the `CoinManager` can limit and expand upon the management capabilities of a `Coin` type, the same rules of using a `Coin` still apply; Unrestricted freedom to transfer tokens. If you need to limit this you can either wrap the `Coin` instances in another object that adds limitations, or you can use the Closed-Loop `Token` standard which does this in a comprehensive and standardised way. You can read more about Closed-Loop tokens work in [the documentation](/standards/closed-loop-token).
 
 ## Differences, pitfalls, pros and cons
 
