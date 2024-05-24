@@ -48,7 +48,9 @@ use sui_types::{
     MOVE_STDLIB_PACKAGE_ID, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID, SUI_SYSTEM_PACKAGE_ID,
 };
 
-use super::types::{snapshot::OutputHeader, stardust_to_sui_address_owner, Alias, AliasOutput};
+use super::types::{
+    snapshot::OutputHeader, stardust_to_sui_address_owner, timelock, Alias, AliasOutput,
+};
 use crate::process_package;
 use crate::stardust::native_token::package_builder;
 use crate::stardust::native_token::package_data::NativeTokenPackageData;
@@ -127,7 +129,17 @@ impl Migration {
         for (header, output) in outputs {
             match output {
                 Output::Alias(alias) => self.executor.create_alias_objects(header, alias)?,
-                Output::Basic(basic) => self.executor.create_basic_objects(header, basic)?,
+                Output::Basic(basic) => {
+                    // All not expired vested rewards(basic outputs with the specific ID format) should be migrated
+                    // as TimeLock<Balance<IOTA>> objects.
+                    if timelock::is_vested_reward(&header)
+                        && !timelock::is_vested_reward_expired(&header, &basic)?
+                    {
+                        self.executor.create_timelock_object(header, basic)?
+                    } else {
+                        self.executor.create_basic_objects(header, basic)?
+                    }
+                }
                 Output::Nft(nft) => self.executor.create_nft_objects(nft)?,
                 Output::Treasury(treasury) => self.executor.create_treasury_objects(treasury)?,
                 Output::Foundry(_) => {
@@ -625,6 +637,31 @@ impl Executor {
             }
             data.to_genesis_object(owner, &self.protocol_config, &self.tx_context, version)?
         };
+        self.store.insert_object(object);
+        Ok(())
+    }
+
+    /// Create [`TimeLock<Balance<IOTA>>`] objects represent vested rewards that were created during the merge.
+    fn create_timelock_object(
+        &mut self,
+        header: OutputHeader,
+        basic_output: BasicOutput,
+    ) -> Result<()> {
+        let owner: SuiAddress = basic_output.address().to_string().parse()?;
+
+        let package_deps = InputObjects::new(self.load_packages(PACKAGE_DEPS).collect());
+        let version = package_deps.lamport_timestamp(&[]);
+
+        let timelock = timelock::new(header, basic_output)?;
+
+        let object = timelock::to_genesis_object(
+            timelock,
+            owner,
+            &self.protocol_config,
+            &self.tx_context,
+            version,
+        )?;
+
         self.store.insert_object(object);
         Ok(())
     }
