@@ -97,3 +97,49 @@ pub fn to_genesis_object(
         tx_context.digest(),
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::stardust::types::{snapshot::OutputHeader, timelock};
+
+    fn output_header(output_id: &str) -> OutputHeader {
+        OutputHeader::new_testing(
+            prefix_hex::decode(output_id).unwrap(),
+            rand::random(),
+            rand::random(),
+            rand::random(),
+        )
+    }
+
+    #[test]
+    fn test_is_vested_reward() {
+        let header =
+            output_header("0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678");
+
+        assert!(timelock::is_vested_reward(&header));
+    }
+
+    #[test]
+    fn test_is_vested_reward_min_address() {
+        let header =
+            output_header("0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1800000000");
+
+        assert!(timelock::is_vested_reward(&header));
+    }
+
+    #[test]
+    fn test_is_vested_reward_max_address() {
+        let header =
+            output_header("0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb18ffffffff");
+
+        assert!(timelock::is_vested_reward(&header));
+    }
+
+    #[test]
+    fn test_is_vested_reward_wrong_address() {
+        let header =
+            output_header("0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1712345678");
+
+        assert!(!timelock::is_vested_reward(&header));
+    }
+}
