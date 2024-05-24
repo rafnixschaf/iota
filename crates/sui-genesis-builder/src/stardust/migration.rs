@@ -641,7 +641,8 @@ impl Executor {
         Ok(())
     }
 
-    /// Create [`TimeLock<Balance<IOTA>>`] objects represent vested rewards that were created during the merge.
+    /// Creates [`TimeLock<Balance<IOTA>>`] objects which represent vested rewards
+    /// that were created during the stardust upgrade on IOTA mainnet.
     fn create_timelock_object(
         &mut self,
         header: OutputHeader,

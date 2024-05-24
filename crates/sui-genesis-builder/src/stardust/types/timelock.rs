@@ -15,7 +15,8 @@ use super::snapshot::OutputHeader;
 
 use anyhow::Result;
 
-/// All basic outputs with ID starting this prefix represent vested rewards that were created during the merge.
+/// All basic outputs whose IDs start with this prefix represent vested rewards
+/// that were created during the stardust upgrade on IOTA mainnet.
 const VESTED_REWARD_ID_PREFIX: &str = "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb18";
 
 /// Checks if an output is a vested reward were created during the merge.
@@ -35,11 +36,12 @@ pub fn is_vested_reward_expired(header: &OutputHeader, basic_output: &BasicOutpu
 
 /// Gets an output timelock unlock condition.
 fn timelock_uc(basic_output: &BasicOutput) -> Result<&TimelockUnlockCondition> {
-    let Some(timelock_uc) = basic_output.unlock_conditions().timelock() else {
-        anyhow::bail!("a vested reward must have a timelock unlock condition");
-    };
-
-    Ok(timelock_uc)
+    basic_output
+        .unlock_conditions()
+        .timelock()
+        .ok_or(anyhow::anyhow!(
+            "a vested reward must have a timelock unlock condition"
+        ))
 }
 
 /// Creates a new time-locked balance.
@@ -53,9 +55,7 @@ pub fn new(header: OutputHeader, basic_output: BasicOutput) -> Result<TimeLock<B
     }
 
     if is_vested_reward_expired(&header, &basic_output)? {
-        anyhow::bail!(
-            "to be migrated as `TimeLock<Balance<IOTA>>` a vested reward must be not expired"
-        );
+        anyhow::bail!("only unexpired vested rewards can be migrated as `TimeLock<Balance<IOTA>>`");
     }
 
     let timelock_uc = timelock_uc(&basic_output)?;
