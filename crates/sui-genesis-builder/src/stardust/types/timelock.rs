@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_sdk::types::block::output::{unlock_condition::TimelockUnlockCondition, BasicOutput};
+use iota_sdk::types::block::output::BasicOutput;
 use sui_protocol_config::ProtocolConfig;
 use sui_types::{
     balance::Balance,
@@ -23,14 +23,14 @@ pub type Result<T> = std::result::Result<T, VestedRewardError>;
 pub enum VestedRewardError {
     #[error("execution error: {0}")]
     ExecutionError(sui_types::error::ExecutionError),
-    #[error("only unexpired vested rewards can be migrated as `TimeLock<Balance<IOTA>>`")]
-    ExpiredVestedReward,
     #[error("a vested reward must not contain native tokens")]
     NativeTokensNotSupported,
     #[error("a basic output is not a vested reward")]
     NotVestedReward,
     #[error("a vested reward must have two unlock conditions")]
     UnlockConditionsNumberMismatch,
+    #[error("only timelocked vested rewards can be migrated as `TimeLock<Balance<IOTA>>`")]
+    UnlockedVestedReward,
 }
 
 impl From<sui_types::error::ExecutionError> for VestedRewardError {
@@ -39,17 +39,20 @@ impl From<sui_types::error::ExecutionError> for VestedRewardError {
     }
 }
 
-/// Checks if an output is an unexpired vested reward.
-pub fn is_unexpired_vested_reward(
+/// Checks if an output is a timelocked vested reward.
+pub fn is_timelocked_vested_reward(
     header: &OutputHeader,
     basic_output: &BasicOutput,
     target_milestone_timestamp_sec: u32,
 ) -> bool {
     is_vested_reward(header, basic_output)
-        && !is_basic_output_expired(basic_output, target_milestone_timestamp_sec)
+        && basic_output
+            .unlock_conditions()
+            .is_time_locked(target_milestone_timestamp_sec)
 }
 
-/// Checks if an output is a vested reward.
+/// Checks if an output is a vested reward, if it has a specific ID prefix,
+/// and if it contains a timelock unlock condition.
 fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bool {
     let with_correct_prefix = header
         .output_id()
@@ -57,25 +60,6 @@ fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bool {
         .starts_with(VESTED_REWARD_ID_PREFIX);
 
     with_correct_prefix && basic_output.unlock_conditions().timelock().is_some()
-}
-
-/// Checks if a basic output is expired.
-fn is_basic_output_expired(
-    basic_output: &BasicOutput,
-    target_milestone_timestamp_sec: u32,
-) -> bool {
-    let timelock_uc = timelock_uc(basic_output);
-
-    timelock_uc.timestamp() <= target_milestone_timestamp_sec
-}
-
-/// Gets an output timelock unlock condition.
-fn timelock_uc(basic_output: &BasicOutput) -> &TimelockUnlockCondition {
-    // We already checked the existence of the timelock unlock condition at this point.
-    basic_output
-        .unlock_conditions()
-        .timelock()
-        .expect("a vested reward should contain a timelock unlock condition")
 }
 
 /// Creates a `TimeLock<Balance<IOTA>>` from a Stardust-based Basic Output
@@ -89,8 +73,11 @@ pub fn try_from_stardust(
         return Err(VestedRewardError::NotVestedReward);
     }
 
-    if is_basic_output_expired(basic_output, target_milestone_timestamp_sec) {
-        return Err(VestedRewardError::ExpiredVestedReward);
+    if !basic_output
+        .unlock_conditions()
+        .is_time_locked(target_milestone_timestamp_sec)
+    {
+        return Err(VestedRewardError::UnlockedVestedReward);
     }
 
     if basic_output.unlock_conditions().len() != 2 {
@@ -104,7 +91,11 @@ pub fn try_from_stardust(
     let id = UID::new(ObjectID::new(header.output_id().hash()));
     let locked = Balance::new(basic_output.amount());
 
-    let timelock_uc = timelock_uc(basic_output);
+    // We already checked the existence of the timelock unlock condition at this point.
+    let timelock_uc = basic_output
+        .unlock_conditions()
+        .timelock()
+        .expect("a vested reward should contain a timelock unlock condition");
     let expiration_timestamp_ms = Into::<u64>::into(timelock_uc.timestamp()) * 1000;
 
     Ok(sui_types::timelock::timelock::TimeLock::new(
@@ -184,47 +175,49 @@ mod tests {
     }
 
     #[test]
-    fn is_unexpired_vested_reward_all_correct() {
+    fn is_timelocked_vested_reward_all_correct() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
         let output = vested_reward_output(10, 1000);
 
-        assert!(timelock::is_unexpired_vested_reward(&header, &output, 100));
+        assert!(timelock::is_timelocked_vested_reward(&header, &output, 100));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_min_id() {
+    fn is_timelocked_vested_reward_min_id() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1800000000",
         );
         let output = vested_reward_output(10, 1000);
 
-        assert!(timelock::is_unexpired_vested_reward(&header, &output, 100));
+        assert!(timelock::is_timelocked_vested_reward(&header, &output, 100));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_max_id() {
+    fn is_timelocked_vested_reward_max_id() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb18ffffffff",
         );
         let output = vested_reward_output(10, 1000);
 
-        assert!(timelock::is_unexpired_vested_reward(&header, &output, 100));
+        assert!(timelock::is_timelocked_vested_reward(&header, &output, 100));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_incorrect_id() {
+    fn is_timelocked_vested_reward_incorrect_id() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1712345678",
         );
         let output = vested_reward_output(10, 1000);
 
-        assert!(!timelock::is_unexpired_vested_reward(&header, &output, 100));
+        assert!(!timelock::is_timelocked_vested_reward(
+            &header, &output, 100
+        ));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_no_timelock_unlock_condition() {
+    fn is_timelocked_vested_reward_no_timelock_unlock_condition() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
@@ -238,29 +231,31 @@ mod tests {
             .finish()
             .unwrap();
 
-        assert!(!timelock::is_unexpired_vested_reward(&header, &output, 100));
+        assert!(!timelock::is_timelocked_vested_reward(
+            &header, &output, 100
+        ));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_bigger_milestone_time() {
+    fn is_timelocked_vested_reward_bigger_milestone_time() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
         let output = vested_reward_output(10, 100);
 
-        assert!(!timelock::is_unexpired_vested_reward(
+        assert!(!timelock::is_timelocked_vested_reward(
             &header, &output, 1000
         ));
     }
 
     #[test]
-    fn is_unexpired_vested_reward_same_milestone_time() {
+    fn is_timelocked_vested_reward_same_milestone_time() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
         let output = vested_reward_output(10, 1000);
 
-        assert!(!timelock::is_unexpired_vested_reward(
+        assert!(!timelock::is_timelocked_vested_reward(
             &header, &output, 1000
         ));
     }
@@ -287,7 +282,7 @@ mod tests {
 
         let err = timelock::try_from_stardust(&header, &output, 1000).unwrap_err();
 
-        assert!(matches!(err, VestedRewardError::ExpiredVestedReward));
+        assert!(matches!(err, VestedRewardError::UnlockedVestedReward));
     }
 
     #[test]

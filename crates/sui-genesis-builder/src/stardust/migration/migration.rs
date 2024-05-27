@@ -164,9 +164,9 @@ impl Migration {
             let created = match output {
                 Output::Alias(alias) => self.executor.create_alias_objects(header, alias)?,
                 Output::Basic(basic) => {
-                    // All not expired vested rewards(basic outputs with the specific ID format) should be migrated
+                    // All timelocked vested rewards(basic outputs with the specific ID format) should be migrated
                     // as TimeLock<Balance<IOTA>> objects.
-                    if timelock::is_unexpired_vested_reward(
+                    if timelock::is_timelocked_vested_reward(
                         header,
                         basic,
                         self.target_milestone_timestamp_sec,
