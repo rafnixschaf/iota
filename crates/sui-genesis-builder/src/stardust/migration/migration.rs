@@ -166,12 +166,11 @@ impl Migration {
                 Output::Basic(basic) => {
                     // All not expired vested rewards(basic outputs with the specific ID format) should be migrated
                     // as TimeLock<Balance<IOTA>> objects.
-                    if timelock::is_vested_reward(header, basic)
-                        && !timelock::is_vested_reward_expired(
-                            basic,
-                            self.target_milestone_timestamp_sec,
-                        )
-                    {
+                    if timelock::is_unexpired_vested_reward(
+                        header,
+                        basic,
+                        self.target_milestone_timestamp_sec,
+                    ) {
                         self.executor.create_timelock_object(
                             header,
                             basic,

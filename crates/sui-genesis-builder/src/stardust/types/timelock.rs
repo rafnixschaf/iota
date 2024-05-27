@@ -37,8 +37,18 @@ impl From<sui_types::error::ExecutionError> for VestedRewardError {
     }
 }
 
-/// Checks if an output is a vested reward were created during the merge.
-pub fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bool {
+/// Checks if an output is an unexpired vested reward.
+pub fn is_unexpired_vested_reward(
+    header: &OutputHeader,
+    basic_output: &BasicOutput,
+    target_milestone_timestamp_sec: u32,
+) -> bool {
+    is_vested_reward(header, basic_output)
+        && !is_vested_reward_expired(basic_output, target_milestone_timestamp_sec)
+}
+
+/// Checks if an output is a vested reward.
+fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bool {
     let with_correct_prefix = header
         .output_id()
         .to_string()
@@ -48,7 +58,7 @@ pub fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bo
 }
 
 /// Checks if a vested reward is expired.
-pub fn is_vested_reward_expired(
+fn is_vested_reward_expired(
     basic_output: &BasicOutput,
     target_milestone_timestamp_sec: u32,
 ) -> bool {
@@ -198,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn is_vested_reward_wrong_address() {
+    fn is_vested_reward_incorrect_address() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1712345678",
         );
@@ -260,6 +270,56 @@ mod tests {
             .unwrap();
 
         assert!(timelock::is_vested_reward_expired(&output, 100));
+    }
+
+    #[test]
+    fn is_unexpired_vested_reward_all_correct() {
+        let header = vested_reward_header(
+            "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
+        );
+        let output = vested_reward_output(10, 1000);
+
+        assert!(timelock::is_unexpired_vested_reward(&header, &output, 100));
+    }
+
+    #[test]
+    fn is_unexpired_vested_reward_incorrect_address() {
+        let header = vested_reward_header(
+            "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1712345678",
+        );
+        let output = vested_reward_output(10, 1000);
+
+        assert!(!timelock::is_unexpired_vested_reward(&header, &output, 100));
+    }
+
+    #[test]
+    fn is_unexpired_vested_reward_no_timelock_unlock_condition() {
+        let header = vested_reward_header(
+            "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
+        );
+        let output = BasicOutputBuilder::new_with_amount(10)
+            .add_unlock_condition(AddressUnlockCondition::new(
+                Ed25519Address::from_str(
+                    "0xebe40a263480190dcd7939447ee01aefa73d6f3cc33c90ef7bf905abf8728655",
+                )
+                .unwrap(),
+            ))
+            .finish()
+            .unwrap();
+
+        assert!(!timelock::is_unexpired_vested_reward(&header, &output, 100));
+    }
+
+    #[test]
+    fn is_unexpired_vested_reward_incorrect_time() {
+        let header = vested_reward_header(
+            "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
+        );
+        let output = vested_reward_output(10, 1000);
+
+        assert!(!timelock::is_unexpired_vested_reward(
+            &header, &output, 10000
+        ));
     }
 
     #[test]
