@@ -18,7 +18,7 @@ IGNORED_PATHS = (
     'scripts/rename_to_iota/rename.py',
 )
 
-IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap', 'bcs', 'chk', 'pdf', 'ai', 'mp3', 'wav', 'ico', 'ttf', 'otf', 'woff', 'woff2')
+IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap', 'bcs', 'chk', 'pdf', 'ai', 'mp3', 'wav', 'ico', 'ttf', 'otf', 'woff', 'woff2', 'mvsm')
 
 # This mapping allows a simple replace mechanism for certain keywords, it's executed in order
 REPLACE_MAP = (
