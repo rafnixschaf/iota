@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_vested_reward() {
+    fn is_vested_reward_correct_address() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
@@ -155,7 +155,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_vested_reward_min_address() {
+    fn is_vested_reward_min_address() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1800000000",
         );
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_vested_reward_max_address() {
+    fn is_vested_reward_max_address() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb18ffffffff",
         );
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_vested_reward_wrong_address() {
+    fn is_vested_reward_wrong_address() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1712345678",
         );
@@ -182,28 +182,28 @@ mod tests {
     }
 
     #[test]
-    fn test_is_vested_reward_expired() {
+    fn is_vested_reward_expired() {
         let output = vested_reward_output(10, 1000);
 
         assert!(timelock::is_vested_reward_expired(&output, 10000).unwrap());
     }
 
     #[test]
-    fn test_is_vested_reward_not_expired() {
+    fn is_vested_reward_not_expired() {
         let output = vested_reward_output(10, 1000);
 
         assert!(!timelock::is_vested_reward_expired(&output, 100).unwrap());
     }
 
     #[test]
-    fn test_is_vested_reward_expired_with_same_ts() {
+    fn is_vested_reward_expired_with_same_ts() {
         let output = vested_reward_output(10, 1000);
 
         assert!(timelock::is_vested_reward_expired(&output, 1000).unwrap());
     }
 
     #[test]
-    fn test_new_timelock() {
+    fn timelock_from_stardust() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn test_new_timelock_with_expired_output() {
+    fn timelock_from_stardust_with_expired_output() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn test_new_timelock_extra_unlock_conditions() {
+    fn timelock_from_stardust_extra_unlock_condition() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn test_new_timelock_with_native_tokens() {
+    fn timelock_from_stardust_with_native_tokens() {
         let header = vested_reward_header(
             "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
         );
