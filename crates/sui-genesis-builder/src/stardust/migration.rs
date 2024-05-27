@@ -666,7 +666,8 @@ impl Executor {
         let package_deps = InputObjects::new(self.load_packages(PACKAGE_DEPS).collect());
         let version = package_deps.lamport_timestamp(&[]);
 
-        let timelock = timelock::new(header, basic_output, target_milestone_timestamp)?;
+        let timelock =
+            timelock::try_from_stardust(header, basic_output, target_milestone_timestamp)?;
 
         let object = timelock::to_genesis_object(
             timelock,
