@@ -73,17 +73,22 @@ module isc::anchor_tests {
         req_assets.place_sui_coin(iota);
         req_assets.place_asset(test_b_nft);
 
-        let req = request::create_request(
-            string::utf8(b"contract"), 
-            string::utf8(b"function"), 
-            vector::empty(), 
-            sender,
+        // ClientPTB.3. Create the request and can send it to the Anchor.
+        /*request::create_and_send_request(
+            object::id(&anchor).id_to_address(),
             req_assets,
+            option::some(string::utf8(b"contract")), 
+            option::some(string::utf8(b"function")), 
+            option::some(vector::empty()), 
+            &mut ctx,
+        );*/ // Commented because cannot be executed received in this test
+        let req = request::create_for_testing(
+            req_assets,
+            option::some(string::utf8(b"contract")), 
+            option::some(string::utf8(b"function")), 
+            option::some(vector::empty()), 
             &mut ctx,
         );
-
-        // ClientPTB.3. Ready with the request, now we can send it to the Anchor.
-        //req.send(anchor.id) // Commented because cannot be executed in this test
 
         // ServerPTB.1 Now the Anchor receives off-chain an event that tracks the request and can receive it.
         //let req_extracted_assets = anchor.receive_request(req); // Commented because cannot be executed in this test
