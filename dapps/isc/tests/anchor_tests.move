@@ -70,7 +70,7 @@ module isc::anchor_tests {
         // ClientPTB.2 Add the assets to the bag.
         let mut req_assets = assets_bag::new(&mut ctx);
         req_assets.place_coin(test_a_coin);
-        req_assets.place_sui_coin(iota);
+        req_assets.place_coin(iota);
         req_assets.place_asset(test_b_nft);
 
         // ClientPTB.3. Create the request and can send it to the Anchor.
@@ -107,9 +107,9 @@ module isc::anchor_tests {
         anchor_assets.place_coin_balance(extracted_test_a_coin_balance);
         
         // ServerPTB.3.1: extract the iota balance.
-        let extracted_iota_balance = req_extracted_assets.take_all_sui_balance();
+        let extracted_iota_balance = req_extracted_assets.take_all_coin_balance<SUI>();
         // ServerPTB.3.2: place it to the anchor assets bag.
-        anchor_assets.place_sui_balance(extracted_iota_balance);
+        anchor_assets.place_coin_balance(extracted_iota_balance);
 
         // ServerPTB.4.1: extract the nft.
         let extracted_nft = req_extracted_assets.take_asset<Nft>(nft_id);

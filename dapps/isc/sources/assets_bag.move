@@ -6,16 +6,13 @@ module isc::assets_bag {
     use std::type_name;
     use sui::{
         coin::{Self, Coin},
-        balance::{Self, Balance},
-        sui::SUI,
+        balance::{Balance},
         dynamic_object_field as dof,
         dynamic_field as df,
     };   
 
     // Attempted to destroy a non-empty assets bag
     const EBagNotEmpty: u64 = 0;
-    /// place_coin was called with a SUI coin
-    const EInvalidSuiCoin: u64 = 1;
 
     // === Main structs ===
 
@@ -23,8 +20,6 @@ module isc::assets_bag {
     /// By default it is owned by a single address.
     public struct AssetsBag has key, store {
         id: UID,
-        /// Balance of the AssetsBag - all Sui coins go here.
-        balance: Balance<SUI>,
         /// the number of key-value pairs in the bag
         size: u64,
     }
@@ -40,15 +35,13 @@ module isc::assets_bag {
     public fun new(ctx: &mut TxContext): AssetsBag {
         AssetsBag{
             id: object::new(ctx),
-            balance: balance::zero(),
             size: 0,
          }
     }
 
     /// Destroys an empty AssetsBag object and returns its balance.    
     public fun destroy_empty(self: AssetsBag) {
-        let AssetsBag { id, balance, size } = self;
-        balance.destroy_zero();
+        let AssetsBag { id, size } = self;
         assert!(size == 0, EBagNotEmpty);
         id.delete();    
     }
@@ -69,16 +62,6 @@ module isc::assets_bag {
     public fun place_coin_balance<T>(self: &mut AssetsBag, balance: Balance<T>) {
         place_coin_balance_internal(self, balance)
     }
-    
-    /// Increases the SUI balance of the AssetsBag.
-    public fun place_sui_coin(self: &mut AssetsBag, coin: Coin<SUI>) {
-        self.balance.join(coin::into_balance(coin)); 
-    }
-
-    /// Increases the SUI balance of the AssetsBag.
-    public fun place_sui_balance(self: &mut AssetsBag, balance: Balance<SUI>) {
-        self.balance.join(balance); 
-    }
  
     /// Adds an asset as a dinamyc field of the AssetsBag where the key is 
     /// of type Asset (indexed by object id).
@@ -98,19 +81,8 @@ module isc::assets_bag {
     /// Aborts with `EInvalidSuiCoin` if the coin is of type SUI.
     public fun take_all_coin_balance<T>(self: &mut AssetsBag): Balance<T> {
         let coin_type = type_name::get<T>().into_string();
-        assert!(coin_type != type_name::get<SUI>().into_string(), EInvalidSuiCoin);
         self.size = self.size - 1;
         df::remove<String, Balance<T>>(&mut self.id, coin_type)
-    }
-
-    /// Takes the SUI balance of the AssetsBag.
-    public fun take_sui_balance(self: &mut AssetsBag, amount: u64): Balance<SUI> {
-        self.balance.split(amount)
-    }
-
-    /// Takes the SUI balance of the AssetsBag.
-    public fun take_all_sui_balance(self: &mut AssetsBag): Balance<SUI> {
-        self.balance.withdraw_all()
     }
 
     /// Takes an asset set as a dinamyc field of the AssetsBag.
@@ -124,7 +96,6 @@ module isc::assets_bag {
     /// Aborts with `EInvalidSuiCoin` if the coin is of type SUI.
     fun place_coin_balance_internal<T>(self: &mut AssetsBag, balance: Balance<T>) {
         let coin_type = type_name::get<T>().into_string();
-        assert!(coin_type != type_name::get<SUI>().into_string(), EInvalidSuiCoin);
 
         if(df::exists_(&self.id, coin_type)) {
             let placed_balance = df::borrow_mut<String, Balance<T>>(&mut self.id, coin_type);
@@ -145,7 +116,6 @@ module isc::assets_bag {
     /// Aborts with `EInvalidSuiCoin` if the coin is of type SUI.
     fun take_coin_balance_internal<T>(self: &mut AssetsBag, amount: u64): Balance<T> {
         let coin_type = type_name::get<T>().into_string();
-        assert!(coin_type != type_name::get<SUI>().into_string(), EInvalidSuiCoin);
 
         let placed_balance = df::borrow_mut<String, Balance<T>>(&mut self.id, coin_type);
         let taken_balance = placed_balance.split(amount);
