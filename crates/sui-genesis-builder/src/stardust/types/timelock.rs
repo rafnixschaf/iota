@@ -50,8 +50,8 @@ fn timelock_uc(basic_output: &BasicOutput) -> Result<&TimelockUnlockCondition> {
 /// Creates a `TimeLock<Balance<IOTA>>` from a Stardust-based Basic Output
 /// that represents a vested reward.
 pub fn try_from_stardust(
-    header: OutputHeader,
-    basic_output: BasicOutput,
+    header: &OutputHeader,
+    basic_output: &BasicOutput,
     target_milestone_timestamp_sec: u32,
 ) -> Result<TimeLock<Balance>> {
     if basic_output.unlock_conditions().len() != 2 {
@@ -62,14 +62,14 @@ pub fn try_from_stardust(
         anyhow::bail!("a vested reward must not contain native tokens");
     }
 
-    if is_vested_reward_expired(&basic_output, target_milestone_timestamp_sec)? {
+    if is_vested_reward_expired(basic_output, target_milestone_timestamp_sec)? {
         anyhow::bail!("only unexpired vested rewards can be migrated as `TimeLock<Balance<IOTA>>`");
     }
 
     let id = UID::new(ObjectID::new(header.output_id().hash()));
     let locked = Balance::new(basic_output.amount());
 
-    let timelock_uc = timelock_uc(&basic_output)?;
+    let timelock_uc = timelock_uc(basic_output)?;
     let expiration_timestamp_ms = Into::<u64>::into(timelock_uc.timestamp()) * 1000;
 
     Ok(sui_types::timelock::timelock::TimeLock::new(
@@ -209,7 +209,7 @@ mod tests {
         );
         let output = vested_reward_output(10, 1000);
 
-        let timelock = timelock::try_from_stardust(header, output, 100).unwrap();
+        let timelock = timelock::try_from_stardust(&header, &output, 100).unwrap();
 
         assert!(timelock.locked().value() == 10);
         assert!(timelock.expiration_timestamp_ms() == 1_000_000);
@@ -222,7 +222,7 @@ mod tests {
         );
         let output = vested_reward_output(10, 1000);
 
-        let err = timelock::try_from_stardust(header, output, 1000).unwrap_err();
+        let err = timelock::try_from_stardust(&header, &output, 1000).unwrap_err();
 
         assert!(
             err.to_string()
@@ -257,7 +257,7 @@ mod tests {
             .finish()
             .unwrap();
 
-        let err = timelock::try_from_stardust(header, output, 1000).unwrap_err();
+        let err = timelock::try_from_stardust(&header, &output, 1000).unwrap_err();
 
         assert!(err.to_string() == "a vested reward must have two unlock conditions");
     }
@@ -279,7 +279,7 @@ mod tests {
             .finish()
             .unwrap();
 
-        let err = timelock::try_from_stardust(header, output, 1000).unwrap_err();
+        let err = timelock::try_from_stardust(&header, &output, 1000).unwrap_err();
 
         assert!(err.to_string() == "a vested reward must not contain native tokens");
     }
