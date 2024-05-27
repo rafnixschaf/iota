@@ -84,15 +84,20 @@ const NATIVE_TOKEN_BAG_KEY_TYPE: &str = "0x01::ascii::String";
 /// The migration process results in the generation of a snapshot file with the generated
 /// objects serialized.
 pub struct Migration {
+    target_milestone_timestamp_sec: u32,
+
     executor: Executor,
 }
 
 impl Migration {
     /// Try to setup the migration process by creating the inner executor
     /// and bootstraping the in-memory storage.
-    pub fn new() -> Result<Self> {
+    pub fn new(target_milestone_timestamp_sec: u32) -> Result<Self> {
         let executor = Executor::new(ProtocolVersion::new(MIGRATION_PROTOCOL_VERSION))?;
-        Ok(Self { executor })
+        Ok(Self {
+            target_milestone_timestamp_sec,
+            executor,
+        })
     }
 
     /// Create the packages, and associated objects representing foundry outputs.
@@ -133,9 +138,16 @@ impl Migration {
                     // All not expired vested rewards(basic outputs with the specific ID format) should be migrated
                     // as TimeLock<Balance<IOTA>> objects.
                     if timelock::is_vested_reward(&header)
-                        && !timelock::is_vested_reward_expired(&header, &basic)?
+                        && !timelock::is_vested_reward_expired(
+                            &basic,
+                            self.target_milestone_timestamp_sec,
+                        )?
                     {
-                        self.executor.create_timelock_object(header, basic)?
+                        self.executor.create_timelock_object(
+                            header,
+                            basic,
+                            self.target_milestone_timestamp_sec,
+                        )?
                     } else {
                         self.executor.create_basic_objects(header, basic)?
                     }
@@ -647,13 +659,14 @@ impl Executor {
         &mut self,
         header: OutputHeader,
         basic_output: BasicOutput,
+        target_milestone_timestamp: u32,
     ) -> Result<()> {
         let owner: SuiAddress = basic_output.address().to_string().parse()?;
 
         let package_deps = InputObjects::new(self.load_packages(PACKAGE_DEPS).collect());
         let version = package_deps.lamport_timestamp(&[]);
 
-        let timelock = timelock::new(header, basic_output)?;
+        let timelock = timelock::new(header, basic_output, target_milestone_timestamp)?;
 
         let object = timelock::to_genesis_object(
             timelock,
@@ -842,7 +855,7 @@ mod tests {
             }
         }
 
-        Migration::new()
+        Migration::new(1000)
             .unwrap()
             .run(
                 foundries.into_iter(),
@@ -863,7 +876,7 @@ mod tests {
             .or_from_output_id(&header.output_id())
             .to_owned();
         let mut snapshot_buffer = Vec::new();
-        Migration::new()
+        Migration::new(1000)
             .unwrap()
             .run(
                 [].into_iter(),
