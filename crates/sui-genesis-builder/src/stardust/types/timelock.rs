@@ -54,12 +54,12 @@ pub fn is_timelocked_vested_reward(
 /// Checks if an output is a vested reward, if it has a specific ID prefix,
 /// and if it contains a timelock unlock condition.
 fn is_vested_reward(header: &OutputHeader, basic_output: &BasicOutput) -> bool {
-    let with_correct_prefix = header
+    let has_vesting_prefix = header
         .output_id()
         .to_string()
         .starts_with(VESTED_REWARD_ID_PREFIX);
 
-    with_correct_prefix && basic_output.unlock_conditions().timelock().is_some()
+    has_vesting_prefix && basic_output.unlock_conditions().timelock().is_some()
 }
 
 /// Creates a `TimeLock<Balance<IOTA>>` from a Stardust-based Basic Output
