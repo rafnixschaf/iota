@@ -16,6 +16,13 @@ module isc::anchor {
         id: UID,
         /// Anchor assets.
         assets: Referent<AssetsBag>,
+        /// Anchor assets.
+        state_root: vector<u8>,
+    }
+
+    public struct Receipt {
+        /// ID of the request object
+        request_id: ID,
     }
 
     // === Anchor packing and unpacking ===
@@ -25,12 +32,13 @@ module isc::anchor {
         Anchor{
             id: object::new(ctx),
             assets: borrow::new(assets_bag::new(ctx), ctx),
+            state_root: vector::empty(),
          }
     }
 
     /// Destroys an Anchor object and returns its assets bag.   
     public fun destroy(self: Anchor): AssetsBag {
-        let Anchor { id, assets } = self;
+        let Anchor { id, assets, state_root: _ } = self;
         id.delete();
         
         assets.destroy()
@@ -55,8 +63,33 @@ module isc::anchor {
     // === Receive a Request ===
 
     /// The Anchor receives a request and destroys it, implementing the HotPotato pattern.
-    public fun receive_request(anchor: &mut Anchor, request: transfer::Receiving<Request>): AssetsBag {
-        let req = request::receive(&mut anchor.id, request);
-        req.destroy()
+    public fun receive_request(self: &mut Anchor, request: transfer::Receiving<Request>): (Receipt, AssetsBag) {
+        let req = request::receive(&mut self.id, request);
+        let (request_id, assets) = req.destroy();
+        (Receipt { request_id }, assets)
     }
+
+    public fun update_state_root(self: &mut Anchor, new_state_root: vector<u8>, mut receipts: vector<Receipt>) {
+        let receipts_len = receipts.length();
+        let mut i = 0;
+        while (i < receipts_len) {
+            let Receipt { 
+                request_id: _ 
+            } = receipts.pop_back();
+            // here performs some cryptographic proof of inclusion with request_id and the new state root?? 
+            i = i + 1;
+        };
+        receipts.destroy_empty();
+        self.state_root = new_state_root
+    } 
+    
+
+    // === Test Functions ===
+
+    // test only function to create a receipt
+    #[test_only]
+    public fun create_receipt_for_testing(request_id: ID): Receipt {
+        Receipt { request_id }
+    }
+
 }

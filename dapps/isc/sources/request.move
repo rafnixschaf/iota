@@ -76,16 +76,17 @@ module isc::request {
     }
 
     /// Destroys a Request object and returns its balance and assets bag.
-    public fun destroy(self: Request): AssetsBag {
+    public fun destroy(self: Request): (ID, AssetsBag) {
         let Request {
             id,
             sender: _,
             assets_bag,
             data: _,
         } = self;
+        let inner_id = id.uid_to_inner();
         id.delete();
         
-        assets_bag.destroy()
+        (inner_id, assets_bag.destroy())
     }
 
     // === Send and receive the Request ===

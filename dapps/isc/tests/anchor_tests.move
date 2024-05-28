@@ -91,8 +91,9 @@ module isc::anchor_tests {
         );
 
         // ServerPTB.1 Now the Anchor receives off-chain an event that tracks the request and can receive it.
-        //let req_extracted_assets = anchor.receive_request(req); // Commented because cannot be executed in this test
-        let mut req_extracted_assets = req.destroy(); //this is not part of the PTB
+        //let (receipt, req_extracted_assets) = anchor.receive_request(req); // Commented because cannot be executed in this test
+        let (id, mut req_extracted_assets) = req.destroy(); //this is not part of the PTB
+        let receipt = anchor::create_receipt_for_testing(id); //this is not part of the PTB
 
         // ServerPTB.2: borrow the asset bag of the anchor
         let (mut anchor_assets, borrow) = anchor.borrow_assets();    
@@ -121,6 +122,13 @@ module isc::anchor_tests {
 
         // ServerPTB.6: return the anchor assets bag from the borrow.
         anchor.return_assets_from_borrow(anchor_assets, borrow);
+
+        // ServerPTB.7: update the state root and destroy the hot potato receipt.
+        // ServerPTB.7.1: create the receipts vector.
+        let mut receipts = vector::empty();
+        receipts.push_back(receipt);
+        // ServerPTB.7.2: update the state root
+        anchor.update_state_root(vector::empty(), receipts);
 
         // !!! END !!!
 
