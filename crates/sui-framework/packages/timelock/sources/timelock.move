@@ -6,7 +6,7 @@ module timelock::timelock {
 
     use std::string::String;
 
-    use timelock::label;
+    use sui::label::{Self, SystemLabelerCap};
 
     /// Error code for when the expire timestamp of the lock is in the past.
     const EExpireEpochIsPast: u64 = 0;
@@ -82,13 +82,13 @@ module timelock::timelock {
     }
 
     /// Function to add a label to a `TimeLock`
-    public fun add_label<T: store>(self: &mut TimeLock<T>, label: String, ctx: &TxContext) {
-        label::add_system(&mut self.id, label, ctx);
+    public fun add_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: String) {
+        label::add_system(cap, &mut self.id, label);
     }
 
     /// Function to remove a label from a `TimeLock`
-    public fun remove_label<T: store>(self: &mut TimeLock<T>, label: &String, ctx: &TxContext) {
-        label::remove_system(&mut self.id, label, ctx);
+    public fun remove_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: &String) {
+        label::remove_system(cap, &mut self.id, label);
     }
 
     /// Function to check if a `TimeLock` tagged with a label.

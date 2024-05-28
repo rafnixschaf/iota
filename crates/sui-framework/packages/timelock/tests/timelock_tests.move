@@ -5,6 +5,7 @@
 module timelock::timelock_tests {
 
     use sui::balance;
+    use sui::label::{Self, SystemLabelerCap};
     use sui::sui::SUI;
     use sui::test_scenario;
 
@@ -107,8 +108,18 @@ module timelock::timelock_tests {
     #[test]
     fun test_add_remove_label_flow() {
         // Set up a test environment.
-        let sender = @0x0;
-        let mut scenario = test_scenario::begin(sender);
+        let system = @0x0;
+        let sender = @0xA;
+        let mut scenario = test_scenario::begin(system);
+
+        // Initialize a SystemLabelerCap.
+        label::assign_system_labeler_cap(sender, scenario.ctx());
+
+        // Switch to sender.
+        scenario.next_tx(sender);
+
+        // Take the capability.
+        let cap = scenario.take_from_sender<SystemLabelerCap>();
 
         // Minting some IOTA.
         let iota = balance::create_for_testing<SUI>(10);
@@ -120,20 +131,19 @@ module timelock::timelock_tests {
         let label1 = b"label1".to_string();
         let label2 = b"label2".to_string();
 
-        timelock.add_label(label1, scenario.ctx());
-        timelock.add_label(label2, scenario.ctx());
+        timelock.add_label(&cap, label1);
+        timelock.add_label(&cap, label2);
 
         // Check labels.
         assert!(timelock.has_label(&label1), 0);
         assert!(timelock.has_label(&label2), 1);
 
-        // Remove the labels.
-        timelock.remove_label(&label1, scenario.ctx());
-        timelock.remove_label(&label2, scenario.ctx());
+        // Remove a label.
+        timelock.remove_label(&cap, &label1);
 
         // Check labels again.
         assert!(!timelock.has_label(&label1), 3);
-        assert!(!timelock.has_label(&label2), 4);
+        assert!(timelock.has_label(&label2), 4);
 
         // Increment epoch timestamp.
         scenario.ctx().increment_epoch_timestamp(110);
@@ -143,6 +153,8 @@ module timelock::timelock_tests {
 
         // Cleanup.
         balance::destroy_for_testing(balance);
+
+        scenario.return_to_sender(cap);
 
         scenario.end();
     }

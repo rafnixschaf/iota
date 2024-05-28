@@ -22,8 +22,8 @@ A timelock implementation.
 -  [Function `transfer`](#0x10cf_timelock_transfer)
 
 
-<pre><code><b>use</b> <a href="label.md#0x10cf_label">0x10cf::label</a>;
-<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
+<pre><code><b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
+<b>use</b> <a href="../sui-framework/label.md#0x2_label">0x2::label</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -301,7 +301,7 @@ Function to get a mutable reference to the locked object of a <code><a href="tim
 Function to add a label to a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_add_label">add_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_add_label">add_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, cap: &<a href="../sui-framework/label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="../sui-framework/label.md#0x2_label">label</a>: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
 </code></pre>
 
 
@@ -310,8 +310,8 @@ Function to add a label to a <code><a href="timelock.md#0x10cf_timelock_TimeLock
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_add_label">add_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: String, ctx: &TxContext) {
-    <a href="label.md#0x10cf_label_add_system">label::add_system</a>(&<b>mut</b> self.id, <a href="label.md#0x10cf_label">label</a>, ctx);
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_add_label">add_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, cap: &SystemLabelerCap, <a href="../sui-framework/label.md#0x2_label">label</a>: String) {
+    <a href="../sui-framework/label.md#0x2_label_add_system">label::add_system</a>(cap, &<b>mut</b> self.id, <a href="../sui-framework/label.md#0x2_label">label</a>);
 }
 </code></pre>
 
@@ -326,7 +326,7 @@ Function to add a label to a <code><a href="timelock.md#0x10cf_timelock_TimeLock
 Function to remove a label from a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remove_label">remove_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remove_label">remove_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, cap: &<a href="../sui-framework/label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="../sui-framework/label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
 </code></pre>
 
 
@@ -335,8 +335,8 @@ Function to remove a label from a <code><a href="timelock.md#0x10cf_timelock_Tim
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remove_label">remove_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: &String, ctx: &TxContext) {
-    <a href="label.md#0x10cf_label_remove_system">label::remove_system</a>(&<b>mut</b> self.id, <a href="label.md#0x10cf_label">label</a>, ctx);
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remove_label">remove_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, cap: &SystemLabelerCap, <a href="../sui-framework/label.md#0x2_label">label</a>: &String) {
+    <a href="../sui-framework/label.md#0x2_label_remove_system">label::remove_system</a>(cap, &<b>mut</b> self.id, <a href="../sui-framework/label.md#0x2_label">label</a>);
 }
 </code></pre>
 
@@ -351,7 +351,7 @@ Function to remove a label from a <code><a href="timelock.md#0x10cf_timelock_Tim
 Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code> tagged with a label.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_has_label">has_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_has_label">has_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, <a href="../sui-framework/label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
 </code></pre>
 
 
@@ -360,8 +360,8 @@ Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">Time
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_has_label">has_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, <a href="label.md#0x10cf_label">label</a>: &String): bool {
-    <a href="label.md#0x10cf_label_has_system">label::has_system</a>(&<b>mut</b> self.id, <a href="label.md#0x10cf_label">label</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_has_label">has_label</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, <a href="../sui-framework/label.md#0x2_label">label</a>: &String): bool {
+    <a href="../sui-framework/label.md#0x2_label_has_system">label::has_system</a>(&<b>mut</b> self.id, <a href="../sui-framework/label.md#0x2_label">label</a>)
 }
 </code></pre>
 

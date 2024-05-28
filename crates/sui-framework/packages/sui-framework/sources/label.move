@@ -3,7 +3,7 @@
 
 /// A library provides implementation for working with labels.
 /// Any object which implements the `key` ability can be tagged with labels.
-module timelock::label {
+module sui::label {
 
     use std::string::String;
 
@@ -18,16 +18,33 @@ module timelock::label {
     /// Sender is not @0x0 the system address.
     const ENotSystemAddress: u64 = 0;
 
+    /// The capability allows to work with system labels.
+    public struct SystemLabelerCap has key {
+        id: UID,
+    }
+
+    /// Create and transfer a `SystemLabelerCap` object to an address.
+    /// This function is called exactly once, during genesis.
+    public fun assign_system_labeler_cap(to: address, ctx: &mut TxContext) {
+        assert!(ctx.sender() == @0x0, ENotSystemAddress);
+
+        // Create a new capability.
+        let cap = SystemLabelerCap {
+            id: object::new(ctx),
+        };
+
+        // Transfer the capability to the specified address.
+        transfer::transfer(cap, to);
+    }
+
     /// Add a user-defined custom label.
     public fun add(object: &mut UID, label: String) {
         add_impl(object, LABELS_NAME, label);
     }
 
     /// Add a system-defined label.
-    /// Can by call only by a system transaction.
-    public fun add_system(object: &mut UID, label: String, ctx: &TxContext) {
-        assert!(ctx.sender() == @0x0, ENotSystemAddress);
-
+    /// Can by call only by a `SystemLabelerCap` owner.
+    public fun add_system(_: &SystemLabelerCap, object: &mut UID, label: String) {
         add_impl(object, SYSTEM_LABELS_NAME, label);
     }
 
@@ -37,10 +54,8 @@ module timelock::label {
     }
 
     /// Remove a system-defined label.
-    /// Can by call only by a system transaction.
-    public fun remove_system(object: &mut UID, label: &String, ctx: &TxContext) {
-        assert!(ctx.sender() == @0x0, ENotSystemAddress);
-
+    /// Can by call only by a `SystemLabelerCap` owner.
+    public fun remove_system(_: &SystemLabelerCap, object: &mut UID, label: &String) {
         remove_impl(object, SYSTEM_LABELS_NAME, label);
     }
 
