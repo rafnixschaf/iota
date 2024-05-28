@@ -3,6 +3,11 @@
 
 /// A timelock implementation.
 module timelock::timelock {
+
+    use std::string::String;
+
+    use timelock::label;
+
     /// Error code for when the expire timestamp of the lock is in the past.
     const EExpireEpochIsPast: u64 = 0;
 
@@ -74,6 +79,21 @@ module timelock::timelock {
     /// Function to get a mutable reference to the locked object of a `TimeLock`.
     public(package) fun locked_mut<T: store>(self: &mut TimeLock<T>): &mut T {
         &mut self.locked
+    }
+
+    /// Function to add a label to a `TimeLock`
+    public fun add_label<T: store>(self: &mut TimeLock<T>, label: String, ctx: &TxContext) {
+        label::add_system(&mut self.id, label, ctx);
+    }
+
+    /// Function to remove a label from a `TimeLock`
+    public fun remove_label<T: store>(self: &mut TimeLock<T>, label: &String, ctx: &TxContext) {
+        label::remove_system(&mut self.id, label, ctx);
+    }
+
+    /// Function to check if a `TimeLock` tagged with a label.
+    public fun has_label<T: store>(self: &mut TimeLock<T>, label: &String): bool {
+        label::has_system(&mut self.id, label)
     }
 
     /// An utility function to pack a `TimeLock`.

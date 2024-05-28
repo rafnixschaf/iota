@@ -103,4 +103,47 @@ module timelock::timelock_tests {
 
         scenario.end();
     }
+
+    #[test]
+    fun test_add_remove_label_flow() {
+        // Set up a test environment.
+        let sender = @0x0;
+        let mut scenario = test_scenario::begin(sender);
+
+        // Minting some IOTA.
+        let iota = balance::create_for_testing<SUI>(10);
+
+        // Lock the IOTA balance.
+        let mut timelock = timelock::lock(iota, 100, scenario.ctx());
+
+        // Add some labels.
+        let label1 = b"label1".to_string();
+        let label2 = b"label2".to_string();
+
+        timelock.add_label(label1, scenario.ctx());
+        timelock.add_label(label2, scenario.ctx());
+
+        // Check labels.
+        assert!(timelock.has_label(&label1), 0);
+        assert!(timelock.has_label(&label2), 1);
+
+        // Remove the labels.
+        timelock.remove_label(&label1, scenario.ctx());
+        timelock.remove_label(&label2, scenario.ctx());
+
+        // Check labels again.
+        assert!(!timelock.has_label(&label1), 3);
+        assert!(!timelock.has_label(&label2), 4);
+
+        // Increment epoch timestamp.
+        scenario.ctx().increment_epoch_timestamp(110);
+
+        // Unlock the IOTA balance.
+        let balance = timelock::unlock(timelock, scenario.ctx());
+
+        // Cleanup.
+        balance::destroy_for_testing(balance);
+
+        scenario.end();
+    }
 }
