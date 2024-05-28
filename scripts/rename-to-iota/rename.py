@@ -82,7 +82,7 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False, 
     # If there's a gitignore and it's respected, use it, otherwise never ignore
     if respect_gitignore:
         if os.path.exists('%s.rename' % gitignore_path):
-            gitignore = parse_gitignore(gitignore_path)
+            gitignore = parse_gitignore('%s.rename' % gitignore_path)
         elif os.path.exists(gitignore_path):
             gitignore = parse_gitignore(gitignore_path)
 
