@@ -209,6 +209,8 @@ pub(super) fn verify_sender_feature(
     Ok(())
 }
 
+// Checks whether an object exists for this address and whether it is the expected alias or nft object.
+// We do not expect an object for Ed25519 addresses.
 pub(super) fn verify_parent(address: &Address, storage: &InMemoryStorage) -> Result<()> {
     let object_id = ObjectID::from(address.to_string().parse::<SuiAddress>()?);
     let parent = storage.get_object(&object_id);
