@@ -4,8 +4,6 @@
 /// A timelock implementation.
 module timelock::timelock {
 
-    use std::string::String;
-
     use sui::label::{Self, SystemLabelerCap};
 
     /// Error code for when the expire timestamp of the lock is in the past.
@@ -82,18 +80,18 @@ module timelock::timelock {
     }
 
     /// Function to add a label to a `TimeLock`
-    public fun add_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: String) {
-        label::add_system(cap, &mut self.id, label);
+    public fun add_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: vector<u8>) {
+        label::borrow_labels_guard_mut(&mut self.id).add_system(cap, label);
     }
 
     /// Function to remove a label from a `TimeLock`
-    public fun remove_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: &String) {
-        label::remove_system(cap, &mut self.id, label);
+    public fun remove_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: &vector<u8>) {
+        label::borrow_labels_guard_mut(&mut self.id).remove_system(cap, label);
     }
 
-    /// Function to check if a `TimeLock` tagged with a label.
-    public fun has_label<T: store>(self: &mut TimeLock<T>, label: &String): bool {
-        label::has_system(&mut self.id, label)
+    /// Function to check if a `TimeLock` labeled with a label.
+    public fun has_label<T: store>(self: &mut TimeLock<T>, label: &vector<u8>): bool {
+        label::borrow_labels_guard(&mut self.id).has_system(label)
     }
 
     /// An utility function to pack a `TimeLock`.
@@ -110,10 +108,13 @@ module timelock::timelock {
     public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64) {
         // Unpack the timelock.
         let TimeLock {
-            id,
+            mut id,
             locked,
             expiration_timestamp_ms
         } = lock;
+
+        // Remove the related labels guard.
+        label::remove_labels_guard(&mut id);
 
         // Delete the timelock. 
         object::delete(id);

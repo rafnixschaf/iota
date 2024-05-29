@@ -128,8 +128,8 @@ module timelock::timelock_tests {
         let mut timelock = timelock::lock(iota, 100, scenario.ctx());
 
         // Add some labels.
-        let label1 = b"label1".to_string();
-        let label2 = b"label2".to_string();
+        let label1 = b"label1";
+        let label2 = b"label2";
 
         timelock.add_label(&cap, label1);
         timelock.add_label(&cap, label2);

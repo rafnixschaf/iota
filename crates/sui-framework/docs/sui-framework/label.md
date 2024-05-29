@@ -7,22 +7,24 @@ Any object which implements the <code>key</code> ability can be tagged with labe
 
 
 -  [Resource `SystemLabelerCap`](#0x2_label_SystemLabelerCap)
+-  [Struct `LabelsGuard`](#0x2_label_LabelsGuard)
 -  [Constants](#@Constants_0)
 -  [Function `assign_system_labeler_cap`](#0x2_label_assign_system_labeler_cap)
 -  [Function `add`](#0x2_label_add)
--  [Function `add_system`](#0x2_label_add_system)
 -  [Function `remove`](#0x2_label_remove)
--  [Function `remove_system`](#0x2_label_remove_system)
 -  [Function `has`](#0x2_label_has)
+-  [Function `add_system`](#0x2_label_add_system)
+-  [Function `remove_system`](#0x2_label_remove_system)
 -  [Function `has_system`](#0x2_label_has_system)
 -  [Function `has_any`](#0x2_label_has_any)
--  [Function `add_impl`](#0x2_label_add_impl)
--  [Function `remove_impl`](#0x2_label_remove_impl)
--  [Function `has_impl`](#0x2_label_has_impl)
+-  [Function `borrow_labels_guard`](#0x2_label_borrow_labels_guard)
+-  [Function `borrow_labels_guard_mut`](#0x2_label_borrow_labels_guard_mut)
+-  [Function `remove_labels_guard`](#0x2_label_remove_labels_guard)
+-  [Function `create_labels_guard`](#0x2_label_create_labels_guard)
+-  [Function `ensure_labels_guard_is_created`](#0x2_label_ensure_labels_guard_is_created)
 
 
-<pre><code><b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
-<b>use</b> <a href="dynamic_field.md#0x2_dynamic_field">0x2::dynamic_field</a>;
+<pre><code><b>use</b> <a href="dynamic_field.md#0x2_dynamic_field">0x2::dynamic_field</a>;
 <b>use</b> <a href="object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -59,6 +61,40 @@ The capability allows to work with system labels.
 
 </details>
 
+<a name="0x2_label_LabelsGuard"></a>
+
+## Struct `LabelsGuard`
+
+<code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> protects the labels from unauthorized access.
+
+
+<pre><code><b>struct</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> <b>has</b> store
+</code></pre>
+
+
+
+<details>
+<summary>Fields</summary>
+
+
+<dl>
+<dt>
+<code>labels: <a href="vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;</code>
+</dt>
+<dd>
+ User-defined labels.
+</dd>
+<dt>
+<code>system_labels: <a href="vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;</code>
+</dt>
+<dd>
+ Protected system-defined labels.
+</dd>
+</dl>
+
+
+</details>
+
 <a name="@Constants_0"></a>
 
 ## Constants
@@ -76,20 +112,10 @@ Sender is not @0x0 the system address.
 
 <a name="0x2_label_LABELS_NAME"></a>
 
-The user-defined custom labels dynamic field name.
+The <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> dynamic field name.
 
 
 <pre><code><b>const</b> <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt; = [108, 97, 98, 101, 108, 115];
-</code></pre>
-
-
-
-<a name="0x2_label_SYSTEM_LABELS_NAME"></a>
-
-The system-defined labels dynamic field name.
-
-
-<pre><code><b>const</b> <a href="label.md#0x2_label_SYSTEM_LABELS_NAME">SYSTEM_LABELS_NAME</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt; = [115, 121, 115, 116, 101, 109, 95, 108, 97, 98, 101, 108, 115];
 </code></pre>
 
 
@@ -135,7 +161,7 @@ This function is called exactly once, during genesis.
 Add a user-defined custom label.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add">add</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add">add</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;)
 </code></pre>
 
 
@@ -144,8 +170,58 @@ Add a user-defined custom label.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add">add</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: String) {
-    <a href="label.md#0x2_label_add_impl">add_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>);
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add">add</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;) {
+    self.labels.insert(<a href="label.md#0x2_label">label</a>);
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x2_label_remove"></a>
+
+## Function `remove`
+
+Remove a user-defined custom label.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove">remove</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove">remove</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;) {
+    self.labels.<a href="label.md#0x2_label_remove">remove</a>(<a href="label.md#0x2_label">label</a>);
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x2_label_has"></a>
+
+## Function `has`
+
+Check if an object is labeled with a user-defined custom label.
+
+
+<pre><code><b>public</b> <b>fun</b> <b>has</b>(self: &<a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <b>has</b>(self: &<a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool {
+    self.labels.contains(<a href="label.md#0x2_label">label</a>)
 }
 </code></pre>
 
@@ -161,7 +237,7 @@ Add a system-defined label.
 Can by call only by a <code><a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a></code> owner.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add_system">add_system</a>(_: &<a href="label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add_system">add_system</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, _: &<a href="label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;)
 </code></pre>
 
 
@@ -170,33 +246,8 @@ Can by call only by a <code><a href="label.md#0x2_label_SystemLabelerCap">System
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add_system">add_system</a>(_: &<a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a>, <a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: String) {
-    <a href="label.md#0x2_label_add_impl">add_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_SYSTEM_LABELS_NAME">SYSTEM_LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>);
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x2_label_remove"></a>
-
-## Function `remove`
-
-Remove a user-defined custom label.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove">remove</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove">remove</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: &String) {
-    <a href="label.md#0x2_label_remove_impl">remove_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>);
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_add_system">add_system</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, _: &<a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a>, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;) {
+    self.system_labels.insert(<a href="label.md#0x2_label">label</a>);
 }
 </code></pre>
 
@@ -212,7 +263,7 @@ Remove a system-defined label.
 Can by call only by a <code><a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a></code> owner.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_system">remove_system</a>(_: &<a href="label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_system">remove_system</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, _: &<a href="label.md#0x2_label_SystemLabelerCap">label::SystemLabelerCap</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;)
 </code></pre>
 
 
@@ -221,33 +272,8 @@ Can by call only by a <code><a href="label.md#0x2_label_SystemLabelerCap">System
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_system">remove_system</a>(_: &<a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a>, <a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: &String) {
-    <a href="label.md#0x2_label_remove_impl">remove_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_SYSTEM_LABELS_NAME">SYSTEM_LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>);
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x2_label_has"></a>
-
-## Function `has`
-
-Check if an object is tagged with a user-defined custom label.
-
-
-<pre><code><b>public</b> <b>fun</b> <b>has</b>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <b>has</b>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: &String): bool {
-    <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_system">remove_system</a>(self: &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, _: &<a href="label.md#0x2_label_SystemLabelerCap">SystemLabelerCap</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;) {
+    self.system_labels.<a href="label.md#0x2_label_remove">remove</a>(<a href="label.md#0x2_label">label</a>);
 }
 </code></pre>
 
@@ -259,10 +285,10 @@ Check if an object is tagged with a user-defined custom label.
 
 ## Function `has_system`
 
-Check if an object is tagged with a system-defined label.
+Check if an object is labeled with a system-defined label.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_system">has_system</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_system">has_system</a>(self: &<a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool
 </code></pre>
 
 
@@ -271,8 +297,8 @@ Check if an object is tagged with a system-defined label.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_system">has_system</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: &String): bool {
-    <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_SYSTEM_LABELS_NAME">SYSTEM_LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_system">has_system</a>(self: &<a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool {
+    self.system_labels.contains(<a href="label.md#0x2_label">label</a>)
 }
 </code></pre>
 
@@ -284,10 +310,10 @@ Check if an object is tagged with a system-defined label.
 
 ## Function `has_any`
 
-Check if an object is tagged with an any label.
+Check if an object is labeled with an any label.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_any">has_any</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_any">has_any</a>(self: &<a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool
 </code></pre>
 
 
@@ -296,8 +322,8 @@ Check if an object is tagged with an any label.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_any">has_any</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, <a href="label.md#0x2_label">label</a>: &String): bool {
-    <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>) || <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_SYSTEM_LABELS_NAME">SYSTEM_LABELS_NAME</a>, <a href="label.md#0x2_label">label</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_has_any">has_any</a>(self: &<a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool {
+    <b>has</b>(self, <a href="label.md#0x2_label">label</a>) || <a href="label.md#0x2_label_has_system">has_system</a>(self, <a href="label.md#0x2_label">label</a>)
 }
 </code></pre>
 
@@ -305,14 +331,15 @@ Check if an object is tagged with an any label.
 
 </details>
 
-<a name="0x2_label_add_impl"></a>
+<a name="0x2_label_borrow_labels_guard"></a>
 
-## Function `add_impl`
+## Function `borrow_labels_guard`
 
-Add label internal utility function.
+Immutably borrow the related labels guard.
+A <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> instance will be created if it does not exist.
 
 
-<pre><code><b>fun</b> <a href="label.md#0x2_label_add_impl">add_impl</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: <a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_borrow_labels_guard">borrow_labels_guard</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>): &<a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>
 </code></pre>
 
 
@@ -321,23 +348,96 @@ Add label internal utility function.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="label.md#0x2_label_add_impl">add_impl</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: String) {
-    // Check <b>if</b> a labels collection exists.
-    <b>if</b> (<a href="dynamic_field.md#0x2_dynamic_field_exists_">dynamic_field::exists_</a>(<a href="object.md#0x2_object">object</a>, df_name)) {
-        // Borrow the related labels collection.
-        <b>let</b> labels = <a href="dynamic_field.md#0x2_dynamic_field_borrow_mut">dynamic_field::borrow_mut</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, VecSet&lt;String&gt;&gt;(<a href="object.md#0x2_object">object</a>, df_name);
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_borrow_labels_guard">borrow_labels_guard</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID): &<a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> {
+    <a href="label.md#0x2_label_ensure_labels_guard_is_created">ensure_labels_guard_is_created</a>(<a href="object.md#0x2_object">object</a>);
 
-        // Insert the <a href="label.md#0x2_label">label</a> into the collection.
-        labels.insert(<a href="label.md#0x2_label">label</a>);
-    } <b>else</b> {
-        // Create a new labels collection.
-        <b>let</b> <b>mut</b> labels = <a href="vec_set.md#0x2_vec_set_empty">vec_set::empty</a>();
+    <a href="dynamic_field.md#0x2_dynamic_field_borrow">dynamic_field::borrow</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>&gt;(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>)
+}
+</code></pre>
 
-        // Insert the <a href="label.md#0x2_label">label</a> into the collection.
-        labels.insert(<a href="label.md#0x2_label">label</a>);
 
-        // Add the created collection <b>as</b> a dynamic field <b>to</b> the <a href="object.md#0x2_object">object</a>.
-        <a href="dynamic_field.md#0x2_dynamic_field_add">dynamic_field::add</a>(<a href="object.md#0x2_object">object</a>, df_name, labels);
+
+</details>
+
+<a name="0x2_label_borrow_labels_guard_mut"></a>
+
+## Function `borrow_labels_guard_mut`
+
+Mutably borrow the related labels guard.
+A <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> instance will be created if it does not exist.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_borrow_labels_guard_mut">borrow_labels_guard_mut</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>): &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_borrow_labels_guard_mut">borrow_labels_guard_mut</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID): &<b>mut</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> {
+    <a href="label.md#0x2_label_ensure_labels_guard_is_created">ensure_labels_guard_is_created</a>(<a href="object.md#0x2_object">object</a>);
+
+    <a href="dynamic_field.md#0x2_dynamic_field_borrow_mut">dynamic_field::borrow_mut</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a>&gt;(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>)
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x2_label_remove_labels_guard"></a>
+
+## Function `remove_labels_guard`
+
+Remove the related <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> if it exists.
+Must be called when the owned object is deleted to avoid memory leaks.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_labels_guard">remove_labels_guard</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x2_label_remove_labels_guard">remove_labels_guard</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID) {
+    <b>if</b> (<a href="dynamic_field.md#0x2_dynamic_field_exists_">dynamic_field::exists_</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>)) {
+        <b>let</b> <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> {
+            labels: _,
+            system_labels: _,
+        } = <a href="dynamic_field.md#0x2_dynamic_field_remove">dynamic_field::remove</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>);
+    };
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x2_label_create_labels_guard"></a>
+
+## Function `create_labels_guard`
+
+Create a <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> instance.
+
+
+<pre><code><b>fun</b> <a href="label.md#0x2_label_create_labels_guard">create_labels_guard</a>(): <a href="label.md#0x2_label_LabelsGuard">label::LabelsGuard</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>fun</b> <a href="label.md#0x2_label_create_labels_guard">create_labels_guard</a>(): <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> {
+    <a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a> {
+        labels: <a href="vec_set.md#0x2_vec_set_empty">vec_set::empty</a>(),
+        system_labels: <a href="vec_set.md#0x2_vec_set_empty">vec_set::empty</a>(),
     }
 }
 </code></pre>
@@ -346,14 +446,14 @@ Add label internal utility function.
 
 </details>
 
-<a name="0x2_label_remove_impl"></a>
+<a name="0x2_label_ensure_labels_guard_is_created"></a>
 
-## Function `remove_impl`
+## Function `ensure_labels_guard_is_created`
 
-Remove label internal utility function.
+Create a related <code><a href="label.md#0x2_label_LabelsGuard">LabelsGuard</a></code> instance if it does not exist.
 
 
-<pre><code><b>fun</b> <a href="label.md#0x2_label_remove_impl">remove_impl</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>)
+<pre><code><b>fun</b> <a href="label.md#0x2_label_ensure_labels_guard_is_created">ensure_labels_guard_is_created</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> <a href="object.md#0x2_object_UID">object::UID</a>)
 </code></pre>
 
 
@@ -362,65 +462,10 @@ Remove label internal utility function.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="label.md#0x2_label_remove_impl">remove_impl</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: &String) {
-    // Need <b>to</b> check <b>if</b> this variable is required.
-    <b>let</b> <b>mut</b> need_remove_collection = <b>false</b>;
-
-    // Check <b>if</b> a labels collection exists.
-    <b>if</b> (<a href="dynamic_field.md#0x2_dynamic_field_exists_">dynamic_field::exists_</a>(<a href="object.md#0x2_object">object</a>, df_name)) {
-        // Borrow the related labels collection.
-        <b>let</b> labels = <a href="dynamic_field.md#0x2_dynamic_field_borrow_mut">dynamic_field::borrow_mut</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, VecSet&lt;String&gt;&gt;(<a href="object.md#0x2_object">object</a>, df_name);
-
-        // Check <b>if</b> the labels collection contains the <a href="label.md#0x2_label">label</a>.
-        <b>if</b> (labels.contains(<a href="label.md#0x2_label">label</a>)) {
-            // Remove the <a href="label.md#0x2_label">label</a>.
-            labels.<a href="label.md#0x2_label_remove">remove</a>(<a href="label.md#0x2_label">label</a>);
-
-            // Remove the labels collection <b>if</b> it is empty.
-            <b>if</b> (labels.is_empty()) {
-                need_remove_collection = <b>true</b>;
-            };
-        };
+<pre><code><b>fun</b> <a href="label.md#0x2_label_ensure_labels_guard_is_created">ensure_labels_guard_is_created</a>(<a href="object.md#0x2_object">object</a>: &<b>mut</b> UID) {
+    <b>if</b> (!<a href="dynamic_field.md#0x2_dynamic_field_exists_">dynamic_field::exists_</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>)) {
+        <a href="dynamic_field.md#0x2_dynamic_field_add">dynamic_field::add</a>(<a href="object.md#0x2_object">object</a>, <a href="label.md#0x2_label_LABELS_NAME">LABELS_NAME</a>, <a href="label.md#0x2_label_create_labels_guard">create_labels_guard</a>());
     };
-
-    // Remove the related labels collection.
-    <b>if</b> (need_remove_collection) {
-        <a href="dynamic_field.md#0x2_dynamic_field_remove">dynamic_field::remove</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, VecSet&lt;String&gt;&gt;(<a href="object.md#0x2_object">object</a>, df_name);
-    }
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x2_label_has_impl"></a>
-
-## Function `has_impl`
-
-Utility function for checking if an object is tagged with a label.
-
-
-<pre><code><b>fun</b> <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>: &<a href="object.md#0x2_object_UID">object::UID</a>, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>fun</b> <a href="label.md#0x2_label_has_impl">has_impl</a>(<a href="object.md#0x2_object">object</a>: &UID, df_name: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, <a href="label.md#0x2_label">label</a>: &String): bool {
-    // The <a href="label.md#0x2_label">label</a> can not exist <b>if</b> there is no a <a href="label.md#0x2_label">label</a> collection.
-    <b>if</b> (!<a href="dynamic_field.md#0x2_dynamic_field_exists_">dynamic_field::exists_</a>(<a href="object.md#0x2_object">object</a>, df_name)) {
-        <b>return</b> <b>false</b>
-    };
-
-    // Borrow the related labels collection.
-    <b>let</b> labels = <a href="dynamic_field.md#0x2_dynamic_field_borrow">dynamic_field::borrow</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, VecSet&lt;String&gt;&gt;(<a href="object.md#0x2_object">object</a>, df_name);
-
-    // Check <b>if</b> an <a href="object.md#0x2_object">object</a> is tagged <b>with</b> a <a href="label.md#0x2_label">label</a>.
-    labels.contains(<a href="label.md#0x2_label">label</a>)
 }
 </code></pre>
 
