@@ -1,8 +1,8 @@
-import { TransactionBlock } from "@mysten/sui.js/transactions";
+import { TransactionBlock } from "@mysten/iota.js/transactions";
 import { Button, Container } from "@radix-ui/themes";
 import {
   useSignAndExecuteTransactionBlock,
-  useSuiClient,
+  useIotaClient,
 } from "@mysten/dapp-kit";
 import { useNetworkVariable } from "./networkConfig";
 
@@ -11,7 +11,7 @@ export function CreateCounter({
 }: {
   onCreated: (id: string) => void;
 }) {
-  const client = useSuiClient();
+  const client = useIotaClient();
   const counterPackageId = useNetworkVariable("counterPackageId");
   const { mutate: signAndExecute } = useSignAndExecuteTransactionBlock();
 

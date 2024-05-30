@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { X32 } from '@mysten/icons';
 import cl from 'clsx';
 import { useCallback } from 'react';
@@ -18,7 +21,7 @@ type OverlayProps = {
 	closeOverlay?: () => void;
 	closeIcon?: ReactNode | null;
 	setShowModal?: (showModal: boolean) => void;
-	background?: 'bg-sui-lightest';
+	background?: 'bg-iota-lightest';
 };
 
 function Overlay({
@@ -27,7 +30,7 @@ function Overlay({
 	showModal,
 	closeOverlay,
 	setShowModal,
-	closeIcon = <X32 fill="currentColor" className="text-sui-light w-8 h-8" />,
+	closeIcon = <X32 fill="currentColor" className="text-iota-light w-8 h-8" />,
 	background,
 }: OverlayProps) {
 	const closeModal = useCallback(

@@ -1,10 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 import { GrowthBook } from '@growthbook/growthbook';
-import { Network } from '@mysten/sui.js/client';
+import { Network } from '@mysten/iota.js/client';
 import Browser from 'webextension-polyfill';
 
 // Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 export const growthbook = new GrowthBook({
 	apiHost: process.env.APPS_BACKEND_URL,

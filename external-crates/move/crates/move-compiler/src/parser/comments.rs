@@ -2,6 +2,9 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{diag, diagnostics::Diagnostics};
 use move_command_line_common::{
     character_sets::{is_permitted_chars, DisplayChar},

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use futures::{future::join_all, StreamExt};
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee::ws_client::WsClient;
@@ -12,45 +15,45 @@ use std::num::NonZeroUsize;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use sui_config::node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange};
-use sui_config::{Config, SUI_CLIENT_CONFIG, SUI_NETWORK_CONFIG};
-use sui_config::{NodeConfig, PersistedConfig, SUI_KEYSTORE_FILENAME};
-use sui_core::authority_aggregator::AuthorityAggregator;
-use sui_core::authority_client::NetworkAuthorityClient;
-use sui_json_rpc_types::{
-    SuiTransactionBlockEffectsAPI, SuiTransactionBlockResponse, TransactionFilter,
+use iota_config::node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange};
+use iota_config::{Config, IOTA_CLIENT_CONFIG, IOTA_NETWORK_CONFIG};
+use iota_config::{NodeConfig, PersistedConfig, IOTA_KEYSTORE_FILENAME};
+use iota_core::authority_aggregator::AuthorityAggregator;
+use iota_core::authority_client::NetworkAuthorityClient;
+use iota_json_rpc_types::{
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse, TransactionFilter,
 };
-use sui_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
-use sui_node::SuiNodeHandle;
-use sui_protocol_config::{ProtocolVersion, SupportedProtocolVersions};
-use sui_sdk::sui_client_config::{SuiClientConfig, SuiEnv};
-use sui_sdk::wallet_context::WalletContext;
-use sui_sdk::{SuiClient, SuiClientBuilder};
-use sui_swarm::memory::{Swarm, SwarmBuilder};
-use sui_swarm_config::genesis_config::{
+use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
+use iota_node::IotaNodeHandle;
+use iota_protocol_config::{ProtocolVersion, SupportedProtocolVersions};
+use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
+use iota_sdk::wallet_context::WalletContext;
+use iota_sdk::{IotaClient, IotaClientBuilder};
+use iota_swarm::memory::{Swarm, SwarmBuilder};
+use iota_swarm_config::genesis_config::{
     AccountConfig, GenesisConfig, ValidatorGenesisConfig, DEFAULT_GAS_AMOUNT,
 };
-use sui_swarm_config::network_config::NetworkConfig;
-use sui_swarm_config::network_config_builder::{
+use iota_swarm_config::network_config::NetworkConfig;
+use iota_swarm_config::network_config_builder::{
     ProtocolVersionsConfig, SupportedProtocolVersionsCallback,
 };
-use sui_swarm_config::node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder};
-use sui_test_transaction_builder::TestTransactionBuilder;
-use sui_types::base_types::ConciseableName;
-use sui_types::base_types::{AuthorityName, ObjectID, ObjectRef, SuiAddress};
-use sui_types::committee::CommitteeTrait;
-use sui_types::committee::{Committee, EpochId};
-use sui_types::crypto::KeypairTraits;
-use sui_types::crypto::SuiKeyPair;
-use sui_types::effects::{TransactionEffects, TransactionEvents};
-use sui_types::error::SuiResult;
-use sui_types::governance::MIN_VALIDATOR_JOINING_STAKE_MIST;
-use sui_types::message_envelope::Message;
-use sui_types::object::Object;
-use sui_types::sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait;
-use sui_types::sui_system_state::SuiSystemState;
-use sui_types::sui_system_state::SuiSystemStateTrait;
-use sui_types::transaction::{
+use iota_swarm_config::node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder};
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::base_types::ConciseableName;
+use iota_types::base_types::{AuthorityName, ObjectID, ObjectRef, IotaAddress};
+use iota_types::committee::CommitteeTrait;
+use iota_types::committee::{Committee, EpochId};
+use iota_types::crypto::KeypairTraits;
+use iota_types::crypto::IotaKeyPair;
+use iota_types::effects::{TransactionEffects, TransactionEvents};
+use iota_types::error::IotaResult;
+use iota_types::governance::MIN_VALIDATOR_JOINING_STAKE_MICROS;
+use iota_types::message_envelope::Message;
+use iota_types::object::Object;
+use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
+use iota_types::iota_system_state::IotaSystemState;
+use iota_types::iota_system_state::IotaSystemStateTrait;
+use iota_types::transaction::{
     CertifiedTransaction, Transaction, TransactionData, TransactionDataAPI, TransactionKind,
 };
 use tokio::time::{timeout, Instant};
@@ -60,24 +63,24 @@ use tracing::{error, info};
 const NUM_VALIDATOR: usize = 4;
 
 pub struct FullNodeHandle {
-    pub sui_node: SuiNodeHandle,
-    pub sui_client: SuiClient,
+    pub iota_node: IotaNodeHandle,
+    pub iota_client: IotaClient,
     pub rpc_client: HttpClient,
     pub rpc_url: String,
     pub ws_url: String,
 }
 
 impl FullNodeHandle {
-    pub async fn new(sui_node: SuiNodeHandle, json_rpc_address: SocketAddr) -> Self {
+    pub async fn new(iota_node: IotaNodeHandle, json_rpc_address: SocketAddr) -> Self {
         let rpc_url = format!("http://{}", json_rpc_address);
         let rpc_client = HttpClientBuilder::default().build(&rpc_url).unwrap();
 
         let ws_url = format!("ws://{}", json_rpc_address);
-        let sui_client = SuiClientBuilder::default().build(&rpc_url).await.unwrap();
+        let iota_client = IotaClientBuilder::default().build(&rpc_url).await.unwrap();
 
         Self {
-            sui_node,
-            sui_client,
+            iota_node,
+            iota_client,
             rpc_client,
             rpc_url,
             ws_url,
@@ -103,8 +106,8 @@ impl TestCluster {
         &self.fullnode_handle.rpc_client
     }
 
-    pub fn sui_client(&self) -> &SuiClient {
-        &self.fullnode_handle.sui_client
+    pub fn iota_client(&self) -> &IotaClient {
+        &self.fullnode_handle.iota_client
     }
 
     pub fn rpc_url(&self) -> &str {
@@ -115,22 +118,22 @@ impl TestCluster {
         &mut self.wallet
     }
 
-    pub fn get_addresses(&self) -> Vec<SuiAddress> {
+    pub fn get_addresses(&self) -> Vec<IotaAddress> {
         self.wallet.get_addresses()
     }
 
     // Helper function to get the 0th address in WalletContext
-    pub fn get_address_0(&self) -> SuiAddress {
+    pub fn get_address_0(&self) -> IotaAddress {
         self.get_addresses()[0]
     }
 
     // Helper function to get the 1st address in WalletContext
-    pub fn get_address_1(&self) -> SuiAddress {
+    pub fn get_address_1(&self) -> IotaAddress {
         self.get_addresses()[1]
     }
 
     // Helper function to get the 2nd address in WalletContext
-    pub fn get_address_2(&self) -> SuiAddress {
+    pub fn get_address_2(&self) -> IotaAddress {
         self.get_addresses()[2]
     }
 
@@ -140,7 +143,7 @@ impl TestCluster {
 
     pub fn committee(&self) -> Arc<Committee> {
         self.fullnode_handle
-            .sui_node
+            .iota_node
             .with(|node| node.state().epoch_store_for_testing().committee().clone())
     }
 
@@ -159,14 +162,14 @@ impl TestCluster {
         FullNodeHandle::new(node, json_rpc_address).await
     }
 
-    pub fn all_node_handles(&self) -> Vec<SuiNodeHandle> {
+    pub fn all_node_handles(&self) -> Vec<IotaNodeHandle> {
         self.swarm
             .all_nodes()
             .map(|n| n.get_node_handle().unwrap())
             .collect()
     }
 
-    pub fn all_validator_handles(&self) -> Vec<SuiNodeHandle> {
+    pub fn all_validator_handles(&self) -> Vec<IotaNodeHandle> {
         self.swarm
             .validator_nodes()
             .map(|n| n.get_node_handle().unwrap())
@@ -209,7 +212,7 @@ impl TestCluster {
     pub async fn spawn_new_validator(
         &mut self,
         genesis_config: ValidatorGenesisConfig,
-    ) -> SuiNodeHandle {
+    ) -> IotaNodeHandle {
         let node_config = ValidatorConfigBuilder::new()
             .build(genesis_config, self.swarm.config().genesis.clone());
         self.swarm.spawn_new_node(node_config).await
@@ -220,7 +223,7 @@ impl TestCluster {
     }
 
     pub async fn get_reference_gas_price(&self) -> u64 {
-        self.sui_client()
+        self.iota_client()
             .governance_api()
             .get_reference_gas_price()
             .await
@@ -229,7 +232,7 @@ impl TestCluster {
 
     pub async fn get_object_from_fullnode_store(&self, object_id: &ObjectID) -> Option<Object> {
         self.fullnode_handle
-            .sui_node
+            .iota_node
             .with_async(|node| async { node.state().get_object(object_id).await.unwrap() })
             .await
     }
@@ -246,7 +249,7 @@ impl TestCluster {
         object_id: ObjectID,
     ) -> ObjectRef {
         self.fullnode_handle
-            .sui_node
+            .iota_node
             .state()
             .get_cache_reader()
             .get_latest_object_ref_or_tombstone(object_id)
@@ -260,7 +263,7 @@ impl TestCluster {
     /// If target_epoch is specified, wait until the cluster reaches that epoch.
     /// If target_epoch is None, wait until the cluster reaches the next epoch.
     /// Note that this function does not guarantee that every node is at the target epoch.
-    pub async fn wait_for_epoch(&self, target_epoch: Option<EpochId>) -> SuiSystemState {
+    pub async fn wait_for_epoch(&self, target_epoch: Option<EpochId>) -> IotaSystemState {
         self.wait_for_epoch_with_timeout(target_epoch, Duration::from_secs(60))
             .await
     }
@@ -269,10 +272,10 @@ impl TestCluster {
         &self,
         target_epoch: Option<EpochId>,
         timeout_dur: Duration,
-    ) -> SuiSystemState {
+    ) -> IotaSystemState {
         let mut epoch_rx = self
             .fullnode_handle
-            .sui_node
+            .iota_node
             .with(|node| node.subscribe_to_epoch_change());
         let mut state = Option::None;
         timeout(timeout_dur, async {
@@ -311,7 +314,7 @@ impl TestCluster {
     ) -> Option<RunWithRange> {
         let mut shutdown_channel_rx = self
             .fullnode_handle
-            .sui_node
+            .iota_node
             .with(|node| node.subscribe_to_shutdown_channel());
 
         timeout(timeout_dur, async move {
@@ -322,7 +325,7 @@ impl TestCluster {
                         Ok(Some(run_with_range)) => Some(run_with_range),
                         Ok(None) => None,
                         Err(e) => {
-                            error!("failed recv from sui-node shutdown channel: {}", e);
+                            error!("failed recv from iota-node shutdown channel: {}", e);
                             None
                         },
                     }
@@ -330,13 +333,13 @@ impl TestCluster {
             }
         })
         .await
-        .expect("Timed out waiting for cluster to hit target epoch and recv shutdown signal from sui-node")
+        .expect("Timed out waiting for cluster to hit target epoch and recv shutdown signal from iota-node")
     }
 
     pub async fn wait_for_protocol_version(
         &self,
         target_protocol_version: ProtocolVersion,
-    ) -> SuiSystemState {
+    ) -> IotaSystemState {
         self.wait_for_protocol_version_with_timeout(
             target_protocol_version,
             Duration::from_secs(60),
@@ -348,7 +351,7 @@ impl TestCluster {
         &self,
         target_protocol_version: ProtocolVersion,
         timeout_dur: Duration,
-    ) -> SuiSystemState {
+    ) -> IotaSystemState {
         timeout(timeout_dur, async move {
             loop {
                 let system_state = self.wait_for_epoch(None).await;
@@ -370,7 +373,7 @@ impl TestCluster {
         // Close epoch on 2f+1 validators.
         let cur_committee = self
             .fullnode_handle
-            .sui_node
+            .iota_node
             .with(|node| node.state().clone_committee_for_testing());
         let mut cur_stake = 0;
         for node in self.swarm.active_validators() {
@@ -475,7 +478,7 @@ impl TestCluster {
     pub async fn wait_for_authenticator_state_update(&self) {
         timeout(
             Duration::from_secs(60),
-            self.fullnode_handle.sui_node.with_async(|node| async move {
+            self.fullnode_handle.iota_node.with_async(|node| async move {
                 let mut txns = node.state().subscription_handler.subscribe_transactions(
                     TransactionFilter::ChangedObject(ObjectID::from_hex_literal("0x7").unwrap()),
                 );
@@ -508,7 +511,7 @@ impl TestCluster {
 
     pub async fn test_transaction_builder_with_sender(
         &self,
-        sender: SuiAddress,
+        sender: IotaAddress,
     ) -> TestTransactionBuilder {
         let gas = self
             .wallet
@@ -522,7 +525,7 @@ impl TestCluster {
 
     pub async fn test_transaction_builder_with_gas_object(
         &self,
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas: ObjectRef,
     ) -> TestTransactionBuilder {
         let rgp = self.get_reference_gas_price().await;
@@ -536,7 +539,7 @@ impl TestCluster {
     pub async fn sign_and_execute_transaction(
         &self,
         tx_data: &TransactionData,
-    ) -> SuiTransactionBlockResponse {
+    ) -> IotaTransactionBlockResponse {
         let tx = self.wallet.sign_transaction(tx_data);
         self.execute_transaction(tx).await
     }
@@ -545,7 +548,7 @@ impl TestCluster {
     /// Also expects the effects status to be ExecutionStatus::Success.
     /// This function is recommended for transaction execution since it most resembles the
     /// production path.
-    pub async fn execute_transaction(&self, tx: Transaction) -> SuiTransactionBlockResponse {
+    pub async fn execute_transaction(&self, tx: Transaction) -> IotaTransactionBlockResponse {
         self.wallet.execute_transaction_must_succeed(tx).await
     }
 
@@ -570,7 +573,7 @@ impl TestCluster {
 
     pub fn authority_aggregator(&self) -> Arc<AuthorityAggregator<NetworkAuthorityClient>> {
         self.fullnode_handle
-            .sui_node
+            .iota_node
             .with(|node| node.clone_authority_aggregator().unwrap())
     }
 
@@ -624,7 +627,7 @@ impl TestCluster {
                 break replies;
             }
         };
-        let replies: SuiResult<Vec<_>> = replies.into_iter().collect();
+        let replies: IotaResult<Vec<_>> = replies.into_iter().collect();
         let replies = replies?;
         let mut all_effects = HashMap::new();
         let mut all_events = HashMap::new();
@@ -649,13 +652,13 @@ impl TestCluster {
         &self,
         rgp: u64,
         amount: Option<u64>,
-        funding_address: SuiAddress,
+        funding_address: IotaAddress,
     ) -> ObjectRef {
         let context = &self.wallet;
         let (sender, gas) = context.get_one_gas_object().await.unwrap().unwrap();
         let tx = context.sign_transaction(
             &TestTransactionBuilder::new(sender, gas, rgp)
-                .transfer_sui(amount, funding_address)
+                .transfer_iota(amount, funding_address)
                 .build(),
         );
         context.execute_transaction_must_succeed(tx).await;
@@ -896,13 +899,13 @@ impl TestClusterBuilder {
 
     pub fn with_validator_candidates(
         mut self,
-        addresses: impl IntoIterator<Item = SuiAddress>,
+        addresses: impl IntoIterator<Item = IotaAddress>,
     ) -> Self {
         self.get_or_init_genesis_config()
             .accounts
             .extend(addresses.into_iter().map(|address| AccountConfig {
                 address: Some(address),
-                gas_amounts: vec![DEFAULT_GAS_AMOUNT, MIN_VALIDATOR_JOINING_STAKE_MIST],
+                gas_amounts: vec![DEFAULT_GAS_AMOUNT, MIN_VALIDATOR_JOINING_STAKE_MICROS],
             }));
         self
     }
@@ -944,7 +947,7 @@ impl TestClusterBuilder {
         // valid JWKs as well.
         #[cfg(msim)]
         if !self.default_jwks {
-            sui_node::set_jwk_injector(Arc::new(|_authority, provider| {
+            iota_node::set_jwk_injector(Arc::new(|_authority, provider| {
                 use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
                 use rand::Rng;
 
@@ -971,15 +974,15 @@ impl TestClusterBuilder {
         let swarm = self.start_swarm().await.unwrap();
         let working_dir = swarm.dir();
 
-        let mut wallet_conf: SuiClientConfig =
-            PersistedConfig::read(&working_dir.join(SUI_CLIENT_CONFIG)).unwrap();
+        let mut wallet_conf: IotaClientConfig =
+            PersistedConfig::read(&working_dir.join(IOTA_CLIENT_CONFIG)).unwrap();
 
         let fullnode = swarm.fullnodes().next().unwrap();
         let json_rpc_address = fullnode.config.json_rpc_address;
         let fullnode_handle =
             FullNodeHandle::new(fullnode.get_node_handle().unwrap(), json_rpc_address).await;
 
-        wallet_conf.envs.push(SuiEnv {
+        wallet_conf.envs.push(IotaEnv {
             alias: "localnet".to_string(),
             rpc: fullnode_handle.rpc_url.clone(),
             ws: Some(fullnode_handle.ws_url.clone()),
@@ -987,11 +990,11 @@ impl TestClusterBuilder {
         wallet_conf.active_env = Some("localnet".to_string());
 
         wallet_conf
-            .persisted(&working_dir.join(SUI_CLIENT_CONFIG))
+            .persisted(&working_dir.join(IOTA_CLIENT_CONFIG))
             .save()
             .unwrap();
 
-        let wallet_conf = swarm.dir().join(SUI_CLIENT_CONFIG);
+        let wallet_conf = swarm.dir().join(IOTA_CLIENT_CONFIG);
         let wallet = WalletContext::new(&wallet_conf, None, None).unwrap();
 
         TestCluster {
@@ -1057,20 +1060,20 @@ impl TestClusterBuilder {
 
         let dir = swarm.dir();
 
-        let network_path = dir.join(SUI_NETWORK_CONFIG);
-        let wallet_path = dir.join(SUI_CLIENT_CONFIG);
-        let keystore_path = dir.join(SUI_KEYSTORE_FILENAME);
+        let network_path = dir.join(IOTA_NETWORK_CONFIG);
+        let wallet_path = dir.join(IOTA_CLIENT_CONFIG);
+        let keystore_path = dir.join(IOTA_KEYSTORE_FILENAME);
 
         swarm.config().save(network_path)?;
         let mut keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
         for key in &swarm.config().account_keys {
-            keystore.add_key(None, SuiKeyPair::Ed25519(key.copy()))?;
+            keystore.add_key(None, IotaKeyPair::Ed25519(key.copy()))?;
         }
 
         let active_address = keystore.addresses().first().cloned();
 
         // Create wallet config with stated authorities port
-        SuiClientConfig {
+        IotaClientConfig {
             keystore: Keystore::from(FileBasedKeystore::new(&keystore_path)?),
             envs: Default::default(),
             active_address,

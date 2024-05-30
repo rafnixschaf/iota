@@ -1,9 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useGetDynamicFields, useGetObject } from '@mysten/core';
-import { useSuiClientQuery } from '@mysten/dapp-kit';
-import { type SuiObjectResponse } from '@mysten/sui.js/client';
+import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { type IotaObjectResponse } from '@mysten/iota.js/client';
 import { Heading } from '@mysten/ui';
 import { type ReactNode, useState } from 'react';
 
@@ -26,13 +29,13 @@ enum TabValue {
 }
 
 function useObjectFieldsCard(id: string) {
-	const { data: suiObjectResponseData, isPending, isError } = useGetObject(id);
+	const { data: iotaObjectResponseData, isPending, isError } = useGetObject(id);
 
 	const objectType =
-		suiObjectResponseData?.data?.type ??
-		suiObjectResponseData?.data?.content?.dataType === 'package'
-			? suiObjectResponseData.data.type
-			: suiObjectResponseData?.data?.content?.type;
+		iotaObjectResponseData?.data?.type ??
+		iotaObjectResponseData?.data?.content?.dataType === 'package'
+			? iotaObjectResponseData.data.type
+			: iotaObjectResponseData?.data?.content?.type;
 
 	const [packageId, moduleName, functionName] = objectType?.split('<')[0]?.split('::') || [];
 
@@ -41,7 +44,7 @@ function useObjectFieldsCard(id: string) {
 		data: normalizedStructData,
 		isPending: loadingNormalizedStruct,
 		isError: errorNormalizedMoveStruct,
-	} = useSuiClientQuery(
+	} = useIotaClientQuery(
 		'getNormalizedMoveStruct',
 		{
 			package: packageId,
@@ -57,7 +60,7 @@ function useObjectFieldsCard(id: string) {
 		loading: isPending || loadingNormalizedStruct,
 		isError: isError || errorNormalizedMoveStruct,
 		normalizedStructData,
-		suiObjectResponseData,
+		iotaObjectResponseData,
 		objectType,
 	};
 }
@@ -65,7 +68,7 @@ function useObjectFieldsCard(id: string) {
 export function FieldsContent({ objectId }: { objectId: string }) {
 	const {
 		normalizedStructData,
-		suiObjectResponseData,
+		iotaObjectResponseData,
 		objectType,
 		loading: objectFieldsCardLoading,
 		isError: objectFieldsCardError,
@@ -98,7 +101,7 @@ export function FieldsContent({ objectId }: { objectId: string }) {
 					<ObjectFieldsCard
 						objectType={objectType || ''}
 						normalizedStructData={normalizedStructData}
-						suiObjectResponseData={suiObjectResponseData}
+						iotaObjectResponseData={iotaObjectResponseData}
 						loading={objectFieldsCardLoading}
 						error={objectFieldsCardError}
 						id={objectId}
@@ -116,7 +119,7 @@ export function FieldsContent({ objectId }: { objectId: string }) {
 	);
 }
 
-export function TokenView({ data }: { data: SuiObjectResponse }) {
+export function TokenView({ data }: { data: IotaObjectResponse }) {
 	const objectId = data.data?.objectId!;
 
 	return (

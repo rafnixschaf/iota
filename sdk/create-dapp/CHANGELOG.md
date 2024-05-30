@@ -5,7 +5,7 @@
 ### Patch Changes
 
 - Updated dependencies [6984dd1e38]
-  - @mysten/sui.js@0.51.1
+  - @mysten/iota.js@0.51.1
   - @mysten/dapp-kit@0.12.7
 
 ## 0.2.8
@@ -31,7 +31,7 @@
 ### Patch Changes
 
 - Updated dependencies [0cafa94027]
-  - @mysten/sui.js@0.51.0
+  - @mysten/iota.js@0.51.0
   - @mysten/dapp-kit@0.12.3
 
 ## 0.2.4
@@ -40,7 +40,7 @@
 
 - 4830361fa4: Updated typescript version
 - Updated dependencies [4830361fa4]
-  - @mysten/sui.js@0.50.1
+  - @mysten/iota.js@0.50.1
   - @mysten/dapp-kit@0.12.2
 
 ## 0.2.3
@@ -61,7 +61,7 @@
 - Updated dependencies [7b8d044603]
 - Updated dependencies [a34f1cb67d]
 - Updated dependencies [220a766d86]
-  - @mysten/sui.js@0.50.0
+  - @mysten/iota.js@0.50.0
   - @mysten/dapp-kit@0.12.0
 
 ## 0.2.1
@@ -70,7 +70,7 @@
 
 - 9ac0a4ec01: Add extensions to all sdk import paths
 - Updated dependencies [9ac0a4ec01]
-  - @mysten/sui.js@0.49.1
+  - @mysten/iota.js@0.49.1
   - @mysten/dapp-kit@0.11.1
 
 ## 0.2.0
@@ -84,7 +84,7 @@
 - Updated dependencies [9ba167b0af]
 - Updated dependencies [e5f9e3ba21]
   - @mysten/dapp-kit@0.11.0
-  - @mysten/sui.js@0.49.0
+  - @mysten/iota.js@0.49.0
 
 ## 0.1.8
 
@@ -96,7 +96,7 @@
 - Updated dependencies [dd362ec1d6]
 - Updated dependencies [d55db38647]
   - @mysten/dapp-kit@0.10.3
-  - @mysten/sui.js@0.48.1
+  - @mysten/iota.js@0.48.1
 
 ## 0.1.7
 
@@ -106,7 +106,7 @@
 - Updated dependencies [b30fecbbca]
 - Updated dependencies [cdcfa76c43]
   - @mysten/dapp-kit@0.10.2
-  - @mysten/sui.js@0.48.0
+  - @mysten/iota.js@0.48.0
 
 ## 0.1.6
 
@@ -130,7 +130,7 @@
 - Updated dependencies [9ac7e2f3d]
 - Updated dependencies [0259aec82]
 - Updated dependencies [64d45ba27]
-  - @mysten/sui.js@0.47.0
+  - @mysten/iota.js@0.47.0
   - @mysten/dapp-kit@0.9.1
 
 ## 0.1.3
@@ -140,7 +140,7 @@
 - Updated dependencies [c5d4db238]
 - Updated dependencies [652bcdd92]
   - @mysten/dapp-kit@0.9.0
-  - @mysten/sui.js@0.46.1
+  - @mysten/iota.js@0.46.1
 
 ## 0.1.2
 
@@ -152,7 +152,7 @@
 - Updated dependencies [103ad29c0]
 - Updated dependencies [093554a0d]
 - Updated dependencies [3718a230b]
-  - @mysten/sui.js@0.46.0
+  - @mysten/iota.js@0.46.0
   - @mysten/dapp-kit@0.8.0
 
 ## 0.1.1
@@ -163,7 +163,7 @@
 - Updated dependencies [5d7055365]
 - Updated dependencies [30b47b758]
   - @mysten/dapp-kit@0.7.0
-  - @mysten/sui.js@0.45.1
+  - @mysten/iota.js@0.45.1
 
 ## 0.1.0
 
@@ -179,7 +179,7 @@
 - Updated dependencies [e0578094b]
 - Updated dependencies [b9afb5567]
   - @mysten/dapp-kit@0.6.0
-  - @mysten/sui.js@0.45.0
+  - @mysten/iota.js@0.45.0
 
 ## 0.0.5
 
@@ -218,4 +218,4 @@
 - Updated dependencies [0c5cdc049]
 - Updated dependencies [c7e12c928]
   - @mysten/dapp-kit@0.3.0
-  - @mysten/sui.js@0.44.0
+  - @mysten/iota.js@0.44.0

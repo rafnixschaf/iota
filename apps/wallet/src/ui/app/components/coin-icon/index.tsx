@@ -1,10 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { ImageIcon } from '_app/shared/image-icon';
 import { useCoinMetadata } from '@mysten/core';
-import { Sui, Unstaked } from '@mysten/icons';
-import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { Iota, Unstaked } from '@mysten/icons';
+import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const imageStyle = cva(['rounded-full flex'], {
@@ -16,27 +19,27 @@ const imageStyle = cva(['rounded-full flex'], {
 			xl: 'md:w-31.5 md:h-31.5 w-16 h-16 ',
 		},
 		fill: {
-			sui: 'bg-sui',
-			suiPrimary2023: 'bg-sui-primaryBlue2023',
+			iota: 'bg-iota',
+			iotaPrimary2023: 'bg-iota-primaryBlue2023',
 		},
 	},
 	defaultVariants: {
 		size: 'md',
-		fill: 'suiPrimary2023',
+		fill: 'iotaPrimary2023',
 	},
 });
 
-function SuiCoin() {
+function IotaCoin() {
 	return (
-		<Sui className="flex items-center w-full h-full justify-center text-white p-1.5 text-body rounded-full" />
+		<Iota className="flex items-center w-full h-full justify-center text-white p-1.5 text-body rounded-full" />
 	);
 }
 
-type NonSuiCoinProps = {
+type NonIotaCoinProps = {
 	coinType: string;
 };
 
-function NonSuiCoin({ coinType }: NonSuiCoinProps) {
+function NonIotaCoin({ coinType }: NonIotaCoinProps) {
 	const { data: coinMeta } = useCoinMetadata(coinType);
 	return (
 		<div className="flex h-full w-full items-center justify-center text-white bg-steel rounded-full">
@@ -61,7 +64,7 @@ export interface CoinIconProps extends VariantProps<typeof imageStyle> {
 export function CoinIcon({ coinType, ...styleProps }: CoinIconProps) {
 	return (
 		<div className={imageStyle(styleProps)}>
-			{coinType === SUI_TYPE_ARG ? <SuiCoin /> : <NonSuiCoin coinType={coinType} />}
+			{coinType === IOTA_TYPE_ARG ? <IotaCoin /> : <NonIotaCoin coinType={coinType} />}
 		</div>
 	);
 }

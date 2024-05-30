@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { toB58 } from '@mysten/bcs';
 import type { Infer } from 'superstruct';
 import {
@@ -18,9 +21,9 @@ import {
 } from 'superstruct';
 
 import { bcs } from '../bcs/index.js';
-import { normalizeSuiAddress } from '../utils/sui-types.js';
+import { normalizeIotaAddress } from '../utils/iota-types.js';
 import { hashTypedData } from './hash.js';
-import { BuilderCallArg, PureCallArg, SuiObjectRef } from './Inputs.js';
+import { BuilderCallArg, PureCallArg, IotaObjectRef } from './Inputs.js';
 import { TransactionBlockInput, TransactionType } from './Transactions.js';
 import { create } from './utils.js';
 
@@ -45,7 +48,7 @@ const StringEncodedBigint = define<string | number | bigint>('StringEncodedBigin
 const GasConfig = object({
 	budget: optional(StringEncodedBigint),
 	price: optional(StringEncodedBigint),
-	payment: optional(array(SuiObjectRef)),
+	payment: optional(array(IotaObjectRef)),
 	owner: optional(string()),
 });
 type GasConfig = Infer<typeof GasConfig>;
@@ -60,8 +63,8 @@ export const SerializedTransactionDataBuilder = object({
 });
 export type SerializedTransactionDataBuilder = Infer<typeof SerializedTransactionDataBuilder>;
 
-function prepareSuiAddress(address: string) {
-	return normalizeSuiAddress(address).replace('0x', '');
+function prepareIotaAddress(address: string) {
+	return normalizeIotaAddress(address).replace('0x', '');
 }
 
 export class TransactionBlockDataBuilder {
@@ -209,11 +212,11 @@ export class TransactionBlockDataBuilder {
 		}
 
 		const transactionData = {
-			sender: prepareSuiAddress(sender),
+			sender: prepareIotaAddress(sender),
 			expiration: expiration ? expiration : { None: true },
 			gasData: {
 				payment: gasConfig.payment,
-				owner: prepareSuiAddress(this.gasConfig.owner ?? sender),
+				owner: prepareIotaAddress(this.gasConfig.owner ?? sender),
 				price: BigInt(gasConfig.price),
 				budget: BigInt(gasConfig.budget),
 			},

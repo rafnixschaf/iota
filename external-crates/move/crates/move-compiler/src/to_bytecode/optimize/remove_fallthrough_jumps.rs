@@ -2,6 +2,9 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::parser::ast::FunctionName;
 use move_ir_types::ast::{self as IR};
 use std::collections::{BTreeSet, HashMap};

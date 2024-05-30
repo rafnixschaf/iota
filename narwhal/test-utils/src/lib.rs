@@ -2,6 +2,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use anemo::async_trait;
 use config::{
     utils::get_available_port, Authority, AuthorityIdentifier, Committee, CommitteeBuilder, Epoch,
@@ -32,7 +35,7 @@ use std::{
 use store::rocks::DBMap;
 use store::rocks::MetricConf;
 use store::rocks::ReadWriteOptions;
-use sui_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tracing::info;
 use types::{
@@ -95,7 +98,7 @@ macro_rules! test_channel {
 // in the channel you're passing as an argument to the primary initialization is
 // the replacement. If that gauge is a dummy gauge, such as the one above, the
 // initialization of the primary will panic (to protect the production code against
-// an erroneous mistake in editing this bootstrap logic).
+// an erroneous microsake in editing this bootstrap logic).
 #[macro_export]
 macro_rules! test_committed_certificates_channel {
     ($e:expr) => {

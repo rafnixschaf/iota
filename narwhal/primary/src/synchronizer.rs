@@ -2,6 +2,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use anemo::{rpc::Status, Network, Request, Response};
 use config::{AuthorityIdentifier, Committee, WorkerCache};
 use crypto::NetworkPublicKey;
@@ -24,7 +27,7 @@ use std::{
     time::Duration,
 };
 use storage::{CertificateStore, PayloadStore};
-use sui_protocol_config::ProtocolConfig;
+use iota_protocol_config::ProtocolConfig;
 use tokio::task::spawn_blocking;
 use tokio::time::Instant;
 use tokio::{

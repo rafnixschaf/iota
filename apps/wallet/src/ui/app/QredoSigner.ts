@@ -1,15 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type QredoSerializedUiAccount } from '_src/background/accounts/QredoAccount';
 import { type QredoAPI, type TransactionInfoResponse } from '_src/shared/qredo-api';
-import { type Network, type SuiClient } from '@mysten/sui.js/client';
+import { type Network, type IotaClient } from '@mysten/iota.js/client';
 import {
 	IntentScope,
 	messageWithIntent,
 	type SerializedSignature,
-} from '@mysten/sui.js/cryptography';
-import { toB64 } from '@mysten/sui.js/utils';
+} from '@mysten/iota.js/cryptography';
+import { toB64 } from '@mysten/iota.js/utils';
 import mitt from 'mitt';
 
 import { WalletSigner } from './WalletSigner';
@@ -29,7 +32,7 @@ export class QredoSigner extends WalletSigner {
 	#network: Network;
 
 	constructor(
-		client: SuiClient,
+		client: IotaClient,
 		account: QredoSerializedUiAccount,
 		qredoAPI: QredoAPI,
 		network: Network,
@@ -144,7 +147,7 @@ export class QredoSigner extends WalletSigner {
 		});
 	};
 
-	connect(client: SuiClient): WalletSigner {
+	connect(client: IotaClient): WalletSigner {
 		return new QredoSigner(client, this.#qredoAccount, this.#qredoAPI, this.#network);
 	}
 

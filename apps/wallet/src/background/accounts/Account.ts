@@ -1,12 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type Serializable } from '_src/shared/cryptography/keystore';
 import {
 	toSerializedSignature,
 	type Keypair,
 	type SerializedSignature,
-} from '@mysten/sui.js/cryptography';
+} from '@mysten/iota.js/cryptography';
 import { blake2b } from '@noble/hashes/blake2b';
 
 import { setupAutoLockAlarm } from '../auto-lock-accounts';

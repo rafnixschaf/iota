@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 use crate::{errors::SubscriberResult, metrics::ExecutorMetrics, ExecutionState};
 
 use config::{AuthorityIdentifier, Committee, WorkerCache, WorkerId};
@@ -19,7 +22,7 @@ use types::FetchBatchesRequest;
 use fastcrypto::hash::Hash;
 use mysten_metrics::metered_channel;
 use mysten_metrics::spawn_logged_monitored_task;
-use sui_protocol_config::ProtocolConfig;
+use iota_protocol_config::ProtocolConfig;
 use tokio::task::JoinHandle;
 use tracing::{debug, error, info};
 use types::{

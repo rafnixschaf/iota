@@ -1,14 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import {
 	ConnectButton,
 	ConnectModal,
-	SuiClientProvider,
+	IotaClientProvider,
 	useCurrentAccount,
 	WalletProvider,
 } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui.js/client';
+import { getFullnodeUrl } from '@mysten/iota.js/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
@@ -64,11 +67,11 @@ function withProviders(Component: React.FunctionComponent<object>) {
 
 		return (
 			<QueryClientProvider client={queryClient}>
-				<SuiClientProvider networks={networks}>
+				<IotaClientProvider networks={networks}>
 					<WalletProvider>
 						<Component />
 					</WalletProvider>
-				</SuiClientProvider>
+				</IotaClientProvider>
 			</QueryClientProvider>
 		);
 	};

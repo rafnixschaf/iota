@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button } from '_app/shared/ButtonUI';
 import { ToS_LINK } from '_src/shared/constants';
 import { useZodForm } from '@mysten/core';
@@ -124,7 +127,7 @@ export function ProtectAccountForm({
 									<Link
 										href={ToS_LINK}
 										beforeColor="steelDarker"
-										color="suiDark"
+										color="iotaDark"
 										text="Terms of Services"
 									/>
 								</span>

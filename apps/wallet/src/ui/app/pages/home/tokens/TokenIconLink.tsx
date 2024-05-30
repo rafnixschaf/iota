@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { LargeButton } from '_app/shared/LargeButton';
 import { ampli } from '_src/shared/analytics/ampli';
 import {
@@ -10,7 +13,7 @@ import {
 import { Text } from '_src/ui/app/shared/text';
 import { useFormatCoin, useGetDelegatedStake } from '@mysten/core';
 import { WalletActionStake24 } from '@mysten/icons';
-import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
+import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
 import { useMemo } from 'react';
 
 export function TokenIconLink({
@@ -35,7 +38,7 @@ export function TokenIconLink({
 		);
 	}, [delegatedStake]);
 
-	const [formatted, symbol, queryResult] = useFormatCoin(totalActivePendingStake, SUI_TYPE_ARG);
+	const [formatted, symbol, queryResult] = useFormatCoin(totalActivePendingStake, IOTA_TYPE_ARG);
 
 	return (
 		<LargeButton
@@ -44,7 +47,7 @@ export function TokenIconLink({
 			center={!totalActivePendingStake}
 			disabled={disabled}
 			onClick={() => {
-				ampli.clickedStakeSui({
+				ampli.clickedStakeIota({
 					isCurrentlyStaking: totalActivePendingStake > 0,
 					sourceFlow: 'Home page',
 				});
@@ -55,7 +58,7 @@ export function TokenIconLink({
 		>
 			<div className="flex flex-col">
 				<Text variant="pBody" weight="semibold">
-					{totalActivePendingStake ? 'Currently Staked' : 'Stake and Earn SUI'}
+					{totalActivePendingStake ? 'Currently Staked' : 'Stake and Earn IOTA'}
 				</Text>
 
 				{!!totalActivePendingStake && (

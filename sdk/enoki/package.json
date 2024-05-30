@@ -37,12 +37,12 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/mystenlabs/sui.git"
+		"url": "git+https://github.com/mystenlabs/iota.git"
 	},
 	"bugs": {
-		"url": "https://github.com/mystenlabs/sui/issues"
+		"url": "https://github.com/mystenlabs/iota/issues"
 	},
-	"homepage": "https://github.com/mystenlabs/sui#readme",
+	"homepage": "https://github.com/mystenlabs/iota#readme",
 	"devDependencies": {
 		"@mysten/build-scripts": "workspace:*",
 		"@types/node": "^20.4.2",
@@ -55,7 +55,7 @@
 		"vite": "^4.4.4"
 	},
 	"dependencies": {
-		"@mysten/sui.js": "workspace:*",
+		"@mysten/iota.js": "workspace:*",
 		"@mysten/zklogin": "workspace:*",
 		"@nanostores/react": "^0.7.1",
 		"jose": "^5.2.3",

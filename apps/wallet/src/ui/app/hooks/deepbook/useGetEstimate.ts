@@ -1,14 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 import { useLotSize } from '_app/hooks/deepbook/useLotSize';
 import { useActiveAccount } from '_app/hooks/useActiveAccount';
 import { type WalletSigner } from '_app/WalletSigner';
 import { DEEPBOOK_KEY, WALLET_FEES_PERCENTAGE } from '_pages/swap/constants';
 import { useDeepBookContext } from '_shared/deepBook/context';
-import { useSuiClient } from '@mysten/dapp-kit';
+import { useIotaClient } from '@mysten/dapp-kit';
 import { type DeepBookClient } from '@mysten/deepbook';
-import { type CoinStruct, type SuiClient } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { type CoinStruct, type IotaClient } from '@mysten/iota.js/client';
+import { TransactionBlock } from '@mysten/iota.js/transactions';
 // import * as Sentry from '@sentry/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
@@ -20,12 +23,12 @@ const NUMBER_EXPECTED_BALANCE_CHANGES = 3;
 async function getCoinsByBalance({
 	coinType,
 	balance,
-	suiClient,
+	iotaClient,
 	address,
 }: {
 	coinType: string;
 	balance: string;
-	suiClient: SuiClient;
+	iotaClient: IotaClient;
 	address: string;
 }) {
 	let cursor: string | undefined | null = null;
@@ -36,7 +39,7 @@ async function getCoinsByBalance({
 	const bigIntBalance = BigInt(new BigNumber(balance).integerValue(BigNumber.ROUND_UP).toString());
 
 	while (currentBalance < bigIntBalance && hasNextPage) {
-		const { data, nextCursor } = await suiClient.getCoins({
+		const { data, nextCursor } = await iotaClient.getCoins({
 			owner: address,
 			coinType,
 			cursor,
@@ -246,7 +249,7 @@ export function useGetEstimate({
 }) {
 	const walletFeeAddress = useDeepBookContext().walletFeeAddress;
 	const queryClient = useQueryClient();
-	const suiClient = useSuiClient();
+	const iotaClient = useIotaClient();
 	const activeAccount = useActiveAccount();
 	const activeAddress = activeAccount?.address;
 	const deepBookClient = useDeepBookContext().client;
@@ -288,13 +291,13 @@ export function useGetEstimate({
 					getCoinsByBalance({
 						coinType,
 						balance: baseBalance,
-						suiClient,
+						iotaClient,
 						address: activeAddress!,
 					}),
 					getCoinsByBalance({
 						coinType,
 						balance: quoteBalance,
-						suiClient,
+						iotaClient,
 						address: activeAddress!,
 					}),
 				]);

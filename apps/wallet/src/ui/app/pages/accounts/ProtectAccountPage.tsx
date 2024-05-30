@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Text } from '_app/shared/text';
 import { isMnemonicSerializedUiAccount } from '_src/background/accounts/MnemonicAccount';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -80,7 +83,7 @@ export function ProtectAccountPage() {
 	}
 
 	return (
-		<div className="rounded-20 bg-sui-lightest shadow-wallet-content flex flex-col items-center px-6 py-10 overflow-auto w-popup-width max-h-popup-height min-h-popup-minimum h-screen">
+		<div className="rounded-20 bg-iota-lightest shadow-wallet-content flex flex-col items-center px-6 py-10 overflow-auto w-popup-width max-h-popup-height min-h-popup-minimum h-screen">
 			<Loading loading={showVerifyPasswordView === null}>
 				{showVerifyPasswordView ? (
 					<VerifyPasswordModal

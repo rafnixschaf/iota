@@ -1,9 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { toB64 } from '@mysten/bcs';
 import type { BcsType } from '@mysten/bcs';
-import { bcs } from '@mysten/sui.js/bcs';
+import { bcs } from '@mysten/iota.js/bcs';
 
 import type { MoveTypeLayout } from './move.js';
 import { toShortTypeString } from './util.js';

@@ -1,5 +1,5 @@
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
-import { isValidSuiObjectId } from "@mysten/sui.js/utils";
+import { isValidIotaObjectId } from "@mysten/iota.js/utils";
 import { Box, Container, Flex, Heading } from "@radix-ui/themes";
 import { useState } from "react";
 import { Counter } from "./Counter";
@@ -9,7 +9,7 @@ function App() {
   const currentAccount = useCurrentAccount();
   const [counterId, setCounter] = useState(() => {
     const hash = window.location.hash.slice(1);
-    return isValidSuiObjectId(hash) ? hash : null;
+    return isValidIotaObjectId(hash) ? hash : null;
   });
 
   return (

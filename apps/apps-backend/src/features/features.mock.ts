@@ -1,6 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 export const developmentFeatures = {
 	'mainnet-selection': {
 		defaultValue: true,
@@ -47,7 +50,7 @@ export const developmentFeatures = {
 			'0x30a644c3485ee9b604f52165668895092191fcaf5489a846afa7fc11cdb9b24a',
 		],
 	},
-	suins: {
+	iotans: {
 		defaultValue: false,
 	},
 	'wallet-onramp-coinbase': {
@@ -120,10 +123,10 @@ export const developmentFeatures = {
 	'wallet-dapps': {
 		defaultValue: [
 			{
-				name: 'Sui Name Service (SuiNS222)',
-				description: 'Find your .sui name!',
-				link: 'https://suins.io/',
-				icon: 'https://raw.githubusercontent.com/SuiNSdapp/docs/main/SuiNS-small2.jpg',
+				name: 'Iota Name Service (IotaNS222)',
+				description: 'Find your .iota name!',
+				link: 'https://iotans.io/',
+				icon: 'https://raw.githubusercontent.com/IotaNSdapp/docs/main/IotaNS-small2.jpg',
 				tags: ['Infra'],
 			},
 		],
@@ -137,22 +140,22 @@ export const developmentFeatures = {
 				},
 				force: [
 					{
-						name: 'SuiFrens',
-						description: 'Enter the world of SuiFrens.',
-						link: 'https://suifrens.com/',
-						icon: 'https://suifrens.com/icons/favicon.ico',
+						name: 'IotaFrens',
+						description: 'Enter the world of IotaFrens.',
+						link: 'https://iotafrens.com/',
+						icon: 'https://iotafrens.com/icons/favicon.ico',
 						tags: ['Social'],
 					},
 					{
-						name: 'Sui Name Service (SuiNS)',
-						description: 'Find your .sui name!',
-						link: 'https://suins.io/',
-						icon: 'https://raw.githubusercontent.com/SuiNSdapp/docs/main/SuiNS-small2.jpg',
+						name: 'Iota Name Service (IotaNS)',
+						description: 'Find your .iota name!',
+						link: 'https://iotans.io/',
+						icon: 'https://raw.githubusercontent.com/IotaNSdapp/docs/main/IotaNS-small2.jpg',
 						tags: ['Infra'],
 					},
 					{
 						name: 'Bullshark Quests',
-						description: 'Earn rewards through engaging with apps on Sui!',
+						description: 'Earn rewards through engaging with apps on Iota!',
 						link: 'https://quests.mystenlabs.com/',
 						icon: 'https://user-images.githubusercontent.com/122397493/251579441-3c84de97-fc6e-46d2-b561-cd7bbef7dac7.png',
 						tags: ['Social'],
@@ -160,7 +163,7 @@ export const developmentFeatures = {
 					{
 						name: 'Aftermath Finance',
 						description:
-							'The all-in-one DEX on Sui, featuring a fully on-chain perpetuals exchange, smart-order routing, liquid staking, and a novel spot AMM.',
+							'The all-in-one DEX on Iota, featuring a fully on-chain perpetuals exchange, smart-order routing, liquid staking, and a novel spot AMM.',
 						link: 'https://aftermath.finance',
 						icon: 'https://github-production-user-asset-6210df.s3.amazonaws.com/122397493/289710788-57f6935c-f930-4668-aa01-86a1579e406a.png',
 						tags: ['DeFi', 'DEX', 'Infra'],
@@ -175,7 +178,7 @@ export const developmentFeatures = {
 					{
 						name: 'Kriya',
 						description:
-							'1-stop DeFi protocol on Sui. Native AMM for Swaps, Limit Orders powered by deepbook, strategy vaults and leveraged perps',
+							'1-stop DeFi protocol on Iota. Native AMM for Swaps, Limit Orders powered by deepbook, strategy vaults and leveraged perps',
 						link: 'https://app.kriya.finance/',
 						icon: 'https://mysten-fe-assets.s3.us-west-2.amazonaws.com/wallet-dapps-assets/kriya_rounded_logo.png',
 						tags: ['DeFi'],
@@ -196,28 +199,28 @@ export const developmentFeatures = {
 					},
 					{
 						name: 'Turbos',
-						description: 'Non-custodial and user-centric DEX on Sui.',
+						description: 'Non-custodial and user-centric DEX on Iota.',
 						link: 'https://app.turbos.finance',
 						icon: 'https://i.ibb.co/RTKw0PZ/Turbos-400x400.png',
 						tags: ['DeFi'],
 					},
 					{
 						name: 'Cetus Protocol',
-						description: 'The pioneer concentrated liquidity DEX on Sui.',
+						description: 'The pioneer concentrated liquidity DEX on Iota.',
 						link: 'https://app.cetus.zone/',
 						icon: 'https://i.ibb.co/TWdmdQz/cetus-icon.png',
 						tags: ['DeFi', 'DEX'],
 					},
 					{
 						name: 'FlowX Finance',
-						description: 'Ecosystem-focused native DEX & aggregator on the Sui Network.',
+						description: 'Ecosystem-focused native DEX & aggregator on the Iota Network.',
 						link: 'https://flowx.finance/swap',
 						icon: 'https://3458959336-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FpEOgAVtfjtpMXMM550M8%2Fuploads%2FiunglJ6f4i7xbVyrPZTD%2FFlowX%20Logo%20Black.png?alt=media&token=6dfa923c-41f6-4252-831f-ac6d1ddd1afe',
 						tags: ['DeFi', 'DEX'],
 					},
 					{
 						name: 'Bucket Protocol',
-						description: 'The first native stablecoin on Sui Network.',
+						description: 'The first native stablecoin on Iota Network.',
 						link: 'https://app.bucketprotocol.io/',
 						icon: 'https://d3h53g0wjfwuec.cloudfront.net/bucket_avatar.png',
 						tags: ['DeFi'],
@@ -230,24 +233,24 @@ export const developmentFeatures = {
 				},
 				force: [
 					{
-						name: 'SuiFrens',
-						description: 'Enter the world of SuiFrens.',
-						link: 'https://suifrens.com/',
-						icon: 'https://suifrens.com/icons/favicon.ico',
+						name: 'IotaFrens',
+						description: 'Enter the world of IotaFrens.',
+						link: 'https://iotafrens.com/',
+						icon: 'https://iotafrens.com/icons/favicon.ico',
 						tags: ['Game'],
 					},
 					{
-						name: 'Sui Name Service (SuiNS)',
-						description: 'Find your .sui name!',
-						link: 'https://suins.io/',
-						icon: 'https://raw.githubusercontent.com/SuiNSdapp/docs/main/SuiNS-small2.jpg',
+						name: 'Iota Name Service (IotaNS)',
+						description: 'Find your .iota name!',
+						link: 'https://iotans.io/',
+						icon: 'https://raw.githubusercontent.com/IotaNSdapp/docs/main/IotaNS-small2.jpg',
 						tags: ['Infra'],
 					},
 					{
 						name: 'Wormhole Connect',
 						description:
-							'Bridge tokens from any Wormhole supported chain into Sui and get dropped off with extra Sui to pay gas fees. Developers can also embed the Connect bridge directly into their own websites and Dapps.',
-						link: 'https://www.portalbridge.com/sui',
+							'Bridge tokens from any Wormhole supported chain into Iota and get dropped off with extra Iota to pay gas fees. Developers can also embed the Connect bridge directly into their own websites and Dapps.',
+						link: 'https://www.portalbridge.com/iota',
 						icon: 'https://www.portalbridge.com/favicon.ico',
 						tags: ['DeFi'],
 					},
@@ -255,8 +258,8 @@ export const developmentFeatures = {
 						name: 'Aries Markets',
 						description:
 							'Aries Markets - All-in-one DeFi platform with an innovative money market.',
-						link: 'https://sui.ariesmarkets.xyz/',
-						icon: 'https://sui.ariesmarkets.xyz/favicon.png',
+						link: 'https://iota.ariesmarkets.xyz/',
+						icon: 'https://iota.ariesmarkets.xyz/favicon.png',
 						tags: ['DeFi'],
 					},
 					{
@@ -268,7 +271,7 @@ export const developmentFeatures = {
 					},
 					{
 						name: 'Keepsake',
-						description: 'One of the first NFT Marketplaces on Sui Network.',
+						description: 'One of the first NFT Marketplaces on Iota Network.',
 						link: 'https://keepsake.gg/',
 						icon: 'https://keepsake.gg/assets/icon/Favicon.png',
 						tags: ['Marketplace'],
@@ -328,11 +331,11 @@ export const developmentFeatures = {
 	'kiosk-marketplace-links': {
 		defaultValue: [
 			{
-				href: 'https://docs.sui.io/build/sui-kiosk',
+				href: 'https://docs.iota.io/build/iota-kiosk',
 				text: 'Learn more about Kiosks',
 			},
 			{
-				href: 'https://sui.hyperspace.xyz',
+				href: 'https://iota.hyperspace.xyz',
 				text: 'Marketplace',
 			},
 		],
@@ -346,8 +349,8 @@ export const developmentFeatures = {
 	'wallet-apps-banner-config': {
 		defaultValue: {
 			enabled: true,
-			bannerUrl: 'https://suiwallet.com',
-			imageUrl: 'https://fe-assets.mystenlabs.com/wallet-next/suiwallet-mobile.svg',
+			bannerUrl: 'https://iotawallet.com',
+			imageUrl: 'https://fe-assets.mystenlabs.com/wallet-next/iotawallet-mobile.svg',
 		},
 		rules: [
 			{
@@ -358,7 +361,7 @@ export const developmentFeatures = {
 				},
 				force: {
 					enabled: false,
-					bannerUrl: 'https://sui.io/basecamp',
+					bannerUrl: 'https://iota.io/basecamp',
 					imageUrl: 'https://fe-assets.mystenlabs.com/basecamp/wallet_basecamp_banner.png',
 				},
 			},
@@ -386,7 +389,7 @@ export const developmentFeatures = {
 	'deep-book-configs': {
 		defaultValue: {
 			pools: {
-				SUI_USDC: [
+				IOTA_USDC: [
 					'0x4405b50d791fd3346754e8171aaab6bc2ed26c2c46efdd033c14b30ae507ac33',
 					'0x7f526b1263c4b91b43c9e646419b5696f424de28dda3c1e6658cc0a54558baa7',
 				],
@@ -395,7 +398,7 @@ export const developmentFeatures = {
 				USDT_USDC: ['0x5deafda22b6b86127ea4299503362638bea0ca33bb212ea3a67b029356b8b955'],
 			},
 			coinsMap: {
-				SUI: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+				IOTA: '0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA',
 				USDC: '0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN',
 				USDT: '0xc060006111016b8a020ad5b33834984a437aaa7d3c74c18e09a95d48aceab08c::coin::COIN',
 				WETH: '0xaf8cd5edc19c4512f4259f0bee101a40d41ebed738ade5874359610ef8eeced5::coin::COIN',
@@ -441,7 +444,7 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-enable-okx-wallet': {
+	'iotans-enable-okx-wallet': {
 		defaultValue: false,
 		rules: [
 			{
@@ -454,10 +457,10 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-enable-day-one-nft-domain-claim': {
+	'iotans-enable-day-one-nft-domain-claim': {
 		defaultValue: false,
 	},
-	'suins-nft-personalization': {
+	'iotans-nft-personalization': {
 		defaultValue: false,
 		rules: [
 			{
@@ -470,7 +473,7 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-front-page-banner': {
+	'iotans-front-page-banner': {
 		defaultValue: {
 			enabled: false,
 			dismissKey: 'quests-3-interstitial-live',
@@ -478,10 +481,10 @@ export const developmentFeatures = {
 			bannerUrl: 'https://tech.mystenlabs.com/quest-3/',
 		},
 	},
-	'suins-enable-coupons': {
+	'iotans-enable-coupons': {
 		defaultValue: false,
 	},
-	'suins-enable-discord': {
+	'iotans-enable-discord': {
 		defaultValue: false,
 		rules: [
 			{
@@ -494,18 +497,18 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-free-claims': {
+	'iotans-free-claims': {
 		defaultValue: false,
 	},
-	'suins-banner': {
+	'iotans-banner': {
 		defaultValue: {
 			content:
-				"SuiNS is experiencing some issues. We're working to fix the problem and appreciate your patience.",
+				"IotaNS is experiencing some issues. We're working to fix the problem and appreciate your patience.",
 			isActive: false,
 			isDismissable: true,
 		},
 	},
-	'suins-enable-subname': {
+	'iotans-enable-subname': {
 		defaultValue: false,
 		rules: [
 			{
@@ -531,7 +534,7 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-name-burn-expired-name': {
+	'iotans-name-burn-expired-name': {
 		defaultValue: false,
 		rules: [
 			{
@@ -539,7 +542,7 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suins-name-enable-v2-design': {
+	'iotans-name-enable-v2-design': {
 		defaultValue: false,
 		rules: [
 			{
@@ -562,7 +565,7 @@ export const developmentFeatures = {
 	'explorer-redirect': {
 		defaultValue: true,
 	},
-	'suifrens-enable-nhn-accessories': {
+	'iotafrens-enable-nhn-accessories': {
 		defaultValue: false,
 		rules: [
 			{
@@ -570,10 +573,10 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'claim-free-suifren-hat-promo': {
+	'claim-free-iotafren-hat-promo': {
 		defaultValue: true,
 	},
-	'suifrens-enable-babyshark-banner': {
+	'iotafrens-enable-babyshark-banner': {
 		defaultValue: false,
 		rules: [
 			{
@@ -581,7 +584,7 @@ export const developmentFeatures = {
 			},
 		],
 	},
-	'suifrens-enable-babyshark-banner-basecamp-accessories': {
+	'iotafrens-enable-babyshark-banner-basecamp-accessories': {
 		defaultValue: false,
 		rules: [
 			{

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button } from '_app/shared/ButtonUI';
 import { useZodForm } from '@mysten/core';
 import { type SubmitHandler } from 'react-hook-form';
@@ -34,14 +37,14 @@ export function ImportPrivateKeyForm({ onSubmit }: ImportPrivateKeyFormProps) {
 	} = form;
 	const navigate = useNavigate();
 	const privateKey = watch('privateKey');
-	const isHexadecimal = isValid && !privateKey.startsWith('suiprivkey');
+	const isHexadecimal = isValid && !privateKey.startsWith('iotaprivkey');
 	return (
 		<Form className="flex flex-col h-full gap-2" form={form} onSubmit={onSubmit}>
 			<TextAreaField label="Enter Private Key" rows={4} {...register('privateKey')} />
 			{isHexadecimal ? (
 				<Alert mode="warning">
 					Importing Hex encoded Private Key will soon be deprecated, please use Bech32 encoded
-					private key that starts with "suiprivkey" instead
+					private key that starts with "iotaprivkey" instead
 				</Alert>
 			) : null}
 			<div className="flex gap-2.5 mt-auto">

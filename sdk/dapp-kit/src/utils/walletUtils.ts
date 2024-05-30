@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import type {
 	MinimallyRequiredFeatures,
 	Wallet,
@@ -15,7 +18,7 @@ export function getRegisteredWallets<AdditionalFeatures extends Wallet['features
 	const walletsApi = getWallets();
 	const wallets = walletsApi.get();
 
-	const suiWallets = wallets.filter(
+	const iotaWallets = wallets.filter(
 		(wallet): wallet is WalletWithFeatures<MinimallyRequiredFeatures & AdditionalFeatures> =>
 			isWalletWithRequiredFeatureSet(wallet, requiredFeatures),
 	);
@@ -23,11 +26,11 @@ export function getRegisteredWallets<AdditionalFeatures extends Wallet['features
 	return [
 		// Preferred wallets, in order:
 		...(preferredWallets
-			.map((name) => suiWallets.find((wallet) => wallet.name === name))
+			.map((name) => iotaWallets.find((wallet) => wallet.name === name))
 			.filter(Boolean) as WalletWithFeatures<MinimallyRequiredFeatures & AdditionalFeatures>[]),
 
 		// Wallets in default order:
-		...suiWallets.filter((wallet) => !preferredWallets.includes(wallet.name)),
+		...iotaWallets.filter((wallet) => !preferredWallets.includes(wallet.name)),
 	];
 }
 

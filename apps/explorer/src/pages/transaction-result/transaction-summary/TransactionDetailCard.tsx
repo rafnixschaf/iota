@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import { formatDate, useResolveSuiNSName } from '@mysten/core';
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+import { formatDate, useResolveIotaNSName } from '@mysten/core';
 import { Heading, Text } from '@mysten/ui';
 import { type ReactNode } from 'react';
 
@@ -36,7 +39,7 @@ export function TransactionDetailCard({
 	timestamp,
 }: TransactionDetailsProps) {
 	const md = useBreakpoint('md');
-	const { data: domainName } = useResolveSuiNSName(sender);
+	const { data: domainName } = useResolveIotaNSName(sender);
 
 	return (
 		<CollapsibleCard size={md ? 'md' : 'sm'}>

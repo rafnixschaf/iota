@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button } from '_app/shared/ButtonUI';
 import { CardLayout } from '_app/shared/card-layout';
 import { Text } from '_app/shared/text';
@@ -109,7 +112,7 @@ export function BackupMnemonicPage() {
 							<div className="flex-1" />
 							{isOnboardingFlow ? (
 								<div className="w-full text-left flex mt-5 mb-">
-									<label className="flex items-center justify-center h-5 mb-0 mr-5 text-sui-dark gap-1.25 relative cursor-pointer">
+									<label className="flex items-center justify-center h-5 mb-0 mr-5 text-iota-dark gap-1.25 relative cursor-pointer">
 										<input
 											type="checkbox"
 											name="agree"
@@ -134,7 +137,7 @@ export function BackupMnemonicPage() {
 							variant="primary"
 							disabled={!passwordCopied && isOnboardingFlow}
 							to="/"
-							text="Open Sui Wallet"
+							text="Open Iota Wallet"
 							after={<ArrowLeft16 className="text-pBodySmall font-normal rotate-135" />}
 						/>
 					</div>

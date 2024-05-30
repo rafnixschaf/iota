@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type QredoSerializedUiAccount } from '_src/background/accounts/QredoAccount';
 import { type UIQredoInfo, type UIQredoPendingRequest } from '_src/background/qredo/types';
 import { type QredoConnectInput } from '_src/dapp-interface/WalletStandardInterface';

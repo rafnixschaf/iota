@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { ChevronRight16 } from '@mysten/icons';
 import { Heading } from '@mysten/ui';
 import * as Collapsible from '@radix-ui/react-collapsible';
@@ -112,7 +115,7 @@ export function CollapsibleCard({
 				</Collapsible.Root>
 
 				{footer && (
-					<div className={clsx('rounded-b-2xl bg-sui/10 py-2.5', size === 'md' ? 'px-6' : 'px-4')}>
+					<div className={clsx('rounded-b-2xl bg-iota/10 py-2.5', size === 'md' ? 'px-6' : 'px-4')}>
 						{footer}
 					</div>
 				)}

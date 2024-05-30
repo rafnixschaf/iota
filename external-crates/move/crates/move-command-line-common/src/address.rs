@@ -1,6 +1,9 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::parser::{parse_address_number, NumberFormat};
 use anyhow::anyhow;
 use move_core_types::account_address::AccountAddress;

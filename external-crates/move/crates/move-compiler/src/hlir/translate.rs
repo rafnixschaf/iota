@@ -2,6 +2,9 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{
     debug_display, debug_display_verbose, diag,
     editions::{FeatureGate, Flavor},
@@ -14,7 +17,7 @@ use crate::{
     naming::ast as N,
     parser::ast::{Ability_, BinOp, BinOp_, ConstantName, Field, FunctionName, StructName},
     shared::{process_binops, unique_map::UniqueMap, *},
-    sui_mode::ID_FIELD_NAME,
+    iota_mode::ID_FIELD_NAME,
     typing::ast as T,
     FullyCompiledProgram,
 };
@@ -2491,7 +2494,7 @@ fn gen_unused_warnings(
         // cannot be analyzed in this pass
         return;
     }
-    let is_sui_mode = context.env.package_config(context.current_package).flavor == Flavor::Sui;
+    let is_iota_mode = context.env.package_config(context.current_package).flavor == Flavor::Iota;
 
     for (_, sname, sdef) in structs {
         context
@@ -2502,8 +2505,8 @@ fn gen_unused_warnings(
 
         if let H::StructFields::Defined(fields) = &sdef.fields {
             for (f, _) in fields {
-                // skip for Sui ID fields
-                if is_sui_mode && has_key && f.value() == ID_FIELD_NAME {
+                // skip for Iota ID fields
+                if is_iota_mode && has_key && f.value() == ID_FIELD_NAME {
                     continue;
                 }
                 if !context

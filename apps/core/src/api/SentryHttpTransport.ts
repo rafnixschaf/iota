@@ -1,12 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiHTTPTransport } from '@mysten/sui.js/client';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { IotaHTTPTransport } from '@mysten/iota.js/client';
 import * as Sentry from '@sentry/react';
 
-const IGNORED_METHODS = ['suix_resolveNameServiceNames', 'suix_resolveNameServiceAddresses'];
+const IGNORED_METHODS = ['iotax_resolveNameServiceNames', 'iotax_resolveNameServiceAddresses'];
 
-export class SentryHttpTransport extends SuiHTTPTransport {
+export class SentryHttpTransport extends IotaHTTPTransport {
 	#url: string;
 	constructor(url: string) {
 		super({ url });

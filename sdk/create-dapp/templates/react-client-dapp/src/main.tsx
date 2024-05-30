@@ -3,9 +3,9 @@ import ReactDOM from "react-dom/client";
 import "@mysten/dapp-kit/dist/index.css";
 import "@radix-ui/themes/styles.css";
 
-import { getFullnodeUrl } from "@mysten/sui.js/client";
+import { getFullnodeUrl } from "@mysten/iota.js/client";
 import {
-  SuiClientProvider,
+  IotaClientProvider,
   WalletProvider,
   createNetworkConfig,
 } from "@mysten/dapp-kit";
@@ -26,11 +26,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Theme appearance="dark">
       <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networkConfig} defaultNetwork="devnet">
+        <IotaClientProvider networks={networkConfig} defaultNetwork="devnet">
           <WalletProvider autoConnect>
             <App />
           </WalletProvider>
-        </SuiClientProvider>
+        </IotaClientProvider>
       </QueryClientProvider>
     </Theme>
   </React.StrictMode>,

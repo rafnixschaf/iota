@@ -1,8 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Search24 } from '@mysten/icons';
-import { type SuiMoveNormalizedStruct, type SuiObjectResponse } from '@mysten/sui.js/client';
+import { type IotaMoveNormalizedStruct, type IotaObjectResponse } from '@mysten/iota.js/client';
 import { Text, LoadingIndicator, Combobox, ComboboxInput, ComboboxList } from '@mysten/ui';
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
@@ -19,8 +22,8 @@ const DEFAULT_FIELDS_COUNT_TO_SHOW_SEARCH = 10;
 
 interface ObjectFieldsProps {
 	id: string;
-	normalizedStructData?: SuiMoveNormalizedStruct;
-	suiObjectResponseData?: SuiObjectResponse;
+	normalizedStructData?: IotaMoveNormalizedStruct;
+	iotaObjectResponseData?: IotaObjectResponse;
 	loading: boolean;
 	error: boolean;
 	objectType?: string;
@@ -29,7 +32,7 @@ interface ObjectFieldsProps {
 export function ObjectFieldsCard({
 	id,
 	normalizedStructData,
-	suiObjectResponseData,
+	iotaObjectResponseData,
 	loading,
 	error,
 	objectType,
@@ -88,8 +91,8 @@ export function ObjectFieldsCard({
 	}
 
 	const fieldsData =
-		suiObjectResponseData?.data?.content?.dataType === 'moveObject'
-			? (suiObjectResponseData?.data?.content?.fields as Record<string, string | number | object>)
+		iotaObjectResponseData?.data?.content?.dataType === 'moveObject'
+			? (iotaObjectResponseData?.data?.content?.fields as Record<string, string | number | object>)
 			: null;
 
 	// Return null if there are no fields
@@ -140,7 +143,7 @@ export function ObjectFieldsCard({
 						<button
 							type="button"
 							key={name}
-							className="mt-0.5 rounded-lg border border-transparent p-2.5 hover:border-sui-primaryBlue2023/20 hover:bg-white/60"
+							className="mt-0.5 rounded-lg border border-transparent p-2.5 hover:border-iota-primaryBlue2023/20 hover:bg-white/60"
 							onClick={() => onFieldsNameClick(name)}
 						>
 							<Description

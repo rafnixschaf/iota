@@ -6,7 +6,7 @@
 	"author": "Mysten Labs <build@mystenlabs.com>",
 	"repository": {
 		"type": "git",
-		"url": "github.com:MystenLabs/sui.git"
+		"url": "github.com:iotaledger/kinesis.git"
 	},
 	"license": "Apache-2.0",
 	"exports": {

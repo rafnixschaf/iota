@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button } from '_src/ui/app/shared/ButtonUI';
 import { Link } from '_src/ui/app/shared/Link';
 import { Text } from '_src/ui/app/shared/text';
@@ -23,7 +26,7 @@ import {
 	type DerivedLedgerAccount,
 } from '../../components/ledger/useDeriveLedgerAccounts';
 import Overlay from '../../components/overlay';
-import { getSuiApplicationErrorMessage } from '../../helpers/errorMessages';
+import { getIotaApplicationErrorMessage } from '../../helpers/errorMessages';
 import { useAccounts } from '../../hooks/useAccounts';
 
 const numLedgerAccountsToDeriveByDefault = 10;
@@ -50,7 +53,7 @@ export function ImportLedgerAccountsPage() {
 
 	useEffect(() => {
 		if (ledgerError) {
-			toast.error(getSuiApplicationErrorMessage(ledgerError) || 'Something went wrong.');
+			toast.error(getIotaApplicationErrorMessage(ledgerError) || 'Something went wrong.');
 			navigate(-1);
 		}
 	}, [ledgerError, navigate]);

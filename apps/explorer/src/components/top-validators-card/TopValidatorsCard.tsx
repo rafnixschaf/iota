@@ -1,9 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSuiClientQuery } from '@mysten/dapp-kit';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { useIotaClientQuery } from '@mysten/dapp-kit';
 import { ArrowRight12 } from '@mysten/icons';
-import { type SuiValidatorSummary } from '@mysten/sui.js/client';
+import { type IotaValidatorSummary } from '@mysten/iota.js/client';
 import { Text } from '@mysten/ui';
 import { useMemo } from 'react';
 
@@ -19,17 +22,17 @@ import { ampli } from '~/utils/analytics/ampli';
 
 const NUMBER_OF_VALIDATORS = 10;
 
-export function processValidators(set: SuiValidatorSummary[]) {
+export function processValidators(set: IotaValidatorSummary[]) {
 	return set.map((av) => ({
 		name: av.name,
-		address: av.suiAddress,
-		stake: av.stakingPoolSuiBalance,
+		address: av.iotaAddress,
+		stake: av.stakingPoolIotaBalance,
 		logo: av.imageUrl,
 	}));
 }
 
 const validatorsTable = (
-	validatorsData: SuiValidatorSummary[],
+	validatorsData: IotaValidatorSummary[],
 	limit?: number,
 	showIcon?: boolean,
 ) => {
@@ -105,7 +108,7 @@ type TopValidatorsCardProps = {
 };
 
 export function TopValidatorsCard({ limit, showIcon }: TopValidatorsCardProps) {
-	const { data, isPending, isSuccess, isError } = useSuiClientQuery('getLatestSuiSystemState');
+	const { data, isPending, isSuccess, isError } = useIotaClientQuery('getLatestIotaSystemState');
 
 	const tableData = useMemo(
 		() => (data ? validatorsTable(data.activeValidators, limit, showIcon) : null),

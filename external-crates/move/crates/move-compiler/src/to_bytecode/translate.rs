@@ -2,6 +2,9 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use super::{canonicalize_handles, context::*, optimize};
 use crate::{
     cfgir::{ast as G, translate::move_value_from_value_},

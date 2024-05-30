@@ -1,5 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 use bytes::Bytes;
 use fastcrypto::hash::Hash;
 use narwhal_executor::get_restored_consensus_output;
@@ -143,7 +146,7 @@ async fn test_recovery() {
         .await
         .unwrap();
 
-        // we expect to have recovered all the certificates from the last commit. The Sui executor engine
+        // we expect to have recovered all the certificates from the last commit. The Iota executor engine
         // will not execute twice the same certificate.
         assert_eq!(consensus_output.len(), 1);
         assert!(

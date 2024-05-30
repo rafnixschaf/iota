@@ -1,6 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Text } from '_app/shared/text';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +14,7 @@ export function ImportSeedPage() {
 	const navigate = useNavigate();
 
 	return (
-		<div className="rounded-20 bg-sui-lightest shadow-wallet-content flex flex-col items-center px-6 py-10 w-full h-full">
+		<div className="rounded-20 bg-iota-lightest shadow-wallet-content flex flex-col items-center px-6 py-10 w-full h-full">
 			<Text variant="caption" color="steel-dark" weight="semibold">
 				Wallet Setup
 			</Text>

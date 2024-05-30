@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import {
 	roundFloat,
 	useGetValidatorsApy,
@@ -8,8 +11,8 @@ import {
 	useGetValidatorsEvents,
 	formatPercentageDisplay,
 } from '@mysten/core';
-import { useSuiClientQuery } from '@mysten/dapp-kit';
-import { type SuiEvent, type SuiValidatorSummary } from '@mysten/sui.js/client';
+import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { type IotaEvent, type IotaValidatorSummary } from '@mysten/iota.js/client';
 import { Heading, Text } from '@mysten/ui';
 import { lazy, Suspense, useMemo } from 'react';
 
@@ -33,9 +36,9 @@ import { VALIDATOR_LOW_STAKE_GRACE_PERIOD } from '~/utils/validatorConstants';
 const ValidatorMap = lazy(() => import('../../components/validator-map'));
 
 export function validatorsTableData(
-	validators: SuiValidatorSummary[],
+	validators: IotaValidatorSummary[],
 	atRiskValidators: [string, string][],
-	validatorEvents: SuiEvent[],
+	validatorEvents: IotaEvent[],
 	rollingAverageApys: ApyByValidator | null,
 ) {
 	return {
@@ -43,19 +46,19 @@ export function validatorsTableData(
 			.sort(() => 0.5 - Math.random())
 			.map((validator) => {
 				const validatorName = validator.name;
-				const totalStake = validator.stakingPoolSuiBalance;
+				const totalStake = validator.stakingPoolIotaBalance;
 				const img = validator.imageUrl;
 
-				const event = getValidatorMoveEvent(validatorEvents, validator.suiAddress) as {
+				const event = getValidatorMoveEvent(validatorEvents, validator.iotaAddress) as {
 					pool_staking_reward?: string;
 				};
 
 				const atRiskValidator = atRiskValidators.find(
-					([address]) => address === validator.suiAddress,
+					([address]) => address === validator.iotaAddress,
 				);
 				const isAtRisk = !!atRiskValidator;
 				const lastReward = event?.pool_staking_reward ?? null;
-				const { apy, isApyApproxZero } = rollingAverageApys?.[validator.suiAddress] ?? {
+				const { apy, isApyApproxZero } = rollingAverageApys?.[validator.iotaAddress] ?? {
 					apy: null,
 				};
 
@@ -72,7 +75,7 @@ export function validatorsTableData(
 					nextEpochGasPrice: validator.nextEpochGasPrice,
 					commission: Number(validator.commissionRate) / 100,
 					img: img,
-					address: validator.suiAddress,
+					address: validator.iotaAddress,
 					lastReward: lastReward ?? null,
 					votingPower: Number(validator.votingPower) / 100,
 					atRisk: isAtRisk ? VALIDATOR_LOW_STAKE_GRACE_PERIOD - Number(atRiskValidator[1]) : null,
@@ -130,7 +133,7 @@ export function validatorsTableData(
 				header: 'Proposed Next Epoch Gas Price',
 				accessorKey: 'nextEpochGasPrice',
 				enableSorting: true,
-				cell: (props: any) => <StakeColumn stake={props.getValue()} inMIST />,
+				cell: (props: any) => <StakeColumn stake={props.getValue()} inMICROS />,
 			},
 			{
 				header: 'APY',
@@ -196,7 +199,7 @@ export function validatorsTableData(
 					const label = 'At Risk';
 					return atRisk !== null ? (
 						<Tooltip
-							tip="Staked SUI is below the minimum SUI stake threshold to remain a validator."
+							tip="Staked IOTA is below the minimum IOTA stake threshold to remain a validator."
 							onOpen={() =>
 								ampli.activatedTooltip({
 									tooltipLabel: label,
@@ -225,7 +228,7 @@ export function validatorsTableData(
 }
 
 function ValidatorPageResult() {
-	const { data, isPending, isSuccess, isError } = useSuiClientQuery('getLatestSuiSystemState');
+	const { data, isPending, isSuccess, isError } = useIotaClientQuery('getLatestIotaSystemState');
 
 	const numberOfValidators = data?.activeValidators.length || 0;
 
@@ -244,7 +247,7 @@ function ValidatorPageResult() {
 		if (!data) return 0;
 		const validators = data.activeValidators;
 
-		return validators.reduce((acc, cur) => acc + Number(cur.stakingPoolSuiBalance), 0);
+		return validators.reduce((acc, cur) => acc + Number(cur.stakingPoolIotaBalance), 0);
 	}, [data]);
 
 	const averageAPY = useMemo(() => {
@@ -320,8 +323,8 @@ function ValidatorPageResult() {
 										</div>
 										<div className="flex flex-col gap-8">
 											<Stats
-												label="Total SUI Staked"
-												tooltip="The total SUI staked on the network by validators and delegators to validate the network and earn rewards."
+												label="Total IOTA Staked"
+												tooltip="The total IOTA staked on the network by validators and delegators to validate the network and earn rewards."
 												unavailable={totalStaked <= 0}
 											>
 												<DelegationAmount amount={totalStaked || 0n} isStats />

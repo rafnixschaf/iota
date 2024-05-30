@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useBackgroundClient } from '_src/ui/app/hooks/useBackgroundClient';
 import { Button } from '_src/ui/app/shared/ButtonUI';
 import FieldLabel from '_src/ui/app/shared/field-label';
@@ -83,7 +86,7 @@ export function PasswordInputDialog({
 						</FieldLabel>
 						<div className="text-center mt-4">
 							<Text variant="pBodySmall" color="steel-dark" weight="normal">
-								This is the password you currently use to lock and unlock your Sui wallet.
+								This is the password you currently use to lock and unlock your Iota wallet.
 							</Text>
 						</div>
 					</div>

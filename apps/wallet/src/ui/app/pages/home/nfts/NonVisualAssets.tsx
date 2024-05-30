@@ -1,13 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import ExplorerLink from '_src/ui/app/components/explorer-link';
 import { ExplorerLinkType } from '_src/ui/app/components/explorer-link/ExplorerLinkType';
 import { Text } from '_src/ui/app/shared/text';
-import { type SuiObjectData } from '@mysten/sui.js/client';
-import { formatAddress, parseStructTag } from '@mysten/sui.js/utils';
+import { type IotaObjectData } from '@mysten/iota.js/client';
+import { formatAddress, parseStructTag } from '@mysten/iota.js/utils';
 
-export default function NonVisualAssets({ items }: { items: SuiObjectData[] }) {
+export default function NonVisualAssets({ items }: { items: IotaObjectData[] }) {
 	return (
 		<div className="flex flex-col items-center gap-4 w-full flex-1">
 			{items?.length ? (

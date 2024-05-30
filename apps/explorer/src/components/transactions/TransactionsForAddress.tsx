@@ -1,8 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSuiClient } from '@mysten/dapp-kit';
-import { type SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { useIotaClient } from '@mysten/dapp-kit';
+import { type IotaTransactionBlockResponse } from '@mysten/iota.js/client';
 import { LoadingIndicator, Text } from '@mysten/ui';
 import { useQuery } from '@tanstack/react-query';
 
@@ -21,7 +24,7 @@ export function TransactionsForAddressTable({
 	isError,
 	address,
 }: {
-	data: SuiTransactionBlockResponse[];
+	data: IotaTransactionBlockResponse[];
 	isPending: boolean;
 	isError: boolean;
 	address: string;
@@ -59,7 +62,7 @@ export function TransactionsForAddressTable({
 }
 
 export function TransactionsForAddress({ address, type }: Props) {
-	const client = useSuiClient();
+	const client = useIotaClient();
 
 	const { data, isPending, isError } = useQuery({
 		queryKey: ['transactions-for-address', address, type],
@@ -84,7 +87,7 @@ export function TransactionsForAddress({ address, type }: Props) {
 			);
 
 			const inserted = new Map();
-			const uniqueList: SuiTransactionBlockResponse[] = [];
+			const uniqueList: IotaTransactionBlockResponse[] = [];
 
 			[...results[0].data, ...results[1].data]
 				.sort((a, b) => Number(b.timestampMs ?? 0) - Number(a.timestampMs ?? 0))

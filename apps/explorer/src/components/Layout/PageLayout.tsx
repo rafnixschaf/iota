@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useAppsBackend, useElementDimensions } from '@mysten/core';
 import { LoadingIndicator } from '@mysten/ui';
@@ -50,7 +53,7 @@ export function PageLayout({ gradient, content, loading, isError }: PageLayoutPr
 
 	const networkDegradeBannerCopy =
 		network === Network.Testnet
-			? 'Sui Explorer (Testnet) is currently under-going maintenance. Some data may be incorrect or missing.'
+			? 'Iota Explorer (Testnet) is currently under-going maintenance. Some data may be incorrect or missing.'
 			: "The explorer is running slower than usual. We're working to fix the issue and appreciate your patience.";
 
 	return (
