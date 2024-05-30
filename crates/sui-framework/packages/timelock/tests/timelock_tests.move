@@ -5,11 +5,11 @@
 module timelock::timelock_tests {
 
     use sui::balance;
-    use sui::label::{Self, SystemLabelerCap};
     use sui::sui::SUI;
     use sui::test_scenario;
+    use sui::vec_set;
 
-    use timelock::timelock;
+    use timelock::timelock::{Self, LabelerCap};
 
     #[test]
     fun test_lock_unlock_flow() {
@@ -30,28 +30,101 @@ module timelock::timelock_tests {
         assert!(timelock.is_locked(scenario.ctx()), 1);
         assert!(timelock.remaining_time(scenario.ctx()) == 100, 2);
 
+        // Check labels.
+        assert!(timelock.labels().is_none(), 3);
+
         // Increment epoch timestamp.
         scenario.ctx().increment_epoch_timestamp(10);
 
         // Check if the timelock is still locked.
-        assert!(timelock.is_locked(scenario.ctx()), 3);
-        assert!(timelock.remaining_time(scenario.ctx()) == 90, 4);
+        assert!(timelock.is_locked(scenario.ctx()), 4);
+        assert!(timelock.remaining_time(scenario.ctx()) == 90, 5);
 
         // Increment epoch timestamp again.
         scenario.ctx().increment_epoch_timestamp(90);
 
         // Check if the timelock is unlocked.
-        assert!(!timelock.is_locked(scenario.ctx()), 5);
-        assert!(timelock.remaining_time(scenario.ctx()) == 0, 6);
+        assert!(!timelock.is_locked(scenario.ctx()), 6);
+        assert!(timelock.remaining_time(scenario.ctx()) == 0, 7);
 
         // Unlock the IOTA balance.
         let balance = timelock::unlock(timelock, scenario.ctx());
 
         // Check the unlocked IOTA balance.
-        assert!(balance.value() == 10, 7);
+        assert!(balance.value() == 10, 8);
 
         // Cleanup.
         balance::destroy_for_testing(balance);
+
+        scenario.end();
+    }
+
+    #[test]
+    fun test_lock_unlock_labeled_flow() {
+        // Set up a test environment.
+        let system = @0x0;
+        let sender = @0xA;
+        let mut scenario = test_scenario::begin(system);
+
+        // Initialize a LabelerCap.
+        timelock::assign_labeler_cap(sender, scenario.ctx());
+
+        // Switch to sender.
+        scenario.next_tx(sender);
+
+        // Take the capability.
+        let cap = scenario.take_from_sender<LabelerCap>();
+
+        // Minting some IOTA.
+        let iota = balance::create_for_testing<SUI>(10);
+
+        // Lock the IOTA balance.
+        let label1 = b"label1";
+        let label2 = b"label2";
+
+        let mut labels = vec_set::empty();
+
+        labels.insert(label1);
+        labels.insert(label2);
+    
+        let timelock = timelock::lock_labeled(&cap, iota, 100, labels, scenario.ctx());
+
+        // Check the locked IOTA.
+        assert!(timelock.locked().value() == 10, 0);
+
+        // Check if the timelock is locked.
+        assert!(timelock.is_locked(scenario.ctx()), 1);
+        assert!(timelock.remaining_time(scenario.ctx()) == 100, 2);
+
+        // Check labels.
+        assert!(timelock.labels() == option::some(labels), 3);
+        assert!(timelock.is_labeled_with(&label1), 4);
+        assert!(timelock.is_labeled_with(&label2), 5);
+
+        // Increment epoch timestamp.
+        scenario.ctx().increment_epoch_timestamp(10);
+
+        // Check if the timelock is still locked.
+        assert!(timelock.is_locked(scenario.ctx()), 6);
+        assert!(timelock.remaining_time(scenario.ctx()) == 90, 7);
+
+        // Increment epoch timestamp again.
+        scenario.ctx().increment_epoch_timestamp(90);
+
+        // Check if the timelock is unlocked.
+        assert!(!timelock.is_locked(scenario.ctx()), 8);
+        assert!(timelock.remaining_time(scenario.ctx()) == 0, 9);
+
+        // Unlock the IOTA balance.
+        let balance = timelock::unlock(timelock, scenario.ctx());
+
+        // Check the unlocked IOTA balance.
+        assert!(balance.value() == 10, 10);
+
+        // Cleanup.
+        balance::destroy_for_testing(balance);
+
+        scenario.return_to_sender(cap);
 
         scenario.end();
     }
@@ -73,7 +146,7 @@ module timelock::timelock_tests {
         let timelock = timelock::lock(iota, 10, scenario.ctx());
 
         // Cleanup.
-        let (balance, _) = timelock::unpack(timelock);
+        let (balance, _, _) = timelock::unpack(timelock);
 
         balance::destroy_for_testing(balance);
 
@@ -101,60 +174,6 @@ module timelock::timelock_tests {
 
         // Cleanup.
         balance::destroy_for_testing(balance);
-
-        scenario.end();
-    }
-
-    #[test]
-    fun test_add_remove_label_flow() {
-        // Set up a test environment.
-        let system = @0x0;
-        let sender = @0xA;
-        let mut scenario = test_scenario::begin(system);
-
-        // Initialize a SystemLabelerCap.
-        label::assign_system_labeler_cap(sender, scenario.ctx());
-
-        // Switch to sender.
-        scenario.next_tx(sender);
-
-        // Take the capability.
-        let cap = scenario.take_from_sender<SystemLabelerCap>();
-
-        // Minting some IOTA.
-        let iota = balance::create_for_testing<SUI>(10);
-
-        // Lock the IOTA balance.
-        let mut timelock = timelock::lock(iota, 100, scenario.ctx());
-
-        // Add some labels.
-        let label1 = b"label1";
-        let label2 = b"label2";
-
-        timelock.add_label(&cap, label1);
-        timelock.add_label(&cap, label2);
-
-        // Check labels.
-        assert!(timelock.has_label(&label1), 0);
-        assert!(timelock.has_label(&label2), 1);
-
-        // Remove a label.
-        timelock.remove_label(&cap, &label1);
-
-        // Check labels again.
-        assert!(!timelock.has_label(&label1), 3);
-        assert!(timelock.has_label(&label2), 4);
-
-        // Increment epoch timestamp.
-        scenario.ctx().increment_epoch_timestamp(110);
-
-        // Unlock the IOTA balance.
-        let balance = timelock::unlock(timelock, scenario.ctx());
-
-        // Cleanup.
-        balance::destroy_for_testing(balance);
-
-        scenario.return_to_sender(cap);
 
         scenario.end();
     }

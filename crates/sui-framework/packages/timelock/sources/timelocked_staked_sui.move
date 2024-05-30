@@ -3,6 +3,8 @@
 
 module timelock::timelocked_staked_sui {
 
+    use sui::vec_set::VecSet;
+
     use sui_system::staking_pool::StakedSui;
 
     const EIncompatibleTimelockedStakedSui: u64 = 0;
@@ -14,18 +16,22 @@ module timelock::timelocked_staked_sui {
         staked_sui: StakedSui,
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
+        /// Timelock related labels.
+        labels: Option<VecSet<vector<u8>>>,
     }
 
     /// Create a new instance of `TimelockedStakedSui`.
     public(package) fun create(
         staked_sui: StakedSui,
         expiration_timestamp_ms: u64,
+        labels: Option<VecSet<vector<u8>>>,
         ctx: &mut TxContext
     ): TimelockedStakedSui {
         TimelockedStakedSui {
             id: object::new(ctx),
             staked_sui,
-            expiration_timestamp_ms
+            expiration_timestamp_ms,
+            labels,
         }
     }
 
@@ -48,6 +54,11 @@ module timelock::timelocked_staked_sui {
         self.expiration_timestamp_ms
     }
 
+    /// Function to get the labels of a `TimelockedStakedSui`.
+    public fun labels(self: &TimelockedStakedSui): &Option<VecSet<vector<u8>>> {
+        &self.labels
+    }
+
     /// Split `TimelockedStakedSui` into two parts, one with principal `split_amount`,
     /// and the remaining principal is left in `self`.
     /// All the other parameters of the `TimelockedStakedSui` like `stake_activation_epoch` or `pool_id` remain the same.
@@ -58,6 +69,7 @@ module timelock::timelocked_staked_sui {
             id: object::new(ctx),
             staked_sui: splitted_stake,
             expiration_timestamp_ms: self.expiration_timestamp_ms,
+            labels: self.labels,
         }
     }
 
@@ -79,6 +91,7 @@ module timelock::timelocked_staked_sui {
             id,
             staked_sui,
             expiration_timestamp_ms: _,
+            labels: _,
         } = other;
 
         id.delete();
@@ -92,20 +105,22 @@ module timelock::timelocked_staked_sui {
     /// Returns true if all the staking parameters of the staked sui except the principal are identical
     public fun is_equal_staking_metadata(self: &TimelockedStakedSui, other: &TimelockedStakedSui): bool {
         self.staked_sui.is_equal_staking_metadata(&other.staked_sui) &&
-        (self.expiration_timestamp_ms == other.expiration_timestamp_ms)
+        (self.expiration_timestamp_ms == other.expiration_timestamp_ms) &&
+        (self.labels == other.labels)
     }
 
     /// An utility function to destroy a `TimelockedStakedSui`.
-    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64) {
+    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<VecSet<vector<u8>>>) {
         let TimelockedStakedSui {
             id,
             staked_sui,
             expiration_timestamp_ms,
+            labels,
         } = self;
 
         object::delete(id);
 
-        (staked_sui, expiration_timestamp_ms)
+        (staked_sui, expiration_timestamp_ms, labels)
     }
 
     /// An utility function to transfer a `TimelockedStakedSui`.

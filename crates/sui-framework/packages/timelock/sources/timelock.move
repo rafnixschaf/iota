@@ -4,13 +4,19 @@
 /// A timelock implementation.
 module timelock::timelock {
 
-    use sui::label::{Self, SystemLabelerCap};
+    use sui::vec_set::VecSet;
 
     /// Error code for when the expire timestamp of the lock is in the past.
     const EExpireEpochIsPast: u64 = 0;
-
     /// Error code for when the lock has not expired yet.
     const ENotExpiredYet: u64 = 1;
+    /// Error code for when the sender is not @0x0, the system address.
+    const ENotSystemAddress: u64 = 2;
+
+    /// The capability allows to work with labels.
+    public struct LabelerCap has key {
+        id: UID,
+    }
 
     /// `TimeLock` struct that holds a locked object.
     public struct TimeLock<T: store> has key {
@@ -19,6 +25,22 @@ module timelock::timelock {
         locked: T,
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
+        /// Timelock related labels.
+        labels: Option<VecSet<vector<u8>>>,
+    }
+
+    /// Create and transfer a `LabelerCap` object to an authority address.
+    /// This function is called exactly once, during genesis.
+    public fun assign_labeler_cap(to: address, ctx: &mut TxContext) {
+        assert!(ctx.sender() == @0x0, ENotSystemAddress);
+
+        // Create a new capability.
+        let cap = LabelerCap {
+            id: object::new(ctx),
+        };
+
+        // Transfer the capability to the specified address.
+        transfer::transfer(cap, to);
     }
 
     /// Function to lock an object till a unix timestamp in milliseconds.
@@ -30,16 +52,42 @@ module timelock::timelock {
         assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
 
         // Create a timelock.
-        pack(locked, expiration_timestamp_ms, ctx)
+        pack(locked, expiration_timestamp_ms, option::none(), ctx)
+    }
+
+    /// Function to lock a labeled object till a unix timestamp in milliseconds.
+    public fun lock_labeled<T: store>(
+        _: &LabelerCap,
+        locked: T,
+        expiration_timestamp_ms: u64,
+        labels: VecSet<vector<u8>>,
+        ctx: &mut TxContext
+    ): TimeLock<T> {
+        // Get the epoch timestamp.
+        let epoch_timestamp_ms = ctx.epoch_timestamp_ms();
+
+        // Check that `expiration_timestamp_ms` is valid.
+        assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
+
+        // Create a labeled timelock.
+        pack(locked, expiration_timestamp_ms, option::some(labels), ctx)
     }
 
     /// Function to unlock the object from a `TimeLock`.
     public fun unlock<T: store>(self: TimeLock<T>, ctx: &mut TxContext): T {
         // Unpack the timelock. 
-        let (locked, expiration_timestamp_ms) = unpack(self);
+        let (locked, expiration_timestamp_ms, labels) = unpack(self);
 
         // Check if the lock has expired.
         assert!(expiration_timestamp_ms <= ctx.epoch_timestamp_ms(), ENotExpiredYet);
+
+        // Delete the labels.
+        if (labels.is_some()) {
+            option::destroy_some(labels);
+        }
+        else {
+            option::destroy_none(labels);
+        };
 
         locked
     }
@@ -79,47 +127,52 @@ module timelock::timelock {
         &mut self.locked
     }
 
-    /// Function to add a label to a `TimeLock`
-    public fun add_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: vector<u8>) {
-        label::borrow_labels_guard_mut(&mut self.id).add_system(cap, label);
-    }
-
-    /// Function to remove a label from a `TimeLock`
-    public fun remove_label<T: store>(self: &mut TimeLock<T>, cap: &SystemLabelerCap, label: &vector<u8>) {
-        label::borrow_labels_guard_mut(&mut self.id).remove_system(cap, label);
-    }
-
     /// Function to check if a `TimeLock` labeled with a label.
-    public fun has_label<T: store>(self: &mut TimeLock<T>, label: &vector<u8>): bool {
-        label::borrow_labels_guard(&mut self.id).has_system(label)
+    public fun is_labeled_with<T: store>(self: &TimeLock<T>, label: &vector<u8>): bool {
+        // Check if the labels member are initialized, return `false` if it is not.
+        if (self.labels.is_some()) {
+            return self.labels.borrow().contains(label)
+        }
+        else {
+            return false
+        }
+    }
+
+    /// Function to get the labels of a `TimeLock`.
+    public fun labels<T: store>(self: &TimeLock<T>): &Option<VecSet<vector<u8>>> {
+        &self.labels
     }
 
     /// An utility function to pack a `TimeLock`.
-    public(package) fun pack<T: store>(locked: T, expiration_timestamp_ms: u64, ctx: &mut TxContext): TimeLock<T> {
+    public(package) fun pack<T: store>(
+        locked: T,
+        expiration_timestamp_ms: u64,
+        labels: Option<VecSet<vector<u8>>>,
+        ctx: &mut TxContext): TimeLock<T>
+    {
         // Create a timelock.
         TimeLock {
             id: object::new(ctx),
             locked,
-            expiration_timestamp_ms
+            expiration_timestamp_ms,
+            labels,
         }
     }
 
     /// An utility function to unpack a `TimeLock`.
-    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64) {
+    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64, Option<VecSet<vector<u8>>>) {
         // Unpack the timelock.
         let TimeLock {
-            mut id,
+            id,
             locked,
-            expiration_timestamp_ms
+            expiration_timestamp_ms,
+            labels,
         } = lock;
-
-        // Remove the related labels guard.
-        label::remove_labels_guard(&mut id);
 
         // Delete the timelock. 
         object::delete(id);
 
-        (locked, expiration_timestamp_ms)
+        (locked, expiration_timestamp_ms, labels)
     }
 
     /// An utility function to transfer a `TimeLock`.
