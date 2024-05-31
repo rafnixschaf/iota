@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { toB64 } from '@mysten/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bytesToHex } from '@noble/hashes/utils';
 
 import { bcs } from '../bcs/index.js';
-import { normalizeIotaAddress, IOTA_ADDRESS_LENGTH } from '../utils/iota-types.js';
+import { normalizeSuiAddress, SUI_ADDRESS_LENGTH } from '../utils/sui-types.js';
 import type { SerializedSignature } from './index.js';
 import { IntentScope, messageWithIntent } from './intent.js';
 import { SIGNATURE_SCHEME_TO_FLAG } from './signature-scheme.js';
@@ -59,12 +56,12 @@ export abstract class PublicKey {
 	}
 
 	/**
-	 * Return the Iota representation of the public key encoded in
-	 * base-64. A Iota public key is formed by the concatenation
+	 * Return the Sui representation of the public key encoded in
+	 * base-64. A Sui public key is formed by the concatenation
 	 * of the scheme flag with the raw bytes of the public key
 	 */
-	toIotaPublicKey(): string {
-		const bytes = this.toIotaBytes();
+	toSuiPublicKey(): string {
+		const bytes = this.toSuiBytes();
 		return toB64(bytes);
 	}
 
@@ -107,13 +104,13 @@ export abstract class PublicKey {
 	 * Returns the bytes representation of the public key
 	 * prefixed with the signature scheme flag
 	 */
-	toIotaBytes(): Uint8Array {
+	toSuiBytes(): Uint8Array {
 		const rawBytes = this.toRawBytes();
-		const iotaBytes = new Uint8Array(rawBytes.length + 1);
-		iotaBytes.set([this.flag()]);
-		iotaBytes.set(rawBytes, 1);
+		const suiBytes = new Uint8Array(rawBytes.length + 1);
+		suiBytes.set([this.flag()]);
+		suiBytes.set(rawBytes, 1);
 
-		return iotaBytes;
+		return suiBytes;
 	}
 
 	/**
@@ -121,28 +118,28 @@ export abstract class PublicKey {
 	 * prefixed with the signature scheme flag. If the
 	 * signature scheme is ED25519, no prefix is set.
 	 */
-	toIotaBytesForAddress(): Uint8Array {
+	toSuiBytesForAddress(): Uint8Array {
 		const rawBytes = this.toRawBytes();
 		if (this.flag() === SIGNATURE_SCHEME_TO_FLAG['ED25519']) {
 			return rawBytes;
 		} else {
-			const iotaBytes = new Uint8Array(rawBytes.length + 1);
-			iotaBytes.set([this.flag()]);
-			iotaBytes.set(rawBytes, 1);
+			const suiBytes = new Uint8Array(rawBytes.length + 1);
+			suiBytes.set([this.flag()]);
+			suiBytes.set(rawBytes, 1);
 
-			return iotaBytes;
+			return suiBytes;
 		}
 	}
 
 	/**
-	 * Return the Iota address associated with this Ed25519 public key
+	 * Return the Sui address associated with this Ed25519 public key
 	 */
-	toIotaAddress(): string {
+	toSuiAddress(): string {
 		// Each hex char represents half a byte, hence hex address doubles the length
-		return normalizeIotaAddress(
-			bytesToHex(blake2b(this.toIotaBytesForAddress(), { dkLen: 32 })).slice(
+		return normalizeSuiAddress(
+			bytesToHex(blake2b(this.toSuiBytesForAddress(), { dkLen: 32 })).slice(
 				0,
-				IOTA_ADDRESS_LENGTH * 2,
+				SUI_ADDRESS_LENGTH * 2,
 			),
 		);
 	}

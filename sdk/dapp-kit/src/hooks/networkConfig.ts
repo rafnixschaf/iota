@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
+import type { SuiClientOptions } from '@mysten/sui.js/client';
 
-import type { IotaClientOptions } from '@mysten/iota.js/client';
+import { useSuiClientContext } from './useSuiClient.js';
 
-import { useIotaClientContext } from './useIotaClient.js';
-
-export type NetworkConfig<T extends object = object> = IotaClientOptions & {
+export type NetworkConfig<T extends object = object> = SuiClientOptions & {
 	variables?: T;
 };
 
@@ -18,7 +15,7 @@ export function createNetworkConfig<
 	Variables extends object = NonNullable<Config['variables']>,
 >(networkConfig: T) {
 	function useNetworkConfig(): Config {
-		const { config } = useIotaClientContext();
+		const { config } = useSuiClientContext();
 
 		if (!config) {
 			throw new Error('No network config found');

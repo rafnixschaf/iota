@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! A helper for generating structured code.
 //!
 //! TODO(wrwg): this should be moved somewhere else. It is currently contained here

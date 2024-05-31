@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TadaDocumentNode } from 'gql.tada';
 import type { DocumentNode } from 'graphql';
@@ -43,16 +40,16 @@ export type GraphQLResponseErrors = Array<{
 	path?: (string | number)[];
 }>;
 
-export interface IotaGraphQLClientOptions<Queries extends Record<string, GraphQLDocument>> {
+export interface SuiGraphQLClientOptions<Queries extends Record<string, GraphQLDocument>> {
 	url: string;
 	fetch?: typeof fetch;
 	headers?: Record<string, string>;
 	queries?: Queries;
 }
 
-export class IotaGraphQLRequestError extends Error {}
+export class SuiGraphQLRequestError extends Error {}
 
-export class IotaGraphQLClient<Queries extends Record<string, GraphQLDocument>> {
+export class SuiGraphQLClient<Queries extends Record<string, GraphQLDocument>> {
 	#url: string;
 	#queries: Queries;
 	#headers: Record<string, string>;
@@ -63,7 +60,7 @@ export class IotaGraphQLClient<Queries extends Record<string, GraphQLDocument>> 
 		fetch: fetchFn = fetch,
 		headers = {},
 		queries = {} as Queries,
-	}: IotaGraphQLClientOptions<Queries>) {
+	}: SuiGraphQLClientOptions<Queries>) {
 		this.#url = url;
 		this.#queries = queries;
 		this.#headers = headers;
@@ -88,7 +85,7 @@ export class IotaGraphQLClient<Queries extends Record<string, GraphQLDocument>> 
 		});
 
 		if (!res.ok) {
-			throw new IotaGraphQLRequestError(`GraphQL request failed: ${res.statusText} (${res.status})`);
+			throw new SuiGraphQLRequestError(`GraphQL request failed: ${res.statusText} (${res.status})`);
 		}
 
 		return await res.json();

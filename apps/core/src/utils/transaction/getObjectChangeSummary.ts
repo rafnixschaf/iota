@@ -1,62 +1,59 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import {
 	DisplayFieldsResponse,
-	IotaObjectChange,
-	IotaObjectChangeCreated,
-	IotaObjectChangeDeleted,
-	IotaObjectChangeMutated,
-	IotaObjectChangePublished,
-	IotaObjectChangeTransferred,
-	IotaObjectChangeWrapped,
-} from '@mysten/iota.js/client';
+	SuiObjectChange,
+	SuiObjectChangeCreated,
+	SuiObjectChangeDeleted,
+	SuiObjectChangeMutated,
+	SuiObjectChangePublished,
+	SuiObjectChangeTransferred,
+	SuiObjectChangeWrapped,
+} from '@mysten/sui.js/client';
 
 import { groupByOwner } from './groupByOwner';
-import { IotaObjectChangeTypes } from './types';
+import { SuiObjectChangeTypes } from './types';
 
 export type WithDisplayFields<T> = T & { display?: DisplayFieldsResponse };
-export type IotaObjectChangeWithDisplay = WithDisplayFields<IotaObjectChange>;
+export type SuiObjectChangeWithDisplay = WithDisplayFields<SuiObjectChange>;
 
 export type ObjectChanges = {
-	changesWithDisplay: IotaObjectChangeWithDisplay[];
-	changes: IotaObjectChange[];
+	changesWithDisplay: SuiObjectChangeWithDisplay[];
+	changes: SuiObjectChange[];
 	ownerType: string;
 };
 export type ObjectChangesByOwner = Record<string, ObjectChanges>;
 
 export type ObjectChangeSummary = {
-	[K in IotaObjectChangeTypes]: ObjectChangesByOwner;
+	[K in SuiObjectChangeTypes]: ObjectChangesByOwner;
 };
 
-export const getObjectChangeSummary = (objectChanges: IotaObjectChangeWithDisplay[]) => {
+export const getObjectChangeSummary = (objectChanges: SuiObjectChangeWithDisplay[]) => {
 	if (!objectChanges) return null;
 
 	const mutated = objectChanges.filter(
 		(change) => change.type === 'mutated',
-	) as IotaObjectChangeMutated[];
+	) as SuiObjectChangeMutated[];
 
 	const created = objectChanges.filter(
 		(change) => change.type === 'created',
-	) as IotaObjectChangeCreated[];
+	) as SuiObjectChangeCreated[];
 
 	const transferred = objectChanges.filter(
 		(change) => change.type === 'transferred',
-	) as IotaObjectChangeTransferred[];
+	) as SuiObjectChangeTransferred[];
 
 	const published = objectChanges.filter(
 		(change) => change.type === 'published',
-	) as IotaObjectChangePublished[];
+	) as SuiObjectChangePublished[];
 
 	const wrapped = objectChanges.filter(
 		(change) => change.type === 'wrapped',
-	) as IotaObjectChangeWrapped[];
+	) as SuiObjectChangeWrapped[];
 
 	const deleted = objectChanges.filter(
 		(change) => change.type === 'deleted',
-	) as IotaObjectChangeDeleted[];
+	) as SuiObjectChangeDeleted[];
 
 	return {
 		transferred: groupByOwner(transferred),

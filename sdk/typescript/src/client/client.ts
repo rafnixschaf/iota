@@ -1,22 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import { fromB58, toB64, toHEX } from '@mysten/bcs';
 
 import type { Signer } from '../cryptography/index.js';
 import type { TransactionBlock } from '../transactions/index.js';
 import { isTransactionBlock } from '../transactions/index.js';
 import {
-	isValidIotaAddress,
-	isValidIotaObjectId,
+	isValidSuiAddress,
+	isValidSuiObjectId,
 	isValidTransactionDigest,
-	normalizeIotaAddress,
-	normalizeIotaObjectId,
-} from '../utils/iota-types.js';
-import { IotaHTTPTransport } from './http-transport.js';
-import type { IotaTransport } from './http-transport.js';
+	normalizeSuiAddress,
+	normalizeSuiObjectId,
+} from '../utils/sui-types.js';
+import { SuiHTTPTransport } from './http-transport.js';
+import type { SuiTransport } from './http-transport.js';
 import type {
 	AddressMetrics,
 	AllEpochsAddressMetrics,
@@ -76,17 +73,17 @@ import type {
 	ResolveNameServiceNamesParams,
 	SubscribeEventParams,
 	SubscribeTransactionParams,
-	IotaEvent,
-	IotaMoveFunctionArgType,
-	IotaMoveNormalizedFunction,
-	IotaMoveNormalizedModule,
-	IotaMoveNormalizedModules,
-	IotaMoveNormalizedStruct,
-	IotaObjectResponse,
-	IotaObjectResponseQuery,
-	IotaSystemStateSummary,
-	IotaTransactionBlockResponse,
-	IotaTransactionBlockResponseQuery,
+	SuiEvent,
+	SuiMoveFunctionArgType,
+	SuiMoveNormalizedFunction,
+	SuiMoveNormalizedModule,
+	SuiMoveNormalizedModules,
+	SuiMoveNormalizedStruct,
+	SuiObjectResponse,
+	SuiObjectResponseQuery,
+	SuiSystemStateSummary,
+	SuiTransactionBlockResponse,
+	SuiTransactionBlockResponseQuery,
 	TransactionEffects,
 	TryGetPastObjectParams,
 	Unsubscribe,
@@ -105,10 +102,10 @@ export interface OrderArguments {
 }
 
 /**
- * Configuration options for the IotaClient
+ * Configuration options for the SuiClient
  * You must provide either a `url` or a `transport`
  */
-export type IotaClientOptions = NetworkOrTransport;
+export type SuiClientOptions = NetworkOrTransport;
 
 export type NetworkOrTransport =
 	| {
@@ -116,34 +113,34 @@ export type NetworkOrTransport =
 			transport?: never;
 	  }
 	| {
-			transport: IotaTransport;
+			transport: SuiTransport;
 			url?: never;
 	  };
 
-export const IOTA_CLIENT_BRAND = Symbol.for('@mysten/IotaClient');
+export const SUI_CLIENT_BRAND = Symbol.for('@mysten/SuiClient');
 
-export function isIotaClient(client: unknown): client is IotaClient {
+export function isSuiClient(client: unknown): client is SuiClient {
 	return (
 		typeof client === 'object' &&
 		client !== null &&
-		(client as { [IOTA_CLIENT_BRAND]: unknown })[IOTA_CLIENT_BRAND] === true
+		(client as { [SUI_CLIENT_BRAND]: unknown })[SUI_CLIENT_BRAND] === true
 	);
 }
 
-export class IotaClient {
-	protected transport: IotaTransport;
+export class SuiClient {
+	protected transport: SuiTransport;
 
-	get [IOTA_CLIENT_BRAND]() {
+	get [SUI_CLIENT_BRAND]() {
 		return true;
 	}
 
 	/**
-	 * Establish a connection to a Iota RPC endpoint
+	 * Establish a connection to a Sui RPC endpoint
 	 *
 	 * @param options configuration options for the API Client
 	 */
-	constructor(options: IotaClientOptions) {
-		this.transport = options.transport ?? new IotaHTTPTransport({ url: options.url });
+	constructor(options: SuiClientOptions) {
+		this.transport = options.transport ?? new SuiHTTPTransport({ url: options.url });
 	}
 
 	async getRpcApiVersion(): Promise<string | undefined> {
@@ -159,12 +156,12 @@ export class IotaClient {
 	 * Get all Coin<`coin_type`> objects owned by an address.
 	 */
 	async getCoins(input: GetCoinsParams): Promise<PaginatedCoins> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
 
 		return await this.transport.request({
-			method: 'iotax_getCoins',
+			method: 'suix_getCoins',
 			params: [input.owner, input.coinType, input.cursor, input.limit],
 		});
 	}
@@ -173,12 +170,12 @@ export class IotaClient {
 	 * Get all Coin objects owned by an address.
 	 */
 	async getAllCoins(input: GetAllCoinsParams): Promise<PaginatedCoins> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
 
 		return await this.transport.request({
-			method: 'iotax_getAllCoins',
+			method: 'suix_getAllCoins',
 			params: [input.owner, input.cursor, input.limit],
 		});
 	}
@@ -187,11 +184,11 @@ export class IotaClient {
 	 * Get the total coin balance for one coin type, owned by the address owner.
 	 */
 	async getBalance(input: GetBalanceParams): Promise<CoinBalance> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
 		return await this.transport.request({
-			method: 'iotax_getBalance',
+			method: 'suix_getBalance',
 			params: [input.owner, input.coinType],
 		});
 	}
@@ -200,10 +197,10 @@ export class IotaClient {
 	 * Get the total coin balance for all coin types, owned by the address owner.
 	 */
 	async getAllBalances(input: GetAllBalancesParams): Promise<CoinBalance[]> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
-		return await this.transport.request({ method: 'iotax_getAllBalances', params: [input.owner] });
+		return await this.transport.request({ method: 'suix_getAllBalances', params: [input.owner] });
 	}
 
 	/**
@@ -211,7 +208,7 @@ export class IotaClient {
 	 */
 	async getCoinMetadata(input: GetCoinMetadataParams): Promise<CoinMetadata | null> {
 		return await this.transport.request({
-			method: 'iotax_getCoinMetadata',
+			method: 'suix_getCoinMetadata',
 			params: [input.coinType],
 		});
 	}
@@ -221,7 +218,7 @@ export class IotaClient {
 	 */
 	async getTotalSupply(input: GetTotalSupplyParams): Promise<CoinSupply> {
 		return await this.transport.request({
-			method: 'iotax_getTotalSupply',
+			method: 'suix_getTotalSupply',
 			params: [input.coinType],
 		});
 	}
@@ -240,9 +237,9 @@ export class IotaClient {
 	 */
 	async getMoveFunctionArgTypes(
 		input: GetMoveFunctionArgTypesParams,
-	): Promise<IotaMoveFunctionArgType[]> {
+	): Promise<SuiMoveFunctionArgType[]> {
 		return await this.transport.request({
-			method: 'iota_getMoveFunctionArgTypes',
+			method: 'sui_getMoveFunctionArgTypes',
 			params: [input.package, input.module, input.function],
 		});
 	}
@@ -253,9 +250,9 @@ export class IotaClient {
 	 */
 	async getNormalizedMoveModulesByPackage(
 		input: GetNormalizedMoveModulesByPackageParams,
-	): Promise<IotaMoveNormalizedModules> {
+	): Promise<SuiMoveNormalizedModules> {
 		return await this.transport.request({
-			method: 'iota_getNormalizedMoveModulesByPackage',
+			method: 'sui_getNormalizedMoveModulesByPackage',
 			params: [input.package],
 		});
 	}
@@ -265,9 +262,9 @@ export class IotaClient {
 	 */
 	async getNormalizedMoveModule(
 		input: GetNormalizedMoveModuleParams,
-	): Promise<IotaMoveNormalizedModule> {
+	): Promise<SuiMoveNormalizedModule> {
 		return await this.transport.request({
-			method: 'iota_getNormalizedMoveModule',
+			method: 'sui_getNormalizedMoveModule',
 			params: [input.package, input.module],
 		});
 	}
@@ -277,9 +274,9 @@ export class IotaClient {
 	 */
 	async getNormalizedMoveFunction(
 		input: GetNormalizedMoveFunctionParams,
-	): Promise<IotaMoveNormalizedFunction> {
+	): Promise<SuiMoveNormalizedFunction> {
 		return await this.transport.request({
-			method: 'iota_getNormalizedMoveFunction',
+			method: 'sui_getNormalizedMoveFunction',
 			params: [input.package, input.module, input.function],
 		});
 	}
@@ -289,9 +286,9 @@ export class IotaClient {
 	 */
 	async getNormalizedMoveStruct(
 		input: GetNormalizedMoveStructParams,
-	): Promise<IotaMoveNormalizedStruct> {
+	): Promise<SuiMoveNormalizedStruct> {
 		return await this.transport.request({
-			method: 'iota_getNormalizedMoveStruct',
+			method: 'sui_getNormalizedMoveStruct',
 			params: [input.package, input.module, input.struct],
 		});
 	}
@@ -300,18 +297,18 @@ export class IotaClient {
 	 * Get all objects owned by an address
 	 */
 	async getOwnedObjects(input: GetOwnedObjectsParams): Promise<PaginatedObjectsResponse> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
 
 		return await this.transport.request({
-			method: 'iotax_getOwnedObjects',
+			method: 'suix_getOwnedObjects',
 			params: [
 				input.owner,
 				{
 					filter: input.filter,
 					options: input.options,
-				} as IotaObjectResponseQuery,
+				} as SuiObjectResponseQuery,
 				input.cursor,
 				input.limit,
 			],
@@ -321,19 +318,19 @@ export class IotaClient {
 	/**
 	 * Get details about an object
 	 */
-	async getObject(input: GetObjectParams): Promise<IotaObjectResponse> {
-		if (!input.id || !isValidIotaObjectId(normalizeIotaObjectId(input.id))) {
-			throw new Error('Invalid Iota Object id');
+	async getObject(input: GetObjectParams): Promise<SuiObjectResponse> {
+		if (!input.id || !isValidSuiObjectId(normalizeSuiObjectId(input.id))) {
+			throw new Error('Invalid Sui Object id');
 		}
 		return await this.transport.request({
-			method: 'iota_getObject',
+			method: 'sui_getObject',
 			params: [input.id, input.options],
 		});
 	}
 
 	async tryGetPastObject(input: TryGetPastObjectParams): Promise<ObjectRead> {
 		return await this.transport.request({
-			method: 'iota_tryGetPastObject',
+			method: 'sui_tryGetPastObject',
 			params: [input.id, input.version, input.options],
 		});
 	}
@@ -341,10 +338,10 @@ export class IotaClient {
 	/**
 	 * Batch get details about a list of objects. If any of the object ids are duplicates the call will fail
 	 */
-	async multiGetObjects(input: MultiGetObjectsParams): Promise<IotaObjectResponse[]> {
+	async multiGetObjects(input: MultiGetObjectsParams): Promise<SuiObjectResponse[]> {
 		input.ids.forEach((id) => {
-			if (!id || !isValidIotaObjectId(normalizeIotaObjectId(id))) {
-				throw new Error(`Invalid Iota Object id ${id}`);
+			if (!id || !isValidSuiObjectId(normalizeSuiObjectId(id))) {
+				throw new Error(`Invalid Sui Object id ${id}`);
 			}
 		});
 		const hasDuplicates = input.ids.length !== new Set(input.ids).size;
@@ -353,7 +350,7 @@ export class IotaClient {
 		}
 
 		return await this.transport.request({
-			method: 'iota_multiGetObjects',
+			method: 'sui_multiGetObjects',
 			params: [input.ids, input.options],
 		});
 	}
@@ -365,12 +362,12 @@ export class IotaClient {
 		input: QueryTransactionBlocksParams,
 	): Promise<PaginatedTransactionResponse> {
 		return await this.transport.request({
-			method: 'iotax_queryTransactionBlocks',
+			method: 'suix_queryTransactionBlocks',
 			params: [
 				{
 					filter: input.filter,
 					options: input.options,
-				} as IotaTransactionBlockResponseQuery,
+				} as SuiTransactionBlockResponseQuery,
 				input.cursor,
 				input.limit,
 				(input.order || 'descending') === 'descending',
@@ -380,19 +377,19 @@ export class IotaClient {
 
 	async getTransactionBlock(
 		input: GetTransactionBlockParams,
-	): Promise<IotaTransactionBlockResponse> {
+	): Promise<SuiTransactionBlockResponse> {
 		if (!isValidTransactionDigest(input.digest)) {
 			throw new Error('Invalid Transaction digest');
 		}
 		return await this.transport.request({
-			method: 'iota_getTransactionBlock',
+			method: 'sui_getTransactionBlock',
 			params: [input.digest, input.options],
 		});
 	}
 
 	async multiGetTransactionBlocks(
 		input: MultiGetTransactionBlocksParams,
-	): Promise<IotaTransactionBlockResponse[]> {
+	): Promise<SuiTransactionBlockResponse[]> {
 		input.digests.forEach((d) => {
 			if (!isValidTransactionDigest(d)) {
 				throw new Error(`Invalid Transaction digest ${d}`);
@@ -405,16 +402,16 @@ export class IotaClient {
 		}
 
 		return await this.transport.request({
-			method: 'iota_multiGetTransactionBlocks',
+			method: 'sui_multiGetTransactionBlocks',
 			params: [input.digests, input.options],
 		});
 	}
 
 	async executeTransactionBlock(
 		input: ExecuteTransactionBlockParams,
-	): Promise<IotaTransactionBlockResponse> {
+	): Promise<SuiTransactionBlockResponse> {
 		return await this.transport.request({
-			method: 'iota_executeTransactionBlock',
+			method: 'sui_executeTransactionBlock',
 			params: [
 				typeof input.transactionBlock === 'string'
 					? input.transactionBlock
@@ -436,13 +433,13 @@ export class IotaClient {
 	} & Omit<
 		ExecuteTransactionBlockParams,
 		'transactionBlock' | 'signature'
-	>): Promise<IotaTransactionBlockResponse> {
+	>): Promise<SuiTransactionBlockResponse> {
 		let transactionBytes;
 
 		if (transactionBlock instanceof Uint8Array) {
 			transactionBytes = transactionBlock;
 		} else {
-			transactionBlock.setSenderIfNotSet(signer.toIotaAddress());
+			transactionBlock.setSenderIfNotSet(signer.toSuiAddress());
 			transactionBytes = await transactionBlock.build({ client: this });
 		}
 
@@ -461,7 +458,7 @@ export class IotaClient {
 
 	async getTotalTransactionBlocks(): Promise<bigint> {
 		const resp = await this.transport.request<string>({
-			method: 'iota_getTotalTransactionBlocks',
+			method: 'sui_getTotalTransactionBlocks',
 			params: [],
 		});
 		return BigInt(resp);
@@ -472,7 +469,7 @@ export class IotaClient {
 	 */
 	async getReferenceGasPrice(): Promise<bigint> {
 		const resp = await this.transport.request<string>({
-			method: 'iotax_getReferenceGasPrice',
+			method: 'suix_getReferenceGasPrice',
 			params: [],
 		});
 		return BigInt(resp);
@@ -482,32 +479,32 @@ export class IotaClient {
 	 * Return the delegated stakes for an address
 	 */
 	async getStakes(input: GetStakesParams): Promise<DelegatedStake[]> {
-		if (!input.owner || !isValidIotaAddress(normalizeIotaAddress(input.owner))) {
-			throw new Error('Invalid Iota address');
+		if (!input.owner || !isValidSuiAddress(normalizeSuiAddress(input.owner))) {
+			throw new Error('Invalid Sui address');
 		}
-		return await this.transport.request({ method: 'iotax_getStakes', params: [input.owner] });
+		return await this.transport.request({ method: 'suix_getStakes', params: [input.owner] });
 	}
 
 	/**
 	 * Return the delegated stakes queried by id.
 	 */
 	async getStakesByIds(input: GetStakesByIdsParams): Promise<DelegatedStake[]> {
-		input.stakedIotaIds.forEach((id) => {
-			if (!id || !isValidIotaObjectId(normalizeIotaObjectId(id))) {
-				throw new Error(`Invalid Iota Stake id ${id}`);
+		input.stakedSuiIds.forEach((id) => {
+			if (!id || !isValidSuiObjectId(normalizeSuiObjectId(id))) {
+				throw new Error(`Invalid Sui Stake id ${id}`);
 			}
 		});
 		return await this.transport.request({
-			method: 'iotax_getStakesByIds',
-			params: [input.stakedIotaIds],
+			method: 'suix_getStakesByIds',
+			params: [input.stakedSuiIds],
 		});
 	}
 
 	/**
 	 * Return the latest system state content.
 	 */
-	async getLatestIotaSystemState(): Promise<IotaSystemStateSummary> {
-		return await this.transport.request({ method: 'iotax_getLatestIotaSystemState', params: [] });
+	async getLatestSuiSystemState(): Promise<SuiSystemStateSummary> {
+		return await this.transport.request({ method: 'suix_getLatestSuiSystemState', params: [] });
 	}
 
 	/**
@@ -515,7 +512,7 @@ export class IotaClient {
 	 */
 	async queryEvents(input: QueryEventsParams): Promise<PaginatedEvents> {
 		return await this.transport.request({
-			method: 'iotax_queryEvents',
+			method: 'suix_queryEvents',
 			params: [
 				input.query,
 				input.cursor,
@@ -531,12 +528,12 @@ export class IotaClient {
 	async subscribeEvent(
 		input: SubscribeEventParams & {
 			/** function to run when we receive a notification of a new event matching the filter */
-			onMessage: (event: IotaEvent) => void;
+			onMessage: (event: SuiEvent) => void;
 		},
 	): Promise<Unsubscribe> {
 		return this.transport.subscribe({
-			method: 'iotax_subscribeEvent',
-			unsubscribe: 'iotax_unsubscribeEvent',
+			method: 'suix_subscribeEvent',
+			unsubscribe: 'suix_unsubscribeEvent',
 			params: [input.filter],
 			onMessage: input.onMessage,
 		});
@@ -549,8 +546,8 @@ export class IotaClient {
 		},
 	): Promise<Unsubscribe> {
 		return this.transport.subscribe({
-			method: 'iotax_subscribeTransaction',
-			unsubscribe: 'iotax_unsubscribeTransaction',
+			method: 'suix_subscribeTransaction',
+			unsubscribe: 'suix_unsubscribeTransaction',
 			params: [input.filter],
 			onMessage: input.onMessage,
 		});
@@ -582,7 +579,7 @@ export class IotaClient {
 		}
 
 		return await this.transport.request({
-			method: 'iota_devInspectTransactionBlock',
+			method: 'sui_devInspectTransactionBlock',
 			params: [input.sender, devInspectTxBytes, input.gasPrice?.toString(), input.epoch],
 		});
 	}
@@ -594,7 +591,7 @@ export class IotaClient {
 		input: DryRunTransactionBlockParams,
 	): Promise<DryRunTransactionBlockResponse> {
 		return await this.transport.request({
-			method: 'iota_dryRunTransactionBlock',
+			method: 'sui_dryRunTransactionBlock',
 			params: [
 				typeof input.transactionBlock === 'string'
 					? input.transactionBlock
@@ -607,11 +604,11 @@ export class IotaClient {
 	 * Return the list of dynamic field objects owned by an object
 	 */
 	async getDynamicFields(input: GetDynamicFieldsParams): Promise<DynamicFieldPage> {
-		if (!input.parentId || !isValidIotaObjectId(normalizeIotaObjectId(input.parentId))) {
-			throw new Error('Invalid Iota Object id');
+		if (!input.parentId || !isValidSuiObjectId(normalizeSuiObjectId(input.parentId))) {
+			throw new Error('Invalid Sui Object id');
 		}
 		return await this.transport.request({
-			method: 'iotax_getDynamicFields',
+			method: 'suix_getDynamicFields',
 			params: [input.parentId, input.cursor, input.limit],
 		});
 	}
@@ -619,9 +616,9 @@ export class IotaClient {
 	/**
 	 * Return the dynamic field object information for a specified object
 	 */
-	async getDynamicFieldObject(input: GetDynamicFieldObjectParams): Promise<IotaObjectResponse> {
+	async getDynamicFieldObject(input: GetDynamicFieldObjectParams): Promise<SuiObjectResponse> {
 		return await this.transport.request({
-			method: 'iotax_getDynamicFieldObject',
+			method: 'suix_getDynamicFieldObject',
 			params: [input.parentId, input.name],
 		});
 	}
@@ -631,7 +628,7 @@ export class IotaClient {
 	 */
 	async getLatestCheckpointSequenceNumber(): Promise<string> {
 		const resp = await this.transport.request({
-			method: 'iota_getLatestCheckpointSequenceNumber',
+			method: 'sui_getLatestCheckpointSequenceNumber',
 			params: [],
 		});
 		return String(resp);
@@ -641,7 +638,7 @@ export class IotaClient {
 	 * Returns information about a given checkpoint
 	 */
 	async getCheckpoint(input: GetCheckpointParams): Promise<Checkpoint> {
-		return await this.transport.request({ method: 'iota_getCheckpoint', params: [input.id] });
+		return await this.transport.request({ method: 'sui_getCheckpoint', params: [input.id] });
 	}
 
 	/**
@@ -651,7 +648,7 @@ export class IotaClient {
 		input: PaginationArguments<CheckpointPage['nextCursor']> & GetCheckpointsParams,
 	): Promise<CheckpointPage> {
 		return await this.transport.request({
-			method: 'iota_getCheckpoints',
+			method: 'sui_getCheckpoints',
 			params: [input.cursor, input?.limit, input.descendingOrder],
 		});
 	}
@@ -661,24 +658,24 @@ export class IotaClient {
 	 */
 	async getCommitteeInfo(input?: GetCommitteeInfoParams): Promise<CommitteeInfo> {
 		return await this.transport.request({
-			method: 'iotax_getCommitteeInfo',
+			method: 'suix_getCommitteeInfo',
 			params: [input?.epoch],
 		});
 	}
 
 	async getNetworkMetrics(): Promise<NetworkMetrics> {
-		return await this.transport.request({ method: 'iotax_getNetworkMetrics', params: [] });
+		return await this.transport.request({ method: 'suix_getNetworkMetrics', params: [] });
 	}
 
 	async getAddressMetrics(): Promise<AddressMetrics> {
-		return await this.transport.request({ method: 'iotax_getLatestAddressMetrics', params: [] });
+		return await this.transport.request({ method: 'suix_getLatestAddressMetrics', params: [] });
 	}
 
 	async getEpochMetrics(
 		input?: { descendingOrder?: boolean } & PaginationArguments<EpochMetricsPage['nextCursor']>,
 	): Promise<EpochMetricsPage> {
 		return await this.transport.request({
-			method: 'iotax_getEpochMetrics',
+			method: 'suix_getEpochMetrics',
 			params: [input?.cursor, input?.limit, input?.descendingOrder],
 		});
 	}
@@ -687,7 +684,7 @@ export class IotaClient {
 		descendingOrder?: boolean;
 	}): Promise<AllEpochsAddressMetrics> {
 		return await this.transport.request({
-			method: 'iotax_getAllEpochAddressMetrics',
+			method: 'suix_getAllEpochAddressMetrics',
 			params: [input?.descendingOrder],
 		});
 	}
@@ -701,7 +698,7 @@ export class IotaClient {
 		} & PaginationArguments<EpochPage['nextCursor']>,
 	): Promise<EpochPage> {
 		return await this.transport.request({
-			method: 'iotax_getEpochs',
+			method: 'suix_getEpochs',
 			params: [input?.cursor, input?.limit, input?.descendingOrder],
 		});
 	}
@@ -710,24 +707,24 @@ export class IotaClient {
 	 * Returns list of top move calls by usage
 	 */
 	async getMoveCallMetrics(): Promise<MoveCallMetrics> {
-		return await this.transport.request({ method: 'iotax_getMoveCallMetrics', params: [] });
+		return await this.transport.request({ method: 'suix_getMoveCallMetrics', params: [] });
 	}
 
 	/**
 	 * Return the committee information for the asked epoch
 	 */
 	async getCurrentEpoch(): Promise<EpochInfo> {
-		return await this.transport.request({ method: 'iotax_getCurrentEpoch', params: [] });
+		return await this.transport.request({ method: 'suix_getCurrentEpoch', params: [] });
 	}
 
 	/**
 	 * Return the Validators APYs
 	 */
 	async getValidatorsApy(): Promise<ValidatorsApy> {
-		return await this.transport.request({ method: 'iotax_getValidatorsApy', params: [] });
+		return await this.transport.request({ method: 'suix_getValidatorsApy', params: [] });
 	}
 
-	// TODO: Migrate this to `iota_getChainIdentifier` once it is widely available.
+	// TODO: Migrate this to `sui_getChainIdentifier` once it is widely available.
 	async getChainIdentifier(): Promise<string> {
 		const checkpoint = await this.getCheckpoint({ id: '0' });
 		const bytes = fromB58(checkpoint.digest);
@@ -736,7 +733,7 @@ export class IotaClient {
 
 	async resolveNameServiceAddress(input: ResolveNameServiceAddressParams): Promise<string | null> {
 		return await this.transport.request({
-			method: 'iotax_resolveNameServiceAddress',
+			method: 'suix_resolveNameServiceAddress',
 			params: [input.name],
 		});
 	}
@@ -745,14 +742,14 @@ export class IotaClient {
 		input: ResolveNameServiceNamesParams,
 	): Promise<ResolvedNameServiceNames> {
 		return await this.transport.request({
-			method: 'iotax_resolveNameServiceNames',
+			method: 'suix_resolveNameServiceNames',
 			params: [input.address, input.cursor, input.limit],
 		});
 	}
 
 	async getProtocolConfig(input?: GetProtocolConfigParams): Promise<ProtocolConfig> {
 		return await this.transport.request({
-			method: 'iota_getProtocolConfig',
+			method: 'sui_getProtocolConfig',
 			params: [input?.version],
 		});
 	}
@@ -775,7 +772,7 @@ export class IotaClient {
 		timeout?: number;
 		/** The amount of time to wait between checks for the transaction block. Defaults to 2 seconds. */
 		pollInterval?: number;
-	} & Parameters<IotaClient['getTransactionBlock']>[0]): Promise<IotaTransactionBlockResponse> {
+	} & Parameters<SuiClient['getTransactionBlock']>[0]): Promise<SuiTransactionBlockResponse> {
 		const timeoutSignal = AbortSignal.timeout(timeout);
 		const timeoutPromise = new Promise((_, reject) => {
 			timeoutSignal.addEventListener('abort', () => reject(timeoutSignal.reason));

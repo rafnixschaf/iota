@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 use crate::{latest_protocol_version, temp_dir, CommitteeFixture};
 use config::{AuthorityIdentifier, Committee, Parameters, WorkerCache, WorkerId};
 use crypto::{KeyPair, NetworkKeyPair, PublicKey};

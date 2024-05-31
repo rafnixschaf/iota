@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 export interface Feature {
 	type: 'Feature';
 	id: string;
@@ -45,7 +42,7 @@ interface ValidatorIpInfo {
 
 export interface ValidatorMapValidator {
 	ipInfo?: ValidatorIpInfo;
-	iotaAddress: string;
+	suiAddress: string;
 	name: string;
 	votingPower: string;
 }

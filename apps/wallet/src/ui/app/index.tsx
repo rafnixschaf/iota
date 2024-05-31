@@ -11,12 +11,12 @@ import { setNavVisibility } from '_redux/slices/app';
 import { isLedgerAccountSerializedUI } from '_src/background/accounts/LedgerAccount';
 import { persistableStorage } from '_src/shared/analytics/amplitude';
 import { type LedgerAccountsPublicKeys } from '_src/shared/messaging/messages/payloads/MethodPayload';
-import { toB64 } from '@mysten/iota.js/utils';
+import { toB64 } from '@mysten/sui.js/utils';
 import { useEffect, useMemo } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { throttle } from 'throttle-debounce';
 
-import { useIotaLedgerClient } from './components/ledger/IotaLedgerClientProvider';
+import { useSuiLedgerClient } from './components/ledger/SuiLedgerClientProvider';
 import { useAccounts } from './hooks/useAccounts';
 import { useAutoLockMinutes } from './hooks/useAutoLockMinutes';
 import { useBackgroundClient } from './hooks/useBackgroundClient';
@@ -93,7 +93,7 @@ const App = () => {
 		[accounts],
 	);
 	const backgroundClient = useBackgroundClient();
-	const { connectToLedger, iotaLedgerClient } = useIotaLedgerClient();
+	const { connectToLedger, suiLedgerClient } = useSuiLedgerClient();
 	useEffect(() => {
 		if (accounts?.length) {
 			// The user has accepted our terms of service after their primary
@@ -108,7 +108,7 @@ const App = () => {
 		(async () => {
 			if (allLedgerWithoutPublicKey.length) {
 				try {
-					if (!iotaLedgerClient) {
+					if (!suiLedgerClient) {
 						await connectToLedger();
 						return;
 					}
@@ -116,7 +116,7 @@ const App = () => {
 					for (const { derivationPath, id } of allLedgerWithoutPublicKey) {
 						if (derivationPath) {
 							try {
-								const { publicKey } = await iotaLedgerClient.getPublicKey(derivationPath);
+								const { publicKey } = await suiLedgerClient.getPublicKey(derivationPath);
 								publicKeysToStore.push({
 									accountID: id,
 									publicKey: toB64(publicKey),
@@ -134,7 +134,7 @@ const App = () => {
 				}
 			}
 		})();
-	}, [allLedgerWithoutPublicKey, iotaLedgerClient, backgroundClient, connectToLedger]);
+	}, [allLedgerWithoutPublicKey, suiLedgerClient, backgroundClient, connectToLedger]);
 	const { data } = useAutoLockMinutes();
 	const autoLockEnabled = !!data;
 	// use mouse move and key down events to detect user activity

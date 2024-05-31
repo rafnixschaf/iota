@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { CONSTANTS, QueryKey } from "@/constants";
 import { useTransactionExecution } from "@/hooks/useTransactionExecution";
 import { ApiEscrowObject, ApiLockedObject } from "@/types/types";
-import { useCurrentAccount, useIotaClient } from "@mysten/dapp-kit";
-import { IotaObjectData } from "@mysten/iota.js/client";
-import { TransactionBlock } from "@mysten/iota.js/transactions";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { SuiObjectData } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -17,7 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
  */
 export function useAcceptEscrowMutation() {
   const currentAccount = useCurrentAccount();
-  const client = useIotaClient();
+  const client = useSuiClient();
   const executeTransaction = useTransactionExecution();
   const queryClient = useQueryClient();
 
@@ -86,10 +83,10 @@ export function useCancelEscrowMutation() {
   return useMutation({
     mutationFn: async ({
       escrow,
-      iotaObject,
+      suiObject,
     }: {
       escrow: ApiEscrowObject;
-      iotaObject: IotaObjectData;
+      suiObject: SuiObjectData;
     }) => {
       if (!currentAccount?.address)
         throw new Error("You need to connect your wallet!");
@@ -98,7 +95,7 @@ export function useCancelEscrowMutation() {
       const item = txb.moveCall({
         target: `${CONSTANTS.escrowContract.packageId}::shared::return_to_sender`,
         arguments: [txb.object(escrow.objectId)],
-        typeArguments: [iotaObject?.type!],
+        typeArguments: [suiObject?.type!],
       });
 
       txb.transferObjects([item], txb.pure.address(currentAccount?.address!));
@@ -126,7 +123,7 @@ export function useCreateEscrowMutation() {
       object,
       locked,
     }: {
-      object: IotaObjectData;
+      object: SuiObjectData;
       locked: ApiLockedObject;
     }) => {
       if (!currentAccount?.address)

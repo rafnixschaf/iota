@@ -1,9 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 use crate::{sandbox::utils::OnDiskStateView, DEFAULT_BUILD_DIR};
 use anyhow::Result;
 use move_command_line_common::env::get_bytecode_version_from_env;

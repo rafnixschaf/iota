@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
 	Account24,
 	ArrowRight16,
 	Info16,
-	Iota,
+	Sui,
 	Swap16,
 	Unstaked,
 	WalletActionStake24,
@@ -29,7 +26,7 @@ const icons = {
 	),
 	Staked: <WalletActionStake24 className="text-gradient-blue-start text-heading2 bg-transparent" />,
 	Unstaked: <Unstaked className="text-gradient-blue-start text-heading3" />,
-	Rewards: <Iota className="text-gradient-blue-start text-body" />,
+	Rewards: <Sui className="text-gradient-blue-start text-body" />,
 	Swapped: <Swap16 className="text-gradient-blue-start text-heading6" />,
 	Failed: <Info16 className="text-issue-dark text-heading6" />,
 	Loading: <LoadingIndicator />,

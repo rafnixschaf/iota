@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { IotaObjectRef } from '@mysten/iota.js/client';
-import { getFaucetHost, requestIotaFromFaucetV1 } from '@mysten/iota.js/faucet';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { SuiObjectRef } from '@mysten/sui.js/client';
+import { getFaucetHost, requestSuiFromFaucetV1 } from '@mysten/sui.js/faucet';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 import { client } from './rpc';
 
@@ -15,12 +12,12 @@ import { client } from './rpc';
 export async function sponsorTransaction(sender: string, transactionKindBytes: Uint8Array) {
 	// Rather than do gas pool management, we just spin out a new keypair to sponsor the transaction with:
 	const keypair = new Ed25519Keypair();
-	const address = keypair.getPublicKey().toIotaAddress();
+	const address = keypair.getPublicKey().toSuiAddress();
 	console.log(`Sponsor address: ${address}`);
 
-	await requestIotaFromFaucetV1({ recipient: address, host: getFaucetHost('testnet') });
+	await requestSuiFromFaucetV1({ recipient: address, host: getFaucetHost('testnet') });
 
-	let payment: IotaObjectRef[] = [];
+	let payment: SuiObjectRef[] = [];
 	let retires = 50;
 	while (retires !== 0) {
 		const coins = await client.getCoins({ owner: address, limit: 1 });

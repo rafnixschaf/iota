@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useActiveAddress } from '_app/hooks/useActiveAddress';
 import BottomMenuLayout, { Content, Menu } from '_app/shared/bottom-menu-layout';
 import { Button } from '_app/shared/ButtonUI';
@@ -13,19 +10,19 @@ import Alert from '_components/alert';
 import Loading from '_components/loading';
 import { parseAmount } from '_helpers';
 import { useGetAllCoins } from '_hooks';
-import { GAS_SYMBOL } from '_src/ui/app/redux/slices/iota-objects/Coin';
+import { GAS_SYMBOL } from '_src/ui/app/redux/slices/sui-objects/Coin';
 import { InputWithAction } from '_src/ui/app/shared/InputWithAction';
 import {
 	CoinFormat,
-	isIotaNSName,
+	isSuiNSName,
 	useCoinMetadata,
 	useFormatCoin,
-	useIotaNSEnabled,
+	useSuiNSEnabled,
 } from '@mysten/core';
-import { useIotaClient } from '@mysten/dapp-kit';
+import { useSuiClient } from '@mysten/dapp-kit';
 import { ArrowRight16 } from '@mysten/icons';
-import { type CoinStruct } from '@mysten/iota.js/client';
-import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
+import { type CoinStruct } from '@mysten/sui.js/client';
+import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Field, Form, Formik, useFormikContext } from 'formik';
 import { useEffect, useMemo } from 'react';
@@ -36,7 +33,7 @@ import { createValidationSchemaStepOne } from './validation';
 const initialValues = {
 	to: '',
 	amount: '',
-	isPayAllIota: false,
+	isPayAllSui: false,
 	gasBudgetEst: '',
 };
 
@@ -45,7 +42,7 @@ export type FormValues = typeof initialValues;
 export type SubmitProps = {
 	to: string;
 	amount: string;
-	isPayAllIota: boolean;
+	isPayAllSui: boolean;
 	coinIds: string[];
 	coins: CoinStruct[];
 	gasBudgetEst: string;
@@ -74,9 +71,9 @@ function GasBudgetEstimation({
 }) {
 	const activeAddress = useActiveAddress();
 	const { values, setFieldValue } = useFormikContext<FormValues>();
-	const iotaNSEnabled = useIotaNSEnabled();
+	const suiNSEnabled = useSuiNSEnabled();
 
-	const client = useIotaClient();
+	const client = useSuiClient();
 	const { data: gasBudget } = useQuery({
 		// eslint-disable-next-line @tanstack/query/exhaustive-deps
 		queryKey: [
@@ -95,12 +92,12 @@ function GasBudgetEstimation({
 			}
 
 			let to = values.to;
-			if (iotaNSEnabled && isIotaNSName(values.to)) {
+			if (suiNSEnabled && isSuiNSName(values.to)) {
 				const address = await client.resolveNameServiceAddress({
 					name: values.to,
 				});
 				if (!address) {
-					throw new Error('IotaNS name not found.');
+					throw new Error('SuiNS name not found.');
 				}
 				to = address;
 			}
@@ -108,9 +105,9 @@ function GasBudgetEstimation({
 			const tx = createTokenTransferTransaction({
 				to,
 				amount: values.amount,
-				coinType: IOTA_TYPE_ARG,
+				coinType: SUI_TYPE_ARG,
 				coinDecimals,
-				isPayAllIota: values.isPayAllIota,
+				isPayAllSui: values.isPayAllSui,
 				coins,
 			});
 
@@ -120,7 +117,7 @@ function GasBudgetEstimation({
 		},
 	});
 
-	const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
+	const [formattedGas] = useFormatCoin(gasBudget, SUI_TYPE_ARG);
 
 	// gasBudgetEstimation should change when the amount above changes
 	useEffect(() => {
@@ -150,30 +147,30 @@ export function SendTokenForm({
 	initialAmount = '',
 	initialTo = '',
 }: SendTokenFormProps) {
-	const client = useIotaClient();
+	const client = useSuiClient();
 	const activeAddress = useActiveAddress();
 	// Get all coins of the type
 	const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(coinType, activeAddress!);
 
-	const { data: iotaCoinsData, isPending: iotaCoinsIsPending } = useGetAllCoins(
-		IOTA_TYPE_ARG,
+	const { data: suiCoinsData, isPending: suiCoinsIsPending } = useGetAllCoins(
+		SUI_TYPE_ARG,
 		activeAddress!,
 	);
 
-	const iotaCoins = iotaCoinsData;
+	const suiCoins = suiCoinsData;
 	const coins = coinsData;
 	const coinBalance = totalBalance(coins || []);
-	const iotaBalance = totalBalance(iotaCoins || []);
+	const suiBalance = totalBalance(suiCoins || []);
 
 	const coinMetadata = useCoinMetadata(coinType);
 	const coinDecimals = coinMetadata.data?.decimals ?? 0;
 
 	const [tokenBalance, symbol, queryResult] = useFormatCoin(coinBalance, coinType, CoinFormat.FULL);
-	const iotaNSEnabled = useIotaNSEnabled();
+	const suiNSEnabled = useSuiNSEnabled();
 
 	const validationSchemaStepOne = useMemo(
-		() => createValidationSchemaStepOne(client, iotaNSEnabled, coinBalance, symbol, coinDecimals),
-		[client, coinBalance, symbol, coinDecimals, iotaNSEnabled],
+		() => createValidationSchemaStepOne(client, suiNSEnabled, coinBalance, symbol, coinDecimals),
+		[client, coinBalance, symbol, coinDecimals, suiNSEnabled],
 	);
 
 	// remove the comma from the token balance
@@ -183,33 +180,33 @@ export function SendTokenForm({
 	return (
 		<Loading
 			loading={
-				queryResult.isPending || coinMetadata.isPending || iotaCoinsIsPending || coinsIsPending
+				queryResult.isPending || coinMetadata.isPending || suiCoinsIsPending || coinsIsPending
 			}
 		>
 			<Formik
 				initialValues={{
 					amount: initialAmount,
 					to: initialTo,
-					isPayAllIota:
-						!!initAmountBig && initAmountBig === coinBalance && coinType === IOTA_TYPE_ARG,
+					isPayAllSui:
+						!!initAmountBig && initAmountBig === coinBalance && coinType === SUI_TYPE_ARG,
 					gasBudgetEst: '',
 				}}
 				validationSchema={validationSchemaStepOne}
 				enableReinitialize
 				validateOnMount
 				validateOnChange
-				onSubmit={async ({ to, amount, isPayAllIota, gasBudgetEst }: FormValues) => {
-					if (!coins || !iotaCoins) return;
+				onSubmit={async ({ to, amount, isPayAllSui, gasBudgetEst }: FormValues) => {
+					if (!coins || !suiCoins) return;
 					const coinsIDs = [...coins]
 						.sort((a, b) => Number(b.balance) - Number(a.balance))
 						.map(({ coinObjectId }) => coinObjectId);
 
-					if (iotaNSEnabled && isIotaNSName(to)) {
+					if (suiNSEnabled && isSuiNSName(to)) {
 						const address = await client.resolveNameServiceAddress({
 							name: to,
 						});
 						if (!address) {
-							throw new Error('IotaNS name not found.');
+							throw new Error('SuiNS name not found.');
 						}
 						to = address;
 					}
@@ -217,7 +214,7 @@ export function SendTokenForm({
 					const data = {
 						to,
 						amount,
-						isPayAllIota,
+						isPayAllSui,
 						coins,
 						coinIds: coinsIDs,
 						gasBudgetEst,
@@ -226,17 +223,17 @@ export function SendTokenForm({
 				}}
 			>
 				{({ isValid, isSubmitting, setFieldValue, values, submitForm, validateField }) => {
-					const newPayIotaAll =
-						parseAmount(values.amount, coinDecimals) === coinBalance && coinType === IOTA_TYPE_ARG;
-					if (values.isPayAllIota !== newPayIotaAll) {
-						setFieldValue('isPayAllIota', newPayIotaAll);
+					const newPaySuiAll =
+						parseAmount(values.amount, coinDecimals) === coinBalance && coinType === SUI_TYPE_ARG;
+					if (values.isPayAllSui !== newPaySuiAll) {
+						setFieldValue('isPayAllSui', newPaySuiAll);
 					}
 
 					const hasEnoughBalance =
-						values.isPayAllIota ||
-						iotaBalance >
+						values.isPayAllSui ||
+						suiBalance >
 							parseAmount(values.gasBudgetEst, coinDecimals) +
-								parseAmount(coinType === IOTA_TYPE_ARG ? values.amount : '0', coinDecimals);
+								parseAmount(coinType === SUI_TYPE_ARG ? values.amount : '0', coinDecimals);
 
 					return (
 						<BottomMenuLayout>
@@ -254,7 +251,7 @@ export function SendTokenForm({
 											type="numberInput"
 											name="amount"
 											placeholder="0.00"
-											prefix={values.isPayAllIota ? '~ ' : ''}
+											prefix={values.isPayAllSui ? '~ ' : ''}
 											actionText="Max"
 											suffix={` ${symbol}`}
 											actionType="button"
@@ -276,7 +273,7 @@ export function SendTokenForm({
 									</div>
 									{!hasEnoughBalance && isValid ? (
 										<div className="mt-3">
-											<Alert>Insufficient IOTA to cover transaction</Alert>
+											<Alert>Insufficient SUI to cover transaction</Alert>
 										</div>
 									) : null}
 

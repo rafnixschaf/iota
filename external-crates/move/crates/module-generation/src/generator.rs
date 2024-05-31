@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{options::ModuleGeneratorOptions, padding::Pad, utils::random_string};
 use move_binary_format::file_format::CompiledModule;
 use move_bytecode_verifier::verify_module_unmetered;

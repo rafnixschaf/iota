@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type TransactionBlock } from '@mysten/iota.js/transactions';
+import { type TransactionBlock } from '@mysten/sui.js/transactions';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAccountByAddress } from './useAccountByAddress';

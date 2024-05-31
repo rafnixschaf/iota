@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB64 } from '@mysten/bcs';
 import nacl from 'tweetnacl';
 
@@ -59,7 +56,7 @@ export class Ed25519PublicKey extends PublicKey {
 	}
 
 	/**
-	 * Return the Iota address associated with this Ed25519 public key
+	 * Return the Sui address associated with this Ed25519 public key
 	 */
 	flag(): number {
 		return SIGNATURE_SCHEME_TO_FLAG['ED25519'];

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import React, { useEffect, useState, useContext } from "react";
 import { useHistory } from "@docusaurus/router";
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -21,7 +18,7 @@ export function Card(props) {
     return;
   }, [href]);
 
-  const { descriptions } = usePluginData("iota-description-plugin");
+  const { descriptions } = usePluginData("sui-description-plugin");
   let h = props.href;
   if (h.match(/^\//)) {
     h = h.substring(1);

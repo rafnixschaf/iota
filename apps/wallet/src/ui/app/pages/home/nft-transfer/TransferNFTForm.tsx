@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import BottomMenuLayout, { Content, Menu } from '_app/shared/bottom-menu-layout';
 import { Button } from '_app/shared/ButtonUI';
 import { Text } from '_app/shared/text';
@@ -15,10 +12,10 @@ import { useActiveAccount } from '_src/ui/app/hooks/useActiveAccount';
 import { useQredoTransaction } from '_src/ui/app/hooks/useQredoTransaction';
 import { useSigner } from '_src/ui/app/hooks/useSigner';
 import { QredoActionIgnoredByUser } from '_src/ui/app/QredoSigner';
-import { isIotaNSName, useGetKioskContents, useIotaNSEnabled } from '@mysten/core';
-import { useIotaClient } from '@mysten/dapp-kit';
+import { isSuiNSName, useGetKioskContents, useSuiNSEnabled } from '@mysten/core';
+import { useSuiClient } from '@mysten/dapp-kit';
 import { ArrowRight16 } from '@mysten/icons';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Field, Form, Formik } from 'formik';
 import { toast } from 'react-hot-toast';
@@ -35,9 +32,9 @@ export function TransferNFTForm({
 	objectType?: string | null;
 }) {
 	const activeAddress = useActiveAddress();
-	const rpc = useIotaClient();
-	const iotaNSEnabled = useIotaNSEnabled();
-	const validationSchema = createValidationSchema(rpc, iotaNSEnabled, activeAddress || '', objectId);
+	const rpc = useSuiClient();
+	const suiNSEnabled = useSuiNSEnabled();
+	const validationSchema = createValidationSchema(rpc, suiNSEnabled, activeAddress || '', objectId);
 	const activeAccount = useActiveAccount();
 	const signer = useSigner(activeAccount);
 	const queryClient = useQueryClient();
@@ -53,12 +50,12 @@ export function TransferNFTForm({
 				throw new Error('Missing data');
 			}
 
-			if (iotaNSEnabled && isIotaNSName(to)) {
+			if (suiNSEnabled && isSuiNSName(to)) {
 				const address = await rpc.resolveNameServiceAddress({
 					name: to,
 				});
 				if (!address) {
-					throw new Error('IotaNS name not found.');
+					throw new Error('SuiNS name not found.');
 				}
 				to = address;
 			}

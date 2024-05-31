@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { type LedgerAccountSerializedUI } from '_src/background/accounts/LedgerAccount';
-import type IotaLedgerClient from '@mysten/ledgerjs-hw-app-iota';
-import { Ed25519PublicKey } from '@mysten/iota.js/keypairs/ed25519';
+import type SuiLedgerClient from '@mysten/ledgerjs-hw-app-sui';
+import { Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519';
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 
-import { useIotaLedgerClient } from './IotaLedgerClientProvider';
+import { useSuiLedgerClient } from './SuiLedgerClientProvider';
 
 export type DerivedLedgerAccount = Pick<
 	LedgerAccountSerializedUI,
@@ -21,16 +18,16 @@ type UseDeriveLedgerAccountOptions = {
 
 export function useDeriveLedgerAccounts(options: UseDeriveLedgerAccountOptions) {
 	const { numAccountsToDerive, ...useQueryOptions } = options;
-	const { iotaLedgerClient } = useIotaLedgerClient();
+	const { suiLedgerClient } = useSuiLedgerClient();
 
 	return useQuery({
 		// eslint-disable-next-line @tanstack/query/exhaustive-deps
 		queryKey: ['derive-ledger-accounts'],
 		queryFn: () => {
-			if (!iotaLedgerClient) {
-				throw new Error("The Iota application isn't open on a connected Ledger device");
+			if (!suiLedgerClient) {
+				throw new Error("The Sui application isn't open on a connected Ledger device");
 			}
-			return deriveAccountsFromLedger(iotaLedgerClient, numAccountsToDerive);
+			return deriveAccountsFromLedger(suiLedgerClient, numAccountsToDerive);
 		},
 		...useQueryOptions,
 		gcTime: 0,
@@ -38,19 +35,19 @@ export function useDeriveLedgerAccounts(options: UseDeriveLedgerAccountOptions) 
 }
 
 async function deriveAccountsFromLedger(
-	iotaLedgerClient: IotaLedgerClient,
+	suiLedgerClient: SuiLedgerClient,
 	numAccountsToDerive: number,
 ) {
 	const ledgerAccounts: DerivedLedgerAccount[] = [];
 	const derivationPaths = getDerivationPathsForLedger(numAccountsToDerive);
 
 	for (const derivationPath of derivationPaths) {
-		const publicKeyResult = await iotaLedgerClient.getPublicKey(derivationPath);
+		const publicKeyResult = await suiLedgerClient.getPublicKey(derivationPath);
 		const publicKey = new Ed25519PublicKey(publicKeyResult.publicKey);
-		const iotaAddress = publicKey.toIotaAddress();
+		const suiAddress = publicKey.toSuiAddress();
 		ledgerAccounts.push({
 			type: 'ledger',
-			address: iotaAddress,
+			address: suiAddress,
 			derivationPath,
 			publicKey: publicKey.toBase64(),
 		});

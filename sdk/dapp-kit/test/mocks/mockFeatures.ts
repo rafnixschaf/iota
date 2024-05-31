@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
+import type { IdentifierRecord, SuiFeatures, SuiSignMessageFeature } from '@mysten/wallet-standard';
 
-import type { IdentifierRecord, IotaFeatures, IotaSignMessageFeature } from '@mysten/wallet-standard';
-
-export const signMessageFeature: IotaSignMessageFeature = {
-	'iota:signMessage': {
+export const signMessageFeature: SuiSignMessageFeature = {
+	'sui:signMessage': {
 		version: '1.0.0',
 		signMessage: vi.fn(),
 	},
@@ -20,17 +17,17 @@ export const superCoolFeature: IdentifierRecord<unknown> = {
 	},
 };
 
-export const iotaFeatures: IotaFeatures = {
+export const suiFeatures: SuiFeatures = {
 	...signMessageFeature,
-	'iota:signPersonalMessage': {
+	'sui:signPersonalMessage': {
 		version: '1.0.0',
 		signPersonalMessage: vi.fn(),
 	},
-	'iota:signTransactionBlock': {
+	'sui:signTransactionBlock': {
 		version: '1.0.0',
 		signTransactionBlock: vi.fn(),
 	},
-	'iota:signAndExecuteTransactionBlock': {
+	'sui:signAndExecuteTransactionBlock': {
 		version: '1.0.0',
 		signAndExecuteTransactionBlock: vi.fn(),
 	},

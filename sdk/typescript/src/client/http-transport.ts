@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { PACKAGE_VERSION, TARGETED_RPC_VERSION } from '../version.js';
-import { JsonRpcError, IotaHTTPStatusError } from './errors.js';
+import { JsonRpcError, SuiHTTPStatusError } from './errors.js';
 import type { WebsocketClientOptions } from './rpc-websocket-client.js';
 import { WebsocketClient } from './rpc-websocket-client.js';
 
@@ -14,7 +11,7 @@ import { WebsocketClient } from './rpc-websocket-client.js';
  */
 export type HttpHeaders = { [header: string]: string };
 
-interface IotaHTTPTransportOptions {
+interface SuiHTTPTransportOptions {
 	fetch?: typeof fetch;
 	WebSocketConstructor?: typeof WebSocket;
 	url: string;
@@ -27,31 +24,31 @@ interface IotaHTTPTransportOptions {
 	};
 }
 
-export interface IotaTransportRequestOptions {
+export interface SuiTransportRequestOptions {
 	method: string;
 	params: unknown[];
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 
-export interface IotaTransportSubscribeOptions<T> {
+export interface SuiTransportSubscribeOptions<T> {
 	method: string;
 	unsubscribe: string;
 	params: unknown[];
 	onMessage: (event: T) => void;
 }
 
-export interface IotaTransport {
-	request<T = unknown>(input: IotaTransportRequestOptions): Promise<T>;
-	subscribe<T = unknown>(input: IotaTransportSubscribeOptions<T>): Promise<() => Promise<boolean>>;
+export interface SuiTransport {
+	request<T = unknown>(input: SuiTransportRequestOptions): Promise<T>;
+	subscribe<T = unknown>(input: SuiTransportSubscribeOptions<T>): Promise<() => Promise<boolean>>;
 }
 
-export class IotaHTTPTransport implements IotaTransport {
+export class SuiHTTPTransport implements SuiTransport {
 	#requestId = 0;
-	#options: IotaHTTPTransportOptions;
+	#options: SuiHTTPTransportOptions;
 	#websocketClient?: WebsocketClient;
 
-	constructor(options: IotaHTTPTransportOptions) {
+	constructor(options: SuiHTTPTransportOptions) {
 		this.#options = options;
 	}
 
@@ -60,7 +57,7 @@ export class IotaHTTPTransport implements IotaTransport {
 
 		if (!this.fetch) {
 			throw new Error(
-				'The current environment does not support fetch, you can provide a fetch implementation in the options for IotaHTTPTransport.',
+				'The current environment does not support fetch, you can provide a fetch implementation in the options for SuiHTTPTransport.',
 			);
 		}
 
@@ -72,7 +69,7 @@ export class IotaHTTPTransport implements IotaTransport {
 			const WebSocketConstructor = this.#options.WebSocketConstructor ?? globalThis.WebSocket;
 			if (!WebSocketConstructor) {
 				throw new Error(
-					'The current environment does not support WebSocket, you can provide a WebSocketConstructor in the options for IotaHTTPTransport.',
+					'The current environment does not support WebSocket, you can provide a WebSocketConstructor in the options for SuiHTTPTransport.',
 				);
 			}
 
@@ -88,7 +85,7 @@ export class IotaHTTPTransport implements IotaTransport {
 		return this.#websocketClient;
 	}
 
-	async request<T>(input: IotaTransportRequestOptions): Promise<T> {
+	async request<T>(input: SuiTransportRequestOptions): Promise<T> {
 		this.#requestId += 1;
 
 		const res = await this.fetch(this.#options.rpc?.url ?? this.#options.url, {
@@ -109,7 +106,7 @@ export class IotaHTTPTransport implements IotaTransport {
 		});
 
 		if (!res.ok) {
-			throw new IotaHTTPStatusError(
+			throw new SuiHTTPStatusError(
 				`Unexpected status code: ${res.status}`,
 				res.status,
 				res.statusText,
@@ -125,7 +122,7 @@ export class IotaHTTPTransport implements IotaTransport {
 		return data.result;
 	}
 
-	async subscribe<T>(input: IotaTransportSubscribeOptions<T>): Promise<() => Promise<boolean>> {
+	async subscribe<T>(input: SuiTransportSubscribeOptions<T>): Promise<() => Promise<boolean>> {
 		const unsubscribe = await this.#getWebsocketClient().subscribe(input);
 
 		return async () => !!(await unsubscribe());

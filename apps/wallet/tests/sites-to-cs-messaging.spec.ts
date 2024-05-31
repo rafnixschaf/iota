@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { type Page } from '@playwright/test';
 
 import { expect, test } from './fixtures';
@@ -15,7 +12,7 @@ function getInAppMessage(page: Page, id: string) {
 		(anId) =>
 			new Promise((resolve, reject) => {
 				const callBackFN = (msg: MessageEvent) => {
-					if (msg.data.target === 'iota_in-page' && msg.data.payload.id === anId) {
+					if (msg.data.target === 'sui_in-page' && msg.data.payload.id === anId) {
 						window.removeEventListener('message', callBackFN);
 						if (msg.data.payload.payload.error) {
 							reject(msg.data.payload);
@@ -84,7 +81,7 @@ test.describe('site to content script messages', () => {
 			await page.evaluate(
 				({ aPayload: payload, aLabel: label }) => {
 					window.postMessage({
-						target: 'iota_content-script',
+						target: 'sui_content-script',
 						payload: {
 							id: label,
 							payload,

@@ -3,7 +3,7 @@ name = "common"
 version = "0.0.1"
 
 [dependencies]
-Iota = { git = "https://github.com/iotaledger/kinesis.git", subdir = "crates/iota-framework/packages/iota-framework", rev = "framework/devnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/devnet" }
 
 [addresses]
 common = "0x0"

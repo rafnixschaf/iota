@@ -1,9 +1,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::expansion::ast::{self as E, ModuleIdent};
 use crate::naming::ast as N;
 use crate::parser::ast::{FunctionName, Visibility};

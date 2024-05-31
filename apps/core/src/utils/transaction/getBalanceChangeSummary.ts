@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import {
 	type DryRunTransactionBlockResponse,
 	type ObjectOwner,
-	type IotaTransactionBlockResponse,
-} from '@mysten/iota.js/client';
-import { normalizeIotaObjectId, parseStructTag } from '@mysten/iota.js/utils';
+	type SuiTransactionBlockResponse,
+} from '@mysten/sui.js/client';
+import { normalizeSuiObjectId, parseStructTag } from '@mysten/sui.js/utils';
 
 export type BalanceChange = {
 	coinType: string;
@@ -35,14 +32,14 @@ function getOwnerAddress(owner: ObjectOwner): string {
 }
 
 export const getBalanceChangeSummary = (
-	transaction: DryRunTransactionBlockResponse | IotaTransactionBlockResponse,
+	transaction: DryRunTransactionBlockResponse | SuiTransactionBlockResponse,
 	recognizedPackagesList: string[],
 ) => {
 	const { balanceChanges, effects } = transaction;
 	if (!balanceChanges || !effects) return null;
 
 	const normalizedRecognizedPackages = recognizedPackagesList.map((itm) =>
-		normalizeIotaObjectId(itm),
+		normalizeSuiObjectId(itm),
 	);
 	const balanceChangeByOwner = {};
 	return balanceChanges.reduce((acc, balanceChange) => {

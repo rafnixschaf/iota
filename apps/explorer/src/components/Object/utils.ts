@@ -1,17 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type IotaMoveNormalizedType } from '@mysten/iota.js/client';
+import { type SuiMoveNormalizedType } from '@mysten/sui.js/client';
 
 type TypeReference =
 	| {
 			address: string;
 			module: string;
 			name: string;
-			typeArguments?: IotaMoveNormalizedType[];
+			typeArguments?: SuiMoveNormalizedType[];
 	  }
 	| string
 	| number;
@@ -26,7 +23,7 @@ function splitByCommaExcludingBrackets(input: string) {
 	return input.split(regex).map((part) => part.trim());
 }
 
-export function extractSerializationType(type: IotaMoveNormalizedType | ''): TypeReference {
+export function extractSerializationType(type: SuiMoveNormalizedType | ''): TypeReference {
 	if (typeof type === 'string') {
 		return type;
 	}
@@ -54,7 +51,7 @@ export function extractSerializationType(type: IotaMoveNormalizedType | ''): Typ
 	return type;
 }
 
-function getDisplayName(type: IotaMoveNormalizedType | '', objectType: string) {
+function getDisplayName(type: SuiMoveNormalizedType | '', objectType: string) {
 	const normalizedType = extractSerializationType(type);
 
 	if (typeof normalizedType === 'string') {
@@ -85,7 +82,7 @@ function getDisplayName(type: IotaMoveNormalizedType | '', objectType: string) {
 	let typeParam = '';
 
 	// For nested Structs type.typeArguments  append the typeArguments to the name
-	// Balance<XUS> || Balance<LSP<IOTA, USDT>>
+	// Balance<XUS> || Balance<LSP<SUI, USDT>>
 	if (normalizedType.typeArguments?.length) {
 		typeParam = `<${normalizedType.typeArguments
 			.map((typeArg) => getDisplayName(typeArg, objectType))
@@ -95,7 +92,7 @@ function getDisplayName(type: IotaMoveNormalizedType | '', objectType: string) {
 	return `${name}${typeParam}`;
 }
 
-export function getFieldTypeValue(type: IotaMoveNormalizedType | '', objectType: string) {
+export function getFieldTypeValue(type: SuiMoveNormalizedType | '', objectType: string) {
 	const displayName = getDisplayName(type, objectType);
 
 	const normalizedType = extractSerializationType(type);

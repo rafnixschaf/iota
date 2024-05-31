@@ -1,21 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB64, toB64 } from '@mysten/bcs';
-import { bcs, TypeTagSerializer } from '@mysten/iota.js/bcs';
+import { bcs, TypeTagSerializer } from '@mysten/sui.js/bcs';
 import type {
 	ExecutionStatus,
-	IotaArgument,
-	IotaCallArg,
-	IotaTransaction,
-	IotaTransactionBlock,
-	IotaTransactionBlockKind,
-	IotaTransactionBlockResponse,
-	IotaTransactionBlockResponseOptions,
-} from '@mysten/iota.js/client';
+	SuiArgument,
+	SuiCallArg,
+	SuiTransaction,
+	SuiTransactionBlock,
+	SuiTransactionBlockKind,
+	SuiTransactionBlockResponse,
+	SuiTransactionBlockResponseOptions,
+} from '@mysten/sui.js/client';
 
 import type { Rpc_Transaction_FieldsFragment } from '../generated/queries.js';
 import { mapGraphQLOwnerToRpcOwner } from './owner.js';
@@ -23,9 +20,9 @@ import { toShortTypeString } from './util.js';
 
 export function mapGraphQLTransactionBlockToRpcTransactionBlock(
 	transactionBlock: Rpc_Transaction_FieldsFragment,
-	options?: IotaTransactionBlockResponseOptions | null,
+	options?: SuiTransactionBlockResponseOptions | null,
 	errors?: string[] | null,
-): IotaTransactionBlockResponse {
+): SuiTransactionBlockResponse {
 	const deletedChanges = transactionBlock.effects?.objectChanges?.nodes
 		?.filter((change) => change?.idDeleted === true)
 		.map((change) => ({
@@ -183,7 +180,7 @@ export function mapGraphQLTransactionBlockToRpcTransactionBlock(
 
 export function mapTransactionBlockToInput(
 	data: typeof bcs.SenderSignedTransaction.$inferType,
-): IotaTransactionBlock | null {
+): SuiTransactionBlock | null {
 	const txData = data.intentMessage.value.V1;
 
 	const programableTransaction =
@@ -215,7 +212,7 @@ export function mapTransactionBlockToInput(
 
 export function mapProgramableTransaction(
 	programableTransaction: typeof bcs.ProgrammableTransaction.$inferType,
-): IotaTransactionBlockKind {
+): SuiTransactionBlockKind {
 	return {
 		inputs: programableTransaction.inputs.map(mapTransactionInput),
 		kind: 'ProgrammableTransaction',
@@ -223,7 +220,7 @@ export function mapProgramableTransaction(
 	};
 }
 
-function mapTransactionInput(input: typeof bcs.CallArg.$inferType): IotaCallArg {
+function mapTransactionInput(input: typeof bcs.CallArg.$inferType): SuiCallArg {
 	if ('Pure' in input) {
 		return {
 			type: 'pure',
@@ -267,7 +264,7 @@ function mapTransactionInput(input: typeof bcs.CallArg.$inferType): IotaCallArg 
 	throw new Error(`Unknown input type ${input}`);
 }
 
-function mapTransaction(transaction: typeof bcs.Transaction.$inferType): IotaTransaction {
+function mapTransaction(transaction: typeof bcs.Transaction.$inferType): SuiTransaction {
 	switch (transaction.kind) {
 		case 'MoveCall': {
 			const [pkg, module, fn] = transaction.target.split('::');
@@ -333,7 +330,7 @@ function mapTransaction(transaction: typeof bcs.Transaction.$inferType): IotaTra
 	throw new Error(`Unknown transaction type ${transaction}`);
 }
 
-function mapTransactionArgument(arg: typeof bcs.Argument.$inferType): IotaArgument {
+function mapTransactionArgument(arg: typeof bcs.Argument.$inferType): SuiArgument {
 	switch (arg.kind) {
 		case 'GasCoin': {
 			return 'GasCoin';

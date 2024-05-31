@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import type { IotaClient } from '@mysten/iota.js/client';
-import { decodeIotaPrivateKey } from '@mysten/iota.js/cryptography';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
-import type { TransactionBlock } from '@mysten/iota.js/transactions';
-import { fromB64, toB64 } from '@mysten/iota.js/utils';
-import type { ZkLoginSignatureInputs } from '@mysten/iota.js/zklogin';
+import type { SuiClient } from '@mysten/sui.js/client';
+import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import type { TransactionBlock } from '@mysten/sui.js/transactions';
+import { fromB64, toB64 } from '@mysten/sui.js/utils';
+import type { ZkLoginSignatureInputs } from '@mysten/sui.js/zklogin';
 import { decodeJwt } from 'jose';
 import type { WritableAtom } from 'nanostores';
 import { atom, onMount, onSet } from 'nanostores';
@@ -164,7 +161,7 @@ export class EnokiFlow {
 			expiresAt: estimatedExpiration,
 			maxEpoch,
 			randomness,
-			ephemeralKeyPair: toB64(decodeIotaPrivateKey(ephemeralKeyPair.getSecretKey()).secretKey),
+			ephemeralKeyPair: toB64(decodeSuiPrivateKey(ephemeralKeyPair.getSecretKey()).secretKey),
 		});
 
 		return oauthUrl;
@@ -322,7 +319,7 @@ export class EnokiFlow {
 	}: {
 		network?: 'mainnet' | 'testnet';
 		transactionBlock: TransactionBlock;
-		client: IotaClient;
+		client: SuiClient;
 	}) {
 		const session = await this.getSession();
 
@@ -356,7 +353,7 @@ export class EnokiFlow {
 	}: {
 		bytes: string;
 		digest: string;
-		client: IotaClient;
+		client: SuiClient;
 	}) {
 		const keypair = await this.getKeypair();
 		const userSignature = await keypair.signTransactionBlock(fromB64(bytes));
@@ -379,7 +376,7 @@ export class EnokiFlow {
 	}: {
 		network?: 'mainnet' | 'testnet';
 		transactionBlock: TransactionBlock;
-		client: IotaClient;
+		client: SuiClient;
 	}) {
 		const { bytes, digest } = await this.sponsorTransactionBlock({
 			network,

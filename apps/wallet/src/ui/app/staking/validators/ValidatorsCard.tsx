@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import BottomMenuLayout, { Content, Menu } from '_app/shared/bottom-menu-layout';
 import { Button } from '_app/shared/ButtonUI';
 import { Card, CardItem } from '_app/shared/card';
@@ -16,13 +13,13 @@ import {
 	DELEGATED_STAKES_QUERY_STALE_TIME,
 } from '_src/shared/constants';
 import { useGetDelegatedStake } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { Plus12 } from '@mysten/icons';
-import type { StakeObject } from '@mysten/iota.js/client';
+import type { StakeObject } from '@mysten/sui.js/client';
 import { useMemo } from 'react';
 
 import { useActiveAddress } from '../../hooks/useActiveAddress';
-import { getAllStakeIota } from '../getAllStakeIota';
+import { getAllStakeSui } from '../getAllStakeSui';
 import { StakeAmount } from '../home/StakeAmount';
 import { StakeCard, type DelegationObjectWithValidator } from '../home/StakedCard';
 
@@ -39,20 +36,20 @@ export function ValidatorsCard() {
 		refetchInterval: DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
 	});
 
-	const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
+	const { data: system } = useSuiClientQuery('getLatestSuiSystemState');
 	const activeValidators = system?.activeValidators;
 
 	// Total active stake for all Staked validators
 	const totalStake = useMemo(() => {
 		if (!delegatedStake) return 0n;
-		return getAllStakeIota(delegatedStake);
+		return getAllStakeSui(delegatedStake);
 	}, [delegatedStake]);
 
 	const delegations = useMemo(() => {
 		return delegatedStake?.flatMap((delegation) => {
 			return delegation.stakes.map((d) => ({
 				...d,
-				// flag any inactive validator for the stakeIota object
+				// flag any inactive validator for the stakeSui object
 				// if the stakingPoolId is not found in the activeValidators list flag as inactive
 				inactiveValidator: !activeValidators?.find(
 					({ stakingPoolId }) => stakingPoolId === delegation.stakingPool,
@@ -111,7 +108,7 @@ export function ValidatorsCard() {
 						{hasInactiveValidatorDelegation ? (
 							<div className="mb-3">
 								<Alert>
-									Unstake IOTA from the inactive validators and stake on an active validator to start
+									Unstake SUI from the inactive validators and stake on an active validator to start
 									earning rewards again.
 								</Alert>
 							</div>
@@ -124,7 +121,7 @@ export function ValidatorsCard() {
 										<StakeCard
 											delegationObject={delegation as DelegationObjectWithValidator}
 											currentEpoch={Number(system.epoch)}
-											key={delegation.stakedIotaId}
+											key={delegation.stakedSuiId}
 											inactiveValidator
 										/>
 									))}
@@ -158,7 +155,7 @@ export function ValidatorsCard() {
 										<StakeCard
 											delegationObject={delegation as DelegationObjectWithValidator}
 											currentEpoch={Number(system.epoch)}
-											key={delegation.stakedIotaId}
+											key={delegation.stakedSuiId}
 										/>
 									))}
 						</div>
@@ -170,13 +167,13 @@ export function ValidatorsCard() {
 						variant="secondary"
 						to="new"
 						onClick={() =>
-							ampli.clickedStakeIota({
+							ampli.clickedStakeSui({
 								isCurrentlyStaking: true,
 								sourceFlow: 'Validator card',
 							})
 						}
 						before={<Plus12 />}
-						text="Stake IOTA"
+						text="Stake SUI"
 					/>
 				</Menu>
 			</BottomMenuLayout>

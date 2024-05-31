@@ -1,25 +1,22 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { isIotaNSName, useIotaNSEnabled } from '@mysten/core';
-import { useIotaClient } from '@mysten/dapp-kit';
-import { type IotaClient } from '@mysten/iota.js/client';
-import { isValidIotaAddress } from '@mysten/iota.js/utils';
+import { isSuiNSName, useSuiNSEnabled } from '@mysten/core';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { type SuiClient } from '@mysten/sui.js/client';
+import { isValidSuiAddress } from '@mysten/sui.js/utils';
 import { useMemo } from 'react';
 import * as Yup from 'yup';
 
-export function createIotaAddressValidation(client: IotaClient, iotaNSEnabled: boolean) {
+export function createSuiAddressValidation(client: SuiClient, suiNSEnabled: boolean) {
 	const resolveCache = new Map<string, boolean>();
 
 	return Yup.string()
 		.ensure()
 		.trim()
 		.required()
-		.test('is-iota-address', 'Invalid address. Please check again.', async (value) => {
-			if (iotaNSEnabled && isIotaNSName(value)) {
+		.test('is-sui-address', 'Invalid address. Please check again.', async (value) => {
+			if (suiNSEnabled && isSuiNSName(value)) {
 				if (resolveCache.has(value)) {
 					return resolveCache.get(value)!;
 				}
@@ -33,16 +30,16 @@ export function createIotaAddressValidation(client: IotaClient, iotaNSEnabled: b
 				return !!address;
 			}
 
-			return isValidIotaAddress(value);
+			return isValidSuiAddress(value);
 		})
 		.label("Recipient's address");
 }
 
-export function useIotaAddressValidation() {
-	const client = useIotaClient();
-	const iotaNSEnabled = useIotaNSEnabled();
+export function useSuiAddressValidation() {
+	const client = useSuiClient();
+	const suiNSEnabled = useSuiNSEnabled();
 
 	return useMemo(() => {
-		return createIotaAddressValidation(client, iotaNSEnabled);
-	}, [client, iotaNSEnabled]);
+		return createSuiAddressValidation(client, suiNSEnabled);
+	}, [client, suiNSEnabled]);
 }

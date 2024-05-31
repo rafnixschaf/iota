@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type IotaObjectResponse } from '@mysten/iota.js/client';
+import { type SuiObjectResponse } from '@mysten/sui.js/client';
 
 import { useRecognizedPackages } from './useRecognizedPackages';
 
-export function useResolveVideo(object: IotaObjectResponse) {
+export function useResolveVideo(object: SuiObjectResponse) {
 	const recognizedPackages = useRecognizedPackages();
 	const objectType =
 		object.data?.type ?? object?.data?.content?.dataType === 'package'

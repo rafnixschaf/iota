@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use anyhow::{anyhow, bail};
 use move_command_line_common::testing::{
     add_update_baseline_fix, format_diff, read_env_update_baseline,

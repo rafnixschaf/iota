@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import 'tsconfig-paths/register';
 
-import { IotaClient, getFullnodeUrl } from '@mysten/iota.js/client';
-import { type Keypair } from '@mysten/iota.js/cryptography';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
+import { type Keypair } from '@mysten/sui.js/cryptography';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 const addressToKeypair = new Map<string, Keypair>();
 
@@ -18,7 +15,7 @@ export async function split_coin(address: string) {
 	if (!keypair) {
 		throw new Error('missing keypair');
 	}
-	const client = new IotaClient({ url: getFullnodeUrl('localnet') });
+	const client = new SuiClient({ url: getFullnodeUrl('localnet') });
 
 	const coins = await client.getCoins({ owner: address });
 	const coin_id = coins.data[0].coinObjectId;
@@ -26,7 +23,7 @@ export async function split_coin(address: string) {
 	const tx = new TransactionBlock();
 	tx.moveCall({
 		target: '0x2::pay::split',
-		typeArguments: ['0x2::iota::IOTA'],
+		typeArguments: ['0x2::sui::SUI'],
 		arguments: [tx.object(coin_id), tx.pure.u64(10)],
 	});
 
@@ -45,7 +42,7 @@ export async function split_coin(address: string) {
 
 export async function faucet() {
 	const keypair = Ed25519Keypair.generate();
-	const address = keypair.getPublicKey().toIotaAddress();
+	const address = keypair.getPublicKey().toSuiAddress();
 	addressToKeypair.set(address, keypair);
 	const res = await fetch('http://127.0.0.1:9123/gas', {
 		method: 'POST',

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type { SerializedBcs } from '@mysten/bcs';
 import { isSerializedBcs } from '@mysten/bcs';
 import type { Infer } from 'superstruct';
@@ -11,9 +8,9 @@ import { array, bigint, boolean, integer, number, object, string, union } from '
 
 import { bcs } from '../bcs/index.js';
 import type { SharedObjectRef } from '../bcs/index.js';
-import { normalizeIotaAddress } from '../utils/iota-types.js';
+import { normalizeSuiAddress } from '../utils/sui-types.js';
 
-export const IotaObjectRef = object({
+export const SuiObjectRef = object({
 	/** Base64 string representing the object digest */
 	digest: string(),
 	/** Hex code as string representing the object id */
@@ -21,10 +18,10 @@ export const IotaObjectRef = object({
 	/** Object version */
 	version: union([number(), string(), bigint()]),
 });
-export type IotaObjectRef = Infer<typeof IotaObjectRef>;
+export type SuiObjectRef = Infer<typeof SuiObjectRef>;
 
 const ObjectArg = union([
-	object({ ImmOrOwned: IotaObjectRef }),
+	object({ ImmOrOwned: SuiObjectRef }),
 	object({
 		Shared: object({
 			objectId: string(),
@@ -32,7 +29,7 @@ const ObjectArg = union([
 			mutable: boolean(),
 		}),
 	}),
-	object({ Receiving: IotaObjectRef }),
+	object({ Receiving: SuiObjectRef }),
 ]);
 
 export const PureCallArg = object({ Pure: array(integer()) });
@@ -61,13 +58,13 @@ function Pure(data: unknown, type?: string): PureCallArg {
 
 export const Inputs = {
 	Pure,
-	ObjectRef({ objectId, digest, version }: IotaObjectRef): ObjectCallArg {
+	ObjectRef({ objectId, digest, version }: SuiObjectRef): ObjectCallArg {
 		return {
 			Object: {
 				ImmOrOwned: {
 					digest,
 					version,
-					objectId: normalizeIotaAddress(objectId),
+					objectId: normalizeSuiAddress(objectId),
 				},
 			},
 		};
@@ -78,18 +75,18 @@ export const Inputs = {
 				Shared: {
 					mutable,
 					initialSharedVersion,
-					objectId: normalizeIotaAddress(objectId),
+					objectId: normalizeSuiAddress(objectId),
 				},
 			},
 		};
 	},
-	ReceivingRef({ objectId, digest, version }: IotaObjectRef): ObjectCallArg {
+	ReceivingRef({ objectId, digest, version }: SuiObjectRef): ObjectCallArg {
 		return {
 			Object: {
 				Receiving: {
 					digest,
 					version,
-					objectId: normalizeIotaAddress(objectId),
+					objectId: normalizeSuiAddress(objectId),
 				},
 			},
 		};
@@ -98,17 +95,17 @@ export const Inputs = {
 
 export function getIdFromCallArg(arg: string | ObjectCallArg) {
 	if (typeof arg === 'string') {
-		return normalizeIotaAddress(arg);
+		return normalizeSuiAddress(arg);
 	}
 	if ('ImmOrOwned' in arg.Object) {
-		return normalizeIotaAddress(arg.Object.ImmOrOwned.objectId);
+		return normalizeSuiAddress(arg.Object.ImmOrOwned.objectId);
 	}
 
 	if ('Receiving' in arg.Object) {
-		return normalizeIotaAddress(arg.Object.Receiving.objectId);
+		return normalizeSuiAddress(arg.Object.Receiving.objectId);
 	}
 
-	return normalizeIotaAddress(arg.Object.Shared.objectId);
+	return normalizeSuiAddress(arg.Object.Shared.objectId);
 }
 
 export function getSharedObjectInput(arg: BuilderCallArg): SharedObjectRef | undefined {

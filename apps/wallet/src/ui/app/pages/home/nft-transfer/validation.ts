@@ -1,21 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { createIotaAddressValidation } from '_components/address-input/validation';
-import { type IotaClient } from '@mysten/iota.js/client';
+import { createSuiAddressValidation } from '_components/address-input/validation';
+import { type SuiClient } from '@mysten/sui.js/client';
 import * as Yup from 'yup';
 
 export function createValidationSchema(
-	client: IotaClient,
-	iotaNSEnabled: boolean,
+	client: SuiClient,
+	suiNSEnabled: boolean,
 	senderAddress: string,
 	objectId: string,
 ) {
 	return Yup.object({
-		to: createIotaAddressValidation(client, iotaNSEnabled)
+		to: createSuiAddressValidation(client, suiNSEnabled)
 			.test(
 				'sender-address',
 				// eslint-disable-next-line no-template-curly-in-string

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 /** @type {import('tailwindcss').Config} */
 const config = {
 	content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -18,7 +15,7 @@ const config = {
 			},
 		},
 	},
-	plugins: [require('@headlesiota/tailwindcss')],
+	plugins: [require('@headlessui/tailwindcss')],
 };
 
 export default config;

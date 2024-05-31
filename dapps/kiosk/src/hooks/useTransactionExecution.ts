@@ -1,18 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useSignTransactionBlock, useIotaClient } from '@mysten/dapp-kit';
-import { IotaTransactionBlockResponseOptions } from '@mysten/iota.js/client';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { useSignTransactionBlock, useSuiClient } from '@mysten/dapp-kit';
+import { SuiTransactionBlockResponseOptions } from '@mysten/sui.js/client';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 // A helper to execute transactions by:
 // 1. Signing them using the wallet
 // 2. Executing them using the rpc provider
 export function useTransactionExecution() {
-	const provider = useIotaClient();
+	const provider = useSuiClient();
 
 	// sign transaction from the wallet
 	const { mutateAsync: signTransactionBlock } = useSignTransactionBlock();
@@ -23,7 +20,7 @@ export function useTransactionExecution() {
 		options = { showEffects: true },
 	}: {
 		tx: TransactionBlock;
-		options?: IotaTransactionBlockResponseOptions | undefined;
+		options?: SuiTransactionBlockResponseOptions | undefined;
 	}) => {
 		// @ts-expect-error: This is an issue with type references not working together:
 		const signedTx = await signTransactionBlock({ transactionBlock: tx });

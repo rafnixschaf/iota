@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter},
@@ -14,7 +11,7 @@ use config::{Authority, AuthorityIdentifier, Committee, Stake};
 use parking_lot::RwLock;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use storage::ConsensusStore;
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use tracing::{debug, trace};
 use types::{Certificate, ReputationScores, Round};
 
@@ -275,7 +272,7 @@ impl LeaderSchedule {
         dag: &'a Dag,
     ) -> (Authority, Option<&'a Certificate>) {
         // Note: this function is often called with even rounds only. While we do not aim at random selection
-        // yet (see issue https://github.com/iotaledger/kinesis/issues/5182), repeated calls to this function
+        // yet (see issue https://github.com/MystenLabs/sui/issues/5182), repeated calls to this function
         // should still pick from the whole roster of leaders.
         let leader = self.leader(round);
 

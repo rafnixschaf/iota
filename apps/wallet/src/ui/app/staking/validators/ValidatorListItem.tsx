@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { Text } from '_app/shared/text';
 import { CheckFill16 } from '@mysten/icons';
 import { cx } from 'class-variance-authority';
@@ -22,8 +19,8 @@ export function ValidatorListItem({ selected, value, validatorAddress }: Validat
 			<motion.div whileHover={{ scale: 0.98 }} animate={selected ? { scale: 0.98 } : { scale: 1 }}>
 				<div
 					className={cx(
-						selected ? 'bg-iota/10' : '',
-						'flex justify-between w-full hover:bg-iota/10 py-3.5 px-2 rounded-lg group items-center gap-1',
+						selected ? 'bg-sui/10' : '',
+						'flex justify-between w-full hover:bg-sui/10 py-3.5 px-2 rounded-lg group items-center gap-1',
 					)}
 					role="button"
 				>

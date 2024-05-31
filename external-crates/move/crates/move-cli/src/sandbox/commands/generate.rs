@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::sandbox::utils::on_disk_state_view::OnDiskStateView;
 use anyhow::{bail, Result};
 use move_bytecode_utils::layout::{SerdeLayoutBuilder, SerdeLayoutConfig};

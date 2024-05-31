@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! This module implements control flow checks.
 //!
 //! For bytecode versions 6 and up, the following properties are ensured:

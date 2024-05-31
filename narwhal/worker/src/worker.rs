@@ -1,9 +1,6 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 use crate::{
     batch_fetcher::BatchFetcher,
     batch_maker::BatchMaker,
@@ -34,7 +31,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use std::{net::Ipv4Addr, sync::Arc, thread::sleep};
 use store::rocks::DBMap;
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use tap::TapFallible;
 use tokio::task::JoinHandle;
 use tower::ServiceBuilder;

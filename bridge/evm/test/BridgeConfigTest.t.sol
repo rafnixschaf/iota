@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.20;
 
 import "./mocks/MockTokens.sol";
@@ -17,11 +14,11 @@ contract BridgeConfigTest is BridgeBaseTest {
         assertTrue(config.getTokenAddress(2) == wETH);
         assertTrue(config.getTokenAddress(3) == USDC);
         assertTrue(config.getTokenAddress(4) == USDT);
-        assertEq(config.getIotaDecimal(0), 9);
-        assertEq(config.getIotaDecimal(1), 8);
-        assertEq(config.getIotaDecimal(2), 8);
-        assertEq(config.getIotaDecimal(3), 6);
-        assertEq(config.getIotaDecimal(4), 6);
+        assertEq(config.getSuiDecimal(0), 9);
+        assertEq(config.getSuiDecimal(1), 8);
+        assertEq(config.getSuiDecimal(2), 8);
+        assertEq(config.getSuiDecimal(3), 6);
+        assertEq(config.getSuiDecimal(4), 6);
         assertEq(config.chainID(), chainID);
         assertTrue(config.supportedChains(0));
     }
@@ -30,12 +27,12 @@ contract BridgeConfigTest is BridgeBaseTest {
         assertEq(config.getTokenAddress(1), wBTC);
     }
 
-    function testconvertERC20ToIotaDecimalAmountTooLargeForUint64() public {
+    function testconvertERC20ToSuiDecimalAmountTooLargeForUint64() public {
         vm.expectRevert(bytes("BridgeConfig: Amount too large for uint64"));
-        config.convertERC20ToIotaDecimal(BridgeMessage.ETH, type(uint256).max);
+        config.convertERC20ToSuiDecimal(BridgeMessage.ETH, type(uint256).max);
     }
 
-    function testconvertERC20ToIotaDecimalInvalidIotaDecimal() public {
+    function testconvertERC20ToSuiDecimalInvalidSuiDecimal() public {
         vm.startPrank(address(bridge));
         address smallUSDC = address(new MockSmallUSDC());
         address[] memory _supportedTokens = new address[](4);
@@ -47,11 +44,11 @@ contract BridgeConfigTest is BridgeBaseTest {
         _supportedDestinationChains[0] = 0;
         BridgeConfig newBridgeConfig =
             new BridgeConfig(chainID, _supportedTokens, _supportedDestinationChains);
-        vm.expectRevert(bytes("BridgeConfig: Invalid Iota decimal"));
-        newBridgeConfig.convertERC20ToIotaDecimal(3, 100);
+        vm.expectRevert(bytes("BridgeConfig: Invalid Sui decimal"));
+        newBridgeConfig.convertERC20ToSuiDecimal(3, 100);
     }
 
-    function testconvertIotaToERC20DecimalInvalidIotaDecimal() public {
+    function testconvertSuiToERC20DecimalInvalidSuiDecimal() public {
         vm.startPrank(address(bridge));
         address smallUSDC = address(new MockSmallUSDC());
         address[] memory _supportedTokens = new address[](4);
@@ -63,8 +60,8 @@ contract BridgeConfigTest is BridgeBaseTest {
         _supportedDestinationChains[0] = 0;
         BridgeConfig newBridgeConfig =
             new BridgeConfig(chainID, _supportedTokens, _supportedDestinationChains);
-        vm.expectRevert(bytes("BridgeConfig: Invalid Iota decimal"));
-        newBridgeConfig.convertIotaToERC20Decimal(3, 100);
+        vm.expectRevert(bytes("BridgeConfig: Invalid Sui decimal"));
+        newBridgeConfig.convertSuiToERC20Decimal(3, 100);
     }
 
     function testIsTokenSupported() public {
@@ -72,59 +69,59 @@ contract BridgeConfigTest is BridgeBaseTest {
         assertTrue(!config.isTokenSupported(0));
     }
 
-    function testGetIotaDecimal() public {
-        assertEq(config.getIotaDecimal(1), 8);
+    function testGetSuiDecimal() public {
+        assertEq(config.getSuiDecimal(1), 8);
     }
 
-    function testconvertERC20ToIotaDecimal() public {
+    function testconvertERC20ToSuiDecimal() public {
         // ETH
         assertEq(IERC20Metadata(wETH).decimals(), 18);
         uint256 ethAmount = 10 ether;
-        uint64 iotaAmount = config.convertERC20ToIotaDecimal(BridgeMessage.ETH, ethAmount);
-        assertEq(iotaAmount, 10_000_000_00); // 10 * 10 ^ 8
+        uint64 suiAmount = config.convertERC20ToSuiDecimal(BridgeMessage.ETH, ethAmount);
+        assertEq(suiAmount, 10_000_000_00); // 10 * 10 ^ 8
 
         // USDC
         assertEq(IERC20Metadata(USDC).decimals(), 6);
         ethAmount = 50_000_000; // 50 USDC
-        iotaAmount = config.convertERC20ToIotaDecimal(BridgeMessage.USDC, ethAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = config.convertERC20ToSuiDecimal(BridgeMessage.USDC, ethAmount);
+        assertEq(suiAmount, ethAmount);
 
         // USDT
         assertEq(IERC20Metadata(USDT).decimals(), 6);
         ethAmount = 60_000_000; // 60 USDT
-        iotaAmount = config.convertERC20ToIotaDecimal(BridgeMessage.USDT, ethAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = config.convertERC20ToSuiDecimal(BridgeMessage.USDT, ethAmount);
+        assertEq(suiAmount, ethAmount);
 
         // BTC
         assertEq(IERC20Metadata(wBTC).decimals(), 8);
         ethAmount = 2_00_000_000; // 2 BTC
-        iotaAmount = config.convertERC20ToIotaDecimal(BridgeMessage.BTC, ethAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = config.convertERC20ToSuiDecimal(BridgeMessage.BTC, ethAmount);
+        assertEq(suiAmount, ethAmount);
     }
 
-    function testconvertIotaToERC20Decimal() public {
+    function testconvertSuiToERC20Decimal() public {
         // ETH
         assertEq(IERC20Metadata(wETH).decimals(), 18);
-        uint64 iotaAmount = 11_000_000_00; // 11 eth
-        uint256 ethAmount = config.convertIotaToERC20Decimal(BridgeMessage.ETH, iotaAmount);
+        uint64 suiAmount = 11_000_000_00; // 11 eth
+        uint256 ethAmount = config.convertSuiToERC20Decimal(BridgeMessage.ETH, suiAmount);
         assertEq(ethAmount, 11 ether);
 
         // USDC
         assertEq(IERC20Metadata(USDC).decimals(), 6);
-        iotaAmount = 50_000_000; // 50 USDC
-        ethAmount = config.convertIotaToERC20Decimal(BridgeMessage.USDC, iotaAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = 50_000_000; // 50 USDC
+        ethAmount = config.convertSuiToERC20Decimal(BridgeMessage.USDC, suiAmount);
+        assertEq(suiAmount, ethAmount);
 
         // USDT
         assertEq(IERC20Metadata(USDT).decimals(), 6);
-        iotaAmount = 50_000_000; // 50 USDT
-        ethAmount = config.convertIotaToERC20Decimal(BridgeMessage.USDT, iotaAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = 50_000_000; // 50 USDT
+        ethAmount = config.convertSuiToERC20Decimal(BridgeMessage.USDT, suiAmount);
+        assertEq(suiAmount, ethAmount);
 
         // BTC
         assertEq(IERC20Metadata(wBTC).decimals(), 8);
-        iotaAmount = 3_000_000_00; // 3 BTC
-        ethAmount = config.convertIotaToERC20Decimal(BridgeMessage.BTC, iotaAmount);
-        assertEq(iotaAmount, ethAmount);
+        suiAmount = 3_000_000_00; // 3 BTC
+        ethAmount = config.convertSuiToERC20Decimal(BridgeMessage.BTC, suiAmount);
+        assertEq(suiAmount, ethAmount);
     }
 }

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 const CODE_TO_ERROR_TYPE: Record<number, string> = {
 	'-32700': 'ParseError',
 	'-32600': 'InvalidRequest',
@@ -12,9 +9,9 @@ const CODE_TO_ERROR_TYPE: Record<number, string> = {
 	'-32603': 'InternalError',
 };
 
-export class IotaHTTPTransportError extends Error {}
+export class SuiHTTPTransportError extends Error {}
 
-export class JsonRpcError extends IotaHTTPTransportError {
+export class JsonRpcError extends SuiHTTPTransportError {
 	code: number;
 	type: string;
 
@@ -25,7 +22,7 @@ export class JsonRpcError extends IotaHTTPTransportError {
 	}
 }
 
-export class IotaHTTPStatusError extends IotaHTTPTransportError {
+export class SuiHTTPStatusError extends SuiHTTPTransportError {
 	status: number;
 	statusText: string;
 

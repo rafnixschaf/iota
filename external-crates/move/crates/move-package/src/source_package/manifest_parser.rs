@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{package_hooks, source_package::parsed_manifest as PM};
 use anyhow::{anyhow, bail, format_err, Context, Result};
 use move_compiler::editions::{Edition, Flavor};

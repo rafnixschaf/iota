@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { type SerializedUIAccount } from '_src/background/accounts/Account';
 import { isZkLoginAccountSerializedUI } from '_src/background/accounts/zklogin/ZkLoginAccount';
 import {
@@ -13,13 +10,13 @@ import {
 	LogoTwitch,
 	SocialFacebook24,
 	SocialKakao24,
-	Iota,
+	Sui,
 } from '@mysten/icons';
 
-function IotaIcon() {
+function SuiIcon() {
 	return (
 		<div className="bg-steel rounded-full text-white h-4 w-4 flex items-center justify-center p-1">
-			<Iota />
+			<Sui />
 		</div>
 	);
 }
@@ -35,7 +32,7 @@ function ProviderIcon({ provider }: { provider: string }) {
 		case 'kakao':
 			return <SocialKakao24 className="h-4 w-4" />;
 		default:
-			return <IotaIcon />;
+			return <SuiIcon />;
 	}
 }
 
@@ -49,5 +46,5 @@ export function AccountIcon({ account }: { account: SerializedUIAccount }) {
 	if (account.type === 'ledger') {
 		return <LedgerLogo17 className="h-4 w-4" />;
 	}
-	return <IotaIcon />;
+	return <SuiIcon />;
 }

@@ -1,16 +1,13 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 'use client';
 
 import { Inter } from 'next/font/google';
 
 import './globals.css';
 
-import { IotaClientProvider, WalletProvider } from '@mysten/dapp-kit';
-import { getAllNetworks } from '@mysten/iota.js/client';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getAllNetworks } from '@mysten/sui.js/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
@@ -31,9 +28,9 @@ export default function RootLayout({
         <html lang="en">
             <body className={inter.className}>
                 <QueryClientProvider client={queryClient}>
-                    <IotaClientProvider networks={allNetworks} defaultNetwork="testnet">
+                    <SuiClientProvider networks={allNetworks} defaultNetwork="testnet">
                         <WalletProvider>{children}</WalletProvider>
-                    </IotaClientProvider>
+                    </SuiClientProvider>
                 </QueryClientProvider>
             </body>
         </html>

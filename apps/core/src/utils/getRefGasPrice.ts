@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { IotaValidatorSummary } from '@mysten/iota.js/client';
+import { SuiValidatorSummary } from '@mysten/sui.js/client';
 
 import { calculateStakeShare } from './calculateStakeShare';
 
@@ -16,7 +13,7 @@ const REF_THRESHOLD = 66.67;
  * 2. Add up stake share from low to high, until reaching REF_THRESHOLD
  * 3. Return the gas price of the last validator that was added to the sum
  */
-export function getRefGasPrice(validators?: IotaValidatorSummary[]) {
+export function getRefGasPrice(validators?: SuiValidatorSummary[]) {
 	if (!validators?.length) {
 		return BigInt(0);
 	}
@@ -37,7 +34,7 @@ export function getRefGasPrice(validators?: IotaValidatorSummary[]) {
 	});
 
 	const totalStaked = validators.reduce(
-		(acc, cur) => acc + BigInt(cur.stakingPoolIotaBalance),
+		(acc, cur) => acc + BigInt(cur.stakingPoolSuiBalance),
 		BigInt(0),
 	);
 
@@ -46,7 +43,7 @@ export function getRefGasPrice(validators?: IotaValidatorSummary[]) {
 
 	for (let i = 0; i < sortedByGasPrice.length; i++) {
 		const validator = sortedByGasPrice[i];
-		const stake = BigInt(validator?.stakingPoolIotaBalance);
+		const stake = BigInt(validator?.stakingPoolSuiBalance);
 
 		const stakeShare = calculateStakeShare(stake, totalStaked);
 

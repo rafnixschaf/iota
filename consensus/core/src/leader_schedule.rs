@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::sync::Arc;
 
 use rand::{prelude::SliceRandom, rngs::StdRng, SeedableRng};
@@ -71,7 +68,7 @@ impl LeaderSchedule {
 #[cfg(test)]
 mod tests {
     use consensus_config::{local_committee_and_keys, Parameters};
-    use iota_protocol_config::ProtocolConfig;
+    use sui_protocol_config::ProtocolConfig;
 
     use super::*;
     use crate::metrics::test_metrics;

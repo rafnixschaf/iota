@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type {
 	PaginatedObjectsResponse,
-	IotaObjectData,
-	IotaObjectDataOptions,
-} from '@mysten/iota.js/client';
-import type { TransactionArgument } from '@mysten/iota.js/transactions';
+	SuiObjectData,
+	SuiObjectDataOptions,
+} from '@mysten/sui.js/client';
+import type { TransactionArgument } from '@mysten/sui.js/transactions';
 
 import type { ObjectArgument } from './index.js';
 
@@ -109,7 +106,7 @@ export type KioskItem = {
 	/** The ID of the kiosk the item is placed in */
 	kioskId: string;
 	/** Optional Kiosk Data */
-	data?: IotaObjectData;
+	data?: SuiObjectData;
 };
 
 /** The overview type returned from `getKiosk` */
@@ -155,7 +152,7 @@ export type FetchKioskOptions = {
 	/** Include the objects for the Items in the kiosk. Defaults to `display` only. */
 	withObjects?: boolean;
 	/** Pass the data options for the objects, when fetching, in case you want to query other details. */
-	objectOptions?: IotaObjectDataOptions;
+	objectOptions?: SuiObjectDataOptions;
 };
 
 export type OwnedKiosks = {

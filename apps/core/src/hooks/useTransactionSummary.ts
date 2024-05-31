@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import {
 	DryRunTransactionBlockResponse,
-	type IotaTransactionBlockResponse,
-} from '@mysten/iota.js/client';
+	type SuiTransactionBlockResponse,
+} from '@mysten/sui.js/client';
 import { useMemo } from 'react';
 
 import { getBalanceChangeSummary } from '../utils/transaction/getBalanceChangeSummary';
@@ -14,7 +11,7 @@ import { getGasSummary } from '../utils/transaction/getGasSummary';
 import { getLabel } from '../utils/transaction/getLabel';
 import {
 	getObjectChangeSummary,
-	IotaObjectChangeWithDisplay,
+	SuiObjectChangeWithDisplay,
 } from '../utils/transaction/getObjectChangeSummary';
 import { getObjectDisplayLookup } from '../utils/transaction/getObjectDisplayLookup';
 import { useMultiGetObjects } from './useMultiGetObjects';
@@ -24,7 +21,7 @@ export function useTransactionSummary({
 	currentAddress,
 	recognizedPackagesList,
 }: {
-	transaction?: IotaTransactionBlockResponse | DryRunTransactionBlockResponse;
+	transaction?: SuiTransactionBlockResponse | DryRunTransactionBlockResponse;
 	currentAddress?: string;
 	recognizedPackagesList: string[];
 }) {
@@ -44,7 +41,7 @@ export function useTransactionSummary({
 				display: 'objectId' in change ? lookup?.get(change.objectId) : null,
 			})),
 		[lookup, objectChanges],
-	) as IotaObjectChangeWithDisplay[];
+	) as SuiObjectChangeWithDisplay[];
 
 	const summary = useMemo(() => {
 		if (!transaction) return null;

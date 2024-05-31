@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { Heading } from '@mysten/ui';
 import clsx from 'clsx';
 import { Fragment } from 'react';
@@ -122,7 +119,7 @@ export function RingChart({ data }: RingChartProps) {
 			</svg>
 			<div className="absolute inset-0 mx-auto flex items-center justify-center">
 				<div className="flex flex-col items-center gap-1.5">
-					<Heading variant="heading2/semibold" color="iota-dark">
+					<Heading variant="heading2/semibold" color="sui-dark">
 						{total}
 					</Heading>
 				</div>

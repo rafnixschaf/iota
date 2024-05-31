@@ -1,9 +1,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 mod remove_fallthrough_jumps;
 mod remove_nop_store;
 mod remove_unused_locals;

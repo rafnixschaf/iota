@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use base::{
     build::Build, coverage::Coverage, disassemble::Disassemble, docgen::Docgen, errmap::Errmap,
     info::Info, migrate::Migrate, new::New, test::Test,

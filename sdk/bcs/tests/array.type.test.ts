@@ -1,24 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { describe, expect, it } from 'vitest';
 
-import { BCS, getIotaMoveConfig } from '../src/index';
+import { BCS, getSuiMoveConfig } from '../src/index';
 import { serde } from './utils';
 
 describe('BCS: Array type', () => {
 	it('should support destructured type name in ser/de', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const values = ['this is a string'];
 
 		expect(serde(bcs, ['vector', BCS.STRING], values)).toEqual(values);
 	});
 
 	it('should support destructured type name in struct', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const value = {
 			name: 'Bob',
 			role: 'Admin',
@@ -43,7 +40,7 @@ describe('BCS: Array type', () => {
 	});
 
 	it('should support destructured type name in enum', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const values = { some: ['this is a string'] };
 
 		bcs.registerEnumType(['Option', 'T'], {
@@ -55,7 +52,7 @@ describe('BCS: Array type', () => {
 	});
 
 	it('should solve nested generic issue', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const value = {
 			contents: {
 				content_one: { key: 'A', value: 'B' },
@@ -82,7 +79,7 @@ describe('BCS: Array type', () => {
 
 	// More complicated invariant of the test case above
 	it('should support arrays in global generics', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		bcs.registerEnumType(['Option', 'T'], {
 			none: null,
 			some: 'T',

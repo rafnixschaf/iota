@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{
     compilation::compiled_package::make_source_and_deps_for_compiler,
     resolution::resolution_graph::ResolvedGraph, ModelConfig,

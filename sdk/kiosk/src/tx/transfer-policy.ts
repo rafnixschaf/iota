@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { bcs } from '@mysten/iota.js/bcs';
+import { bcs } from '@mysten/sui.js/bcs';
 import type {
 	TransactionArgument,
 	TransactionBlock,
 	TransactionObjectArgument,
-} from '@mysten/iota.js/transactions';
+} from '@mysten/sui.js/transactions';
 
 import type { ObjectArgument } from '../types/index.js';
 import { TRANSFER_POLICY_MODULE, TRANSFER_POLICY_TYPE } from '../types/index.js';

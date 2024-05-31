@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use rand::{distributions::Alphanumeric, rngs::StdRng, Rng};
 
 pub fn random_string(rng: &mut StdRng, len: usize) -> String {

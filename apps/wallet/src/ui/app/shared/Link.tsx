@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ReactNode, type Ref } from 'react';
 
@@ -33,7 +30,7 @@ const styles = cva(
 				heroDark: [
 					'text-hero-dark hover:text-hero-darkest focus:text-hero-darkest disabled:text-hero-dark',
 				],
-				iotaDark: ['text-iota-dark'],
+				suiDark: ['text-sui-dark'],
 				hero: ['text-hero hover:text-hero-dark focus:text-hero-dark disabled:text-hero-dark'],
 			},
 			weight: {
@@ -69,8 +66,8 @@ const iconStyles = cva(['transition flex'], {
 			heroDark: [
 				'text-hero group-hover:text-hero-darkest group-focus:text-hero-darkest group-disabled:text-hero-dark',
 			],
-			iotaDark: [
-				'text-steel group-hover:text-iota-dark group-focus:text-iota-dark group-disabled:text-steel',
+			suiDark: [
+				'text-steel group-hover:text-sui-dark group-focus:text-sui-dark group-disabled:text-steel',
 			],
 			hero: [
 				'text-hero group-hover:text-hero-dark group-focus:text-hero-dark group-disabled:text-hero-dark',

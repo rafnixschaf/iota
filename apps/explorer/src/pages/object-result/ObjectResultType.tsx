@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { parseObjectType } from '../../utils/objectUtils';
 
-import type { IotaObjectResponse, ObjectOwner } from '@mysten/iota.js/client';
+import type { SuiObjectResponse, ObjectOwner } from '@mysten/sui.js/client';
 
 export type DataType = {
 	id: string;
@@ -35,7 +32,7 @@ export type DataType = {
  * TODO: We should redesign the rendering logic and data model
  * to make this more extensible and customizable for different Move types
  */
-export function translate(o: IotaObjectResponse): DataType {
+export function translate(o: SuiObjectResponse): DataType {
 	if (o.data) {
 		return {
 			id: o.data.objectId,

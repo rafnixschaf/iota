@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import type { IotaEvent, IotaTransactionBlockKind, TransactionEffects } from '@mysten/iota.js/client';
+import type { SuiEvent, SuiTransactionBlockKind, TransactionEffects } from '@mysten/sui.js/client';
 
 type FormattedBalance = {
 	amount?: number | null;
@@ -13,9 +10,9 @@ type FormattedBalance = {
 }[];
 
 export function getAmount(
-	_txnData: IotaTransactionBlockKind,
+	_txnData: SuiTransactionBlockKind,
 	_txnEffect: TransactionEffects,
-	_events: IotaEvent[],
+	_events: SuiEvent[],
 ): FormattedBalance | null {
 	// TODO: Support programmable transactions:
 	return null;

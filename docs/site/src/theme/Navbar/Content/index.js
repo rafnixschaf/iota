@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import React from "react";
 import Link from "@docusaurus/Link";
 import { useThemeConfig, ErrorCauseBoundary } from "@docusaurus/theme-common";
@@ -83,7 +80,7 @@ export default function NavbarContent() {
               <SearchBar />
               {isHomePage && (
                 <Link
-                  to="/guides#get-started-developing-on-iota"
+                  to="/guides#get-started-developing-on-sui"
                   className="button-cta"
                 >
                   Get started

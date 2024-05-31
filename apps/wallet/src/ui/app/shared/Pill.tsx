@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { cva, type VariantProps } from 'class-variance-authority';
 import { forwardRef, type ReactNode, type Ref } from 'react';
 
@@ -25,7 +22,7 @@ const styles = cva(
 			dark: {
 				true: 'border-gray-60 text-steel-darker hover:border-steel-darker hover:text-steel-darker disabled:bg-gray-40 font-medium',
 				false:
-					'border-iota-light text-hero-dark active:bg-gray-45 active:text-steel-darker active:border-gray-45 disabled:bg-white hover:bg-iota-light focus:bg-iota-light',
+					'border-sui-light text-hero-dark active:bg-gray-45 active:text-steel-darker active:border-gray-45 disabled:bg-white hover:bg-sui-light focus:bg-sui-light',
 			},
 		},
 		defaultVariants: {

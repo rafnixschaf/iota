@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 pub type PathSlice<Lbl> = [Lbl];
 pub type Path<Lbl> = Vec<Lbl>;
 

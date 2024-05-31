@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{NodeStorage, PayloadToken};
 use config::WorkerId;
 use mysten_common::sync::notify_read::NotifyRead;
@@ -11,7 +8,7 @@ use std::sync::Arc;
 use store::reopen;
 use store::rocks::{open_cf, MetricConf, ReadWriteOptions};
 use store::{rocks::DBMap, Map, TypedStoreError};
-use iota_macros::fail_point;
+use sui_macros::fail_point;
 use types::BatchDigest;
 
 /// Store of the batch digests for the primary node for the own created batches.

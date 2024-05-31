@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use criterion::{criterion_group, criterion_main, measurement::Measurement, Criterion};
 use language_benchmarks::{measurement::cpu_time_measurement, move_vm::bench};
 

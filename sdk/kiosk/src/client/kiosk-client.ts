@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import type { IotaClient } from '@mysten/iota.js/client';
+import type { SuiClient } from '@mysten/sui.js/client';
 
 import {
 	FLOOR_PRICE_RULE_ADDRESS,
@@ -36,7 +33,7 @@ import type {
  * If you pass packageIds, all functionality will be managed using these packages.
  */
 export class KioskClient {
-	client: IotaClient;
+	client: SuiClient;
 	network: Network;
 	rules: TransferPolicyRule[];
 	packageIds?: BaseRulePackageIds;

@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{loaded_data::runtime_types::Type, values::GlobalValue};
 use move_binary_format::errors::{PartialVMResult, VMResult};
 use move_core_types::{

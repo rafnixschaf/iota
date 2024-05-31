@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
@@ -33,7 +30,7 @@ export function StorageMigrationPage() {
 			<CardLayout
 				title={data === 'inProgress' ? 'Storage migration in progress, please wait' : ''}
 				subtitle={data === 'required' ? 'Storage migration is required' : ''}
-				icon="iota"
+				icon="sui"
 			>
 				{data === 'required' && !migrationMutation.isSuccess ? (
 					<PasswordInputDialog

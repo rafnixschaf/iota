@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! Analysis on partitioning temp variables, struct fields and function parameters according to involved operations (arithmetic or bitwise)
 //
 // The result of this analysis will be used when generating the boogie code

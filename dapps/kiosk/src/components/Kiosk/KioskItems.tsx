@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useCurrentAccount } from '@mysten/dapp-kit';
-import { normalizeIotaAddress } from '@mysten/iota.js/utils';
+import { normalizeSuiAddress } from '@mysten/sui.js/utils';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -29,7 +26,7 @@ export function KioskItems({ kioskId }: { kioskId?: string }) {
 	// using endsWith because we support it with both 0x prefix and without.
 	const isOwnedKiosk = () => {
 		return walletKiosk?.caps?.find(
-			(x) => kioskId && normalizeIotaAddress(x.kioskId).endsWith(kioskId),
+			(x) => kioskId && normalizeSuiAddress(x.kioskId).endsWith(kioskId),
 		);
 	};
 

@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { IotaObjectData } from '../../src/client';
+import { SuiObjectData } from '../../src/client';
 import { publishPackage, setup, TestToolbox } from './utils/setup';
 
 describe('Dynamic Fields Reading API', () => {
@@ -26,7 +23,7 @@ describe('Dynamic Fields Reading API', () => {
 				filter: { StructType: `${packageId}::dynamic_fields_test::Test` },
 			})
 			.then(function (objects) {
-				const data = objects.data[0].data as IotaObjectData;
+				const data = objects.data[0].data as SuiObjectData;
 				parentObjectId = data.objectId;
 			});
 	});

@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { toHEX } from '@mysten/bcs';
-import type { PublicKey } from '@mysten/iota.js/cryptography';
-import { toBigEndianBytes } from '@mysten/iota.js/zklogin';
+import type { PublicKey } from '@mysten/sui.js/cryptography';
+import { toBigEndianBytes } from '@mysten/sui.js/zklogin';
 import { randomBytes } from '@noble/hashes/utils';
 import { base64url } from 'jose';
 
@@ -28,7 +25,7 @@ export function generateRandomness() {
 }
 
 export function generateNonce(publicKey: PublicKey, maxEpoch: number, randomness: bigint | string) {
-	const publicKeyBytes = toBigIntBE(publicKey.toIotaBytes());
+	const publicKeyBytes = toBigIntBE(publicKey.toSuiBytes());
 	const eph_public_key_0 = publicKeyBytes / 2n ** 128n;
 	const eph_public_key_1 = publicKeyBytes % 2n ** 128n;
 	const bigNum = poseidonHash([eph_public_key_0, eph_public_key_1, maxEpoch, BigInt(randomness)]);

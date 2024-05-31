@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type {
-	IotaSignAndExecuteTransactionBlockInput,
-	IotaSignAndExecuteTransactionBlockOutput,
+	SuiSignAndExecuteTransactionBlockInput,
+	SuiSignAndExecuteTransactionBlockOutput,
 } from '@mysten/wallet-standard';
 import type { UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
@@ -18,16 +15,16 @@ import {
 	WalletNotConnectedError,
 } from '../../errors/walletErrors.js';
 import type { PartialBy } from '../../types/utilityTypes.js';
-import { useIotaClient } from '../useIotaClient.js';
+import { useSuiClient } from '../useSuiClient.js';
 import { useCurrentAccount } from './useCurrentAccount.js';
 import { useCurrentWallet } from './useCurrentWallet.js';
 
 type UseSignAndExecuteTransactionBlockArgs = PartialBy<
-	IotaSignAndExecuteTransactionBlockInput,
+	SuiSignAndExecuteTransactionBlockInput,
 	'account' | 'chain'
 >;
 
-type UseSignAndExecuteTransactionBlockResult = IotaSignAndExecuteTransactionBlockOutput;
+type UseSignAndExecuteTransactionBlockResult = SuiSignAndExecuteTransactionBlockOutput;
 
 type UseSignAndExecuteTransactionBlockError =
 	| WalletFeatureNotSupportedError
@@ -61,7 +58,7 @@ export function useSignAndExecuteTransactionBlock({
 > {
 	const { currentWallet } = useCurrentWallet();
 	const currentAccount = useCurrentAccount();
-	const client = useIotaClient();
+	const client = useSuiClient();
 
 	return useMutation({
 		mutationKey: walletMutationKeys.signAndExecuteTransactionBlock(mutationKey),
@@ -78,7 +75,7 @@ export function useSignAndExecuteTransactionBlock({
 			}
 
 			if (executeFromWallet) {
-				const walletFeature = currentWallet.features['iota:signAndExecuteTransactionBlock'];
+				const walletFeature = currentWallet.features['sui:signAndExecuteTransactionBlock'];
 				if (!walletFeature) {
 					throw new WalletFeatureNotSupportedError(
 						"This wallet doesn't support the `signAndExecuteTransactionBlock` feature.",
@@ -94,7 +91,7 @@ export function useSignAndExecuteTransactionBlock({
 				});
 			}
 
-			const walletFeature = currentWallet.features['iota:signTransactionBlock'];
+			const walletFeature = currentWallet.features['sui:signTransactionBlock'];
 			if (!walletFeature) {
 				throw new WalletFeatureNotSupportedError(
 					"This wallet doesn't support the `signTransactionBlock` feature.",

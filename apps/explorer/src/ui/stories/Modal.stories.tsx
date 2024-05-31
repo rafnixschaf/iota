@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { IotaClientProvider } from '@mysten/dapp-kit';
+import { SuiClientProvider } from '@mysten/dapp-kit';
 import { type Meta, type StoryObj } from '@storybook/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -43,9 +40,9 @@ export default {
 		(Story) => (
 			<MemoryRouter>
 				<QueryClientProvider client={new QueryClient()}>
-					<IotaClientProvider>
+					<SuiClientProvider>
 						<Story />
-					</IotaClientProvider>
+					</SuiClientProvider>
 				</QueryClientProvider>
 			</MemoryRouter>
 		),
@@ -63,10 +60,10 @@ export const Image: StoryObj<ObjectModalProps> = {
 		return (
 			<div>
 				<ObjectModal
-					title="Iota"
+					title="Sui"
 					open={open}
 					src="https://images.unsplash.com/photo-1562016600-ece13e8ba570?auto=format&fit=crop&w=738&q=80"
-					alt="Iota"
+					alt="Sui"
 					onClose={() => setOpen(false)}
 					subtitle="Still water runs deep."
 				/>
@@ -84,11 +81,11 @@ export const Video: StoryObj<ObjectModalProps> = {
 		return (
 			<div>
 				<ObjectModal
-					title="Iota"
+					title="Sui"
 					open={open}
 					src="https://images.unsplash.com/photo-1562016600-ece13e8ba570?auto=format&fit=crop&w=738&q=80"
 					video="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
-					alt="Iota"
+					alt="Sui"
 					onClose={() => setOpen(false)}
 					subtitle="Still water runs deep."
 				/>

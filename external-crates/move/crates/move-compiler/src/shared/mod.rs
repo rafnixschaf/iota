@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{
     cfgir::visitor::{AbsIntVisitorObj, AbstractInterpreterVisitor},
     command_line as cli,
@@ -15,7 +12,7 @@ use crate::{
     editions::{check_feature_or_error as edition_check_feature, Edition, FeatureGate, Flavor},
     expansion::ast as E,
     naming::ast as N,
-    iota_mode,
+    sui_mode,
     typing::visitor::{TypingVisitor, TypingVisitorObj},
 };
 use clap::*;
@@ -260,8 +257,8 @@ impl CompilationEnv {
     ) -> Self {
         use crate::diagnostics::codes::{TypeSafety, UnusedItem};
         visitors.extend([
-            iota_mode::id_leak::IDLeakVerifier.visitor(),
-            iota_mode::typing::IotaTypeChecks.visitor(),
+            sui_mode::id_leak::IDLeakVerifier.visitor(),
+            sui_mode::typing::SuiTypeChecks.visitor(),
         ]);
         let known_filters_: BTreeMap<FilterName, BTreeSet<WarningFilter>> = BTreeMap::from([
             (

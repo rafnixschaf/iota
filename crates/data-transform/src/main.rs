@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use anyhow::anyhow;
 use data_transform::*;
 use diesel::prelude::*;
@@ -12,22 +9,22 @@ use once_cell::sync::Lazy;
 use std::process::exit;
 use std::str::FromStr;
 use std::sync::Arc;
-use iota_types::object::bounded_visitor::BoundedVisitor;
+use sui_types::object::bounded_visitor::BoundedVisitor;
 
 use move_bytecode_utils::module_cache::SyncModuleCache;
-use iota_types::object::MoveObject;
+use sui_types::object::MoveObject;
 
 use self::models::*;
 use std::env;
-use iota_indexer::db::new_pg_connection_pool;
-use iota_indexer::errors::IndexerError;
-use iota_indexer::store::module_resolver::IndexerStorePackageModuleResolver;
+use sui_indexer::db::new_pg_connection_pool;
+use sui_indexer::errors::IndexerError;
+use sui_indexer::store::module_resolver::IndexerStorePackageModuleResolver;
 
 use move_core_types::language_storage::ModuleId;
 use move_core_types::resolver::ModuleResolver;
 use std::collections::{HashMap, HashSet};
-use iota_json_rpc_types::IotaMoveStruct;
-use iota_types::parse_iota_struct_tag;
+use sui_json_rpc_types::SuiMoveStruct;
+use sui_types::parse_sui_struct_tag;
 
 use tracing::debug;
 extern crate base64;
@@ -283,7 +280,7 @@ fn main() {
                 }
 
                 // JSON parsing starts here
-                let type_ = parse_iota_struct_tag(&event.event_type).expect("cannot load StructTag");
+                let type_ = parse_sui_struct_tag(&event.event_type).expect("cannot load StructTag");
 
                 let layout = MoveObject::get_layout_from_struct_tag(type_.clone(), &module_cache);
 
@@ -294,7 +291,7 @@ fn main() {
 
                         match move_object {
                             Ok(m) => {
-                                let parsed_json = IotaMoveStruct::from(m).to_json_value();
+                                let parsed_json = SuiMoveStruct::from(m).to_json_value();
                                 let final_result =
                                     serde_json::to_string_pretty(&parsed_json).unwrap();
                                 println!("event json = {}", final_result);

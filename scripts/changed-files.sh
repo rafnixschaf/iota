@@ -2,9 +2,6 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Modifications Copyright (c) 2024 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
 set -e
 
 # Check for modified or untracked files after CI has run

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type {
 	IdentifierRecord,
 	StandardConnectFeature,
@@ -12,41 +9,41 @@ import type {
 	WalletWithFeatures,
 } from '@wallet-standard/core';
 
-import type { IotaSignAndExecuteTransactionBlockFeature } from './iotaSignAndExecuteTransactionBlock.js';
-import type { IotaSignMessageFeature } from './iotaSignMessage.js';
-import type { IotaSignPersonalMessageFeature } from './iotaSignPersonalMessage.js';
-import type { IotaSignTransactionBlockFeature } from './iotaSignTransactionBlock.js';
+import type { SuiSignAndExecuteTransactionBlockFeature } from './suiSignAndExecuteTransactionBlock.js';
+import type { SuiSignMessageFeature } from './suiSignMessage.js';
+import type { SuiSignPersonalMessageFeature } from './suiSignPersonalMessage.js';
+import type { SuiSignTransactionBlockFeature } from './suiSignTransactionBlock.js';
 
 /**
- * Wallet Standard features that are unique to Iota, and that all Iota wallets are expected to implement.
+ * Wallet Standard features that are unique to Sui, and that all Sui wallets are expected to implement.
  */
-export type IotaFeatures = IotaSignTransactionBlockFeature &
-	IotaSignAndExecuteTransactionBlockFeature &
-	IotaSignPersonalMessageFeature &
+export type SuiFeatures = SuiSignTransactionBlockFeature &
+	SuiSignAndExecuteTransactionBlockFeature &
+	SuiSignPersonalMessageFeature &
 	// This deprecated feature should be removed once wallets update to the new method:
-	Partial<IotaSignMessageFeature>;
+	Partial<SuiSignMessageFeature>;
 
-export type WalletWithIotaFeatures = WalletWithFeatures<
+export type WalletWithSuiFeatures = WalletWithFeatures<
 	StandardConnectFeature &
 		StandardEventsFeature &
-		IotaFeatures &
+		SuiFeatures &
 		// Disconnect is an optional feature:
 		Partial<StandardDisconnectFeature>
 >;
 
 /**
- * Represents a wallet with the absolute minimum feature set required to function in the Iota ecosystem.
+ * Represents a wallet with the absolute minimum feature set required to function in the Sui ecosystem.
  */
 export type WalletWithRequiredFeatures = WalletWithFeatures<
 	MinimallyRequiredFeatures &
-		Partial<IotaFeatures> &
+		Partial<SuiFeatures> &
 		Partial<StandardDisconnectFeature> &
 		IdentifierRecord<unknown>
 >;
 
 export type MinimallyRequiredFeatures = StandardConnectFeature & StandardEventsFeature;
 
-export * from './iotaSignMessage.js';
-export * from './iotaSignTransactionBlock.js';
-export * from './iotaSignAndExecuteTransactionBlock.js';
-export * from './iotaSignPersonalMessage.js';
+export * from './suiSignMessage.js';
+export * from './suiSignTransactionBlock.js';
+export * from './suiSignAndExecuteTransactionBlock.js';
+export * from './suiSignPersonalMessage.js';

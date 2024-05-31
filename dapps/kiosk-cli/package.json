@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@mysten/kiosk": "workspace:*",
-    "@mysten/iota.js": "workspace:*",
+    "@mysten/sui.js": "workspace:*",
     "commander": "^11.0.0"
   }
 }

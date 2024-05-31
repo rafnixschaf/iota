@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { TransactionBlock } from '../../src/transactions';
-import { normalizeIotaAddress, IOTA_TYPE_ARG } from '../../src/utils';
+import { normalizeSuiAddress, SUI_TYPE_ARG } from '../../src/utils';
 import { setup, TestToolbox } from './utils/setup';
 
 describe('Object Reading API', () => {
@@ -36,7 +33,7 @@ describe('Object Reading API', () => {
 			}),
 		);
 		objectInfos.forEach((objectInfo) => {
-			expect(objectInfo.data?.type).to.equal('0x2::coin::Coin<0x2::iota::IOTA>');
+			expect(objectInfo.data?.type).to.equal('0x2::coin::Coin<0x2::sui::SUI>');
 		});
 	});
 
@@ -56,13 +53,13 @@ describe('Object Reading API', () => {
 		expect(gasObjects.data.length).to.equal(objectInfos.length);
 
 		objectInfos.forEach((objectInfo) => {
-			expect(objectInfo.data?.type).to.equal('0x2::coin::Coin<0x2::iota::IOTA>');
+			expect(objectInfo.data?.type).to.equal('0x2::coin::Coin<0x2::sui::SUI>');
 		});
 	});
 
 	it('handles trying to get non-existent old objects', async () => {
 		const res = await toolbox.client.tryGetPastObject({
-			id: normalizeIotaAddress('0x9999'),
+			id: normalizeSuiAddress('0x9999'),
 			version: 0,
 		});
 
@@ -72,7 +69,7 @@ describe('Object Reading API', () => {
 	it('can read live versions', async () => {
 		const { data } = await toolbox.client.getCoins({
 			owner: toolbox.address(),
-			coinType: IOTA_TYPE_ARG,
+			coinType: SUI_TYPE_ARG,
 		});
 
 		const res = await toolbox.client.tryGetPastObject({
@@ -86,7 +83,7 @@ describe('Object Reading API', () => {
 	it('handles trying to get a newer version than the latest version', async () => {
 		const { data } = await toolbox.client.getCoins({
 			owner: toolbox.address(),
-			coinType: IOTA_TYPE_ARG,
+			coinType: SUI_TYPE_ARG,
 		});
 
 		const res = await toolbox.client.tryGetPastObject({
@@ -100,7 +97,7 @@ describe('Object Reading API', () => {
 	it('handles fetching versions that do not exist', async () => {
 		const { data } = await toolbox.client.getCoins({
 			owner: toolbox.address(),
-			coinType: IOTA_TYPE_ARG,
+			coinType: SUI_TYPE_ARG,
 		});
 
 		const res = await toolbox.client.tryGetPastObject({
@@ -115,12 +112,12 @@ describe('Object Reading API', () => {
 	it('can find old versions of objects', async () => {
 		const { data } = await toolbox.client.getCoins({
 			owner: toolbox.address(),
-			coinType: IOTA_TYPE_ARG,
+			coinType: SUI_TYPE_ARG,
 		});
 
 		const tx = new TransactionBlock();
 		// Transfer the entire gas object:
-		tx.transferObjects([tx.gas], tx.pure(normalizeIotaAddress('0x2')));
+		tx.transferObjects([tx.gas], tx.pure(normalizeSuiAddress('0x2')));
 
 		await toolbox.client.signAndExecuteTransactionBlock({
 			signer: toolbox.keypair,

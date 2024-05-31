@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! This file defines types, data structures and corresponding functions to
 //! mark the operation (arithmetic or bitwise) that a variable or a field involves,
 //! which will be used later when the correct number type (int or bv<N>) in the boogie program

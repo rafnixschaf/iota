@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import Alert from '_components/alert';
 import { ErrorBoundary } from '_components/error-boundary';
 import Loading from '_components/loading';
@@ -108,7 +105,7 @@ function HiddenNftsPage() {
 									</Link>
 									<div className="h-8 w-8">
 										<Button
-											variant="secondaryIota"
+											variant="secondarySui"
 											size="icon"
 											onClick={() => {
 												showAsset(objectId);

@@ -3,10 +3,10 @@ name = "Move2024"
 version = "0.0.1"
 edition = "2024.beta"
 
-#include Iota as dependency to test that importing it does not crash the symbolicator
+#include Sui as dependency to test that importing it does not crash the symbolicator
 [dependencies]
-Iota = { local = "../../../../../../crates/iota-framework/packages/iota-framework/" }
+Sui = { local = "../../../../../../crates/sui-framework/packages/sui-framework/" }
 
 [addresses]
 Move2024 = "0xCAFE"
-Iota = "0x2"
+Sui = "0x2"

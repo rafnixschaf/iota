@@ -1,21 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
 	getLedgerConnectionErrorMessage,
-	getIotaApplicationErrorMessage,
+	getSuiApplicationErrorMessage,
 } from '_src/ui/app/helpers/errorMessages';
 import { Link } from '_src/ui/app/shared/Link';
 import { Text } from '_src/ui/app/shared/text';
 import { Check12, X12 } from '@mysten/icons';
-import { Ed25519PublicKey } from '@mysten/iota.js/keypairs/ed25519';
+import { Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { useIotaLedgerClient } from '../../ledger/IotaLedgerClientProvider';
+import { useSuiLedgerClient } from '../../ledger/SuiLedgerClientProvider';
 import LoadingIndicator from '../../loading/LoadingIndicator';
 
 export type VerifyLedgerConnectionLinkProps = {
@@ -36,7 +33,7 @@ export function VerifyLedgerConnectionStatus({
 	accountAddress,
 	derivationPath,
 }: VerifyLedgerConnectionLinkProps) {
-	const { connectToLedger } = useIotaLedgerClient();
+	const { connectToLedger } = useSuiLedgerClient();
 	const [isPending, setLoading] = useState(false);
 	const [verificationStatus, setVerificationStatus] = useState(VerificationStatus.UNKNOWN);
 
@@ -60,20 +57,20 @@ export function VerifyLedgerConnectionStatus({
 						}, loadingStateDelay);
 
 						try {
-							const iotaLedgerClient = await connectToLedger();
-							const publicKeyResult = await iotaLedgerClient.getPublicKey(derivationPath, true);
+							const suiLedgerClient = await connectToLedger();
+							const publicKeyResult = await suiLedgerClient.getPublicKey(derivationPath, true);
 							const publicKey = new Ed25519PublicKey(publicKeyResult.publicKey);
-							const iotaAddress = publicKey.toIotaAddress();
+							const suiAddress = publicKey.toSuiAddress();
 
 							setVerificationStatus(
-								accountAddress === iotaAddress
+								accountAddress === suiAddress
 									? VerificationStatus.VERIFIED
 									: VerificationStatus.NOT_VERIFIED,
 							);
 						} catch (error) {
 							const errorMessage =
 								getLedgerConnectionErrorMessage(error) ||
-								getIotaApplicationErrorMessage(error) ||
+								getSuiApplicationErrorMessage(error) ||
 								'Something went wrong';
 							toast.error(errorMessage);
 

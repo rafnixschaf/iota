@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type { ZkSendWallet } from '@mysten/zksend';
 import { registerZkSendWallet } from '@mysten/zksend';
 import { useEffect, useLayoutEffect, useState } from 'react';

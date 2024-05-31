@@ -1,10 +1,10 @@
 # BCS
 
-The `@mysten/iota.js/bcs` package extends `@mysten/bcs` with Iota specific scheme definitions.
+The `@mysten/sui.js/bcs` package extends `@mysten/bcs` with Sui specific scheme definitions.
 
 To learn more about using BCS see the [BCS documentation](/bcs).
 
-the `bcs` export of `@mysten/iota.js/bcs` contains all the same exports as `bcs` from `@mysten/bcs`
+the `bcs` export of `@mysten/sui.js/bcs` contains all the same exports as `bcs` from `@mysten/bcs`
 plus the following pre-defined schemes:
 
 - `U8`
@@ -32,7 +32,7 @@ plus the following pre-defined schemes:
 - `SenderSignedData`
 - `SharedObjectRef`
 - `StructTag`
-- `IotaObjectRef`
+- `SuiObjectRef`
 - `Transaction`
 - `TransactionData`
 - `TransactionDataV1`
@@ -44,7 +44,7 @@ All the upper-cased values are `BcsType` instances, and can be used directly to 
 data.
 
 ```typescript
-import { bcs } from '@mysten/iota.js/bcs';
+import { bcs } from '@mysten/sui.js/bcs';
 
 bcs.U8.serialize(1);
 bcs.Address.serialize('0x1');

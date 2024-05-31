@@ -1,17 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
 	ConnectButton,
 	useCurrentAccount,
 	useSignTransactionBlock,
-	useIotaClient,
+	useSuiClient,
 } from '@mysten/dapp-kit';
-import { IotaTransactionBlockResponse } from '@mysten/iota.js/client';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { ComponentProps, ReactNode, useMemo, useState } from 'react';
 
 import { sponsorTransaction } from './utils/sponsorTransaction';
@@ -42,7 +39,7 @@ const CodePanel = ({
 );
 
 export function App() {
-	const client = useIotaClient();
+	const client = useSuiClient();
 	const currentAccount = useCurrentAccount();
 	const { mutateAsync: signTransactionBlock } = useSignTransactionBlock();
 	const [loading, setLoading] = useState(false);
@@ -52,7 +49,7 @@ export function App() {
 	const [signedTx, setSignedTx] = useState<Awaited<ReturnType<typeof signTransactionBlock>> | null>(
 		null,
 	);
-	const [executedTx, setExecutedTx] = useState<IotaTransactionBlockResponse | null>(null);
+	const [executedTx, setExecutedTx] = useState<SuiTransactionBlockResponse | null>(null);
 
 	const tx = useMemo(() => {
 		if (!currentAccount) return null;

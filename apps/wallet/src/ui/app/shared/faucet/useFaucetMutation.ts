@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { getFaucetRequestStatus, requestIotaFromFaucetV1 } from '@mysten/iota.js/faucet';
+import { getFaucetRequestStatus, requestSuiFromFaucetV1 } from '@mysten/sui.js/faucet';
 import { useIsMutating, useMutation, type UseMutationOptions } from '@tanstack/react-query';
 
 import { useActiveAccount } from '../../hooks/useActiveAccount';
@@ -32,7 +29,7 @@ export function useFaucetMutation(options?: UseFaucetMutationOptions) {
 				throw new Error('Failed, faucet host not found.');
 			}
 
-			const { error, task: taskId } = await requestIotaFromFaucetV1({
+			const { error, task: taskId } = await requestSuiFromFaucetV1({
 				recipient: addressToTopUp,
 				host: options.host,
 			});

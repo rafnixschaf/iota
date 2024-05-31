@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import {
 	DryRunTransactionBlockResponse,
 	GasCostSummary,
-	IotaGasData,
-	IotaTransactionBlockResponse,
+	SuiGasData,
+	SuiTransactionBlockResponse,
 	TransactionEffects,
-} from '@mysten/iota.js/client';
+} from '@mysten/sui.js/client';
 
 type Optional<T> = {
 	[K in keyof T]?: T[K];
@@ -17,7 +14,7 @@ type Optional<T> = {
 
 export type GasSummaryType =
 	| (GasCostSummary &
-			Optional<IotaGasData> & {
+			Optional<SuiGasData> & {
 				totalGas?: string;
 				owner?: string;
 				isSponsored: boolean;
@@ -26,7 +23,7 @@ export type GasSummaryType =
 	| null;
 
 export function getGasSummary(
-	transaction: IotaTransactionBlockResponse | DryRunTransactionBlockResponse,
+	transaction: SuiTransactionBlockResponse | DryRunTransactionBlockResponse,
 ): GasSummaryType {
 	const { effects } = transaction;
 	if (!effects) return null;

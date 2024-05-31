@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! Analysis which computes information needed in backends for monomorphization. This
 //! computes the distinct type instantiations in the model for structs and inlined functions.
 

@@ -1,18 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 /// This example demonstrates a basic use of a shared object.
 /// Rules:
 /// - anyone can create and share a counter
 /// - everyone can increment a counter by 1
 /// - the owner of the counter can reset it to any value
 module counter::counter {
-    use iota::transfer;
-    use iota::object::{Self, UID};
-    use iota::tx_context::{Self, TxContext};
+    use sui::transfer;
+    use sui::object::{Self, UID};
+    use sui::tx_context::{Self, TxContext};
 
     /// A shared counter.
     struct Counter has key {

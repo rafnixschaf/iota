@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! This file contains an abstraction of concrete *access paths*, which are canonical names for a particular cell in
 //! memory. Some examples of concrete paths are:
 //! * `0x7/M::T/f` (i.e., the field `f` of the `M::T` resource stored at address `0x7`

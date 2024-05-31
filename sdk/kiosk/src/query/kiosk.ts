@@ -1,17 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type {
 	PaginationArguments,
-	IotaClient,
-	IotaObjectData,
-	IotaObjectDataFilter,
-	IotaObjectResponse,
-} from '@mysten/iota.js/client';
-import { isValidIotaAddress } from '@mysten/iota.js/utils';
+	SuiClient,
+	SuiObjectData,
+	SuiObjectDataFilter,
+	SuiObjectResponse,
+} from '@mysten/sui.js/client';
+import { isValidSuiAddress } from '@mysten/sui.js/utils';
 
 import type {
 	FetchKioskOptions,
@@ -32,7 +29,7 @@ import {
 } from '../utils.js';
 
 export async function fetchKiosk(
-	client: IotaClient,
+	client: SuiClient,
 	kioskId: string,
 	pagination: PaginationArguments<string>,
 	options: FetchKioskOptions,
@@ -90,14 +87,14 @@ export async function fetchKiosk(
  * Extra options allow pagination.
  */
 export async function getOwnedKiosks(
-	client: IotaClient,
+	client: SuiClient,
 	address: string,
 	options?: {
 		pagination?: PaginationArguments<string>;
 		personalKioskType: string;
 	},
 ): Promise<OwnedKiosks> {
-	if (!isValidIotaAddress(address))
+	if (!isValidSuiAddress(address))
 		return {
 			nextCursor: null,
 			hasNextPage: false,
@@ -105,7 +102,7 @@ export async function getOwnedKiosks(
 			kioskIds: [],
 		};
 
-	const filter: IotaObjectDataFilter = {
+	const filter: SuiObjectDataFilter = {
 		MatchAny: [
 			{
 				StructType: KIOSK_OWNER_CAP,
@@ -131,7 +128,7 @@ export async function getOwnedKiosks(
 	});
 
 	// get kioskIds from the OwnerCaps.
-	const kioskIdList = data?.map((x: IotaObjectResponse) => {
+	const kioskIdList = data?.map((x: SuiObjectResponse) => {
 		const fields = x.data?.content?.dataType === 'moveObject' ? x.data.content.fields : null;
 		// @ts-ignore-next-line TODO: should i remove ts ignore here?
 		return (fields?.cap ? fields?.cap?.fields?.for : fields?.for) as string;
@@ -140,7 +137,7 @@ export async function getOwnedKiosks(
 
 	// clean up data that might have an error in them.
 	// only return valid objects.
-	const filteredData = data.filter((x) => 'data' in x).map((x) => x.data) as IotaObjectData[];
+	const filteredData = data.filter((x) => 'data' in x).map((x) => x.data) as SuiObjectData[];
 
 	return {
 		nextCursor,
@@ -158,7 +155,7 @@ export async function getOwnedKiosks(
 
 // Get a kiosk extension data for a given kioskId and extensionType.
 export async function fetchKioskExtension(
-	client: IotaClient,
+	client: SuiClient,
 	kioskId: string,
 	extensionType: string,
 ): Promise<KioskExtension | null> {

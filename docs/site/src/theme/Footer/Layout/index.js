@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 import React, { useEffect } from "react";
 import Link from "@docusaurus/Link";
 import styles from "./index.module.css";
@@ -25,7 +22,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
         <div className={styles.footerLogo}>{logo}</div>
         <div className={styles.footerContent}>
           <div className={styles.footerLinks}>
-            <Link to="https://discord.gg/Iota">
+            <Link to="https://discord.gg/Sui">
               <svg
                 width="32"
                 height="32"

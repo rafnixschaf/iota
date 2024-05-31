@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::metrics::new_registry;
 use crate::{try_join_all, FuturesUnordered, NodeError};
 use anemo::PeerId;
@@ -18,7 +15,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use storage::NodeStorage;
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use tracing::{info, instrument};

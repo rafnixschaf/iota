@@ -1,29 +1,26 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { EventId, IotaClient, IotaEvent, IotaEventFilter } from '@mysten/iota.js/client';
+import { EventId, SuiClient, SuiEvent, SuiEventFilter } from '@mysten/sui.js/client';
 
 import { CONFIG } from '../config';
 import { prisma } from '../db';
-import { getClient } from '../iota-utils';
+import { getClient } from '../sui-utils';
 import { handleEscrowObjects } from './escrow-handler';
 import { handleLockObjects } from './locked-handler';
 
-type IotaEventsCursor = EventId | null | undefined;
+type SuiEventsCursor = EventId | null | undefined;
 
 type EventExecutionResult = {
-	cursor: IotaEventsCursor;
+	cursor: SuiEventsCursor;
 	hasNextPage: boolean;
 };
 
 type EventTracker = {
 	// The module that defines the type, with format `package::module`
 	type: string;
-	filter: IotaEventFilter;
-	callback: (events: IotaEvent[], type: string) => any;
+	filter: SuiEventFilter;
+	callback: (events: SuiEvent[], type: string) => any;
 };
 
 const EVENTS_TO_TRACK: EventTracker[] = [
@@ -50,9 +47,9 @@ const EVENTS_TO_TRACK: EventTracker[] = [
 ];
 
 const executeEventJob = async (
-	client: IotaClient,
+	client: SuiClient,
 	tracker: EventTracker,
-	cursor: IotaEventsCursor,
+	cursor: SuiEventsCursor,
 ): Promise<EventExecutionResult> => {
 	try {
 		// get the events from the chain.
@@ -86,7 +83,7 @@ const executeEventJob = async (
 	};
 };
 
-const runEventJob = async (client: IotaClient, tracker: EventTracker, cursor: IotaEventsCursor) => {
+const runEventJob = async (client: SuiClient, tracker: EventTracker, cursor: SuiEventsCursor) => {
 	const result = await executeEventJob(client, tracker, cursor);
 
 	// Trigger a timeout. Depending on the result, we either wait 0ms or the polling interval.

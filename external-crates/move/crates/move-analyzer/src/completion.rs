@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{context::Context, symbols::Symbols};
 use lsp_server::Request;
 use lsp_types::{CompletionItem, CompletionItemKind, CompletionParams, Position};

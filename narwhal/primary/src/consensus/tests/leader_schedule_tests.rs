@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::{
     collections::{BTreeSet, HashMap},
     num::NonZeroUsize,
@@ -12,7 +9,7 @@ use std::{
 
 use config::AuthorityIdentifier;
 use storage::ConsensusStore;
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use test_utils::{latest_protocol_version, mock_certificate, CommitteeFixture};
 use types::{Certificate, CommittedSubDag, ReputationScores, Round};
 

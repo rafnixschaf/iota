@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { CONSTANTS } from "@/constants";
-import { useIotaClientQuery } from "@mysten/dapp-kit";
+import { useSuiClientQuery } from "@mysten/dapp-kit";
 import { Locked } from "./partials/Locked";
-import { IotaObjectData } from "@mysten/iota.js/client";
+import { SuiObjectData } from "@mysten/sui.js/client";
 
 /**
  * Acts as a wrapper between the `Locked` object fetched from API
@@ -23,7 +20,7 @@ export function LockedObject({
   itemId,
   hideControls,
 }: {
-  object: IotaObjectData;
+  object: SuiObjectData;
   itemId?: string;
   hideControls?: boolean;
 }) {
@@ -37,7 +34,7 @@ export function LockedObject({
     return object.owner.AddressOwner;
   };
 
-  const getKeyId = (item: IotaObjectData) => {
+  const getKeyId = (item: SuiObjectData) => {
     if (
       !(item.content?.dataType === "moveObject") ||
       !("key" in item.content.fields)
@@ -47,7 +44,7 @@ export function LockedObject({
   };
 
   // Get the itemID for the locked object (We've saved it as a DOF on the SC).
-  const iotaObjectId = useIotaClientQuery(
+  const suiObjectId = useSuiClientQuery(
     "getDynamicFieldObject",
     {
       parentId: object.objectId,
@@ -67,7 +64,7 @@ export function LockedObject({
   return (
     <Locked
       locked={{
-        itemId: itemId || iotaObjectId.data?.objectId!,
+        itemId: itemId || suiObjectId.data?.objectId!,
         objectId: object.objectId,
         keyId: getKeyId(object),
         creator: owner(),

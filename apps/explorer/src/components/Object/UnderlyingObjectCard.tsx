@@ -1,16 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { LoadingIndicator } from '@mysten/ui';
 
 import { FieldItem } from './FieldItem';
 import { Banner } from '~/ui/Banner';
 
-import type { DynamicFieldName } from '@mysten/iota.js/client';
+import type { DynamicFieldName } from '@mysten/sui.js/client';
 
 interface UnderlyingObjectCardProps {
 	parentId: string;
@@ -23,7 +20,7 @@ export function UnderlyingObjectCard({
 	name,
 	dynamicFieldType,
 }: UnderlyingObjectCardProps) {
-	const { data, isPending, isError, isFetched } = useIotaClientQuery('getDynamicFieldObject', {
+	const { data, isPending, isError, isFetched } = useSuiClientQuery('getDynamicFieldObject', {
 		parentId,
 		name,
 	});
@@ -39,7 +36,7 @@ export function UnderlyingObjectCard({
 		data: normalizedStruct,
 		isFetched: normalizedStructFetched,
 		isPending: loadingNormalizedStruct,
-	} = useIotaClientQuery('getNormalizedMoveStruct', {
+	} = useSuiClientQuery('getNormalizedMoveStruct', {
 		package: packageId,
 		module: moduleName,
 		struct: functionName,

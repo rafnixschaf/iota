@@ -4,14 +4,11 @@
 // Copyright (c) The Diem Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::sync::Arc;
 
 use proptest::prelude::*;
-use iota_types::{
-    base_types::{ObjectID, IotaAddress},
+use sui_types::{
+    base_types::{ObjectID, SuiAddress},
     crypto::{get_key_pair, AccountKeyPair},
     object::Object,
 };
@@ -24,7 +21,7 @@ pub const NUM_GAS_OBJECTS: usize = 1;
 
 #[derive(Debug)]
 pub struct Account {
-    pub address: IotaAddress,
+    pub address: SuiAddress,
     pub key: AccountKeyPair,
 }
 

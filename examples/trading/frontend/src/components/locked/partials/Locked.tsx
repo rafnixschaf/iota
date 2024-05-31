@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useCurrentAccount, useIotaClientQuery } from "@mysten/dapp-kit";
-import { IotaObjectDisplay } from "@/components/IotaObjectDisplay";
+import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
+import { SuiObjectDisplay } from "@/components/SuiObjectDisplay";
 import { Button } from "@radix-ui/themes";
 import {
   ArrowDownIcon,
@@ -36,7 +33,7 @@ export function Locked({
   const account = useCurrentAccount();
   const { mutate: unlockMutation, isPending } = useUnlockMutation();
 
-  const iotaObject = useIotaClientQuery(
+  const suiObject = useSuiClientQuery(
     "getObject",
     {
       id: locked.itemId,
@@ -76,8 +73,8 @@ export function Locked({
   };
 
   return (
-    <IotaObjectDisplay
-      object={iotaObject.data!}
+    <SuiObjectDisplay
+      object={suiObject.data!}
       label={getLabel()}
       labelClasses={getLabelClasses()}
     >
@@ -95,7 +92,7 @@ export function Locked({
               unlockMutation({
                 lockedId: locked.objectId,
                 keyId: locked.keyId,
-                iotaObject: iotaObject.data!,
+                suiObject: suiObject.data!,
               });
             }}
           >
@@ -118,6 +115,6 @@ export function Locked({
           </div>
         )}
       </div>
-    </IotaObjectDisplay>
+    </SuiObjectDisplay>
   );
 }

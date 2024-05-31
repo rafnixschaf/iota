@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClientContext } from '@mysten/dapp-kit';
-import { DryRunTransactionBlockResponse, GasCostSummary } from '@mysten/iota.js/src/client';
+import { useSuiClientContext } from '@mysten/dapp-kit';
+import { DryRunTransactionBlockResponse, GasCostSummary } from '@mysten/sui.js/src/client';
 import { ReactNode } from 'react';
 
 import { ObjectLink } from '../ObjectLink';
@@ -25,7 +22,7 @@ const calculateGas = (gas: GasCostSummary): string => {
 };
 
 export function Overview({ output }: { output: DryRunTransactionBlockResponse }) {
-	const { network } = useIotaClientContext();
+	const { network } = useSuiClientContext();
 	const metadata: Record<string, ReactNode> = {
 		network,
 		status:
@@ -45,7 +42,7 @@ export function Overview({ output }: { output: DryRunTransactionBlockResponse })
 			</span>
 		),
 		epoch: output.effects.executedEpoch,
-		gas: calculateGas(output.effects.gasUsed) + ' IOTA',
+		gas: calculateGas(output.effects.gasUsed) + ' SUI',
 	};
 
 	return (

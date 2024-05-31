@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::{path::PathBuf, time::Duration};
 
 use serde::{Deserialize, Serialize};
@@ -11,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// Operational configurations of a consensus authority.
 ///
 /// All fields should tolerate inconsistencies among authorities, without affecting safety of the
-/// protocol. Otherwise, they need to be part of Iota protocol config or epoch state on-chain.
+/// protocol. Otherwise, they need to be part of Sui protocol config or epoch state on-chain.
 ///
 /// NOTE: fields with default values are specified in the serde default functions. Most operators
 /// should not need to specify any field, except db_path.

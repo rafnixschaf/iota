@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { Text } from '_app/shared/text';
 import { IconTooltip } from '_app/shared/tooltip';
 import LoadingIndicator from '_components/loading/LoadingIndicator';
 import { roundFloat, useGetValidatorsApy } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { useMemo } from 'react';
 
 const APY_DECIMALS = 3;
@@ -18,7 +15,7 @@ type DelegatedAPYProps = {
 };
 
 export function DelegatedAPY({ stakedValidators }: DelegatedAPYProps) {
-	const { data, isPending } = useIotaClientQuery('getLatestIotaSystemState');
+	const { data, isPending } = useSuiClientQuery('getLatestSuiSystemState');
 	const { data: rollingAverageApys } = useGetValidatorsApy();
 
 	const averageNetworkAPY = useMemo(() => {
@@ -57,7 +54,7 @@ export function DelegatedAPY({ stakedValidators }: DelegatedAPYProps) {
 					</Text>
 					<div className="text-steel items-baseline text-body flex">
 						<IconTooltip
-							tip="The average APY of all validators you are currently staking your IOTA on."
+							tip="The average APY of all validators you are currently staking your SUI on."
 							placement="top"
 						/>
 					</div>

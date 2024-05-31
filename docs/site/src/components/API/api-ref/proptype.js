@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import React from "react";
 
 import { getRef } from "..";
@@ -39,7 +36,7 @@ const PropType = (props) => {
     if (proptype[1].allOf.length == 1) {
       typeof proptype[1].allOf[0]["$ref"] !== "undefined"
         ? (allof = getRef(proptype[1].allOf[0]["$ref"]))
-        : (allof = "IotaERR");
+        : (allof = "SuiERR");
     }
   }
 
@@ -57,7 +54,7 @@ const PropType = (props) => {
           } else if (typeof i.type !== "undefined") {
             a.push(i.type);
           } else {
-            a.push("IotaERR");
+            a.push("SuiERR");
           }
         });
         array = a.join(", ");

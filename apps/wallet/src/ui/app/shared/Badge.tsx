@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const badgeStyle = cva(
@@ -14,7 +11,7 @@ const badgeStyle = cva(
 		variants: {
 			variant: {
 				warning: 'bg-issue-light text-issue-dark',
-				success: 'bg-iota/30 text-hero-dark',
+				success: 'bg-sui/30 text-hero-dark',
 			},
 		},
 	},

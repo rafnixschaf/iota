@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use named_lock::{NamedLock, NamedLockGuard};
 use once_cell::sync::Lazy;
 use std::sync::{Mutex, MutexGuard};

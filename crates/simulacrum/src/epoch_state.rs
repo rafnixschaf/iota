@@ -1,25 +1,22 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use std::{collections::HashSet, sync::Arc};
 
 use anyhow::Result;
-use iota_config::transaction_deny_config::TransactionDenyConfig;
-use iota_execution::Executor;
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::{
+use sui_config::transaction_deny_config::TransactionDenyConfig;
+use sui_execution::Executor;
+use sui_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+use sui_types::{
     committee::{Committee, EpochId},
     effects::TransactionEffects,
-    gas::IotaGasStatus,
+    gas::SuiGasStatus,
     inner_temporary_store::InnerTemporaryStore,
     metrics::BytecodeVerifierMetrics,
     metrics::LimitsMetrics,
-    iota_system_state::{
-        epoch_start_iota_system_state::{EpochStartSystemState, EpochStartSystemStateTrait},
-        IotaSystemState, IotaSystemStateTrait,
+    sui_system_state::{
+        epoch_start_sui_system_state::{EpochStartSystemState, EpochStartSystemStateTrait},
+        SuiSystemState, SuiSystemStateTrait,
     },
     transaction::{TransactionDataAPI, VerifiedTransaction},
 };
@@ -39,15 +36,15 @@ pub struct EpochState {
 }
 
 impl EpochState {
-    pub fn new(system_state: IotaSystemState) -> Self {
+    pub fn new(system_state: SuiSystemState) -> Self {
         let epoch_start_state = system_state.into_epoch_start_state();
-        let committee = epoch_start_state.get_iota_committee();
+        let committee = epoch_start_state.get_sui_committee();
         let protocol_config =
             ProtocolConfig::get_for_version(epoch_start_state.protocol_version(), Chain::Unknown);
         let registry = prometheus::Registry::new();
         let limits_metrics = Arc::new(LimitsMetrics::new(&registry));
         let bytecode_verifier_metrics = Arc::new(BytecodeVerifierMetrics::new(&registry));
-        let executor = iota_execution::executor(&protocol_config, true, None).unwrap();
+        let executor = sui_execution::executor(&protocol_config, true, None).unwrap();
 
         Self {
             epoch_start_state,
@@ -97,16 +94,16 @@ impl EpochState {
         transaction: &VerifiedTransaction,
     ) -> Result<(
         InnerTemporaryStore,
-        IotaGasStatus,
+        SuiGasStatus,
         TransactionEffects,
-        Result<(), iota_types::error::ExecutionError>,
+        Result<(), sui_types::error::ExecutionError>,
     )> {
         let tx_digest = *transaction.digest();
         let tx_data = &transaction.data().intent_message().value;
         let input_object_kinds = tx_data.input_objects()?;
         let receiving_object_refs = tx_data.receiving_objects();
 
-        iota_transaction_checks::deny::check_transaction_for_signing(
+        sui_transaction_checks::deny::check_transaction_for_signing(
             tx_data,
             transaction.tx_signatures(),
             &input_object_kinds,
@@ -123,7 +120,7 @@ impl EpochState {
 
         // Run the transaction input checks that would run when submitting the txn to a validator
         // for signing
-        let (gas_status, checked_input_objects) = iota_transaction_checks::check_transaction_input(
+        let (gas_status, checked_input_objects) = sui_transaction_checks::check_transaction_input(
             &self.protocol_config,
             self.epoch_start_state.reference_gas_price(),
             transaction.data().transaction_data(),

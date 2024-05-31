@@ -1,20 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { getFullnodeUrl, IotaClient } from '@mysten/iota.js/client';
-import type { CoinStruct } from '@mysten/iota.js/client';
-import { decodeIotaPrivateKey } from '@mysten/iota.js/cryptography';
-import type { Keypair, Signer } from '@mysten/iota.js/cryptography';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
+import { getFullnodeUrl, SuiClient } from '@mysten/sui.js/client';
+import type { CoinStruct } from '@mysten/sui.js/client';
+import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
+import type { Keypair, Signer } from '@mysten/sui.js/cryptography';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
 import type {
 	TransactionObjectArgument,
 	TransactionObjectInput,
-} from '@mysten/iota.js/transactions';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
-import { normalizeStructTag, normalizeIotaAddress, IOTA_TYPE_ARG, toB64 } from '@mysten/iota.js/utils';
+} from '@mysten/sui.js/transactions';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { normalizeStructTag, normalizeSuiAddress, SUI_TYPE_ARG, toB64 } from '@mysten/sui.js/utils';
 
 import type { ZkBagContractOptions } from './zk-bag.js';
 import { MAINNET_CONTRACT_IDS, ZkBag } from './zk-bag.js';
@@ -29,7 +26,7 @@ export interface ZkSendLinkBuilderOptions {
 	path?: string;
 	keypair?: Keypair;
 	network?: 'mainnet' | 'testnet';
-	client?: IotaClient;
+	client?: SuiClient;
 	sender: string;
 	redirect?: ZkSendLinkRedirect;
 	contract?: ZkBagContractOptions | null;
@@ -41,7 +38,7 @@ const DEFAULT_ZK_SEND_LINK_OPTIONS = {
 	network: 'mainnet' as const,
 };
 
-const IOTA_COIN_TYPE = normalizeStructTag(IOTA_TYPE_ARG);
+const SUI_COIN_TYPE = normalizeStructTag(SUI_TYPE_ARG);
 
 export interface CreateZkSendLinkOptions {
 	transactionBlock?: TransactionBlock;
@@ -59,7 +56,7 @@ export class ZkSendLinkBuilder {
 	#host: string;
 	#path: string;
 	keypair: Keypair;
-	#client: IotaClient;
+	#client: SuiClient;
 	#redirect?: ZkSendLinkRedirect;
 	#coinsByType = new Map<string, CoinStruct[]>();
 	#contract?: ZkBag<ZkBagContractOptions>;
@@ -69,7 +66,7 @@ export class ZkSendLinkBuilder {
 		path = DEFAULT_ZK_SEND_LINK_OPTIONS.path,
 		keypair = new Ed25519Keypair(),
 		network = DEFAULT_ZK_SEND_LINK_OPTIONS.network,
-		client = new IotaClient({ url: getFullnodeUrl(network) }),
+		client = new SuiClient({ url: getFullnodeUrl(network) }),
 		sender,
 		redirect,
 		contract = network === 'mainnet' ? MAINNET_CONTRACT_IDS : undefined,
@@ -79,15 +76,15 @@ export class ZkSendLinkBuilder {
 		this.#redirect = redirect;
 		this.keypair = keypair;
 		this.#client = client;
-		this.sender = normalizeIotaAddress(sender);
+		this.sender = normalizeSuiAddress(sender);
 
 		if (contract) {
 			this.#contract = new ZkBag(contract.packageId, contract);
 		}
 	}
 
-	addClaimableMicros(amount: bigint) {
-		this.addClaimableBalance(IOTA_COIN_TYPE, amount);
+	addClaimableMist(amount: bigint) {
+		this.addClaimableBalance(SUI_COIN_TYPE, amount);
 	}
 
 	addClaimableBalance(coinType: string, amount: bigint) {
@@ -103,7 +100,7 @@ export class ZkSendLinkBuilder {
 		const link = new URL(this.#host);
 		link.pathname = this.#path;
 		link.hash = `${this.#contract ? '$' : ''}${toB64(
-			decodeIotaPrivateKey(this.keypair.getSecretKey()).secretKey,
+			decodeSuiPrivateKey(this.keypair.getSecretKey()).secretKey,
 		)}`;
 
 		if (this.#redirect) {
@@ -184,10 +181,10 @@ export class ZkSendLinkBuilder {
 		txb.setSenderIfNotSet(this.sender);
 
 		for (const [coinType, amount] of this.balances) {
-			if (coinType === IOTA_COIN_TYPE) {
-				const [iota] = txb.splitCoins(txb.gas, [amount]);
+			if (coinType === SUI_COIN_TYPE) {
+				const [sui] = txb.splitCoins(txb.gas, [amount]);
 				refsWithType.push({
-					ref: iota,
+					ref: sui,
 					type: `0x2::coin::Coin<${coinType}>`,
 				} as never);
 			} else {
@@ -225,7 +222,7 @@ export class ZkSendLinkBuilder {
 		// Ensure that gas amount ends in 987
 		const roundedGasAmount = gasWithBuffer - (gasWithBuffer % 1000n) - 13n;
 
-		const address = this.keypair.toIotaAddress();
+		const address = this.keypair.toSuiAddress();
 		const objectsToTransfer = (await this.#objectsToTransfer(txb)).map((obj) => obj.ref);
 		const [gas] = txb.splitCoins(txb.gas, [roundedGasAmount]);
 		objectsToTransfer.push(gas);
@@ -240,7 +237,7 @@ export class ZkSendLinkBuilder {
 		const txb = new TransactionBlock();
 		txb.setSender(this.sender);
 		txb.setGasPayment([]);
-		txb.transferObjects([txb.gas], this.keypair.toIotaAddress());
+		txb.transferObjects([txb.gas], this.keypair.toSuiAddress());
 
 		const idsToTransfer = [...this.objectIds];
 
@@ -257,7 +254,7 @@ export class ZkSendLinkBuilder {
 		if (idsToTransfer.length > 0) {
 			txb.transferObjects(
 				idsToTransfer.map((id) => txb.object(id)),
-				this.keypair.toIotaAddress(),
+				this.keypair.toSuiAddress(),
 			);
 		}
 
@@ -290,12 +287,12 @@ export class ZkSendLinkBuilder {
 	static async createLinks({
 		links,
 		network = 'mainnet',
-		client = new IotaClient({ url: getFullnodeUrl(network) }),
+		client = new SuiClient({ url: getFullnodeUrl(network) }),
 		transactionBlock = new TransactionBlock(),
 		contract: contractIds = MAINNET_CONTRACT_IDS,
 	}: {
 		transactionBlock?: TransactionBlock;
-		client?: IotaClient;
+		client?: SuiClient;
 		network?: 'mainnet' | 'testnet';
 		links: ZkSendLinkBuilder[];
 		contract: ZkBagContractOptions;
@@ -357,11 +354,11 @@ export class ZkSendLinkBuilder {
 		}
 
 		const mergedCoins = new Map<string, TransactionObjectArgument>([
-			[IOTA_COIN_TYPE, transactionBlock.gas],
+			[SUI_COIN_TYPE, transactionBlock.gas],
 		]);
 
 		for (const [coinType, coins] of coinsByType) {
-			if (coinType === IOTA_COIN_TYPE) {
+			if (coinType === SUI_COIN_TYPE) {
 				continue;
 			}
 
@@ -379,7 +376,7 @@ export class ZkSendLinkBuilder {
 		}
 
 		for (const link of links) {
-			const receiver = link.keypair.toIotaAddress();
+			const receiver = link.keypair.toSuiAddress();
 			contract.new(transactionBlock, { arguments: [store, receiver] });
 
 			link.objectIds.forEach((id) => {
@@ -404,7 +401,7 @@ export class ZkSendLinkBuilder {
 			const splits = transactionBlock.splitCoins(merged, balances);
 			for (const [i, link] of linksWithCoin.entries()) {
 				contract.add(transactionBlock, {
-					arguments: [store, link.keypair.toIotaAddress(), splits[i]],
+					arguments: [store, link.keypair.toSuiAddress(), splits[i]],
 					typeArguments: [`0x2::coin::Coin<${coinType}>`],
 				});
 			}

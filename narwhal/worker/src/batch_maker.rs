@@ -2,9 +2,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::metrics::WorkerMetrics;
 use config::WorkerId;
 use fastcrypto::hash::Hash;
@@ -16,7 +13,7 @@ use mysten_metrics::{monitored_scope, spawn_logged_monitored_task};
 use network::{client::NetworkClient, WorkerToPrimaryClient};
 use std::sync::Arc;
 use store::{rocks::DBMap, Map};
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use tokio::{
     task::JoinHandle,
     time::{sleep, Duration, Instant},

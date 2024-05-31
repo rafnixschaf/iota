@@ -2,9 +2,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use fastcrypto::hash::Hash;
 use std::vec;
 use test_utils::{get_protocol_config, latest_protocol_version, CommitteeFixture};

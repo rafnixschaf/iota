@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import type { SignatureWithBytes } from '@mysten/iota.js/cryptography';
-import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@mysten/iota.js/cryptography';
-import type { Ed25519Keypair, Ed25519PublicKey } from '@mysten/iota.js/keypairs/ed25519';
-import type { ZkLoginSignatureInputs } from '@mysten/iota.js/zklogin';
+import type { SignatureWithBytes } from '@mysten/sui.js/cryptography';
+import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@mysten/sui.js/cryptography';
+import type { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519';
+import type { ZkLoginSignatureInputs } from '@mysten/sui.js/zklogin';
 import { getZkLoginSignature } from '@mysten/zklogin';
 
 export class EnokiPublicKey extends PublicKey {
@@ -24,7 +21,7 @@ export class EnokiPublicKey extends PublicKey {
 		return SIGNATURE_SCHEME_TO_FLAG['ZkLogin'];
 	}
 
-	toIotaAddress(): string {
+	toSuiAddress(): string {
 		return this.#address;
 	}
 

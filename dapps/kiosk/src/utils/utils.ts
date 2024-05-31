@@ -1,20 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { KioskListing, KioskOwnerCap } from '@mysten/kiosk';
-import { IotaObjectResponse } from '@mysten/iota.js/client';
-import { MICROS_PER_IOTA, normalizeIotaAddress } from '@mysten/iota.js/utils';
+import { SuiObjectResponse } from '@mysten/sui.js/client';
+import { MIST_PER_SUI, normalizeSuiAddress } from '@mysten/sui.js/utils';
 
 // Parse the display of a list of objects into a simple {object_id: display} map
 // to use throughout the app.
 export const parseObjectDisplays = (
-	data: IotaObjectResponse[],
+	data: SuiObjectResponse[],
 ): Record<string, Record<string, string> | undefined> => {
 	return data.reduce<Record<string, Record<string, string> | undefined>>(
-		(acc, item: IotaObjectResponse) => {
+		(acc, item: SuiObjectResponse) => {
 			const display = item.data?.display?.data;
 			const id = item.data?.objectId!;
 			acc[id] = display || undefined;
@@ -36,12 +33,12 @@ export const processKioskListings = (data: KioskListing[]): Record<string, Kiosk
 	return results;
 };
 
-export const microsToIota = (micros: bigint | string | undefined) => {
-	if (!micros) return 0;
-	return Number(micros || 0) / Number(MICROS_PER_IOTA);
+export const mistToSui = (mist: bigint | string | undefined) => {
+	if (!mist) return 0;
+	return Number(mist || 0) / Number(MIST_PER_SUI);
 };
 
-export const formatIota = (amount: number) => {
+export const formatSui = (amount: number) => {
 	return new Intl.NumberFormat('en-US', {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 5,
@@ -56,5 +53,5 @@ export const findActiveCap = (
 	caps: KioskOwnerCap[] = [],
 	kioskId: string,
 ): KioskOwnerCap | undefined => {
-	return caps.find((x) => normalizeIotaAddress(x.kioskId) === normalizeIotaAddress(kioskId));
+	return caps.find((x) => normalizeSuiAddress(x.kioskId) === normalizeSuiAddress(kioskId));
 };

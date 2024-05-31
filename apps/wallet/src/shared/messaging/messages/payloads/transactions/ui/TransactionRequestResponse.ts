@@ -1,20 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { isBasePayload } from '_payloads';
 import type { BasePayload, Payload } from '_payloads';
 import { type SignedTransaction } from '_src/ui/app/WalletSigner';
-import type { IotaTransactionBlockResponse } from '@mysten/iota.js/client';
-import { type IotaSignMessageOutput } from '@mysten/wallet-standard';
+import type { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { type SuiSignMessageOutput } from '@mysten/wallet-standard';
 
 export interface TransactionRequestResponse extends BasePayload {
 	type: 'transaction-request-response';
 	txID: string;
 	approved: boolean;
-	txResult?: IotaTransactionBlockResponse | IotaSignMessageOutput;
+	txResult?: SuiTransactionBlockResponse | SuiSignMessageOutput;
 	txResultError?: string;
 	txSigned?: SignedTransaction;
 }

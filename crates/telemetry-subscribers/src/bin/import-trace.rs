@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use bytes::Buf;
 use bytes_varint::VarIntSupport;
 use clap::*;
@@ -55,7 +52,7 @@ async fn main() {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        format!("iota-node-{}", timestamp)
+        format!("sui-node-{}", timestamp)
     });
 
     println!("importing trace with service name {:?}", service_name);

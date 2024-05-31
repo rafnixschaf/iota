@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import Alert from '_components/alert';
 import { ErrorBoundary } from '_components/error-boundary';
 import Loading from '_components/loading';
@@ -27,7 +24,7 @@ export function CompletedTransactions() {
 					</ErrorBoundary>
 				))
 			) : (
-				<NoActivityCard message="When available, your Iota network transactions will show up here." />
+				<NoActivityCard message="When available, your Sui network transactions will show up here." />
 			)}
 		</Loading>
 	);

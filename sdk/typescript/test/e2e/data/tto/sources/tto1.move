@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 module tto::tto {
-    use iota::object::{Self, UID};
-    use iota::tx_context::{Self, TxContext};
-    use iota::transfer::{Self, Receiving};
+    use sui::object::{Self, UID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::transfer::{Self, Receiving};
 
     struct A has key, store {
         id: UID,

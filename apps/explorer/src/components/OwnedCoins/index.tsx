@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { getCoinSymbol } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { Info16 } from '@mysten/icons';
-import { type CoinBalance } from '@mysten/iota.js/client';
-import { normalizeIotaAddress } from '@mysten/iota.js/utils';
+import { type CoinBalance } from '@mysten/sui.js/client';
+import { normalizeSuiAddress } from '@mysten/sui.js/utils';
 import { Heading, Text, LoadingIndicator, RadioGroup, RadioGroupItem } from '@mysten/ui';
 import { useMemo, useState } from 'react';
 
@@ -30,8 +27,8 @@ export function OwnedCoins({ id }: { id: string }) {
 	const [currentSlice, setCurrentSlice] = useState(1);
 	const [limit, setLimit] = useState(20);
 	const [filterValue, setFilterValue] = useState(CoinFilter.Recognized);
-	const { isPending, data, isError } = useIotaClientQuery('getAllBalances', {
-		owner: normalizeIotaAddress(id),
+	const { isPending, data, isError } = useSuiClientQuery('getAllBalances', {
+		owner: normalizeSuiAddress(id),
 	});
 	const recognizedPackages = useRecognizedPackages();
 
@@ -55,10 +52,10 @@ export function OwnedCoins({ id }: { id: string }) {
 		) ?? { recognizedBalances: [], unrecognizedBalances: [] };
 
 		const recognizedBalances = balanceData.recognizedBalances.sort((a, b) => {
-			// Make sure IOTA always comes first
-			if (getCoinSymbol(a.coinType) === 'IOTA') {
+			// Make sure SUI always comes first
+			if (getCoinSymbol(a.coinType) === 'SUI') {
 				return -1;
-			} else if (getCoinSymbol(b.coinType) === 'IOTA') {
+			} else if (getCoinSymbol(b.coinType) === 'SUI') {
 				return 1;
 			} else {
 				return getCoinSymbol(a.coinType).localeCompare(getCoinSymbol(b.coinType), undefined, {
@@ -135,7 +132,7 @@ export function OwnedCoins({ id }: { id: string }) {
 								<Info16 width="16px" />
 							</div>
 							<Text color="steel-darker" variant="body/medium">
-								These coins have not been recognized by Iota Foundation.
+								These coins have not been recognized by Sui Foundation.
 							</Text>
 						</div>
 					)}

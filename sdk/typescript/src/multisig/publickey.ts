@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB64, toB64 } from '@mysten/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bytesToHex } from '@noble/hashes/utils';
@@ -17,7 +14,7 @@ import {
 import type { SignatureFlag, SignatureScheme } from '../cryptography/signature-scheme.js';
 import { parseSerializedSignature } from '../cryptography/signature.js';
 import type { SerializedSignature } from '../cryptography/signature.js';
-import { normalizeIotaAddress } from '../utils/iota-types.js';
+import { normalizeSuiAddress } from '../utils/sui-types.js';
 // eslint-disable-next-line import/no-cycle
 import { publicKeyFromRawBytes } from '../verify/index.js';
 import { toZkLoginPublicIdentifier } from '../zklogin/publickey.js';
@@ -173,9 +170,9 @@ export class MultiSigPublicKey extends PublicKey {
 	}
 
 	/**
-	 * Return the Iota address associated with this MultiSig public key
+	 * Return the Sui address associated with this MultiSig public key
 	 */
-	override toIotaAddress(): string {
+	override toSuiAddress(): string {
 		// max length = 1 flag byte + (max pk size + max weight size (u8)) * max signer size + 2 threshold bytes (u16)
 		const maxLength = 1 + (64 + 1) * MAX_SIGNER_IN_MULTISIG + 2;
 		const tmp = new Uint8Array(maxLength);
@@ -185,16 +182,16 @@ export class MultiSigPublicKey extends PublicKey {
 		// The initial value 3 ensures that following data will be after the flag byte and threshold bytes
 		let i = 3;
 		for (const { publicKey, weight } of this.publicKeys) {
-			const bytes = publicKey.toIotaBytesForAddress();
+			const bytes = publicKey.toSuiBytesForAddress();
 			tmp.set(bytes, i);
 			i += bytes.length;
 			tmp.set([weight], i++);
 		}
-		return normalizeIotaAddress(bytesToHex(blake2b(tmp.slice(0, i), { dkLen: 32 })));
+		return normalizeSuiAddress(bytesToHex(blake2b(tmp.slice(0, i), { dkLen: 32 })));
 	}
 
 	/**
-	 * Return the Iota address associated with this MultiSig public key
+	 * Return the Sui address associated with this MultiSig public key
 	 */
 	flag(): number {
 		return SIGNATURE_SCHEME_TO_FLAG['MultiSig'];

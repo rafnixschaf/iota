@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type IotaCallArg } from '@mysten/iota.js/client';
+import { type SuiCallArg } from '@mysten/sui.js/client';
 import { Text } from '@mysten/ui';
 
 import { ProgrammableTxnBlockCard } from '~/components/transactions/ProgTxnBlockCard';
@@ -14,7 +11,7 @@ import { CollapsibleSection } from '~/ui/collapsible/CollapsibleSection';
 const REGEX_NUMBER = /^\d+$/;
 
 interface InputsCardProps {
-	inputs: IotaCallArg[];
+	inputs: SuiCallArg[];
 }
 
 export function InputsCard({ inputs }: InputsCardProps) {

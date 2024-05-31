@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { describe, expect, it } from 'vitest';
 
-import { BCS, getRustConfig, getIotaMoveConfig } from '../src/index';
+import { BCS, getRustConfig, getSuiMoveConfig } from '../src/index';
 import { serde } from './utils';
 
 describe('BCS: Config', () => {
@@ -16,14 +13,14 @@ describe('BCS: Config', () => {
 		expect(serde(bcs, 'Vec<string>', value)).toEqual(value);
 	});
 
-	it('should work with Iota Move config', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+	it('should work with Sui Move config', () => {
+		const bcs = new BCS(getSuiMoveConfig());
 		let value = ['beep', 'boop', 'beep'];
 		expect(serde(bcs, 'vector<string>', value)).toEqual(value);
 	});
 
 	it('should fork config', () => {
-		const bcs_v1 = new BCS(getIotaMoveConfig());
+		const bcs_v1 = new BCS(getSuiMoveConfig());
 		bcs_v1.registerStructType('User', { name: 'string' });
 
 		const bcs_v2 = new BCS(bcs_v1);

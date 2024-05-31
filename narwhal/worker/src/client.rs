@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use arc_swap::{ArcSwap, ArcSwapOption};
 use mysten_metrics::metered_channel::Sender;
 use mysten_network::{multiaddr::Protocol, Multiaddr};
@@ -89,7 +86,7 @@ impl LazyNarwhalClient {
 
     pub async fn get(&self) -> Arc<ArcSwap<LocalNarwhalClient>> {
         // Narwhal may not have started and created LocalNarwhalClient, so retry in a loop.
-        // Retries should only happen on Iota process start.
+        // Retries should only happen on Sui process start.
         const NARWHAL_WORKER_START_TIMEOUT: Duration = Duration::from_secs(30);
         if let Ok(client) = timeout(NARWHAL_WORKER_START_TIMEOUT, async {
             loop {

@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { getFullnodeUrl, IotaClient, IotaObjectChange } from '@mysten/iota.js/client';
-import { decodeIotaPrivateKey } from '@mysten/iota.js/cryptography';
-// import { getFaucetHost, requestIotaFromFaucetV0 } from '@mysten/iota.js/faucet';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
-import { toB64 } from '@mysten/iota.js/utils';
+import { getFullnodeUrl, SuiClient, SuiObjectChange } from '@mysten/sui.js/client';
+import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
+// import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui.js/faucet';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { toB64 } from '@mysten/sui.js/utils';
 import { describe } from 'node:test';
 import { expect, test } from 'vitest';
 
@@ -27,27 +24,27 @@ export const ZK_BAG_CONFIG = {
 	bagStoreTableId: '0x4e1bc4085d64005e03eb4eab2510d527aeba9548cda431cb8f149ff37451f870',
 };
 
-const client = new IotaClient({
+const client = new SuiClient({
 	url: getFullnodeUrl('testnet'),
 });
 
 // 0x6e43d0e58341db532a87a16aaa079ae6eb1ed3ae8b77fdfa4870a268ea5d5db8
 const keypair = Ed25519Keypair.fromSecretKey(
-	decodeIotaPrivateKey('iotaprivkey1qrlgsqryjmmt59nw7a76myeeadxrs3esp8ap2074qz8xaq5kens32f7e3u7')
+	decodeSuiPrivateKey('suiprivkey1qrlgsqryjmmt59nw7a76myeeadxrs3esp8ap2074qz8xaq5kens32f7e3u7')
 		.secretKey,
 );
 
 // Automatically get gas from testnet is not working reliably, manually request gas via discord,
 // or uncomment the beforeAll and gas function below
 // beforeAll(async () => {
-// 	await getIotaFromFaucet(keypair);
+// 	await getSuiFromFaucet(keypair);
 // });
 
-// async function getIotaFromFaucet(keypair: Keypair) {
+// async function getSuiFromFaucet(keypair: Keypair) {
 // 	const faucetHost = getFaucetHost('testnet');
-// 	const result = await requestIotaFromFaucetV0({
+// 	const result = await requestSuiFromFaucetV0({
 // 		host: faucetHost,
-// 		recipient: keypair.toIotaAddress(),
+// 		recipient: keypair.toSuiAddress(),
 // 	});
 
 // 	if (result.error) {
@@ -62,7 +59,7 @@ describe('Contract links', () => {
 			const link = new ZkSendLinkBuilder({
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toIotaAddress(),
+				sender: keypair.toSuiAddress(),
 			});
 
 			const bears = await createBears(3);
@@ -71,7 +68,7 @@ describe('Contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMicros(100n);
+			link.addClaimableMist(100n);
 
 			const linkUrl = link.getLink();
 
@@ -94,12 +91,12 @@ describe('Contract links', () => {
 				[
 				  {
 				    "amount": 100n,
-				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
+				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 				  },
 				]
 			`);
 
-			const claim = await claimLink.claimAssets(keypair.toIotaAddress());
+			const claim = await claimLink.claimAssets(keypair.toSuiAddress());
 
 			const res = await client.waitForTransactionBlock({
 				digest: claim.digest,
@@ -139,7 +136,7 @@ describe('Contract links', () => {
 				keypair: linkKp,
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toIotaAddress(),
+				sender: keypair.toSuiAddress(),
 			});
 
 			const bears = await createBears(3);
@@ -148,7 +145,7 @@ describe('Contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMicros(100n);
+			link.addClaimableMist(100n);
 
 			await link.create({
 				signer: keypair,
@@ -158,13 +155,13 @@ describe('Contract links', () => {
 			const {
 				links: [lostLink],
 			} = await listCreatedLinks({
-				address: keypair.toIotaAddress(),
+				address: keypair.toSuiAddress(),
 				network: 'testnet',
 				contract: ZK_BAG_CONFIG,
 			});
 
 			const { url, transactionBlock } = await lostLink.link.createRegenerateTransaction(
-				keypair.toIotaAddress(),
+				keypair.toSuiAddress(),
 			);
 
 			const result = await client.signAndExecuteTransactionBlock({
@@ -189,12 +186,12 @@ describe('Contract links', () => {
 				[
 				  {
 				    "amount": 100n,
-				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
+				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 				  },
 				]
 			`);
 
-			const claim = await claimLink.claimAssets(keypair.toIotaAddress());
+			const claim = await claimLink.claimAssets(keypair.toSuiAddress());
 
 			const res = await client.waitForTransactionBlock({
 				digest: claim.digest,
@@ -235,10 +232,10 @@ describe('Contract links', () => {
 				const link = new ZkSendLinkBuilder({
 					client,
 					contract: ZK_BAG_CONFIG,
-					sender: keypair.toIotaAddress(),
+					sender: keypair.toSuiAddress(),
 				});
 
-				link.addClaimableMicros(100n);
+				link.addClaimableMist(100n);
 				link.addClaimableObject(bear.objectId);
 
 				links.push(link);
@@ -274,12 +271,12 @@ describe('Contract links', () => {
 					[
 					  {
 					    "amount": 100n,
-					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
+					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 					  },
 					]
 				`);
 
-				const claim = await claimLink.claimAssets(keypair.toIotaAddress());
+				const claim = await claimLink.claimAssets(keypair.toSuiAddress());
 
 				const res = await client.waitForTransactionBlock({
 					digest: claim.digest,
@@ -308,7 +305,7 @@ describe('Non contract links', () => {
 		async () => {
 			const link = new ZkSendLinkBuilder({
 				client,
-				sender: keypair.toIotaAddress(),
+				sender: keypair.toSuiAddress(),
 				contract: null,
 			});
 
@@ -318,7 +315,7 @@ describe('Non contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMicros(100n);
+			link.addClaimableMist(100n);
 
 			const linkUrl = link.getLink();
 
@@ -340,12 +337,12 @@ describe('Non contract links', () => {
 					[
 					  {
 					    "amount": 100n,
-					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
+					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
 					  },
 					]
 				`);
 
-			const claimTx = await claimLink.claimAssets(new Ed25519Keypair().toIotaAddress());
+			const claimTx = await claimLink.claimAssets(new Ed25519Keypair().toSuiAddress());
 
 			const res = await client.waitForTransactionBlock({
 				digest: claimTx.digest,
@@ -384,7 +381,7 @@ describe('Non contract links', () => {
 			const txb = new TransactionBlock();
 
 			const [coin] = txb.splitCoins(txb.gas, [5_000_000]);
-			txb.transferObjects([coin], linkKp.toIotaAddress());
+			txb.transferObjects([coin], linkKp.toSuiAddress());
 
 			const { digest } = await client.signAndExecuteTransactionBlock({
 				signer: keypair,
@@ -404,10 +401,10 @@ describe('Non contract links', () => {
 			expect(claimLink.assets?.nfts.length).toEqual(0);
 			expect(claimLink.assets?.balances.length).toEqual(1);
 			expect(claimLink.assets?.balances[0].coinType).toEqual(
-				'0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA',
+				'0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
 			);
 
-			const claimTx = await claimLink.claimAssets(keypair.toIotaAddress());
+			const claimTx = await claimLink.claimAssets(keypair.toSuiAddress());
 
 			const res = await client.waitForTransactionBlock({
 				digest: claimTx.digest,
@@ -418,7 +415,7 @@ describe('Non contract links', () => {
 
 			expect(res.balanceChanges?.length).toEqual(2);
 			const link2 = await ZkSendLink.fromUrl(
-				`https://zksend.con/claim#${toB64(decodeIotaPrivateKey(linkKp.getSecretKey()).secretKey)}`,
+				`https://zksend.con/claim#${toB64(decodeSuiPrivateKey(linkKp.getSecretKey()).secretKey)}`,
 				{
 					contract: ZK_BAG_CONFIG,
 					network: 'testnet',
@@ -450,7 +447,7 @@ async function createBears(totalBears: number) {
 		bears.push(bear);
 	}
 
-	txb.transferObjects(bears, txb.pure.address(keypair.toIotaAddress()));
+	txb.transferObjects(bears, txb.pure.address(keypair.toSuiAddress()));
 
 	const res = await client.signAndExecuteTransactionBlock({
 		transactionBlock: txb,
@@ -466,9 +463,9 @@ async function createBears(totalBears: number) {
 
 	const bearList = res
 		.objectChanges!.filter(
-			(x: IotaObjectChange) => x.type === 'created' && x.objectType.includes(DEMO_BEAR_CONFIG.type),
+			(x: SuiObjectChange) => x.type === 'created' && x.objectType.includes(DEMO_BEAR_CONFIG.type),
 		)
-		.map((x: IotaObjectChange) => {
+		.map((x: SuiObjectChange) => {
 			if (!('objectId' in x)) throw new Error('invalid data');
 			return {
 				objectId: x.objectId,

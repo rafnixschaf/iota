@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { expect } from 'vitest';
 
 import type { KioskClient, KioskOwnerCap } from '../../src/index.js';

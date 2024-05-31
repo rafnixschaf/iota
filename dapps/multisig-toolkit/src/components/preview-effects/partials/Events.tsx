@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { IotaEvent } from '@mysten/iota.js/src/client';
+import { SuiEvent } from '@mysten/sui.js/src/client';
 import { ReactNode } from 'react';
 
 import { Textarea } from '@/components/ui/textarea';
@@ -12,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ObjectLink } from '../ObjectLink';
 import { PreviewCard } from '../PreviewCard';
 
-export function Events({ events }: { events: IotaEvent[] }) {
+export function Events({ events }: { events: SuiEvent[] }) {
 	if (events.length === 0) {
 		return <div>No events were emitted.</div>;
 	}
@@ -26,7 +23,7 @@ export function Events({ events }: { events: IotaEvent[] }) {
 	);
 }
 
-export function Event({ event }: { event: IotaEvent }) {
+export function Event({ event }: { event: SuiEvent }) {
 	const fields: Record<string, ReactNode> = {
 		'Package ID': <ObjectLink inputObject={event.packageId} />,
 		Sender: <ObjectLink owner={{ AddressOwner: event.sender }} />,

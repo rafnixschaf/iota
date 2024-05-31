@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClient } from '@mysten/dapp-kit';
+import { useSuiClient } from '@mysten/dapp-kit';
 import { useQuery } from '@tanstack/react-query';
 
 export function useGetAddressMetrics() {
-	const client = useIotaClient();
+	const client = useSuiClient();
 	return useQuery({
 		queryKey: ['home', 'addresses'],
 		queryFn: () => client.getAddressMetrics(),

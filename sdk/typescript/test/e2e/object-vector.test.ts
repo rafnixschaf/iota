@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TransactionBlock } from '../../src/transactions';
-import { IOTA_FRAMEWORK_ADDRESS } from '../../src/utils';
+import { SUI_FRAMEWORK_ADDRESS } from '../../src/utils';
 import { publishPackage, setup, TestToolbox } from './utils/setup';
 
 describe('Test Move call with a vector of objects as input', () => {
@@ -54,7 +51,7 @@ describe('Test Move call with a vector of objects as input', () => {
 	beforeEach(async () => {
 		toolbox = await setup();
 		const packagePath =
-			__dirname + '/../../../../crates/iota-core/src/unit_tests/data/entry_point_vector';
+			__dirname + '/../../../../crates/sui-core/src/unit_tests/data/entry_point_vector';
 		({ packageId } = await publishPackage(packagePath));
 	});
 
@@ -82,8 +79,8 @@ describe('Test Move call with a vector of objects as input', () => {
 			objects: [coinIDs[1], tx.object(coinIDs[2])],
 		});
 		tx.moveCall({
-			target: `${IOTA_FRAMEWORK_ADDRESS}::pay::join_vec`,
-			typeArguments: ['0x2::iota::IOTA'],
+			target: `${SUI_FRAMEWORK_ADDRESS}::pay::join_vec`,
+			typeArguments: ['0x2::sui::SUI'],
 			arguments: [tx.object(coinIDs[0]), vec],
 		});
 		tx.setGasPayment([{ objectId: coin.coinObjectId, digest: coin.digest, version: coin.version }]);

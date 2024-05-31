@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useCookieConsentBanner } from '@mysten/core';
-import { IotaClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Fragment } from 'react';
 import { resolveValue, Toaster, type ToastType } from 'react-hot-toast';
@@ -15,7 +12,7 @@ import { useInitialPageView } from '../../hooks/useInitialPageView';
 import { NetworkContext, useNetwork } from '~/context';
 import { Banner, type BannerProps } from '~/ui/Banner';
 import { persistableStorage } from '~/utils/analytics/amplitude';
-import { type Network, createIotaClient, SupportedNetworks } from '~/utils/api/DefaultRpcClient';
+import { type Network, createSuiClient, SupportedNetworks } from '~/utils/api/DefaultRpcClient';
 import { KioskClientProvider } from '@mysten/core/src/components/KioskClientProvider';
 
 const toastVariants: Partial<Record<ToastType, BannerProps['variant']>> = {
@@ -27,7 +24,7 @@ export function Layout() {
 	const [network, setNetwork] = useNetwork();
 
 	useCookieConsentBanner(persistableStorage, {
-		cookie_name: 'iota_explorer_cookie_consent',
+		cookie_name: 'sui_explorer_cookie_consent',
 		onBeforeLoad: async () => {
 			await import('./cookieConsent.css');
 			document.body.classList.add('cookie-consent-theme');
@@ -40,9 +37,9 @@ export function Layout() {
 		// NOTE: We set a top-level key here to force the entire react tree to be re-created when the network changes:
 		<Fragment key={network}>
 			<ScrollRestoration />
-			<IotaClientProvider
+			<SuiClientProvider
 				networks={SupportedNetworks}
-				createClient={createIotaClient}
+				createClient={createSuiClient}
 				network={network as Network}
 				onNetworkChange={setNetwork}
 			>
@@ -73,7 +70,7 @@ export function Layout() {
 						</NetworkContext.Provider>
 					</KioskClientProvider>
 				</WalletProvider>
-			</IotaClientProvider>
+			</SuiClientProvider>
 		</Fragment>
 	);
 }

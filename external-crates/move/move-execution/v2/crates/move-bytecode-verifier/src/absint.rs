@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::meter::{
     Meter, Scope, ANALYZE_FUNCTION_BASE_COST, EXECUTE_BLOCK_BASE_COST, PER_BACKEDGE_COST,
     PER_SUCCESSOR_COST,

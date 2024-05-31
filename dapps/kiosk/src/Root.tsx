@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { IotaClientProvider, WalletProvider } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/iota.js/client';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl } from '@mysten/sui.js/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { Outlet } from 'react-router-dom';
@@ -18,7 +15,7 @@ const queryClient = new QueryClient();
 export default function Root() {
 	return (
 		<QueryClientProvider client={queryClient}>
-			<IotaClientProvider
+			<SuiClientProvider
 				defaultNetwork="testnet"
 				networks={{ testnet: { url: getFullnodeUrl('testnet') } }}
 			>
@@ -34,7 +31,7 @@ export default function Root() {
 						<Toaster position="bottom-center" />
 					</KisokClientProvider>
 				</WalletProvider>
-			</IotaClientProvider>
+			</SuiClientProvider>
 		</QueryClientProvider>
 	);
 }

@@ -1,9 +1,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::command_line::compiler::Visitor;
 use crate::diagnostics::WarningFilters;
 use crate::expansion::ast::ModuleIdent;

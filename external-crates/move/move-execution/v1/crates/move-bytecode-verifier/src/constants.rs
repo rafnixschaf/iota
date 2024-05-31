@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! This module implements a checker for verifying that
 //! - a constant's type only refers to primitive types
 //! - a constant's data serializes correctly for that type

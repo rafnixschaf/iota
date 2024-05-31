@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! Translates and validates specification language fragments as they are output from the Move
 //! compiler's expansion phase and adds them to the environment (which was initialized from the
 //! byte code). This includes identifying the Move sub-language supported by the specification

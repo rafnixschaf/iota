@@ -1,16 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import EventEmitter from 'node:events';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { IotaHTTPTransport } from '../../../src/client';
+import { SuiHTTPTransport } from '../../../src/client';
 import { PACKAGE_VERSION, TARGETED_RPC_VERSION } from '../../../src/version';
 
-describe('IotaHTTPTransport', () => {
+describe('SuiHTTPTransport', () => {
 	describe('rpc requests', () => {
 		const mockResult = { data: 123 };
 		let requestId = 0;
@@ -33,7 +30,7 @@ describe('IotaHTTPTransport', () => {
 			);
 		});
 
-		const transport = new IotaHTTPTransport({
+		const transport = new SuiHTTPTransport({
 			url: 'http://localhost:4000',
 			rpc: {
 				url: 'http://localhost:4000',
@@ -115,7 +112,7 @@ describe('IotaHTTPTransport', () => {
 		});
 
 		it('Creates a subscription', async () => {
-			const transport = new IotaHTTPTransport({
+			const transport = new SuiHTTPTransport({
 				url: 'http://localhost:4000',
 				WebSocketConstructor: MockWebSocketConstructor,
 			});
@@ -183,7 +180,7 @@ describe('IotaHTTPTransport', () => {
 		});
 
 		it('Should reconnect on close', async () => {
-			const transport = new IotaHTTPTransport({
+			const transport = new SuiHTTPTransport({
 				url: 'http://localhost:4000',
 				WebSocketConstructor: MockWebSocketConstructor,
 				websocket: {

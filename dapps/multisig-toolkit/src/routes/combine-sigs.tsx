@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { PublicKey, SerializedSignature } from '@mysten/iota.js/cryptography';
-import { MultiSigPublicKey, publicKeyFromIotaBytes } from '@mysten/iota.js/multisig';
+import { PublicKey, SerializedSignature } from '@mysten/sui.js/cryptography';
+import { MultiSigPublicKey, publicKeyFromSuiBytes } from '@mysten/sui.js/multisig';
 import { useState } from 'react';
 import { FieldValues, useFieldArray, useForm } from 'react-hook-form';
 
@@ -17,7 +14,7 @@ export default function MultiSigCombineSignatureGenerator() {
 	const [msSignature, setMSSignature] = useState('');
 	const { register, control, handleSubmit } = useForm({
 		defaultValues: {
-			pubKeys: [{ pubKey: 'Iota Pubkey', weight: '', signature: 'Iota Signature' }],
+			pubKeys: [{ pubKey: 'Sui Pubkey', weight: '', signature: 'Sui Signature' }],
 			threshold: 1,
 		},
 	});
@@ -32,7 +29,7 @@ export default function MultiSigCombineSignatureGenerator() {
 		let pks: { publicKey: PublicKey; weight: number }[] = [];
 		let sigs: SerializedSignature[] = [];
 		data.pubKeys.forEach((item: any) => {
-			const pk = publicKeyFromIotaBytes(item.pubKey);
+			const pk = publicKeyFromSuiBytes(item.pubKey);
 			pks.push({ publicKey: pk, weight: item.weight });
 			if (item.signature) {
 				sigs.push(item.signature);
@@ -42,8 +39,8 @@ export default function MultiSigCombineSignatureGenerator() {
 			threshold: data.threshold,
 			publicKeys: pks,
 		});
-		const multisigIotaAddress = multiSigPublicKey.toIotaAddress();
-		setMSAddress(multisigIotaAddress);
+		const multisigSuiAddress = multiSigPublicKey.toSuiAddress();
+		setMSAddress(multisigSuiAddress);
 		const multisigCombinedSig = multiSigPublicKey.combinePartialSignatures(sigs);
 		setMSSignature(multisigCombinedSig);
 	};
@@ -55,11 +52,11 @@ export default function MultiSigCombineSignatureGenerator() {
 			</h2>
 
 			<form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
-				<p>The following demo allow you to create Iota MultiSig Combined Signatures.</p>
-				<p>Iota Pubkeys, weights, signatures for testing/playing with:</p>
+				<p>The following demo allow you to create Sui MultiSig Combined Signatures.</p>
+				<p>Sui Pubkeys, weights, signatures for testing/playing with:</p>
 				<div className="flex flex-col gap-2 bg-gray-600 p-4 rounded-md">
 					<div className="flex gap-0 border-b">
-						<div className="flex-1 font-bold border-r p-2">Iota Pubkeys</div>
+						<div className="flex-1 font-bold border-r p-2">Sui Pubkeys</div>
 						<div className="flex-1 font-bold border-r p-2">Weights</div>
 						<div className="flex-1 font-bold p-2">Signatures</div>
 					</div>
@@ -121,7 +118,7 @@ export default function MultiSigCombineSignatureGenerator() {
 					<Button
 						type="button"
 						onClick={() => {
-							append({ pubKey: 'Iota Pubkey', weight: '', signature: 'Iota Signature' });
+							append({ pubKey: 'Sui Pubkey', weight: '', signature: 'Sui Signature' });
 						}}
 					>
 						New PubKey
@@ -143,9 +140,9 @@ export default function MultiSigCombineSignatureGenerator() {
 			{msAddress && (
 				<Card key={msAddress}>
 					<CardHeader>
-						<CardTitle>Iota MultiSig Address</CardTitle>
+						<CardTitle>Sui MultiSig Address</CardTitle>
 						<CardDescription>
-							https://docs.iota.io/testnet/learn/cryptography/iota-multisig
+							https://docs.sui.io/testnet/learn/cryptography/sui-multisig
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -158,9 +155,9 @@ export default function MultiSigCombineSignatureGenerator() {
 			{msSignature && (
 				<Card key={msSignature}>
 					<CardHeader>
-						<CardTitle>Iota MultiSig Combined Address</CardTitle>
+						<CardTitle>Sui MultiSig Combined Address</CardTitle>
 						<CardDescription>
-							https://docs.iota.io/testnet/learn/cryptography/iota-multisig
+							https://docs.sui.io/testnet/learn/cryptography/sui-multisig
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -175,7 +172,7 @@ export default function MultiSigCombineSignatureGenerator() {
 }
 
 /*
-iota keytool multi-sig-combine-partial-sig \
+sui keytool multi-sig-combine-partial-sig \
 --pks \
 ACaY7TW0MnPu+fr/Z2qH5YRybHsj80qfwfqiuduT4czi \
 ABr818VXt+6PLPRoA7QnsHBfRpKJdWZPjt7ppiTl6Fkq \

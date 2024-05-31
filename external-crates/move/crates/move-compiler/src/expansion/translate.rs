@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{
     diag,
     diagnostics::{codes::WarningFilter, Diagnostic, WarningFilters},
@@ -319,16 +316,16 @@ const IMPLICIT_STD_MEMBERS: &[(Symbol, Symbol, ModuleMemberKind)] = &[(
     ModuleMemberKind::Struct,
 )];
 
-// Implicit aliases for Iota mode:
-// use iota::object::{Self, ID, UID};
-// use iota::transfer;
-// use iota::tx_context::{Self, TxContext};
-const IMPLICIT_IOTA_MODULES: &[Symbol] = &[
+// Implicit aliases for Sui mode:
+// use sui::object::{Self, ID, UID};
+// use sui::transfer;
+// use sui::tx_context::{Self, TxContext};
+const IMPLICIT_SUI_MODULES: &[Symbol] = &[
     symbol!("object"),
     symbol!("transfer"),
     symbol!("tx_context"),
 ];
-const IMPLICIT_IOTA_MEMBERS: &[(Symbol, Symbol, ModuleMemberKind)] = &[
+const IMPLICIT_SUI_MEMBERS: &[(Symbol, Symbol, ModuleMemberKind)] = &[
     (symbol!("object"), symbol!("ID"), ModuleMemberKind::Struct),
     (symbol!("object"), symbol!("UID"), ModuleMemberKind::Struct),
     (
@@ -350,7 +347,7 @@ fn default_aliases(context: &mut Context) -> AliasMapBuilder {
     // Unused loc since these will not conflict and are implicit so no warnings are given
     let loc = Loc::invalid();
     let std_address = maybe_make_well_known_address(context, loc, symbol!("std"));
-    let iota_address = maybe_make_well_known_address(context, loc, symbol!("iota"));
+    let sui_address = maybe_make_well_known_address(context, loc, symbol!("sui"));
     let mut modules: Vec<(Address, Symbol)> = vec![];
     let mut members: Vec<(Address, Symbol, Symbol, ModuleMemberKind)> = vec![];
     // if std is defined, add implicit std aliases
@@ -368,21 +365,21 @@ fn default_aliases(context: &mut Context) -> AliasMapBuilder {
                 .map(|(m, mem, k)| (std_address, m, mem, k)),
         );
     }
-    // if iota is defined and the current package is in Iota mode, add implicit iota aliases
-    if iota_address.is_some() && context.env().package_config(current_package).flavor == Flavor::Iota
+    // if sui is defined and the current package is in Sui mode, add implicit sui aliases
+    if sui_address.is_some() && context.env().package_config(current_package).flavor == Flavor::Sui
     {
-        let iota_address = iota_address.unwrap();
+        let sui_address = sui_address.unwrap();
         modules.extend(
-            IMPLICIT_IOTA_MODULES
+            IMPLICIT_SUI_MODULES
                 .iter()
                 .copied()
-                .map(|m| (iota_address, m)),
+                .map(|m| (sui_address, m)),
         );
         members.extend(
-            IMPLICIT_IOTA_MEMBERS
+            IMPLICIT_SUI_MEMBERS
                 .iter()
                 .copied()
-                .map(|(m, mem, k)| (iota_address, m, mem, k)),
+                .map(|(m, mem, k)| (sui_address, m, mem, k)),
         );
     }
     for (addr, module) in modules {

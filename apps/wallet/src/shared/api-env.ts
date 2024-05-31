@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
 	getDefaultNetwork,
 	getNetwork,
 	Network,
 	type NetworkConfiguration,
-} from '@mysten/iota.js/client';
+} from '@mysten/sui.js/client';
 
 export type NetworkEnvType =
 	| { network: Exclude<Network, Network.Custom>; customRpcUrl: null }
@@ -20,7 +17,7 @@ export function getCustomNetwork(rpc: string = ''): NetworkConfiguration {
 		name: 'Custom RPC',
 		id: Network.Custom,
 		url: rpc,
-		chain: 'iota:unknown',
+		chain: 'sui:unknown',
 		explorer: getNetwork(getDefaultNetwork()).explorer,
 	};
 }

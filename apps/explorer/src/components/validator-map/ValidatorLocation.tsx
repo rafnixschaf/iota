@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useCallback } from 'react';
 
 import { type ValidatorMapValidator } from './types';
@@ -24,7 +21,7 @@ const MAX_VALIDATOR_OPACITY = 0.5;
 export function ValidatorLocation({ validator, projection, onMouseOut, onMouseOver }: Props) {
 	const handleMouseOver = useCallback(
 		(e: React.MouseEvent) => {
-			validator && onMouseOver(e, validator.iotaAddress);
+			validator && onMouseOver(e, validator.suiAddress);
 		},
 		[validator, onMouseOver],
 	);

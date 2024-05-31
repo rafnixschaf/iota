@@ -2,9 +2,6 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Modifications Copyright (c) 2024 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
 set -e
 
 if ! command -v git &> /dev/null; then
@@ -18,7 +15,7 @@ if ! command -v sed &> /dev/null; then
 fi
 
 DEFAULT_REMOTE="https://github.com/move-language/move"
-DEFAULT_BRANCH="iota-move"
+DEFAULT_BRANCH="sui-move"
 
 while getopts ":r:b:h" OPT; do
     case $OPT in
@@ -50,7 +47,7 @@ COMMIT=$(git ls-remote "$REMOTE" "$BRANCH" | cut -f1)
 REPO=$(git rev-parse --show-toplevel)
 
 >&2 echo "Updating Move Cargo dependency"
->&2 echo "Iota Repo    : $REPO"
+>&2 echo "Sui Repo    : $REPO"
 >&2 echo "Move Repo   : $REMOTE"
 >&2 echo "Move Branch : $BRANCH"
 >&2 echo "Move Commit : $COMMIT"

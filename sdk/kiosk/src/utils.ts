@@ -1,19 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type {
 	DynamicFieldInfo,
 	PaginationArguments,
-	IotaClient,
-	IotaObjectData,
-	IotaObjectDataFilter,
-	IotaObjectDataOptions,
-	IotaObjectResponse,
-} from '@mysten/iota.js/client';
-import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@mysten/iota.js/utils';
+	SuiClient,
+	SuiObjectData,
+	SuiObjectDataFilter,
+	SuiObjectDataOptions,
+	SuiObjectResponse,
+} from '@mysten/sui.js/client';
+import { normalizeStructTag, normalizeSuiAddress, parseStructTag } from '@mysten/sui.js/utils';
 
 import { bcs } from './bcs.js';
 import type { Kiosk, KioskData, KioskListing, TransferPolicyCap } from './types/index.js';
@@ -21,7 +18,7 @@ import { KIOSK_TYPE, TRANSFER_POLICY_CAP_TYPE } from './types/index.js';
 
 const DEFAULT_QUERY_LIMIT = 50;
 
-export async function getKioskObject(client: IotaClient, id: string): Promise<Kiosk> {
+export async function getKioskObject(client: SuiClient, id: string): Promise<Kiosk> {
 	const queryRes = await client.getObject({ id, options: { showBcs: true } });
 
 	if (!queryRes || queryRes.error || !queryRes.data) {
@@ -86,7 +83,7 @@ export function extractKioskData(
 export function attachListingsAndPrices(
 	kioskData: KioskData,
 	listings: KioskListing[],
-	listingObjects: IotaObjectResponse[],
+	listingObjects: SuiObjectResponse[],
 ) {
 	// map item listings as {item_id: KioskListing}
 	// for easier mapping on the nex
@@ -117,9 +114,9 @@ export function attachListingsAndPrices(
 /**
  * A helper that attaches the listing prices to kiosk listings.
  */
-export function attachObjects(kioskData: KioskData, objects: IotaObjectData[]) {
-	const mapping = objects.reduce<Record<string, IotaObjectData>>(
-		(acc: Record<string, IotaObjectData>, obj) => {
+export function attachObjects(kioskData: KioskData, objects: SuiObjectData[]) {
+	const mapping = objects.reduce<Record<string, SuiObjectData>>(
+		(acc: Record<string, SuiObjectData>, obj) => {
 			acc[obj.objectId] = obj;
 			return acc;
 		},
@@ -156,7 +153,7 @@ export function attachLockedItems(kioskData: KioskData, lockedItemIds: string[])
  * RPC calls that allow filtering of Type / batch fetching of spec
  */
 export async function getAllDynamicFields(
-	client: IotaClient,
+	client: SuiClient,
 	parentId: string,
 	pagination: PaginationArguments<string>,
 ) {
@@ -184,9 +181,9 @@ export async function getAllDynamicFields(
  * Requests are sent using `Promise.all`.
  */
 export async function getAllObjects(
-	client: IotaClient,
+	client: SuiClient,
 	ids: string[],
-	options: IotaObjectDataOptions,
+	options: SuiObjectDataOptions,
 	limit: number = DEFAULT_QUERY_LIMIT,
 ) {
 	const chunks = Array.from({ length: Math.ceil(ids.length / limit) }, (_, index) =>
@@ -216,15 +213,15 @@ export async function getAllOwnedObjects({
 	limit = DEFAULT_QUERY_LIMIT,
 	options = { showType: true, showContent: true },
 }: {
-	client: IotaClient;
+	client: SuiClient;
 	owner: string;
-	filter?: IotaObjectDataFilter;
-	options?: IotaObjectDataOptions;
+	filter?: SuiObjectDataFilter;
+	options?: SuiObjectDataOptions;
 	limit?: number;
 }) {
 	let hasNextPage = true;
 	let cursor = undefined;
-	const data: IotaObjectResponse[] = [];
+	const data: SuiObjectResponse[] = [];
 
 	while (hasNextPage) {
 		const result = await client.getOwnedObjects({
@@ -258,7 +255,7 @@ export function percentageToBasisPoints(percentage: number) {
  * A helper to parse a transfer policy Cap into a usable object.
  */
 export function parseTransferPolicyCapObject(
-	item: IotaObjectResponse,
+	item: SuiObjectResponse,
 ): TransferPolicyCap | undefined {
 	const type = (item?.data?.content as { type: string })?.type;
 
@@ -280,6 +277,6 @@ export function parseTransferPolicyCapObject(
 // Normalizes the packageId part of a rule's type.
 export function getNormalizedRuleType(rule: string) {
 	const normalizedRuleAddress = rule.split('::');
-	normalizedRuleAddress[0] = normalizeIotaAddress(normalizedRuleAddress[0]);
+	normalizedRuleAddress[0] = normalizeSuiAddress(normalizedRuleAddress[0]);
 	return normalizedRuleAddress.join('::');
 }

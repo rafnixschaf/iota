@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 use anemo_tower::callback::{MakeCallbackHandler, ResponseHandler};
-use iota_macros::fail_point;
+use sui_macros::fail_point;
 
 #[derive(Clone, Default)]
 pub struct FailpointsMakeCallbackHandler {}

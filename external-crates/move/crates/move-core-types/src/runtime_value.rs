@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::{account_address::AccountAddress, annotated_value as A, fmt_list, u256};
 use anyhow::{anyhow, Result as AResult};
 use move_proc_macros::test_variant_order;

@@ -1,9 +1,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 //! This module controls feature gating and breaking changes in new editions of the source language
 
 use std::{
@@ -57,7 +54,7 @@ pub enum FeatureGate {
 pub enum Flavor {
     #[default]
     Core,
-    Iota,
+    Sui,
 }
 
 pub const UPGRADE_NOTE: &str =
@@ -233,8 +230,8 @@ impl Edition {
 
 impl Flavor {
     pub const CORE: &'static str = "core";
-    pub const IOTA: &'static str = "iota";
-    pub const ALL: &'static [Self] = &[Self::Core, Self::Iota];
+    pub const SUI: &'static str = "sui";
+    pub const ALL: &'static [Self] = &[Self::Core, Self::Sui];
 }
 
 impl FeatureGate {
@@ -292,7 +289,7 @@ impl FromStr for Flavor {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             Self::CORE => Self::Core,
-            Self::IOTA => Self::Iota,
+            Self::SUI => Self::Sui,
             _ => anyhow::bail!(
                 "Unknown flavor \"{s}\". Expected one of: {}",
                 Self::ALL
@@ -342,7 +339,7 @@ impl Display for Flavor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Flavor::Core => write!(f, "{}", Self::CORE),
-            Flavor::Iota => write!(f, "{}", Self::IOTA),
+            Flavor::Sui => write!(f, "{}", Self::SUI),
         }
     }
 }

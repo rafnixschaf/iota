@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import Dexie, { type Table } from 'dexie';
 import { exportDB, importDB } from 'dexie-export-import';
 
@@ -12,7 +9,7 @@ import { type AccountType, type SerializedAccount } from './accounts/Account';
 import { captureException } from './sentry';
 import { getFromLocalStorage, setToLocalStorage } from './storage-utils';
 
-const dbName = 'IotaWallet DB';
+const dbName = 'SuiWallet DB';
 const dbLocalStorageBackupKey = 'indexed-db-backup';
 
 export const settingsKeys = {

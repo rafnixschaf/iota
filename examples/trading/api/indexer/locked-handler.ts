@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-import { IotaEvent } from '@mysten/iota.js/client';
+import { SuiEvent } from '@mysten/sui.js/client';
 import { Prisma } from '@prisma/client';
 
 import { prisma } from '../db';
@@ -28,7 +25,7 @@ type LockDestroyed = {
  * We're constructing the updates to support multiple events involving a single record
  * as part of the same batch of events (but using a single write/record to the DB).
  * */
-export const handleLockObjects = async (events: IotaEvent[], type: string) => {
+export const handleLockObjects = async (events: SuiEvent[], type: string) => {
 	const updates: Record<string, Prisma.LockedCreateInput> = {};
 
 	for (const event of events) {

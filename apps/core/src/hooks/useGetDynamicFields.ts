@@ -1,23 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClient } from '@mysten/dapp-kit';
-import { DynamicFieldPage } from '@mysten/iota.js/client';
-import { normalizeIotaAddress } from '@mysten/iota.js/utils';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { DynamicFieldPage } from '@mysten/sui.js/client';
+import { normalizeSuiAddress } from '@mysten/sui.js/utils';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 const MAX_PAGE_SIZE = 10;
 
 export function useGetDynamicFields(parentId: string, maxPageSize = MAX_PAGE_SIZE) {
-	const client = useIotaClient();
+	const client = useSuiClient();
 	return useInfiniteQuery<DynamicFieldPage>({
 		queryKey: ['dynamic-fields', { maxPageSize, parentId }],
 		queryFn: ({ pageParam = null }) =>
 			client.getDynamicFields({
-				parentId: normalizeIotaAddress(parentId),
+				parentId: normalizeSuiAddress(parentId),
 				cursor: pageParam as string | null,
 				limit: maxPageSize,
 			}),

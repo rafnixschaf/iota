@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable eqeqeq */
 
 /**
@@ -30,27 +27,27 @@
 
 import {
   formatAddress,
-  isValidIotaAddress,
-  isValidIotaObjectId,
-  MICROS_PER_IOTA,
-} from '@mysten/iota.js/utils';
-import { bcs } from '@mysten/iota.js/bcs';
+  isValidSuiAddress,
+  isValidSuiObjectId,
+  MIST_PER_SUI,
+} from '@mysten/sui.js/utils';
+import { bcs } from '@mysten/sui.js/bcs';
 import { program } from 'commander';
 import { KIOSK_LISTING, KioskClient, KioskTransaction, Network } from '@mysten/kiosk';
-import { IotaClient, getFullnodeUrl } from '@mysten/iota.js/client';
-import { Ed25519Keypair } from '@mysten/iota.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 
 /**
  * List of known types for shorthand search in the `search` command.
  */
 const KNOWN_TYPES = {
-  iotafren:
-    '0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332::iotafrens::IotaFren<0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332::capy::Capy>',
+  suifren:
+    '0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332::suifrens::SuiFren<0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332::capy::Capy>',
 };
 
 /** JsonRpcProvider for the Testnet */
-const client = new IotaClient({ url: getFullnodeUrl('testnet') });
+const client = new SuiClient({ url: getFullnodeUrl('testnet') });
 
 const kioskClient = new KioskClient({
   client,
@@ -118,9 +115,9 @@ program
 
 program
   .command('list')
-  .description('list an item in the Kiosk for the specified amount of IOTA')
+  .description('list an item in the Kiosk for the specified amount of SUI')
   .argument('<item ID>', 'The ID of the item to list')
-  .argument('<amount MICROS>', 'The amount of IOTA to list the item for')
+  .argument('<amount MIST>', 'The amount of SUI to list the item for')
   .action(listItem);
 
 program
@@ -142,13 +139,13 @@ program
 program
   .command('search')
   .description('search open listings in Kiosks')
-  .argument('<type>', 'The type of the item to search for. \nAvailable aliases: "iotafren", "test"')
+  .argument('<type>', 'The type of the item to search for. \nAvailable aliases: "suifren", "test"')
   .action(searchType);
 
 program
   .command('policy')
   .description('search for a TransferPolicy for the specified type')
-  .argument('<type>', 'The type of the item to search for. \nAvailable aliases: "iotafren", "test"')
+  .argument('<type>', 'The type of the item to search for. \nAvailable aliases: "suifren", "test"')
   .action(searchPolicy);
 
 program
@@ -168,7 +165,7 @@ program.parse(process.argv);
  * Description: creates and shares a Kiosk
  */
 async function newKiosk() {
-  const sender = keypair.getPublicKey().toIotaAddress();
+  const sender = keypair.getPublicKey().toSuiAddress();
   const kioskCap = await findKioskCap().catch(() => null);
 
   if (kioskCap !== null) {
@@ -190,10 +187,10 @@ async function newKiosk() {
  * Description: view the inventory of the sender (or a specified address)
  */
 async function showInventory({ address, onlyDisplay, cursor, filter }) {
-  const owner = address || keypair.getPublicKey().toIotaAddress();
+  const owner = address || keypair.getPublicKey().toSuiAddress();
 
-  if (!isValidIotaAddress(owner)) {
-    throw new Error(`Invalid IOTA address: "${owner}"`);
+  if (!isValidSuiAddress(owner)) {
+    throw new Error(`Invalid SUI address: "${owner}"`);
   }
 
   const options = {
@@ -242,16 +239,16 @@ async function showKioskContents({ id, address }) {
   let kioskId = null;
 
   if (id) {
-    if (!isValidIotaObjectId(id)) {
+    if (!isValidSuiObjectId(id)) {
       throw new Error(`Invalid Kiosk ID: "${id}"`);
     }
 
     kioskId = id;
   } else {
-    const sender = address || keypair.getPublicKey().toIotaAddress();
+    const sender = address || keypair.getPublicKey().toSuiAddress();
 
-    if (!isValidIotaAddress(sender)) {
-      throw new Error(`Invalid IOTA address: "${sender}"`);
+    if (!isValidSuiAddress(sender)) {
+      throw new Error(`Invalid SUI address: "${sender}"`);
     }
 
     const kioskCap = await findKioskCap(sender).catch(() => null);
@@ -292,7 +289,7 @@ async function showKioskContents({ id, address }) {
       isLocked: item.isLocked,
       listed: !!item.listing,
       isPublic: (item.listing && !item.listing.isExclusive) || false,
-      'price (IOTA)': item.listing ? formatAmount(item.listing.price) : 'N/A',
+      'price (SUI)': item.listing ? formatAmount(item.listing.price) : 'N/A',
     }))
     .sort((a, b) => a.listed - b.listed);
 
@@ -305,13 +302,13 @@ async function showKioskContents({ id, address }) {
  */
 async function placeItem(itemId) {
   const kioskCap = await findKioskCap().catch(() => null);
-  const owner = keypair.getPublicKey().toIotaAddress();
+  const owner = keypair.getPublicKey().toSuiAddress();
 
   if (kioskCap === null) {
     throw new Error('No Kiosk found for sender; use `new` to create one');
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -347,13 +344,13 @@ async function placeItem(itemId) {
  */
 async function lockItem(itemId) {
   const cap = await findKioskCap().catch(() => null);
-  const owner = keypair.getPublicKey().toIotaAddress();
+  const owner = keypair.getPublicKey().toSuiAddress();
 
   if (cap === null) {
     throw new Error('No Kiosk found for sender; use `new` to create one');
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -397,13 +394,13 @@ async function lockItem(itemId) {
  */
 async function takeItem(itemId, { address }) {
   const cap = await findKioskCap().catch(() => null);
-  const receiver = address || keypair.getPublicKey().toIotaAddress();
+  const receiver = address || keypair.getPublicKey().toSuiAddress();
 
-  if (!isValidIotaAddress(receiver)) {
+  if (!isValidSuiAddress(receiver)) {
     throw new Error('Invalid receiver address: "%s"', receiver);
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -432,7 +429,7 @@ async function takeItem(itemId, { address }) {
 
 /**
  * Command: `list`
- * Description: Lists an item in the Kiosk for the specified amount of IOTA
+ * Description: Lists an item in the Kiosk for the specified amount of SUI
  */
 async function listItem(itemId, price) {
   const cap = await findKioskCap().catch(() => null);
@@ -441,7 +438,7 @@ async function listItem(itemId, price) {
     throw new Error('No Kiosk found for sender; use `new` to create one');
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -475,7 +472,7 @@ async function delistItem(itemId) {
     throw new Error('No Kiosk found for sender; use `new` to create one');
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -507,11 +504,11 @@ async function delistItem(itemId) {
 async function purchaseItem(itemId, opts) {
   const { kiosk: inputKioskId } = opts;
 
-  if (inputKioskId && !isValidIotaObjectId(inputKioskId)) {
+  if (inputKioskId && !isValidSuiObjectId(inputKioskId)) {
     throw new Error('Invalid Kiosk ID: "%s"', inputKioskId);
   }
 
-  if (!isValidIotaObjectId(itemId)) {
+  if (!isValidSuiObjectId(itemId)) {
     throw new Error('Invalid Item ID: "%s"', itemId);
   }
 
@@ -663,7 +660,7 @@ async function searchPolicy(type) {
  * Description: Withdraws funds from the Kiosk and send them to sender.
  */
 async function withdrawAll() {
-  const sender = keypair.getPublicKey().toIotaAddress();
+  const sender = keypair.getPublicKey().toSuiAddress();
   const cap = await findKioskCap(sender).catch(() => null);
   if (cap === null) {
     throw new Error('No Kiosk found for sender; use `new` to create one');
@@ -681,7 +678,7 @@ async function withdrawAll() {
  * Description: Shows the Publisher objects of the current user.
  */
 async function showPublisher() {
-  const sender = keypair.getPublicKey().toIotaAddress();
+  const sender = keypair.getPublicKey().toSuiAddress();
   const result = await client.getOwnedObjects({
     owner: sender,
     filter: { StructType: '0x2::package::Publisher' },
@@ -716,9 +713,9 @@ async function showPublisher() {
  * and sets it on the kioskClient instance.
  */
 async function findKioskCap(address) {
-  const sender = address || keypair.getPublicKey().toIotaAddress();
+  const sender = address || keypair.getPublicKey().toSuiAddress();
 
-  if (!isValidIotaAddress(sender)) {
+  if (!isValidSuiAddress(sender)) {
     throw new Error(`Invalid address "${sender}"`);
   }
 
@@ -766,7 +763,7 @@ async function sendTx(txb) {
       console.log('Storage rebate:            %s', gas.storageRebate);
       console.log('NonRefundable Storage Fee: %s', gas.nonRefundableStorageFee);
       console.log(
-        'Total Gas:                 %s IOTA (%s MICROS)',
+        'Total Gas:                 %s SUI (%s MIST)',
         formatAmount(total),
         total.toString(),
       );
@@ -794,15 +791,15 @@ function formatType(type) {
 }
 
 /**
- * Formats the MICROS into IOTA.
+ * Formats the MIST into SUI.
  */
 function formatAmount(amount) {
   if (!amount) {
     return null;
   }
 
-  if (amount <= MICROS_PER_IOTA) {
-    return Number(amount) / Number(MICROS_PER_IOTA);
+  if (amount <= MIST_PER_SUI) {
+    return Number(amount) / Number(MIST_PER_SUI);
   }
 
   let len = amount.toString().length;

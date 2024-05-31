@@ -1,7 +1,7 @@
 {
 	"name": "@mysten/dapp-kit",
 	"author": "Mysten Labs <build@mystenlabs.com>",
-	"description": "A collection of React hooks and components for interacting with the Iota blockchain and wallets.",
+	"description": "A collection of React hooks and components for interacting with the Sui blockchain and wallets.",
 	"homepage": "https://sdk.mystenlabs.com/typescript",
 	"version": "0.12.7",
 	"license": "Apache-2.0",
@@ -42,7 +42,7 @@
 		"lint:fix": "pnpm run eslint:fix && pnpm run prettier:fix"
 	},
 	"bugs": {
-		"url": "https://github.com/iotaledger/kinesis/issues/new"
+		"url": "https://github.com/MystenLabs/sui/issues/new"
 	},
 	"publishConfig": {
 		"access": "public"
@@ -78,7 +78,7 @@
 		"vitest": "^0.33.0"
 	},
 	"dependencies": {
-		"@mysten/iota.js": "workspace:*",
+		"@mysten/sui.js": "workspace:*",
 		"@mysten/wallet-standard": "workspace:*",
 		"@mysten/zksend": "workspace:*",
 		"@radix-ui/react-dialog": "^1.0.4",

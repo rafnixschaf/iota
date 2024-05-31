@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { GAS_TYPE_ARG } from '_redux/slices/iota-objects/Coin';
+import { GAS_TYPE_ARG } from '_redux/slices/sui-objects/Coin';
 import { Text } from '_src/ui/app/shared/text';
 import { useFormatCoin } from '@mysten/core';
-import type { GasCostSummary } from '@mysten/iota.js/client';
+import type { GasCostSummary } from '@mysten/sui.js/client';
 
 type TxnGasSummaryProps = {
 	gasSummary?: GasCostSummary;

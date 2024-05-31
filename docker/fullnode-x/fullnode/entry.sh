@@ -2,7 +2,4 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Modifications Copyright (c) 2024 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-/opt/iota/bin/iota-node --config-path /opt/iota/config/fullnode.yaml
+/opt/sui/bin/sui-node --config-path /opt/sui/config/fullnode.yaml

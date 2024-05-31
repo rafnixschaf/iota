@@ -1,20 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { getTotalGasUsed } from '@mysten/core';
 import { X12, Dot12 } from '@mysten/icons';
-import { type IotaClient, type IotaTransactionBlockResponse } from '@mysten/iota.js/client';
+import { type SuiClient, type SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 
-import { IotaAmount } from '../Table/IotaAmount';
+import { SuiAmount } from '../Table/SuiAmount';
 import { TxTimeType } from '../tx-time/TxTimeType';
 import { HighlightedTableCol } from '~/components/Table/HighlightedTableCol';
 import { AddressLink, TransactionLink } from '~/ui/InternalLink';
 
 // Generate table data from the transaction data
-export const genTableDataFromTxData = (results: IotaTransactionBlockResponse[]) => ({
+export const genTableDataFromTxData = (results: SuiTransactionBlockResponse[]) => ({
 	data: results.map((transaction) => {
 		const status = transaction.effects?.status.status;
 		const sender = transaction.transaction?.data.sender;
@@ -46,7 +43,7 @@ export const genTableDataFromTxData = (results: IotaTransactionBlockResponse[]) 
 						: '--'}
 				</div>
 			),
-			gas: <IotaAmount amount={transaction.effects && getTotalGasUsed(transaction.effects!)} />,
+			gas: <SuiAmount amount={transaction.effects && getTotalGasUsed(transaction.effects!)} />,
 			sender: (
 				<HighlightedTableCol>{sender ? <AddressLink address={sender} /> : '-'}</HighlightedTableCol>
 			),
@@ -78,7 +75,7 @@ export const genTableDataFromTxData = (results: IotaTransactionBlockResponse[]) 
 
 const dedupe = (arr: string[]) => Array.from(new Set(arr));
 
-export const getDataOnTxDigests = (client: IotaClient, transactions: string[]) =>
+export const getDataOnTxDigests = (client: SuiClient, transactions: string[]) =>
 	client
 		.multiGetTransactionBlocks({
 			digests: dedupe(transactions),

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { createMessage } from '_messages';
 import { WindowMessageStream } from '_messaging/WindowMessageStream';
 import type { BasePayload, Payload } from '_payloads';
@@ -30,22 +27,22 @@ import {
 } from '_src/shared/messaging/messages/payloads/QredoConnect';
 import { type SignMessageRequest } from '_src/shared/messaging/messages/payloads/transactions/SignMessage';
 import { isWalletStatusChangePayload } from '_src/shared/messaging/messages/payloads/wallet-status-change';
-import { getNetwork, Network, type ChainType } from '@mysten/iota.js/client';
-import { isTransactionBlock } from '@mysten/iota.js/transactions';
-import { fromB64, toB64 } from '@mysten/iota.js/utils';
+import { getNetwork, Network, type ChainType } from '@mysten/sui.js/client';
+import { isTransactionBlock } from '@mysten/sui.js/transactions';
+import { fromB64, toB64 } from '@mysten/sui.js/utils';
 import {
 	ReadonlyWalletAccount,
-	IOTA_CHAINS,
+	SUI_CHAINS,
 	type StandardConnectFeature,
 	type StandardConnectMethod,
 	type StandardEventsFeature,
 	type StandardEventsListeners,
 	type StandardEventsOnMethod,
-	type IotaFeatures,
-	type IotaSignAndExecuteTransactionBlockMethod,
-	type IotaSignMessageMethod,
-	type IotaSignPersonalMessageMethod,
-	type IotaSignTransactionBlockMethod,
+	type SuiFeatures,
+	type SuiSignAndExecuteTransactionBlockMethod,
+	type SuiSignMessageMethod,
+	type SuiSignPersonalMessageMethod,
+	type SuiSignTransactionBlockMethod,
 	type Wallet,
 } from '@mysten/wallet-standard';
 import mitt, { type Emitter } from 'mitt';
@@ -58,7 +55,7 @@ type WalletEventsMap = {
 };
 
 // NOTE: Because this runs in a content script, we can't fetch the manifest.
-const name = process.env.APP_NAME || 'Iota Wallet';
+const name = process.env.APP_NAME || 'Sui Wallet';
 
 export type QredoConnectInput = {
 	service: string;
@@ -81,7 +78,7 @@ type QredoConnectFeature = {
 	};
 };
 
-export class IotaWallet implements Wallet {
+export class SuiWallet implements Wallet {
 	readonly #events: Emitter<WalletEventsMap>;
 	readonly #version = '1.0.0' as const;
 	readonly #name = name;
@@ -103,12 +100,12 @@ export class IotaWallet implements Wallet {
 
 	get chains() {
 		// TODO: Extract chain from wallet:
-		return IOTA_CHAINS;
+		return SUI_CHAINS;
 	}
 
 	get features(): StandardConnectFeature &
 		StandardEventsFeature &
-		IotaFeatures &
+		SuiFeatures &
 		QredoConnectFeature {
 		return {
 			'standard:connect': {
@@ -119,19 +116,19 @@ export class IotaWallet implements Wallet {
 				version: '1.0.0',
 				on: this.#on,
 			},
-			'iota:signTransactionBlock': {
+			'sui:signTransactionBlock': {
 				version: '1.0.0',
 				signTransactionBlock: this.#signTransactionBlock,
 			},
-			'iota:signAndExecuteTransactionBlock': {
+			'sui:signAndExecuteTransactionBlock': {
 				version: '1.0.0',
 				signAndExecuteTransactionBlock: this.#signAndExecuteTransactionBlock,
 			},
-			'iota:signMessage': {
+			'sui:signMessage': {
 				version: '1.0.0',
 				signMessage: this.#signMessage,
 			},
-			'iota:signPersonalMessage': {
+			'sui:signPersonalMessage': {
 				version: '1.0.0',
 				signPersonalMessage: this.#signPersonalMessage,
 			},
@@ -154,7 +151,7 @@ export class IotaWallet implements Wallet {
 					label: nickname || undefined,
 					publicKey: publicKey ? fromB64(publicKey) : new Uint8Array(),
 					chains: this.#activeChain ? [this.#activeChain] : [],
-					features: ['iota:signAndExecuteTransaction'],
+					features: ['sui:signAndExecuteTransaction'],
 				}),
 		);
 	}
@@ -162,7 +159,7 @@ export class IotaWallet implements Wallet {
 	constructor() {
 		this.#events = mitt();
 		this.#accounts = [];
-		this.#messagesStream = new WindowMessageStream('iota_in-page', 'iota_content-script');
+		this.#messagesStream = new WindowMessageStream('sui_in-page', 'sui_content-script');
 		this.#messagesStream.messages.subscribe(({ payload }) => {
 			if (isWalletStatusChangePayload(payload)) {
 				const { network, accounts } = payload;
@@ -225,7 +222,7 @@ export class IotaWallet implements Wallet {
 		return { accounts: this.accounts };
 	};
 
-	#signTransactionBlock: IotaSignTransactionBlockMethod = async ({
+	#signTransactionBlock: SuiSignTransactionBlockMethod = async ({
 		transactionBlock,
 		account,
 		...input
@@ -251,7 +248,7 @@ export class IotaWallet implements Wallet {
 		);
 	};
 
-	#signAndExecuteTransactionBlock: IotaSignAndExecuteTransactionBlockMethod = async (input) => {
+	#signAndExecuteTransactionBlock: SuiSignAndExecuteTransactionBlockMethod = async (input) => {
 		if (!isTransactionBlock(input.transactionBlock)) {
 			throw new Error(
 				'Unexpect transaction format found. Ensure that you are using the `Transaction` class.',
@@ -274,7 +271,7 @@ export class IotaWallet implements Wallet {
 		);
 	};
 
-	#signMessage: IotaSignMessageMethod = async ({ message, account }) => {
+	#signMessage: SuiSignMessageMethod = async ({ message, account }) => {
 		return mapToPromise(
 			this.#send<SignMessageRequest, SignMessageRequest>({
 				type: 'sign-message-request',
@@ -292,7 +289,7 @@ export class IotaWallet implements Wallet {
 		);
 	};
 
-	#signPersonalMessage: IotaSignPersonalMessageMethod = async ({ message, account }) => {
+	#signPersonalMessage: SuiSignPersonalMessageMethod = async ({ message, account }) => {
 		return mapToPromise(
 			this.#send<SignMessageRequest, SignMessageRequest>({
 				type: 'sign-message-request',

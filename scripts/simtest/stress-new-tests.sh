@@ -2,9 +2,6 @@
 # Copyright (c) Mysten Labs, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-# Modifications Copyright (c) 2024 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
 # This script runs as part of the rust.yml CI workflow.
 # It will detect new tests added to the repository since the last commit
 # to the main branch, and run them 20 times each with a different seed.

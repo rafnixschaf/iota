@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import nacl from 'tweetnacl';
 
-import { encodeIotaPrivateKey, Keypair, PRIVATE_KEY_SIZE } from '../../cryptography/keypair.js';
+import { encodeSuiPrivateKey, Keypair, PRIVATE_KEY_SIZE } from '../../cryptography/keypair.js';
 import { isValidHardenedPath, mnemonicToSeedHex } from '../../cryptography/mnemonics.js';
 import type { SignatureScheme } from '../../cryptography/signature-scheme.js';
 import { derivePath } from './ed25519-hd-key.js';
@@ -82,7 +79,7 @@ export class Ed25519Keypair extends Keypair {
 		const keypair = nacl.sign.keyPair.fromSeed(secretKey);
 		if (!options || !options.skipValidation) {
 			const encoder = new TextEncoder();
-			const signData = encoder.encode('iota validation');
+			const signData = encoder.encode('sui validation');
 			const signature = nacl.sign.detached(signData, keypair.secretKey);
 			if (!nacl.sign.detached.verify(signData, signature, keypair.publicKey)) {
 				throw new Error('provided secretKey is invalid');
@@ -102,7 +99,7 @@ export class Ed25519Keypair extends Keypair {
 	 * The Bech32 secret key string for this Ed25519 keypair
 	 */
 	getSecretKey(): string {
-		return encodeIotaPrivateKey(
+		return encodeSuiPrivateKey(
 			this.keypair.secretKey.slice(0, PRIVATE_KEY_SIZE),
 			this.getKeyScheme(),
 		);

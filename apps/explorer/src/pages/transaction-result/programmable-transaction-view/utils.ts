@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+import { type SuiArgument } from '@mysten/sui.js/client';
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-import { type IotaArgument } from '@mysten/iota.js/client';
-
-export function flattenIotaArguments(data: (IotaArgument | IotaArgument[])[]): string {
+export function flattenSuiArguments(data: (SuiArgument | SuiArgument[])[]): string {
 	if (!data) {
 		return '';
 	}
@@ -15,7 +12,7 @@ export function flattenIotaArguments(data: (IotaArgument | IotaArgument[])[]): s
 			if (value === 'GasCoin') {
 				return value;
 			} else if (Array.isArray(value)) {
-				return `[${flattenIotaArguments(value)}]`;
+				return `[${flattenSuiArguments(value)}]`;
 			} else if (value === null) {
 				return 'Null';
 			} else if (typeof value === 'object') {

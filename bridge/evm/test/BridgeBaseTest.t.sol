@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../contracts/BridgeCommittee.sol";
 import "../contracts/BridgeVault.sol";
 import "../contracts/BridgeLimiter.sol";
-import "../contracts/IotaBridge.sol";
+import "../contracts/SuiBridge.sol";
 import "../contracts/utils/BridgeConfig.sol";
 
 contract BridgeBaseTest is Test {
@@ -37,7 +34,7 @@ contract BridgeBaseTest is Test {
 
     address USDCWhale = 0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC;
 
-    uint256 IOTA_PRICE = 12800;
+    uint256 SUI_PRICE = 12800;
     uint256 BTC_PRICE = 432518900;
     uint256 ETH_PRICE = 25969600;
     uint256 USDC_PRICE = 10000;
@@ -47,7 +44,7 @@ contract BridgeBaseTest is Test {
     uint16 minStakeRequired = 10000;
 
     BridgeCommittee public committee;
-    IotaBridge public bridge;
+    SuiBridge public bridge;
     BridgeVault public vault;
     BridgeLimiter public limiter;
     BridgeConfig public config;
@@ -149,7 +146,7 @@ contract BridgeBaseTest is Test {
         committee.initialize(address(config), _committee, _stake, minStakeRequired);
         vault = new BridgeVault(wETH);
         uint256[] memory _tokenPrices = new uint256[](4);
-        _tokenPrices[0] = IOTA_PRICE;
+        _tokenPrices[0] = SUI_PRICE;
         _tokenPrices[1] = BTC_PRICE;
         _tokenPrices[2] = ETH_PRICE;
         _tokenPrices[3] = USDC_PRICE;
@@ -158,7 +155,7 @@ contract BridgeBaseTest is Test {
         uint64[] memory chainLimits = new uint64[](1);
         chainLimits[0] = totalLimit;
         limiter.initialize(address(committee), _tokenPrices, _supportedChains, chainLimits);
-        bridge = new IotaBridge();
+        bridge = new SuiBridge();
         bridge.initialize(address(committee), address(vault), address(limiter), wETH);
         vault.transferOwnership(address(bridge));
         limiter.transferOwnership(address(bridge));

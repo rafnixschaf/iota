@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
 	zkLoginProviderDataMap,
 	type ZkLoginProvider,
@@ -57,7 +54,7 @@ export function ZkLoginAccountWarningModal() {
 						</DialogTitle>
 					</DialogHeader>
 					<DialogDescription className="text-center text-steel-darker">
-						Your {providerToName[activeAccount.provider]} Account now gives access to your Iota
+						Your {providerToName[activeAccount.provider]} Account now gives access to your Sui
 						Wallet. To help safeguard your assets, we strongly recommend you enable 2FA.
 						{providerData.mfaLink ? (
 							<>

@@ -1,20 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { parseAmount } from '_src/ui/app/helpers';
-import { type CoinStruct } from '@mysten/iota.js/client';
-import { TransactionBlock } from '@mysten/iota.js/transactions';
-import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
+import { type CoinStruct } from '@mysten/sui.js/client';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 
 interface Options {
 	coinType: string;
 	to: string;
 	amount: string;
 	coinDecimals: number;
-	isPayAllIota: boolean;
+	isPayAllSui: boolean;
 	coins: CoinStruct[];
 }
 
@@ -24,11 +21,11 @@ export function createTokenTransferTransaction({
 	coins,
 	coinType,
 	coinDecimals,
-	isPayAllIota,
+	isPayAllSui,
 }: Options) {
 	const tx = new TransactionBlock();
 
-	if (isPayAllIota && coinType === IOTA_TYPE_ARG) {
+	if (isPayAllSui && coinType === SUI_TYPE_ARG) {
 		tx.transferObjects([tx.gas], to);
 		tx.setGasPayment(
 			coins
@@ -46,7 +43,7 @@ export function createTokenTransferTransaction({
 	const bigIntAmount = parseAmount(amount, coinDecimals);
 	const [primaryCoin, ...mergeCoins] = coins.filter((coin) => coin.coinType === coinType);
 
-	if (coinType === IOTA_TYPE_ARG) {
+	if (coinType === SUI_TYPE_ARG) {
 		const coin = tx.splitCoins(tx.gas, [bigIntAmount]);
 		tx.transferObjects([coin], to);
 	} else {

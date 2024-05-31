@@ -1,7 +1,7 @@
 {
 	"name": "@mysten/create-dapp",
 	"author": "Mysten Labs <build@mystenlabs.com>",
-	"description": "A CLI for creating new Iota dApps",
+	"description": "A CLI for creating new Sui dApps",
 	"homepage": "https://sdk.mystenlabs.com",
 	"version": "0.2.9",
 	"license": "Apache-2.0",
@@ -29,7 +29,7 @@
 		"lint:fix": "pnpm run eslint:fix && pnpm run prettier:fix"
 	},
 	"bugs": {
-		"url": "https://github.com/iotaledger/kinesis/issues/new"
+		"url": "https://github.com/MystenLabs/sui/issues/new"
 	},
 	"publishConfig": {
 		"access": "public"
@@ -40,7 +40,7 @@
 	},
 	"dependencies": {
 		"@mysten/dapp-kit": "workspace:*",
-		"@mysten/iota.js": "workspace:*",
+		"@mysten/sui.js": "workspace:*",
 		"@types/node": "^20.4.2",
 		"enquirer": "^2.4.1"
 	},

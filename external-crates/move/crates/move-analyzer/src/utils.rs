@@ -1,9 +1,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use codespan_reporting::files::{Files, SimpleFiles};
 use lsp_types::Position;
 use move_command_line_common::files::FileHash;

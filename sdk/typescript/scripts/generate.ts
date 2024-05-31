@@ -19,15 +19,12 @@ import type {
 const packageRoot = path.resolve(import.meta.url.slice(5), '../..');
 const openRpcSpec: OpenRpcSpec = JSON.parse(
 	await fs.readFile(
-		path.resolve(packageRoot, '../../crates/iota-open-rpc/spec/openrpc.json'),
+		path.resolve(packageRoot, '../../crates/sui-open-rpc/spec/openrpc.json'),
 		'utf-8',
 	),
 );
 export const LICENSE_HEADER = `
 // Copyright (c) Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /**
@@ -36,7 +33,7 @@ export const LICENSE_HEADER = `
  *  ######################################
  *
  * This file is generated from:
- * /crates/iota-open-rpc/spec/openrpc.json
+ * /crates/sui-open-rpc/spec/openrpc.json
  */
 `.trim();
 
@@ -65,30 +62,30 @@ const options: {
 } = {
 	types: {
 		Coin: { alias: 'CoinStruct' },
-		Data: { alias: 'IotaParsedData' },
-		Event: { alias: 'IotaEvent' },
-		EventFilter: { alias: 'IotaEventFilter' },
+		Data: { alias: 'SuiParsedData' },
+		Event: { alias: 'SuiEvent' },
+		EventFilter: { alias: 'SuiEventFilter' },
 		EventID: { alias: 'EventId' },
-		GasData: { alias: 'IotaGasData' },
-		MoveFunctionArgType: { alias: 'IotaMoveFunctionArgType' },
-		ObjectChange: { alias: 'IotaObjectChange' },
-		ObjectData: { alias: 'IotaObjectData' },
-		ObjectDataOptions: { alias: 'IotaObjectDataOptions' },
-		ObjectRef: { alias: 'IotaObjectRef' },
-		ObjectResponseQuery: { alias: 'IotaObjectResponseQuery' },
+		GasData: { alias: 'SuiGasData' },
+		MoveFunctionArgType: { alias: 'SuiMoveFunctionArgType' },
+		ObjectChange: { alias: 'SuiObjectChange' },
+		ObjectData: { alias: 'SuiObjectData' },
+		ObjectDataOptions: { alias: 'SuiObjectDataOptions' },
+		ObjectRef: { alias: 'SuiObjectRef' },
+		ObjectResponseQuery: { alias: 'SuiObjectResponseQuery' },
 		Owner: { alias: 'ObjectOwner' },
-		PaginatedIotaObjectResponse: { alias: 'PaginatedObjectsResponse' },
+		PaginatedSuiObjectResponse: { alias: 'PaginatedObjectsResponse' },
 		PaginatedTransactionBlockResponse: { alias: 'PaginatedTransactionResponse' },
 		Stake: { alias: 'StakeObject' },
-		IotaCoinMetadata: { alias: 'CoinMetadata' },
-		IotaProgrammableMoveCall: { alias: 'MoveCallIotaTransaction' },
+		SuiCoinMetadata: { alias: 'CoinMetadata' },
+		SuiProgrammableMoveCall: { alias: 'MoveCallSuiTransaction' },
 		Supply: { alias: 'CoinSupply' },
-		TransactionBlock: { alias: 'IotaTransactionBlock' },
+		TransactionBlock: { alias: 'SuiTransactionBlock' },
 		TransactionBlockEffects: { alias: 'TransactionEffects' },
-		TransactionBlockKind: { alias: 'IotaTransactionBlockKind' },
-		TransactionBlockResponse: { alias: 'IotaTransactionBlockResponse' },
-		TransactionBlockResponseOptions: { alias: 'IotaTransactionBlockResponseOptions' },
-		TransactionBlockResponseQuery: { alias: 'IotaTransactionBlockResponseQuery' },
+		TransactionBlockKind: { alias: 'SuiTransactionBlockKind' },
+		TransactionBlockResponse: { alias: 'SuiTransactionBlockResponse' },
+		TransactionBlockResponseOptions: { alias: 'SuiTransactionBlockResponseOptions' },
+		TransactionBlockResponseQuery: { alias: 'SuiTransactionBlockResponseQuery' },
 		ValidatorApys: { alias: 'ValidatorsApy' },
 		GenericSignature: {
 			typeAlias: 'string',
@@ -98,14 +95,14 @@ const options: {
 		},
 	},
 	methods: {
-		iota_getNormalizedMoveModule: {
+		sui_getNormalizedMoveModule: {
 			params: {
 				module_name: {
 					alias: 'module',
 				},
 			},
 		},
-		iota_getNormalizedMoveFunction: {
+		sui_getNormalizedMoveFunction: {
 			params: {
 				module_name: {
 					alias: 'module',
@@ -115,7 +112,7 @@ const options: {
 				},
 			},
 		},
-		iota_getNormalizedMoveStruct: {
+		sui_getNormalizedMoveStruct: {
 			params: {
 				module_name: {
 					alias: 'module',
@@ -125,7 +122,7 @@ const options: {
 				},
 			},
 		},
-		iotax_getOwnedObjects: {
+		suix_getOwnedObjects: {
 			flattenParams: ['query'],
 			params: {
 				address: {
@@ -133,14 +130,14 @@ const options: {
 				},
 			},
 		},
-		iota_getObject: {
+		sui_getObject: {
 			params: {
 				object_id: {
 					alias: 'id',
 				},
 			},
 		},
-		iota_tryGetPastObject: {
+		sui_tryGetPastObject: {
 			params: {
 				object_id: {
 					alias: 'id',
@@ -150,14 +147,14 @@ const options: {
 				},
 			},
 		},
-		iota_multiGetObjects: {
+		sui_multiGetObjects: {
 			params: {
 				object_ids: {
 					alias: 'ids',
 				},
 			},
 		},
-		iotax_queryTransactionBlocks: {
+		suix_queryTransactionBlocks: {
 			flattenParams: ['query'],
 			params: {
 				descending_order: {
@@ -166,7 +163,7 @@ const options: {
 				},
 			},
 		},
-		iota_executeTransactionBlock: {
+		sui_executeTransactionBlock: {
 			params: {
 				tx_bytes: {
 					alias: 'transactionBlock',
@@ -178,7 +175,7 @@ const options: {
 				},
 			},
 		},
-		iotax_queryEvents: {
+		suix_queryEvents: {
 			params: {
 				descending_order: {
 					alias: 'order',
@@ -186,7 +183,7 @@ const options: {
 				},
 			},
 		},
-		iota_devInspectTransactionBlock: {
+		sui_devInspectTransactionBlock: {
 			params: {
 				sender_address: {
 					alias: 'sender',
@@ -200,7 +197,7 @@ const options: {
 				},
 			},
 		},
-		iota_dryRunTransactionBlock: {
+		sui_dryRunTransactionBlock: {
 			params: {
 				tx_bytes: {
 					alias: 'transactionBlock',
@@ -208,14 +205,14 @@ const options: {
 				},
 			},
 		},
-		iotax_getDynamicFields: {
+		suix_getDynamicFields: {
 			params: {
 				parent_object_id: {
 					alias: 'parentId',
 				},
 			},
 		},
-		iotax_getDynamicFieldObject: {
+		suix_getDynamicFieldObject: {
 			params: {
 				parent_object_id: {
 					alias: 'parentId',
@@ -766,11 +763,11 @@ function normalizeName(name: string) {
 }
 
 export function normalizeMethodName(name: string): string {
-	if (name.startsWith('iota_')) {
+	if (name.startsWith('sui_')) {
 		return normalizeMethodName(name.slice(4));
 	}
 
-	if (name.startsWith('iotax_')) {
+	if (name.startsWith('suix_')) {
 		return normalizeMethodName(name.slice(5));
 	}
 

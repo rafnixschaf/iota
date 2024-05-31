@@ -2,9 +2,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::batch_maker::MAX_PARALLEL_BATCH;
 use crate::metrics::WorkerMetrics;
 use config::{Authority, Committee, Stake, WorkerCache, WorkerId};

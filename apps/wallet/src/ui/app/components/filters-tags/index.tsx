@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import cl from 'clsx';
 import { memo, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
@@ -11,7 +8,7 @@ import { NavLink } from 'react-router-dom';
 
 import st from './Filters.module.scss';
 
-const ELEMENT_ID = '#iota-apps-filters';
+const ELEMENT_ID = '#sui-apps-filters';
 
 // TODO: extend this interface to include params and functions for the filter tags
 export interface Props {

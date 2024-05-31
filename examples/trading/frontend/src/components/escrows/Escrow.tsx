@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useCurrentAccount, useIotaClientQuery } from "@mysten/dapp-kit";
-import { IotaObjectDisplay } from "@/components/IotaObjectDisplay";
+import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
+import { SuiObjectDisplay } from "@/components/SuiObjectDisplay";
 import { Button } from "@radix-ui/themes";
 import {
   ArrowDownIcon,
@@ -36,7 +33,7 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
   const { mutate: cancelEscrowMutation, isPending: pendingCancellation } =
     useCancelEscrowMutation();
 
-  const iotaObject = useIotaClientQuery("getObject", {
+  const suiObject = useSuiClientQuery("getObject", {
     id: escrow?.itemId,
     options: {
       showDisplay: true,
@@ -56,7 +53,7 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
     enabled: !escrow.cancelled,
   });
 
-  const { data: iotaLockedObject } = useGetLockedObject({
+  const { data: suiLockedObject } = useGetLockedObject({
     lockedId: lockedData.data?.objectId,
   });
 
@@ -78,8 +75,8 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
   };
 
   return (
-    <IotaObjectDisplay
-      object={iotaObject.data?.data!}
+    <SuiObjectDisplay
+      object={suiObject.data?.data!}
       label={getLabel()}
       labelClasses={getLabelClasses()}
     >
@@ -106,7 +103,7 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
               onClick={() =>
                 cancelEscrowMutation({
                   escrow,
-                  iotaObject: iotaObject.data?.data!,
+                  suiObject: suiObject.data?.data!,
                 })
               }
             >
@@ -116,9 +113,9 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
           )}
         {isToggled && lockedData.data && (
           <div className="min-w-[340px] w-full justify-self-start text-left">
-            {iotaLockedObject?.data && (
+            {suiLockedObject?.data && (
               <LockedObject
-                object={iotaLockedObject.data}
+                object={suiLockedObject.data}
                 itemId={lockedData.data.itemId}
                 hideControls
               />
@@ -160,6 +157,6 @@ export function Escrow({ escrow }: { escrow: ApiEscrowObject }) {
           </div>
         )}
       </div>
-    </IotaObjectDisplay>
+    </SuiObjectDisplay>
   );
 }

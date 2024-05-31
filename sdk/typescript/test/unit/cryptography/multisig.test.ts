@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB64, toB58, toB64 } from '@mysten/bcs';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -46,7 +43,7 @@ describe('Multisig scenarios', () => {
 		];
 
 		const txb = new TransactionBlock();
-		txb.setSender(k3.getPublicKey().toIotaAddress());
+		txb.setSender(k3.getPublicKey().toSuiAddress());
 		txb.setGasPrice(5);
 		txb.setGasBudget(100);
 		txb.setGasPayment([
@@ -396,7 +393,7 @@ describe('Multisig address creation:', () => {
 			],
 			threshold: 1,
 		});
-		const multisigAddress = multisigPublicKey.toIotaAddress();
+		const multisigAddress = multisigPublicKey.toSuiAddress();
 
 		expect(multisigAddress).toEqual(
 			'0x77a9fbf3c695d78dd83449a81a9e70aa79a77dbfd6fb72037bf09201c12052cd',
@@ -412,7 +409,7 @@ describe('Multisig address creation:', () => {
 			],
 			threshold: 1,
 		});
-		expect(publicKey.toIotaAddress()).toEqual(
+		expect(publicKey.toSuiAddress()).toEqual(
 			'0x3abd6a29ba3b00c7c84d7980160179c32a7bbd639d79c53dd30f9481ee0a94e2',
 		);
 		const data = new Uint8Array(

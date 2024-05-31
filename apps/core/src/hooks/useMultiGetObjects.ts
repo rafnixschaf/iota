@@ -1,21 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClient } from '@mysten/dapp-kit';
-import { IotaObjectDataOptions, IotaObjectResponse } from '@mysten/iota.js/client';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { SuiObjectDataOptions, SuiObjectResponse } from '@mysten/sui.js/client';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
 import { chunkArray } from '../utils/chunkArray';
 
 export function useMultiGetObjects(
 	ids: string[],
-	options: IotaObjectDataOptions,
-	queryOptions?: Omit<UseQueryOptions<IotaObjectResponse[]>, 'queryKey' | 'queryFn'>,
+	options: SuiObjectDataOptions,
+	queryOptions?: Omit<UseQueryOptions<SuiObjectResponse[]>, 'queryKey' | 'queryFn'>,
 ) {
-	const client = useIotaClient();
+	const client = useSuiClient();
 	return useQuery({
 		...queryOptions,
 		queryKey: ['multiGetObjects', ids],

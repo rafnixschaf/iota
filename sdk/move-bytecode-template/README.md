@@ -1,6 +1,6 @@
 # Move Bytecode Template
 
-Move Bytecode Template allows updating a pre-compiled bytecode, so that a standard template could be customized and used to publish new modules on Iota directly in the browser. Hence, removing the need for a backend to compile new modules.
+Move Bytecode Template allows updating a pre-compiled bytecode, so that a standard template could be customized and used to publish new modules on Sui directly in the browser. Hence, removing the need for a backend to compile new modules.
 
 This crate builds a WASM binary for the `move-language/move-binary-format` allowing bytecode serialization and deserialization in various environments. The main target for this package is "web".
 
@@ -14,14 +14,14 @@ This package is a perfect fit for the following applications:
 
 ## Example of a Template Module
 
-The following code is a close-copy of the `Coin` example from the [Move by Example](https://examples.iota.io/samples/coin.html) book.
+The following code is a close-copy of the `Coin` example from the [Move by Example](https://examples.sui.io/samples/coin.html) book.
 
 ```move
 module 0x0::template {
     use std::option;
-    use iota::coin;
-    use iota::transfer;
-    use iota::tx_context::{Self, TxContext};
+    use sui::coin;
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
 
     /// The OTW for the Coin
     struct TEMPLATE has drop {}

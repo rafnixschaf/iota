@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB58, toB58 } from './b58.js';
 import { fromB64, toB64 } from './b64.js';
 import { BcsType } from './bcs-type.js';
@@ -25,7 +22,7 @@ import { BcsWriter } from './writer.js';
  */
 export type TypeName = string | [string, ...(TypeName | string)[]];
 
-const IOTA_ADDRESS_LENGTH = 32;
+const SUI_ADDRESS_LENGTH = 32;
 
 export interface TypeInterface {
 	encode: (
@@ -305,7 +302,7 @@ export class BCS {
 	 *
 	 * @example
 	 * ```
-	 * let bcs = new BCS(getIotaMoveConfig());
+	 * let bcs = new BCS(getSuiMoveConfig());
 	 * bcs.registerAlias('ObjectDigest', BCS.BASE58);
 	 * let b58_digest = bcs.de('ObjectDigest', '<digest_bytes>', 'base64');
 	 * ```
@@ -468,7 +465,7 @@ export class BCS {
 	/**
 	 * Register an address type which is a sequence of U8s of specified length.
 	 * @example
-	 * bcs.registerAddressType('address', IOTA_ADDRESS_LENGTH);
+	 * bcs.registerAddressType('address', SUI_ADDRESS_LENGTH);
 	 * let addr = bcs.de('address', 'c3aca510c785c7094ac99aeaa1e69d493122444df50bb8a99dfa790c654a79af');
 	 *
 	 * @param name Name of the address type.
@@ -956,9 +953,9 @@ export class BCS {
 	/**
 	 * Parse a type name and get the type's generics.
 	 * @example
-	 * let { typeName, typeParams } = parseTypeName('Option<Coin<IOTA>>');
+	 * let { typeName, typeParams } = parseTypeName('Option<Coin<SUI>>');
 	 * // typeName: Option
-	 * // typeParams: [ 'Coin<IOTA>' ]
+	 * // typeParams: [ 'Coin<SUI>' ]
 	 *
 	 * @param name Name of the type to process
 	 * @returns Object with typeName and typeParams listed as Array
@@ -1132,16 +1129,16 @@ export function getRustConfig(): BcsConfig {
 	return {
 		genericSeparators: ['<', '>'],
 		vectorType: 'Vec',
-		addressLength: IOTA_ADDRESS_LENGTH,
+		addressLength: SUI_ADDRESS_LENGTH,
 		addressEncoding: 'hex',
 	};
 }
 
-export function getIotaMoveConfig(): BcsConfig {
+export function getSuiMoveConfig(): BcsConfig {
 	return {
 		genericSeparators: ['<', '>'],
 		vectorType: 'vector',
-		addressLength: IOTA_ADDRESS_LENGTH,
+		addressLength: SUI_ADDRESS_LENGTH,
 		addressEncoding: 'hex',
 	};
 }

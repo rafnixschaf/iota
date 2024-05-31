@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import * as Sentry from '@sentry/react';
 import { useEffect } from 'react';
 import {
@@ -57,5 +54,5 @@ Sentry.init({
 		/^chrome(?:-extension)?:\/\//i,
 		/<anonymous>/,
 	],
-	allowUrls: [/.*\.iota\.io/i, /.*-mysten-labs\.vercel\.app/i, 'explorer-topaz.vercel.app'],
+	allowUrls: [/.*\.sui\.io/i, /.*-mysten-labs\.vercel\.app/i, 'explorer-topaz.vercel.app'],
 });

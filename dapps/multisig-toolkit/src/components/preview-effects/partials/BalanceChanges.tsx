@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClientQuery } from '@mysten/dapp-kit';
-import { type BalanceChange } from '@mysten/iota.js/src/client';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
+import { type BalanceChange } from '@mysten/sui.js/src/client';
 
 import { PreviewCard } from '../PreviewCard';
 import { onChainAmountToFloat } from '../utils';
@@ -21,7 +18,7 @@ export function BalanceChanges({ changes }: { changes: BalanceChange[] }) {
 }
 
 function ChangedBalance({ change }: { change: BalanceChange }) {
-	const { data: coinMetadata } = useIotaClientQuery('getCoinMetadata', {
+	const { data: coinMetadata } = useSuiClientQuery('getCoinMetadata', {
 		coinType: change.coinType,
 	});
 

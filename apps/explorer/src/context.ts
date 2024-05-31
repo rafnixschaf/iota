@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import * as Sentry from '@sentry/react';
 import { createContext, useContext, useLayoutEffect, useMemo } from 'react';
 // eslint-disable-next-line no-restricted-imports
@@ -12,7 +9,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Network } from './utils/api/DefaultRpcClient';
 import { growthbook } from './utils/growthbook';
 import { queryClient } from './utils/queryClient';
-import { getDefaultNetwork } from '@mysten/iota.js/client';
+import { getDefaultNetwork } from '@mysten/sui.js/client';
 
 export const NetworkContext = createContext<
 	[Network | string, (network: Network | string) => void]

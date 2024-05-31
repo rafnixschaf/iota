@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 use crate::metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider};
 use crate::{
     client::{connect_lazy_with_config, connect_with_config},

@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useParams } from 'react-router-dom';
 import {
-	isIotaNSName,
+	isSuiNSName,
 	useGetObject,
-	useResolveIotaNSAddress,
-	useResolveIotaNSName,
+	useResolveSuiNSAddress,
+	useResolveSuiNSName,
 } from '@mysten/core';
 import { PageLayout } from '~/components/Layout/PageLayout';
 import { PageHeader } from '~/ui/PageHeader';
@@ -28,10 +25,10 @@ function Header({
 	loading?: boolean;
 	error?: Error | null;
 }) {
-	const { data: domainName, isLoading, error: resolveIotansError } = useResolveIotaNSName(address);
+	const { data: domainName, isLoading, error: resolveSuinsError } = useResolveSuiNSName(address);
 	const { data, isPending, error: getObjectError } = useGetObject(address!);
 	const isObject = !!data?.data;
-	const errorText = getObjectError?.message ?? resolveIotansError?.message ?? error?.message;
+	const errorText = getObjectError?.message ?? resolveSuinsError?.message ?? error?.message;
 
 	return (
 		<div>
@@ -58,22 +55,22 @@ function Header({
 
 function PageLayoutContainer({ address }: { address: string }) {
 	const { id } = useParams();
-	const isIotaNSAddress = isIotaNSName(id!);
+	const isSuiNSAddress = isSuiNSName(id!);
 	const {
 		data,
 		isLoading,
-		error: iotansAddressError,
-	} = useResolveIotaNSAddress(address, isIotaNSAddress);
+		error: suinsAddressError,
+	} = useResolveSuiNSAddress(address, isSuiNSAddress);
 
 	return (
 		<PageLayout
 			loading={isLoading}
-			isError={!!iotansAddressError}
+			isError={!!suinsAddressError}
 			gradient={{
 				size: 'md',
 				content: <Header address={address} />,
 			}}
-			content={<PageContent address={data || address} error={iotansAddressError} />}
+			content={<PageContent address={data || address} error={suinsAddressError} />}
 		/>
 	);
 }

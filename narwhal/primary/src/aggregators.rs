@@ -2,9 +2,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 use crate::metrics::PrimaryMetrics;
 use config::{AuthorityIdentifier, Committee, Stake};
 use crypto::{
@@ -14,7 +11,7 @@ use crypto::{
 use fastcrypto::hash::{Digest, Hash};
 use std::collections::HashSet;
 use std::sync::Arc;
-use iota_protocol_config::ProtocolConfig;
+use sui_protocol_config::ProtocolConfig;
 use tracing::warn;
 use types::{
     ensure,

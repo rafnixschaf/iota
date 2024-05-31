@@ -1,17 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClientQuery } from "@mysten/dapp-kit";
+import { useSuiClientQuery } from "@mysten/dapp-kit";
 
 /**
  * A re-usable hook for querying a locked object by ID
  * from the on-chain state.
  */
 export function useGetLockedObject({ lockedId }: { lockedId: string }) {
-  return useIotaClientQuery(
+  return useSuiClientQuery(
     "getObject",
     {
       id: lockedId,

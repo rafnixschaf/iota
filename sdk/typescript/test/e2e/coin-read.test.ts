@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { publishPackage, setup, TestToolbox } from './utils/setup';
@@ -22,10 +19,10 @@ describe('CoinRead API', () => {
 	});
 
 	it('Get coins with/without type', async () => {
-		const iotaCoins = await toolbox.client.getCoins({
+		const suiCoins = await toolbox.client.getCoins({
 			owner: toolbox.address(),
 		});
-		expect(iotaCoins.data.length).toEqual(5);
+		expect(suiCoins.data.length).toEqual(5);
 
 		const testCoins = await toolbox.client.getCoins({
 			owner: publishToolbox.address(),
@@ -46,21 +43,21 @@ describe('CoinRead API', () => {
 		expect(publisherAllCoins.hasNextPage).toEqual(false);
 
 		//test paging with limit
-		const someIotaCoins = await toolbox.client.getCoins({
+		const someSuiCoins = await toolbox.client.getCoins({
 			owner: toolbox.address(),
 			limit: 3,
 		});
-		expect(someIotaCoins.data.length).toEqual(3);
-		expect(someIotaCoins.nextCursor).toBeTruthy();
+		expect(someSuiCoins.data.length).toEqual(3);
+		expect(someSuiCoins.nextCursor).toBeTruthy();
 	});
 
 	it('Get balance with/without type', async () => {
-		const iotaBalance = await toolbox.client.getBalance({
+		const suiBalance = await toolbox.client.getBalance({
 			owner: toolbox.address(),
 		});
-		expect(iotaBalance.coinType).toEqual('0x2::iota::IOTA');
-		expect(iotaBalance.coinObjectCount).toEqual(5);
-		expect(Number(iotaBalance.totalBalance)).toBeGreaterThan(0);
+		expect(suiBalance.coinType).toEqual('0x2::sui::SUI');
+		expect(suiBalance.coinObjectCount).toEqual(5);
+		expect(Number(suiBalance.totalBalance)).toBeGreaterThan(0);
 
 		const testBalance = await toolbox.client.getBalance({
 			owner: publishToolbox.address(),

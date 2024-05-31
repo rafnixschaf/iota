@@ -1,14 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import type { WalletWithRequiredFeatures } from '@mysten/wallet-standard';
 
 import { useWallets } from '../../../hooks/wallet/useWallets.js';
 import { getWalletUniqueIdentifier } from '../../../utils/walletUtils.js';
-import { IotaIcon } from '../../icons/IotaIcon.js';
+import { SuiIcon } from '../../icons/SuiIcon.js';
 import * as styles from './WalletList.css.js';
 import { WalletListItem } from './WalletListItem.js';
 
@@ -34,8 +31,8 @@ export function WalletList({ selectedWalletName, onPlaceholderClick, onSelect }:
 				))
 			) : (
 				<WalletListItem
-					name="Iota Wallet"
-					icon={<IotaIcon />}
+					name="Sui Wallet"
+					icon={<SuiIcon />}
 					onClick={onPlaceholderClick}
 					isSelected
 				/>

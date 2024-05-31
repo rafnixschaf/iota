@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { fromB64, toB58, toB64 } from '@mysten/bcs';
 import { secp256r1 } from '@noble/curves/p256';
 import { sha256 } from '@noble/hashes/sha256';
 import { describe, expect, it } from 'vitest';
 
-import { decodeIotaPrivateKey } from '../../../src/cryptography/keypair';
+import { decodeSuiPrivateKey } from '../../../src/cryptography/keypair';
 import {
 	DEFAULT_SECP256R1_DERIVATION_PATH,
 	Secp256r1Keypair,
@@ -35,21 +32,21 @@ export const INVALID_SECP256R1_SECRET_KEY = Uint8Array.from(Array(PRIVATE_KEY_SI
 // Invalid public key with incorrect length
 export const INVALID_SECP256R1_PUBLIC_KEY = Uint8Array.from(Array(PRIVATE_KEY_SIZE).fill(1));
 
-// Test case generated against rust keytool cli. See https://github.com/iotaledger/kinesis/blob/edd2cd31e0b05d336b1b03b6e79a67d8dd00d06b/crates/iota/src/unit_tests/keytool_tests.rs#L165
+// Test case generated against rust keytool cli. See https://github.com/MystenLabs/sui/blob/edd2cd31e0b05d336b1b03b6e79a67d8dd00d06b/crates/sui/src/unit_tests/keytool_tests.rs#L165
 const TEST_CASES = [
 	[
 		'act wing dilemma glory episode region allow mad tourist humble muffin oblige',
-		'iotaprivkey1qtt65ua2lhal76zg4cxd6umdqynv2rj2gzrntp5rwlnyj370jg3pwhxg9kc',
+		'suiprivkey1qtt65ua2lhal76zg4cxd6umdqynv2rj2gzrntp5rwlnyj370jg3pwhxg9kc',
 		'0x779a63b28528210a5ec6c4af5a70382fa3f0c2d3f98dcbe4e3a4ae2f8c39cc9c',
 	],
 	[
 		'flag rebel cabbage captain minimum purpose long already valley horn enrich salt',
-		'iotaprivkey1qtcjgmue7q8u4gtutfvfpx3zj3aa2r9pqssuusrltxfv68eqhzsgjyhk7e4',
+		'suiprivkey1qtcjgmue7q8u4gtutfvfpx3zj3aa2r9pqssuusrltxfv68eqhzsgjyhk7e4',
 		'0x8b45523042933aa55f57e2ccc661304baed292529b6e67a0c9857c1f3f871806',
 	],
 	[
 		'area renew bar language pudding trial small host remind supreme cabbage era',
-		'iotaprivkey1qtxafg26qxeqy7f56gd2rvsup0a5kl4cre7nt2rtcrf0p3v5pwd4c595zjp',
+		'suiprivkey1qtxafg26qxeqy7f56gd2rvsup0a5kl4cre7nt2rtcrf0p3v5pwd4c595zjp',
 		'0x8528ef86150ec331928a8b3edb8adbe2fb523db8c84679aa57a931da6a4cdb25',
 	],
 ];
@@ -132,12 +129,12 @@ describe('secp256r1-keypair', () => {
 		for (const t of TEST_CASES) {
 			// Keypair derived from mnemonic
 			const keypair = Secp256r1Keypair.deriveKeypair(t[0]);
-			expect(keypair.getPublicKey().toIotaAddress()).toEqual(t[2]);
+			expect(keypair.getPublicKey().toSuiAddress()).toEqual(t[2]);
 
 			// Keypair derived from Bech32 string.
-			const parsed = decodeIotaPrivateKey(t[1]);
+			const parsed = decodeSuiPrivateKey(t[1]);
 			const kp = Secp256r1Keypair.fromSecretKey(parsed.secretKey);
-			expect(kp.getPublicKey().toIotaAddress()).toEqual(t[2]);
+			expect(kp.getPublicKey().toSuiAddress()).toEqual(t[2]);
 
 			// Exported keypair matches the Bech32 encoded secret key.
 			const exported = kp.export();
@@ -160,7 +157,7 @@ describe('secp256r1-keypair', () => {
 	it('signs TransactionBlocks', async () => {
 		const keypair = new Secp256r1Keypair();
 		const txb = new TransactionBlock();
-		txb.setSender(keypair.getPublicKey().toIotaAddress());
+		txb.setSender(keypair.getPublicKey().toSuiAddress());
 		txb.setGasPrice(5);
 		txb.setGasBudget(100);
 		txb.setGasPayment([

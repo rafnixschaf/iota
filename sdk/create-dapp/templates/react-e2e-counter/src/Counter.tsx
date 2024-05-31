@@ -1,20 +1,20 @@
 import {
   useCurrentAccount,
   useSignAndExecuteTransactionBlock,
-  useIotaClient,
-  useIotaClientQuery,
+  useSuiClient,
+  useSuiClientQuery,
 } from "@mysten/dapp-kit";
-import type { IotaObjectData } from "@mysten/iota.js/client";
-import { TransactionBlock } from "@mysten/iota.js/transactions";
+import type { SuiObjectData } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { useNetworkVariable } from "./networkConfig";
 
 export function Counter({ id }: { id: string }) {
-  const client = useIotaClient();
+  const client = useSuiClient();
   const currentAccount = useCurrentAccount();
   const counterPackageId = useNetworkVariable("counterPackageId");
   const { mutate: signAndExecute } = useSignAndExecuteTransactionBlock();
-  const { data, isPending, error, refetch } = useIotaClientQuery("getObject", {
+  const { data, isPending, error, refetch } = useSuiClientQuery("getObject", {
     id,
     options: {
       showContent: true,
@@ -82,7 +82,7 @@ export function Counter({ id }: { id: string }) {
     </>
   );
 }
-function getCounterFields(data: IotaObjectData) {
+function getCounterFields(data: SuiObjectData) {
   if (data.content?.dataType !== "moveObject") {
     return null;
   }

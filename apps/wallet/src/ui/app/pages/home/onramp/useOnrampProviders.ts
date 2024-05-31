@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { growthbook } from '_src/ui/app/experimentation/feature-gating';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useQuery } from '@tanstack/react-query';
@@ -37,15 +34,15 @@ const ONRAMP_PROVIDER: OnrampProvider[] = [
 		},
 		getUrl: async (address) => {
 			const params = new URLSearchParams({
-				coinType: 'IOTA',
+				coinType: 'SUI',
 				fiatType: 'USD',
 				fiatAmount: '100',
-				blockchain: 'IOTA',
+				blockchain: 'SUI',
 				theme: 'dark',
 				walletAddress: address,
 				returnUrl: window.location.href,
 			});
-			const url = `https://iotawallet.banxa.com/?${params}`;
+			const url = `https://suiwallet.banxa.com/?${params}`;
 			return url;
 		},
 	},
@@ -64,7 +61,7 @@ const ONRAMP_PROVIDER: OnrampProvider[] = [
 				// If you want to test ETH values, you can use something like this:
 				// cryptoCurrencyCode: 'ETH',
 				// walletAddress: '0x000000000000000000000000000000000000dead',
-				cryptoCurrencyCode: 'IOTA',
+				cryptoCurrencyCode: 'SUI',
 				walletAddress: address,
 				disableWalletAddressForm: 'true',
 				themeColor: '#6fbcf0',
@@ -99,7 +96,7 @@ const ONRAMP_PROVIDER: OnrampProvider[] = [
 			const params = new URLSearchParams({
 				theme: 'light',
 				colorCode: '#6fbcf0',
-				currencyCode: 'IOTA',
+				currencyCode: 'SUI',
 				walletAddress: address,
 				environment: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'STAGING',
 			});

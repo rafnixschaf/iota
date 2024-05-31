@@ -1,9 +1,9 @@
 {
-	"index": "Iota TypeScript SDK Quick Start",
+	"index": "Sui TypeScript SDK Quick Start",
 	"install": "Install",
-	"hello-iota": "Hello, Iota",
+	"hello-sui": "Hello, Sui",
 	"faucet": "Faucet",
-	"iota-client": "IotaClient",
+	"sui-client": "SuiClient",
 	"transaction-building": "Transaction Building",
 	"cryptography": "Cryptography",
 	"utils": "Utils",

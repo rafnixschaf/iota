@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import clsx from 'clsx';
 import { lazy, Suspense } from 'react';
 
@@ -11,7 +8,7 @@ import { AccountsCardGraph } from '~/components/AccountCardGraph';
 import { Activity } from '~/components/Activity';
 import { CurrentEpoch, OnTheNetwork } from '~/components/HomeMetrics';
 import { PageLayout } from '~/components/Layout/PageLayout';
-import { IotaTokenCard } from '~/components/IotaTokenCard';
+import { SuiTokenCard } from '~/components/SuiTokenCard';
 import { TransactionsCardGraph } from '~/components/TransactionsCardGraph';
 import { ErrorBoundary } from '~/components/error-boundary/ErrorBoundary';
 import { TopPackagesCard } from '~/components/top-packages/TopPackagesCard';
@@ -27,14 +24,14 @@ const TRANSACTIONS_LIMIT = 25;
 
 function Home() {
 	const [network] = useNetwork();
-	const isIotaTokenCardEnabled = network === Network.Mainnet;
+	const isSuiTokenCardEnabled = network === Network.Mainnet;
 	return (
 		<PageLayout
 			gradient={{
 				content: (
 					<div
 						data-testid="home-page"
-						className={clsx('home-page-grid-container-top', isIotaTokenCardEnabled && 'with-token')}
+						className={clsx('home-page-grid-container-top', isSuiTokenCardEnabled && 'with-token')}
 					>
 						<div style={{ gridArea: 'network' }} className="overflow-hidden">
 							<OnTheNetwork />
@@ -42,9 +39,9 @@ function Home() {
 						<div style={{ gridArea: 'epoch' }}>
 							<CurrentEpoch />
 						</div>
-						{isIotaTokenCardEnabled ? (
+						{isSuiTokenCardEnabled ? (
 							<div style={{ gridArea: 'token' }}>
-								<IotaTokenCard />
+								<SuiTokenCard />
 							</div>
 						) : null}
 						<div style={{ gridArea: 'transactions' }}>

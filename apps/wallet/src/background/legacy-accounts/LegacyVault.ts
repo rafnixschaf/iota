@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { decrypt } from '_shared/cryptography/keystore';
 import {
 	entropyToMnemonic,
@@ -15,7 +12,7 @@ import {
 	fromExportedKeypair,
 	type LegacyExportedKeyPair,
 } from '_shared/utils/from-exported-keypair';
-import { mnemonicToSeedHex, type Keypair } from '@mysten/iota.js/cryptography';
+import { mnemonicToSeedHex, type Keypair } from '@mysten/sui.js/cryptography';
 
 import { getFromLocalStorage } from '../storage-utils';
 

@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -11,7 +8,7 @@ import {
 	fromB58,
 	fromB64,
 	fromHEX,
-	getIotaMoveConfig,
+	getSuiMoveConfig,
 	toB58,
 	toB64,
 	toHEX,
@@ -19,7 +16,7 @@ import {
 
 describe('BCS: Encodings', () => {
 	it('should de/ser hex, base58 and base64', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 
 		expect(bcs.de('u8', 'AA==', 'base64')).toEqual(0);
 		expect(bcs.de('u8', '00', 'hex')).toEqual(0);
@@ -34,7 +31,7 @@ describe('BCS: Encodings', () => {
 	});
 
 	it('should de/ser native encoding types', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 
 		bcs.registerStructType('TestStruct', {
 			hex: BCS.HEX,

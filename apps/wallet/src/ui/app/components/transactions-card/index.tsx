@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { DateCard } from '_app/shared/date-card';
 import { Text } from '_app/shared/text';
 import { useGetTxnRecipientAddress } from '_hooks';
 import { useRecognizedPackages } from '_src/ui/app/hooks/useRecognizedPackages';
 import { getLabel, useTransactionSummary } from '@mysten/core';
-import type { IotaTransactionBlockResponse } from '@mysten/iota.js/client';
+import type { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { Link } from 'react-router-dom';
 
 import { TxnTypeLabel } from './TxnActionLabel';
@@ -19,7 +16,7 @@ export function TransactionCard({
 	txn,
 	address,
 }: {
-	txn: IotaTransactionBlockResponse;
+	txn: SuiTransactionBlockResponse;
 	address: string;
 }) {
 	const executionStatus = txn.effects?.status.status;
@@ -31,7 +28,7 @@ export function TransactionCard({
 		recognizedPackagesList,
 	});
 
-	// we only show Iota Transfer amount or the first non-Iota transfer amount
+	// we only show Sui Transfer amount or the first non-Sui transfer amount
 
 	const recipientAddress = useGetTxnRecipientAddress({ txn, address });
 
@@ -45,8 +42,8 @@ export function TransactionCard({
 	// For other transaction show Sent or Received
 
 	// TODO: Support programmable tx:
-	// Show iota symbol only if transfer transferAmount coinType is IOTA_TYPE_ARG, staking or unstaking
-	const showIotaSymbol = false;
+	// Show sui symbol only if transfer transferAmount coinType is SUI_TYPE_ARG, staking or unstaking
+	const showSuiSymbol = false;
 
 	const timestamp = txn.timestampMs;
 
@@ -89,9 +86,9 @@ export function TransactionCard({
 									<Text color="gray-90" weight="semibold">
 										{summary?.label}
 									</Text>
-									{showIotaSymbol && (
+									{showSuiSymbol && (
 										<Text color="gray-90" weight="normal" variant="subtitleSmall">
-											IOTA
+											SUI
 										</Text>
 									)}
 								</div>

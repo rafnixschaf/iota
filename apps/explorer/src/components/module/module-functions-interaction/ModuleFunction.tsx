@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useZodForm } from '@mysten/core';
 import { ArrowRight12 } from '@mysten/icons';
-import { TransactionBlock, getPureSerializationType } from '@mysten/iota.js/transactions';
+import { TransactionBlock, getPureSerializationType } from '@mysten/sui.js/transactions';
 import { Button } from '@mysten/ui';
 import {
 	ConnectButton,
@@ -25,7 +22,7 @@ import { useFunctionTypeArguments } from './useFunctionTypeArguments';
 import { DisclosureBox } from '~/ui/DisclosureBox';
 import { Input } from '~/ui/Input';
 
-import type { IotaMoveNormalizedFunction } from '@mysten/iota.js/client';
+import type { SuiMoveNormalizedFunction } from '@mysten/sui.js/client';
 import type { TypeOf } from 'zod';
 
 const argsSchema = z.object({
@@ -37,7 +34,7 @@ export type ModuleFunctionProps = {
 	packageId: string;
 	moduleName: string;
 	functionName: string;
-	functionDetails: IotaMoveNormalizedFunction;
+	functionDetails: SuiMoveNormalizedFunction;
 	defaultOpen?: boolean;
 };
 
@@ -141,7 +138,7 @@ export function ModuleFunction({
 							'!rounded-md !text-bodySmall',
 							currentAccount
 								? '!border !border-solid !border-steel !bg-white !font-mono !text-hero-dark !shadow-sm !shadow-ebony/5'
-								: '!flex !flex-nowrap !items-center !gap-1 !bg-iota-dark !font-sans !text-iota-light hover:!bg-iota-dark hover:!text-white',
+								: '!flex !flex-nowrap !items-center !gap-1 !bg-sui-dark !font-sans !text-sui-light hover:!bg-sui-dark hover:!text-white',
 						)}
 					/>
 				</div>

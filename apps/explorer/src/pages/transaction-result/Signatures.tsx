@@ -1,18 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type IotaTransactionBlockResponse } from '@mysten/iota.js/client';
+import { type SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import {
 	parseSerializedSignature,
 	type SignatureScheme,
 	type PublicKey,
-} from '@mysten/iota.js/cryptography';
-import { parsePartialSignatures } from '@mysten/iota.js/multisig';
-import { toB64, normalizeIotaAddress } from '@mysten/iota.js/utils';
-import { publicKeyFromRawBytes } from '@mysten/iota.js/verify';
+} from '@mysten/sui.js/cryptography';
+import { parsePartialSignatures } from '@mysten/sui.js/multisig';
+import { toB64, normalizeSuiAddress } from '@mysten/sui.js/utils';
+import { publicKeyFromRawBytes } from '@mysten/sui.js/verify';
 import { Text } from '@mysten/ui';
 
 import { DescriptionItem, DescriptionList } from '~/ui/DescriptionList';
@@ -43,13 +40,13 @@ function SignaturePanel({
 				<DescriptionItem title="Address" align="start" labelWidth="sm">
 					<AddressLink
 						noTruncate
-						address={'address' in data ? data.address : data.publicKey.toIotaAddress()}
+						address={'address' in data ? data.address : data.publicKey.toSuiAddress()}
 					/>
 				</DescriptionItem>
 				{'publicKey' in data ? (
-					<DescriptionItem title="Iota Public Key" align="start" labelWidth="sm">
+					<DescriptionItem title="Sui Public Key" align="start" labelWidth="sm">
 						<Text variant="pBody/medium" color="steel-darker">
-							{data.publicKey.toIotaPublicKey()}
+							{data.publicKey.toSuiPublicKey()}
 						</Text>
 					</DescriptionItem>
 				) : null}
@@ -63,26 +60,26 @@ function SignaturePanel({
 	);
 }
 
-function getSignatureFromAddress(signatures: SignaturePubkeyPair[], iotaAddress: string) {
+function getSignatureFromAddress(signatures: SignaturePubkeyPair[], suiAddress: string) {
 	return signatures.find(
 		(signature) =>
-			('address' in signature ? signature.address : signature.publicKey.toIotaAddress()) ===
-			normalizeIotaAddress(iotaAddress),
+			('address' in signature ? signature.address : signature.publicKey.toSuiAddress()) ===
+			normalizeSuiAddress(suiAddress),
 	);
 }
 
 function getSignaturesExcludingAddress(
 	signatures: SignaturePubkeyPair[],
-	iotaAddress: string,
+	suiAddress: string,
 ): SignaturePubkeyPair[] {
 	return signatures.filter(
 		(signature) =>
-			('address' in signature ? signature.address : signature.publicKey.toIotaAddress()) !==
-			normalizeIotaAddress(iotaAddress),
+			('address' in signature ? signature.address : signature.publicKey.toSuiAddress()) !==
+			normalizeSuiAddress(suiAddress),
 	);
 }
 interface Props {
-	transaction: IotaTransactionBlockResponse;
+	transaction: SuiTransactionBlockResponse;
 }
 
 export function Signatures({ transaction }: Props) {

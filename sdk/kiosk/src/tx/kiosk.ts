@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { bcs } from '@mysten/iota.js/bcs';
+import { bcs } from '@mysten/sui.js/bcs';
 import type {
 	TransactionArgument,
 	TransactionBlock,
 	TransactionObjectArgument,
-} from '@mysten/iota.js/transactions';
+} from '@mysten/sui.js/transactions';
 
 import type { ObjectArgument } from '../types/index.js';
 import { KIOSK_MODULE, KIOSK_TYPE } from '../types/index.js';
@@ -166,7 +163,7 @@ export function placeAndList(
 }
 
 /**
- * Call the `kiosk::purchase<T>(Kiosk, ID, Coin<IOTA>)` function and receive an Item and
+ * Call the `kiosk::purchase<T>(Kiosk, ID, Coin<SUI>)` function and receive an Item and
  * a TransferRequest which needs to be dealt with (via a matching TransferPolicy).
  */
 export function purchase(
@@ -186,7 +183,7 @@ export function purchase(
 }
 
 /**
- * Call the `kiosk::withdraw(Kiosk, KioskOwnerCap, Option<u64>)` function and receive a Coin<IOTA>.
+ * Call the `kiosk::withdraw(Kiosk, KioskOwnerCap, Option<u64>)` function and receive a Coin<SUI>.
  * If the amount is null, then the entire balance will be withdrawn.
  */
 export function withdrawFromKiosk(

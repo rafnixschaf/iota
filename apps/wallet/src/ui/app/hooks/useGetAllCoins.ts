@@ -1,18 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClient } from '@mysten/dapp-kit';
-import type { CoinStruct, PaginatedCoins } from '@mysten/iota.js/client';
+import { useSuiClient } from '@mysten/dapp-kit';
+import type { CoinStruct, PaginatedCoins } from '@mysten/sui.js/client';
 import { useQuery } from '@tanstack/react-query';
 
 const MAX_COINS_PER_REQUEST = 100;
 
 // Fetch all coins for an address, this will keep calling the API until all coins are fetched
 export function useGetAllCoins(coinType: string, address?: string | null) {
-	const rpc = useIotaClient();
+	const rpc = useSuiClient();
 	return useQuery({
 		queryKey: ['get-all-coins', address, coinType],
 		queryFn: async () => {

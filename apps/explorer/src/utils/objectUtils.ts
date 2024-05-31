@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { type ObjectOwner, type IotaObjectResponse } from '@mysten/iota.js/client';
+import { type ObjectOwner, type SuiObjectResponse } from '@mysten/sui.js/client';
 
 import { findIPFSvalue } from './stringUtils';
 
@@ -23,7 +20,7 @@ export function parseImageURL(display?: Record<string, string> | null) {
 	return '';
 }
 
-export function parseObjectType(data: IotaObjectResponse): string {
+export function parseObjectType(data: SuiObjectResponse): string {
 	if (data.data?.content?.dataType === 'package') {
 		return 'Move Package';
 	}

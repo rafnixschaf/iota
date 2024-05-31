@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 const concepts = [
 	'concepts',
 	'concepts/components',
@@ -65,24 +62,24 @@ const concepts = [
 				label: 'Move Overview',
 				link: {
 					type: 'doc',
-					id: 'concepts/iota-move-concepts',
+					id: 'concepts/sui-move-concepts',
 				},
 				items: [
-					'concepts/iota-move-concepts/strings',
-					'concepts/iota-move-concepts/collections',
-					'concepts/iota-move-concepts/init',
-					'concepts/iota-move-concepts/entry-functions',
-					'concepts/iota-move-concepts/one-time-witness',
+					'concepts/sui-move-concepts/strings',
+					'concepts/sui-move-concepts/collections',
+					'concepts/sui-move-concepts/init',
+					'concepts/sui-move-concepts/entry-functions',
+					'concepts/sui-move-concepts/one-time-witness',
 					{
 						type: 'category',
 						label: 'Package Upgrades',
 						link: {
 							type: 'doc',
-							id: 'concepts/iota-move-concepts/packages',
+							id: 'concepts/sui-move-concepts/packages',
 						},
 						items: [
-							'concepts/iota-move-concepts/packages/upgrade',
-							'concepts/iota-move-concepts/packages/custom-policies',
+							'concepts/sui-move-concepts/packages/upgrade',
+							'concepts/sui-move-concepts/packages/custom-policies',
 						],
 					},
 					{
@@ -90,18 +87,18 @@ const concepts = [
 						label: 'Patterns',
 						link: {
 							type: 'doc',
-							id: 'concepts/iota-move-concepts/patterns',
+							id: 'concepts/sui-move-concepts/patterns',
 						},
 						items: [
-							'concepts/iota-move-concepts/patterns/capabilities',
-							'concepts/iota-move-concepts/patterns/witness',
-							'concepts/iota-move-concepts/patterns/transferrable-witness',
-							'concepts/iota-move-concepts/patterns/hot-potato',
-							'concepts/iota-move-concepts/patterns/id-pointer',
-							'concepts/iota-move-concepts/patterns/app-extensions',
+							'concepts/sui-move-concepts/patterns/capabilities',
+							'concepts/sui-move-concepts/patterns/witness',
+							'concepts/sui-move-concepts/patterns/transferrable-witness',
+							'concepts/sui-move-concepts/patterns/hot-potato',
+							'concepts/sui-move-concepts/patterns/id-pointer',
+							'concepts/sui-move-concepts/patterns/app-extensions',
 						],
 					},
-					'concepts/iota-move-concepts/conventions',
+					'concepts/sui-move-concepts/conventions',
 				],
 			},
 			{
@@ -169,21 +166,21 @@ const concepts = [
 	},
 	{
 		type: 'category',
-		label: 'Iota Architecture',
+		label: 'Sui Architecture',
 		link: {
 			type: 'doc',
-			id: 'concepts/iota-architecture',
+			id: 'concepts/sui-architecture',
 		},
 		items: [
-			'concepts/iota-architecture/high-level',
-			'concepts/iota-architecture/iota-security',
-			'concepts/iota-architecture/transaction-lifecycle',
-			'concepts/iota-architecture/consensus',
-			'concepts/iota-architecture/indexer-functions',
-			'concepts/iota-architecture/epochs',
-			'concepts/iota-architecture/protocol-upgrades',
-			'concepts/iota-architecture/data-management-things',
-			'concepts/iota-architecture/staking-rewards',
+			'concepts/sui-architecture/high-level',
+			'concepts/sui-architecture/sui-security',
+			'concepts/sui-architecture/transaction-lifecycle',
+			'concepts/sui-architecture/consensus',
+			'concepts/sui-architecture/indexer-functions',
+			'concepts/sui-architecture/epochs',
+			'concepts/sui-architecture/protocol-upgrades',
+			'concepts/sui-architecture/data-management-things',
+			'concepts/sui-architecture/staking-rewards',
 		],
 	},
 	{
@@ -197,11 +194,11 @@ const concepts = [
 			'concepts/tokenomics/proof-of-stake',
 			'concepts/tokenomics/validators-staking',
 			'concepts/tokenomics/staking-unstaking',
-			'concepts/tokenomics/iota-coin',
-			'concepts/tokenomics/iota-bridging',
+			'concepts/tokenomics/sui-coin',
+			'concepts/tokenomics/sui-bridging',
 			'concepts/tokenomics/storage-fund',
 			'concepts/tokenomics/gas-pricing',
-			'concepts/tokenomics/gas-in-iota',
+			'concepts/tokenomics/gas-in-sui',
 		],
 	},
 	'concepts/research-papers',

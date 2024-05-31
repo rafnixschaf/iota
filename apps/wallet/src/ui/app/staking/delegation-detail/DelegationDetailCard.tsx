@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import BottomMenuLayout, { Content } from '_app/shared/bottom-menu-layout';
 import { Button } from '_app/shared/ButtonUI';
 import { Card } from '_app/shared/card';
@@ -17,14 +14,14 @@ import { ampli } from '_src/shared/analytics/ampli';
 import {
 	DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
 	DELEGATED_STAKES_QUERY_STALE_TIME,
-	MIN_NUMBER_IOTA_TO_STAKE,
+	MIN_NUMBER_SUI_TO_STAKE,
 } from '_src/shared/constants';
 import FaucetRequestButton from '_src/ui/app/shared/faucet/FaucetRequestButton';
 import { useCoinMetadata, useGetDelegatedStake, useGetValidatorsApy } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { ArrowLeft16, StakeAdd16, StakeRemove16 } from '@mysten/icons';
-import { Network, type StakeObject } from '@mysten/iota.js/client';
-import { MICROS_PER_IOTA, IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
+import { Network, type StakeObject } from '@mysten/sui.js/client';
+import { MIST_PER_SUI, SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import BigNumber from 'bignumber.js';
 import { useMemo } from 'react';
 
@@ -43,7 +40,7 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 		data: system,
 		isPending: loadingValidators,
 		isError: errorValidators,
-	} = useIotaClientQuery('getLatestIotaSystemState');
+	} = useSuiClientQuery('getLatestSuiSystemState');
 
 	const accountAddress = useActiveAddress();
 
@@ -59,26 +56,26 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 
 	const network = useAppSelector(({ app }) => app.network);
 	const { staleTime, refetchInterval } = useCoinsReFetchingConfig();
-	const { data: iotaCoinBalance } = useIotaClientQuery(
+	const { data: suiCoinBalance } = useSuiClientQuery(
 		'getBalance',
-		{ coinType: IOTA_TYPE_ARG, owner: accountAddress!! },
+		{ coinType: SUI_TYPE_ARG, owner: accountAddress!! },
 		{ refetchInterval, staleTime, enabled: !!accountAddress },
 	);
-	const { data: metadata } = useCoinMetadata(IOTA_TYPE_ARG);
-	// set minimum stake amount to 1 IOTA
-	const showRequestMoreIotaToken = useMemo(() => {
-		if (!iotaCoinBalance?.totalBalance || !metadata?.decimals || network === Network.Mainnet)
+	const { data: metadata } = useCoinMetadata(SUI_TYPE_ARG);
+	// set minimum stake amount to 1 SUI
+	const showRequestMoreSuiToken = useMemo(() => {
+		if (!suiCoinBalance?.totalBalance || !metadata?.decimals || network === Network.Mainnet)
 			return false;
-		const currentBalance = new BigNumber(iotaCoinBalance.totalBalance);
-		const minStakeAmount = new BigNumber(MIN_NUMBER_IOTA_TO_STAKE).shiftedBy(metadata.decimals);
+		const currentBalance = new BigNumber(suiCoinBalance.totalBalance);
+		const minStakeAmount = new BigNumber(MIN_NUMBER_SUI_TO_STAKE).shiftedBy(metadata.decimals);
 		return currentBalance.lt(minStakeAmount.toString());
-	}, [network, metadata?.decimals, iotaCoinBalance?.totalBalance]);
+	}, [network, metadata?.decimals, suiCoinBalance?.totalBalance]);
 
 	const { data: rollingAverageApys } = useGetValidatorsApy();
 
 	const validatorData = useMemo(() => {
 		if (!system) return null;
-		return system.activeValidators.find((av) => av.iotaAddress === validatorAddress);
+		return system.activeValidators.find((av) => av.suiAddress === validatorAddress);
 	}, [validatorAddress, system]);
 
 	const delegationData = useMemo(() => {
@@ -87,14 +84,14 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 
 	const totalStake = BigInt(delegationData?.principal || 0n);
 
-	const iotaEarned = BigInt(
+	const suiEarned = BigInt(
 		(delegationData as Extract<StakeObject, { estimatedReward: string }>)?.estimatedReward || 0n,
 	);
 	const { apy, isApyApproxZero } = rollingAverageApys?.[validatorAddress] ?? {
 		apy: 0,
 	};
 
-	const delegationId = delegationData?.status === 'Active' && delegationData?.stakedIotaId;
+	const delegationId = delegationData?.status === 'Active' && delegationData?.stakedSuiId;
 
 	const stakeByValidatorAddress = `/stake/new?${new URLSearchParams({
 		address: validatorAddress,
@@ -134,7 +131,7 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 						{hasInactiveValidatorDelegation ? (
 							<div className="mb-3">
 								<Alert>
-									Unstake IOTA from this inactive validator and stake on an active validator to start
+									Unstake SUI from this inactive validator and stake on an active validator to start
 									earning rewards again.
 								</Alert>
 							</div>
@@ -148,7 +145,7 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 										</CardItem>
 
 										<CardItem title="Earned">
-											<StakeAmount balance={iotaEarned} variant="heading5" isEarnedRewards />
+											<StakeAmount balance={suiEarned} variant="heading5" isEarnedRewards />
 										</CardItem>
 									</div>
 								}
@@ -207,14 +204,14 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 									variant="outline"
 									to={stakeByValidatorAddress}
 									before={<StakeAdd16 />}
-									text="Stake IOTA"
+									text="Stake SUI"
 									onClick={() => {
-										ampli.clickedStakeIota({
+										ampli.clickedStakeSui({
 											isCurrentlyStaking: true,
 											sourceFlow: 'Delegation detail card',
 										});
 									}}
-									disabled={showRequestMoreIotaToken}
+									disabled={showRequestMoreSuiToken}
 								/>
 							) : null}
 
@@ -225,12 +222,12 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 									variant="outline"
 									to={stakeByValidatorAddress + '&unstake=true'}
 									onClick={() => {
-										ampli.clickedUnstakeIota({
-											stakedAmount: Number(totalStake / MICROS_PER_IOTA),
+										ampli.clickedUnstakeSui({
+											stakedAmount: Number(totalStake / MIST_PER_SUI),
 											validatorAddress,
 										});
 									}}
-									text="Unstake IOTA"
+									text="Unstake SUI"
 									before={<StakeRemove16 />}
 								/>
 							)}
@@ -239,11 +236,11 @@ export function DelegationDetailCard({ validatorAddress, stakedId }: DelegationD
 				</Content>
 
 				{/* show faucet request button on devnet or testnet whenever there is only one coin  */}
-				{showRequestMoreIotaToken ? (
+				{showRequestMoreSuiToken ? (
 					<div className="flex flex-col gap-4 items-center">
 						<div className="w-8/12 text-center">
 							<Text variant="pSubtitle" weight="medium" color="steel-darker">
-								You need a minimum of {MIN_NUMBER_IOTA_TO_STAKE} IOTA to continue staking.
+								You need a minimum of {MIN_NUMBER_SUI_TO_STAKE} SUI to continue staking.
 							</Text>
 						</div>
 						<FaucetRequestButton size="tall" />

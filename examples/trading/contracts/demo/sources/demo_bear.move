@@ -1,16 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 module demo::demo_bear {
     use std::string::{String, utf8};
 
-    use iota::object::{Self, UID};
-    use iota::tx_context::{TxContext, sender};
-    use iota::package;
-    use iota::display;
+    use sui::object::{Self, UID};
+    use sui::tx_context::{TxContext, sender};
+    use sui::package;
+    use sui::display;
 
     /// our demo struct.
     struct DemoBear has key, store {
@@ -50,8 +47,8 @@ module demo::demo_bear {
         // Commit first version of `Display` to apply changes.
         display::update_version(&mut display);
 
-        iota::transfer::public_transfer(display, sender(ctx));
-        iota::transfer::public_transfer(publisher, sender(ctx))
+        sui::transfer::public_transfer(display, sender(ctx));
+        sui::transfer::public_transfer(publisher, sender(ctx))
     }
 
     public fun new(name: String, ctx: &mut TxContext): DemoBear {

@@ -1,17 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { describe, expect, it } from 'vitest';
 
-import { BCS, getIotaMoveConfig } from '../src/index';
+import { BCS, getSuiMoveConfig } from '../src/index';
 import { serde } from './utils';
 
 describe('BCS: Inline struct definitions', () => {
 	it('should de/serialize inline definition', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const value = {
 			t1: 'Adam',
 			t2: '1000',
@@ -32,7 +29,7 @@ describe('BCS: Inline struct definitions', () => {
 	});
 
 	it('should not contain a trace of the temp struct', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 		const _sr = bcs
 			.ser({ name: 'string', age: 'u8' }, { name: 'Charlie', age: 10 })
 			.toString('hex');
@@ -41,7 +38,7 @@ describe('BCS: Inline struct definitions', () => {
 	});
 
 	it('should avoid duplicate key', () => {
-		const bcs = new BCS(getIotaMoveConfig());
+		const bcs = new BCS(getSuiMoveConfig());
 
 		bcs.registerStructType('temp-struct', { a0: 'u8' });
 

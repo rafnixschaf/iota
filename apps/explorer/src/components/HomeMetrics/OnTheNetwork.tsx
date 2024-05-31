@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { CoinFormat, formatBalance } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { Heading } from '@mysten/ui';
 
 import { FormattedStatsAmount, StatsWrapper } from './FormattedStatsAmount';
@@ -15,7 +12,7 @@ import { Divider } from '~/ui/Divider';
 
 export function OnTheNetwork() {
 	const { data: networkMetrics } = useGetNetworkMetrics();
-	const { data: referenceGasPrice } = useIotaClientQuery('getReferenceGasPrice');
+	const { data: referenceGasPrice } = useSuiClientQuery('getReferenceGasPrice');
 	const gasPriceFormatted =
 		typeof referenceGasPrice === 'bigint'
 			? formatBalance(referenceGasPrice, 0, CoinFormat.FULL)
@@ -45,7 +42,7 @@ export function OnTheNetwork() {
 					orientation="horizontal"
 					label="Reference Gas Price"
 					tooltip="The reference gas price of the current epoch"
-					postfix={gasPriceFormatted !== null ? 'MICROS' : null}
+					postfix={gasPriceFormatted !== null ? 'MIST' : null}
 					size="sm"
 				>
 					{gasPriceFormatted}

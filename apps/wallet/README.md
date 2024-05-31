@@ -1,18 +1,18 @@
-# Iota Wallet
+# Sui Wallet
 
-A Chrome extension wallet for [Iota](https://iota.io).
+A Chrome extension wallet for [Sui](https://sui.io).
 
 # Set Up
 
 **Requirements**: 18.0.0 or later.
 
-Dependencies are managed using [`pnpm`](https://pnpm.io/). You can start by installing dependencies in the root of the Iota repository:
+Dependencies are managed using [`pnpm`](https://pnpm.io/). You can start by installing dependencies in the root of the Sui repository:
 
 ```
 $ pnpm install
 ```
 
-> All `pnpm` commands below are intended to be run in the root of the Iota repo.
+> All `pnpm` commands below are intended to be run in the root of the Sui repo.
 
 ## Build in watch mode (dev)
 

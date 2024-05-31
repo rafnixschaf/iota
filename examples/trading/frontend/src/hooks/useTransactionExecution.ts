@@ -1,11 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-import { useSignTransactionBlock, useIotaClient } from "@mysten/dapp-kit";
-import { IotaTransactionBlockResponse } from "@mysten/iota.js/client";
-import { TransactionBlock } from "@mysten/iota.js/transactions";
+import { useSignTransactionBlock, useSuiClient } from "@mysten/dapp-kit";
+import { SuiTransactionBlockResponse } from "@mysten/sui.js/client";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
 import toast from "react-hot-toast";
 
 /**
@@ -15,12 +12,12 @@ import toast from "react-hot-toast";
  * That allows read-after-write consistency and is generally considered a best practice.
  */
 export function useTransactionExecution() {
-  const client = useIotaClient();
+  const client = useSuiClient();
   const { mutateAsync: signTransactionBlock } = useSignTransactionBlock();
 
   const executeTransaction = async (
     txb: TransactionBlock,
-  ): Promise<IotaTransactionBlockResponse | void> => {
+  ): Promise<SuiTransactionBlockResponse | void> => {
     try {
       const signature = await signTransactionBlock({
         transactionBlock: txb,

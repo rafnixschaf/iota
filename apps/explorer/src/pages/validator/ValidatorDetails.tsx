@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useGetValidatorsApy, useGetValidatorsEvents } from '@mysten/core';
-import { useIotaClientQuery } from '@mysten/dapp-kit';
-import { type IotaSystemStateSummary } from '@mysten/iota.js/client';
+import { useSuiClientQuery } from '@mysten/dapp-kit';
+import { type SuiSystemStateSummary } from '@mysten/sui.js/client';
 import { LoadingIndicator, Text } from '@mysten/ui';
 import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
@@ -19,7 +16,7 @@ import { getValidatorMoveEvent } from '~/utils/getValidatorMoveEvent';
 import { VALIDATOR_LOW_STAKE_GRACE_PERIOD } from '~/utils/validatorConstants';
 
 const getAtRiskRemainingEpochs = (
-	data: IotaSystemStateSummary | undefined,
+	data: SuiSystemStateSummary | undefined,
 	validatorId: string | undefined,
 ): number | null => {
 	if (!data || !validatorId) return null;
@@ -29,13 +26,13 @@ const getAtRiskRemainingEpochs = (
 
 function ValidatorDetails() {
 	const { id } = useParams();
-	const { data, isPending } = useIotaClientQuery('getLatestIotaSystemState');
+	const { data, isPending } = useSuiClientQuery('getLatestSuiSystemState');
 
 	const validatorData = useMemo(() => {
 		if (!data) return null;
 		return (
 			data.activeValidators.find(
-				({ iotaAddress, stakingPoolId }) => iotaAddress === id || stakingPoolId === id,
+				({ suiAddress, stakingPoolId }) => suiAddress === id || stakingPoolId === id,
 			) || null
 		);
 	}, [id, data]);
@@ -123,7 +120,7 @@ function ValidatorDetails() {
 								}
 							>
 								<Text variant="bodySmall/medium">
-									Staked IOTA is below the minimum IOTA stake threshold to remain a validator.
+									Staked SUI is below the minimum SUI stake threshold to remain a validator.
 								</Text>
 							</Banner>
 						</div>

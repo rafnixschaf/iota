@@ -1,8 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 pub mod errors;
 pub(crate) mod iter;
 pub(crate) mod keys;
@@ -46,7 +43,7 @@ use std::{
     time::Duration,
 };
 use std::{collections::HashSet, ffi::CStr};
-use iota_macros::{fail_point, nondeterministic};
+use sui_macros::{fail_point, nondeterministic};
 use tap::TapFallible;
 use tokio::sync::oneshot;
 use tracing::{debug, error, info, instrument, warn};
@@ -2256,7 +2253,7 @@ impl Default for ReadWriteOptions {
     fn default() -> Self {
         Self {
             ignore_range_deletions: true,
-            sync_to_disk: std::env::var("IOTA_DB_SYNC_TO_DISK").map_or(false, |v| v != "0"),
+            sync_to_disk: std::env::var("SUI_DB_SYNC_TO_DISK").map_or(false, |v| v != "0"),
         }
     }
 }
@@ -2412,7 +2409,7 @@ pub fn default_db_options() -> DBOptions {
             .unwrap(),
     );
 
-    // Iota uses multiple RocksDB in a node, so total sizes of write buffers and WAL can be higher
+    // Sui uses multiple RocksDB in a node, so total sizes of write buffers and WAL can be higher
     // than the limits below.
     //
     // RocksDB also exposes the option to configure total write buffer size across multiple instances
@@ -2421,7 +2418,7 @@ pub fn default_db_options() -> DBOptions {
     //
     // The environment variables are only meant to be emergency overrides. They may go away in future.
     // If you need to modify an option, either update the default value, or override the option in
-    // Iota / Narwhal.
+    // Sui / Narwhal.
     opt.set_db_write_buffer_size(
         read_size_from_env(ENV_VAR_DB_WRITE_BUFFER_SIZE).unwrap_or(DEFAULT_DB_WRITE_BUFFER_SIZE)
             * 1024

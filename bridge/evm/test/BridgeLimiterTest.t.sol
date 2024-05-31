@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -18,7 +15,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
     }
 
     function testBridgeLimiterInitialization() public {
-        assertEq(limiter.tokenPrices(0), IOTA_PRICE);
+        assertEq(limiter.tokenPrices(0), SUI_PRICE);
         assertEq(limiter.tokenPrices(1), BTC_PRICE);
         assertEq(limiter.tokenPrices(2), ETH_PRICE);
         assertEq(limiter.tokenPrices(3), USDC_PRICE);
@@ -193,7 +190,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         totalLimits[0] = 10000000000;
         totalLimits[1] = 20000000000;
         uint256[] memory tokenPrices = new uint256[](4);
-        tokenPrices[0] = IOTA_PRICE;
+        tokenPrices[0] = SUI_PRICE;
         tokenPrices[1] = BTC_PRICE;
         tokenPrices[2] = ETH_PRICE;
         tokenPrices[3] = USDC_PRICE;
@@ -244,7 +241,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         committee.initialize(address(config), _committee, _stake, minStakeRequired);
         vault = new BridgeVault(wETH);
         uint256[] memory tokenPrices = new uint256[](4);
-        tokenPrices[0] = 10000; // IOTA PRICE
+        tokenPrices[0] = 10000; // SUI PRICE
         tokenPrices[1] = 10000; // BTC PRICE
         tokenPrices[2] = 10000; // ETH PRICE
         tokenPrices[3] = 10000; // USDC PRICE
@@ -257,7 +254,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         limiter.initialize(
             address(committee), tokenPrices, _supportedDestinationChains, totalLimits
         );
-        bridge = new IotaBridge();
+        bridge = new SuiBridge();
         bridge.initialize(address(committee), address(vault), address(limiter), wETH);
         vault.transferOwnership(address(bridge));
         limiter.transferOwnership(address(bridge));
@@ -308,7 +305,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         committee.initialize(address(config), _committee, _stake, minStakeRequired);
         vault = new BridgeVault(wETH);
         uint256[] memory tokenPrices = new uint256[](4);
-        tokenPrices[0] = 10000; // IOTA PRICE
+        tokenPrices[0] = 10000; // SUI PRICE
         tokenPrices[1] = 10000; // BTC PRICE
         tokenPrices[2] = 10000; // ETH PRICE
         tokenPrices[3] = 10000; // USDC PRICE
@@ -322,7 +319,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         limiter.initialize(
             address(committee), tokenPrices, _supportedDestinationChains, totalLimits
         );
-        bridge = new IotaBridge();
+        bridge = new SuiBridge();
         bridge.initialize(address(committee), address(vault), address(limiter), wETH);
 
         vault.transferOwnership(address(bridge));
@@ -380,7 +377,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         committee.initialize(address(config), _committee, _stake, minStakeRequired);
         vault = new BridgeVault(wETH);
         uint256[] memory tokenPrices = new uint256[](4);
-        tokenPrices[0] = 10000; // IOTA PRICE
+        tokenPrices[0] = 10000; // SUI PRICE
         tokenPrices[1] = 10000; // BTC PRICE
         tokenPrices[2] = 10000; // ETH PRICE
         tokenPrices[3] = 10000; // USDC PRICE
@@ -393,7 +390,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         limiter.initialize(
             address(committee), tokenPrices, _supportedDestinationChains, totalLimits
         );
-        bridge = new IotaBridge();
+        bridge = new SuiBridge();
         bridge.initialize(address(committee), address(vault), address(limiter), wETH);
         vault.transferOwnership(address(bridge));
         limiter.transferOwnership(address(bridge));
@@ -443,7 +440,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         committee.initialize(address(config), _committee, _stake, minStakeRequired);
         vault = new BridgeVault(wETH);
         uint256[] memory tokenPrices = new uint256[](4);
-        tokenPrices[0] = 10000; // IOTA PRICE
+        tokenPrices[0] = 10000; // SUI PRICE
         tokenPrices[1] = 10000; // BTC PRICE
         tokenPrices[2] = 10000; // ETH PRICE
         tokenPrices[3] = 10000; // USDC PRICE
@@ -457,7 +454,7 @@ contract BridgeLimiterTest is BridgeBaseTest {
         limiter.initialize(
             address(committee), tokenPrices, _supportedDestinationChains, totalLimits
         );
-        bridge = new IotaBridge();
+        bridge = new SuiBridge();
         bridge.initialize(address(committee), address(vault), address(limiter), wETH);
         vault.transferOwnership(address(bridge));
         limiter.transferOwnership(address(bridge));

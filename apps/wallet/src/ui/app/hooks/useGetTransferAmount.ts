@@ -1,31 +1,28 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { getAmount } from '_helpers';
-import type { IotaTransactionBlockResponse } from '@mysten/iota.js/client';
-import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
+import type { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { useMemo } from 'react';
 
 export function useGetTransferAmount({
 	txn,
 	activeAddress,
 }: {
-	txn: IotaTransactionBlockResponse;
+	txn: SuiTransactionBlockResponse;
 	activeAddress: string;
 }) {
 	const { effects, events } = txn;
 	// const { coins } = getEventsSummary(events!, activeAddress);
 
-	const iotaTransfer = useMemo(() => {
+	const suiTransfer = useMemo(() => {
 		const txdetails = txn.transaction?.data.transaction!;
 		return getAmount(txdetails, effects!, events!)?.map(
 			({ amount, coinType, recipientAddress }) => {
 				return {
 					amount: amount || 0,
-					coinType: coinType || IOTA_TYPE_ARG,
+					coinType: coinType || SUI_TYPE_ARG,
 					receiverAddress: recipientAddress,
 				};
 			},
@@ -34,13 +31,13 @@ export function useGetTransferAmount({
 
 	// MUSTFIX(chris)
 	// const transferAmount = useMemo(() => {
-	//     return iotaTransfer?.length
-	//         ? iotaTransfer
+	//     return suiTransfer?.length
+	//         ? suiTransfer
 	//         : coins.filter(
 	//               ({ receiverAddress }) => receiverAddress === activeAddress
 	//           );
-	// }, [iotaTransfer, coins, activeAddress]);
+	// }, [suiTransfer, coins, activeAddress]);
 
-	// return iotaTransfer ?? transferAmount;
-	return iotaTransfer;
+	// return suiTransfer ?? transferAmount;
+	return suiTransfer;
 }

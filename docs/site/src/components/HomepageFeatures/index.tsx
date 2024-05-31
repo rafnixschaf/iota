@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import React from "react";
 import clsx from "clsx";
 import styles from "./styles.module.css";
@@ -26,7 +23,7 @@ const FeatureList: FeatureItem[] = [
     description: <></>,
   },
   {
-    title: "Built on Iota Move",
+    title: "Built on Sui Move",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: <></>,
   },

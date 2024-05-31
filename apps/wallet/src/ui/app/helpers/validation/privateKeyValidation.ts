@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { decodeIotaPrivateKey, encodeIotaPrivateKey } from '@mysten/iota.js/cryptography/keypair';
+import { decodeSuiPrivateKey, encodeSuiPrivateKey } from '@mysten/sui.js/cryptography/keypair';
 import { hexToBytes } from '@noble/hashes/utils';
 import { z } from 'zod';
 
@@ -13,7 +10,7 @@ export const privateKeyValidation = z
 	.trim()
 	.nonempty('Private Key is required.')
 	.transform((privateKey, context) => {
-		if (!privateKey.startsWith('iotaprivkey')) {
+		if (!privateKey.startsWith('suiprivkey')) {
 			const hexValue = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
 			let privateKeyBytes: Uint8Array | undefined;
 
@@ -35,10 +32,10 @@ export const privateKeyValidation = z
 				return z.NEVER;
 			}
 
-			return encodeIotaPrivateKey(privateKeyBytes.slice(0, 32), 'ED25519');
+			return encodeSuiPrivateKey(privateKeyBytes.slice(0, 32), 'ED25519');
 		}
 		try {
-			decodeIotaPrivateKey(privateKey);
+			decodeSuiPrivateKey(privateKey);
 		} catch (error) {
 			context.addIssue({
 				code: 'custom',

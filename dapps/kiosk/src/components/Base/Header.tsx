@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import classNames from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import FindKiosk from '../Kiosk/FindKiosk';
 import { Button } from './Button';
-import { IotaConnectButton } from './IotaConnectButton';
+import { SuiConnectButton } from './SuiConnectButton';
 
 export function Header() {
 	const navigate = useNavigate();
@@ -51,7 +48,7 @@ export function Header() {
 				</Button>
 				<FindKiosk />
 				<div className="ml-auto my-3 md:my-1">
-					<IotaConnectButton></IotaConnectButton>
+					<SuiConnectButton></SuiConnectButton>
 				</div>
 			</div>
 		</div>

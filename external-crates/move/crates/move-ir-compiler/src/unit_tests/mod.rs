@@ -2,9 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 // Needs to be at the top to allow macros defined in here to be used in tests.
 #[macro_use]
 pub(crate) mod testutils;

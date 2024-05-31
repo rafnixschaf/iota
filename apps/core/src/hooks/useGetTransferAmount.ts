@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-import { IotaTransactionBlockResponse } from '@mysten/iota.js/client';
-import { IOTA_TYPE_ARG } from '@mysten/iota.js/utils';
+import { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
 import { useMemo } from 'react';
 
 import { getTotalGasUsed } from '../utils/transaction';
 
-export function useGetTransferAmount(txnData: IotaTransactionBlockResponse) {
+export function useGetTransferAmount(txnData: SuiTransactionBlockResponse) {
 	const { balanceChanges } = txnData;
 	const sender = txnData.transaction?.data.sender;
 	const gas = txnData.effects && getTotalGasUsed(txnData.effects);
@@ -27,7 +24,7 @@ export function useGetTransferAmount(txnData: IotaTransactionBlockResponse) {
 								? owner.ObjectOwner
 								: '',
 						amount:
-							coinType === IOTA_TYPE_ARG && BigInt(amount) < 0n
+							coinType === SUI_TYPE_ARG && BigInt(amount) < 0n
 								? BigInt(amount) + BigInt(gas ?? 0n)
 								: BigInt(amount),
 				  }))

@@ -1,19 +1,19 @@
-# Iota Owned Object Pools Quick Start
+# Sui Owned Object Pools Quick Start
 
 import { Callout } from 'nextra/components';
 
 <Callout type="info">
-	Iota Owned Object Pools (IotaOOP) is a beta library. Enhancements and changes are likely during
+	Sui Owned Object Pools (SuiOOP) is a beta library. Enhancements and changes are likely during
 	development.
 </Callout>
 
-IotaOOP is a TypeScript library that provides a set of tools for managing multiple concurrent
-transactions on the Iota network to help avoid object equivocation and locking.
+SuiOOP is a TypeScript library that provides a set of tools for managing multiple concurrent
+transactions on the Sui network to help avoid object equivocation and locking.
 
 ## Installation
 
 ```sh npm2yarn
-npm i iotaoop
+npm i suioop
 ```
 
 ## Usage
@@ -24,7 +24,7 @@ At a high level, this is how you implement the library:
 // Initialize the ExecutorServiceHandler.
 const eshandler = await ExecutorServiceHandler.initialize(
 adminKeypair,
-iotaClient,
+suiClient,
 );
 
 /// And then for each incoming request...
@@ -32,7 +32,7 @@ iotaClient,
 const myTransactionBlock;
 
 /// and send it for execution
-const promise = eshandler.execute(myTransactionBlock, iotaClient, splitStrategy);
+const promise = eshandler.execute(myTransactionBlock, suiClient, splitStrategy);
 ```
 
 See [End-to-End Examples](/typescript/owned-object-pool/examples) for sample code you can run.

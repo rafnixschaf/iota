@@ -1,9 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import { useAppSelector } from '_hooks';
 import { getNavIsVisible } from '_redux/slices/app';
 import { Activity32, Apps32, Nft132, Tokens32 } from '@mysten/icons';
@@ -26,7 +23,7 @@ export function Navigation() {
 				[st.hidden]: !isVisible,
 			})}
 		>
-			<div id="iota-apps-filters" className="flex whitespace-nowrap w-full justify-center"></div>
+			<div id="sui-apps-filters" className="flex whitespace-nowrap w-full justify-center"></div>
 			<div className={st.navMenu}>
 				<NavLink
 					data-testid="nav-tokens"

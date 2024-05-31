@@ -1,6 +1,6 @@
 {
-	"short_name": "iota-explorer",
-	"name": "Iota Explorer",
+	"short_name": "sui-explorer",
+	"name": "Sui Explorer",
 	"icons": [
 		{
 			"src": "favicon192x192.png",

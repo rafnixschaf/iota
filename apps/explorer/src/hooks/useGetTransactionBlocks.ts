@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { useIotaClient } from '@mysten/dapp-kit';
+import { useSuiClient } from '@mysten/dapp-kit';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 
-import { type PaginatedTransactionResponse, type TransactionFilter } from '@mysten/iota.js/client';
+import { type PaginatedTransactionResponse, type TransactionFilter } from '@mysten/sui.js/client';
 
 export const DEFAULT_TRANSACTIONS_LIMIT = 20;
 
@@ -17,7 +14,7 @@ export function useGetTransactionBlocks(
 	limit = DEFAULT_TRANSACTIONS_LIMIT,
 	refetchInterval?: number,
 ) {
-	const client = useIotaClient();
+	const client = useSuiClient();
 
 	return useInfiniteQuery<PaginatedTransactionResponse>({
 		queryKey: ['get-transaction-blocks', filter, limit],

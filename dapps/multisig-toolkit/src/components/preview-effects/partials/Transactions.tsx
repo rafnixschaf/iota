@@ -1,15 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 import {
-	IotaArgument,
-	IotaCallArg,
-	IotaTransaction,
+	SuiArgument,
+	SuiCallArg,
+	SuiTransaction,
 	TransactionBlockData,
-} from '@mysten/iota.js/src/client';
+} from '@mysten/sui.js/src/client';
 import { ReactNode } from 'react';
 
 import { ObjectLink } from '../ObjectLink';
@@ -27,7 +24,7 @@ export function Transactions({ inputs }: { inputs: TransactionBlockData }) {
 	);
 }
 
-const getCallArgDisplay = (argument: IotaCallArg | undefined) => {
+const getCallArgDisplay = (argument: SuiCallArg | undefined) => {
 	if (!argument) return null;
 	if (typeof argument === 'string') return argument;
 
@@ -53,7 +50,7 @@ const getCallArgDisplay = (argument: IotaCallArg | undefined) => {
 	);
 };
 
-const getIotaArgumentDisplay = (argument: IotaArgument, inputs: IotaCallArg[]) => {
+const getSuiArgumentDisplay = (argument: SuiArgument, inputs: SuiCallArg[]) => {
 	if (typeof argument === 'string') return argument;
 
 	if ('Input' in argument) {
@@ -67,12 +64,12 @@ const getIotaArgumentDisplay = (argument: IotaArgument, inputs: IotaCallArg[]) =
 	);
 };
 
-const renderArguments = (callArgs: IotaArgument[], inputs: IotaCallArg[]) => {
+const renderArguments = (callArgs: SuiArgument[], inputs: SuiCallArg[]) => {
 	return (
 		<div className="flex overflow-x-auto gap-3 my-3">
 			{callArgs.map((arg, index) => (
 				<div key={index} className="flex-shrink-0">
-					{getIotaArgumentDisplay(arg, inputs)}
+					{getSuiArgumentDisplay(arg, inputs)}
 				</div>
 			))}
 		</div>
@@ -104,7 +101,7 @@ function Transaction({
 	inputs,
 	index,
 }: {
-	transaction: IotaTransaction;
+	transaction: SuiTransaction;
 	inputs: TransactionBlockData;
 	index: number;
 }) {

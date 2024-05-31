@@ -1,10 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modifications Copyright (c) 2024 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
-import { TransactionBlock } from '@mysten/iota.js/transactions';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { Mock } from 'vitest';
 
@@ -13,7 +10,7 @@ import {
 	WalletNotConnectedError,
 } from '../../src/errors/walletErrors.js';
 import { useConnectWallet, useSignTransactionBlock } from '../../src/index.js';
-import { iotaFeatures } from '../mocks/mockFeatures.js';
+import { suiFeatures } from '../mocks/mockFeatures.js';
 import { createWalletProviderContextWrapper, registerMockWallet } from '../test-utils.js';
 
 describe('useSignTransactionBlock', () => {
@@ -21,7 +18,7 @@ describe('useSignTransactionBlock', () => {
 		const wrapper = createWalletProviderContextWrapper();
 		const { result } = renderHook(() => useSignTransactionBlock(), { wrapper });
 
-		result.current.mutate({ transactionBlock: new TransactionBlock(), chain: 'iota:testnet' });
+		result.current.mutate({ transactionBlock: new TransactionBlock(), chain: 'sui:testnet' });
 
 		await waitFor(() => expect(result.current.error).toBeInstanceOf(WalletNotConnectedError));
 	});
@@ -45,7 +42,7 @@ describe('useSignTransactionBlock', () => {
 
 		result.current.signTransactionBlock.mutate({
 			transactionBlock: new TransactionBlock(),
-			chain: 'iota:testnet',
+			chain: 'sui:testnet',
 		});
 		await waitFor(() =>
 			expect(result.current.signTransactionBlock.error).toBeInstanceOf(
@@ -59,7 +56,7 @@ describe('useSignTransactionBlock', () => {
 	test('signing a transaction block from the currently connected account works successfully', async () => {
 		const { unregister, mockWallet } = registerMockWallet({
 			walletName: 'Mock Wallet 1',
-			features: iotaFeatures,
+			features: suiFeatures,
 		});
 
 		const wrapper = createWalletProviderContextWrapper();
@@ -75,7 +72,7 @@ describe('useSignTransactionBlock', () => {
 
 		await waitFor(() => expect(result.current.connectWallet.isSuccess).toBe(true));
 
-		const signTransactionBlockFeature = mockWallet.features['iota:signTransactionBlock'];
+		const signTransactionBlockFeature = mockWallet.features['sui:signTransactionBlock'];
 		const signTransactionBlockMock = signTransactionBlockFeature!.signTransactionBlock as Mock;
 
 		signTransactionBlockMock.mockReturnValueOnce({
@@ -85,7 +82,7 @@ describe('useSignTransactionBlock', () => {
 
 		result.current.signTransactionBlock.mutate({
 			transactionBlock: new TransactionBlock(),
-			chain: 'iota:testnet',
+			chain: 'sui:testnet',
 		});
 
 		await waitFor(() => expect(result.current.signTransactionBlock.isSuccess).toBe(true));
