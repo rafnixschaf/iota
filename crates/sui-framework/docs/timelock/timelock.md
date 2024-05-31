@@ -22,6 +22,7 @@ A timelock implementation.
 -  [Function `pack`](#0x10cf_timelock_pack)
 -  [Function `unpack`](#0x10cf_timelock_unpack)
 -  [Function `transfer`](#0x10cf_timelock_transfer)
+-  [Function `check_expiration_timestamp_ms`](#0x10cf_timelock_check_expiration_timestamp_ms)
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
@@ -213,11 +214,8 @@ Function to lock an object till a unix timestamp in milliseconds.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock">lock</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> TxContext): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt; {
-    // Get the epoch timestamp.
-    <b>let</b> epoch_timestamp_ms = ctx.epoch_timestamp_ms();
-
     // Check that `expiration_timestamp_ms` is valid.
-    <b>assert</b>!(expiration_timestamp_ms &gt; epoch_timestamp_ms, <a href="timelock.md#0x10cf_timelock_EExpireEpochIsPast">EExpireEpochIsPast</a>);
+    <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
     // Create a <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_none">option::none</a>(), ctx)
@@ -251,11 +249,8 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
     labels: VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt; {
-    // Get the epoch timestamp.
-    <b>let</b> epoch_timestamp_ms = ctx.epoch_timestamp_ms();
-
-    // Check that the `expiration_timestamp_ms` value is valid.
-    <b>assert</b>!(expiration_timestamp_ms &gt; epoch_timestamp_ms, <a href="timelock.md#0x10cf_timelock_EExpireEpochIsPast">EExpireEpochIsPast</a>);
+    // Check that `expiration_timestamp_ms` is valid.
+    <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
     // Check that the `labels` value is valid.
     <b>assert</b>!(!labels.is_empty(), <a href="timelock.md#0x10cf_timelock_EEmptyLabelsCollection">EEmptyLabelsCollection</a>);
@@ -277,7 +272,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
 Function to unlock the object from a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
 </code></pre>
 
 
@@ -286,7 +281,7 @@ Function to unlock the object from a <code><a href="timelock.md#0x10cf_timelock_
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): T {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &TxContext): T {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <b>let</b> (locked, expiration_timestamp_ms, labels) = <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>(self);
 
@@ -341,7 +336,7 @@ Function to get the expiration timestamp of a <code><a href="timelock.md#0x10cf_
 Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code> is locked.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
 </code></pre>
 
 
@@ -350,7 +345,7 @@ Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">Time
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): bool {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &TxContext): bool {
     self.<a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>(ctx) &gt; 0
 }
 </code></pre>
@@ -367,7 +362,7 @@ Function to get the remaining time of a <code><a href="timelock.md#0x10cf_timelo
 Returns 0 if the lock has expired.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
 </code></pre>
 
 
@@ -376,7 +371,7 @@ Returns 0 if the lock has expired.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> TxContext): u64 {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &TxContext): u64 {
     // Get the epoch timestamp.
     <b>let</b> current_timestamp_ms = ctx.epoch_timestamp_ms();
 
@@ -590,6 +585,35 @@ An utility function to transfer a <code><a href="timelock.md#0x10cf_timelock_Tim
 
 <pre><code><b>public</b>(package) <b>fun</b> <a href="../sui-framework/transfer.md#0x2_transfer">transfer</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, recipient: <b>address</b>) {
     <a href="../sui-framework/transfer.md#0x2_transfer_transfer">transfer::transfer</a>(lock, recipient);
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x10cf_timelock_check_expiration_timestamp_ms"></a>
+
+## Function `check_expiration_timestamp_ms`
+
+An utility function to check that the <code>expiration_timestamp_ms</code> value is valid.
+
+
+<pre><code><b>fun</b> <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms: u64, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>fun</b> <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms: u64, ctx: &TxContext) {
+    // Get the epoch timestamp.
+    <b>let</b> epoch_timestamp_ms = ctx.epoch_timestamp_ms();
+
+    // Check that `expiration_timestamp_ms` is valid.
+    <b>assert</b>!(expiration_timestamp_ms &gt; epoch_timestamp_ms, <a href="timelock.md#0x10cf_timelock_EExpireEpochIsPast">EExpireEpochIsPast</a>);
 }
 </code></pre>
 

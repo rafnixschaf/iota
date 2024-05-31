@@ -49,11 +49,8 @@ module timelock::timelock {
 
     /// Function to lock an object till a unix timestamp in milliseconds.
     public fun lock<T: store>(locked: T, expiration_timestamp_ms: u64, ctx: &mut TxContext): TimeLock<T> {
-        // Get the epoch timestamp.
-        let epoch_timestamp_ms = ctx.epoch_timestamp_ms();
-
         // Check that `expiration_timestamp_ms` is valid.
-        assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
+        check_expiration_timestamp_ms(expiration_timestamp_ms, ctx);
 
         // Create a timelock.
         pack(locked, expiration_timestamp_ms, option::none(), ctx)
@@ -67,11 +64,8 @@ module timelock::timelock {
         labels: VecSet<vector<u8>>,
         ctx: &mut TxContext
     ): TimeLock<T> {
-        // Get the epoch timestamp.
-        let epoch_timestamp_ms = ctx.epoch_timestamp_ms();
-
-        // Check that the `expiration_timestamp_ms` value is valid.
-        assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
+        // Check that `expiration_timestamp_ms` is valid.
+        check_expiration_timestamp_ms(expiration_timestamp_ms, ctx);
 
         // Check that the `labels` value is valid.
         assert!(!labels.is_empty(), EEmptyLabelsCollection);
@@ -82,7 +76,7 @@ module timelock::timelock {
     }
 
     /// Function to unlock the object from a `TimeLock`.
-    public fun unlock<T: store>(self: TimeLock<T>, ctx: &mut TxContext): T {
+    public fun unlock<T: store>(self: TimeLock<T>, ctx: &TxContext): T {
         // Unpack the timelock. 
         let (locked, expiration_timestamp_ms, labels) = unpack(self);
 
@@ -106,13 +100,13 @@ module timelock::timelock {
     }
 
     /// Function to check if a `TimeLock` is locked.
-    public fun is_locked<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): bool {
+    public fun is_locked<T: store>(self: &TimeLock<T>, ctx: &TxContext): bool {
         self.remaining_time(ctx) > 0
     }
 
     /// Function to get the remaining time of a `TimeLock`.
     /// Returns 0 if the lock has expired.
-    public fun remaining_time<T: store>(self: &TimeLock<T>, ctx: &mut TxContext): u64 {
+    public fun remaining_time<T: store>(self: &TimeLock<T>, ctx: &TxContext): u64 {
         // Get the epoch timestamp.
         let current_timestamp_ms = ctx.epoch_timestamp_ms();
 
@@ -186,5 +180,14 @@ module timelock::timelock {
     /// An utility function to transfer a `TimeLock`.
     public(package) fun transfer<T: store>(lock: TimeLock<T>, recipient: address) {
         transfer::transfer(lock, recipient);
+    }
+
+    /// An utility function to check that the `expiration_timestamp_ms` value is valid.
+    fun check_expiration_timestamp_ms(expiration_timestamp_ms: u64, ctx: &TxContext) {
+        // Get the epoch timestamp.
+        let epoch_timestamp_ms = ctx.epoch_timestamp_ms();
+
+        // Check that `expiration_timestamp_ms` is valid.
+        assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
     }
 }
