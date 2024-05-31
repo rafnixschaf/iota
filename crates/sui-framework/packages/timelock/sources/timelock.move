@@ -12,6 +12,10 @@ module timelock::timelock {
     const ENotExpiredYet: u64 = 1;
     /// Error code for when the sender is not @0x0, the system address.
     const ENotSystemAddress: u64 = 2;
+    /// Error code for when the labels collection of the lock is empty.
+    const EEmptyLabelsCollection: u64 = 3;
+    /// Error code for when the labels collection of the lock contains an empty label.
+    const EEmptyLabel: u64 = 4;
 
     /// The capability allows to work with labels.
     public struct LabelerCap has key {
@@ -66,8 +70,12 @@ module timelock::timelock {
         // Get the epoch timestamp.
         let epoch_timestamp_ms = ctx.epoch_timestamp_ms();
 
-        // Check that `expiration_timestamp_ms` is valid.
+        // Check that the `expiration_timestamp_ms` value is valid.
         assert!(expiration_timestamp_ms > epoch_timestamp_ms, EExpireEpochIsPast);
+
+        // Check that the `labels` value is valid.
+        assert!(!labels.is_empty(), EEmptyLabelsCollection);
+        assert!(!labels.contains(&vector::empty()), EEmptyLabel);
 
         // Create a labeled timelock.
         pack(locked, expiration_timestamp_ms, option::some(labels), ctx)

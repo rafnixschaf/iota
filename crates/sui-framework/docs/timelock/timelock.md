@@ -122,6 +122,26 @@ Error code for when the sender is not @0x0, the system address.
 
 
 
+<a name="0x10cf_timelock_EEmptyLabel"></a>
+
+Error code for when the labels collection of the lock contains an empty label.
+
+
+<pre><code><b>const</b> <a href="timelock.md#0x10cf_timelock_EEmptyLabel">EEmptyLabel</a>: u64 = 4;
+</code></pre>
+
+
+
+<a name="0x10cf_timelock_EEmptyLabelsCollection"></a>
+
+Error code for when the labels collection of the lock is empty.
+
+
+<pre><code><b>const</b> <a href="timelock.md#0x10cf_timelock_EEmptyLabelsCollection">EEmptyLabelsCollection</a>: u64 = 3;
+</code></pre>
+
+
+
 <a name="0x10cf_timelock_EExpireEpochIsPast"></a>
 
 Error code for when the expire timestamp of the lock is in the past.
@@ -234,8 +254,12 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
     // Get the epoch timestamp.
     <b>let</b> epoch_timestamp_ms = ctx.epoch_timestamp_ms();
 
-    // Check that `expiration_timestamp_ms` is valid.
+    // Check that the `expiration_timestamp_ms` value is valid.
     <b>assert</b>!(expiration_timestamp_ms &gt; epoch_timestamp_ms, <a href="timelock.md#0x10cf_timelock_EExpireEpochIsPast">EExpireEpochIsPast</a>);
+
+    // Check that the `labels` value is valid.
+    <b>assert</b>!(!labels.is_empty(), <a href="timelock.md#0x10cf_timelock_EEmptyLabelsCollection">EEmptyLabelsCollection</a>);
+    <b>assert</b>!(!labels.contains(&<a href="../move-stdlib/vector.md#0x1_vector_empty">vector::empty</a>()), <a href="timelock.md#0x10cf_timelock_EEmptyLabel">EEmptyLabel</a>);
 
     // Create a labeled <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(labels), ctx)

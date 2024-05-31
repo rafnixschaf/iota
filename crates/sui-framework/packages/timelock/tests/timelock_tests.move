@@ -177,4 +177,75 @@ module timelock::timelock_tests {
 
         scenario.end();
     }
+
+    #[test]
+    #[expected_failure(abort_code = timelock::EEmptyLabelsCollection)]
+    fun test_labeled_timelock_with_empty_labels_collection() {
+        // Set up a test environment.
+        let system = @0x0;
+        let sender = @0xA;
+        let mut scenario = test_scenario::begin(system);
+
+        // Initialize a LabelerCap.
+        timelock::assign_labeler_cap(sender, scenario.ctx());
+
+        // Switch to sender.
+        scenario.next_tx(sender);
+
+        // Take the capability.
+        let cap = scenario.take_from_sender<LabelerCap>();
+
+        // Minting some IOTA.
+        let iota = balance::create_for_testing<SUI>(10);
+
+        // Lock the IOTA balance.
+        let labels = vec_set::empty();
+        let timelock = timelock::lock_labeled(&cap, iota, 100, labels, scenario.ctx());
+
+        // Cleanup.
+        let (balance, _, _) = timelock::unpack(timelock);
+
+        balance::destroy_for_testing(balance);
+
+        scenario.return_to_sender(cap);
+
+        scenario.end();
+    }
+
+    #[test]
+    #[expected_failure(abort_code = timelock::EEmptyLabel)]
+    fun test_labeled_timelock_with_empty_label() {
+        // Set up a test environment.
+        let system = @0x0;
+        let sender = @0xA;
+        let mut scenario = test_scenario::begin(system);
+
+        // Initialize a LabelerCap.
+        timelock::assign_labeler_cap(sender, scenario.ctx());
+
+        // Switch to sender.
+        scenario.next_tx(sender);
+
+        // Take the capability.
+        let cap = scenario.take_from_sender<LabelerCap>();
+
+        // Minting some IOTA.
+        let iota = balance::create_for_testing<SUI>(10);
+
+        // Lock the IOTA balance.
+        let mut labels = vec_set::empty();
+
+        labels.insert(vector::empty());
+
+        let timelock = timelock::lock_labeled(&cap, iota, 100, labels, scenario.ctx());
+
+        // Cleanup.
+        let (balance, _, _) = timelock::unpack(timelock);
+
+        balance::destroy_for_testing(balance);
+
+        scenario.return_to_sender(cap);
+
+        scenario.end();
+    }
 }
