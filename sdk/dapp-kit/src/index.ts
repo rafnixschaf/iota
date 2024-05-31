@@ -1,17 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 export * from './components/connect-modal/ConnectModal.js';
 export * from './components/ConnectButton.js';
-export * from './components/SuiClientProvider.js';
+export * from './components/IOTAClientProvider.js';
 export * from './components/WalletProvider.js';
 export * from './hooks/networkConfig.js';
-export * from './hooks/useResolveSuiNSNames.js';
-export * from './hooks/useSuiClient.js';
-export * from './hooks/useSuiClientInfiniteQuery.js';
-export * from './hooks/useSuiClientMutation.js';
-export * from './hooks/useSuiClientQuery.js';
-export * from './hooks/useSuiClientQueries.js';
+export * from './hooks/useResolveIOTANSNames.js';
+export * from './hooks/useIOTAClient.js';
+export * from './hooks/useIOTAClientInfiniteQuery.js';
+export * from './hooks/useIOTAClientMutation.js';
+export * from './hooks/useIOTAClientQuery.js';
+export * from './hooks/useIOTAClientQueries.js';
 export * from './hooks/wallet/useAccounts.js';
 export * from './hooks/wallet/useAutoConnectWallet.js';
 export * from './hooks/wallet/useConnectWallet.js';

@@ -1,16 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import type {
 	MoveStruct,
 	MoveValue,
-	SuiMoveAbility,
-	SuiMoveNormalizedFunction,
-	SuiMoveNormalizedModule,
-	SuiMoveNormalizedStruct,
-	SuiMoveNormalizedType,
-} from '@mysten/sui.js/client';
-import { normalizeSuiAddress, parseStructTag } from '@mysten/sui.js/utils';
+	IOTAMoveAbility,
+	IOTAMoveNormalizedFunction,
+	IOTAMoveNormalizedModule,
+	IOTAMoveNormalizedStruct,
+	IOTAMoveNormalizedType,
+} from '@iota/iota.js/client';
+import { normalizeIOTAAddress, parseStructTag } from '@iota/iota.js/utils';
 
 import type {
 	Rpc_Move_Function_FieldsFragment,
@@ -57,7 +60,7 @@ export function mapOpenMoveType(type: { ref?: '&' | '&mut'; body: OpenMoveTypeSi
 	return body;
 }
 
-export function mapNormalizedType(type: OpenMoveTypeSignatureBody): SuiMoveNormalizedType {
+export function mapNormalizedType(type: OpenMoveTypeSignatureBody): IOTAMoveNormalizedType {
 	switch (type) {
 		case 'address':
 			return 'Address';
@@ -105,7 +108,7 @@ export function mapNormalizedType(type: OpenMoveTypeSignatureBody): SuiMoveNorma
 
 export function mapNormalizedMoveFunction(
 	fn: Rpc_Move_Function_FieldsFragment,
-): SuiMoveNormalizedFunction {
+): IOTAMoveNormalizedFunction {
 	return {
 		visibility: `${fn.visibility?.[0]}${fn.visibility?.slice(1).toLowerCase()}` as never,
 		isEntry: fn.isEntry!,
@@ -114,7 +117,7 @@ export function mapNormalizedMoveFunction(
 				abilities:
 					param.constraints?.map(
 						(constraint) =>
-							`${constraint[0]}${constraint.slice(1).toLowerCase()}` as SuiMoveAbility,
+							`${constraint[0]}${constraint.slice(1).toLowerCase()}` as IOTAMoveAbility,
 					) ?? [],
 			})) ?? [],
 		return: fn.return?.map((param) => mapOpenMoveType(param.signature)) ?? [],
@@ -124,12 +127,12 @@ export function mapNormalizedMoveFunction(
 
 export function mapNormalizedMoveStruct(
 	struct: Rpc_Move_Struct_FieldsFragment,
-): SuiMoveNormalizedStruct {
+): IOTAMoveNormalizedStruct {
 	return {
 		abilities: {
 			abilities:
 				struct.abilities?.map(
-					(ability) => `${ability[0]}${ability.slice(1).toLowerCase()}` as SuiMoveAbility,
+					(ability) => `${ability[0]}${ability.slice(1).toLowerCase()}` as IOTAMoveAbility,
 				) ?? [],
 		},
 		fields:
@@ -143,7 +146,7 @@ export function mapNormalizedMoveStruct(
 				constraints: {
 					abilities: param.constraints?.map(
 						(constraint) =>
-							`${constraint[0]}${constraint.slice(1).toLowerCase()}` as SuiMoveAbility,
+							`${constraint[0]}${constraint.slice(1).toLowerCase()}` as IOTAMoveAbility,
 					),
 				},
 			})) ?? [],
@@ -153,9 +156,9 @@ export function mapNormalizedMoveStruct(
 export function mapNormalizedMoveModule(
 	module: Rpc_Move_Module_FieldsFragment,
 	address: string,
-): SuiMoveNormalizedModule {
-	const exposedFunctions: Record<string, SuiMoveNormalizedFunction> = {};
-	const structs: Record<string, SuiMoveNormalizedStruct> = {};
+): IOTAMoveNormalizedModule {
+	const exposedFunctions: Record<string, IOTAMoveNormalizedFunction> = {};
+	const structs: Record<string, IOTAMoveNormalizedStruct> = {};
 
 	module.functions?.nodes
 		.filter((func) => func.visibility === 'PUBLIC' || func.isEntry || func.visibility === 'FRIEND')
@@ -211,19 +214,19 @@ export type MoveTypeLayout =
 
 export function moveDataToRpcContent(data: MoveData, layout: MoveTypeLayout): MoveValue {
 	if ('Address' in data) {
-		return normalizeSuiAddress(
+		return normalizeIOTAAddress(
 			data.Address.map((byte) => byte.toString(16).padStart(2, '0')).join(''),
 		);
 	}
 
 	if ('UID' in data) {
 		return {
-			id: normalizeSuiAddress(data.UID.map((byte) => byte.toString(16).padStart(2, '0')).join('')),
+			id: normalizeIOTAAddress(data.UID.map((byte) => byte.toString(16).padStart(2, '0')).join('')),
 		};
 	}
 
 	if ('ID' in data) {
-		return normalizeSuiAddress(data.ID.map((byte) => byte.toString(16).padStart(2, '0')).join(''));
+		return normalizeIOTAAddress(data.ID.map((byte) => byte.toString(16).padStart(2, '0')).join(''));
 	}
 
 	if ('Bool' in data) {
@@ -265,7 +268,7 @@ export function moveDataToRpcContent(data: MoveData, layout: MoveTypeLayout): Mo
 			result[name] = moveDataToRpcContent(item.value, itemLayout);
 		});
 
-		// https://github.com/MystenLabs/sui/blob/5849f6845a3ab9fdb4c17523994adad461478a4c/crates/sui-json-rpc-types/src/sui_move.rs#L481
+		// https://github.com/iotaledger/kinesis/blob/5849f6845a3ab9fdb4c17523994adad461478a4c/crates/iota-json-rpc-types/src/iota_move.rs#L481
 		const tag = parseStructTag(layout.struct.type);
 		const structName = `${toShortTypeString(tag.address)}::${tag.module}::${tag.name}`;
 

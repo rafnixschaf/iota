@@ -1,9 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { OwnedObjectRef, SuiClient } from '../../src/client';
+import { OwnedObjectRef, IOTAClient } from '../../src/client';
 import type { Keypair } from '../../src/cryptography';
 import { TransactionBlock } from '../../src/transactions';
 import { publishPackage, setup, TestToolbox } from './utils/setup';
@@ -130,8 +133,8 @@ describe('Transfer to Object', () => {
 	});
 });
 
-async function validateTransaction(client: SuiClient, signer: Keypair, tx: TransactionBlock) {
-	tx.setSenderIfNotSet(signer.getPublicKey().toSuiAddress());
+async function validateTransaction(client: IOTAClient, signer: Keypair, tx: TransactionBlock) {
+	tx.setSenderIfNotSet(signer.getPublicKey().toIOTAAddress());
 	const localDigest = await tx.getDigest({ client });
 	const result = await client.signAndExecuteTransactionBlock({
 		signer,

@@ -1,22 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { isSuiNSName, useSuiNSEnabled } from '@mysten/core';
-import { useSuiClient } from '@mysten/dapp-kit';
-import { type SuiClient } from '@mysten/sui.js/client';
-import { isValidSuiAddress } from '@mysten/sui.js/utils';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { isIOTANSName, useIOTANSEnabled } from '@iota/core';
+import { useIOTAClient } from '@iota/dapp-kit';
+import { type IOTAClient } from '@iota/iota.js/client';
+import { isValidIOTAAddress } from '@iota/iota.js/utils';
 import { useMemo } from 'react';
 import * as Yup from 'yup';
 
-export function createSuiAddressValidation(client: SuiClient, suiNSEnabled: boolean) {
+export function createIOTAAddressValidation(client: IOTAClient, iotaNSEnabled: boolean) {
     const resolveCache = new Map<string, boolean>();
 
     return Yup.string()
         .ensure()
         .trim()
         .required()
-        .test('is-sui-address', 'Invalid address. Please check again.', async (value) => {
-            if (suiNSEnabled && isSuiNSName(value)) {
+        .test('is-iota-address', 'Invalid address. Please check again.', async (value) => {
+            if (iotaNSEnabled && isIOTANSName(value)) {
                 if (resolveCache.has(value)) {
                     return resolveCache.get(value)!;
                 }
@@ -30,16 +33,16 @@ export function createSuiAddressValidation(client: SuiClient, suiNSEnabled: bool
                 return !!address;
             }
 
-            return isValidSuiAddress(value);
+            return isValidIOTAAddress(value);
         })
         .label("Recipient's address");
 }
 
-export function useSuiAddressValidation() {
-    const client = useSuiClient();
-    const suiNSEnabled = useSuiNSEnabled();
+export function useIOTAAddressValidation() {
+    const client = useIOTAClient();
+    const iotaNSEnabled = useIOTANSEnabled();
 
     return useMemo(() => {
-        return createSuiAddressValidation(client, suiNSEnabled);
-    }, [client, suiNSEnabled]);
+        return createIOTAAddressValidation(client, iotaNSEnabled);
+    }, [client, iotaNSEnabled]);
 }

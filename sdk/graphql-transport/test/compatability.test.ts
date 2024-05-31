@@ -1,27 +1,30 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import {
 	getFullnodeUrl,
-	SuiClient,
-	SuiObjectData,
-	SuiTransactionBlockResponse,
+	IOTAClient,
+	IOTAObjectData,
+	IOTATransactionBlockResponse,
 } from '../../typescript/src/client/index.js';
 import { TransactionBlock } from '../../typescript/src/transactions/index.js';
 import { publishPackage, setup, TestToolbox } from '../../typescript/test/e2e/utils/setup';
-import { SuiClientGraphQLTransport } from '../src/transport';
+import { IOTAClientGraphQLTransport } from '../src/transport';
 
 const DEFAULT_GRAPHQL_URL = import.meta.env.DEFAULT_GRAPHQL_URL ?? 'http:127.0.0.1:9125';
 
-describe('GraphQL SuiClient compatibility', () => {
+describe('GraphQL IOTAClient compatibility', () => {
 	let toolbox: TestToolbox;
 	let transactionBlockDigest: string;
 	let packageId: string;
 	let parentObjectId: string;
-	const graphQLClient = new SuiClient({
-		transport: new SuiClientGraphQLTransport({
+	const graphQLClient = new IOTAClient({
+		transport: new IOTAClientGraphQLTransport({
 			url: DEFAULT_GRAPHQL_URL,
 			fallbackFullNodeUrl: getFullnodeUrl('localnet'),
 		}),
@@ -40,7 +43,7 @@ describe('GraphQL SuiClient compatibility', () => {
 				filter: { StructType: `${packageId}::dynamic_fields_test::Test` },
 			})
 			.then(function (objects) {
-				const data = objects.data[0].data as SuiObjectData;
+				const data = objects.data[0].data as IOTAObjectData;
 				parentObjectId = data.objectId;
 			});
 
@@ -121,11 +124,11 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('getCoinMetadata', async () => {
 		const rpcMetadata = await toolbox.client.getCoinMetadata({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		const graphQLMetadata = await graphQLClient!.getCoinMetadata({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		expect(graphQLMetadata).toEqual(rpcMetadata);
@@ -133,11 +136,11 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('getTotalSupply', async () => {
 		const rpcSupply = await toolbox.client.getTotalSupply({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		const graphQLgetTotalSupply = await graphQLClient!.getTotalSupply({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		expect(graphQLgetTotalSupply).toEqual(rpcSupply);
@@ -283,7 +286,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		const {
 			data: [{ coinObjectId: id, version }],
 		} = await toolbox.getGasObjectsOwnedByAddress();
-		const fullNodeClient = new SuiClient({
+		const fullNodeClient = new IOTAClient({
 			url: getFullnodeUrl('localnet'),
 		});
 
@@ -393,7 +396,7 @@ describe('GraphQL SuiClient compatibility', () => {
 				showObjectChanges: true,
 				showRawInput: true,
 			},
-		})) as SuiTransactionBlockResponse & { rawEffects: unknown };
+		})) as IOTATransactionBlockResponse & { rawEffects: unknown };
 		const graphQLTransactionBlock = await graphQLClient!.getTransactionBlock({
 			digest: transactionBlockDigest,
 			options: {
@@ -467,18 +470,18 @@ describe('GraphQL SuiClient compatibility', () => {
 			owner: toolbox.address(),
 		});
 		const rpc = await toolbox.client.getStakesByIds({
-			stakedSuiIds: [stakes[0].stakes[0].stakedSuiId],
+			stakedIOTAIds: [stakes[0].stakes[0].stakedIOTAId],
 		});
 		const graphql = await graphQLClient!.getStakesByIds({
-			stakedSuiIds: [stakes[0].stakes[0].stakedSuiId],
+			stakedIOTAIds: [stakes[0].stakes[0].stakedIOTAId],
 		});
 
 		expect(graphql).toEqual(rpc);
 	});
 
-	test.skip('getLatestSuiSystemState', async () => {
-		const rpc = await toolbox.client.getLatestSuiSystemState();
-		const graphql = await graphQLClient!.getLatestSuiSystemState();
+	test.skip('getLatestIOTASystemState', async () => {
+		const rpc = await toolbox.client.getLatestIOTASystemState();
+		const graphql = await graphQLClient!.getLatestIOTASystemState();
 
 		expect(graphql).toEqual(rpc);
 	});
@@ -593,7 +596,7 @@ describe('GraphQL SuiClient compatibility', () => {
 					showObjectChanges: true,
 					showRawInput: true,
 				},
-			})) as SuiTransactionBlockResponse & { rawEffects: unknown };
+			})) as IOTATransactionBlockResponse & { rawEffects: unknown };
 
 		// Deleted gas coin isn't included in changes when executing transaction block
 		rpc.objectChanges?.pop();
@@ -724,10 +727,10 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('resolveNameServiceAddress', async () => {
 		const rpc = await toolbox.client.resolveNameServiceAddress({
-			name: 'test.sui',
+			name: 'test.iota',
 		});
 		const graphql = await graphQLClient!.resolveNameServiceAddress({
-			name: 'test.sui',
+			name: 'test.iota',
 		});
 
 		expect(graphql).toEqual(rpc);

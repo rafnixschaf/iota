@@ -1,8 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @tanstack/query/exhaustive-deps */
 
-import { useSuiClient } from '@mysten/dapp-kit';
+import { useIOTAClient } from '@iota/dapp-kit';
 import {
 	getKioskObject,
 	Kiosk,
@@ -10,8 +13,8 @@ import {
 	KioskItem,
 	KioskListing,
 	KioskOwnerCap,
-} from '@mysten/kiosk';
-import { SuiObjectResponse } from '@mysten/sui.js/client';
+} from '@iota/kiosk';
+import { IOTAObjectResponse } from '@iota/iota.js/client';
 import { useQuery } from '@tanstack/react-query';
 
 import { OwnedObjectType } from '../components/Inventory/OwnedObjects';
@@ -64,7 +67,7 @@ export function useKiosk(kioskId: string | undefined | null) {
 		queryKey: [TANSTACK_KIOSK_KEY, kioskId],
 		queryFn: async (): Promise<{
 			kioskData: KioskData | null;
-			items: SuiObjectResponse[];
+			items: IOTAObjectResponse[];
 		}> => {
 			if (!kioskId) return { kioskData: null, items: [] };
 			const res = await kioskClient.getKiosk({
@@ -114,7 +117,7 @@ export function useKiosk(kioskId: string | undefined | null) {
  * A hook to fetch a kiosk's details.
  */
 export function useKioskDetails(kioskId: string | undefined | null) {
-	const client = useSuiClient();
+	const client = useIOTAClient();
 
 	return useQuery({
 		queryKey: [TANSTACK_KIOSK_DATA_KEY, kioskId],

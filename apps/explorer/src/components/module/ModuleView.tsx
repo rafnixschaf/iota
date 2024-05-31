@@ -1,8 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { type SuiMoveNormalizedType } from '@mysten/sui.js/client';
-import { normalizeSuiAddress } from '@mysten/sui.js/utils';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { type IOTAMoveNormalizedType } from '@iota/iota.js/client';
+import { normalizeIOTAAddress } from '@iota/iota.js/utils';
 import cl from 'clsx';
 import Highlight, { defaultProps, Prism } from 'prism-react-renderer';
 import 'prism-themes/themes/prism-one-light.css';
@@ -32,11 +35,11 @@ interface TypeReference {
     address: string;
     module: string;
     name: string;
-    typeArguments: SuiMoveNormalizedType[];
+    typeArguments: IOTAMoveNormalizedType[];
 }
 
 /** Takes a normalized move type and returns the address information contained within it */
-function unwrapTypeReference(type: SuiMoveNormalizedType): null | TypeReference {
+function unwrapTypeReference(type: IOTAMoveNormalizedType): null | TypeReference {
     if (typeof type === 'object') {
         if ('Struct' in type) {
             return type.Struct;
@@ -116,8 +119,8 @@ function ModuleView({ id, name, code }: Props) {
                                                     })}
                                                     to={href}
                                                     target={
-                                                        normalizeSuiAddress(reference.address) ===
-                                                        normalizeSuiAddress(id!)
+                                                        normalizeIOTAAddress(reference.address) ===
+                                                        normalizeIOTAAddress(id!)
                                                             ? undefined
                                                             : '_blank'
                                                     }

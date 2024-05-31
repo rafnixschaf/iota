@@ -1,20 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
-	SuiTransport,
-	SuiTransportRequestOptions,
-	SuiTransportSubscribeOptions,
-} from '@mysten/sui.js/client';
-import { SuiHTTPTransport } from '@mysten/sui.js/client';
+	IOTATransport,
+	IOTATransportRequestOptions,
+	IOTATransportSubscribeOptions,
+} from '@iota/iota.js/client';
+import { IOTAHTTPTransport } from '@iota/iota.js/client';
 import type { DocumentNode } from 'graphql';
 import { print } from 'graphql';
 
 import { TypedDocumentString } from './generated/queries.js';
 import { RPC_METHODS, UnsupportedMethodError, UnsupportedParamError } from './methods.js';
 
-export interface SuiClientGraphQLTransportOptions {
+export interface IOTAClientGraphQLTransportOptions {
 	url: string;
 	fallbackFullNodeUrl?: string;
 	fallbackMethods?: (keyof typeof RPC_METHODS)[];
@@ -54,12 +57,12 @@ export type GraphQLResponseErrors = Array<{
 	path?: (string | number)[];
 }>;
 
-export class SuiClientGraphQLTransport implements SuiTransport {
-	#options: SuiClientGraphQLTransportOptions;
-	#fallbackTransport?: SuiTransport;
+export class IOTAClientGraphQLTransport implements IOTATransport {
+	#options: IOTAClientGraphQLTransportOptions;
+	#fallbackTransport?: IOTATransport;
 	#fallbackMethods: (keyof typeof RPC_METHODS)[];
 
-	constructor(options: SuiClientGraphQLTransportOptions) {
+	constructor(options: IOTAClientGraphQLTransportOptions) {
 		this.#options = options;
 		this.#fallbackMethods = options.fallbackMethods || [
 			'executeTransactionBlock',
@@ -68,7 +71,7 @@ export class SuiClientGraphQLTransport implements SuiTransport {
 		];
 
 		if (options.fallbackFullNodeUrl) {
-			this.#fallbackTransport = new SuiHTTPTransport({
+			this.#fallbackTransport = new IOTAHTTPTransport({
 				url: options.fallbackFullNodeUrl,
 			});
 		}
@@ -121,14 +124,14 @@ export class SuiClientGraphQLTransport implements SuiTransport {
 		});
 	}
 
-	async request<T = unknown>(input: SuiTransportRequestOptions): Promise<T> {
+	async request<T = unknown>(input: IOTATransportRequestOptions): Promise<T> {
 		let clientMethod: keyof typeof RPC_METHODS;
 
 		switch (input.method) {
 			case 'rpc.discover':
 				clientMethod = 'getRpcApiVersion';
 				break;
-			case 'suix_getLatestAddressMetrics':
+			case 'iotax_getLatestAddressMetrics':
 				clientMethod = 'getAddressMetrics';
 				break;
 			default:
@@ -153,7 +156,7 @@ export class SuiClientGraphQLTransport implements SuiTransport {
 	}
 
 	async subscribe<T = unknown>(
-		input: SuiTransportSubscribeOptions<T>,
+		input: IOTATransportSubscribeOptions<T>,
 	): Promise<() => Promise<boolean>> {
 		if (!this.#fallbackTransport) {
 			throw new UnsupportedMethodError(input.method);
@@ -162,7 +165,7 @@ export class SuiClientGraphQLTransport implements SuiTransport {
 		return this.#fallbackTransport.subscribe(input);
 	}
 
-	async #unsupportedMethod<T = unknown>(input: SuiTransportRequestOptions): Promise<T> {
+	async #unsupportedMethod<T = unknown>(input: IOTATransportRequestOptions): Promise<T> {
 		if (!this.#fallbackTransport) {
 			throw new UnsupportedMethodError(input.method);
 		}

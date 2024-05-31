@@ -1,20 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type SignedTransaction } from '_src/ui/app/WalletSigner';
-import type { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
+import type { IOTATransactionBlockResponse } from '@iota/iota.js/client';
 import {
-    type SuiSignAndExecuteTransactionBlockInput,
-    type SuiSignMessageOutput,
-} from '@mysten/wallet-standard';
+    type IOTASignAndExecuteTransactionBlockInput,
+    type IOTASignMessageOutput,
+} from '@iota/wallet-standard';
 
 export type TransactionDataType = {
     type: 'transaction';
     data: string;
     account: string;
     justSign?: boolean;
-    requestType?: SuiSignAndExecuteTransactionBlockInput['requestType'];
-    options?: SuiSignAndExecuteTransactionBlockInput['options'];
+    requestType?: IOTASignAndExecuteTransactionBlockInput['requestType'];
+    options?: IOTASignAndExecuteTransactionBlockInput['options'];
 };
 
 export type SignMessageDataType = {
@@ -28,7 +31,7 @@ export type ApprovalRequest = {
     approved: boolean | null;
     origin: string;
     originFavIcon?: string;
-    txResult?: SuiTransactionBlockResponse | SuiSignMessageOutput;
+    txResult?: IOTATransactionBlockResponse | IOTASignMessageOutput;
     txResultError?: string;
     txSigned?: SignedTransaction;
     createdDate: string;
@@ -37,12 +40,12 @@ export type ApprovalRequest = {
 
 export interface SignMessageApprovalRequest extends Omit<ApprovalRequest, 'txResult' | 'tx'> {
     tx: SignMessageDataType;
-    txResult?: SuiSignMessageOutput;
+    txResult?: IOTASignMessageOutput;
 }
 
 export interface TransactionApprovalRequest extends Omit<ApprovalRequest, 'txResult' | 'tx'> {
     tx: TransactionDataType;
-    txResult?: SuiTransactionBlockResponse;
+    txResult?: IOTATransactionBlockResponse;
 }
 
 export function isSignMessageApprovalRequest(

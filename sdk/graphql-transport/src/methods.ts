@@ -1,16 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromB64, toB58 } from '@mysten/bcs';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { fromB64, toB58 } from '@iota/bcs';
 import type {
 	MoveValue,
 	ProtocolConfigValue,
-	SuiArgument,
-	SuiClient,
-	SuiMoveNormalizedModule,
-} from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, parseStructTag } from '@mysten/sui.js/utils';
+	IOTAArgument,
+	IOTAClient,
+	IOTAMoveNormalizedModule,
+} from '@iota/iota.js/client';
+import { TransactionBlock } from '@iota/iota.js/transactions';
+import { normalizeStructTag, normalizeIOTAAddress, parseStructTag } from '@iota/iota.js/utils';
 
 import type {
 	ObjectFilter,
@@ -34,7 +37,7 @@ import {
 	GetDynamicFieldObjectDocument,
 	GetDynamicFieldsDocument,
 	GetLatestCheckpointSequenceNumberDocument,
-	GetLatestSuiSystemStateDocument,
+	GetLatestIOTASystemStateDocument,
 	GetMoveFunctionArgTypesDocument,
 	GetNormalizedMoveFunctionDocument,
 	GetNormalizedMoveModuleDocument,
@@ -77,7 +80,7 @@ import { mapGraphQLStakeToRpcStake } from './mappers/stakes.js';
 import { mapGraphQLTransactionBlockToRpcTransactionBlock } from './mappers/transaction-block.js';
 import { isNumericString, toShortTypeString } from './mappers/util.js';
 import { mapGraphQlValidatorToRpcValidator } from './mappers/validator.js';
-import type { SuiClientGraphQLTransport } from './transport.js';
+import type { IOTAClientGraphQLTransport } from './transport.js';
 
 interface ResponseTypes {
 	getRpcApiVersion: {
@@ -86,11 +89,11 @@ interface ResponseTypes {
 }
 
 export const RPC_METHODS: {
-	[K in keyof SuiClient as SuiClient[K] extends (...args: any[]) => Promise<any>
+	[K in keyof IOTAClient as IOTAClient[K] extends (...args: any[]) => Promise<any>
 		? K
-		: never]?: SuiClient[K] extends (...args: any[]) => infer R
+		: never]?: IOTAClient[K] extends (...args: any[]) => infer R
 		? (
-				transport: SuiClientGraphQLTransport,
+				transport: IOTAClientGraphQLTransport,
 				inputs: any[],
 		  ) => K extends keyof ResponseTypes ? Promise<ResponseTypes[K]> : R
 		: never;
@@ -107,7 +110,7 @@ export const RPC_METHODS: {
 
 		return {
 			info: {
-				version: res.headers.get('x-sui-rpc-version') ?? undefined,
+				version: res.headers.get('x-iota-rpc-version') ?? undefined,
 			},
 		};
 	},
@@ -318,7 +321,7 @@ export const RPC_METHODS: {
 		}
 
 		const address = toShortTypeString(movePackage.address);
-		const modules: Record<string, SuiMoveNormalizedModule> = {};
+		const modules: Record<string, IOTAMoveNormalizedModule> = {};
 
 		for (const moveModule of movePackage.modules?.nodes ?? []) {
 			let hasMoreFriends = moveModule.friends?.pageInfo.hasNextPage ?? false;
@@ -412,7 +415,7 @@ export const RPC_METHODS: {
 			afterStructs = page.structs?.pageInfo.endCursor;
 		}
 
-		return mapNormalizedMoveModule(moveModule, normalizeSuiAddress(pkg));
+		return mapNormalizedMoveModule(moveModule, normalizeIOTAAddress(pkg));
 	},
 	async getNormalizedMoveStruct(transport, [pkg, module, struct]) {
 		const moveStruct = await transport.graphqlQuery(
@@ -724,28 +727,28 @@ export const RPC_METHODS: {
 					owner,
 				},
 			},
-			(data) => data.address?.stakedSuis?.nodes,
+			(data) => data.address?.stakedIOTAs?.nodes,
 		);
 
 		return mapGraphQLStakeToRpcStake(stakes);
 	},
-	async getStakesByIds(transport, [stakedSuiIds]) {
+	async getStakesByIds(transport, [stakedIOTAIds]) {
 		const stakes = await transport.graphqlQuery(
 			{
 				query: GetStakesByIdsDocument,
 				variables: {
-					ids: stakedSuiIds,
+					ids: stakedIOTAIds,
 				},
 			},
-			(data) => data.objects?.nodes.map((node) => node?.asMoveObject?.asStakedSui!).filter(Boolean),
+			(data) => data.objects?.nodes.map((node) => node?.asMoveObject?.asStakedIOTA!).filter(Boolean),
 		);
 
 		return mapGraphQLStakeToRpcStake(stakes);
 	},
-	async getLatestSuiSystemState(transport) {
+	async getLatestIOTASystemState(transport) {
 		const systemState = await transport.graphqlQuery(
 			{
-				query: GetLatestSuiSystemStateDocument,
+				query: GetLatestIOTASystemStateDocument,
 			},
 			(data) => data.epoch,
 		);
@@ -930,7 +933,7 @@ export const RPC_METHODS: {
 			events: result.events!,
 			results: results?.map((result) => ({
 				mutableReferenceOutputs: result.mutatedReferences?.map(
-					(ref): [SuiArgument, number[], string] => [
+					(ref): [IOTAArgument, number[], string] => [
 						ref.input.__typename === 'GasCoin'
 							? 'GasCoin'
 							: ref.input.__typename === 'Input'
@@ -1386,10 +1389,10 @@ export const RPC_METHODS: {
 			},
 		});
 
-		return data.resolveSuinsAddress?.address ?? null;
+		return data.resolveIOTAnsAddress?.address ?? null;
 	},
 	async resolveNameServiceNames(transport, [address, cursor, limit]) {
-		const suinsRegistrations = await transport.graphqlQuery(
+		const iotansRegistrations = await transport.graphqlQuery(
 			{
 				query: ResolveNameServiceNamesDocument,
 				variables: {
@@ -1398,13 +1401,13 @@ export const RPC_METHODS: {
 					limit,
 				},
 			},
-			(data) => data.address?.suinsRegistrations,
+			(data) => data.address?.iotansRegistrations,
 		);
 
 		return {
-			hasNextPage: suinsRegistrations.pageInfo.hasNextPage,
-			nextCursor: suinsRegistrations.pageInfo.endCursor ?? null,
-			data: suinsRegistrations?.nodes.map((node) => node.domain) ?? [],
+			hasNextPage: iotansRegistrations.pageInfo.hasNextPage,
+			nextCursor: iotansRegistrations.pageInfo.endCursor ?? null,
+			data: iotansRegistrations?.nodes.map((node) => node.domain) ?? [],
 		};
 	},
 };
@@ -1422,7 +1425,7 @@ export class UnsupportedMethodError extends Error {
 }
 
 async function paginateTransactionBlockLists(
-	transport: SuiClientGraphQLTransport,
+	transport: IOTAClientGraphQLTransport,
 	transactionBlock: Rpc_Transaction_FieldsFragment,
 ) {
 	let hasMoreEvents = transactionBlock.effects?.events?.pageInfo.hasNextPage ?? false;
@@ -1470,7 +1473,7 @@ async function paginateTransactionBlockLists(
 }
 
 async function paginateCheckpointLists(
-	transport: SuiClientGraphQLTransport,
+	transport: IOTAClientGraphQLTransport,
 	checkpoint: Rpc_Checkpoint_FieldsFragment,
 ) {
 	let hasNextPage = checkpoint.transactionBlocks.pageInfo.hasNextPage;

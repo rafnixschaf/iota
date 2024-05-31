@@ -1,35 +1,38 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getFullnodeUrl, SuiClient } from '@mysten/sui.js/client';
-import type { IdentifierRecord, ReadonlyWalletAccount } from '@mysten/wallet-standard';
-import { getWallets } from '@mysten/wallet-standard';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { getFullnodeUrl, IOTAClient } from '@iota/iota.js/client';
+import type { IdentifierRecord, ReadonlyWalletAccount } from '@iota/wallet-standard';
+import { getWallets } from '@iota/wallet-standard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
 
 import { WalletProvider } from '../src/components/WalletProvider.js';
-import { SuiClientProvider } from '../src/index.js';
+import { IOTAClientProvider } from '../src/index.js';
 import { createMockAccount } from './mocks/mockAccount.js';
 import { MockWallet } from './mocks/mockWallet.js';
 
-export function createSuiClientContextWrapper(client: SuiClient) {
-	return function SuiClientContextWrapper({ children }: { children: React.ReactNode }) {
-		return <SuiClientProvider networks={{ test: client }}>{children}</SuiClientProvider>;
+export function createIOTAClientContextWrapper(client: IOTAClient) {
+	return function IOTAClientContextWrapper({ children }: { children: React.ReactNode }) {
+		return <IOTAClientProvider networks={{ test: client }}>{children}</IOTAClientProvider>;
 	};
 }
 
 export function createWalletProviderContextWrapper(
 	providerProps: Omit<ComponentProps<typeof WalletProvider>, 'children'> = {},
-	suiClient: SuiClient = new SuiClient({ url: getFullnodeUrl('localnet') }),
+	iotaClient: IOTAClient = new IOTAClient({ url: getFullnodeUrl('localnet') }),
 ) {
 	const queryClient = new QueryClient();
 	return function WalletProviderContextWrapper({ children }: { children: React.ReactNode }) {
 		return (
-			<SuiClientProvider networks={{ test: suiClient }}>
+			<IOTAClientProvider networks={{ test: iotaClient }}>
 				<QueryClientProvider client={queryClient}>
 					<WalletProvider {...providerProps}>{children}</WalletProvider>;
 				</QueryClientProvider>
-			</SuiClientProvider>
+			</IOTAClientProvider>
 		);
 	};
 }

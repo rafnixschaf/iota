@@ -1,0 +1,11 @@
+[package]
+name = "IOTAExtraChangeTypeConstraint"
+version = "0.0.1"
+
+[dependencies]
+IOTASystem = { local = "../../../../iota-framework/packages/iota-system" }
+IOTA = { local = "../../../../iota-framework/packages/iota-framework" }
+MoveStdlib = { local = "../../../../iota-framework/packages/move-stdlib" }
+
+[addresses]
+iota_system = "0x3"

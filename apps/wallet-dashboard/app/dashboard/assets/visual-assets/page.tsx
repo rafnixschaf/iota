@@ -1,9 +1,12 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 'use client';
 
-import { SuiObjectData } from '@mysten/sui.js/client';
+import { IOTAObjectData } from '@iota/iota.js/client';
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Box } from '@/components/index';
@@ -73,7 +76,7 @@ function VisualAssetsPage(): JSX.Element {
     );
 }
 
-const HARCODED_VISUAL_ASSETS: SuiObjectData[] = [
+const HARCODED_VISUAL_ASSETS: IOTAObjectData[] = [
     {
         digest: 'dh3bxjGDzm62bdidFFehtaajwqBSaKFdm8Ujr23J51xy',
         objectId: '0x9303adf2c711dcc239rbd78c0d0666666df06e2b3a35837',

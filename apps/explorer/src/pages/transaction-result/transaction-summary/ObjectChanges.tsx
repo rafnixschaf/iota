@@ -1,22 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import {
     ObjectChangeLabels,
-    type SuiObjectChangeWithDisplay,
+    type IOTAObjectChangeWithDisplay,
     type ObjectChangesByOwner,
     type ObjectChangeSummary,
-    type SuiObjectChangeTypes,
-    useResolveSuiNSName,
-} from '@mysten/core';
-import { ChevronRight12 } from '@mysten/icons';
+    type IOTAObjectChangeTypes,
+    useResolveIOTANSName,
+} from '@iota/core';
+import { ChevronRight12 } from '@iota/icons';
 import {
-    type SuiObjectChangePublished,
-    type SuiObjectChange,
+    type IOTAObjectChangePublished,
+    type IOTAObjectChange,
     type DisplayFieldsResponse,
-} from '@mysten/sui.js/client';
-import { parseStructTag } from '@mysten/sui.js/utils';
-import { Text } from '@mysten/ui';
+} from '@iota/iota.js/client';
+import { parseStructTag } from '@iota/iota.js/utils';
+import { Text } from '@iota/ui';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import clsx from 'clsx';
 import { useState, type ReactNode } from 'react';
@@ -150,8 +153,8 @@ function ObjectDetail({
 }
 
 interface ObjectChangeEntriesProps {
-    type: SuiObjectChangeTypes;
-    changeEntries: SuiObjectChange[];
+    type: IOTAObjectChangeTypes;
+    changeEntries: IOTAObjectChange[];
     isDisplay?: boolean;
 }
 
@@ -160,7 +163,7 @@ function ObjectChangeEntries({ changeEntries, type, isDisplay }: ObjectChangeEnt
     let expandableItems = [];
 
     if (type === 'published') {
-        expandableItems = (changeEntries as SuiObjectChangePublished[]).map(
+        expandableItems = (changeEntries as IOTAObjectChangePublished[]).map(
             ({ packageId, modules }) => (
                 <ObjectDetailPanel
                     key={packageId}
@@ -181,7 +184,7 @@ function ObjectChangeEntries({ changeEntries, type, isDisplay }: ObjectChangeEnt
             ),
         );
     } else {
-        expandableItems = (changeEntries as SuiObjectChangeWithDisplay[]).map((change) =>
+        expandableItems = (changeEntries as IOTAObjectChangeWithDisplay[]).map((change) =>
             'objectId' in change && change.display ? (
                 <ObjectDisplay
                     key={change.objectId}
@@ -238,7 +241,7 @@ function ObjectChangeEntries({ changeEntries, type, isDisplay }: ObjectChangeEnt
 
 interface ObjectChangeEntriesCardsProps {
     data: ObjectChangesByOwner;
-    type: SuiObjectChangeTypes;
+    type: IOTAObjectChangeTypes;
 }
 
 function ObjectChangeEntriesCardFooter({
@@ -248,7 +251,7 @@ function ObjectChangeEntriesCardFooter({
     ownerType: string;
     ownerAddress: string;
 }) {
-    const { data: suinsDomainName } = useResolveSuiNSName(ownerAddress);
+    const { data: iotansDomainName } = useResolveIOTANSName(ownerAddress);
 
     return (
         <div className="flex flex-wrap items-center justify-between">
@@ -257,7 +260,7 @@ function ObjectChangeEntriesCardFooter({
             </Text>
 
             {ownerType === 'AddressOwner' && (
-                <AddressLink label={suinsDomainName || undefined} address={ownerAddress} />
+                <AddressLink label={iotansDomainName || undefined} address={ownerAddress} />
             )}
 
             {ownerType === 'ObjectOwner' && <ObjectLink objectId={ownerAddress} />}
@@ -322,7 +325,7 @@ export function ObjectChanges({ objectSummary }: ObjectChangesProps) {
             {Object.entries(objectSummary).map(([type, changes]) => (
                 <ObjectChangeEntriesCards
                     key={type}
-                    type={type as SuiObjectChangeTypes}
+                    type={type as IOTAObjectChangeTypes}
                     data={changes}
                 />
             ))}

@@ -1,18 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { hasDisplayData, isKioskOwnerToken, useGetOwnedObjects } from '@mysten/core';
-import { useKioskClient } from '@mysten/core/src/hooks/useKioskClient';
-import { type SuiObjectData } from '@mysten/sui.js/client';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { hasDisplayData, isKioskOwnerToken, useGetOwnedObjects } from '@iota/core';
+import { useKioskClient } from '@iota/core/src/hooks/useKioskClient';
+import { type IOTAObjectData } from '@iota/iota.js/client';
 import { useMemo } from 'react';
 
 import { useBuyNLargeAsset } from '../components/buynlarge/useBuyNLargeAsset';
 import { useHiddenAssets } from '../pages/home/hidden-assets/HiddenAssetsProvider';
 
 type OwnedAssets = {
-    visual: SuiObjectData[];
-    other: SuiObjectData[];
-    hidden: SuiObjectData[];
+    visual: IOTAObjectData[];
+    other: IOTAObjectData[];
+    hidden: IOTAObjectData[];
 };
 
 export enum AssetFilterTypes {
@@ -57,10 +60,10 @@ export function useGetNFTs(address?: string | null) {
             )
             .reduce((acc, curr) => {
                 if (hasDisplayData(curr) || isKioskOwnerToken(kioskClient.network, curr))
-                    acc.visual.push(curr.data as SuiObjectData);
-                if (!hasDisplayData(curr)) acc.other.push(curr.data as SuiObjectData);
+                    acc.visual.push(curr.data as IOTAObjectData);
+                if (!hasDisplayData(curr)) acc.other.push(curr.data as IOTAObjectData);
                 if (curr.data?.objectId && hiddenAssetIds.includes(curr.data?.objectId))
-                    acc.hidden.push(curr.data as SuiObjectData);
+                    acc.hidden.push(curr.data as IOTAObjectData);
                 return acc;
             }, ownedAssets);
 

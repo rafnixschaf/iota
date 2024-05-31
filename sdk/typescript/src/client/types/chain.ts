@@ -1,14 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import type {
 	Checkpoint,
 	DynamicFieldInfo,
-	SuiCallArg,
-	SuiMoveNormalizedModule,
-	SuiParsedData,
-	SuiTransaction,
-	SuiValidatorSummary,
+	IOTACallArg,
+	IOTAMoveNormalizedModule,
+	IOTAParsedData,
+	IOTATransaction,
+	IOTAValidatorSummary,
 } from './generated.js';
 
 export type ResolvedNameServiceNames = {
@@ -19,7 +22,7 @@ export type ResolvedNameServiceNames = {
 
 export type EpochInfo = {
 	epoch: string;
-	validators: SuiValidatorSummary[];
+	validators: IOTAValidatorSummary[];
 	epochTotalTransactions: string;
 	firstCheckpointId: string;
 	epochStartTimestamp: string;
@@ -111,12 +114,12 @@ export type DynamicFieldPage = {
 	hasNextPage: boolean;
 };
 
-export type SuiMoveNormalizedModules = Record<string, SuiMoveNormalizedModule>;
+export type IOTAMoveNormalizedModules = Record<string, IOTAMoveNormalizedModule>;
 
-export type SuiMoveObject = Extract<SuiParsedData, { dataType: 'moveObject' }>;
-export type SuiMovePackage = Extract<SuiParsedData, { dataType: 'package' }>;
+export type IOTAMoveObject = Extract<IOTAParsedData, { dataType: 'moveObject' }>;
+export type IOTAMovePackage = Extract<IOTAParsedData, { dataType: 'package' }>;
 
 export type ProgrammableTransaction = {
-	transactions: SuiTransaction[];
-	inputs: SuiCallArg[];
+	transactions: IOTATransaction[];
+	inputs: IOTACallArg[];
 };

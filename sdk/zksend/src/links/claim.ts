@@ -1,22 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PureArg } from '@mysten/sui.js/bcs';
-import { bcs } from '@mysten/sui.js/bcs';
-import { getFullnodeUrl, SuiClient } from '@mysten/sui.js/client';
-import type { CoinStruct, SuiTransaction } from '@mysten/sui.js/client';
-import type { Keypair } from '@mysten/sui.js/cryptography';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import type { PureArg } from '@iota/iota.js/bcs';
+import { bcs } from '@iota/iota.js/bcs';
+import { getFullnodeUrl, IOTAClient } from '@iota/iota.js/client';
+import type { CoinStruct, IOTATransaction } from '@iota/iota.js/client';
+import type { Keypair } from '@iota/iota.js/cryptography';
+import { Ed25519Keypair } from '@iota/iota.js/keypairs/ed25519';
+import { TransactionBlock } from '@iota/iota.js/transactions';
 import {
 	fromB64,
 	normalizeStructTag,
-	normalizeSuiAddress,
-	normalizeSuiObjectId,
+	normalizeIOTAAddress,
+	normalizeIOTAObjectId,
 	parseStructTag,
-	SUI_TYPE_ARG,
+	IOTA_TYPE_ARG,
 	toB64,
-} from '@mysten/sui.js/utils';
+} from '@iota/iota.js/utils';
 
 import type { ZkSendLinkBuilderOptions } from './builder.js';
 import { ZkSendLinkBuilder } from './builder.js';
@@ -32,13 +35,13 @@ const DEFAULT_ZK_SEND_LINK_OPTIONS = {
 	claimApi: 'https://zksend.com/api',
 };
 
-const SUI_COIN_TYPE = normalizeStructTag(SUI_TYPE_ARG);
-const SUI_COIN_OBJECT_TYPE = normalizeStructTag('0x2::coin::Coin<0x2::sui::SUI>');
+const IOTA_COIN_TYPE = normalizeStructTag(IOTA_TYPE_ARG);
+const IOTA_COIN_OBJECT_TYPE = normalizeStructTag('0x2::coin::Coin<0x2::iota::IOTA>');
 
 export type ZkSendLinkOptions = {
 	claimApi?: string;
 	keypair?: Keypair;
-	client?: SuiClient;
+	client?: IOTAClient;
 	network?: 'mainnet' | 'testnet';
 	host?: string;
 	path?: string;
@@ -63,7 +66,7 @@ export class ZkSendLink {
 	assets?: LinkAssets;
 	claimed?: boolean;
 
-	#client: SuiClient;
+	#client: IOTAClient;
 	#contract?: ZkBag<ZkBagContractOptions>;
 	#claimApi: string;
 	#network: 'mainnet' | 'testnet';
@@ -72,7 +75,7 @@ export class ZkSendLink {
 
 	// State for non-contract based links
 	#gasCoin?: CoinStruct;
-	#hasSui = false;
+	#hasIOTA = false;
 	#ownedObjects: {
 		objectId: string;
 		version: string;
@@ -83,7 +86,7 @@ export class ZkSendLink {
 	constructor({
 		network = DEFAULT_ZK_SEND_LINK_OPTIONS.network,
 		claimApi = DEFAULT_ZK_SEND_LINK_OPTIONS.claimApi,
-		client = new SuiClient({ url: getFullnodeUrl(network) }),
+		client = new IOTAClient({ url: getFullnodeUrl(network) }),
 		keypair,
 		contract = network === 'mainnet' ? MAINNET_CONTRACT_IDS : null,
 		address,
@@ -97,7 +100,7 @@ export class ZkSendLink {
 
 		this.#client = client;
 		this.keypair = keypair;
-		this.address = address ?? keypair!.toSuiAddress();
+		this.address = address ?? keypair!.toIOTAAddress();
 		this.#claimApi = claimApi;
 		this.#network = network;
 		this.#host = host;
@@ -194,7 +197,7 @@ export class ZkSendLink {
 		const txb = this.createClaimTransaction(address);
 
 		const { digest } = await this.#executeSponsoredTransactionBlock(
-			await this.#createSponsoredTransactionBlock(txb, address, this.keypair.toSuiAddress()),
+			await this.#createSponsoredTransactionBlock(txb, address, this.keypair.toIOTAAddress()),
 			this.keypair,
 		);
 
@@ -218,7 +221,7 @@ export class ZkSendLink {
 		}
 
 		const txb = new TransactionBlock();
-		const sender = reclaim ? address : this.keypair!.toSuiAddress();
+		const sender = reclaim ? address : this.keypair!.toIOTAAddress();
 		txb.setSender(sender);
 
 		const store = txb.object(this.#contract.ids.bagStoreId);
@@ -289,7 +292,7 @@ export class ZkSendLink {
 			keypair: newLinkKp,
 		});
 
-		const to = txb.pure.address(newLinkKp.toSuiAddress());
+		const to = txb.pure.address(newLinkKp.toIOTAAddress());
 
 		this.#contract.update_receiver(txb, { arguments: [store, this.address, to] });
 
@@ -360,7 +363,7 @@ export class ZkSendLink {
 			const type = parseStructTag(normalizeStructTag(object.data.type));
 
 			if (
-				type.address === normalizeSuiAddress('0x2') &&
+				type.address === normalizeIOTAAddress('0x2') &&
 				type.module === 'coin' &&
 				type.name === 'Coin'
 			) {
@@ -419,7 +422,7 @@ export class ZkSendLink {
 		}
 
 		const transfer = txb.transaction.data.transaction.transactions.findLast(
-			(tx): tx is Extract<SuiTransaction, { TransferObjects: unknown }> => 'TransferObjects' in tx,
+			(tx): tx is Extract<IOTATransaction, { TransferObjects: unknown }> => 'TransferObjects' in tx,
 		);
 
 		if (!transfer) {
@@ -525,7 +528,7 @@ export class ZkSendLink {
 			digest: string;
 		}[] = [];
 
-		if (this.#ownedObjects.length === 0 && !this.#hasSui) {
+		if (this.#ownedObjects.length === 0 && !this.#hasIOTA) {
 			return {
 				balances,
 				nfts,
@@ -533,12 +536,12 @@ export class ZkSendLink {
 			};
 		}
 
-		const address = new Ed25519Keypair().toSuiAddress();
-		const normalizedAddress = normalizeSuiAddress(address);
+		const address = new Ed25519Keypair().toIOTAAddress();
+		const normalizedAddress = normalizeIOTAAddress(address);
 
 		const txb = this.createClaimTransaction(normalizedAddress);
 
-		if (this.#gasCoin || !this.#hasSui) {
+		if (this.#gasCoin || !this.#hasIOTA) {
 			txb.setGasPayment([]);
 		}
 
@@ -560,7 +563,7 @@ export class ZkSendLink {
 				const type = parseStructTag(objectChange.objectType);
 
 				if (
-					type.address === normalizeSuiAddress('0x2') &&
+					type.address === normalizeIOTAAddress('0x2') &&
 					type.module === 'coin' &&
 					type.name === 'Coin'
 				) {
@@ -589,7 +592,7 @@ export class ZkSendLink {
 		}
 
 		const txb = new TransactionBlock();
-		txb.setSender(this.keypair.toSuiAddress());
+		txb.setSender(this.keypair.toIOTAAddress());
 
 		const objectsToTransfer = this.#ownedObjects
 			.filter((object) => {
@@ -597,7 +600,7 @@ export class ZkSendLink {
 					if (object.objectId === this.#gasCoin.coinObjectId) {
 						return false;
 					}
-				} else if (object.type === SUI_COIN_OBJECT_TYPE) {
+				} else if (object.type === IOTA_COIN_OBJECT_TYPE) {
 					return false;
 				}
 
@@ -641,7 +644,7 @@ export class ZkSendLink {
 			for (const object of ownedObjects.data) {
 				if (object.data) {
 					this.#ownedObjects.push({
-						objectId: normalizeSuiObjectId(object.data.objectId),
+						objectId: normalizeIOTAObjectId(object.data.objectId),
 						version: object.data.version,
 						digest: object.data.digest,
 						type: normalizeStructTag(object.data.type!),
@@ -651,11 +654,11 @@ export class ZkSendLink {
 		} while (nextCursor);
 
 		const coins = await this.#client.getCoins({
-			coinType: SUI_COIN_TYPE,
+			coinType: IOTA_COIN_TYPE,
 			owner: this.address,
 		});
 
-		this.#hasSui = coins.data.length > 0;
+		this.#hasIOTA = coins.data.length > 0;
 		this.#gasCoin = coins.data.find((coin) => BigInt(coin.balance) % 1000n === 987n);
 
 		const result = await this.#client.queryTransactionBlocks({
@@ -673,7 +676,7 @@ export class ZkSendLink {
 
 		this.creatorAddress = result.data[0]?.transaction?.data.sender;
 
-		if (this.#hasSui || this.#ownedObjects.length > 0) {
+		if (this.#hasIOTA || this.#ownedObjects.length > 0) {
 			this.claimed = false;
 			this.assets = await this.#listNonContractClaimableAssets();
 		} else if (result.data[0]) {

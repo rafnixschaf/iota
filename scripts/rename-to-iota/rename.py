@@ -11,8 +11,8 @@ from git import Repo
 # Anything in ignored paths, including what is inside in case of a directory, will be ignored regardless of gitignore
 IGNORED_PATHS = (
     'pnpm-lock.yaml', 
-    'crates/sui-light-client/example_config/20873329.yaml', 
-    'crates/sui-framework-snapshot/bytecode_snapshot/',
+    'crates/iota-light-client/example_config/20873329.yaml', 
+    'crates/iota-framework-snapshot/bytecode_snapshot/',
     'crates/iota-light-client/example_config/20873329.yaml', 
     'crates/iota-framework-snapshot/bytecode_snapshot/',
     'scripts/rename_to_iota/rename.py',
@@ -22,19 +22,19 @@ IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap'
 
 # This mapping allows a simple replace mechanism for certain keywords, it's executed in order
 REPLACE_MAP = (
-    ('MystenLabs/sui', 'iotaledger/kinesis'),
-    ('SUI', 'IOTA'),
-    ('Sui', 'IOTA'),
-    ('sui', 'iota'),
-    ('@mysten/', '@iota/'),
-    ('MIST', 'MICROS'),
-    ('Mist', 'Micros'),
-    ('mist', 'micros')
+    ('iotaledger/kinesis', 'iotaledger/kinesis'),
+    ('IOTA', 'IOTA'),
+    ('IOTA', 'IOTA'),
+    ('iota', 'iota'),
+    ('@iota/', '@iota/'),
+    ('MICROS', 'MICROS'),
+    ('Micros', 'Micros'),
+    ('micros', 'micros')
 )
 
 REPLACE_DICT = dict(REPLACE_MAP)
 
-# I list of things to not replace if they occur, especially words containing 'mist'
+# I list of things to not replace if they occur, especially words containing 'micros'
 CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes', 'optimistic', 'optimist', 'optimistically', 'testsuite', 'test_suite', 'test-suite', 'lawsuit', 'suitable', 'mistic', 'minimist', 'headlessui')
 
 # Make a mapping of to ignore file name replacements for use later on
@@ -46,11 +46,11 @@ for x in CASE_INSENSITIVE_IGNORE_REPLACE:
             skip_replace_mapping.append((k, x))
 
 WARN_ABOUT = (
-    'suiprivkey',
+    'iotaprivkey',
 )
 
 '''
-A function that renames all references to SUI and its terms to the corresponding IOTA alternative.
+A function that renames all references to IOTA and its terms to the corresponding IOTA alternative.
 It's highly recommended to run a dry run and manually check the results before actually executing.
 
 The path defaults to the full repo, unless specified otherwise
@@ -271,7 +271,7 @@ def rename(path=None, dry_run=True, respect_gitignore=True, skip_filemod=False, 
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Port a folder recursively to from SUI based naming to IOTA based naming.')
+    parser = argparse.ArgumentParser(description='Port a folder recursively to from IOTA based naming to IOTA based naming.')
 
     parser.add_argument('--path', '-p',  help='The path of the folder to process, defaults to the main folder of the project if left out')
     parser.add_argument('--execute', action='store_true', default=False, help='Flag to execute the replacements, if omitted it will just be a dry-run')

@@ -1,14 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSuiClient } from '@mysten/dapp-kit';
-import { Text, LoadingIndicator } from '@mysten/ui';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { useIOTAClient } from '@iota/dapp-kit';
+import { Text, LoadingIndicator } from '@iota/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
 import { CheckpointTransactionBlocks } from './CheckpointTransactionBlocks';
 import { PageLayout } from '~/components/Layout/PageLayout';
-import { SuiAmount } from '~/components/Table/SuiAmount';
+import { IOTAAmount } from '~/components/Table/IOTAAmount';
 import { Banner } from '~/ui/Banner';
 import { DescriptionList, DescriptionItem } from '~/ui/DescriptionList';
 import { EpochLink } from '~/ui/InternalLink';
@@ -19,7 +22,7 @@ export default function CheckpointDetail() {
     const { id } = useParams<{ id: string }>();
     const digestOrSequenceNumber = /^\d+$/.test(id!) ? parseInt(id!, 10) : id;
 
-    const client = useSuiClient();
+    const client = useIOTAClient();
     const { data, isError, isPending } = useQuery({
         queryKey: ['checkpoints', digestOrSequenceNumber],
         queryFn: () => client.getCheckpoint({ id: String(digestOrSequenceNumber!) }),
@@ -102,19 +105,19 @@ export default function CheckpointDetail() {
                             <TabHeader title="Gas & Storage Fees">
                                 <DescriptionList>
                                     <DescriptionItem title="Computation Fee">
-                                        <SuiAmount
+                                        <IOTAAmount
                                             full
                                             amount={data.epochRollingGasCostSummary.computationCost}
                                         />
                                     </DescriptionItem>
                                     <DescriptionItem title="Storage Fee">
-                                        <SuiAmount
+                                        <IOTAAmount
                                             full
                                             amount={data.epochRollingGasCostSummary.storageCost}
                                         />
                                     </DescriptionItem>
                                     <DescriptionItem title="Storage Rebate">
-                                        <SuiAmount
+                                        <IOTAAmount
                                             full
                                             amount={data.epochRollingGasCostSummary.storageRebate}
                                         />

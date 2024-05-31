@@ -1,22 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { isSuiNSName, useSuiNSEnabled } from '@mysten/core';
-import { useSuiClientQuery, useSuiClient } from '@mysten/dapp-kit';
-import { type SuiClient, type SuiSystemStateSummary } from '@mysten/sui.js/client';
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+import { isIOTANSName, useIOTANSEnabled } from '@iota/core';
+import { useIOTAClientQuery, useIOTAClient } from '@iota/dapp-kit';
+import { type IOTAClient, type IOTASystemStateSummary } from '@iota/iota.js/client';
 import {
     isValidTransactionDigest,
-    isValidSuiAddress,
-    isValidSuiObjectId,
-    normalizeSuiObjectId,
-} from '@mysten/sui.js/utils';
+    isValidIOTAAddress,
+    isValidIOTAObjectId,
+    normalizeIOTAObjectId,
+} from '@iota/iota.js/utils';
 import { useQuery } from '@tanstack/react-query';
 
 const isGenesisLibAddress = (value: string): boolean => /^(0x|0X)0{0,39}[12]$/.test(value);
 
 type Results = { id: string; label: string; type: string }[];
 
-const getResultsForTransaction = async (client: SuiClient, query: string) => {
+const getResultsForTransaction = async (client: IOTAClient, query: string) => {
     if (!isValidTransactionDigest(query)) return null;
     const txdata = await client.getTransactionBlock({ digest: query });
     return [
@@ -28,9 +31,9 @@ const getResultsForTransaction = async (client: SuiClient, query: string) => {
     ];
 };
 
-const getResultsForObject = async (client: SuiClient, query: string) => {
-    const normalized = normalizeSuiObjectId(query);
-    if (!isValidSuiObjectId(normalized)) return null;
+const getResultsForObject = async (client: IOTAClient, query: string) => {
+    const normalized = normalizeIOTAObjectId(query);
+    if (!isValidIOTAObjectId(normalized)) return null;
 
     const { data, error } = await client.getObject({ id: normalized });
     if (!data || error) return null;
@@ -44,7 +47,7 @@ const getResultsForObject = async (client: SuiClient, query: string) => {
     ];
 };
 
-const getResultsForCheckpoint = async (client: SuiClient, query: string) => {
+const getResultsForCheckpoint = async (client: IOTAClient, query: string) => {
     // Checkpoint digests have the same format as transaction digests:
     if (!isValidTransactionDigest(query)) return null;
 
@@ -60,8 +63,8 @@ const getResultsForCheckpoint = async (client: SuiClient, query: string) => {
     ];
 };
 
-const getResultsForAddress = async (client: SuiClient, query: string, suiNSEnabled: boolean) => {
-    if (suiNSEnabled && isSuiNSName(query)) {
+const getResultsForAddress = async (client: IOTAClient, query: string, iotaNSEnabled: boolean) => {
+    if (iotaNSEnabled && isIOTANSName(query)) {
         const resolved = await client.resolveNameServiceAddress({ name: query.toLowerCase() });
         if (!resolved) return null;
         return [
@@ -73,8 +76,8 @@ const getResultsForAddress = async (client: SuiClient, query: string, suiNSEnabl
         ];
     }
 
-    const normalized = normalizeSuiObjectId(query);
-    if (!isValidSuiAddress(normalized) || isGenesisLibAddress(normalized)) return null;
+    const normalized = normalizeIOTAObjectId(query);
+    if (!isValidIOTAAddress(normalized) || isGenesisLibAddress(normalized)) return null;
 
     const [from, to] = await Promise.all([
         client.queryTransactionBlocks({
@@ -98,25 +101,25 @@ const getResultsForAddress = async (client: SuiClient, query: string, suiNSEnabl
     ];
 };
 
-// Query for validator by pool id or sui address.
-const getResultsForValidatorByPoolIdOrSuiAddress = async (
-    systemStateSummery: SuiSystemStateSummary | null,
+// Query for validator by pool id or iota address.
+const getResultsForValidatorByPoolIdOrIOTAAddress = async (
+    systemStateSummery: IOTASystemStateSummary | null,
     query: string,
 ) => {
-    const normalized = normalizeSuiObjectId(query);
-    if ((!isValidSuiAddress(normalized) && !isValidSuiObjectId(normalized)) || !systemStateSummery)
+    const normalized = normalizeIOTAObjectId(query);
+    if ((!isValidIOTAAddress(normalized) && !isValidIOTAObjectId(normalized)) || !systemStateSummery)
         return null;
 
-    // find validator by pool id or sui address
+    // find validator by pool id or iota address
     const validator = systemStateSummery.activeValidators?.find(
-        ({ stakingPoolId, suiAddress }) => stakingPoolId === normalized || suiAddress === query,
+        ({ stakingPoolId, iotaAddress }) => stakingPoolId === normalized || iotaAddress === query,
     );
 
     if (!validator) return null;
 
     return [
         {
-            id: validator.suiAddress || validator.stakingPoolId,
+            id: validator.iotaAddress || validator.stakingPoolId,
             label: normalized,
             type: 'validator',
         },
@@ -124,9 +127,9 @@ const getResultsForValidatorByPoolIdOrSuiAddress = async (
 };
 
 export function useSearch(query: string) {
-    const client = useSuiClient();
-    const { data: systemStateSummery } = useSuiClientQuery('getLatestSuiSystemState');
-    const suiNSEnabled = useSuiNSEnabled();
+    const client = useIOTAClient();
+    const { data: systemStateSummery } = useIOTAClientQuery('getLatestIOTASystemState');
+    const iotaNSEnabled = useIOTANSEnabled();
 
     return useQuery({
         // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -136,9 +139,9 @@ export function useSearch(query: string) {
                 await Promise.allSettled([
                     getResultsForTransaction(client, query),
                     getResultsForCheckpoint(client, query),
-                    getResultsForAddress(client, query, suiNSEnabled),
+                    getResultsForAddress(client, query, iotaNSEnabled),
                     getResultsForObject(client, query),
-                    getResultsForValidatorByPoolIdOrSuiAddress(systemStateSummery || null, query),
+                    getResultsForValidatorByPoolIdOrIOTAAddress(systemStateSummery || null, query),
                 ])
             ).filter(
                 (r) => r.status === 'fulfilled' && r.value,

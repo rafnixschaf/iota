@@ -1,17 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useRouter } from 'next/router';
 
 const config = {
-	logo: <span>Sui TypeScript Docs</span>,
+	logo: <span>IOTA TypeScript Docs</span>,
 	project: {
-		link: 'https://github.com/MystenLabs/sui/tree/main/sdk/',
+		link: 'https://github.com/iotaledger/kinesis/tree/main/sdk/',
 	},
 	chat: {
-		link: 'https://discord.com/invite/Sui',
+		link: 'https://discord.com/invite/IOTA',
 	},
-	docsRepositoryBase: 'https://github.com/MystenLabs/sui/tree/main/sdk/docs',
+	docsRepositoryBase: 'https://github.com/iotaledger/kinesis/tree/main/sdk/docs',
 	footer: {
 		text: `Copyright © ${new Date().getFullYear()}, Mysten Labs, Inc.`,
 	},
@@ -25,16 +28,16 @@ const config = {
 		const { asPath } = useRouter();
 
 		return {
-			titleTemplate: asPath !== '/' ? '%s | Sui TypeScript Docs' : 'Sui TypeScript Docs',
+			titleTemplate: asPath !== '/' ? '%s | IOTA TypeScript Docs' : 'IOTA TypeScript Docs',
 			description:
-				'Sui TypeScript Documentation. Discover the power of Sui through examples, guides, and concepts.',
+				'IOTA TypeScript Documentation. Discover the power of IOTA through examples, guides, and concepts.',
 			openGraph: {
-				title: 'Sui TypeScript Docs',
+				title: 'IOTA TypeScript Docs',
 				description:
-					'Sui TypeScript Documentation. Discover the power of Sui through examples, guides, and concepts.',
-				site_name: 'Sui TypeScript Docs',
+					'IOTA TypeScript Documentation. Discover the power of IOTA through examples, guides, and concepts.',
+				site_name: 'IOTA TypeScript Docs',
 			},
-			additionalMetaTags: [{ content: 'Sui TypeScript Docs', name: 'apple-mobile-web-app-title' }],
+			additionalMetaTags: [{ content: 'IOTA TypeScript Docs', name: 'apple-mobile-web-app-title' }],
 			twitter: {
 				card: 'summary_large_image',
 				site: '@Mysten_Labs',

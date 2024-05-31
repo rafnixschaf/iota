@@ -1,10 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { LinkGroup } from './LinkGroup';
 import { Banner } from '~/ui/Banner';
 
-import type { SuiTransactionBlockResponse, OwnedObjectRef } from '@mysten/sui.js/client';
+import type { IOTATransactionBlockResponse, OwnedObjectRef } from '@iota/iota.js/client';
 
 function toObjectLink(object: OwnedObjectRef) {
     return {
@@ -14,7 +17,7 @@ function toObjectLink(object: OwnedObjectRef) {
 }
 
 type FunctionExecutionResultProps = {
-    result: SuiTransactionBlockResponse | null;
+    result: IOTATransactionBlockResponse | null;
     error: string | false;
     onClear: () => void;
 };
