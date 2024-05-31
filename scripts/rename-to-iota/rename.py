@@ -24,8 +24,9 @@ IGNORED_EXTENSIONS = ('svg', 'mv', 'png', 'jpg', 'jpeg', 'gif', 'wasm', 'errmap'
 REPLACE_MAP = (
     ('MystenLabs/sui', 'iotaledger/kinesis'),
     ('SUI', 'IOTA'),
-    ('Sui', 'Iota'),
+    ('Sui', 'IOTA'),
     ('sui', 'iota'),
+    ('@mysten/', '@iota/'),
     ('MIST', 'MICROS'),
     ('Mist', 'Micros'),
     ('mist', 'micros')
@@ -34,7 +35,7 @@ REPLACE_MAP = (
 REPLACE_DICT = dict(REPLACE_MAP)
 
 # I list of things to not replace if they occur, especially words containing 'mist'
-CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes', 'optimistic', 'optimist', 'optimistically', 'testsuite', 'test_suite', 'test-suite', 'lawsuit', 'suitable', 'mistic', 'minimist')
+CASE_INSENSITIVE_IGNORE_REPLACE = ('mistakes', 'optimistic', 'optimist', 'optimistically', 'testsuite', 'test_suite', 'test-suite', 'lawsuit', 'suitable', 'mistic', 'minimist', 'headlessui')
 
 # Make a mapping of to ignore file name replacements for use later on
 skip_replace_mapping = []
