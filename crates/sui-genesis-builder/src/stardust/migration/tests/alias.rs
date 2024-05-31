@@ -1,32 +1,40 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::stardust::migration::migration::Executor;
-use crate::stardust::migration::migration::{MIGRATION_PROTOCOL_VERSION, PACKAGE_DEPS};
-use crate::stardust::migration::tests::random_output_header;
-use crate::stardust::migration::tests::run_migration;
-use crate::stardust::types::ALIAS_OUTPUT_MODULE_NAME;
-use crate::stardust::{
-    migration::migration::Migration,
-    types::{snapshot::OutputHeader, Alias, AliasOutput},
-};
-use iota_sdk::types::block::address::Address;
-use iota_sdk::types::block::{
-    address::Ed25519Address,
-    output::{
-        feature::{IssuerFeature, MetadataFeature, SenderFeature},
-        unlock_condition::{GovernorAddressUnlockCondition, StateControllerAddressUnlockCondition},
-        AliasId, AliasOutput as StardustAlias, AliasOutputBuilder, Feature,
-    },
-};
-use move_core_types::ident_str;
-use move_core_types::language_storage::StructTag;
 use std::str::FromStr;
-use sui_types::base_types::SuiAddress;
-use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use sui_types::transaction::{Argument, CheckedInputObjects, ObjectArg};
+
+use iota_sdk::{
+    types::block::{
+        address::{Address, Ed25519Address},
+        output::{
+            feature::{Irc30Metadata, IssuerFeature, MetadataFeature, SenderFeature},
+            unlock_condition::{
+                GovernorAddressUnlockCondition, StateControllerAddressUnlockCondition,
+            },
+            AliasId, AliasOutput as StardustAlias, AliasOutputBuilder, Feature, NativeToken,
+            SimpleTokenScheme, TokenId,
+        },
+    },
+    U256,
+};
+use move_core_types::{ident_str, language_storage::StructTag};
 use sui_types::{
-    base_types::ObjectID, object::Object, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID,
+    balance::Balance,
+    base_types::{ObjectID, SuiAddress},
+    coin::Coin,
+    gas_coin::GAS,
+    inner_temporary_store::InnerTemporaryStore,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{Argument, CheckedInputObjects, ObjectArg},
+    TypeTag, STARDUST_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID,
+};
+
+use crate::stardust::{
+    migration::{
+        migration::{NATIVE_TOKEN_BAG_KEY_TYPE, PACKAGE_DEPS},
+        tests::{create_foundry, random_output_header, run_migration},
+    },
+    types::{snapshot::OutputHeader, Alias, AliasOutput, ALIAS_OUTPUT_MODULE_NAME},
 };
 
 fn migrate_alias(
@@ -37,17 +45,8 @@ fn migrate_alias(
         .alias_id()
         .or_from_output_id(&header.output_id())
         .to_owned();
-    let mut snapshot_buffer = Vec::new();
-    Migration::new()
-        .unwrap()
-        .run(
-            [].into_iter(),
-            [(header, stardust_alias.into())].into_iter(),
-            &mut snapshot_buffer,
-        )
-        .unwrap();
 
-    let migrated_objects: Vec<Object> = bcs::from_bytes(&snapshot_buffer).unwrap();
+    let migrated_objects = run_migration([(header, stardust_alias.into())]).into_objects();
 
     // Ensure the migrated objects exist under the expected identifiers.
     let alias_object_id = ObjectID::new(*alias_id);
@@ -64,8 +63,9 @@ fn migrate_alias(
         })
         .expect("alias object should be present in the migrated snapshot");
 
-    // Version is set to 1 when the alias is created based on the computed lamport timestamp.
-    // When the alias is attached to the alias output, the version should be incremented.
+    // Version is set to 1 when the alias is created based on the computed lamport
+    // timestamp. When the alias is attached to the alias output, the version
+    // should be incremented.
     assert!(
         alias_object.version().value() > 1,
         "alias object version should have been incremented"
@@ -83,9 +83,10 @@ fn migrate_alias(
     (alias_object_id, alias, alias_output)
 }
 
-/// Test that the migrated alias objects in the snapshot contain the expected data.
+/// Test that the migrated alias objects in the snapshot contain the expected
+/// data.
 #[test]
-fn test_alias_migration() {
+fn alias_migration_with_full_features() {
     let alias_id = AliasId::new(rand::random());
     let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
     let header = random_output_header();
@@ -109,15 +110,17 @@ fn test_alias_migration() {
     let (alias_object_id, alias, alias_output) = migrate_alias(header, stardust_alias.clone());
     let expected_alias = Alias::try_from_stardust(alias_object_id, &stardust_alias).unwrap();
 
-    // Compare only the balance. The ID is newly generated and the bag is tested separately.
+    // Compare only the balance. The ID is newly generated and the bag is tested
+    // separately.
     assert_eq!(stardust_alias.amount(), alias_output.iota.value());
 
     assert_eq!(expected_alias, alias);
 }
 
-/// Test that an Alias with a zeroed ID is migrated to an Alias Object with its UID set to the hashed Output ID.
+/// Test that an Alias with a zeroed ID is migrated to an Alias Object with its
+/// UID set to the hashed Output ID.
 #[test]
-fn test_alias_migration_with_zeroed_id() {
+fn alias_migration_with_zeroed_id() {
     let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
     let header = random_output_header();
 
@@ -132,9 +135,11 @@ fn test_alias_migration_with_zeroed_id() {
     migrate_alias(header, stardust_alias);
 }
 
-/// Test that an Alias owned by another Alias can be received by the owning object.
+/// Test that an Alias owned by another Alias can be received by the owning
+/// object.
 ///
-/// The PTB sends the extracted assets to the null address since it must be used in the transaction.
+/// The PTB sends the extracted assets to the null address since it must be used
+/// in the transaction.
 #[test]
 fn test_alias_migration_with_alias_owner() {
     let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
@@ -160,16 +165,19 @@ fn test_alias_migration_with_alias_owner() {
             .finish()
             .unwrap();
 
-    let migrated_objects = run_migration([
+    let mut executor = run_migration([
         (random_output_header(), stardust_alias1.into()),
         (random_output_header(), stardust_alias2.into()),
     ]);
 
-    // Find the corresponding objects to the migrated aliases, uniquely identified by their amounts.
-    // Should be adapted to use the tags from issue 239 to make this much easier.
-    let alias_output1_id = migrated_objects
+    // Find the corresponding objects to the migrated aliases, uniquely identified
+    // by their amounts. Should be adapted to use the tags from issue 239 to
+    // make this much easier.
+    let alias_output1_id = executor
+        .store()
+        .objects()
         .iter()
-        .find(|obj| {
+        .find(|(_, obj)| {
             obj.struct_tag()
                 .map(|tag| tag == AliasOutput::tag())
                 .unwrap_or(false)
@@ -180,11 +188,14 @@ fn test_alias_migration_with_alias_owner() {
                     == alias1_amount
         })
         .expect("alias1 should exist")
+        .1
         .id();
 
-    let alias_output2_id = migrated_objects
+    let alias_output2_id = executor
+        .store()
+        .objects()
         .iter()
-        .find(|obj| {
+        .find(|(_, obj)| {
             obj.struct_tag()
                 .map(|tag| tag == AliasOutput::tag())
                 .unwrap_or(false)
@@ -195,12 +206,8 @@ fn test_alias_migration_with_alias_owner() {
                     == alias2_amount
         })
         .expect("alias2 should exist")
+        .1
         .id();
-
-    let mut executor = Executor::new(MIGRATION_PROTOCOL_VERSION.into()).unwrap();
-    for object in migrated_objects {
-        executor.store_mut().insert_object(object);
-    }
 
     let alias_output1_object_ref = executor
         .store()
@@ -261,8 +268,8 @@ fn test_alias_migration_with_alias_owner() {
         builder.transfer_arg(SuiAddress::default(), bag_arg);
         builder.transfer_arg(SuiAddress::default(), coin_arg);
 
-        // We have to use Alias Output as we cannot transfer it (since it lacks the `store` ability),
-        // so we extract its assets.
+        // We have to use Alias Output as we cannot transfer it (since it lacks the
+        // `store` ability), so we extract its assets.
         let extracted_assets = builder.programmable_move_call(
             STARDUST_PACKAGE_ID,
             ALIAS_OUTPUT_MODULE_NAME.into(),
@@ -305,4 +312,152 @@ fn test_alias_migration_with_alias_owner() {
             .collect(),
     );
     executor.execute_pt_unmetered(input_objects, pt).unwrap();
+}
+
+/// Test that an Alias that owns Native Tokens can extract those tokens from the
+/// contained bag.
+#[test]
+fn alias_migration_with_native_tokens() {
+    let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
+
+    let (foundry_header, foundry_output) = create_foundry(
+        0,
+        SimpleTokenScheme::new(U256::from(100_000), U256::from(0), U256::from(100_000_000))
+            .unwrap(),
+        Irc30Metadata::new("Rustcoin", "Rust", 0),
+        AliasId::null(),
+    );
+    let native_token_id: TokenId = foundry_output.id().into();
+
+    let alias1_amount = 1_000_000;
+    let native_token_amount = 100;
+    let stardust_alias1 =
+        AliasOutputBuilder::new_with_amount(alias1_amount, AliasId::new(rand::random()))
+            .add_unlock_condition(StateControllerAddressUnlockCondition::new(random_address))
+            .add_unlock_condition(GovernorAddressUnlockCondition::new(random_address))
+            .add_native_token(NativeToken::new(native_token_id, native_token_amount).unwrap())
+            .finish()
+            .unwrap();
+
+    let mut executor = run_migration([
+        (random_output_header(), stardust_alias1.into()),
+        (foundry_header, foundry_output.into()),
+    ]);
+
+    // Find the corresponding objects to the migrated aliases, uniquely identified
+    // by their amounts. Should be adapted to use the tags from issue 239 to
+    // make this much easier.
+    let alias_output1_id = executor
+        .store()
+        .objects()
+        .values()
+        .find(|obj| {
+            obj.struct_tag()
+                .map(|tag| tag == AliasOutput::tag())
+                .unwrap_or(false)
+        })
+        .expect("alias1 should exist")
+        .id();
+
+    let alias_output1_object_ref = executor
+        .store()
+        .get_object(&alias_output1_id)
+        .unwrap()
+        .compute_object_reference();
+
+    // Recreate the key under which the tokens are stored in the bag.
+    let foundry_ledger_data = executor.native_tokens().get(&native_token_id).unwrap();
+    let token_type = foundry_ledger_data.canonical_coin_type();
+    let token_type_tag = token_type.parse::<TypeTag>().unwrap();
+
+    let pt = {
+        let mut builder = ProgrammableTransactionBuilder::new();
+        let alias1_arg = builder
+            .obj(ObjectArg::ImmOrOwnedObject(alias_output1_object_ref))
+            .unwrap();
+
+        let extracted_assets = builder.programmable_move_call(
+            STARDUST_PACKAGE_ID,
+            ALIAS_OUTPUT_MODULE_NAME.into(),
+            ident_str!("extract_assets").into(),
+            vec![],
+            vec![alias1_arg],
+        );
+
+        let Argument::Result(result_idx) = extracted_assets else {
+            panic!("expected Argument::Result");
+        };
+        let balance_arg = Argument::NestedResult(result_idx, 0);
+        let bag_arg = Argument::NestedResult(result_idx, 1);
+        let alias1_arg = Argument::NestedResult(result_idx, 2);
+
+        let coin_arg = builder.programmable_move_call(
+            SUI_FRAMEWORK_PACKAGE_ID,
+            ident_str!("coin").into(),
+            ident_str!("from_balance").into(),
+            vec![GAS::type_tag()],
+            vec![balance_arg],
+        );
+
+        builder.transfer_arg(SuiAddress::default(), coin_arg);
+        builder.transfer_arg(SuiAddress::default(), alias1_arg);
+
+        let token_type_arg = builder.pure(token_type.clone()).unwrap();
+        let balance_arg = builder.programmable_move_call(
+            SUI_FRAMEWORK_PACKAGE_ID,
+            ident_str!("bag").into(),
+            ident_str!("remove").into(),
+            vec![
+                NATIVE_TOKEN_BAG_KEY_TYPE
+                    .parse()
+                    .expect("should be a valid struct tag"),
+                Balance::type_(token_type_tag.clone()).into(),
+            ],
+            vec![bag_arg, token_type_arg],
+        );
+
+        let coin_arg = builder.programmable_move_call(
+            SUI_FRAMEWORK_PACKAGE_ID,
+            ident_str!("coin").into(),
+            ident_str!("from_balance").into(),
+            vec![token_type_tag.clone()],
+            vec![balance_arg],
+        );
+
+        // Destroying the bag only works if it's empty, hence asserting that it is in
+        // fact empty.
+        builder.programmable_move_call(
+            SUI_FRAMEWORK_PACKAGE_ID,
+            ident_str!("bag").into(),
+            ident_str!("destroy_empty").into(),
+            vec![],
+            vec![bag_arg],
+        );
+
+        builder.transfer_arg(SuiAddress::default(), coin_arg);
+
+        builder.finish()
+    };
+
+    let input_objects = CheckedInputObjects::new_for_genesis(
+        executor
+            .load_input_objects([alias_output1_object_ref])
+            .chain(executor.load_packages(PACKAGE_DEPS))
+            .collect(),
+    );
+    let InnerTemporaryStore { written, .. } =
+        executor.execute_pt_unmetered(input_objects, pt).unwrap();
+
+    let coin_token_struct_tag = Coin::type_(token_type_tag);
+    let coin_token = written
+        .values()
+        .find(|obj| {
+            obj.struct_tag()
+                .map(|tag| tag == coin_token_struct_tag)
+                .unwrap_or(false)
+        })
+        .and_then(|obj| obj.as_coin_maybe())
+        .expect("coin token object should exist");
+
+    assert_eq!(coin_token.balance.value(), native_token_amount);
 }
