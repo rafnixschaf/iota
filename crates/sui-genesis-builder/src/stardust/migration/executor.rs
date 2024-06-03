@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::Result;
 use iota_sdk::types::block::output::{
-    AliasOutput, BasicOutput, FoundryOutput, NativeTokens, NftOutput, TokenId,
+    AliasOutput, BasicOutput, FoundryOutput, NativeTokens, NftOutput, OutputId, TokenId,
 };
 use move_core_types::{ident_str, language_storage::StructTag};
 use move_vm_runtime_v2::move_vm::MoveVM;
@@ -553,7 +553,7 @@ impl Executor {
     /// mainnet.
     pub(super) fn create_timelock_object(
         &mut self,
-        header: &OutputHeader,
+        output_id: OutputId,
         basic_output: &BasicOutput,
         target_milestone_timestamp: u32,
     ) -> Result<CreatedObjects> {
@@ -565,7 +565,7 @@ impl Executor {
         let version = package_deps.lamport_timestamp(&[]);
 
         let timelock =
-            timelock::try_from_stardust(header, basic_output, target_milestone_timestamp)?;
+            timelock::try_from_stardust(output_id, basic_output, target_milestone_timestamp)?;
 
         let object = timelock::to_genesis_object(
             timelock,
