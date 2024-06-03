@@ -4,9 +4,11 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sui_types::base_types::{AuthorityName, EpochId, ObjectID, SuiAddress};
-use sui_types::committee::{Committee, StakeUnit};
-use sui_types::sui_serde::BigInt;
+use sui_types::{
+    base_types::{AuthorityName, EpochId, ObjectID, SuiAddress},
+    committee::{Committee, StakeUnit},
+    sui_serde::BigInt,
+};
 
 /// RPC representation of the [Committee] type.
 #[serde_as]
@@ -40,6 +42,14 @@ pub struct DelegatedStake {
     pub stakes: Vec<Stake>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DelegatedTimelockedStake {
+    pub validator_address: SuiAddress,
+    pub staking_pool: ObjectID,
+    pub stakes: Vec<TimelockedStake>,
+}
+
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(tag = "status")]
@@ -71,6 +81,27 @@ pub struct Stake {
     pub principal: u64,
     #[serde(flatten)]
     pub status: StakeStatus,
+}
+
+#[serde_as]
+#[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct TimelockedStake {
+    pub timelocked_staked_sui_id: ObjectID,
+    #[schemars(with = "BigInt<u64>")]
+    #[serde_as(as = "BigInt<u64>")]
+    pub stake_request_epoch: EpochId,
+    #[schemars(with = "BigInt<u64>")]
+    #[serde_as(as = "BigInt<u64>")]
+    pub stake_active_epoch: EpochId,
+    #[schemars(with = "BigInt<u64>")]
+    #[serde_as(as = "BigInt<u64>")]
+    pub principal: u64,
+    #[serde(flatten)]
+    pub status: StakeStatus,
+    #[schemars(with = "BigInt<u64>")]
+    #[serde_as(as = "BigInt<u64>")]
+    pub expiration_timestamp_ms: u64,
 }
 
 #[serde_as]

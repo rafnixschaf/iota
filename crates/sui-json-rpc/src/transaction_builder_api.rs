@@ -5,26 +5,23 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use fastcrypto::encoding::Base64;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
+use jsonrpsee::{core::RpcResult, RpcModule};
 use move_core_types::language_storage::StructTag;
-
 use sui_core::authority::AuthorityState;
 use sui_json::SuiJsonValue;
 use sui_json_rpc_api::{TransactionBuilderOpenRpc, TransactionBuilderServer};
-use sui_json_rpc_types::{RPCTransactionRequestParams, SuiObjectDataFilter};
 use sui_json_rpc_types::{
-    SuiObjectDataOptions, SuiObjectResponse, SuiTransactionBlockBuilderMode, SuiTypeTag,
-    TransactionBlockBytes,
+    RPCTransactionRequestParams, SuiObjectDataFilter, SuiObjectDataOptions, SuiObjectResponse,
+    SuiTransactionBlockBuilderMode, SuiTypeTag, TransactionBlockBytes,
 };
 use sui_open_rpc::Module;
 use sui_transaction_builder::{DataReader, TransactionBuilder};
-use sui_types::base_types::ObjectInfo;
-use sui_types::base_types::{ObjectID, SuiAddress};
-use sui_types::sui_serde::BigInt;
+use sui_types::{
+    base_types::{ObjectID, ObjectInfo, SuiAddress},
+    sui_serde::BigInt,
+};
 
-use crate::authority_state::StateRead;
-use crate::SuiRpcModule;
+use crate::{authority_state::StateRead, SuiRpcModule};
 
 pub struct TransactionBuilderApi(TransactionBuilder);
 
@@ -311,6 +308,35 @@ impl TransactionBuilderServer for TransactionBuilderApi {
         Ok(TransactionBlockBytes::from_data(
             self.0
                 .request_withdraw_stake(signer, staked_sui, gas, *gas_budget)
+                .await?,
+        )?)
+    }
+
+    async fn request_add_timelocked_stake(
+        &self,
+        signer: SuiAddress,
+        locked_balance: ObjectID,
+        validator: SuiAddress,
+        gas: ObjectID,
+        gas_budget: BigInt<u64>,
+    ) -> RpcResult<TransactionBlockBytes> {
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .request_add_timelocked_stake(signer, locked_balance, validator, gas, *gas_budget)
+                .await?,
+        )?)
+    }
+
+    async fn request_withdraw_timelocked_stake(
+        &self,
+        signer: SuiAddress,
+        timelocked_staked_sui: ObjectID,
+        gas: ObjectID,
+        gas_budget: BigInt<u64>,
+    ) -> RpcResult<TransactionBlockBytes> {
+        Ok(TransactionBlockBytes::from_data(
+            self.0
+                .request_withdraw_timelocked_stake(signer, timelocked_staked_sui, gas, *gas_budget)
                 .await?,
         )?)
     }
