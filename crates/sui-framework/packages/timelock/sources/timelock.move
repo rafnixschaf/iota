@@ -4,6 +4,8 @@
 /// A timelock implementation.
 module timelock::timelock {
 
+    use std::string::{Self, String};
+
     use sui::vec_set::VecSet;
 
     /// Error code for when the expire timestamp of the lock is in the past.
@@ -30,7 +32,7 @@ module timelock::timelock {
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
         /// Timelock related labels.
-        labels: Option<VecSet<vector<u8>>>,
+        labels: Option<VecSet<String>>,
     }
 
     /// Create and transfer a `LabelerCap` object to an authority address.
@@ -61,7 +63,7 @@ module timelock::timelock {
         _: &LabelerCap,
         locked: T,
         expiration_timestamp_ms: u64,
-        labels: VecSet<vector<u8>>,
+        labels: VecSet<String>,
         ctx: &mut TxContext
     ): TimeLock<T> {
         // Check that `expiration_timestamp_ms` is valid.
@@ -69,7 +71,7 @@ module timelock::timelock {
 
         // Check that the `labels` value is valid.
         assert!(!labels.is_empty(), EEmptyLabelsCollection);
-        assert!(!labels.contains(&vector::empty()), EEmptyLabel);
+        assert!(!labels.contains(&string::utf8(b"")), EEmptyLabel);
 
         // Create a labeled timelock.
         pack(locked, expiration_timestamp_ms, option::some(labels), ctx)
@@ -130,7 +132,7 @@ module timelock::timelock {
     }
 
     /// Function to check if a `TimeLock` labeled with a label.
-    public fun is_labeled_with<T: store>(self: &TimeLock<T>, label: &vector<u8>): bool {
+    public fun is_labeled_with<T: store>(self: &TimeLock<T>, label: &String): bool {
         // Check if the labels member are initialized, return `false` if it is not.
         if (self.labels.is_some()) {
             return self.labels.borrow().contains(label)
@@ -141,7 +143,7 @@ module timelock::timelock {
     }
 
     /// Function to get the labels of a `TimeLock`.
-    public fun labels<T: store>(self: &TimeLock<T>): &Option<VecSet<vector<u8>>> {
+    public fun labels<T: store>(self: &TimeLock<T>): &Option<VecSet<String>> {
         &self.labels
     }
 
@@ -149,7 +151,7 @@ module timelock::timelock {
     public(package) fun pack<T: store>(
         locked: T,
         expiration_timestamp_ms: u64,
-        labels: Option<VecSet<vector<u8>>>,
+        labels: Option<VecSet<String>>,
         ctx: &mut TxContext): TimeLock<T>
     {
         // Create a timelock.
@@ -162,7 +164,7 @@ module timelock::timelock {
     }
 
     /// An utility function to unpack a `TimeLock`.
-    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64, Option<VecSet<vector<u8>>>) {
+    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64, Option<VecSet<String>>) {
         // Unpack the timelock.
         let TimeLock {
             id,

@@ -21,6 +21,7 @@ title: Module `0x10cf::timelocked_staked_sui`
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -66,7 +67,7 @@ A self-custodial object holding the timelocked staked SUI tokens.
  This is the epoch time stamp of when the lock expires.
 </dd>
 <dt>
-<code>labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;</code>
+<code>labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;</code>
 </dt>
 <dd>
  Timelock related labels.
@@ -97,7 +98,7 @@ A self-custodial object holding the timelocked staked SUI tokens.
 Create a new instance of <code><a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_create">create</a>(staked_sui: <a href="../sui-system/staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, expiration_timestamp_ms: u64, labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_create">create</a>(staked_sui: <a href="../sui-system/staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, expiration_timestamp_ms: u64, labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>
 </code></pre>
 
 
@@ -109,7 +110,7 @@ Create a new instance of <code><a href="timelocked_staked_sui.md#0x10cf_timelock
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_create">create</a>(
     staked_sui: StakedSui,
     expiration_timestamp_ms: u64,
-    labels: Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;,
+    labels: Option&lt;VecSet&lt;String&gt;&gt;,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
     <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
@@ -228,7 +229,7 @@ Function to get the expiration timestamp of a <code><a href="timelocked_staked_s
 Function to get the labels of a <code><a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_labels">labels</a>(self: &<a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_labels">labels</a>(self: &<a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;
 </code></pre>
 
 
@@ -237,7 +238,7 @@ Function to get the labels of a <code><a href="timelocked_staked_sui.md#0x10cf_t
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_labels">labels</a>(self: &<a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): &Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt; {
+<pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_labels">labels</a>(self: &<a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): &Option&lt;VecSet&lt;String&gt;&gt; {
     &self.labels
 }
 </code></pre>
@@ -377,7 +378,7 @@ Returns true if all the staking parameters of the staked sui except the principa
 An utility function to destroy a <code><a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): (<a href="../sui-system/staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): (<a href="../sui-system/staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;)
 </code></pre>
 
 
@@ -386,7 +387,7 @@ An utility function to destroy a <code><a href="timelocked_staked_sui.md#0x10cf_
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): (StakedSui, u64, Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a>): (StakedSui, u64, Option&lt;VecSet&lt;String&gt;&gt;) {
     <b>let</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a> {
         id,
         staked_sui,

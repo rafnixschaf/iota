@@ -26,6 +26,7 @@ A timelock implementation.
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -98,7 +99,7 @@ The capability allows to work with labels.
  This is the epoch time stamp of when the lock expires.
 </dd>
 <dt>
-<code>labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;</code>
+<code>labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;</code>
 </dt>
 <dd>
  Timelock related labels.
@@ -233,7 +234,7 @@ Function to lock an object till a unix timestamp in milliseconds.
 Function to lock a labeled object till a unix timestamp in milliseconds.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_labeled">lock_labeled</a>&lt;T: store&gt;(_: &<a href="timelock.md#0x10cf_timelock_LabelerCap">timelock::LabelerCap</a>, locked: T, expiration_timestamp_ms: u64, labels: <a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_labeled">lock_labeled</a>&lt;T: store&gt;(_: &<a href="timelock.md#0x10cf_timelock_LabelerCap">timelock::LabelerCap</a>, locked: T, expiration_timestamp_ms: u64, labels: <a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -246,7 +247,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
     _: &<a href="timelock.md#0x10cf_timelock_LabelerCap">LabelerCap</a>,
     locked: T,
     expiration_timestamp_ms: u64,
-    labels: VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;,
+    labels: VecSet&lt;String&gt;,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt; {
     // Check that `expiration_timestamp_ms` is valid.
@@ -254,7 +255,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
 
     // Check that the `labels` value is valid.
     <b>assert</b>!(!labels.is_empty(), <a href="timelock.md#0x10cf_timelock_EEmptyLabelsCollection">EEmptyLabelsCollection</a>);
-    <b>assert</b>!(!labels.contains(&<a href="../move-stdlib/vector.md#0x1_vector_empty">vector::empty</a>()), <a href="timelock.md#0x10cf_timelock_EEmptyLabel">EEmptyLabel</a>);
+    <b>assert</b>!(!labels.contains(&<a href="../move-stdlib/string.md#0x1_string_utf8">string::utf8</a>(b"")), <a href="timelock.md#0x10cf_timelock_EEmptyLabel">EEmptyLabel</a>);
 
     // Create a labeled <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(labels), ctx)
@@ -446,7 +447,7 @@ Function to get a mutable reference to the locked object of a <code><a href="tim
 Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code> labeled with a label.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, label: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, label: &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>): bool
 </code></pre>
 
 
@@ -455,7 +456,7 @@ Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">Time
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, label: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): bool {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, label: &String): bool {
     // Check <b>if</b> the labels member are initialized, <b>return</b> `<b>false</b>` <b>if</b> it is not.
     <b>if</b> (self.labels.is_some()) {
         <b>return</b> self.labels.borrow().contains(label)
@@ -477,7 +478,7 @@ Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">Time
 Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;
 </code></pre>
 
 
@@ -486,7 +487,7 @@ Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeL
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): &Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt; {
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): &Option&lt;VecSet&lt;String&gt;&gt; {
     &self.labels
 }
 </code></pre>
@@ -502,7 +503,7 @@ Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeL
 An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, labels: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -514,7 +515,7 @@ An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLoc
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(
     locked: T,
     expiration_timestamp_ms: u64,
-    labels: Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;,
+    labels: Option&lt;VecSet&lt;String&gt;&gt;,
     ctx: &<b>mut</b> TxContext): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;
 {
     // Create a <a href="timelock.md#0x10cf_timelock">timelock</a>.
@@ -538,7 +539,7 @@ An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLoc
 An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../sui-framework/vec_set.md#0x2_vec_set_VecSet">vec_set::VecSet</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;&gt;)
 </code></pre>
 
 
@@ -547,7 +548,7 @@ An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeL
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Option&lt;VecSet&lt;<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;&gt;&gt;) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Option&lt;VecSet&lt;String&gt;&gt;) {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <b>let</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a> {
         id,

@@ -16,6 +16,7 @@ title: Module `0x10cf::timelocked_staking`
 <pre><code><b>use</b> <a href="timelock.md#0x10cf_timelock">0x10cf::timelock</a>;
 <b>use</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui">0x10cf::timelocked_staked_sui</a>;
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
 <b>use</b> <a href="../sui-framework/coin.md#0x2_coin">0x2::coin</a>;
 <b>use</b> <a href="../sui-framework/sui.md#0x2_sui">0x2::sui</a>;

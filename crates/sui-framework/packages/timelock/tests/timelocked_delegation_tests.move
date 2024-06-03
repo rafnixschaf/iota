@@ -3,6 +3,9 @@
 
 #[test_only]
 module timelock::timelocked_stake_tests {
+
+    use std::string::{Self, String};
+
     use sui::balance;
     use sui::balance::Balance;
     use sui::coin::Coin;
@@ -147,8 +150,8 @@ module timelock::timelocked_stake_tests {
         set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = b"label1";
-        let label2 = b"label2";
+        let label1 = string::utf8(b"label1");
+        let label2 = string::utf8(b"label2");
 
         let mut labels = vec_set::empty();
         labels.insert(label1);
@@ -186,8 +189,8 @@ module timelock::timelocked_stake_tests {
         set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = b"label1";
-        let label2 = b"label2";
+        let label1 = string::utf8(b"label1");
+        let label2 = string::utf8(b"label2");
 
         let mut labels1 = vec_set::empty();
         labels1.insert(label1);
@@ -223,8 +226,8 @@ module timelock::timelocked_stake_tests {
         set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = b"label1";
-        let label2 = b"label2";
+        let label1 = string::utf8(b"label1");
+        let label2 = string::utf8(b"label2");
 
         let mut labels = vec_set::empty();
         labels.insert(label1);
@@ -362,8 +365,8 @@ module timelock::timelocked_stake_tests {
 
         set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
 
-        let label1 = b"label1";
-        let label2 = b"label2";
+        let label1 = string::utf8(b"label1");
+        let label2 = string::utf8(b"label2");
 
         let mut labels = vec_set::empty();
         labels.insert(label1);
@@ -975,7 +978,7 @@ module timelock::timelocked_stake_tests {
         validator: address,
         amount: u64,
         expiration_timestamp_ms: u64,
-        labels: VecSet<vector<u8>>,
+        labels: VecSet<String>,
         scenario: &mut Scenario
     ) {
         scenario.next_tx(staker);

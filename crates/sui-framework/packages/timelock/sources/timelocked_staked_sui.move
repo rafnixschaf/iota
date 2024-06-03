@@ -3,6 +3,8 @@
 
 module timelock::timelocked_staked_sui {
 
+    use std::string::String;
+
     use sui::vec_set::VecSet;
 
     use sui_system::staking_pool::StakedSui;
@@ -17,14 +19,14 @@ module timelock::timelocked_staked_sui {
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
         /// Timelock related labels.
-        labels: Option<VecSet<vector<u8>>>,
+        labels: Option<VecSet<String>>,
     }
 
     /// Create a new instance of `TimelockedStakedSui`.
     public(package) fun create(
         staked_sui: StakedSui,
         expiration_timestamp_ms: u64,
-        labels: Option<VecSet<vector<u8>>>,
+        labels: Option<VecSet<String>>,
         ctx: &mut TxContext
     ): TimelockedStakedSui {
         TimelockedStakedSui {
@@ -55,7 +57,7 @@ module timelock::timelocked_staked_sui {
     }
 
     /// Function to get the labels of a `TimelockedStakedSui`.
-    public fun labels(self: &TimelockedStakedSui): &Option<VecSet<vector<u8>>> {
+    public fun labels(self: &TimelockedStakedSui): &Option<VecSet<String>> {
         &self.labels
     }
 
@@ -110,7 +112,7 @@ module timelock::timelocked_staked_sui {
     }
 
     /// An utility function to destroy a `TimelockedStakedSui`.
-    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<VecSet<vector<u8>>>) {
+    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<VecSet<String>>) {
         let TimelockedStakedSui {
             id,
             staked_sui,

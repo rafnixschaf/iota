@@ -4,6 +4,8 @@
 #[test_only]
 module timelock::timelock_tests {
 
+    use std::string;
+
     use sui::balance;
     use sui::sui::SUI;
     use sui::test_scenario;
@@ -79,8 +81,8 @@ module timelock::timelock_tests {
         let iota = balance::create_for_testing<SUI>(10);
 
         // Lock the IOTA balance.
-        let label1 = b"label1";
-        let label2 = b"label2";
+        let label1 = string::utf8(b"label1");
+        let label2 = string::utf8(b"label2");
 
         let mut labels = vec_set::empty();
 
@@ -235,7 +237,7 @@ module timelock::timelock_tests {
         // Lock the IOTA balance.
         let mut labels = vec_set::empty();
 
-        labels.insert(vector::empty());
+        labels.insert(string::utf8(b""));
 
         let timelock = timelock::lock_labeled(&cap, iota, 100, labels, scenario.ctx());
 
