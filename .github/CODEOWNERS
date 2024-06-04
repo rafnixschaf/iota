@@ -7,6 +7,9 @@
 # Docs are for DevEx to approve upon
 /docs/* @iotaledger/devx
 
+# Changes to the genesis builder should be approved by Konstantinos at least
+/crates/sui-genesis-builder/ @kodemartin
+
 # Frontend apps to be looked after by Boxfish Studio or the tooling team
 /apps/ @iotaledger/boxfish @iotaledger/tooling
 /dapps/ @iotaledger/boxfish @iotaledger/tooling
