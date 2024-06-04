@@ -2,8 +2,7 @@
 * @iotaledger/l1-core
 
 # Everything within the SDK folder is for review by someone from the `iota-sdk` team by default
-/sdk/ @iotaledger/iota-sdk
-/sdk/typescript @iotaledger/iota-sdk @iotaledger/boxfish
+/sdk/ @iotaledger/boxfish @iotaledger/l1-core
 
 # Docs are for DevEx to approve upon
 /docs/* @iotaledger/devx
