@@ -49,8 +49,8 @@ pub(super) fn verify_basic_output(
         ensure!(
             created_timelock.expiration_timestamp_ms == target_milestone_timestamp as u64,
             "timelock timestamp mismatch: found {}, expected {}",
-            target_milestone_timestamp,
-            created_timelock.expiration_timestamp_ms
+            created_timelock.expiration_timestamp_ms,
+            target_milestone_timestamp
         );
 
         // Amount
