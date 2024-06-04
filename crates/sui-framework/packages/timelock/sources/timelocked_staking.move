@@ -39,7 +39,7 @@ module timelock::timelocked_staking {
         assert!(timelocked_balance.is_locked(ctx), ETimeLockShouldNotBeExpired);
 
         // Unpack the time-locked balance.
-        let (balance, expiration_timestamp_ms, labels) = timelock::unpack(timelocked_balance);
+        let (balance, expiration_timestamp_ms, label) = timelock::unpack(timelocked_balance);
 
         // Stake the time-locked balance.
         let staked_sui = sui_system.request_add_stake_non_entry(
@@ -52,7 +52,7 @@ module timelock::timelocked_staking {
         timelocked_staked_sui::create(
             staked_sui,
             expiration_timestamp_ms,
-            labels,
+            label,
             ctx,
         )
     }
@@ -148,7 +148,7 @@ module timelock::timelocked_staking {
         ctx: &mut TxContext,
     ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
         // Unpack the `TimelockedStakedSui` instance.
-        let (staked_sui, expiration_timestamp_ms, labels) = timelocked_staked_sui.unpack();
+        let (staked_sui, expiration_timestamp_ms, label) = timelocked_staked_sui.unpack();
 
         // Store the original stake amount.
         let principal = staked_sui.staked_sui_amount();
@@ -161,6 +161,6 @@ module timelock::timelocked_staking {
         let principal = withdraw_stake.split(principal);
 
         // Pack and return a time-locked balance, and the reward.
-        (timelock::pack(principal, expiration_timestamp_ms, labels, ctx), withdraw_stake)
+        (timelock::pack(principal, expiration_timestamp_ms, label, ctx), withdraw_stake)
     }
 }

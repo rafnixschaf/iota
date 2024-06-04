@@ -3,7 +3,7 @@
 
 module timelock::timelocked_staked_sui {
 
-    use timelock::labels::{Self, Labels};
+    use timelock::label::{Self, Label};
 
     use sui_system::staking_pool::StakedSui;
 
@@ -16,22 +16,22 @@ module timelock::timelocked_staked_sui {
         staked_sui: StakedSui,
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
-        /// Timelock related labels.
-        labels: Labels,
+        /// Timelock related label.
+        label: Option<Label>,
     }
 
     /// Create a new instance of `TimelockedStakedSui`.
     public(package) fun create(
         staked_sui: StakedSui,
         expiration_timestamp_ms: u64,
-        labels: Labels,
+        label: Option<Label>,
         ctx: &mut TxContext
     ): TimelockedStakedSui {
         TimelockedStakedSui {
             id: object::new(ctx),
             staked_sui,
             expiration_timestamp_ms,
-            labels,
+            label,
         }
     }
 
@@ -54,9 +54,9 @@ module timelock::timelocked_staked_sui {
         self.expiration_timestamp_ms
     }
 
-    /// Function to get the labels of a `TimelockedStakedSui`.
-    public fun labels(self: &TimelockedStakedSui): &Labels {
-        &self.labels
+    /// Function to get the label of a `TimelockedStakedSui`.
+    public fun label(self: &TimelockedStakedSui): &Option<Label> {
+        &self.label
     }
 
     /// Split `TimelockedStakedSui` into two parts, one with principal `split_amount`,
@@ -69,7 +69,7 @@ module timelock::timelocked_staked_sui {
             id: object::new(ctx),
             staked_sui: splitted_stake,
             expiration_timestamp_ms: self.expiration_timestamp_ms,
-            labels: self.labels.clone(),
+            label: label::clone_opt(&self.label),
         }
     }
 
@@ -91,10 +91,10 @@ module timelock::timelocked_staked_sui {
             id,
             staked_sui,
             expiration_timestamp_ms: _,
-            labels,
+            label,
         } = other;
 
-        labels::destroy(labels);
+        label::destroy_opt(label);
 
         id.delete();
 
@@ -108,21 +108,21 @@ module timelock::timelocked_staked_sui {
     public fun is_equal_staking_metadata(self: &TimelockedStakedSui, other: &TimelockedStakedSui): bool {
         self.staked_sui.is_equal_staking_metadata(&other.staked_sui) &&
         (self.expiration_timestamp_ms == other.expiration_timestamp_ms) &&
-        (self.labels() == other.labels())
+        (self.label() == other.label())
     }
 
     /// An utility function to destroy a `TimelockedStakedSui`.
-    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Labels) {
+    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<Label>) {
         let TimelockedStakedSui {
             id,
             staked_sui,
             expiration_timestamp_ms,
-            labels,
+            label,
         } = self;
 
         object::delete(id);
 
-        (staked_sui, expiration_timestamp_ms, labels)
+        (staked_sui, expiration_timestamp_ms, label)
     }
 
     /// An utility function to transfer a `TimelockedStakedSui`.

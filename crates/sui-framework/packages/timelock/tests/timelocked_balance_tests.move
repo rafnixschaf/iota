@@ -9,7 +9,7 @@ module timelock::timelocked_balance_tests {
     use sui::test_scenario;
     use sui::test_utils::{Self, assert_eq};
 
-    use timelock::labels::{Self, LabelerCap};
+    use timelock::label::LabelerCap;
     use timelock::timelock;
     use timelock::timelocked_balance;
 
@@ -36,7 +36,7 @@ module timelock::timelocked_balance_tests {
         // Check the joined timelock.
         assert_eq(timelock1.expiration_timestamp_ms(), 100);
         assert_eq(timelock1.locked().value(), 25);
-        assert_eq(timelock1.labels().is_empty(), true);
+        assert_eq(timelock1.label().is_none(), true);
 
         // Cleanup.
         test_utils::destroy(timelock1);
@@ -52,27 +52,20 @@ module timelock::timelocked_balance_tests {
 
         // Initialize LabelerCap instances.
         test_label_one::assign_labeler_cap(sender, scenario.ctx());
-        test_label_two::assign_labeler_cap(sender, scenario.ctx());
 
         // Advance the scenario to a new transaction.
         scenario.next_tx(sender);
 
         // Take the capabilities.
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
-        let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
         // Minting some IOTA.
         let iota1 = balance::create_for_testing<SUI>(10);
         let iota2 = balance::create_for_testing<SUI>(15);
 
         // Lock the IOTA balances.
-        let labels = labels::create_builder()
-            .with_label<TEST_LABEL_ONE>(&labeler_one)
-            .with_label<TEST_LABEL_TWO>(&labeler_two)
-            .into_labels();
-
-        let mut timelock1 = timelock::lock_with_labels(iota1, 100, labels.clone(), scenario.ctx());
-        let timelock2 = timelock::lock_with_labels(iota2, 100, labels, scenario.ctx());
+        let mut timelock1 = timelock::lock_with_label(&labeler_one, iota1, 100, scenario.ctx());
+        let timelock2 = timelock::lock_with_label(&labeler_one, iota2, 100, scenario.ctx());
 
         // Join the timelocks.
         timelocked_balance::join(&mut timelock1, timelock2);
@@ -80,14 +73,12 @@ module timelock::timelocked_balance_tests {
         // Check the joined timelock.
         assert_eq(timelock1.locked().value(), 25);
         assert_eq(timelock1.expiration_timestamp_ms(), 100);
-        assert_eq(timelock1.labels().contains<TEST_LABEL_ONE>(), true);
-        assert_eq(timelock1.labels().contains<TEST_LABEL_TWO>(), true);
+        assert_eq(timelock1.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
         // Cleanup.
         test_utils::destroy(timelock1);
 
         scenario.return_to_sender(labeler_one);
-        scenario.return_to_sender(labeler_two);
 
         scenario.end();
     }
@@ -139,15 +130,8 @@ module timelock::timelocked_balance_tests {
         let iota2 = balance::create_for_testing<SUI>(15);
 
         // Lock the IOTA balance.
-        let labels1 = labels::create_builder()
-            .with_label<TEST_LABEL_ONE>(&labeler_one)
-            .into_labels();
-        let labels2 = labels::create_builder()
-            .with_label<TEST_LABEL_TWO>(&labeler_two)
-            .into_labels();
-
-        let mut timelock1 = timelock::lock_with_labels(iota1, 100, labels1, scenario.ctx());
-        let timelock2 = timelock::lock_with_labels(iota2, 100, labels2, scenario.ctx());
+        let mut timelock1 = timelock::lock_with_label(&labeler_one, iota1, 100, scenario.ctx());
+        let timelock2 = timelock::lock_with_label(&labeler_two, iota2, 100, scenario.ctx());
 
         // Join the timelocks.
         timelocked_balance::join(&mut timelock1, timelock2);
@@ -350,25 +334,18 @@ module timelock::timelocked_balance_tests {
 
         // Initialize LabelerCap instances.
         test_label_one::assign_labeler_cap(sender, scenario.ctx());
-        test_label_two::assign_labeler_cap(sender, scenario.ctx());
 
         // Advance the scenario to a new transaction.
         scenario.next_tx(sender);
 
         // Take the capabilities.
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
-        let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
         // Minting some IOTA.
         let iota = balance::create_for_testing<SUI>(10);
 
         // Lock the IOTA balance.
-        let labels = labels::create_builder()
-            .with_label<TEST_LABEL_ONE>(&labeler_one)
-            .with_label<TEST_LABEL_TWO>(&labeler_two)
-            .into_labels();
-
-        let mut original = timelock::lock_with_labels(iota, 100, labels, scenario.ctx());
+        let mut original = timelock::lock_with_label(&labeler_one, iota, 100, scenario.ctx());
 
         // Split the timelock.
         let splitted = timelocked_balance::split(&mut original, 3, scenario.ctx());
@@ -376,21 +353,18 @@ module timelock::timelocked_balance_tests {
         // Check the original timelock.
         assert_eq(original.locked().value(), 7);
         assert_eq(original.expiration_timestamp_ms(), 100);
-        assert_eq(original.labels().contains<TEST_LABEL_ONE>(), true);
-        assert_eq(original.labels().contains<TEST_LABEL_TWO>(), true);
+        assert_eq(original.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
         // Check the splitted timelock.
         assert_eq(splitted.locked().value(), 3);
         assert_eq(splitted.expiration_timestamp_ms(), 100);
-        assert_eq(splitted.labels().contains<TEST_LABEL_ONE>(), true);
-        assert_eq(splitted.labels().contains<TEST_LABEL_TWO>(), true);
+        assert_eq(splitted.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
         // Cleanup.
         test_utils::destroy(original);
         test_utils::destroy(splitted);
 
         scenario.return_to_sender(labeler_one);
-        scenario.return_to_sender(labeler_two);
 
         scenario.end();
     }

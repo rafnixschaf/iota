@@ -8,21 +8,22 @@ A timelock implementation.
 -  [Resource `TimeLock`](#0x10cf_timelock_TimeLock)
 -  [Constants](#@Constants_0)
 -  [Function `lock`](#0x10cf_timelock_lock)
--  [Function `lock_with_labels`](#0x10cf_timelock_lock_with_labels)
+-  [Function `lock_with_label`](#0x10cf_timelock_lock_with_label)
 -  [Function `unlock`](#0x10cf_timelock_unlock)
 -  [Function `expiration_timestamp_ms`](#0x10cf_timelock_expiration_timestamp_ms)
 -  [Function `is_locked`](#0x10cf_timelock_is_locked)
 -  [Function `remaining_time`](#0x10cf_timelock_remaining_time)
 -  [Function `locked`](#0x10cf_timelock_locked)
 -  [Function `locked_mut`](#0x10cf_timelock_locked_mut)
--  [Function `labels`](#0x10cf_timelock_labels)
+-  [Function `label`](#0x10cf_timelock_label)
 -  [Function `pack`](#0x10cf_timelock_pack)
 -  [Function `unpack`](#0x10cf_timelock_unpack)
 -  [Function `transfer`](#0x10cf_timelock_transfer)
 -  [Function `check_expiration_timestamp_ms`](#0x10cf_timelock_check_expiration_timestamp_ms)
 
 
-<pre><code><b>use</b> <a href="labels.md#0x10cf_labels">0x10cf::labels</a>;
+<pre><code><b>use</b> <a href="label.md#0x10cf_label">0x10cf::label</a>;
+<b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
 <b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -66,10 +67,10 @@ A timelock implementation.
  This is the epoch time stamp of when the lock expires.
 </dd>
 <dt>
-<code><a href="labels.md#0x10cf_labels">labels</a>: <a href="labels.md#0x10cf_labels_Labels">labels::Labels</a></code>
+<code><a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;</code>
 </dt>
 <dd>
- Timelock related labels.
+ Timelock related label.
 </dd>
 </dl>
 
@@ -122,7 +123,7 @@ Function to lock an object till a unix timestamp in milliseconds.
     <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
     // Create a <a href="timelock.md#0x10cf_timelock">timelock</a>.
-    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels_create_builder">labels::create_builder</a>().into_labels(), ctx)
+    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_none">option::none</a>(), ctx)
 }
 </code></pre>
 
@@ -130,14 +131,14 @@ Function to lock an object till a unix timestamp in milliseconds.
 
 </details>
 
-<a name="0x10cf_timelock_lock_with_labels"></a>
+<a name="0x10cf_timelock_lock_with_label"></a>
 
-## Function `lock_with_labels`
+## Function `lock_with_label`
 
 Function to lock a labeled object till a unix timestamp in milliseconds.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_labels">lock_with_labels</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="labels.md#0x10cf_labels">labels</a>: <a href="labels.md#0x10cf_labels_Labels">labels::Labels</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(cap: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;, locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -146,17 +147,20 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_labels">lock_with_labels</a>&lt;T: store&gt;(
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(
+    cap: &LabelerCap&lt;L&gt;,
     locked: T,
     expiration_timestamp_ms: u64,
-    <a href="labels.md#0x10cf_labels">labels</a>: Labels,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt; {
     // Check that `expiration_timestamp_ms` is valid.
     <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
+    // Create a <a href="label.md#0x10cf_label">label</a> instance.
+    <b>let</b> <a href="label.md#0x10cf_label">label</a> = <a href="label.md#0x10cf_label_from_type">label::from_type</a>&lt;L&gt;(cap);
+
     // Create a labeled <a href="timelock.md#0x10cf_timelock">timelock</a>.
-    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>, ctx)
+    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(<a href="label.md#0x10cf_label">label</a>), ctx)
 }
 </code></pre>
 
@@ -182,13 +186,13 @@ Function to unlock the object from a <code><a href="timelock.md#0x10cf_timelock_
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &TxContext): T {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
-    <b>let</b> (locked, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>) = <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>(self);
+    <b>let</b> (locked, expiration_timestamp_ms, <a href="label.md#0x10cf_label">label</a>) = <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>(self);
 
     // Check <b>if</b> the lock <b>has</b> expired.
     <b>assert</b>!(<a href="timelock.md#0x10cf_timelock_expiration_timestamp_ms">expiration_timestamp_ms</a> &lt;= ctx.epoch_timestamp_ms(), <a href="timelock.md#0x10cf_timelock_ENotExpiredYet">ENotExpiredYet</a>);
 
-    // Destroy the <a href="labels.md#0x10cf_labels">labels</a>.
-    <a href="labels.md#0x10cf_labels_destroy">labels::destroy</a>(<a href="labels.md#0x10cf_labels">labels</a>);
+    // Destroy the <a href="label.md#0x10cf_label">label</a>.
+    <a href="label.md#0x10cf_label_destroy_opt">label::destroy_opt</a>(<a href="label.md#0x10cf_label">label</a>);
 
     locked
 }
@@ -333,14 +337,14 @@ Function to get a mutable reference to the locked object of a <code><a href="tim
 
 </details>
 
-<a name="0x10cf_timelock_labels"></a>
+<a name="0x10cf_timelock_label"></a>
 
-## Function `labels`
+## Function `label`
 
-Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
+Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="labels.md#0x10cf_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="labels.md#0x10cf_labels_Labels">labels::Labels</a>
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;
 </code></pre>
 
 
@@ -349,8 +353,8 @@ Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeL
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="labels.md#0x10cf_labels">labels</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): &Labels {
-    &self.<a href="labels.md#0x10cf_labels">labels</a>
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): &Option&lt;Label&gt; {
+    &self.<a href="label.md#0x10cf_label">label</a>
 }
 </code></pre>
 
@@ -365,7 +369,7 @@ Function to get the labels of a <code><a href="timelock.md#0x10cf_timelock_TimeL
 An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="labels.md#0x10cf_labels">labels</a>: <a href="labels.md#0x10cf_labels_Labels">labels::Labels</a>, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -377,7 +381,7 @@ An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLoc
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(
     locked: T,
     expiration_timestamp_ms: u64,
-    <a href="labels.md#0x10cf_labels">labels</a>: Labels,
+    <a href="label.md#0x10cf_label">label</a>: Option&lt;Label&gt;,
     ctx: &<b>mut</b> TxContext): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;
 {
     // Create a <a href="timelock.md#0x10cf_timelock">timelock</a>.
@@ -385,7 +389,7 @@ An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLoc
         id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
         locked,
         expiration_timestamp_ms,
-        <a href="labels.md#0x10cf_labels">labels</a>,
+        <a href="label.md#0x10cf_label">label</a>,
     }
 }
 </code></pre>
@@ -401,7 +405,7 @@ An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLoc
 An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="labels.md#0x10cf_labels_Labels">labels::Labels</a>)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;)
 </code></pre>
 
 
@@ -410,19 +414,19 @@ An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeL
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Labels) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Option&lt;Label&gt;) {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <b>let</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a> {
         id,
         locked,
         expiration_timestamp_ms,
-        <a href="labels.md#0x10cf_labels">labels</a>,
+        <a href="label.md#0x10cf_label">label</a>,
     } = lock;
 
     // Delete the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
-    (locked, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>)
+    (locked, expiration_timestamp_ms, <a href="label.md#0x10cf_label">label</a>)
 }
 </code></pre>
 

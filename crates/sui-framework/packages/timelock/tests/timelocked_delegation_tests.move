@@ -30,7 +30,7 @@ module timelock::timelocked_stake_tests {
         unstake,
     };
 
-    use timelock::labels::{Self, Labels, LabelerCap};
+    use timelock::label::LabelerCap;
     use timelock::timelock::{Self, TimeLock};
     use timelock::timelocked_staked_sui::{Self, TimelockedStakedSui};
     use timelock::timelocked_staking;
@@ -154,18 +154,11 @@ module timelock::timelocked_stake_tests {
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
-            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-            let labels = labels::create_builder()
-                .with_label<TEST_LABEL_ONE>(&labeler_one)
-                .with_label<TEST_LABEL_TWO>(&labeler_two)
-                .into_labels();
-
-            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels.clone(), scenario);
-            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 50, 10, labels, scenario);
+            stake_labeled_timelocked_with(&labeler_one, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
+            stake_labeled_timelocked_with(&labeler_one, STAKER_ADDR_1, VALIDATOR_ADDR_1, 50, 10, scenario);
 
             scenario.return_to_sender(labeler_one);
-            scenario.return_to_sender(labeler_two);
         };
 
         // Verify that these can be merged
@@ -179,8 +172,7 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(part1.staked_sui_amount(), 110 * MIST_PER_SUI);
             assert_eq(part1.expiration_timestamp_ms(), 10);
-            assert_eq(part1.labels().contains<TEST_LABEL_ONE>(), true);
-            assert_eq(part1.labels().contains<TEST_LABEL_TWO>(), true);
+            assert_eq(part1.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(part1);
         };
@@ -203,16 +195,9 @@ module timelock::timelocked_stake_tests {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
             let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-            let labels1 = labels::create_builder()
-                .with_label<TEST_LABEL_ONE>(&labeler_one)
-                .into_labels();
-            let labels2 = labels::create_builder()
-                .with_label<TEST_LABEL_TWO>(&labeler_two)
-                .into_labels();
-
-            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels1, scenario);
+            stake_labeled_timelocked_with(&labeler_one, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
             advance_epoch(scenario);
-            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels2, scenario);
+            stake_labeled_timelocked_with(&labeler_two, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
             scenario.return_to_sender(labeler_one);
             scenario.return_to_sender(labeler_two);
@@ -245,17 +230,10 @@ module timelock::timelocked_stake_tests {
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
-            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-            let labels = labels::create_builder()
-                .with_label<TEST_LABEL_ONE>(&labeler_one)
-                .with_label<TEST_LABEL_TWO>(&labeler_two)
-                .into_labels();
-
-            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels, scenario);
+            stake_labeled_timelocked_with(&labeler_one, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
             scenario.return_to_sender(labeler_one);
-            scenario.return_to_sender(labeler_two);
 
             advance_epoch(scenario);
         };
@@ -268,13 +246,11 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(original.staked_sui_amount(), 40 * MIST_PER_SUI);
             assert_eq(original.expiration_timestamp_ms(), 10);
-            assert_eq(original.labels().contains<TEST_LABEL_ONE>(), true);
-            assert_eq(original.labels().contains<TEST_LABEL_TWO>(), true);
+            assert_eq(original.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
             assert_eq(splitted.staked_sui_amount(), 20 * MIST_PER_SUI);
             assert_eq(splitted.expiration_timestamp_ms(), 10);
-            assert_eq(splitted.labels().contains<TEST_LABEL_ONE>(), true);
-            assert_eq(splitted.labels().contains<TEST_LABEL_TWO>(), true);
+            assert_eq(splitted.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(original);
             test_utils::destroy(splitted);
@@ -394,12 +370,6 @@ module timelock::timelocked_stake_tests {
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
-            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
-
-            let labels = labels::create_builder()
-                .with_label<TEST_LABEL_ONE>(&labeler_one)
-                .with_label<TEST_LABEL_TWO>(&labeler_two)
-                .into_labels();
 
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
@@ -409,7 +379,7 @@ module timelock::timelocked_stake_tests {
             // Create a stake to VALIDATOR_ADDR_1.
             timelocked_staking::request_add_stake(
                 system_state_mut_ref,
-                timelock::lock_with_labels(balance::create_for_testing(60 * MIST_PER_SUI), 10, labels, ctx),
+                timelock::lock_with_label(&labeler_one, balance::create_for_testing(60 * MIST_PER_SUI), 10, ctx),
                 VALIDATOR_ADDR_1,
                 ctx
             );
@@ -420,7 +390,6 @@ module timelock::timelocked_stake_tests {
             test_scenario::return_shared(system_state);
 
             scenario.return_to_sender(labeler_one);
-            scenario.return_to_sender(labeler_two);
         };
 
         advance_epoch(scenario);
@@ -456,8 +425,7 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(timelock.locked().value(), 60 * MIST_PER_SUI);
             assert_eq(timelock.expiration_timestamp_ms(), 10);
-            assert_eq(timelock.labels().contains<TEST_LABEL_ONE>(), true);
-            assert_eq(timelock.labels().contains<TEST_LABEL_TWO>(), true);
+            assert_eq(timelock.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(timelock);
 
@@ -1002,12 +970,12 @@ module timelock::timelocked_stake_tests {
         test_scenario::return_shared(system_state);
     }
 
-    fun stake_labeled_timelocked_with(
+    fun stake_labeled_timelocked_with<L>(
+        cap: &LabelerCap<L>,
         staker: address,
         validator: address,
         amount: u64,
         expiration_timestamp_ms: u64,
-        labels: Labels,
         scenario: &mut Scenario
     ) {
         scenario.next_tx(staker);
@@ -1017,10 +985,10 @@ module timelock::timelocked_stake_tests {
 
         timelocked_staking::request_add_stake(
             &mut system_state,
-            timelock::lock_with_labels(
+            timelock::lock_with_label(
+                cap,
                 balance::create_for_testing(amount * MIST_PER_SUI),
                 expiration_timestamp_ms,
-                labels,
                 ctx),
             validator,
             ctx);
