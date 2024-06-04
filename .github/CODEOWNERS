@@ -1,0 +1,15 @@
+# Default fallback, if no other path below this matches someone from the `move` team has to review
+* @iotaledger/move
+
+# Everything within the SDK folder is for review by someone from the `iota-sdk` team by default
+/sdk/ @iotaledger/iota-sdk
+/sdk/typescript @iotaledger/iota-sdk @iotaledger/boxfish
+
+# Docs are for DevEx to approve upon
+/docs/* @iotaledger/devx
+
+# Frontend apps to be looked after by Boxfish Studio
+/apps/ @iotaledger/boxfish
+
+# Protect this CODEOWNERS file, with some fallback in case of unavailability
+/.github/CODEOWNERS @luca-moser @lzpap @miker83z @fijter
