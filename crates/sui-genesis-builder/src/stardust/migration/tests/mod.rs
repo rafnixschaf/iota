@@ -40,6 +40,7 @@ use crate::stardust::{
 
 mod alias;
 mod executor;
+mod foundry;
 mod nft;
 
 fn random_output_header() -> OutputHeader {
