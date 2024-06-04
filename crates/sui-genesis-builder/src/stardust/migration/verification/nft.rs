@@ -15,28 +15,29 @@ use crate::stardust::migration::{
     verification::{
         created_objects::CreatedObjects,
         util::{
-            verify_expiration_unlock_condition, verify_issuer_feature, verify_metadata_feature,
-            verify_native_tokens, verify_parent, verify_sender_feature,
+            verify_address_owner, verify_expiration_unlock_condition, verify_issuer_feature,
+            verify_metadata_feature, verify_native_tokens, verify_parent, verify_sender_feature,
             verify_storage_deposit_unlock_condition, verify_tag_feature,
             verify_timelock_unlock_condition,
         },
+        AggregateData,
     },
 };
 
-pub(crate) fn verify_nft_output(
+pub(super) fn verify_nft_output(
     output_id: OutputId,
     output: &NftOutput,
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
+    aggregate_data: &mut AggregateData,
 ) -> anyhow::Result<()> {
-    let created_output = created_objects
-        .output()
-        .and_then(|id| {
-            storage
-                .get_object(id)
-                .ok_or_else(|| anyhow!("missing nft output object for {output_id}"))
-        })?
+    let created_output_obj = created_objects.output().and_then(|id| {
+        storage
+            .get_object(id)
+            .ok_or_else(|| anyhow!("missing nft output object for {output_id}"))
+    })?;
+    let created_output = created_output_obj
         .to_rust::<crate::stardust::types::NftOutput>()
         .ok_or_else(|| anyhow!("invalid nft output object for {output_id}"))?;
 
@@ -46,6 +47,9 @@ pub(crate) fn verify_nft_output(
         .to_rust::<crate::stardust::types::Nft>()
         .ok_or_else(|| anyhow!("invalid nft object for {output_id}"))?;
 
+    // Owner
+    verify_address_owner(output.address(), created_output_obj)?;
+
     // Amount
     ensure!(
         created_output.iota.value() == output.amount(),
@@ -53,6 +57,11 @@ pub(crate) fn verify_nft_output(
         created_output.iota.value(),
         output.amount()
     );
+    aggregate_data.total_iota_amount += output.amount();
+    *aggregate_data
+        .address_balances
+        .entry(*output.address())
+        .or_default() += output.amount();
 
     // Native Tokens
     verify_native_tokens::<Field<String, Balance>>(
@@ -102,12 +111,29 @@ pub(crate) fn verify_nft_output(
         nft.immutable_metadata
     );
 
+    verify_parent(output.address(), storage)?;
+
+    ensure!(created_objects.coin().is_err(), "unexpected coin found");
+
+    ensure!(
+        created_objects.coin_metadata().is_err(),
+        "unexpected coin metadata found"
+    );
+
+    ensure!(
+        created_objects.minted_coin().is_err(),
+        "unexpected minted coin found"
+    );
+
+    ensure!(
+        created_objects.max_supply_policy().is_err(),
+        "unexpected max supply policy found"
+    );
+
     ensure!(
         created_objects.package().is_err(),
         "unexpected package found"
     );
-
-    verify_parent(output.address(), storage)?;
 
     Ok(())
 }

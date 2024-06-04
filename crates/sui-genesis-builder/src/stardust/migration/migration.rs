@@ -26,7 +26,7 @@ use sui_types::{
 use crate::stardust::{
     migration::{
         executor::Executor,
-        verification::{created_objects::CreatedObjects, verify_output},
+        verification::{created_objects::CreatedObjects, verify_outputs},
     },
     native_token::package_data::NativeTokenPackageData,
     types::{snapshot::OutputHeader, timelock},
@@ -63,7 +63,6 @@ pub(crate) const NATIVE_TOKEN_BAG_KEY_TYPE: &str = "0x01::ascii::String";
 /// generated objects serialized.
 pub struct Migration {
     target_milestone_timestamp_sec: u32,
-
     executor: Executor,
     output_objects_map: HashMap<OutputId, CreatedObjects>,
 }
@@ -86,6 +85,7 @@ impl Migration {
     /// See also `Self::run`.
     pub(crate) fn run_migration(
         &mut self,
+        total_supply: u64,
         outputs: impl IntoIterator<Item = (OutputHeader, Output)>,
     ) -> Result<()> {
         let (mut foundries, mut outputs) = outputs.into_iter().fold(
@@ -112,7 +112,7 @@ impl Migration {
             .into_iter()
             .chain(foundries.into_iter().map(|(h, f)| (h, Output::Foundry(f))))
             .collect::<Vec<_>>();
-        self.verify_ledger_state(&outputs)?;
+        self.verify_ledger_state(total_supply, &outputs)?;
 
         Ok(())
     }
@@ -126,10 +126,11 @@ impl Migration {
     /// * Create the snapshot file.
     pub fn run(
         mut self,
+        total_supply: u64,
         outputs: impl IntoIterator<Item = (OutputHeader, Output)>,
         writer: impl Write,
     ) -> Result<()> {
-        self.run_migration(outputs)?;
+        self.run_migration(total_supply, outputs)?;
         create_snapshot(&self.into_objects(), writer)
     }
 
@@ -197,23 +198,16 @@ impl Migration {
     /// [`InMemoryStorage`].
     pub fn verify_ledger_state<'a>(
         &self,
+        total_supply: u64,
         outputs: impl IntoIterator<Item = &'a (OutputHeader, Output)>,
     ) -> Result<()> {
-        for (header, output) in outputs {
-            let objects = self
-                .output_objects_map
-                .get(&header.output_id())
-                .ok_or_else(|| {
-                    anyhow::anyhow!("missing created objects for output {}", header.output_id())
-                })?;
-            verify_output(
-                header,
-                output,
-                objects,
-                self.executor.native_tokens(),
-                self.executor.store(),
-            )?;
-        }
+        verify_outputs(
+            outputs,
+            &self.output_objects_map,
+            self.executor.native_tokens(),
+            total_supply,
+            self.executor.store(),
+        )?;
         Ok(())
     }
 

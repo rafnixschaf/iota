@@ -15,8 +15,8 @@ use crate::stardust::{
     migration::{
         executor::FoundryLedgerData,
         verification::{
-            util::{truncate_to_max_allowed_u64_supply, verify_parent},
-            CreatedObjects,
+            util::{truncate_to_max_allowed_u64_supply, verify_coin, verify_parent},
+            AggregateData, CreatedObjects,
         },
     },
     native_token::package_data::NativeTokenPackageData,
@@ -28,27 +28,26 @@ pub(super) fn verify_foundry_output(
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
+    aggregate_data: &mut AggregateData,
 ) -> Result<()> {
     let foundry_data = foundry_data
         .get(&output.token_id())
         .ok_or_else(|| anyhow!("missing foundry data"))?;
 
+    let alias_address = output
+        .unlock_conditions()
+        .immutable_alias_address()
+        .expect("foundry outputs always have an immutable alias address")
+        .address();
+
     // Coin value.
-    let created_coin = created_objects
-        .coin()
-        .and_then(|id| {
-            storage
-                .get_object(id)
-                .ok_or_else(|| anyhow!("missing coin"))
-        })?
-        .as_coin_maybe()
-        .ok_or_else(|| anyhow!("expected a coin"))?;
-    ensure!(
-        created_coin.value() == output.amount(),
-        "coin amount mismatch: found {}, expected {}",
-        created_coin.value(),
-        output.amount()
-    );
+    verify_coin(output.amount(), alias_address, created_objects, storage)?;
+
+    aggregate_data.total_iota_amount += output.amount();
+    *aggregate_data
+        .address_balances
+        .entry(*alias_address)
+        .or_default() += output.amount();
 
     // Minted coin value
     let minted_coin_id = created_objects.minted_coin()?;
@@ -208,22 +207,20 @@ pub(super) fn verify_foundry_output(
     );
 
     // Alias Address Unlock Condition
-    let alias_address = output.alias_address().to_string().parse::<SuiAddress>()?;
+    let sui_alias_address = alias_address.to_string().parse::<SuiAddress>()?;
     ensure!(
-        max_supply_policy_obj.owner == Owner::AddressOwner(alias_address),
+        max_supply_policy_obj.owner == Owner::AddressOwner(sui_alias_address),
         "unexpected max supply policy owner: expected {}, found {}",
-        alias_address,
+        sui_alias_address,
         max_supply_policy_obj.owner
     );
 
-    verify_parent(
-        output
-            .unlock_conditions()
-            .immutable_alias_address()
-            .expect("foundry outputs always have an immutable alias address")
-            .address(),
-        storage,
-    )?;
+    verify_parent(alias_address, storage)?;
+
+    ensure!(
+        created_objects.output().is_err(),
+        "unexpected output object found"
+    );
 
     Ok(())
 }

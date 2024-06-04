@@ -57,7 +57,8 @@ fn migrate_nft(
         .or_from_output_id(&output_id)
         .to_owned();
 
-    let (executor, objects_map) = run_migration([(header, stardust_nft.into())]);
+    let (executor, objects_map) =
+        run_migration(stardust_nft.amount(), [(header, stardust_nft.into())]);
 
     // Ensure the migrated objects exist under the expected identifiers.
     let nft_object_id = ObjectID::new(*nft_id);
@@ -204,6 +205,7 @@ fn nft_migration_with_alias_owner() {
     object_migration_with_object_owner(
         alias_header.output_id(),
         nft_header.output_id(),
+        nft.amount() + alias.amount(),
         [
             (nft_header.clone(), nft.into()),
             (alias_header.clone(), alias.into()),
@@ -236,6 +238,7 @@ fn nft_migration_with_nft_owner() {
     object_migration_with_object_owner(
         nft1_header.output_id(),
         nft2_header.output_id(),
+        nft1.amount() + nft2.amount(),
         [
             (nft1_header.clone(), nft1.into()),
             (nft2_header.clone(), nft2.into()),
@@ -269,6 +272,7 @@ fn nft_migration_with_native_tokens() {
 
     extract_native_token_from_bag(
         nft_header.output_id(),
+        nft.amount() + foundry_output.amount(),
         [
             (nft_header.clone(), nft.into()),
             (foundry_header, foundry_output.into()),
@@ -504,6 +508,7 @@ fn nft_migration_with_timelock_unlocked() {
 
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header, stardust_nft.into())],
         // Sender is not important for this test.
         &SuiAddress::ZERO,
@@ -531,6 +536,7 @@ fn nft_migration_with_timelock_still_locked() {
 
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header, stardust_nft.into())],
         // Sender is not important for this test.
         &SuiAddress::ZERO,
@@ -567,6 +573,7 @@ fn nft_migration_with_expired_unlock_condition() {
     // Owner Address CANNOT unlock.
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header.clone(), stardust_nft.clone().into())],
         &sui_owner_address,
         NFT_OUTPUT_MODULE_NAME,
@@ -577,6 +584,7 @@ fn nft_migration_with_expired_unlock_condition() {
     // Return Address CAN unlock.
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header, stardust_nft.into())],
         &sui_return_address,
         NFT_OUTPUT_MODULE_NAME,
@@ -612,6 +620,7 @@ fn nft_migration_with_unexpired_unlock_condition() {
     // Return Address CANNOT unlock.
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header.clone(), stardust_nft.clone().into())],
         &sui_return_address,
         NFT_OUTPUT_MODULE_NAME,
@@ -622,6 +631,7 @@ fn nft_migration_with_unexpired_unlock_condition() {
     // Owner Address CAN unlock.
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header, stardust_nft.into())],
         &sui_owner_address,
         NFT_OUTPUT_MODULE_NAME,
@@ -649,6 +659,7 @@ fn nft_migration_with_storage_deposit_return_unlock_condition() {
     // Simply test that the unlock with the SDRUC succeeds.
     unlock_object_test(
         header.output_id(),
+        stardust_nft.amount(),
         [(header.clone(), stardust_nft.clone().into())],
         // Sender is not important for this test.
         &SuiAddress::ZERO,

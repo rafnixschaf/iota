@@ -28,7 +28,10 @@ fn create_gas_coin() {
     let output_id = foundry_header.output_id();
     let alias_address = *foundry_output.alias_address();
 
-    let (executor, _) = run_migration([(foundry_header, foundry_output.into())]);
+    let (executor, _) = run_migration(
+        foundry_output.amount(),
+        [(foundry_header, foundry_output.into())],
+    );
     let objects = executor.into_objects();
 
     // Foundry package publication creates five objects
