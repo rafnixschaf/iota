@@ -4,8 +4,6 @@
 #[test_only]
 module timelock::timelocked_stake_tests {
 
-    use std::string::{Self, String};
-
     use sui::balance;
     use sui::balance::Balance;
     use sui::coin::Coin;
@@ -14,7 +12,6 @@ module timelock::timelocked_stake_tests {
     use sui::test_scenario::{Self, Scenario};
     use sui::test_utils::assert_eq;
     use sui::test_utils;
-    use sui::vec_set::{Self, VecSet};
 
     use sui_system::sui_system::SuiSystemState;
     use sui_system::staking_pool::{Self, PoolTokenExchangeRate};
@@ -33,9 +30,13 @@ module timelock::timelocked_stake_tests {
         unstake,
     };
 
-    use timelock::timelock::{Self, LabelerCap, TimeLock};
+    use timelock::labels::{Self, Labels, LabelerCap};
+    use timelock::timelock::{Self, TimeLock};
     use timelock::timelocked_staked_sui::{Self, TimelockedStakedSui};
     use timelock::timelocked_staking;
+
+    use timelock::test_label_one::{Self, TEST_LABEL_ONE};
+    use timelock::test_label_two::{Self, TEST_LABEL_TWO};
 
     const VALIDATOR_ADDR_1: address = @0x1;
     const VALIDATOR_ADDR_2: address = @0x2;
@@ -147,18 +148,25 @@ module timelock::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
-        set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
+        set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = string::utf8(b"label1");
-        let label2 = string::utf8(b"label2");
+        scenario.next_tx(STAKER_ADDR_1);
+        {
+            let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
+            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-        let mut labels = vec_set::empty();
-        labels.insert(label1);
-        labels.insert(label2);
+            let labels = labels::create_builder()
+                .with_label<TEST_LABEL_ONE>(&labeler_one)
+                .with_label<TEST_LABEL_TWO>(&labeler_two)
+                .into_labels();
 
-        stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels, scenario);
-        stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 50, 10, labels, scenario);
+            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels.clone(), scenario);
+            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 50, 10, labels, scenario);
+
+            scenario.return_to_sender(labeler_one);
+            scenario.return_to_sender(labeler_two);
+        };
 
         // Verify that these can be merged
         scenario.next_tx(STAKER_ADDR_1);
@@ -171,7 +179,8 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(part1.staked_sui_amount(), 110 * MIST_PER_SUI);
             assert_eq(part1.expiration_timestamp_ms(), 10);
-            assert_eq(*part1.labels(), option::some(labels));
+            assert_eq(part1.labels().contains<TEST_LABEL_ONE>(), true);
+            assert_eq(part1.labels().contains<TEST_LABEL_TWO>(), true);
 
             scenario.return_to_sender(part1);
         };
@@ -186,21 +195,28 @@ module timelock::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
-        set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
+        set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = string::utf8(b"label1");
-        let label2 = string::utf8(b"label2");
+        scenario.next_tx(STAKER_ADDR_1);
+        {
+            let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
+            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-        let mut labels1 = vec_set::empty();
-        labels1.insert(label1);
+            let labels1 = labels::create_builder()
+                .with_label<TEST_LABEL_ONE>(&labeler_one)
+                .into_labels();
+            let labels2 = labels::create_builder()
+                .with_label<TEST_LABEL_TWO>(&labeler_two)
+                .into_labels();
 
-        let mut labels2 = vec_set::empty();
-        labels2.insert(label2);
+            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels1, scenario);
+            advance_epoch(scenario);
+            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels2, scenario);
 
-        stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels1, scenario);
-        advance_epoch(scenario);
-        stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels2, scenario);
+            scenario.return_to_sender(labeler_one);
+            scenario.return_to_sender(labeler_two);
+        };
 
         // Verify that these cannot be merged
         scenario.next_tx(STAKER_ADDR_1);
@@ -223,18 +239,26 @@ module timelock::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
-        set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
+        set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
         // Create two instances of labeled staked sui w/ different epoch activations
-        let label1 = string::utf8(b"label1");
-        let label2 = string::utf8(b"label2");
+        scenario.next_tx(STAKER_ADDR_1);
+        {
+            let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
+            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
-        let mut labels = vec_set::empty();
-        labels.insert(label1);
-        labels.insert(label2);
+            let labels = labels::create_builder()
+                .with_label<TEST_LABEL_ONE>(&labeler_one)
+                .with_label<TEST_LABEL_TWO>(&labeler_two)
+                .into_labels();
 
-        stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels, scenario);
-        advance_epoch(scenario);
+            stake_labeled_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, labels, scenario);
+
+            scenario.return_to_sender(labeler_one);
+            scenario.return_to_sender(labeler_two);
+
+            advance_epoch(scenario);
+        };
 
         // Verify that these can be splitted
         scenario.next_tx(STAKER_ADDR_1);
@@ -244,11 +268,13 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(original.staked_sui_amount(), 40 * MIST_PER_SUI);
             assert_eq(original.expiration_timestamp_ms(), 10);
-            assert_eq(*original.labels(), option::some(labels));
+            assert_eq(original.labels().contains<TEST_LABEL_ONE>(), true);
+            assert_eq(original.labels().contains<TEST_LABEL_TWO>(), true);
 
             assert_eq(splitted.staked_sui_amount(), 20 * MIST_PER_SUI);
             assert_eq(splitted.expiration_timestamp_ms(), 10);
-            assert_eq(*splitted.labels(), option::some(labels));
+            assert_eq(splitted.labels().contains<TEST_LABEL_ONE>(), true);
+            assert_eq(splitted.labels().contains<TEST_LABEL_TWO>(), true);
 
             scenario.return_to_sender(original);
             test_utils::destroy(splitted);
@@ -363,18 +389,17 @@ module timelock::timelocked_stake_tests {
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
-        set_up_timelock_labeler_cap(STAKER_ADDR_1, scenario);
-
-        let label1 = string::utf8(b"label1");
-        let label2 = string::utf8(b"label2");
-
-        let mut labels = vec_set::empty();
-        labels.insert(label1);
-        labels.insert(label2);
+        set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let cap = scenario.take_from_sender<LabelerCap>();
+            let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
+            let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
+
+            let labels = labels::create_builder()
+                .with_label<TEST_LABEL_ONE>(&labeler_one)
+                .with_label<TEST_LABEL_TWO>(&labeler_two)
+                .into_labels();
 
             let mut system_state = scenario.take_shared<SuiSystemState>();
             let system_state_mut_ref = &mut system_state;
@@ -384,7 +409,7 @@ module timelock::timelocked_stake_tests {
             // Create a stake to VALIDATOR_ADDR_1.
             timelocked_staking::request_add_stake(
                 system_state_mut_ref,
-                timelock::lock_labeled(&cap, balance::create_for_testing(60 * MIST_PER_SUI), 10, labels, ctx),
+                timelock::lock_with_labels(balance::create_for_testing(60 * MIST_PER_SUI), 10, labels, ctx),
                 VALIDATOR_ADDR_1,
                 ctx
             );
@@ -393,7 +418,9 @@ module timelock::timelocked_stake_tests {
             assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MIST_PER_SUI);
 
             test_scenario::return_shared(system_state);
-            scenario.return_to_sender(cap);
+
+            scenario.return_to_sender(labeler_one);
+            scenario.return_to_sender(labeler_two);
         };
 
         advance_epoch(scenario);
@@ -429,7 +456,8 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(timelock.locked().value(), 60 * MIST_PER_SUI);
             assert_eq(timelock.expiration_timestamp_ms(), 10);
-            assert_eq(*timelock.labels(), option::some(labels));
+            assert_eq(timelock.labels().contains<TEST_LABEL_ONE>(), true);
+            assert_eq(timelock.labels().contains<TEST_LABEL_TWO>(), true);
 
             scenario.return_to_sender(timelock);
 
@@ -934,10 +962,11 @@ module timelock::timelocked_stake_tests {
         scenario_val.end();
     }
 
-    fun set_up_timelock_labeler_cap(to: address, scenario: &mut Scenario) {
-        scenario.next_tx(@0x0);
+    fun set_up_timelock_labeler_caps(to: address, scenario: &mut Scenario) {
+        scenario.next_tx(to);
 
-        timelock::assign_labeler_cap(to, scenario.ctx());
+        test_label_one::assign_labeler_cap(to, scenario.ctx());
+        test_label_two::assign_labeler_cap(to, scenario.ctx());
     }
 
     fun set_up_sui_system_state_with_storage_fund() {
@@ -978,19 +1007,17 @@ module timelock::timelocked_stake_tests {
         validator: address,
         amount: u64,
         expiration_timestamp_ms: u64,
-        labels: VecSet<String>,
+        labels: Labels,
         scenario: &mut Scenario
     ) {
         scenario.next_tx(staker);
 
         let mut system_state = scenario.take_shared<SuiSystemState>();
-        let cap = scenario.take_from_sender<LabelerCap>();
         let ctx = scenario.ctx();
 
         timelocked_staking::request_add_stake(
             &mut system_state,
-            timelock::lock_labeled(
-                &cap,
+            timelock::lock_with_labels(
                 balance::create_for_testing(amount * MIST_PER_SUI),
                 expiration_timestamp_ms,
                 labels,
@@ -999,7 +1026,6 @@ module timelock::timelocked_stake_tests {
             ctx);
 
         test_scenario::return_shared(system_state);
-        scenario.return_to_sender(cap);
     }
 
     fun unstake_timelocked(

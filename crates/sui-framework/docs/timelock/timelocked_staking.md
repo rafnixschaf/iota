@@ -13,16 +13,14 @@ title: Module `0x10cf::timelocked_staking`
 -  [Function `request_withdraw_stake_non_entry`](#0x10cf_timelocked_staking_request_withdraw_stake_non_entry)
 
 
-<pre><code><b>use</b> <a href="timelock.md#0x10cf_timelock">0x10cf::timelock</a>;
+<pre><code><b>use</b> <a href="labels.md#0x10cf_labels">0x10cf::labels</a>;
+<b>use</b> <a href="timelock.md#0x10cf_timelock">0x10cf::timelock</a>;
 <b>use</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui">0x10cf::timelocked_staked_sui</a>;
-<b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
-<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../sui-framework/balance.md#0x2_balance">0x2::balance</a>;
 <b>use</b> <a href="../sui-framework/coin.md#0x2_coin">0x2::coin</a>;
 <b>use</b> <a href="../sui-framework/sui.md#0x2_sui">0x2::sui</a>;
 <b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
-<b>use</b> <a href="../sui-framework/vec_set.md#0x2_vec_set">0x2::vec_set</a>;
 <b>use</b> <a href="../sui-system/staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
 <b>use</b> <a href="../sui-system/sui_system.md#0x3_sui_system">0x3::sui_system</a>;
 </code></pre>
@@ -104,7 +102,7 @@ The non-entry version of <code>request_add_stake</code>, which returns the time-
     <b>assert</b>!(<a href="timelocked_balance.md#0x10cf_timelocked_balance">timelocked_balance</a>.is_locked(ctx), <a href="timelocked_staking.md#0x10cf_timelocked_staking_ETimeLockShouldNotBeExpired">ETimeLockShouldNotBeExpired</a>);
 
     // Unpack the time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
-    <b>let</b> (<a href="../sui-framework/balance.md#0x2_balance">balance</a>, expiration_timestamp_ms, labels) = <a href="timelock.md#0x10cf_timelock_unpack">timelock::unpack</a>(<a href="timelocked_balance.md#0x10cf_timelocked_balance">timelocked_balance</a>);
+    <b>let</b> (<a href="../sui-framework/balance.md#0x2_balance">balance</a>, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>) = <a href="timelock.md#0x10cf_timelock_unpack">timelock::unpack</a>(<a href="timelocked_balance.md#0x10cf_timelocked_balance">timelocked_balance</a>);
 
     // Stake the time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>.
     <b>let</b> staked_sui = <a href="../sui-system/sui_system.md#0x3_sui_system">sui_system</a>.<a href="timelocked_staking.md#0x10cf_timelocked_staking_request_add_stake_non_entry">request_add_stake_non_entry</a>(
@@ -117,7 +115,7 @@ The non-entry version of <code>request_add_stake</code>, which returns the time-
     <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_create">timelocked_staked_sui::create</a>(
         staked_sui,
         expiration_timestamp_ms,
-        labels,
+        <a href="labels.md#0x10cf_labels">labels</a>,
         ctx,
     )
 }
@@ -293,7 +291,7 @@ instead of transferring it to the sender.
     ctx: &<b>mut</b> TxContext,
 ) : (TimeLock&lt;Balance&lt;SUI&gt;&gt;, Balance&lt;SUI&gt;) {
     // Unpack the `TimelockedStakedSui` instance.
-    <b>let</b> (staked_sui, expiration_timestamp_ms, labels) = <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui">timelocked_staked_sui</a>.unpack();
+    <b>let</b> (staked_sui, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>) = <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui">timelocked_staked_sui</a>.unpack();
 
     // Store the original stake amount.
     <b>let</b> principal = staked_sui.staked_sui_amount();
@@ -306,7 +304,7 @@ instead of transferring it to the sender.
     <b>let</b> principal = withdraw_stake.split(principal);
 
     // Pack and <b>return</b> a time-locked <a href="../sui-framework/balance.md#0x2_balance">balance</a>, and the reward.
-    (<a href="timelock.md#0x10cf_timelock_pack">timelock::pack</a>(principal, expiration_timestamp_ms, labels, ctx), withdraw_stake)
+    (<a href="timelock.md#0x10cf_timelock_pack">timelock::pack</a>(principal, expiration_timestamp_ms, <a href="labels.md#0x10cf_labels">labels</a>, ctx), withdraw_stake)
 }
 </code></pre>
 

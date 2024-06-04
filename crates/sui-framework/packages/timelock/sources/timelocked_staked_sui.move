@@ -3,9 +3,7 @@
 
 module timelock::timelocked_staked_sui {
 
-    use std::string::String;
-
-    use sui::vec_set::VecSet;
+    use timelock::labels::{Self, Labels};
 
     use sui_system::staking_pool::StakedSui;
 
@@ -19,14 +17,14 @@ module timelock::timelocked_staked_sui {
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
         /// Timelock related labels.
-        labels: Option<VecSet<String>>,
+        labels: Labels,
     }
 
     /// Create a new instance of `TimelockedStakedSui`.
     public(package) fun create(
         staked_sui: StakedSui,
         expiration_timestamp_ms: u64,
-        labels: Option<VecSet<String>>,
+        labels: Labels,
         ctx: &mut TxContext
     ): TimelockedStakedSui {
         TimelockedStakedSui {
@@ -57,7 +55,7 @@ module timelock::timelocked_staked_sui {
     }
 
     /// Function to get the labels of a `TimelockedStakedSui`.
-    public fun labels(self: &TimelockedStakedSui): &Option<VecSet<String>> {
+    public fun labels(self: &TimelockedStakedSui): &Labels {
         &self.labels
     }
 
@@ -71,7 +69,7 @@ module timelock::timelocked_staked_sui {
             id: object::new(ctx),
             staked_sui: splitted_stake,
             expiration_timestamp_ms: self.expiration_timestamp_ms,
-            labels: self.labels,
+            labels: self.labels.clone(),
         }
     }
 
@@ -93,8 +91,10 @@ module timelock::timelocked_staked_sui {
             id,
             staked_sui,
             expiration_timestamp_ms: _,
-            labels: _,
+            labels,
         } = other;
+
+        labels::destroy(labels);
 
         id.delete();
 
@@ -108,11 +108,11 @@ module timelock::timelocked_staked_sui {
     public fun is_equal_staking_metadata(self: &TimelockedStakedSui, other: &TimelockedStakedSui): bool {
         self.staked_sui.is_equal_staking_metadata(&other.staked_sui) &&
         (self.expiration_timestamp_ms == other.expiration_timestamp_ms) &&
-        (self.labels == other.labels)
+        (self.labels() == other.labels())
     }
 
     /// An utility function to destroy a `TimelockedStakedSui`.
-    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<VecSet<String>>) {
+    public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Labels) {
         let TimelockedStakedSui {
             id,
             staked_sui,

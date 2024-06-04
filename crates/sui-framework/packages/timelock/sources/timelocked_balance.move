@@ -6,6 +6,7 @@ module timelock::timelocked_balance {
 
     use sui::balance::Balance;
 
+    use timelock::labels;
     use timelock::timelock::{Self, TimeLock};
 
     /// For when trying to join two time-locked balances with different expiration time.
@@ -20,7 +21,10 @@ module timelock::timelocked_balance {
         assert!(self.labels() == other.labels(), EDifferentLabels);
 
         // Unpack the time-locked balance.
-        let (value, _, _) = timelock::unpack(other);
+        let (value, _, labels) = timelock::unpack(other);
+
+        // Destroy the labels.
+        labels::destroy(labels);
 
         // Join the balances.
         self.locked_mut().join(value);
@@ -48,6 +52,6 @@ module timelock::timelocked_balance {
         let value = self.locked_mut().split(value);
 
         // Pack the splitted balance into a timelock.
-        timelock::pack(value, self.expiration_timestamp_ms(), *self.labels(), ctx)
+        timelock::pack(value, self.expiration_timestamp_ms(), self.labels().clone(), ctx)
     }
 }
