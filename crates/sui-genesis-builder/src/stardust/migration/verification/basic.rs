@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use anyhow::{anyhow, ensure, Result};
 use iota_sdk::types::block::output::{BasicOutput, OutputId, TokenId};
 use sui_types::{
-    balance::Balance, dynamic_field::Field, in_memory_storage::InMemoryStorage,
-    timelock::timelock::TimeLock,
+    balance::Balance, coin::Coin, dynamic_field::Field, in_memory_storage::InMemoryStorage,
+    timelock::timelock::TimeLock, TypeTag,
 };
 
 use crate::stardust::{
@@ -86,28 +86,12 @@ pub(super) fn verify_basic_output(
         );
 
         // Native Tokens
-        ensure!(
-            created_output.native_tokens.size == output.native_tokens().len() as u64,
-            "native tokens bag length mismatch: found {}, expected {}",
-            created_output.native_tokens.size,
-            output.native_tokens().len()
-        );
-        let created_native_token_fields = created_objects.native_tokens().and_then(|ids| {
-            ids.iter()
-                .map(|id| {
-                    let obj = storage
-                        .get_object(id)
-                        .ok_or_else(|| anyhow!("missing native token field for {id}"))?;
-                    obj.to_rust::<Field<String, Balance>>().ok_or_else(|| {
-                        anyhow!("expected a native token field, found {:?}", obj.type_())
-                    })
-                })
-                .collect::<Result<Vec<_>, _>>()
-        })?;
-        verify_native_tokens(
+        verify_native_tokens::<Field<String, Balance>>(
             output.native_tokens(),
             foundry_data,
-            created_native_token_fields,
+            created_output.native_tokens,
+            created_objects.native_tokens().ok(),
+            storage,
         )?;
 
         // Storage Deposit Return Unlock Condition
@@ -167,24 +151,12 @@ pub(super) fn verify_basic_output(
         );
 
         // Native Tokens
-        let created_native_token_coins = created_objects.native_tokens().and_then(|ids| {
-            ids.iter()
-                .map(|id| {
-                    let obj = storage
-                        .get_object(id)
-                        .ok_or_else(|| anyhow!("missing native token coin for {id}"))?;
-                    obj.coin_type_maybe()
-                        .zip(obj.as_coin_maybe())
-                        .ok_or_else(|| {
-                            anyhow!("expected a native token coin, found {:?}", obj.type_())
-                        })
-                })
-                .collect::<Result<Vec<_>, _>>()
-        })?;
-        verify_native_tokens(
+        verify_native_tokens::<(TypeTag, Coin)>(
             output.native_tokens(),
             foundry_data,
-            created_native_token_coins,
+            None,
+            created_objects.native_tokens().ok(),
+            storage,
         )?;
     }
 
