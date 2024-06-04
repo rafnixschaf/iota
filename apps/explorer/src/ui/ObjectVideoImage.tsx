@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { MediaPlay16 } from '@mysten/icons';
 import { cva, type VariantProps } from 'class-variance-authority';
 import clsx from 'clsx';
@@ -29,7 +32,7 @@ const imageStyles = cva(['z-0 flex-shrink-0 relative'], {
 
 type ImageStylesProps = VariantProps<typeof imageStyles>;
 
-interface Props extends ImageStylesProps {
+interface ObjectVideoImageProps extends ImageStylesProps {
     title: string;
     subtitle: string;
     src: string;
@@ -56,7 +59,7 @@ export function ObjectVideoImage({
     imgFit,
     aspect,
     rounded = 'md',
-}: Props) {
+}: ObjectVideoImageProps) {
     const close = () => {
         if (disablePreview) {
             return;

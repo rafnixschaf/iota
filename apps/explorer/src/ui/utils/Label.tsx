@@ -1,11 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef } from 'react';
 
 import type { ComponentProps } from 'react';
 
-export interface LabelProps extends Omit<ComponentProps<'label'>, 'ref' | 'className'> {
+interface LabelProps extends Omit<ComponentProps<'label'>, 'ref' | 'className'> {
     label: string;
 }
 

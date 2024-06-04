@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useSuiClient, useSuiClientInfiniteQuery } from '@mysten/dapp-kit';
 import { ArrowRight12 } from '@mysten/icons';
 import { Text } from '@mysten/ui';
@@ -16,7 +19,7 @@ import { numberSuffix } from '~/utils/numberUtil';
 
 const DEFAULT_EPOCHS_LIMIT = 20;
 
-interface Props {
+interface EpochsActivityTableProps {
     disablePagination?: boolean;
     refetchInterval?: number;
     initialLimit?: number;
@@ -25,7 +28,7 @@ interface Props {
 export function EpochsActivityTable({
     disablePagination,
     initialLimit = DEFAULT_EPOCHS_LIMIT,
-}: Props) {
+}: EpochsActivityTableProps) {
     const [limit, setLimit] = useState(initialLimit);
     const client = useSuiClient();
 

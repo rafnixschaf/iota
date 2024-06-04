@@ -1,11 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback } from 'react';
 
 import { type ValidatorMapValidator } from './types';
 
-interface Props {
+interface ValidatorLocationProps {
     validator: ValidatorMapValidator;
     projection: (loc: [number, number]) => [number, number] | null;
     onMouseOver(event: React.MouseEvent, countryCode?: string): void;
@@ -18,7 +21,12 @@ const MIN_VALIDATOR_SIZE = 2.5;
 const MAX_VALIDATOR_SIZE = 10;
 const MAX_VALIDATOR_OPACITY = 0.5;
 
-export function ValidatorLocation({ validator, projection, onMouseOut, onMouseOver }: Props) {
+export function ValidatorLocation({
+    validator,
+    projection,
+    onMouseOut,
+    onMouseOver,
+}: ValidatorLocationProps) {
     const handleMouseOver = useCallback(
         (e: React.MouseEvent) => {
             validator && onMouseOver(e, validator.suiAddress);

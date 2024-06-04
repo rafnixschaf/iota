@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useSuiClient } from '@mysten/dapp-kit';
 import { type SuiTransactionBlockResponse } from '@mysten/sui.js/client';
 import { LoadingIndicator, Text } from '@mysten/ui';
@@ -10,7 +13,7 @@ import { genTableDataFromTxData } from './TxCardUtils';
 import { Banner } from '~/ui/Banner';
 import { TableCard } from '~/ui/TableCard';
 
-interface Props {
+interface TransactionsForAddressProps {
     address: string;
     type: 'object' | 'address';
 }
@@ -58,7 +61,7 @@ export function TransactionsForAddressTable({
     return <TableCard data={tableData.data} columns={tableData.columns} />;
 }
 
-export function TransactionsForAddress({ address, type }: Props) {
+export function TransactionsForAddress({ address, type }: TransactionsForAddressProps) {
     const client = useSuiClient();
 
     const { data, isPending, isError } = useQuery({

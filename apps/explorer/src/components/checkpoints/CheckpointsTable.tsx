@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useSuiClientQuery } from '@mysten/dapp-kit';
 import { ArrowRight12 } from '@mysten/icons';
 import { Text } from '@mysten/ui';
@@ -16,7 +19,7 @@ import { numberSuffix } from '~/utils/numberUtil';
 
 const DEFAULT_CHECKPOINTS_LIMIT = 20;
 
-interface Props {
+interface CheckpointsTableProps {
     disablePagination?: boolean;
     refetchInterval?: number;
     initialLimit?: number;
@@ -29,7 +32,7 @@ export function CheckpointsTable({
     initialLimit = DEFAULT_CHECKPOINTS_LIMIT,
     initialCursor,
     maxCursor,
-}: Props) {
+}: CheckpointsTableProps) {
     const [limit, setLimit] = useState(initialLimit);
 
     const countQuery = useSuiClientQuery('getLatestCheckpointSequenceNumber');

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Mercator } from '@visx/geo';
 import React, { memo } from 'react';
 import * as topojson from 'topojson-client';
@@ -22,7 +25,7 @@ const filteredLand = land.features.filter(
     (feature) => !HIDDEN_REGIONS.includes(feature.properties.name),
 );
 
-interface Props {
+interface BaseWorldMapProps {
     width: number;
     height: number;
     validators?: ValidatorMapValidator[];
@@ -30,7 +33,7 @@ interface Props {
     onMouseOut(): void;
 }
 
-function BaseWorldMap({ onMouseOver, onMouseOut, width, height, validators }: Props) {
+function BaseWorldMap({ onMouseOver, onMouseOut, width, height, validators }: BaseWorldMapProps) {
     const centerX = width / 2;
     const centerY = height / 2;
 

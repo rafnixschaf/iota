@@ -1,10 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import clsx from 'clsx';
 import { type ReactNode } from 'react';
 
-export interface ListItemProps {
+interface ListItemProps {
     active?: boolean;
     children: ReactNode;
     onClick?(): void;
@@ -29,7 +32,7 @@ export function ListItem({ active, children, onClick }: ListItemProps) {
     );
 }
 
-export interface VerticalListProps {
+interface VerticalListProps {
     children: ReactNode;
 }
 

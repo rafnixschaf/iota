@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { type SuiObjectResponse } from '@mysten/sui.js/client';
 import { formatAddress } from '@mysten/sui.js/utils';
 import { Placeholder } from '@mysten/ui';
@@ -13,7 +16,7 @@ import { ObjectVideoImage } from '~/ui/ObjectVideoImage';
 import { parseObjectType } from '~/utils/objectUtils';
 import { trimStdLibPrefix } from '~/utils/stringUtils';
 
-interface Props {
+interface SmallThumbnailsViewProps {
     limit: number;
     data?: SuiObjectResponse[];
     loading?: boolean;
@@ -73,7 +76,7 @@ function SmallThumbnail({ obj }: { obj: SuiObjectResponse }) {
     );
 }
 
-export function SmallThumbnailsView({ data, loading, limit }: Props) {
+export function SmallThumbnailsView({ data, loading, limit }: SmallThumbnailsViewProps) {
     return (
         <div className="flex flex-row flex-wrap overflow-auto">
             {loading && <SmallThumbnailsViewLoading limit={limit} />}

@@ -1,11 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-interface Props {
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+interface MapFeatureProps {
     path: string | null;
 }
 
-export function MapFeature({ path }: Props) {
+export function MapFeature({ path }: MapFeatureProps) {
     if (!path) {
         return null;
     }

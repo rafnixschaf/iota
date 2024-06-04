@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Search24 } from '@mysten/icons';
 import { Combobox, ComboboxInput, ComboboxList } from '@mysten/ui';
 import clsx from 'clsx';
@@ -17,13 +20,13 @@ import { ModuleCodeTabs } from './ModuleCodeTabs';
 
 type ModuleType = [moduleName: string, code: string];
 
-interface Props {
+interface PkgModuleViewWrapperProps {
     id: string;
     modules: ModuleType[];
     splitPanelOrientation: Direction;
 }
 
-function PkgModuleViewWrapper({ id, modules, splitPanelOrientation }: Props) {
+function PkgModuleViewWrapper({ id, modules, splitPanelOrientation }: PkgModuleViewWrapperProps) {
     const isMediumOrAbove = useBreakpoint('md');
 
     const [searchParams, setSearchParams] = useSearchParamsMerged();
