@@ -1,5 +1,5 @@
 # Default fallback, if no other path below this matches someone from the `move` team has to review
-* @iotaledger/move
+* @iotaledger/l1-core
 
 # Everything within the SDK folder is for review by someone from the `iota-sdk` team by default
 /sdk/ @iotaledger/iota-sdk
