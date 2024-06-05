@@ -25,7 +25,6 @@ use crate::stardust::{
                 verify_sender_feature, verify_storage_deposit_unlock_condition, verify_tag_feature,
                 verify_timelock_unlock_condition,
             },
-            AggregateData,
         },
     },
     types::{NFT_DYNAMIC_OBJECT_FIELD_KEY, NFT_DYNAMIC_OBJECT_FIELD_KEY_TYPE},
@@ -37,7 +36,6 @@ pub(super) fn verify_nft_output(
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
-    aggregate_data: &mut AggregateData,
 ) -> anyhow::Result<()> {
     let created_output_obj = created_objects.output().and_then(|id| {
         storage
@@ -85,11 +83,6 @@ pub(super) fn verify_nft_output(
         created_output.iota.value(),
         output.amount()
     );
-    aggregate_data.total_iota_amount += output.amount();
-    *aggregate_data
-        .address_balances
-        .entry(*output.address())
-        .or_default() += output.amount();
 
     // Native Tokens
     verify_native_tokens::<Field<String, Balance>>(

@@ -19,7 +19,6 @@ use crate::stardust::migration::{
             verify_storage_deposit_unlock_condition, verify_tag_feature,
             verify_timelock_unlock_condition,
         },
-        AggregateData,
     },
 };
 
@@ -28,7 +27,6 @@ pub(super) fn verify_basic_output(
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
-    aggregate_data: &mut AggregateData,
 ) -> Result<()> {
     // If the output has multiple unlock conditions, then a genesis object should
     // have been created.
@@ -54,11 +52,6 @@ pub(super) fn verify_basic_output(
             created_output.iota.value(),
             output.amount()
         );
-        aggregate_data.total_iota_amount += output.amount();
-        *aggregate_data
-            .address_balances
-            .entry(*output.address())
-            .or_default() += output.amount();
 
         // Native Tokens
         verify_native_tokens::<Field<String, Balance>>(
@@ -110,12 +103,6 @@ pub(super) fn verify_basic_output(
 
         // Coin value and owner
         verify_coin(output.amount(), output.address(), created_objects, storage)?;
-
-        aggregate_data.total_iota_amount += output.amount();
-        *aggregate_data
-            .address_balances
-            .entry(*output.address())
-            .or_default() += output.amount();
 
         // Native Tokens
         verify_native_tokens::<(TypeTag, Coin)>(

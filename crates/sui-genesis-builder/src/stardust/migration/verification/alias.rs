@@ -24,7 +24,6 @@ use crate::stardust::{
                 verify_address_owner, verify_issuer_feature, verify_metadata_feature,
                 verify_native_tokens, verify_sender_feature,
             },
-            AggregateData,
         },
     },
     types::{
@@ -38,7 +37,6 @@ pub(super) fn verify_alias_output(
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<stardust::TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
-    aggregate_data: &mut AggregateData,
 ) -> anyhow::Result<()> {
     let alias_id = ObjectID::new(*output.alias_id_non_null(&output_id));
 
@@ -94,11 +92,6 @@ pub(super) fn verify_alias_output(
         created_output.iota.value(),
         output.amount()
     );
-    aggregate_data.total_iota_amount += output.amount();
-    *aggregate_data
-        .address_balances
-        .entry(*output.governor_address())
-        .or_default() += output.amount();
 
     // Native Tokens
     verify_native_tokens::<Field<String, Balance>>(

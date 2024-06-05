@@ -19,7 +19,7 @@ use crate::stardust::{
                 truncate_to_max_allowed_u64_supply, verify_address_owner, verify_coin,
                 verify_parent,
             },
-            AggregateData, CreatedObjects,
+            CreatedObjects,
         },
     },
     native_token::package_data::NativeTokenPackageData,
@@ -31,7 +31,6 @@ pub(super) fn verify_foundry_output(
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
     storage: &InMemoryStorage,
-    aggregate_data: &mut AggregateData,
 ) -> Result<()> {
     let foundry_data = foundry_data
         .get(&output.token_id())
@@ -45,12 +44,6 @@ pub(super) fn verify_foundry_output(
 
     // Coin value and owner
     verify_coin(output.amount(), alias_address, created_objects, storage)?;
-
-    aggregate_data.total_iota_amount += output.amount();
-    *aggregate_data
-        .address_balances
-        .entry(*alias_address)
-        .or_default() += output.amount();
 
     // Minted coin value
     let minted_coin_id = created_objects.minted_coin()?;

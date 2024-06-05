@@ -85,7 +85,6 @@ impl Migration {
     /// See also `Self::run`.
     pub(crate) fn run_migration(
         &mut self,
-        total_supply: u64,
         outputs: impl IntoIterator<Item = (OutputHeader, Output)>,
     ) -> Result<()> {
         let (mut foundries, mut outputs) = outputs.into_iter().fold(
@@ -112,7 +111,7 @@ impl Migration {
             .into_iter()
             .chain(foundries.into_iter().map(|(h, f)| (h, Output::Foundry(f))))
             .collect::<Vec<_>>();
-        self.verify_ledger_state(total_supply, &outputs)?;
+        self.verify_ledger_state(&outputs)?;
 
         Ok(())
     }
@@ -126,11 +125,10 @@ impl Migration {
     /// * Create the snapshot file.
     pub fn run(
         mut self,
-        total_supply: u64,
         outputs: impl IntoIterator<Item = (OutputHeader, Output)>,
         writer: impl Write,
     ) -> Result<()> {
-        self.run_migration(total_supply, outputs)?;
+        self.run_migration(outputs)?;
         create_snapshot(&self.into_objects(), writer)
     }
 
@@ -198,14 +196,12 @@ impl Migration {
     /// [`InMemoryStorage`].
     pub fn verify_ledger_state<'a>(
         &self,
-        total_supply: u64,
         outputs: impl IntoIterator<Item = &'a (OutputHeader, Output)>,
     ) -> Result<()> {
         verify_outputs(
             outputs,
             &self.output_objects_map,
             self.executor.native_tokens(),
-            total_supply,
             self.executor.store(),
         )?;
         Ok(())
