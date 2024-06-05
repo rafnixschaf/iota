@@ -376,7 +376,7 @@ Returns true if all the staking parameters of the staked sui except the principa
 
 ## Function `unpack`
 
-An utility function to destroy a <code><a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
+A utility function to destroy a <code><a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">TimelockedStakedSui</a></code>.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_unpack">unpack</a>(self: <a href="timelocked_staked_sui.md#0x10cf_timelocked_staked_sui_TimelockedStakedSui">timelocked_staked_sui::TimelockedStakedSui</a>): (<a href="../sui-system/staking_pool.md#0x3_staking_pool_StakedSui">staking_pool::StakedSui</a>, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;)

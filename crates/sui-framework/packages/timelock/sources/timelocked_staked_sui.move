@@ -111,7 +111,7 @@ module timelock::timelocked_staked_sui {
         (self.label() == other.label())
     }
 
-    /// An utility function to destroy a `TimelockedStakedSui`.
+    /// A utility function to destroy a `TimelockedStakedSui`.
     public(package) fun unpack(self: TimelockedStakedSui): (StakedSui, u64, Option<Label>) {
         let TimelockedStakedSui {
             id,

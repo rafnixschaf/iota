@@ -317,6 +317,7 @@ Function to get the locked object of a <code><a href="timelock.md#0x10cf_timeloc
 ## Function `locked_mut`
 
 Function to get a mutable reference to the locked object of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
+Must not be callable from the outside, as one could modify the locked object.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_locked_mut">locked_mut</a>&lt;T: store&gt;(self: &<b>mut</b> <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<b>mut</b> T
@@ -366,7 +367,7 @@ Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLo
 
 ## Function `pack`
 
-An utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
+A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;

@@ -149,7 +149,7 @@ module timelock::timelocked_stake_tests {
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create two instances of labeled staked sui w/ different epoch activations
+        // Create two instances of labeled staked sui w/ different amounts
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -188,7 +188,7 @@ module timelock::timelocked_stake_tests {
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create two instances of labeled staked sui w/ different epoch activations
+        // Create two instances of labeled staked sui w/ different labels
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -224,7 +224,7 @@ module timelock::timelocked_stake_tests {
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create two instances of labeled staked sui w/ different epoch activations
+        // Create one instance of labeled staked sui
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -236,7 +236,7 @@ module timelock::timelocked_stake_tests {
             advance_epoch(scenario);
         };
 
-        // Verify that these can be splitted
+        // Verify that it can be splitted
         scenario.next_tx(STAKER_ADDR_1);
         {
             let mut original = scenario.take_from_sender<TimelockedStakedSui>();

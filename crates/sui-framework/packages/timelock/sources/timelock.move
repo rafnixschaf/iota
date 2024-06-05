@@ -93,6 +93,7 @@ module timelock::timelock {
     }
 
     /// Function to get a mutable reference to the locked object of a `TimeLock`.
+    /// Must not be callable from the outside, as one could modify the locked object.
     public(package) fun locked_mut<T: store>(self: &mut TimeLock<T>): &mut T {
         &mut self.locked
     }
@@ -102,7 +103,7 @@ module timelock::timelock {
         &self.label
     }
 
-    /// An utility function to pack a `TimeLock`.
+    /// A utility function to pack a `TimeLock`.
     public(package) fun pack<T: store>(
         locked: T,
         expiration_timestamp_ms: u64,
