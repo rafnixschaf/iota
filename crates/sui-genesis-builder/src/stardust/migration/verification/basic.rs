@@ -45,7 +45,7 @@ pub(super) fn verify_basic_output(
             .ok_or_else(|| anyhow!("invalid basic output object"))?;
 
         // Owner
-        verify_address_owner(output.address(), created_output_obj)?;
+        verify_address_owner(output.address(), created_output_obj, "basic output")?;
 
         // Amount
         ensure!(
@@ -108,7 +108,7 @@ pub(super) fn verify_basic_output(
             "unexpected output object created for simple deposit"
         );
 
-        // Coin value.
+        // Coin value and owner
         verify_coin(output.amount(), output.address(), created_objects, storage)?;
 
         aggregate_data.total_iota_amount += output.amount();

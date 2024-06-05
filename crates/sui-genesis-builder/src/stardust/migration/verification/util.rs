@@ -22,9 +22,8 @@ use sui_types::{
     TypeTag,
 };
 
-use super::created_objects::CreatedObjects;
 use crate::stardust::{
-    migration::executor::FoundryLedgerData,
+    migration::{executor::FoundryLedgerData, verification::CreatedObjects},
     types::{
         output as migration_output, stardust_to_sui_address, stardust_to_sui_address_owner,
         token_scheme::MAX_ALLOWED_U64_SUPPLY, Alias, Nft,
@@ -275,11 +274,15 @@ pub(super) fn verify_issuer_feature(
     Ok(())
 }
 
-pub(super) fn verify_address_owner(owning_address: &Address, obj: &Object) -> Result<()> {
+pub(super) fn verify_address_owner(
+    owning_address: &Address,
+    obj: &Object,
+    name: &str,
+) -> Result<()> {
     let expected_owner = stardust_to_sui_address_owner(owning_address)?;
     ensure!(
         obj.owner == expected_owner,
-        "output owner mismatch: found {}, expected {}",
+        "{name} owner mismatch: found {}, expected {}",
         obj.owner,
         expected_owner
     );
@@ -331,21 +334,15 @@ pub(super) fn verify_coin(
     let created_coin = created_coin_obj
         .as_coin_maybe()
         .ok_or_else(|| anyhow!("expected a coin"))?;
-    let expected_owner = stardust_to_sui_address_owner(owning_address)?;
 
-    ensure!(
-        expected_owner == created_coin_obj.owner,
-        "coin owner mismatch: found {}, expected {}",
-        created_coin_obj.owner,
-        expected_owner
-    );
     ensure!(
         created_coin.value() == output_amount,
         "coin amount mismatch: found {}, expected {}",
         created_coin.value(),
         output_amount
     );
-    Ok(())
+
+    verify_address_owner(owning_address, created_coin_obj, "coin")
 }
 
 pub(super) trait NativeTokenKind {

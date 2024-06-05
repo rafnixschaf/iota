@@ -53,9 +53,13 @@ pub(super) fn verify_alias_output(
         .ok_or_else(|| anyhow!("missing alias object"))?;
 
     // Alias Output Owner
-    verify_address_owner(output.governor_address(), created_output_obj)?;
+    verify_address_owner(
+        output.governor_address(),
+        created_output_obj,
+        "alias output",
+    )?;
 
-    //  Alias Owner
+    // Alias Owner
     let expected_alias_owner = Owner::ObjectOwner(
         derive_dynamic_field_id(
             created_output_obj.id(),
