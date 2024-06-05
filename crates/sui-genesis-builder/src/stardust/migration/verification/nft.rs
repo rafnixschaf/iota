@@ -53,10 +53,19 @@ pub(super) fn verify_nft_output(
         .to_rust::<crate::stardust::types::Nft>()
         .ok_or_else(|| anyhow!("invalid nft object for {output_id}"))?;
 
-    // Owner
-    verify_address_owner(output.address(), created_output_obj, "nft output")?;
+    // Output Owner
+    // If there is an expiration unlock condition, the NFT is shared.
+    if output.unlock_conditions().expiration().is_some() {
+        ensure!(
+            matches!(created_output_obj.owner, Owner::Shared { .. }),
+            "nft output owner mismatch: found {:?}, expected Shared",
+            created_output_obj.owner,
+        );
+    } else {
+        verify_address_owner(output.address(), created_output_obj, "nft output")?;
+    }
 
-    // Nft Owner
+    // NFT Owner
     let expected_nft_owner = Owner::ObjectOwner(
         derive_dynamic_field_id(
             created_output_obj.id(),
