@@ -39,7 +39,7 @@ module timelock::label {
 
     /// Delete a `LabelerCap` instance.
     /// If a capability is destroyed, it is impossible to add the related labels.
-    public fun destroy_labeler_cap<L: drop>(cap: LabelerCap<L>) {
+    public fun destroy_labeler_cap<L>(cap: LabelerCap<L>) {
         let LabelerCap<L> {
             id,
         } = cap;

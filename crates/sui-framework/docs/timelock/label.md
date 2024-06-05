@@ -139,7 +139,7 @@ Delete a <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a></code> 
 If a capability is destroyed, it is impossible to add the related labels.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_destroy_labeler_cap">destroy_labeler_cap</a>&lt;L: drop&gt;(cap: <a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;)
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_destroy_labeler_cap">destroy_labeler_cap</a>&lt;L&gt;(cap: <a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;)
 </code></pre>
 
 
@@ -148,7 +148,7 @@ If a capability is destroyed, it is impossible to add the related labels.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_destroy_labeler_cap">destroy_labeler_cap</a>&lt;L: drop&gt;(cap: <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt;) {
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_destroy_labeler_cap">destroy_labeler_cap</a>&lt;L&gt;(cap: <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt;) {
     <b>let</b> <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt; {
         id,
     } = cap;
