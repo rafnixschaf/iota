@@ -124,7 +124,6 @@ module timelock::timelocked_stake_tests {
         let scenario = &mut scenario_val;
         // Create two instances of staked sui w/ different epoch activations
         stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
-        advance_epoch(scenario);
         stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 20, scenario);
 
         // Verify that these cannot be merged
