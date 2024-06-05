@@ -65,6 +65,11 @@ module timelock::label {
         self.value == type_name<L>()
     }
 
+    /// Function to get the value of a `Label`.
+    public fun value(self: &Label): &String {
+        &self.value
+    }
+
     /// Destroy a `Label` instance.
     public fun destroy(self: Label) {
         let Label {
@@ -106,10 +111,5 @@ module timelock::label {
         else {
             option::none()
         }
-    }
-
-    #[test_only]
-    public fun value(self: &Label): &String {
-        &self.value
     }
 }

@@ -11,6 +11,7 @@ title: Module `0x10cf::label`
 -  [Function `destroy_labeler_cap`](#0x10cf_label_destroy_labeler_cap)
 -  [Function `from_type`](#0x10cf_label_from_type)
 -  [Function `is_type`](#0x10cf_label_is_type)
+-  [Function `value`](#0x10cf_label_value)
 -  [Function `destroy`](#0x10cf_label_destroy)
 -  [Function `destroy_opt`](#0x10cf_label_destroy_opt)
 -  [Function `type_name`](#0x10cf_label_type_name)
@@ -34,7 +35,7 @@ title: Module `0x10cf::label`
 ## Resource `LabelerCap`
 
 <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a></code> allows to create labels of the specific type <code>L</code>.
-Can be publicly transferred.
+Can be publicly transferred like any other object.
 
 
 <pre><code><b>struct</b> <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt; <b>has</b> store, key
@@ -63,6 +64,8 @@ Can be publicly transferred.
 ## Struct `Label`
 
 <code><a href="label.md#0x10cf_label_Label">Label</a></code> is an immutable label representation.
+The only way to create instances is through the <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt;</code>.
+Upon creation, <code>value</code> field becomes the fully qualified type name of <code>L</code>.
 
 
 <pre><code><b>struct</b> <a href="label.md#0x10cf_label_Label">Label</a> <b>has</b> store
@@ -208,6 +211,31 @@ Check if a <code><a href="label.md#0x10cf_label_Label">Label</a></code> represen
 
 <pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_is_type">is_type</a>&lt;L&gt;(self: &<a href="label.md#0x10cf_label_Label">Label</a>): bool {
     self.value == <a href="../move-stdlib/type_name.md#0x1_type_name">type_name</a>&lt;L&gt;()
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x10cf_label_value"></a>
+
+## Function `value`
+
+Function to get the value of a <code><a href="label.md#0x10cf_label_Label">Label</a></code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_value">value</a>(self: &<a href="label.md#0x10cf_label_Label">label::Label</a>): &<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_value">value</a>(self: &<a href="label.md#0x10cf_label_Label">Label</a>): &String {
+    &self.value
 }
 </code></pre>
 
