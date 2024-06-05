@@ -23,13 +23,21 @@ pub(crate) fn verify_outputs<'a>(
     outputs: impl IntoIterator<Item = &'a (OutputHeader, Output)>,
     output_objects_map: &HashMap<OutputId, CreatedObjects>,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
+    target_milestone_timestamp: u32,
     storage: &InMemoryStorage,
 ) -> anyhow::Result<()> {
     for (header, output) in outputs {
         let created_objects = output_objects_map.get(&header.output_id()).ok_or_else(|| {
             anyhow::anyhow!("missing created objects for output {}", header.output_id())
         })?;
-        verify_output(header, output, created_objects, foundry_data, storage)?;
+        verify_output(
+            header,
+            output,
+            created_objects,
+            foundry_data,
+            target_milestone_timestamp,
+            storage,
+        )?;
     }
     Ok(())
 }
@@ -39,6 +47,7 @@ fn verify_output(
     output: &Output,
     created_objects: &CreatedObjects,
     foundry_data: &HashMap<TokenId, FoundryLedgerData>,
+    target_milestone_timestamp: u32,
     storage: &InMemoryStorage,
 ) -> anyhow::Result<()> {
     match output {
@@ -49,9 +58,14 @@ fn verify_output(
             foundry_data,
             storage,
         ),
-        Output::Basic(output) => {
-            basic::verify_basic_output(output, created_objects, foundry_data, storage)
-        }
+        Output::Basic(output) => basic::verify_basic_output(
+            header.output_id(),
+            output,
+            created_objects,
+            foundry_data,
+            target_milestone_timestamp,
+            storage,
+        ),
         Output::Foundry(output) => {
             foundry::verify_foundry_output(output, created_objects, foundry_data, storage)
         }
