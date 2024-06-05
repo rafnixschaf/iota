@@ -195,7 +195,6 @@ module timelock::timelocked_stake_tests {
             let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
             stake_labeled_timelocked_with(&labeler_one, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
-            advance_epoch(scenario);
             stake_labeled_timelocked_with(&labeler_two, STAKER_ADDR_1, VALIDATOR_ADDR_1, 60, 10, scenario);
 
             scenario.return_to_sender(labeler_one);
