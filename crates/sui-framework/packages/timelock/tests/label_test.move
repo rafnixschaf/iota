@@ -34,8 +34,8 @@ module timelock::label_tests {
         let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
         // Build the labels.
-        let label_one = label::from_type<TEST_LABEL_ONE>(&labeler_one);
-        let label_two = label::from_type<TEST_LABEL_TWO>(&labeler_two);
+        let label_one = label::create(&labeler_one);
+        let label_two = label::create(&labeler_two);
 
         // Check the labels.
         assert_eq(label_one.is_type<TEST_LABEL_ONE>(), true);
@@ -74,7 +74,7 @@ module timelock::label_tests {
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
 
         // Build a label.
-        let label_one = label::from_type<TEST_LABEL_ONE>(&labeler_one);
+        let label_one = label::create(&labeler_one);
 
         // Check the label.
         assert_eq(*label_one.value(), string::utf8(b"00000000000000000000000000000000000000000000000000000000000010cf::test_label_one::TEST_LABEL_ONE"));
@@ -98,7 +98,7 @@ module timelock::label_tests {
         let witness = FAKE_WITNESS{};
 
         // Create a new capability.
-        let cap = label::create_labeler_cap<FAKE_WITNESS>(witness, scenario.ctx());
+        let cap = label::create_labeler_cap(witness, scenario.ctx());
 
         // Cleanup.
         label::destroy_labeler_cap(cap);

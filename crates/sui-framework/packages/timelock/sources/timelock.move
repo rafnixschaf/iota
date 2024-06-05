@@ -42,7 +42,7 @@ module timelock::timelock {
         check_expiration_timestamp_ms(expiration_timestamp_ms, ctx);
 
         // Create a label instance.
-        let label = label::from_type<L>(cap);
+        let label = label::create(cap);
 
         // Create a labeled timelock.
         pack(locked, expiration_timestamp_ms, option::some(label), ctx)

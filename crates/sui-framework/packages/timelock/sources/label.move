@@ -51,15 +51,6 @@ module timelock::label {
 
     // === `Label` functions ===
 
-    /// Create a `Label` instance.
-    /// The created label holds a fully qualified type name with the original package IDs.
-    /// Can be called only by the related `LabelerCap` owner.
-    public fun from_type<L>(_: &LabelerCap<L>): Label {
-        Label {
-            value: type_name<L>(),
-        }
-    }
-
     /// Check if a `Label` represents the type `L`.
     public fun is_type<L>(self: &Label): bool {
         self.value == type_name<L>()
@@ -68,6 +59,15 @@ module timelock::label {
     /// Function to get the value of a `Label`.
     public fun value(self: &Label): &String {
         &self.value
+    }
+
+    /// Create a `Label` instance.
+    /// The created label holds a fully qualified type name with the original package IDs.
+    /// Can be called only by the related `LabelerCap` owner.
+    public fun create<L>(_: &LabelerCap<L>): Label {
+        Label {
+            value: type_name<L>(),
+        }
     }
 
     /// Destroy a `Label` instance.

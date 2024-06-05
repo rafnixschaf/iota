@@ -157,7 +157,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
     <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
     // Create a <a href="label.md#0x10cf_label">label</a> instance.
-    <b>let</b> <a href="label.md#0x10cf_label">label</a> = <a href="label.md#0x10cf_label_from_type">label::from_type</a>&lt;L&gt;(cap);
+    <b>let</b> <a href="label.md#0x10cf_label">label</a> = <a href="label.md#0x10cf_label_create">label::create</a>(cap);
 
     // Create a labeled <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(<a href="label.md#0x10cf_label">label</a>), ctx)

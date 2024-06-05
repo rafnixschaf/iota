@@ -9,9 +9,9 @@ title: Module `0x10cf::label`
 -  [Constants](#@Constants_0)
 -  [Function `create_labeler_cap`](#0x10cf_label_create_labeler_cap)
 -  [Function `destroy_labeler_cap`](#0x10cf_label_destroy_labeler_cap)
--  [Function `from_type`](#0x10cf_label_from_type)
 -  [Function `is_type`](#0x10cf_label_is_type)
 -  [Function `value`](#0x10cf_label_value)
+-  [Function `create`](#0x10cf_label_create)
 -  [Function `destroy`](#0x10cf_label_destroy)
 -  [Function `destroy_opt`](#0x10cf_label_destroy_opt)
 -  [Function `type_name`](#0x10cf_label_type_name)
@@ -164,35 +164,6 @@ If a capability is destroyed, it is impossible to add the related labels.
 
 </details>
 
-<a name="0x10cf_label_from_type"></a>
-
-## Function `from_type`
-
-Create a <code><a href="label.md#0x10cf_label_Label">Label</a></code> instance.
-The created label holds a fully qualified type name with the original package IDs.
-Can be called only by the related <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a></code> owner.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_from_type">from_type</a>&lt;L&gt;(_: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;): <a href="label.md#0x10cf_label_Label">label::Label</a>
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_from_type">from_type</a>&lt;L&gt;(_: &<a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt;): <a href="label.md#0x10cf_label_Label">Label</a> {
-    <a href="label.md#0x10cf_label_Label">Label</a> {
-        value: <a href="../move-stdlib/type_name.md#0x1_type_name">type_name</a>&lt;L&gt;(),
-    }
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x10cf_label_is_type"></a>
 
 ## Function `is_type`
@@ -236,6 +207,35 @@ Function to get the value of a <code><a href="label.md#0x10cf_label_Label">Label
 
 <pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_value">value</a>(self: &<a href="label.md#0x10cf_label_Label">Label</a>): &String {
     &self.value
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x10cf_label_create"></a>
+
+## Function `create`
+
+Create a <code><a href="label.md#0x10cf_label_Label">Label</a></code> instance.
+The created label holds a fully qualified type name with the original package IDs.
+Can be called only by the related <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a></code> owner.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_create">create</a>&lt;L&gt;(_: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;): <a href="label.md#0x10cf_label_Label">label::Label</a>
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_create">create</a>&lt;L&gt;(_: &<a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt;): <a href="label.md#0x10cf_label_Label">Label</a> {
+    <a href="label.md#0x10cf_label_Label">Label</a> {
+        value: <a href="../move-stdlib/type_name.md#0x1_type_name">type_name</a>&lt;L&gt;(),
+    }
 }
 </code></pre>
 
