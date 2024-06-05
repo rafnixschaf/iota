@@ -9,8 +9,11 @@ use sui_types::base_types::ObjectID;
 pub struct CreatedObjects {
     output: Option<ObjectID>,
     coin: Option<ObjectID>,
+    coin_metadata: Option<ObjectID>,
     package: Option<ObjectID>,
+    max_supply_policy: Option<ObjectID>,
     native_tokens: Option<Vec<ObjectID>>,
+    minted_coin: Option<ObjectID>,
 }
 
 impl CreatedObjects {
@@ -42,6 +45,20 @@ impl CreatedObjects {
         Ok(())
     }
 
+    pub fn coin_metadata(&self) -> Result<&ObjectID> {
+        self.coin_metadata
+            .as_ref()
+            .ok_or_else(|| anyhow!("no created coin metadata object"))
+    }
+
+    pub(crate) fn set_coin_metadata(&mut self, id: ObjectID) -> Result<()> {
+        if let Some(id) = self.coin_metadata {
+            bail!("coin metadata already set: {id}")
+        }
+        self.coin_metadata.replace(id);
+        Ok(())
+    }
+
     pub fn package(&self) -> Result<&ObjectID> {
         self.package
             .as_ref()
@@ -56,6 +73,20 @@ impl CreatedObjects {
         Ok(())
     }
 
+    pub fn max_supply_policy(&self) -> Result<&ObjectID> {
+        self.max_supply_policy
+            .as_ref()
+            .ok_or_else(|| anyhow!("no created max supply policy object"))
+    }
+
+    pub(crate) fn set_max_supply_policy(&mut self, id: ObjectID) -> Result<()> {
+        if let Some(id) = self.max_supply_policy {
+            bail!("max supply policy already set: {id}")
+        }
+        self.max_supply_policy.replace(id);
+        Ok(())
+    }
+
     pub fn native_tokens(&self) -> Result<&[ObjectID]> {
         self.native_tokens
             .as_deref()
@@ -67,6 +98,20 @@ impl CreatedObjects {
             bail!("native tokens already set: {id:?}")
         }
         self.native_tokens.replace(ids);
+        Ok(())
+    }
+
+    pub fn minted_coin(&self) -> Result<&ObjectID> {
+        self.minted_coin
+            .as_ref()
+            .ok_or_else(|| anyhow!("no minted coin object"))
+    }
+
+    pub(crate) fn set_minted_coin(&mut self, id: ObjectID) -> Result<()> {
+        if let Some(id) = self.minted_coin {
+            bail!("minted coin already set: {id}")
+        }
+        self.minted_coin.replace(id);
         Ok(())
     }
 }
