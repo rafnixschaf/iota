@@ -15,12 +15,14 @@ module timelock::label {
     // === Structs ===
 
     /// `LabelerCap` allows to create labels of the specific type `L`.
-    /// Can be publicly transferred.
+    /// Can be publicly transferred like any other object.
     public struct LabelerCap<phantom L> has key, store {
         id: UID,
     }
 
     /// `Label` is an immutable label representation.
+    /// The only way to create instances is through the `LabelerCap<L>`.
+    /// Upon creation, `value` field becomes the fully qualified type name of `L`.
     public struct Label has store {
         /// A fully qualified type name with the original package IDs.
         value: String,
