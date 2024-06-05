@@ -18,17 +18,19 @@ interface TransactionsForAddressProps {
     type: 'object' | 'address';
 }
 
+interface TransactionsForAddressTableProps {
+    data: SuiTransactionBlockResponse[];
+    isPending: boolean;
+    isError: boolean;
+    address: string;
+}
+
 export function TransactionsForAddressTable({
     data,
     isPending,
     isError,
     address,
-}: {
-    data: SuiTransactionBlockResponse[];
-    isPending: boolean;
-    isError: boolean;
-    address: string;
-}) {
+}: TransactionsForAddressTableProps) {
     if (isPending) {
         return (
             <div>

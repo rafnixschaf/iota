@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { AxisBottom, AxisLeft, type TickRendererProps } from '@visx/axis';
 import { curveCatmullRom as curve } from '@visx/curve';
 import { localPoint } from '@visx/event';
@@ -50,7 +53,7 @@ function AxisBottomTick({ x, y, formattedValue }: TickRendererProps) {
     );
 }
 
-export type AreaGraphProps<D> = {
+type AreaGraphProps<D> = {
     data: D[];
     width: number;
     height: number;

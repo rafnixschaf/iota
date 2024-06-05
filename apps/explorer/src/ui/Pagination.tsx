@@ -1,11 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { PaginationFirst24, PaginationNext24, PaginationPrev24 } from '@mysten/icons';
 import { type InfiniteData, type UseInfiniteQueryResult } from '@tanstack/react-query';
 import { useState } from 'react';
 
-export interface PaginationProps {
+interface PaginationProps {
     hasPrev: boolean;
     hasNext: boolean;
     onFirst(): void;

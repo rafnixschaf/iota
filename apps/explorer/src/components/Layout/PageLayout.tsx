@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useAppsBackend, useElementDimensions } from '@mysten/core';
 import { LoadingIndicator } from '@mysten/ui';
@@ -14,7 +17,7 @@ import { useNetworkContext } from '~/context';
 import { Banner } from '~/ui/Banner';
 import { Network } from '~/utils/api/DefaultRpcClient';
 
-export type PageLayoutProps = {
+type PageLayoutProps = {
     gradient?: {
         content: ReactNode;
         size: 'lg' | 'md';

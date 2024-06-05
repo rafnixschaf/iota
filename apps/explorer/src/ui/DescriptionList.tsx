@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import type { ReactNode } from 'react';
@@ -35,9 +38,7 @@ const descriptionItemLabelStyles = cva(
 type DescriptionItemStylesProps = VariantProps<typeof descriptionItemStyles>;
 type DescriptionItemLabelStylesProps = VariantProps<typeof descriptionItemLabelStyles>;
 
-export interface DescriptionItemProps
-    extends DescriptionItemStylesProps,
-        DescriptionItemLabelStylesProps {
+interface DescriptionItemProps extends DescriptionItemStylesProps, DescriptionItemLabelStylesProps {
     title: string | ReactNode;
     children: ReactNode;
 }

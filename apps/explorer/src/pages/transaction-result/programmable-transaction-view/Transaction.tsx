@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import {
     type MoveCallSuiTransaction,
     type SuiArgument,
@@ -13,7 +16,7 @@ import { flattenSuiArguments } from './utils';
 import { ErrorBoundary } from '~/components/error-boundary/ErrorBoundary';
 import { ObjectLink } from '~/ui/InternalLink';
 
-export interface TransactionProps<T> {
+interface TransactionProps<T> {
     type: string;
     data: T;
 }

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useGetKioskContents, useGetOwnedObjects, useLocalStorage } from '@mysten/core';
 import { ThumbnailsOnly16, ViewList16, ViewSmallThumbnails16 } from '@mysten/icons';
 import { Heading, IconButton, RadioGroup, RadioGroupItem, Text } from '@mysten/ui';
@@ -57,7 +60,11 @@ function getShowPagination(
     return currentPage !== 0 || itemsLength > SHOW_PAGINATION_MAX_ITEMS;
 }
 
-export function OwnedObjects({ id }: { id: string }) {
+interface OwnedObjectsProps {
+    id: string;
+}
+
+export function OwnedObjects({ id }: OwnedObjectsProps) {
     const [limit, setLimit] = useState(50);
     const [filter, setFilter] = useLocalStorage<string | undefined>(
         OWNED_OBJECTS_LOCAL_STORAGE_FILTER,

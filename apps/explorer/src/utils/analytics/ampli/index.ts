@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 /* tslint:disable */
 /* eslint-disable */
 // @ts-nocheck
@@ -22,7 +25,7 @@
 
 import * as amplitude from '@amplitude/analytics-browser';
 
-export type Environment = 'production' | 'development';
+type Environment = 'production' | 'development';
 
 export const ApiKey: Record<Environment, string> = {
     production: import.meta.env.VITE_AMPLI_PROD_API_KEY,
@@ -47,27 +50,27 @@ export const DefaultConfiguration: BrowserOptions = {
     },
 };
 
-export interface LoadOptionsBase {
+interface LoadOptionsBase {
     disabled?: boolean;
 }
 
-export type LoadOptionsWithEnvironment = LoadOptionsBase & {
+type LoadOptionsWithEnvironment = LoadOptionsBase & {
     environment: Environment;
     client?: { configuration?: BrowserOptions };
 };
-export type LoadOptionsWithApiKey = LoadOptionsBase & {
+type LoadOptionsWithApiKey = LoadOptionsBase & {
     client: { apiKey: string; configuration?: BrowserOptions };
 };
-export type LoadOptionsWithClientInstance = LoadOptionsBase & {
+type LoadOptionsWithClientInstance = LoadOptionsBase & {
     client: { instance: BrowserClient };
 };
 
-export type LoadOptions =
+type LoadOptions =
     | LoadOptionsWithEnvironment
     | LoadOptionsWithApiKey
     | LoadOptionsWithClientInstance;
 
-export interface IdentifyProperties {
+interface IdentifyProperties {
     /**
      * The Sui network that the user is currently interacting with.
      */
@@ -86,11 +89,11 @@ export interface IdentifyProperties {
     pageUrl: string;
 }
 
-export interface ActivatedTooltipProperties {
+interface ActivatedTooltipProperties {
     tooltipLabel: string;
 }
 
-export interface ClickedCurrentEpochCardProperties {
+interface ClickedCurrentEpochCardProperties {
     /**
      * An epoch or period of time.
      *
@@ -101,12 +104,12 @@ export interface ClickedCurrentEpochCardProperties {
     epoch: number;
 }
 
-export interface ClickedSearchResultProperties {
+interface ClickedSearchResultProperties {
     searchCategory: string;
     searchQuery: string;
 }
 
-export interface ClickedValidatorRowProperties {
+interface ClickedValidatorRowProperties {
     /**
      * The source flow where the user came from.
      */
@@ -121,11 +124,11 @@ export interface ClickedValidatorRowProperties {
     validatorName: string;
 }
 
-export interface CompletedSearchProperties {
+interface CompletedSearchProperties {
     searchQuery: string;
 }
 
-export interface SwitchedNetworkProperties {
+interface SwitchedNetworkProperties {
     toNetwork: string;
 }
 
@@ -189,7 +192,7 @@ export class SwitchedNetwork implements BaseEvent {
     }
 }
 
-export type PromiseResult<T> = { promise: Promise<T | void> };
+type PromiseResult<T> = { promise: Promise<T | void> };
 
 const getVoidPromiseResult = () => ({ promise: Promise.resolve() });
 
@@ -432,10 +435,10 @@ export const ampli = new Ampli();
 // BASE TYPES
 type BrowserOptions = amplitude.Types.BrowserOptions;
 
-export type BrowserClient = amplitude.Types.BrowserClient;
-export type BaseEvent = amplitude.Types.BaseEvent;
-export type IdentifyEvent = amplitude.Types.IdentifyEvent;
-export type GroupEvent = amplitude.Types.GroupIdentifyEvent;
-export type Event = amplitude.Types.Event;
-export type EventOptions = amplitude.Types.EventOptions;
-export type Result = amplitude.Types.Result;
+type BrowserClient = amplitude.Types.BrowserClient;
+type BaseEvent = amplitude.Types.BaseEvent;
+type IdentifyEvent = amplitude.Types.IdentifyEvent;
+type GroupEvent = amplitude.Types.GroupIdentifyEvent;
+type Event = amplitude.Types.Event;
+type EventOptions = amplitude.Types.EventOptions;
+type Result = amplitude.Types.Result;

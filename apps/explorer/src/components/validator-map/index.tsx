@@ -22,7 +22,12 @@ type ValidatorsMap = Record<string, ValidatorMapValidator>;
 
 const numberFormatter = new Intl.NumberFormat('en');
 
-function NodeStat({ title, children }: { title: string; children: ReactNode }) {
+interface NodeStatProps {
+    title: string;
+    children: ReactNode;
+}
+
+function NodeStat({ title, children }: NodeStatProps) {
     return (
         <div className="space-y-1.5">
             <Heading variant="heading2/semibold" color="steel-darker">

@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { formatDate } from '@mysten/core';
 import { Heading, Text } from '@mysten/ui';
 import clsx from 'clsx';
@@ -9,7 +12,7 @@ import { getElapsedTime, useEpochProgress } from '~/pages/epochs/utils';
 import { Card } from '~/ui/Card';
 import { ProgressBar } from '~/ui/ProgressBar';
 
-export interface EpochProgressProps {
+interface EpochProgressProps {
     epoch?: string;
     start: number;
     end?: number;

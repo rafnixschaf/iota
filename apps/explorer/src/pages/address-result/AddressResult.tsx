@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { isSuiNSName, useResolveSuiNSAddress, useResolveSuiNSName } from '@mysten/core';
 import { Domain32 } from '@mysten/icons';
 import { LoadingIndicator } from '@mysten/ui';
@@ -21,7 +24,12 @@ import { TotalStaked } from './TotalStaked';
 const LEFT_RIGHT_PANEL_MIN_SIZE = 30;
 const TOP_PANEL_MIN_SIZE = 20;
 
-function AddressResultPageHeader({ address, loading }: { address: string; loading?: boolean }) {
+interface AddressResultPageHeaderProps {
+    address: string;
+    loading?: boolean;
+}
+
+function AddressResultPageHeader({ address, loading }: AddressResultPageHeaderProps) {
     const { data: domainName, isLoading } = useResolveSuiNSName(address);
 
     return (

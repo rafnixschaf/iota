@@ -1,11 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { Heading } from '@mysten/ui';
 import clsx from 'clsx';
 import { Fragment } from 'react';
 
-export type Gradient = {
+type Gradient = {
     deg?: number;
     values: { percent: number; color: string }[];
 };

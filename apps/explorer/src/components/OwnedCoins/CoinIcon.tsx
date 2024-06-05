@@ -1,6 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Modifications Copyright (c) 2024 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCoinMetadata } from '@mysten/core';
 import { Sui, Unstaked } from '@mysten/icons';
 import { SUI_TYPE_ARG } from '@mysten/sui.js/utils';
@@ -53,7 +56,7 @@ function NonSuiCoin({ coinType }: NonSuiCoinProps) {
     );
 }
 
-export interface CoinIconProps extends VariantProps<typeof imageStyle> {
+interface CoinIconProps extends VariantProps<typeof imageStyle> {
     coinType: string;
 }
 
