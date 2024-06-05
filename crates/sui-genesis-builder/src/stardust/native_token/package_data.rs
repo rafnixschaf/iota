@@ -13,6 +13,7 @@ use iota_sdk::{
     },
     Url,
 };
+use move_compiler::parser::keywords;
 use rand::distributions::{Alphanumeric, DistString};
 use rand_pcg::Pcg64;
 use rand_seeder::Seeder;
@@ -112,12 +113,7 @@ impl TryFrom<&FoundryOutput> for NativeTokenPackageData {
             output.id().as_slice(),
         );
 
-        let decimals = u8::try_from(*irc_30_metadata.decimals()).map_err(|e| {
-            StardustError::FoundryConversionError {
-                foundry_id: output.id(),
-                err: e.into(),
-            }
-        })?;
+        let decimals = u8::try_from(*irc_30_metadata.decimals()).unwrap_or_default();
 
         let token_scheme_u64: SimpleTokenSchemeU64 =
             output.token_scheme().as_simple().try_into()?;
@@ -203,7 +199,12 @@ fn derive_foundry_package_lowercase_identifier(input: &str, seed: &[u8]) -> Stri
     // Ensure no trailing underscore at the end of the identifier
     let final_identifier = concatenated.trim_end_matches('_').to_string();
 
-    if move_core_types::identifier::is_valid(&final_identifier) {
+    if move_core_types::identifier::is_valid(&final_identifier)
+        && !keywords::KEYWORDS.contains(&final_identifier.as_str())
+        && !keywords::CONTEXTUAL_KEYWORDS.contains(&final_identifier.as_str())
+        && !keywords::PRIMITIVE_TYPES.contains(&final_identifier.as_str())
+        && !keywords::BUILTINS.contains(&final_identifier.as_str())
+    {
         final_identifier
     } else {
         // Generate a new valid random identifier if the identifier is empty.
