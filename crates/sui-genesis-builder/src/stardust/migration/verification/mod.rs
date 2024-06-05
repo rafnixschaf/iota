@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 
+use anyhow::anyhow;
 use iota_sdk::types::block::output::{Output, OutputId, TokenId};
 use sui_types::in_memory_storage::InMemoryStorage;
 
@@ -27,9 +28,9 @@ pub(crate) fn verify_outputs<'a>(
     storage: &InMemoryStorage,
 ) -> anyhow::Result<()> {
     for (header, output) in outputs {
-        let created_objects = output_objects_map.get(&header.output_id()).ok_or_else(|| {
-            anyhow::anyhow!("missing created objects for output {}", header.output_id())
-        })?;
+        let created_objects = output_objects_map
+            .get(&header.output_id())
+            .ok_or_else(|| anyhow!("missing created objects for output {}", header.output_id()))?;
         verify_output(
             header,
             output,
@@ -79,5 +80,5 @@ fn verify_output(
         // Treasury outputs aren't used since Stardust, so no need to verify anything here.
         Output::Treasury(_) => return Ok(()),
     }
-    .map_err(|e| anyhow::anyhow!("error verifying output {}: {}", header.output_id(), e))
+    .map_err(|e| anyhow!("error verifying output {}: {}", header.output_id(), e))
 }
