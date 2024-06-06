@@ -8,7 +8,7 @@ use anyhow::{anyhow, ensure, Result};
 use iota_sdk::types::block::output::{BasicOutput, OutputId, TokenId};
 use iota_types::{
     balance::Balance, coin::Coin, dynamic_field::Field, in_memory_storage::InMemoryStorage,
-    timelock::timelock::TimeLock, TypeTag,
+    object::Owner, timelock::timelock::TimeLock, TypeTag,
 };
 
 use crate::stardust::{
@@ -81,7 +81,16 @@ pub(super) fn verify_basic_output(
             .ok_or_else(|| anyhow!("invalid basic output object"))?;
 
         // Owner
-        verify_address_owner(output.address(), created_output_obj, "basic output")?;
+        // If there is an expiration unlock condition, the output is shared.
+        if output.unlock_conditions().expiration().is_some() {
+            ensure!(
+                matches!(created_output_obj.owner, Owner::Shared { .. }),
+                "basic output owner mismatch: found {:?}, expected Shared",
+                created_output_obj.owner,
+            );
+        } else {
+            verify_address_owner(output.address(), created_output_obj, "basic output")?;
+        }
 
         // Amount
         ensure!(
