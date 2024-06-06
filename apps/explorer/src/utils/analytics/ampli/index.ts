@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 // Modifications Copyright (c) 2024 IOTA Stiftung
@@ -18,9 +19,9 @@
  * Build: 1.0.0
  * Runtime: browser:typescript-ampli-v2
  *
- * [View Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest)
+ * [View Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest)
  *
- * [Full Setup Instructions](https://data.amplitude.com/mystenlabs/Sui%20Explorer/implementation/web)
+ * [Full Setup Instructions](https://data.amplitude.com/mystenlabs/Iota%20Explorer/implementation/web)
  */
 
 import * as amplitude from '@amplitude/analytics-browser';
@@ -72,11 +73,11 @@ type LoadOptions =
 
 interface IdentifyProperties {
     /**
-     * The Sui network that the user is currently interacting with.
+     * The Iota network that the user is currently interacting with.
      */
     activeNetwork: string;
     /**
-     * The domain (e.g., suiexplorer.com) of a given page.
+     * The domain (e.g., iotaexplorer.com) of a given page.
      */
     pageDomain: string;
     /**
@@ -84,7 +85,7 @@ interface IdentifyProperties {
      */
     pagePath: string;
     /**
-     * The full URL (e.g., suiexplorer.com/validators) of a given page.
+     * The full URL (e.g., iotaexplorer.com/validators) of a given page.
      */
     pageUrl: string;
 }
@@ -180,8 +181,8 @@ export class CompletedSearch implements BaseEvent {
     }
 }
 
-export class OpenedSuiExplorer implements BaseEvent {
-    event_type = 'opened sui explorer';
+export class OpenedIotaExplorer implements BaseEvent {
+    event_type = 'opened iota explorer';
 }
 
 export class SwitchedNetwork implements BaseEvent {
@@ -301,7 +302,7 @@ export class Ampli {
   /**
    * activated tooltip
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/activated%20tooltip)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/activated%20tooltip)
    *
    * When users activate or open a tooltip in the application.
    *
@@ -320,7 +321,7 @@ export class Ampli {
   /**
    * clicked current epoch card
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/clicked%20current%20epoch%20card)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/clicked%20current%20epoch%20card)
    *
    * When users click the current epoch card on the home page.
    *
@@ -339,7 +340,7 @@ export class Ampli {
   /**
    * clicked search result
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/clicked%20search%20result)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/clicked%20search%20result)
    *
    * When users click a search result within the search bar.
    *
@@ -358,7 +359,7 @@ export class Ampli {
   /**
    * clicked validator row
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/clicked%20validator%20row)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/clicked%20validator%20row)
    *
    * When users click a validator list item in a table.
    *
@@ -377,7 +378,7 @@ export class Ampli {
   /**
    * completed search
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/completed%20search)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/completed%20search)
    *
    * When users successfully search for something.
    *
@@ -394,26 +395,26 @@ export class Ampli {
   }
 
   /**
-   * opened sui explorer
+   * opened iota explorer
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/opened%20sui%20explorer)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/opened%20iota%20explorer)
    *
-   * When users first open Sui Explorer.
+   * When users first open Iota Explorer.
    *
    * Owner: William Robertson
    *
    * @param options Amplitude event options.
    */
-  openedSuiExplorer(
+  openedIotaExplorer(
     options?: EventOptions,
   ) {
-    return this.track(new OpenedSuiExplorer(), options);
+    return this.track(new OpenedIotaExplorer(), options);
   }
 
   /**
    * switched network
    *
-   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Sui%20Explorer/events/main/latest/switched%20network)
+   * [View in Tracking Plan](https://data.amplitude.com/mystenlabs/Iota%20Explorer/events/main/latest/switched%20network)
    *
    * When users switch from one network to another.
    *

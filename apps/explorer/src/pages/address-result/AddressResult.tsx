@@ -1,12 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { isSuiNSName, useResolveSuiNSAddress, useResolveSuiNSName } from '@mysten/core';
-import { Domain32 } from '@mysten/icons';
-import { LoadingIndicator } from '@mysten/ui';
+import { isIotaNSName, useResolveIotaNSAddress, useResolveIotaNSName } from '@iota/core';
+import { Domain32 } from '@iota/icons';
+import { LoadingIndicator } from '@iota/ui';
 import { useParams } from 'react-router-dom';
 
 import { PageLayout } from '~/components/Layout/PageLayout';
@@ -30,7 +28,7 @@ interface AddressResultPageHeaderProps {
 }
 
 function AddressResultPageHeader({ address, loading }: AddressResultPageHeaderProps) {
-    const { data: domainName, isLoading } = useResolveSuiNSName(address);
+    const { data: domainName, isLoading } = useResolveIotaNSName(address);
 
     return (
         <PageHeader
@@ -44,8 +42,8 @@ function AddressResultPageHeader({ address, loading }: AddressResultPageHeaderPr
     );
 }
 
-function SuiNSAddressResultPageHeader({ name }: { name: string }) {
-    const { data: address, isLoading } = useResolveSuiNSAddress(name);
+function IotaNSAddressResultPageHeader({ name }: { name: string }) {
+    const { data: address, isLoading } = useResolveIotaNSAddress(name);
 
     return <AddressResultPageHeader address={address ?? name} loading={isLoading} />;
 }
@@ -134,8 +132,8 @@ function AddressResult({ address }: { address: string }) {
     );
 }
 
-function SuiNSAddressResult({ name }: { name: string }) {
-    const { isFetched, data } = useResolveSuiNSAddress(name);
+function IotaNSAddressResult({ name }: { name: string }) {
+    const { isFetched, data } = useResolveIotaNSAddress(name);
 
     if (!isFetched) {
         return <LoadingIndicator />;
@@ -147,20 +145,20 @@ function SuiNSAddressResult({ name }: { name: string }) {
 
 export default function AddressResultPage() {
     const { id } = useParams();
-    const isSuiNSAddress = isSuiNSName(id!);
+    const isIotaNSAddress = isIotaNSName(id!);
 
     return (
         <PageLayout
             gradient={{
                 size: 'md',
-                content: isSuiNSAddress ? (
-                    <SuiNSAddressResultPageHeader name={id!} />
+                content: isIotaNSAddress ? (
+                    <IotaNSAddressResultPageHeader name={id!} />
                 ) : (
                     <AddressResultPageHeader address={id!} />
                 ),
             }}
             content={
-                isSuiNSAddress ? <SuiNSAddressResult name={id!} /> : <AddressResult address={id!} />
+                isIotaNSAddress ? <IotaNSAddressResult name={id!} /> : <AddressResult address={id!} />
             }
         />
     );
