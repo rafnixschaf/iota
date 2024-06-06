@@ -16,14 +16,16 @@ A timelock implementation.
 -  [Function `locked`](#0x10cf_timelock_locked)
 -  [Function `locked_mut`](#0x10cf_timelock_locked_mut)
 -  [Function `label`](#0x10cf_timelock_label)
+-  [Function `is_labeled_with`](#0x10cf_timelock_is_labeled_with)
 -  [Function `pack`](#0x10cf_timelock_pack)
 -  [Function `unpack`](#0x10cf_timelock_unpack)
 -  [Function `transfer`](#0x10cf_timelock_transfer)
 -  [Function `check_expiration_timestamp_ms`](#0x10cf_timelock_check_expiration_timestamp_ms)
 
 
-<pre><code><b>use</b> <a href="label.md#0x10cf_label">0x10cf::label</a>;
+<pre><code><b>use</b> <a href="labeler.md#0x10cf_labeler">0x10cf::labeler</a>;
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../iota-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../iota-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
@@ -67,7 +69,7 @@ A timelock implementation.
  This is the epoch time stamp of when the lock expires.
 </dd>
 <dt>
-<code><a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;</code>
+<code>label: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;</code>
 </dt>
 <dd>
  Timelock related label.
@@ -138,7 +140,7 @@ Function to lock an object till a unix timestamp in milliseconds.
 Function to lock a labeled object till a unix timestamp in milliseconds.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(cap: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;, locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(_: &<a href="labeler.md#0x10cf_labeler_LabelerCap">labeler::LabelerCap</a>&lt;L&gt;, locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -148,7 +150,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(
-    cap: &LabelerCap&lt;L&gt;,
+    _: &LabelerCap&lt;L&gt;,
     locked: T,
     expiration_timestamp_ms: u64,
     ctx: &<b>mut</b> TxContext
@@ -156,11 +158,11 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
     // Check that `expiration_timestamp_ms` is valid.
     <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms, ctx);
 
-    // Create a <a href="label.md#0x10cf_label">label</a> instance.
-    <b>let</b> <a href="label.md#0x10cf_label">label</a> = <a href="label.md#0x10cf_label_create">label::create</a>(cap);
+    // Calculate a label value.
+    <b>let</b> label = <a href="labeler.md#0x10cf_labeler_type_name">labeler::type_name</a>&lt;L&gt;();
 
     // Create a labeled <a href="timelock.md#0x10cf_timelock">timelock</a>.
-    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(<a href="label.md#0x10cf_label">label</a>), ctx)
+    <a href="timelock.md#0x10cf_timelock_pack">pack</a>(locked, expiration_timestamp_ms, <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(label), ctx)
 }
 </code></pre>
 
@@ -186,13 +188,10 @@ Function to unlock the object from a <code><a href="timelock.md#0x10cf_timelock_
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;, ctx: &TxContext): T {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
-    <b>let</b> (locked, expiration_timestamp_ms, <a href="label.md#0x10cf_label">label</a>) = <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>(self);
+    <b>let</b> (locked, expiration_timestamp_ms, _) = <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>(self);
 
     // Check <b>if</b> the lock <b>has</b> expired.
     <b>assert</b>!(<a href="timelock.md#0x10cf_timelock_expiration_timestamp_ms">expiration_timestamp_ms</a> &lt;= ctx.epoch_timestamp_ms(), <a href="timelock.md#0x10cf_timelock_ENotExpiredYet">ENotExpiredYet</a>);
-
-    // Destroy the <a href="label.md#0x10cf_label">label</a>.
-    <a href="label.md#0x10cf_label_destroy_opt">label::destroy_opt</a>(<a href="label.md#0x10cf_label">label</a>);
 
     locked
 }
@@ -345,7 +344,7 @@ Must not be callable from the outside, as one could modify the locked object.
 Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;
 </code></pre>
 
 
@@ -354,8 +353,38 @@ Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLo
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): &Option&lt;Label&gt; {
-    &self.<a href="label.md#0x10cf_label">label</a>
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): Option&lt;String&gt; {
+    self.label
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x10cf_timelock_is_labeled_with"></a>
+
+## Function `is_labeled_with`
+
+Check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code> is labeled with the type <code>L</code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store, L&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): bool
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_labeled_with">is_labeled_with</a>&lt;T: store, L&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): bool {
+    <b>if</b> (self.label.is_some()) {
+        self.label.borrow() == <a href="labeler.md#0x10cf_labeler_type_name">labeler::type_name</a>&lt;L&gt;()
+    }
+    <b>else</b> {
+        <b>false</b>
+    }
 }
 </code></pre>
 
@@ -370,7 +399,7 @@ Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLo
 A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, label: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -382,7 +411,7 @@ A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(
     locked: T,
     expiration_timestamp_ms: u64,
-    <a href="label.md#0x10cf_label">label</a>: Option&lt;Label&gt;,
+    label: Option&lt;String&gt;,
     ctx: &<b>mut</b> TxContext): <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;
 {
     // Create a <a href="timelock.md#0x10cf_timelock">timelock</a>.
@@ -390,7 +419,7 @@ A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock
         id: <a href="../iota-framework/object.md#0x2_object_new">object::new</a>(ctx),
         locked,
         expiration_timestamp_ms,
-        <a href="label.md#0x10cf_label">label</a>,
+        label,
     }
 }
 </code></pre>
@@ -406,7 +435,7 @@ A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock
 An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): (T, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="../move-stdlib/string.md#0x1_string_String">string::String</a>&gt;)
 </code></pre>
 
 
@@ -415,19 +444,19 @@ An utility function to unpack a <code><a href="timelock.md#0x10cf_timelock_TimeL
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Option&lt;Label&gt;) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelock.md#0x10cf_timelock_unpack">unpack</a>&lt;T: store&gt;(lock: <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a>&lt;T&gt;): (T, u64, Option&lt;String&gt;) {
     // Unpack the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <b>let</b> <a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a> {
         id,
         locked,
         expiration_timestamp_ms,
-        <a href="label.md#0x10cf_label">label</a>,
+        label,
     } = lock;
 
     // Delete the <a href="timelock.md#0x10cf_timelock">timelock</a>.
     <a href="../iota-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
-    (locked, expiration_timestamp_ms, <a href="label.md#0x10cf_label">label</a>)
+    (locked, expiration_timestamp_ms, label)
 }
 </code></pre>
 

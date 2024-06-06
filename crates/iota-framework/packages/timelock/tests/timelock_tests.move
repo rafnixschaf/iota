@@ -5,12 +5,14 @@
 #[test_only]
 module timelock::timelock_tests {
 
-    use iota::balance;
+    use std::string;
+
+    use iota::balance::{Self, Balance};
     use iota::iota::IOTA;
     use iota::test_scenario;
     use iota::test_utils::{Self, assert_eq};
 
-    use timelock::label::LabelerCap;
+    use timelock::labeler::LabelerCap;
     use timelock::timelock;
 
     use timelock::test_label_one::{Self, TEST_LABEL_ONE};
@@ -37,6 +39,7 @@ module timelock::timelock_tests {
 
         // Check the label.
         assert_eq(timelock.label().is_none(), true);
+        assert_eq(timelock.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), false);
 
         // Increment epoch timestamp.
         scenario.ctx().increment_epoch_timestamp(10);
@@ -93,8 +96,10 @@ module timelock::timelock_tests {
         assert_eq(timelock.remaining_time(scenario.ctx()), 100);
 
         // Check the labels.
-        assert_eq(timelock.label().borrow().is_type<TEST_LABEL_ONE>(), true);
-        assert_eq(timelock.label().borrow().is_type<TEST_LABEL_TWO>(), false);
+        assert_eq(timelock.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), true);
+        assert_eq(timelock.is_labeled_with<Balance<IOTA>, TEST_LABEL_TWO>(), false);
+
+        assert_eq(*timelock.label().borrow(), string::utf8(b"00000000000000000000000000000000000000000000000000000000000010cf::test_label_one::TEST_LABEL_ONE"));
 
         // Increment epoch timestamp.
         scenario.ctx().increment_epoch_timestamp(10);

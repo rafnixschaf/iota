@@ -3,9 +3,11 @@
 
 module timelock::timelocked_staked_iota {
 
-    use timelock::label::{Self, Label};
+    use std::string::String;
 
     use iota_system::staking_pool::StakedIota;
+
+    use timelock::labeler;
 
     const EIncompatibleTimelockedStakedIota: u64 = 0;
 
@@ -17,14 +19,14 @@ module timelock::timelocked_staked_iota {
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
         /// Timelock related label.
-        label: Option<Label>,
+        label: Option<String>,
     }
 
     /// Create a new instance of `TimelockedStakedIota`.
     public(package) fun create(
         staked_iota: StakedIota,
         expiration_timestamp_ms: u64,
-        label: Option<Label>,
+        label: Option<String>,
         ctx: &mut TxContext
     ): TimelockedStakedIota {
         TimelockedStakedIota {
@@ -55,8 +57,18 @@ module timelock::timelocked_staked_iota {
     }
 
     /// Function to get the label of a `TimelockedStakedIota`.
-    public fun label(self: &TimelockedStakedIota): &Option<Label> {
-        &self.label
+    public fun label(self: &TimelockedStakedIota): Option<String> {
+        self.label
+    }
+
+    /// Check if a `TimelockedStakedIota` is labeled with the type `L`.
+    public fun is_labeled_with<L>(self: &TimelockedStakedIota): bool {
+        if (self.label.is_some()) {
+            self.label.borrow() == labeler::type_name<L>()
+        }
+        else {
+            false
+        }
     }
 
     /// Split `TimelockedStakedIota` into two parts, one with principal `split_amount`,
@@ -69,7 +81,7 @@ module timelock::timelocked_staked_iota {
             id: object::new(ctx),
             staked_iota: splitted_stake,
             expiration_timestamp_ms: self.expiration_timestamp_ms,
-            label: label::clone_opt(&self.label),
+            label: self.label,
         }
     }
 
@@ -91,10 +103,8 @@ module timelock::timelocked_staked_iota {
             id,
             staked_iota,
             expiration_timestamp_ms: _,
-            label,
+            label: _,
         } = other;
-
-        label::destroy_opt(label);
 
         id.delete();
 
@@ -112,7 +122,7 @@ module timelock::timelocked_staked_iota {
     }
 
     /// A utility function to destroy a `TimelockedStakedIota`.
-    public(package) fun unpack(self: TimelockedStakedIota): (StakedIota, u64, Option<Label>) {
+    public(package) fun unpack(self: TimelockedStakedIota): (StakedIota, u64, Option<String>) {
         let TimelockedStakedIota {
             id,
             staked_iota,

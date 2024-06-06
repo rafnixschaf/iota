@@ -5,12 +5,12 @@
 #[test_only]
 module timelock::timelocked_balance_tests {
 
-    use iota::balance;
+    use iota::balance::{Self, Balance};
     use iota::iota::IOTA;
     use iota::test_scenario;
     use iota::test_utils::{Self, assert_eq};
 
-    use timelock::label::LabelerCap;
+    use timelock::labeler::LabelerCap;
     use timelock::timelock;
     use timelock::timelocked_balance;
 
@@ -74,7 +74,7 @@ module timelock::timelocked_balance_tests {
         // Check the joined timelock.
         assert_eq(timelock1.locked().value(), 25);
         assert_eq(timelock1.expiration_timestamp_ms(), 100);
-        assert_eq(timelock1.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+        assert_eq(timelock1.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), true);
 
         // Cleanup.
         test_utils::destroy(timelock1);
@@ -354,12 +354,12 @@ module timelock::timelocked_balance_tests {
         // Check the original timelock.
         assert_eq(original.locked().value(), 7);
         assert_eq(original.expiration_timestamp_ms(), 100);
-        assert_eq(original.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+        assert_eq(original.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), true);
 
         // Check the splitted timelock.
         assert_eq(splitted.locked().value(), 3);
         assert_eq(splitted.expiration_timestamp_ms(), 100);
-        assert_eq(splitted.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+        assert_eq(splitted.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), true);
 
         // Cleanup.
         test_utils::destroy(original);

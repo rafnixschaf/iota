@@ -7,7 +7,6 @@ module timelock::timelocked_balance {
 
     use iota::balance::Balance;
 
-    use timelock::label;
     use timelock::timelock::{Self, TimeLock};
 
     /// For when trying to join two time-locked balances with different expiration time.
@@ -22,10 +21,7 @@ module timelock::timelocked_balance {
         assert!(self.label() == other.label(), EDifferentLabels);
 
         // Unpack the time-locked balance.
-        let (value, _, label) = timelock::unpack(other);
-
-        // Destroy the labels.
-        label::destroy_opt(label);
+        let (value, _, _) = timelock::unpack(other);
 
         // Join the balances.
         self.locked_mut().join(value);
@@ -53,6 +49,6 @@ module timelock::timelocked_balance {
         let value = self.locked_mut().split(value);
 
         // Pack the splitted balance into a timelock.
-        timelock::pack(value, self.expiration_timestamp_ms(), label::clone_opt(self.label()), ctx)
+        timelock::pack(value, self.expiration_timestamp_ms(), self.label(), ctx)
     }
 }

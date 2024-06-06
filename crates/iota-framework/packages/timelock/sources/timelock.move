@@ -5,7 +5,9 @@
 /// A timelock implementation.
 module timelock::timelock {
 
-    use timelock::label::{Self, Label, LabelerCap};
+    use std::string::String;
+
+    use timelock::labeler::{Self, LabelerCap};
 
     /// Error code for when the expire timestamp of the lock is in the past.
     const EExpireEpochIsPast: u64 = 0;
@@ -20,7 +22,7 @@ module timelock::timelock {
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
         /// Timelock related label.
-        label: Option<Label>,
+        label: Option<String>,
     }
 
     /// Function to lock an object till a unix timestamp in milliseconds.
@@ -34,7 +36,7 @@ module timelock::timelock {
 
     /// Function to lock a labeled object till a unix timestamp in milliseconds.
     public fun lock_with_label<T: store, L>(
-        cap: &LabelerCap<L>,
+        _: &LabelerCap<L>,
         locked: T,
         expiration_timestamp_ms: u64,
         ctx: &mut TxContext
@@ -42,8 +44,8 @@ module timelock::timelock {
         // Check that `expiration_timestamp_ms` is valid.
         check_expiration_timestamp_ms(expiration_timestamp_ms, ctx);
 
-        // Create a label instance.
-        let label = label::create(cap);
+        // Calculate a label value.
+        let label = labeler::type_name<L>();
 
         // Create a labeled timelock.
         pack(locked, expiration_timestamp_ms, option::some(label), ctx)
@@ -52,13 +54,10 @@ module timelock::timelock {
     /// Function to unlock the object from a `TimeLock`.
     public fun unlock<T: store>(self: TimeLock<T>, ctx: &TxContext): T {
         // Unpack the timelock. 
-        let (locked, expiration_timestamp_ms, label) = unpack(self);
+        let (locked, expiration_timestamp_ms, _) = unpack(self);
 
         // Check if the lock has expired.
         assert!(expiration_timestamp_ms <= ctx.epoch_timestamp_ms(), ENotExpiredYet);
-
-        // Destroy the label.
-        label::destroy_opt(label);
 
         locked
     }
@@ -100,15 +99,25 @@ module timelock::timelock {
     }
 
     /// Function to get the label of a `TimeLock`.
-    public fun label<T: store>(self: &TimeLock<T>): &Option<Label> {
-        &self.label
+    public fun label<T: store>(self: &TimeLock<T>): Option<String> {
+        self.label
+    }
+
+    /// Check if a `TimeLock` is labeled with the type `L`.
+    public fun is_labeled_with<T: store, L>(self: &TimeLock<T>): bool {
+        if (self.label.is_some()) {
+            self.label.borrow() == labeler::type_name<L>()
+        }
+        else {
+            false
+        }
     }
 
     /// A utility function to pack a `TimeLock`.
     public(package) fun pack<T: store>(
         locked: T,
         expiration_timestamp_ms: u64,
-        label: Option<Label>,
+        label: Option<String>,
         ctx: &mut TxContext): TimeLock<T>
     {
         // Create a timelock.
@@ -121,7 +130,7 @@ module timelock::timelock {
     }
 
     /// An utility function to unpack a `TimeLock`.
-    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64, Option<Label>) {
+    public(package) fun unpack<T: store>(lock: TimeLock<T>): (T, u64, Option<String>) {
         // Unpack the timelock.
         let TimeLock {
             id,

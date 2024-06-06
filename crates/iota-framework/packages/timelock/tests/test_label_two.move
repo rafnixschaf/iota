@@ -5,7 +5,7 @@
 #[test_only]
 module timelock::test_label_two {
 
-    use timelock::label;
+    use timelock::labeler;
 
     /// Name of the label.
     public struct TEST_LABEL_TWO has drop {}
@@ -16,7 +16,7 @@ module timelock::test_label_two {
         let witness = TEST_LABEL_TWO{};
 
         // Create a new capability.
-        let cap = label::create_labeler_cap(witness, ctx);
+        let cap = labeler::create_labeler_cap(witness, ctx);
 
         // Transfer the capability to the specified address.
         transfer::public_transfer(cap, to);

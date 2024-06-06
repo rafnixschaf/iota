@@ -31,7 +31,7 @@ module timelock::timelocked_stake_tests {
         unstake,
     };
 
-    use timelock::label::LabelerCap;
+    use timelock::labeler::LabelerCap;
     use timelock::timelock::{Self, TimeLock};
     use timelock::timelocked_staked_iota::{Self, TimelockedStakedIota};
     use timelock::timelocked_staking;
@@ -172,7 +172,7 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(part1.staked_iota_amount(), 110 * MICROS_PER_IOTA);
             assert_eq(part1.expiration_timestamp_ms(), 10);
-            assert_eq(part1.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+            assert_eq(part1.is_labeled_with<TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(part1);
         };
@@ -245,11 +245,11 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(original.staked_iota_amount(), 40 * MICROS_PER_IOTA);
             assert_eq(original.expiration_timestamp_ms(), 10);
-            assert_eq(original.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+            assert_eq(original.is_labeled_with<TEST_LABEL_ONE>(), true);
 
             assert_eq(splitted.staked_iota_amount(), 20 * MICROS_PER_IOTA);
             assert_eq(splitted.expiration_timestamp_ms(), 10);
-            assert_eq(splitted.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+            assert_eq(splitted.is_labeled_with<TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(original);
             test_utils::destroy(splitted);
@@ -424,7 +424,7 @@ module timelock::timelocked_stake_tests {
 
             assert_eq(timelock.locked().value(), 60 * MICROS_PER_IOTA);
             assert_eq(timelock.expiration_timestamp_ms(), 10);
-            assert_eq(timelock.label().borrow().is_type<TEST_LABEL_ONE>(), true);
+            assert_eq(timelock.is_labeled_with<Balance<IOTA>, TEST_LABEL_ONE>(), true);
 
             scenario.return_to_sender(timelock);
 
