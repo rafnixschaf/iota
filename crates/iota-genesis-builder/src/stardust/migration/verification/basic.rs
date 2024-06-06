@@ -67,7 +67,10 @@ pub(super) fn verify_basic_output(
         );
 
         // Label
-        let label = created_timelock.label().as_ref().unwrap();
+        let label = created_timelock
+            .label()
+            .as_ref()
+            .ok_or_else(|| anyhow!("timelock label must be initialized"))?;
         let expected_label = STARDUST_UPGRADE_LABEL_VALUE;
 
         ensure!(
