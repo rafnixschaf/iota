@@ -26,7 +26,7 @@ use iota_types::{
 use crate::stardust::{
     migration::{executor::FoundryLedgerData, verification::CreatedObjects},
     types::{
-        output as migration_output, stardust_to_sui_address, stardust_to_sui_address_owner,
+        output as migration_output, stardust_to_iota_address, stardust_to_iota_address_owner,
         token_scheme::MAX_ALLOWED_U64_SUPPLY, Alias, Nft,
     },
 };
@@ -280,7 +280,7 @@ pub(super) fn verify_address_owner(
     obj: &Object,
     name: &str,
 ) -> Result<()> {
-    let expected_owner = stardust_to_sui_address_owner(owning_address)?;
+    let expected_owner = stardust_to_iota_address_owner(owning_address)?;
     ensure!(
         obj.owner == expected_owner,
         "{name} owner mismatch: found {}, expected {}",

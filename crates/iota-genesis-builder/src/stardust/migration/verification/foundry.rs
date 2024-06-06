@@ -56,7 +56,7 @@ pub(super) fn verify_foundry_output(
         .ok_or_else(|| anyhow!("expected a coin"))?;
 
     // Minted coins are transferred to `0x0`
-    let expected_owner = Owner::AddressOwner(SuiAddress::default());
+    let expected_owner = Owner::AddressOwner(IotaAddress::default());
     ensure!(
         minted_coin_obj.owner == expected_owner,
         "minted coin owner mismatch: found {}, expected {}",
