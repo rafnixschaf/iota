@@ -113,6 +113,7 @@ impl TryFrom<&FoundryOutput> for NativeTokenPackageData {
             output.id().as_slice(),
         );
 
+        // Any decimal value that exceeds a u8 is set to zero, as we cannot infer a good alternative.
         let decimals = u8::try_from(*irc_30_metadata.decimals()).unwrap_or_default();
 
         let token_scheme_u64: SimpleTokenSchemeU64 =
