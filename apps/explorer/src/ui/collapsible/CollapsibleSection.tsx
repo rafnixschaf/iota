@@ -1,7 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
 import { ChevronRight12 } from '@iota/icons';
 import { Text } from '@iota/ui';
 import * as Collapsible from '@radix-ui/react-collapsible';
