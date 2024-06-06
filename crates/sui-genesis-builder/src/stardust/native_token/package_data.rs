@@ -197,21 +197,28 @@ fn derive_foundry_package_lowercase_identifier(input: &str, seed: &[u8]) -> Stri
     let concatenated = valid_parts.concat();
 
     // Ensure no trailing underscore at the end of the identifier
-    let final_identifier = concatenated.trim_end_matches('_').to_string();
+    let refined_identifier = concatenated.trim_end_matches('_').to_string();
+    let is_valid = move_core_types::identifier::is_valid(&refined_identifier);
 
-    if move_core_types::identifier::is_valid(&final_identifier)
-        && !keywords::KEYWORDS.contains(&final_identifier.as_str())
-        && !keywords::CONTEXTUAL_KEYWORDS.contains(&final_identifier.as_str())
-        && !keywords::PRIMITIVE_TYPES.contains(&final_identifier.as_str())
-        && !keywords::BUILTINS.contains(&final_identifier.as_str())
+    if is_valid
+        && !keywords::KEYWORDS.contains(&refined_identifier.as_str())
+        && !keywords::CONTEXTUAL_KEYWORDS.contains(&refined_identifier.as_str())
+        && !keywords::PRIMITIVE_TYPES.contains(&refined_identifier.as_str())
+        && !keywords::BUILTINS.contains(&refined_identifier.as_str())
     {
-        final_identifier
+        refined_identifier
     } else {
-        // Generate a new valid random identifier if the identifier is empty.
-        let mut rng: Pcg64 = Seeder::from(seed).make_rng();
-        let mut identifier = String::from("foundry");
-        identifier.push_str(&Alphanumeric.sample_string(&mut rng, 7).to_lowercase());
-        identifier
+        let mut final_identifier = String::from("foundry_");
+        let additional_part = if is_valid {
+            refined_identifier
+        } else {
+            // Generate a new valid random identifier if the identifier is empty.
+            Alphanumeric
+                .sample_string(&mut Pcg64::from(Seeder::from(seed).make_rng()), 7)
+                .to_lowercase()
+        };
+        final_identifier.push_str(&additional_part);
+        final_identifier
     }
 }
 
