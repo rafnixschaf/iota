@@ -1,4 +1,5 @@
 // Copyright (c) 2024 IOTA Stiftung
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
@@ -6,8 +7,8 @@ module timelock::label_tests {
 
     use std::string;
 
-    use sui::test_scenario;
-    use sui::test_utils::assert_eq;
+    use iota::test_scenario;
+    use iota::test_utils::assert_eq;
 
     use timelock::label::{Self, LabelerCap};
 

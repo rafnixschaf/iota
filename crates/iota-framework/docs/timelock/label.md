@@ -23,9 +23,9 @@ title: Module `0x10cf::label`
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
 <b>use</b> <a href="../move-stdlib/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="../move-stdlib/type_name.md#0x1_type_name">0x1::type_name</a>;
-<b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
-<b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
-<b>use</b> <a href="../sui-framework/types.md#0x2_types">0x2::types</a>;
+<b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
+<b>use</b> <a href="../iota-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
+<b>use</b> <a href="../iota-framework/types.md#0x2_types">0x2::types</a>;
 </code></pre>
 
 
@@ -49,7 +49,7 @@ Can be publicly transferred like any other object.
 
 <dl>
 <dt>
-<code>id: <a href="../sui-framework/object.md#0x2_object_UID">object::UID</a></code>
+<code>id: <a href="../iota-framework/object.md#0x2_object_UID">object::UID</a></code>
 </dt>
 <dd>
 
@@ -112,7 +112,7 @@ Create a <code><a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a></code> 
 Can be created only by consuming a one time witness.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_create_labeler_cap">create_labeler_cap</a>&lt;L: drop&gt;(witness: L, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_create_labeler_cap">create_labeler_cap</a>&lt;L: drop&gt;(witness: L, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;
 </code></pre>
 
 
@@ -122,10 +122,10 @@ Can be created only by consuming a one time witness.
 
 
 <pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label_create_labeler_cap">create_labeler_cap</a>&lt;L: drop&gt;(witness: L, ctx: &<b>mut</b> TxContext): <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt; {
-    <b>assert</b>!(<a href="../sui-framework/types.md#0x2_types_is_one_time_witness">types::is_one_time_witness</a>(&witness), <a href="label.md#0x10cf_label_ENotOneTimeWitness">ENotOneTimeWitness</a>);
+    <b>assert</b>!(<a href="../iota-framework/types.md#0x2_types_is_one_time_witness">types::is_one_time_witness</a>(&witness), <a href="label.md#0x10cf_label_ENotOneTimeWitness">ENotOneTimeWitness</a>);
 
     <a href="label.md#0x10cf_label_LabelerCap">LabelerCap</a>&lt;L&gt; {
-        id: <a href="../sui-framework/object.md#0x2_object_new">object::new</a>(ctx),
+        id: <a href="../iota-framework/object.md#0x2_object_new">object::new</a>(ctx),
     }
 }
 </code></pre>
@@ -156,7 +156,7 @@ If a capability is destroyed, it is impossible to add the related labels.
         id,
     } = cap;
 
-    <a href="../sui-framework/object.md#0x2_object_delete">object::delete</a>(id);
+    <a href="../iota-framework/object.md#0x2_object_delete">object::delete</a>(id);
 }
 </code></pre>
 

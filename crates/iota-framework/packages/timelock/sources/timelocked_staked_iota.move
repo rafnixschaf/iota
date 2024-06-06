@@ -1,8 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module timelock::timelocked_staked_iota {
+
+    use timelock::label::{Self, Label};
 
     use iota_system::staking_pool::StakedIota;
 
@@ -15,18 +16,22 @@ module timelock::timelocked_staked_iota {
         staked_iota: StakedIota,
         /// This is the epoch time stamp of when the lock expires.
         expiration_timestamp_ms: u64,
+        /// Timelock related label.
+        label: Option<Label>,
     }
 
     /// Create a new instance of `TimelockedStakedIota`.
     public(package) fun create(
         staked_iota: StakedIota,
         expiration_timestamp_ms: u64,
+        label: Option<Label>,
         ctx: &mut TxContext
     ): TimelockedStakedIota {
         TimelockedStakedIota {
             id: object::new(ctx),
             staked_iota,
-            expiration_timestamp_ms
+            expiration_timestamp_ms,
+            label,
         }
     }
 
@@ -49,6 +54,11 @@ module timelock::timelocked_staked_iota {
         self.expiration_timestamp_ms
     }
 
+    /// Function to get the label of a `TimelockedStakedIota`.
+    public fun label(self: &TimelockedStakedIota): &Option<Label> {
+        &self.label
+    }
+
     /// Split `TimelockedStakedIota` into two parts, one with principal `split_amount`,
     /// and the remaining principal is left in `self`.
     /// All the other parameters of the `TimelockedStakedIota` like `stake_activation_epoch` or `pool_id` remain the same.
@@ -59,6 +69,7 @@ module timelock::timelocked_staked_iota {
             id: object::new(ctx),
             staked_iota: splitted_stake,
             expiration_timestamp_ms: self.expiration_timestamp_ms,
+            label: label::clone_opt(&self.label),
         }
     }
 
@@ -80,7 +91,10 @@ module timelock::timelocked_staked_iota {
             id,
             staked_iota,
             expiration_timestamp_ms: _,
+            label,
         } = other;
+
+        label::destroy_opt(label);
 
         id.delete();
 
@@ -93,20 +107,22 @@ module timelock::timelocked_staked_iota {
     /// Returns true if all the staking parameters of the staked iota except the principal are identical
     public fun is_equal_staking_metadata(self: &TimelockedStakedIota, other: &TimelockedStakedIota): bool {
         self.staked_iota.is_equal_staking_metadata(&other.staked_iota) &&
-        (self.expiration_timestamp_ms == other.expiration_timestamp_ms)
+        (self.expiration_timestamp_ms == other.expiration_timestamp_ms) &&
+        (self.label() == other.label())
     }
 
-    /// An utility function to destroy a `TimelockedStakedIota`.
-    public(package) fun unpack(self: TimelockedStakedIota): (StakedIota, u64) {
+    /// A utility function to destroy a `TimelockedStakedIota`.
+    public(package) fun unpack(self: TimelockedStakedIota): (StakedIota, u64, Option<Label>) {
         let TimelockedStakedIota {
             id,
             staked_iota,
             expiration_timestamp_ms,
+            label,
         } = self;
 
         object::delete(id);
 
-        (staked_iota, expiration_timestamp_ms)
+        (staked_iota, expiration_timestamp_ms, label)
     }
 
     /// An utility function to transfer a `TimelockedStakedIota`.

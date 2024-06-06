@@ -4,17 +4,7 @@
 
 #[test_only]
 module timelock::timelocked_stake_tests {
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/tests/timelocked_delegation_tests.move
 
-    use sui::balance;
-    use sui::balance::Balance;
-    use sui::coin::Coin;
-    use sui::sui::SUI;
-    use sui::table::Table;
-    use sui::test_scenario::{Self, Scenario};
-    use sui::test_utils::assert_eq;
-    use sui::test_utils;
-=======
     use iota::balance;
     use iota::balance::Balance;
     use iota::coin::Coin;
@@ -23,7 +13,6 @@ module timelock::timelocked_stake_tests {
     use iota::test_scenario::{Self, Scenario};
     use iota::test_utils::assert_eq;
     use iota::test_utils;
->>>>>>> develop:crates/iota-framework/packages/timelock/tests/timelocked_delegation_tests.move
 
     use iota_system::iota_system::IotaSystemState;
     use iota_system::staking_pool::{Self, PoolTokenExchangeRate};
@@ -153,16 +142,15 @@ module timelock::timelocked_stake_tests {
     }
 
     #[test]
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/tests/timelocked_delegation_tests.move
     fun test_join_same_labels() {
-        set_up_sui_system_state();
+        set_up_iota_system_state();
 
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create two instances of labeled staked sui w/ different amounts
+        // Create two instances of labeled staked iota w/ different amounts
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -176,13 +164,13 @@ module timelock::timelocked_stake_tests {
         // Verify that these can be merged
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let staked_sui_ids = scenario.ids_for_sender<TimelockedStakedSui>();
-            let mut part1 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[0]);
-            let part2 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[1]);
+            let staked_iota_ids = scenario.ids_for_sender<TimelockedStakedIota>();
+            let mut part1 = scenario.take_from_sender_by_id<TimelockedStakedIota>(staked_iota_ids[0]);
+            let part2 = scenario.take_from_sender_by_id<TimelockedStakedIota>(staked_iota_ids[1]);
 
             part1.join(part2);
 
-            assert_eq(part1.staked_sui_amount(), 110 * MIST_PER_SUI);
+            assert_eq(part1.staked_iota_amount(), 110 * MICROS_PER_IOTA);
             assert_eq(part1.expiration_timestamp_ms(), 10);
             assert_eq(part1.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
@@ -192,16 +180,16 @@ module timelock::timelocked_stake_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = timelocked_staked_sui::EIncompatibleTimelockedStakedSui)]
+    #[expected_failure(abort_code = timelocked_staked_iota::EIncompatibleTimelockedStakedIota)]
     fun test_join_different_labels() {
-        set_up_sui_system_state();
+        set_up_iota_system_state();
 
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create two instances of labeled staked sui w/ different labels
+        // Create two instances of labeled staked iota w/ different labels
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -217,9 +205,9 @@ module timelock::timelocked_stake_tests {
         // Verify that these cannot be merged
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let staked_sui_ids = scenario.ids_for_sender<TimelockedStakedSui>();
-            let mut part1 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[0]);
-            let part2 = scenario.take_from_sender_by_id<TimelockedStakedSui>(staked_sui_ids[1]);
+            let staked_iota_ids = scenario.ids_for_sender<TimelockedStakedIota>();
+            let mut part1 = scenario.take_from_sender_by_id<TimelockedStakedIota>(staked_iota_ids[0]);
+            let part2 = scenario.take_from_sender_by_id<TimelockedStakedIota>(staked_iota_ids[1]);
 
             part1.join(part2);
 
@@ -230,14 +218,14 @@ module timelock::timelocked_stake_tests {
 
     #[test]
     fun test_split_with_labels() {
-        set_up_sui_system_state();
+        set_up_iota_system_state();
 
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
         let scenario = &mut scenario_val;
 
         set_up_timelock_labeler_caps(STAKER_ADDR_1, scenario);
 
-        // Create one instance of labeled staked sui
+        // Create one instance of labeled staked iota
         scenario.next_tx(STAKER_ADDR_1);
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
@@ -252,14 +240,14 @@ module timelock::timelocked_stake_tests {
         // Verify that it can be splitted
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let mut original = scenario.take_from_sender<TimelockedStakedSui>();
-            let splitted = original.split(20 * MIST_PER_SUI, scenario.ctx());
+            let mut original = scenario.take_from_sender<TimelockedStakedIota>();
+            let splitted = original.split(20 * MICROS_PER_IOTA, scenario.ctx());
 
-            assert_eq(original.staked_sui_amount(), 40 * MIST_PER_SUI);
+            assert_eq(original.staked_iota_amount(), 40 * MICROS_PER_IOTA);
             assert_eq(original.expiration_timestamp_ms(), 10);
             assert_eq(original.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
-            assert_eq(splitted.staked_sui_amount(), 20 * MIST_PER_SUI);
+            assert_eq(splitted.staked_iota_amount(), 20 * MICROS_PER_IOTA);
             assert_eq(splitted.expiration_timestamp_ms(), 10);
             assert_eq(splitted.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
@@ -270,10 +258,7 @@ module timelock::timelocked_stake_tests {
     }
 
     #[test]
-    #[expected_failure(abort_code = staking_pool::EStakedSuiBelowThreshold)]
-=======
     #[expected_failure(abort_code = staking_pool::EStakedIotaBelowThreshold)]
->>>>>>> develop:crates/iota-framework/packages/timelock/tests/timelocked_delegation_tests.move
     fun test_split_below_threshold() {
         set_up_iota_system_state();
         let mut scenario_val = test_scenario::begin(STAKER_ADDR_1);
@@ -375,7 +360,7 @@ module timelock::timelocked_stake_tests {
 
     #[test]
     fun test_add_remove_labeled_stake_flow() {
-        set_up_sui_system_state();
+        set_up_iota_system_state();
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
@@ -385,7 +370,7 @@ module timelock::timelocked_stake_tests {
         {
             let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
 
-            let mut system_state = scenario.take_shared<SuiSystemState>();
+            let mut system_state = scenario.take_shared<IotaSystemState>();
             let system_state_mut_ref = &mut system_state;
 
             let ctx = scenario.ctx();
@@ -393,13 +378,13 @@ module timelock::timelocked_stake_tests {
             // Create a stake to VALIDATOR_ADDR_1.
             timelocked_staking::request_add_stake(
                 system_state_mut_ref,
-                timelock::lock_with_label(&labeler_one, balance::create_for_testing(60 * MIST_PER_SUI), 10, ctx),
+                timelock::lock_with_label(&labeler_one, balance::create_for_testing(60 * MICROS_PER_IOTA), 10, ctx),
                 VALIDATOR_ADDR_1,
                 ctx
             );
 
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 100 * MIST_PER_SUI);
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MIST_PER_SUI);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 100 * MICROS_PER_IOTA);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MICROS_PER_IOTA);
 
             test_scenario::return_shared(system_state);
 
@@ -410,19 +395,19 @@ module timelock::timelocked_stake_tests {
 
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let staked_sui = scenario.take_from_sender<TimelockedStakedSui>();
-            assert_eq(staked_sui.amount(), 60 * MIST_PER_SUI);
+            let staked_iota = scenario.take_from_sender<TimelockedStakedIota>();
+            assert_eq(staked_iota.amount(), 60 * MICROS_PER_IOTA);
 
-            let mut system_state = scenario.take_shared<SuiSystemState>();
+            let mut system_state = scenario.take_shared<IotaSystemState>();
             let system_state_mut_ref = &mut system_state;
 
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MIST_PER_SUI);
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MIST_PER_SUI);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MICROS_PER_IOTA);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_2), 100 * MICROS_PER_IOTA);
 
             // Unstake from VALIDATOR_ADDR_1
-            timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_sui, scenario.ctx());
+            timelocked_staking::request_withdraw_stake(system_state_mut_ref, staked_iota, scenario.ctx());
 
-            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MIST_PER_SUI);
+            assert_eq(system_state_mut_ref.validator_stake_amount(VALIDATOR_ADDR_1), 160 * MICROS_PER_IOTA);
             test_scenario::return_shared(system_state);
         };
 
@@ -430,14 +415,14 @@ module timelock::timelocked_stake_tests {
 
         scenario.next_tx(STAKER_ADDR_1);
         {
-            let mut system_state = scenario.take_shared<SuiSystemState>();
+            let mut system_state = scenario.take_shared<IotaSystemState>();
 
-            assert_eq(system_state.validator_stake_amount(VALIDATOR_ADDR_1), 100 * MIST_PER_SUI);
+            assert_eq(system_state.validator_stake_amount(VALIDATOR_ADDR_1), 100 * MICROS_PER_IOTA);
 
             // Check the time-locked balance.
-            let timelock = scenario.take_from_sender<TimeLock<Balance<SUI>>>();
+            let timelock = scenario.take_from_sender<TimeLock<Balance<IOTA>>>();
 
-            assert_eq(timelock.locked().value(), 60 * MIST_PER_SUI);
+            assert_eq(timelock.locked().value(), 60 * MICROS_PER_IOTA);
             assert_eq(timelock.expiration_timestamp_ms(), 10);
             assert_eq(timelock.label().borrow().is_type<TEST_LABEL_ONE>(), true);
 
@@ -944,7 +929,6 @@ module timelock::timelocked_stake_tests {
         scenario_val.end();
     }
 
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/tests/timelocked_delegation_tests.move
     fun set_up_timelock_labeler_caps(to: address, scenario: &mut Scenario) {
         scenario.next_tx(to);
 
@@ -952,10 +936,7 @@ module timelock::timelocked_stake_tests {
         test_label_two::assign_labeler_cap(to, scenario.ctx());
     }
 
-    fun set_up_sui_system_state_with_storage_fund() {
-=======
     fun set_up_iota_system_state_with_storage_fund() {
->>>>>>> develop:crates/iota-framework/packages/timelock/tests/timelocked_delegation_tests.move
         let mut scenario_val = test_scenario::begin(@0x0);
         let scenario = &mut scenario_val;
         let ctx = scenario.ctx();
@@ -998,14 +979,14 @@ module timelock::timelocked_stake_tests {
     ) {
         scenario.next_tx(staker);
 
-        let mut system_state = scenario.take_shared<SuiSystemState>();
+        let mut system_state = scenario.take_shared<IotaSystemState>();
         let ctx = scenario.ctx();
 
         timelocked_staking::request_add_stake(
             &mut system_state,
             timelock::lock_with_label(
                 cap,
-                balance::create_for_testing(amount * MIST_PER_SUI),
+                balance::create_for_testing(amount * MICROS_PER_IOTA),
                 expiration_timestamp_ms,
                 ctx),
             validator,

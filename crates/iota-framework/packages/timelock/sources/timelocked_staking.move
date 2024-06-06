@@ -147,15 +147,9 @@ module timelock::timelocked_staking {
         iota_system: &mut IotaSystemState,
         timelocked_staked_iota: TimelockedStakedIota,
         ctx: &mut TxContext,
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/sources/timelocked_staking.move
-    ) : (TimeLock<Balance<SUI>>, Balance<SUI>) {
-        // Unpack the `TimelockedStakedSui` instance.
-        let (staked_sui, expiration_timestamp_ms, label) = timelocked_staked_sui.unpack();
-=======
     ) : (TimeLock<Balance<IOTA>>, Balance<IOTA>) {
         // Unpack the `TimelockedStakedIota` instance.
-        let (staked_iota, expiration_timestamp_ms) = timelocked_staked_iota.unpack();
->>>>>>> develop:crates/iota-framework/packages/timelock/sources/timelocked_staking.move
+        let (staked_iota, expiration_timestamp_ms, label) = timelocked_staked_iota.unpack();
 
         // Store the original stake amount.
         let principal = staked_iota.staked_iota_amount();

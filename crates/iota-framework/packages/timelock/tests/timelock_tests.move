@@ -5,16 +5,10 @@
 #[test_only]
 module timelock::timelock_tests {
 
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/tests/timelock_tests.move
-    use sui::balance;
-    use sui::sui::SUI;
-    use sui::test_scenario;
-    use sui::test_utils::{Self, assert_eq};
-=======
     use iota::balance;
     use iota::iota::IOTA;
     use iota::test_scenario;
->>>>>>> develop:crates/iota-framework/packages/timelock/tests/timelock_tests.move
+    use iota::test_utils::{Self, assert_eq};
 
     use timelock::label::LabelerCap;
     use timelock::timelock;
@@ -86,7 +80,7 @@ module timelock::timelock_tests {
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
 
         // Minting some IOTA.
-        let iota = balance::create_for_testing<SUI>(10);
+        let iota = balance::create_for_testing<IOTA>(10);
 
         // Lock the IOTA balance.
         let timelock = timelock::lock_with_label(&labeler_one, iota, 100, scenario.ctx());

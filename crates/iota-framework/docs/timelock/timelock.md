@@ -22,17 +22,11 @@ A timelock implementation.
 -  [Function `check_expiration_timestamp_ms`](#0x10cf_timelock_check_expiration_timestamp_ms)
 
 
-<<<<<<< HEAD:crates/sui-framework/docs/timelock/timelock.md
 <pre><code><b>use</b> <a href="label.md#0x10cf_label">0x10cf::label</a>;
 <b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
-<b>use</b> <a href="../sui-framework/object.md#0x2_object">0x2::object</a>;
-<b>use</b> <a href="../sui-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
-<b>use</b> <a href="../sui-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
-=======
-<pre><code><b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
+<b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../iota-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../iota-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
->>>>>>> develop:crates/iota-framework/docs/timelock/timelock.md
 </code></pre>
 
 
@@ -144,7 +138,7 @@ Function to lock an object till a unix timestamp in milliseconds.
 Function to lock a labeled object till a unix timestamp in milliseconds.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(cap: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;, locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_lock_with_label">lock_with_label</a>&lt;T: store, L&gt;(cap: &<a href="label.md#0x10cf_label_LabelerCap">label::LabelerCap</a>&lt;L&gt;, locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -181,11 +175,7 @@ Function to lock a labeled object till a unix timestamp in milliseconds.
 Function to unlock the object from a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<<<<<<< HEAD:crates/sui-framework/docs/timelock/timelock.md
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
-=======
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
->>>>>>> develop:crates/iota-framework/docs/timelock/timelock.md
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_unlock">unlock</a>&lt;T: store&gt;(self: <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): T
 </code></pre>
 
 
@@ -244,11 +234,7 @@ Function to get the expiration timestamp of a <code><a href="timelock.md#0x10cf_
 Function to check if a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code> is locked.
 
 
-<<<<<<< HEAD:crates/sui-framework/docs/timelock/timelock.md
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
-=======
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
->>>>>>> develop:crates/iota-framework/docs/timelock/timelock.md
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_is_locked">is_locked</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): bool
 </code></pre>
 
 
@@ -274,11 +260,7 @@ Function to get the remaining time of a <code><a href="timelock.md#0x10cf_timelo
 Returns 0 if the lock has expired.
 
 
-<<<<<<< HEAD:crates/sui-framework/docs/timelock/timelock.md
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
-=======
-<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
->>>>>>> develop:crates/iota-framework/docs/timelock/timelock.md
+<pre><code><b>public</b> <b>fun</b> <a href="timelock.md#0x10cf_timelock_remaining_time">remaining_time</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): u64
 </code></pre>
 
 
@@ -363,11 +345,7 @@ Must not be callable from the outside, as one could modify the locked object.
 Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<<<<<<< HEAD:crates/sui-framework/docs/timelock/timelock.md
 <pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>&lt;T: store&gt;(self: &<a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;
-=======
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
->>>>>>> develop:crates/iota-framework/docs/timelock/timelock.md
 </code></pre>
 
 
@@ -392,7 +370,7 @@ Function to get the label of a <code><a href="timelock.md#0x10cf_timelock_TimeLo
 A utility function to pack a <code><a href="timelock.md#0x10cf_timelock_TimeLock">TimeLock</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelock.md#0x10cf_timelock_pack">pack</a>&lt;T: store&gt;(locked: T, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelock.md#0x10cf_timelock_TimeLock">timelock::TimeLock</a>&lt;T&gt;
 </code></pre>
 
 
@@ -489,7 +467,7 @@ An utility function to transfer a <code><a href="timelock.md#0x10cf_timelock_Tim
 An utility function to check that the <code>expiration_timestamp_ms</code> value is valid.
 
 
-<pre><code><b>fun</b> <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms: u64, ctx: &<a href="../sui-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
+<pre><code><b>fun</b> <a href="timelock.md#0x10cf_timelock_check_expiration_timestamp_ms">check_expiration_timestamp_ms</a>(expiration_timestamp_ms: u64, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)
 </code></pre>
 
 

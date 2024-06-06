@@ -11,6 +11,7 @@ title: Module `0x10cf::timelocked_staked_iota`
 -  [Function `staked_iota_amount`](#0x10cf_timelocked_staked_iota_staked_iota_amount)
 -  [Function `stake_activation_epoch`](#0x10cf_timelocked_staked_iota_stake_activation_epoch)
 -  [Function `expiration_timestamp_ms`](#0x10cf_timelocked_staked_iota_expiration_timestamp_ms)
+-  [Function `label`](#0x10cf_timelocked_staked_iota_label)
 -  [Function `split`](#0x10cf_timelocked_staked_iota_split)
 -  [Function `split_staked_iota`](#0x10cf_timelocked_staked_iota_split_staked_iota)
 -  [Function `join_staked_iota`](#0x10cf_timelocked_staked_iota_join_staked_iota)
@@ -19,7 +20,9 @@ title: Module `0x10cf::timelocked_staked_iota`
 -  [Function `transfer`](#0x10cf_timelocked_staked_iota_transfer)
 
 
-<pre><code><b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
+<pre><code><b>use</b> <a href="label.md#0x10cf_label">0x10cf::label</a>;
+<b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
+<b>use</b> <a href="../iota-framework/object.md#0x2_object">0x2::object</a>;
 <b>use</b> <a href="../iota-framework/transfer.md#0x2_transfer">0x2::transfer</a>;
 <b>use</b> <a href="../iota-framework/tx_context.md#0x2_tx_context">0x2::tx_context</a>;
 <b>use</b> <a href="../iota-system/staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
@@ -62,6 +65,12 @@ A self-custodial object holding the timelocked staked IOTA tokens.
 <dd>
  This is the epoch time stamp of when the lock expires.
 </dd>
+<dt>
+<code><a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;</code>
+</dt>
+<dd>
+ Timelock related label.
+</dd>
 </dl>
 
 
@@ -88,7 +97,7 @@ A self-custodial object holding the timelocked staked IOTA tokens.
 Create a new instance of <code><a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_create">create</a>(staked_iota: <a href="../iota-system/staking_pool.md#0x3_staking_pool_StakedIota">staking_pool::StakedIota</a>, expiration_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">timelocked_staked_iota::TimelockedStakedIota</a>
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_create">create</a>(staked_iota: <a href="../iota-system/staking_pool.md#0x3_staking_pool_StakedIota">staking_pool::StakedIota</a>, expiration_timestamp_ms: u64, <a href="label.md#0x10cf_label">label</a>: <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">timelocked_staked_iota::TimelockedStakedIota</a>
 </code></pre>
 
 
@@ -100,12 +109,14 @@ Create a new instance of <code><a href="timelocked_staked_iota.md#0x10cf_timeloc
 <pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_create">create</a>(
     staked_iota: StakedIota,
     expiration_timestamp_ms: u64,
+    <a href="label.md#0x10cf_label">label</a>: Option&lt;Label&gt;,
     ctx: &<b>mut</b> TxContext
 ): <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a> {
     <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a> {
         id: <a href="../iota-framework/object.md#0x2_object_new">object::new</a>(ctx),
         staked_iota,
-        expiration_timestamp_ms
+        expiration_timestamp_ms,
+        <a href="label.md#0x10cf_label">label</a>,
     }
 }
 </code></pre>
@@ -210,6 +221,31 @@ Function to get the expiration timestamp of a <code><a href="timelocked_staked_i
 
 </details>
 
+<a name="0x10cf_timelocked_staked_iota_label"></a>
+
+## Function `label`
+
+Function to get the label of a <code><a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a></code>.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>(self: &<a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">timelocked_staked_iota::TimelockedStakedIota</a>): &<a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="label.md#0x10cf_label">label</a>(self: &<a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a>): &Option&lt;Label&gt; {
+    &self.<a href="label.md#0x10cf_label">label</a>
+}
+</code></pre>
+
+
+
+</details>
+
 <a name="0x10cf_timelocked_staked_iota_split"></a>
 
 ## Function `split`
@@ -235,6 +271,7 @@ All the other parameters of the <code><a href="timelocked_staked_iota.md#0x10cf_
         id: <a href="../iota-framework/object.md#0x2_object_new">object::new</a>(ctx),
         staked_iota: splitted_stake,
         expiration_timestamp_ms: self.expiration_timestamp_ms,
+        <a href="label.md#0x10cf_label">label</a>: <a href="label.md#0x10cf_label_clone_opt">label::clone_opt</a>(&self.<a href="label.md#0x10cf_label">label</a>),
     }
 }
 </code></pre>
@@ -293,7 +330,10 @@ Aborts if some of the staking parameters are incompatible (pool id, stake activa
         id,
         staked_iota,
         expiration_timestamp_ms: _,
+        <a href="label.md#0x10cf_label">label</a>,
     } = other;
+
+    <a href="label.md#0x10cf_label_destroy_opt">label::destroy_opt</a>(<a href="label.md#0x10cf_label">label</a>);
 
     id.delete();
 
@@ -323,7 +363,8 @@ Returns true if all the staking parameters of the staked iota except the princip
 
 <pre><code><b>public</b> <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_is_equal_staking_metadata">is_equal_staking_metadata</a>(self: &<a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a>, other: &<a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a>): bool {
     self.staked_iota.<a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_is_equal_staking_metadata">is_equal_staking_metadata</a>(&other.staked_iota) &&
-    (self.expiration_timestamp_ms == other.expiration_timestamp_ms)
+    (self.expiration_timestamp_ms == other.expiration_timestamp_ms) &&
+    (self.<a href="label.md#0x10cf_label">label</a>() == other.<a href="label.md#0x10cf_label">label</a>())
 }
 </code></pre>
 
@@ -335,10 +376,10 @@ Returns true if all the staking parameters of the staked iota except the princip
 
 ## Function `unpack`
 
-An utility function to destroy a <code><a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a></code>.
+A utility function to destroy a <code><a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a></code>.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_unpack">unpack</a>(self: <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">timelocked_staked_iota::TimelockedStakedIota</a>): (<a href="../iota-system/staking_pool.md#0x3_staking_pool_StakedIota">staking_pool::StakedIota</a>, u64)
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_unpack">unpack</a>(self: <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">timelocked_staked_iota::TimelockedStakedIota</a>): (<a href="../iota-system/staking_pool.md#0x3_staking_pool_StakedIota">staking_pool::StakedIota</a>, u64, <a href="../move-stdlib/option.md#0x1_option_Option">option::Option</a>&lt;<a href="label.md#0x10cf_label_Label">label::Label</a>&gt;)
 </code></pre>
 
 
@@ -347,16 +388,17 @@ An utility function to destroy a <code><a href="timelocked_staked_iota.md#0x10cf
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_unpack">unpack</a>(self: <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a>): (StakedIota, u64) {
+<pre><code><b>public</b>(package) <b>fun</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_unpack">unpack</a>(self: <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a>): (StakedIota, u64, Option&lt;Label&gt;) {
     <b>let</b> <a href="timelocked_staked_iota.md#0x10cf_timelocked_staked_iota_TimelockedStakedIota">TimelockedStakedIota</a> {
         id,
         staked_iota,
         expiration_timestamp_ms,
+        <a href="label.md#0x10cf_label">label</a>,
     } = self;
 
     <a href="../iota-framework/object.md#0x2_object_delete">object::delete</a>(id);
 
-    (staked_iota, expiration_timestamp_ms)
+    (staked_iota, expiration_timestamp_ms, <a href="label.md#0x10cf_label">label</a>)
 }
 </code></pre>
 

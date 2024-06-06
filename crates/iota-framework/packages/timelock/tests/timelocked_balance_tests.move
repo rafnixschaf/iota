@@ -5,16 +5,10 @@
 #[test_only]
 module timelock::timelocked_balance_tests {
 
-<<<<<<< HEAD:crates/sui-framework/packages/timelock/tests/timelocked_balance_tests.move
-    use sui::balance;
-    use sui::sui::SUI;
-    use sui::test_scenario;
-    use sui::test_utils::{Self, assert_eq};
-=======
     use iota::balance;
     use iota::iota::IOTA;
     use iota::test_scenario;
->>>>>>> develop:crates/iota-framework/packages/timelock/tests/timelocked_balance_tests.move
+    use iota::test_utils::{Self, assert_eq};
 
     use timelock::label::LabelerCap;
     use timelock::timelock;
@@ -67,8 +61,8 @@ module timelock::timelocked_balance_tests {
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
 
         // Minting some IOTA.
-        let iota1 = balance::create_for_testing<SUI>(10);
-        let iota2 = balance::create_for_testing<SUI>(15);
+        let iota1 = balance::create_for_testing<IOTA>(10);
+        let iota2 = balance::create_for_testing<IOTA>(15);
 
         // Lock the IOTA balances.
         let mut timelock1 = timelock::lock_with_label(&labeler_one, iota1, 100, scenario.ctx());
@@ -133,8 +127,8 @@ module timelock::timelocked_balance_tests {
         let labeler_two = scenario.take_from_sender<LabelerCap<TEST_LABEL_TWO>>();
 
         // Minting some IOTA.
-        let iota1 = balance::create_for_testing<SUI>(10);
-        let iota2 = balance::create_for_testing<SUI>(15);
+        let iota1 = balance::create_for_testing<IOTA>(10);
+        let iota2 = balance::create_for_testing<IOTA>(15);
 
         // Lock the IOTA balance.
         let mut timelock1 = timelock::lock_with_label(&labeler_one, iota1, 100, scenario.ctx());
@@ -349,7 +343,7 @@ module timelock::timelocked_balance_tests {
         let labeler_one = scenario.take_from_sender<LabelerCap<TEST_LABEL_ONE>>();
 
         // Minting some IOTA.
-        let iota = balance::create_for_testing<SUI>(10);
+        let iota = balance::create_for_testing<IOTA>(10);
 
         // Lock the IOTA balance.
         let mut original = timelock::lock_with_label(&labeler_one, iota, 100, scenario.ctx());
