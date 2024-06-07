@@ -45,8 +45,9 @@ interface ValidatorMapProps {
 // NOTE: This component is lazy imported, so it needs to be default exported:
 export default function ValidatorMap({ minHeight }: ValidatorMapProps) {
     const [network] = useNetwork();
-    const { data: systemState, isError: systemStateError } =
-        useIotaClientQuery('getLatestIotaSystemState');
+    const { data: systemState, isError: systemStateError } = useIotaClientQuery(
+        'getLatestIotaSystemState',
+    );
 
     const { request } = useAppsBackend();
 
