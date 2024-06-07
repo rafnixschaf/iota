@@ -81,7 +81,7 @@ impl TimelockedStakedIota {
         self.expiration_timestamp_ms
     }
 
-    /// Get the TimelockedStakedSui's `label``.
+    /// Get the TimelockedStakedIota's `label``.
     pub fn label(&self) -> &Option<String> {
         &self.label
     }
