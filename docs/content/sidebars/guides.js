@@ -206,8 +206,8 @@ const guides = [
 								label: 'Languages & VMs',
 								id: 'guides/developer/layer-2-smart-contracts/getting-started/languages-and-vms',
 							},
-							'getting-started/quick-start',
-							'getting-started/compatibility',
+							'guides/developer/layer-2-smart-contracts/getting-started/quick-start',
+							'guides/developer/layer-2-smart-contracts/getting-started/compatibility',
 							{
 								type: 'doc',
 								label: 'Networks & Chains',
@@ -224,7 +224,7 @@ const guides = [
 						type: 'category',
 						label: 'How To',
 						items: [
-							'how-tos/introduction',
+							'guides/developer/layer-2-smart-contracts/how-tos/introduction',
 							{
 								type: 'doc',
 								label: 'Send Funds from L1 to L2',
