@@ -186,16 +186,16 @@ const guides = [
 			},
 			{
 				type: 'category',
-				label: 'Layer 2 Smart Contracts',
+				label: 'IOTA Chains',
 				link: {
 					type: 'doc',
-					id: 'guides/developer/layer-2-smart-contracts/introduction',
+					id: 'guides/developer/iota-chains/introduction',
 				},
 				items: [
 					{
 						type: 'doc',
 						label: 'Introduction',
-						id: 'guides/developer/layer-2-smart-contracts/introduction',
+						id: 'guides/developer/iota-chains/introduction',
 					},
 					{
 						type: 'category',
@@ -204,19 +204,19 @@ const guides = [
 							{
 								type: 'doc',
 								label: 'Languages & VMs',
-								id: 'guides/developer/layer-2-smart-contracts/getting-started/languages-and-vms',
+								id: 'guides/developer/iota-chains/getting-started/languages-and-vms',
 							},
-							'guides/developer/layer-2-smart-contracts/getting-started/quick-start',
-							'guides/developer/layer-2-smart-contracts/getting-started/compatibility',
+							'guides/developer/iota-chains/getting-started/quick-start',
+							'guides/developer/iota-chains/getting-started/compatibility',
 							{
 								type: 'doc',
 								label: 'Networks & Chains',
-								id: 'guides/developer/layer-2-smart-contracts/getting-started/networks-and-chains',
+								id: 'guides/developer/iota-chains/getting-started/networks-and-chains',
 							},
 							{
 								type: 'doc',
 								label: 'Tools',
-								id: 'guides/developer/layer-2-smart-contracts/getting-started/tools',
+								id: 'guides/developer/iota-chains/getting-started/tools',
 							},
 						],
 					},
@@ -224,46 +224,46 @@ const guides = [
 						type: 'category',
 						label: 'How To',
 						items: [
-							'guides/developer/layer-2-smart-contracts/how-tos/introduction',
+							'guides/developer/iota-chains/how-tos/introduction',
 							{
 								type: 'doc',
 								label: 'Send Funds from L1 to L2',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/send-funds-from-L1-to-L2',
+								id: 'guides/developer/iota-chains/how-tos/send-funds-from-L1-to-L2',
 							},
 							{
 								type: 'doc',
 								label: 'Create a Basic Contract',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/create-a-basic-contract',
+								id: 'guides/developer/iota-chains/how-tos/create-a-basic-contract',
 							},
 							{
 								type: 'doc',
 								label: 'Deploy a Smart Contract',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/deploy-a-smart-contract',
+								id: 'guides/developer/iota-chains/how-tos/deploy-a-smart-contract',
 							},
 							{
 								type: 'doc',
 								label: 'Create Custom Tokens - ERC20',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/ERC20',
+								id: 'guides/developer/iota-chains/how-tos/ERC20',
 							},
 							{
 								type: 'doc',
 								label: 'Send ERC20 Tokens Across Chains',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/send-ERC20-across-chains',
+								id: 'guides/developer/iota-chains/how-tos/send-ERC20-across-chains',
 							},
 							{
 								type: 'doc',
 								label: 'Create NFTs - ERC721',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/ERC721',
+								id: 'guides/developer/iota-chains/how-tos/ERC721',
 							},
 							{
 								type: 'doc',
 								label: 'Send NFTs Across Chains',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/send-NFTs-across-chains',
+								id: 'guides/developer/iota-chains/how-tos/send-NFTs-across-chains',
 							},
 							{
 								type: 'doc',
 								label: 'Test Smart Contracts',
-								id: 'guides/developer/layer-2-smart-contracts/how-tos/test-smart-contracts',
+								id: 'guides/developer/iota-chains/how-tos/test-smart-contracts',
 							},
 							{
 								type: 'category',
@@ -272,7 +272,7 @@ const guides = [
 									{
 										type: 'doc',
 										label: 'Introduction',
-										id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/introduction',
+										id: 'guides/developer/iota-chains/how-tos/core-contracts/introduction',
 									},
 									{
 										type: 'category',
@@ -281,7 +281,7 @@ const guides = [
 											{
 												type: 'doc',
 												label: 'Get Native Assets Balance',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/basics/get-balance',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/basics/get-balance',
 											},
 											{
 												type: 'category',
@@ -290,24 +290,24 @@ const guides = [
 													{
 														type: 'doc',
 														label: 'Allow',
-														id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/basics/allowance/allow',
+														id: 'guides/developer/iota-chains/how-tos/core-contracts/basics/allowance/allow',
 													},
 													{
 														type: 'doc',
 														label: 'Get Allowance',
-														id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/basics/allowance/get-allowance',
+														id: 'guides/developer/iota-chains/how-tos/core-contracts/basics/allowance/get-allowance',
 													},
 													{
 														type: 'doc',
 														label: 'Take Allowance',
-														id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/basics/allowance/take-allowance',
+														id: 'guides/developer/iota-chains/how-tos/core-contracts/basics/allowance/take-allowance',
 													},
 												],
 											},
 											{
 												type: 'doc',
 												label: 'Send Assets to L1',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/basics/send-assets-to-l1',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/basics/send-assets-to-l1',
 											},
 										],
 									},
@@ -318,32 +318,32 @@ const guides = [
 											{
 												label: 'Introduction',
 												type: 'doc',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/introduction',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/introduction',
 											},
 											{
 												type: 'doc',
 												label: 'Create a Native Token',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/create-native-token',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/create-native-token',
 											},
 											{
 												type: 'doc',
 												label: 'Mint Native Tokens',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/mint-token',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/mint-token',
 											},
 											{
 												type: 'doc',
 												label: 'Custom ERC20 Functions',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/erc20-native-token',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/erc20-native-token',
 											},
 											{
 												type: 'doc',
 												label: 'Create a Foundry',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/create-foundry',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/create-foundry',
 											},
 											{
 												type: 'doc',
 												label: 'Register Token as ERC20',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/token/register-token',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/token/register-token',
 											},
 										],
 									},
@@ -354,29 +354,29 @@ const guides = [
 											{
 												label: 'Introduction',
 												type: 'doc',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/nft/introduction',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/nft/introduction',
 											},
 											{
 												type: 'doc',
 												label: 'Mint an NFT',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/nft/mint-nft',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/nft/mint-nft',
 											},
 											{
 												type: 'doc',
 												label: 'Use as ERC721',
-												id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/nft/use-as-erc721',
+												id: 'guides/developer/iota-chains/how-tos/core-contracts/nft/use-as-erc721',
 											},
 										],
 									},
 									{
 										type: 'doc',
 										label: 'Get Randomness on L2',
-										id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/get-randomness-on-l2',
+										id: 'guides/developer/iota-chains/how-tos/core-contracts/get-randomness-on-l2',
 									},
 									{
 										type: 'doc',
 										label: 'Call and Call View',
-										id: 'guides/developer/layer-2-smart-contracts/how-tos/core-contracts/call-view',
+										id: 'guides/developer/iota-chains/how-tos/core-contracts/call-view',
 									},
 								],
 							},
@@ -389,42 +389,42 @@ const guides = [
 							{
 								type: 'doc',
 								label: 'Anatomy of a Smart Contract',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/smart-contract-anatomy',
+								id: 'guides/developer/iota-chains/explanations/smart-contract-anatomy',
 							},
 							{
 								type: 'doc',
 								label: 'Sandbox Interface',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/sandbox',
+								id: 'guides/developer/iota-chains/explanations/sandbox',
 							},
 							{
 								type: 'doc',
 								label: 'Calling a Smart Contract',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/invocation',
+								id: 'guides/developer/iota-chains/explanations/invocation',
 							},
 							{
 								type: 'doc',
 								label: 'State, Transitions and State Anchoring',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/states',
+								id: 'guides/developer/iota-chains/explanations/states',
 							},
 							{
 								type: 'doc',
 								label: 'State manager',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/state_manager',
+								id: 'guides/developer/iota-chains/explanations/state_manager',
 							},
 							{
 								type: 'doc',
 								label: 'Validators and Access Nodes',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/validators',
+								id: 'guides/developer/iota-chains/explanations/validators',
 							},
 							{
 								type: 'doc',
 								label: 'Consensus',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/consensus',
+								id: 'guides/developer/iota-chains/explanations/consensus',
 							},
 							{
 								type: 'doc',
 								label: 'How Accounts Work',
-								id: 'guides/developer/layer-2-smart-contracts/explanations/how-accounts-work',
+								id: 'guides/developer/iota-chains/explanations/how-accounts-work',
 							},
 							{
 								type: 'link',
@@ -439,7 +439,7 @@ const guides = [
 						items: [
 							{
 								label: 'Getting Started',
-								id: 'guides/developer/layer-2-smart-contracts/solo/getting-started',
+								id: 'guides/developer/iota-chains/solo/getting-started',
 								type: 'doc',
 							},
 							{
@@ -449,52 +449,52 @@ const guides = [
 									{
 										type: 'doc',
 										label: 'First Example',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/first-example',
+										id: 'guides/developer/iota-chains/solo/how-tos/first-example',
 									},
 									{
 										type: 'doc',
 										label: 'The L1 Ledger',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/the-l1-ledger',
+										id: 'guides/developer/iota-chains/solo/how-tos/the-l1-ledger',
 									},
 									{
 										type: 'doc',
 										label: 'Deploy a Smart Contract',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/deploying-sc',
+										id: 'guides/developer/iota-chains/solo/how-tos/deploying-sc',
 									},
 									{
 										type: 'doc',
 										label: 'Invoke a Smart Contract',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/invoking-sc',
+										id: 'guides/developer/iota-chains/solo/how-tos/invoking-sc',
 									},
 									{
 										type: 'doc',
 										label: 'Call a View',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/view-sc',
+										id: 'guides/developer/iota-chains/solo/how-tos/view-sc',
 									},
 									{
 										type: 'doc',
 										label: 'Error Handling',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/error-handling',
+										id: 'guides/developer/iota-chains/solo/how-tos/error-handling',
 									},
 									{
 										type: 'doc',
 										label: 'Accounts',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/the-l2-ledger',
+										id: 'guides/developer/iota-chains/solo/how-tos/the-l2-ledger',
 									},
 									{
 										type: 'doc',
 										label: 'Test Smart Contracts',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/test',
+										id: 'guides/developer/iota-chains/solo/how-tos/test',
 									},
 									{
 										type: 'doc',
 										label: 'Example Tests',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/examples',
+										id: 'guides/developer/iota-chains/solo/how-tos/examples',
 									},
 									{
 										type: 'doc',
 										label: 'Colored Tokens and Time Locks',
-										id: 'guides/developer/layer-2-smart-contracts/solo/how-tos/timelock',
+										id: 'guides/developer/iota-chains/solo/how-tos/timelock',
 									},
 								],
 							},
@@ -507,12 +507,12 @@ const guides = [
 							{
 								type: 'doc',
 								label: 'The Schema Tool',
-								id: 'guides/developer/layer-2-smart-contracts/schema/introduction',
+								id: 'guides/developer/iota-chains/schema/introduction',
 							},
 							{
 								type: 'doc',
 								label: 'Data Access Proxies',
-								id: 'guides/developer/layer-2-smart-contracts/schema/proxies',
+								id: 'guides/developer/iota-chains/schema/proxies',
 							},
 							{
 								type: 'category',
@@ -521,82 +521,82 @@ const guides = [
 									{
 										type: 'doc',
 										label: 'Create a Schema',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/usage',
+										id: 'guides/developer/iota-chains/schema/how-tos/usage',
 									},
 									{
 										type: 'doc',
 										label: 'Define the State',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/state',
+										id: 'guides/developer/iota-chains/schema/how-tos/state',
 									},
 									{
 										type: 'doc',
 										label: 'Use Structured Data Types',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/structs',
+										id: 'guides/developer/iota-chains/schema/how-tos/structs',
 									},
 									{
 										type: 'doc',
 										label: 'Generate Type Definitions',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/typedefs',
+										id: 'guides/developer/iota-chains/schema/how-tos/typedefs',
 									},
 									{
 										type: 'doc',
 										label: 'Trigger Events',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/events',
+										id: 'guides/developer/iota-chains/schema/how-tos/events',
 									},
 									{
 										type: 'doc',
 										label: 'Define Functions',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/funcs',
+										id: 'guides/developer/iota-chains/schema/how-tos/funcs',
 									},
 									{
 										type: 'doc',
 										label: 'Limit Access',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/access',
+										id: 'guides/developer/iota-chains/schema/how-tos/access',
 									},
 									{
 										type: 'doc',
 										label: 'Define Function Parameters',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/params',
+										id: 'guides/developer/iota-chains/schema/how-tos/params',
 									},
 									{
 										type: 'doc',
 										label: 'Define Function Results',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/results',
+										id: 'guides/developer/iota-chains/schema/how-tos/results',
 									},
 									{
 										type: 'doc',
 										label: 'Use Thunk Functions',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/thunks',
+										id: 'guides/developer/iota-chains/schema/how-tos/thunks',
 									},
 									{
 										type: 'doc',
 										label: 'Use View-Only Functions',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/views',
+										id: 'guides/developer/iota-chains/schema/how-tos/views',
 									},
 									{
 										type: 'doc',
 										label: 'Initialize a Smart Contract',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/init',
+										id: 'guides/developer/iota-chains/schema/how-tos/init',
 									},
 									{
 										type: 'doc',
 										label: 'Transfer Tokens',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/transfers',
+										id: 'guides/developer/iota-chains/schema/how-tos/transfers',
 									},
 									{
 										type: 'doc',
 										label: 'Add Function Descriptors',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/funcdesc',
+										id: 'guides/developer/iota-chains/schema/how-tos/funcdesc',
 									},
 									{
 										type: 'doc',
 										label: 'Call Functions',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/call',
+										id: 'guides/developer/iota-chains/schema/how-tos/call',
 									},
 									{
 										type: 'doc',
 										label: 'Post Asynchronous Requests',
-										id: 'guides/developer/layer-2-smart-contracts/schema/how-tos/post',
+										id: 'guides/developer/iota-chains/schema/how-tos/post',
 									},
 								],
 							},
@@ -627,10 +627,10 @@ const guides = [
 			'guides/operator/validator-tasks',
 			{
 				type: 'category',
-				label: 'Layer 2 Smart Contracts Node',
+				label: 'IOTA Chains Node',
 				link: {
 					type: 'doc',
-					id: 'guides/operator/layer-2-smart-contracts-node/how-tos/running-a-node',
+					id: 'guides/operator/iota-chains-node/how-tos/running-a-node',
 				},
 				items: [
 					{
@@ -640,26 +640,26 @@ const guides = [
 						items: [
 							{
 								type: 'doc',
-								id: 'guides/operator/layer-2-smart-contracts-node/how-tos/running-a-node',
+								id: 'guides/operator/iota-chains-node/how-tos/running-a-node',
 								label: 'Run a Node',
 							},
 							{
 								type: 'doc',
-								id: 'guides/operator/layer-2-smart-contracts-node/how-tos/running-an-access-node',
+								id: 'guides/operator/iota-chains-node/how-tos/running-an-access-node',
 								label: 'Run an Access Node',
 							},
 							{
-								id: 'guides/operator/layer-2-smart-contracts-node/how-tos/wasp-cli',
+								id: 'guides/operator/iota-chains-node/how-tos/wasp-cli',
 								label: 'Configure wasp-cli',
 								type: 'doc',
 							},
 							{
-								id: 'guides/operator/layer-2-smart-contracts-node/how-tos/setting-up-a-chain',
+								id: 'guides/operator/iota-chains-node/how-tos/setting-up-a-chain',
 								label: 'Set Up a Chain',
 								type: 'doc',
 							},
 							{
-								id: 'guides/operator/layer-2-smart-contracts-node/how-tos/chain-management',
+								id: 'guides/operator/iota-chains-node/how-tos/chain-management',
 								label: 'Manage a Chain',
 								type: 'doc',
 							},
@@ -671,11 +671,11 @@ const guides = [
 						items: [
 							{
 								type: 'doc',
-								id: 'guides/operator/layer-2-smart-contracts-node/reference/configuration',
+								id: 'guides/operator/iota-chains-node/reference/configuration',
 							},
 							{
 								type: 'doc',
-								id: 'guides/operator/layer-2-smart-contracts-node/reference/metrics',
+								id: 'guides/operator/iota-chains-node/reference/metrics',
 							},
 						],
 					},
