@@ -15,9 +15,10 @@ import { TransactionsForAddress } from '~/components/transactions/TransactionsFo
 import { useBreakpoint } from '~/hooks/useBreakpoint';
 import { Divider } from '~/ui/Divider';
 import { PageHeader } from '~/ui/PageHeader';
-import { LocalStorageSplitPaneKey, SplitPanes } from '~/ui/SplitPanes';
+import { SplitPanes } from '~/ui/SplitPanes';
 import { TabHeader, TabsList, TabsTrigger } from '~/ui/Tabs';
 import { TotalStaked } from './TotalStaked';
+import { LocalStorageSplitPaneKey } from '~/lib/enums';
 
 const LEFT_RIGHT_PANEL_MIN_SIZE = 30;
 const TOP_PANEL_MIN_SIZE = 20;
