@@ -44,7 +44,10 @@ const FILTER_OPTIONS: { label: string; value: ObjectFilterValue }[] = [
     { label: 'Updated Objects', value: ObjectFilterValue.Changed },
 ];
 
-const reducer = (state: PageStateByFilterMap, action: TransactionBlocksForAddressActionType) => {
+function reducer(
+    state: PageStateByFilterMap,
+    action: TransactionBlocksForAddressActionType,
+): PageStateByFilterMap {
     switch (action.type) {
         case PageAction.Next:
             return {
@@ -64,15 +67,14 @@ const reducer = (state: PageStateByFilterMap, action: TransactionBlocksForAddres
         default:
             return { ...state };
     }
-};
+}
 
-export function FiltersControl({
-    filterValue,
-    setFilterValue,
-}: {
+interface FiltersControlProps {
     filterValue: string;
     setFilterValue: Dispatch<SetStateAction<ObjectFilterValue>>;
-}) {
+}
+
+export function FiltersControl({ filterValue, setFilterValue }: FiltersControlProps): JSX.Element {
     return (
         <RadioGroup
             aria-label="transaction filter"
@@ -90,7 +92,7 @@ function TransactionBlocksForAddress({
     address,
     filter = ObjectFilterValue.Changed,
     header,
-}: TransactionBlocksForAddressProps) {
+}: TransactionBlocksForAddressProps): JSX.Element {
     const [filterValue, setFilterValue] = useState(filter);
     const [currentPageState, dispatch] = useReducer(reducer, {
         [ObjectFilterValue.Input]: 0,

@@ -70,7 +70,7 @@ function BaseImage({
     fadeIn,
     aspect,
     ...imgProps
-}: ImageProps & { status: string }) {
+}: ImageProps & { status: string }): JSX.Element {
     const [scope, animate] = useAnimate();
     const [isBlurred, setIsBlurred] = useState(false);
     useEffect(() => {
@@ -132,7 +132,7 @@ function BaseImage({
     );
 }
 
-export function Image({ src, moderate = true, ...props }: ImageProps) {
+export function Image({ src, moderate = true, ...props }: ImageProps): JSX.Element {
     const { status, url, moderation } = useImage({ src, moderate });
     return <BaseImage visibility={moderation?.visibility} status={status} src={url} {...props} />;
 }

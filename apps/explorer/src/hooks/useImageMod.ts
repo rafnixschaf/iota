@@ -36,7 +36,13 @@ const isURL = (url?: string) => {
     }
 };
 
-export function useImageMod({ url = '', enabled = true }: { url?: string; enabled?: boolean }) {
+export function useImageMod({
+    url = '',
+    enabled = true,
+}: {
+    url?: string;
+    enabled?: boolean;
+}): ReturnType<typeof useQuery> {
     const { request } = useAppsBackend();
 
     return useQuery({

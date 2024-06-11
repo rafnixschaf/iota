@@ -26,7 +26,11 @@ const splitPanelsOrientation: { label: string; value: Direction }[] = [
     { label: 'SIDE-BY-SIDE', value: 'horizontal' },
 ];
 
-function PkgView({ data }: { data: DataType }) {
+interface PkgViewProps {
+    data: DataType;
+}
+
+function PkgView({ data }: PkgViewProps): JSX.Element {
     const [selectedSplitPanelOrientation, setSplitPanelOrientation] = useState(
         splitPanelsOrientation[1].value,
     );
