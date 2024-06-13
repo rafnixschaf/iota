@@ -352,7 +352,7 @@ pkcs8 = { version = "0.10.2", features = ["std"] }
 pprof = { version = "0.13.0", features = ["cpp", "frame-pointer"] }
 pretty_assertions = "1.4.0"
 prettytable-rs = "0.10.0"
-proc-macro2 = "1.0.82"
+proc-macro2 = "1.0.47"
 prometheus = "0.13.4"
 prometheus-http-query = { version = "0.6.6", default_features = false, features = ["rustls-tls"] }
 prometheus-parse = { git = "https://github.com/asonnino/prometheus-parser.git", rev = "75334db" }
