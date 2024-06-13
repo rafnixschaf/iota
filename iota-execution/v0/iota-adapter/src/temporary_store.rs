@@ -355,7 +355,7 @@ impl<'backing> TemporaryStore<'backing> {
 
     pub fn write_object(&mut self, mut object: Object, kind: WriteKind) {
         // there should be no write after delete
-        debug_assert!(self.deleted.get(&object.id()).is_none());
+        debug_assert!(!self.deleted.contains_key(&object.id()));
         // Check it is not read-only
         #[cfg(test)] // Movevm should ensure this
         if let Some(existing_object) = self.read_object(&object.id()) {
@@ -386,7 +386,7 @@ impl<'backing> TemporaryStore<'backing> {
 
     pub fn delete_object(&mut self, id: &ObjectID, kind: DeleteKindWithOldVersion) {
         // there should be no deletion after write
-        debug_assert!(self.written.get(id).is_none());
+        debug_assert!(!self.written.contains_key(id));
 
         // TODO: promote this to an on-in-prod check that raises an invariant_violation
         // Check that we are not deleting an immutable object
@@ -422,7 +422,7 @@ impl<'backing> TemporaryStore<'backing> {
 
     pub fn read_object(&self, id: &ObjectID) -> Option<&Object> {
         // there should be no read after delete
-        debug_assert!(self.deleted.get(id).is_none());
+        debug_assert!(!self.deleted.contains_key(id));
         self.written
             .get(id)
             .map(|(obj, _kind)| obj)
