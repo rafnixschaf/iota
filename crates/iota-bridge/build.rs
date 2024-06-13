@@ -65,7 +65,7 @@ fn main() -> Result<(), ExitStatus> {
         let mut forge = PathBuf::from(foundryup_path);
         forge.pop();
         forge.push("forge");
-        forge_path = forge.to_str().unwrap().clone_into();
+        forge_path = forge.to_str().unwrap().to_owned();
     }
 
     // check if should install dependencies
