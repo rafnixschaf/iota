@@ -668,10 +668,8 @@ async fn test_move_call_args_linter_command() -> Result<(), anyhow::Error> {
 
     // Try a transfer
     // This should fail due to mismatch of object being sent
-    let args = vec![
-        IotaJsonValue::new(json!(obj))?,
-        IotaJsonValue::new(json!(address2))?,
-    ];
+    let args = [IotaJsonValue::new(json!(obj))?,
+        IotaJsonValue::new(json!(address2))?];
 
     let resp = IotaClientCommands::Call {
         package,
@@ -692,10 +690,8 @@ async fn test_move_call_args_linter_command() -> Result<(), anyhow::Error> {
 
     // Try a transfer with explicitly set gas price.
     // It should fail due to that gas price is below RGP.
-    let args = vec![
-        IotaJsonValue::new(json!(created_obj))?,
-        IotaJsonValue::new(json!(address2))?,
-    ];
+    let args = [IotaJsonValue::new(json!(created_obj))?,
+        IotaJsonValue::new(json!(address2))?];
 
     let resp = IotaClientCommands::Call {
         package,
@@ -725,10 +721,8 @@ async fn test_move_call_args_linter_command() -> Result<(), anyhow::Error> {
     // {framework_addr}::coin::Coin<{framework_addr}::iota::IOTA>")));
 
     // Try a proper transfer
-    let args = vec![
-        IotaJsonValue::new(json!(created_obj))?,
-        IotaJsonValue::new(json!(address2))?,
-    ];
+    let args = [IotaJsonValue::new(json!(created_obj))?,
+        IotaJsonValue::new(json!(address2))?];
 
     IotaClientCommands::Call {
         package,
