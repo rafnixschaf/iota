@@ -5,12 +5,9 @@
 use std::fmt::{Display, Formatter};
 
 use iota_types::{gas::IotaGasStatus, gas_model::gas_v2::IotaGasStatus as GasStatusV2};
-use tabled::{
-    builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Style as TableStyle},
-};
+use tabled::{builder::Builder as TableBuilder, settings::Style as TableStyle};
 
-use crate::displays::Pretty;
+use crate::{displays::Pretty, HORIZONTAL_LINE};
 
 impl<'a> Display for Pretty<'a, IotaGasStatus> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -38,10 +35,7 @@ fn per_object_storage_table(f: &mut Formatter, iota_gas_status: &GasStatusV2) ->
     }
     let mut table = builder.build();
 
-    table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-        1,
-        TableStyle::modern().get_horizontal(),
-    )]));
+    table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
     write!(f, "\n{}\n", table)
 }
 

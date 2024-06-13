@@ -416,9 +416,21 @@ mod tests {
         context::Context,
         core_thread::{CoreError, CoreThreadDispatcher},
         network::NetworkClient,
-        storage::mem_store::MemStore,
-        transaction::NoopTransactionVerifier,
+        storage::mem_store::MemStore, ValidationError,
     };
+
+    /// `NoopTransactionVerifier` accepts all transactions.
+    struct NoopTransactionVerifier;
+
+    impl TransactionVerifier for NoopTransactionVerifier {
+        fn verify_batch(
+            &self,
+            _protocol_config: &ProtocolConfig,
+            _batch: &[&[u8]],
+        ) -> Result<(), ValidationError> {
+            Ok(())
+        }
+    }
 
     struct FakeCoreThreadDispatcher {
         blocks: Mutex<Vec<VerifiedBlock>>,

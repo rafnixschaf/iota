@@ -22,10 +22,10 @@ use move_core_types::{
 };
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle},
 };
 
-use crate::{displays::Pretty, replay::LocalExec};
+use crate::{displays::Pretty, replay::LocalExec, HORIZONTAL_LINE};
 
 pub struct FullPTB {
     pub ptb: ProgrammableTransaction,
@@ -91,10 +91,7 @@ impl<'a> Display for Pretty<'a, FullPTB> {
 
             let mut table = builder.build();
             table.with(TablePanel::header("Input Objects"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             write!(f, "\n{}\n", table)?;
         } else {
             write!(f, "\n  No input objects for this transaction")?;
@@ -133,10 +130,7 @@ impl<'a> Display for Pretty<'a, FullPTB> {
 
             let mut table = builder.build();
             table.with(TablePanel::header("Commands"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             write!(f, "\n{}\n", table)?;
         } else {
             write!(f, "\n  No commands for this transaction")?;

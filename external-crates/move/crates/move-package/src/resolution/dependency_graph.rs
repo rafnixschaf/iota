@@ -15,6 +15,7 @@ use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use move_symbol_pool::Symbol;
 use petgraph::{algo, prelude::DiGraphMap, Direction};
+use serde::Serialize;
 
 use super::{
     dependency_cache::DependencyCache,
@@ -1686,7 +1687,10 @@ impl<'a> fmt::Display for SubstTOML<'a> {
 
 /// Escape a string to output in a TOML file.
 fn str_escape(s: &str) -> Result<String, fmt::Error> {
-    toml::to_string(s).map_err(|_| fmt::Error)
+    let mut res = String::new();
+    s.serialize(toml::ser::ValueSerializer::new(&mut res))
+        .map_err(|_| fmt::Error)?;
+    Ok(res)
 }
 
 /// Escape a path to output in a TOML file.

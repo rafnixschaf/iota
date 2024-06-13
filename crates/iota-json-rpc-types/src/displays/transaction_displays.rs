@@ -7,12 +7,12 @@ use std::fmt::{Display, Formatter};
 use iota_types::transaction::write_sep;
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle},
 };
 
 use crate::{
     displays::Pretty, IotaArgument, IotaCallArg, IotaCommand, IotaObjectArg,
-    IotaProgrammableMoveCall, IotaProgrammableTransactionBlock,
+    IotaProgrammableMoveCall, IotaProgrammableTransactionBlock, HORIZONTAL_LINE,
 };
 
 impl<'a> Display for Pretty<'a, IotaProgrammableTransactionBlock> {
@@ -58,10 +58,7 @@ impl<'a> Display for Pretty<'a, IotaProgrammableTransactionBlock> {
 
             let mut table = builder.build();
             table.with(TablePanel::header("Input Objects"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             write!(f, "\n{}", table)?;
         } else {
             write!(f, "\n  No input objects for this transaction")?;
@@ -78,10 +75,7 @@ impl<'a> Display for Pretty<'a, IotaProgrammableTransactionBlock> {
             }
             let mut table = builder.build();
             table.with(TablePanel::header("Commands"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             write!(f, "\n{}", table)
         } else {
             write!(f, "\n  No commands for this transaction")

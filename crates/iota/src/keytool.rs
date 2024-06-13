@@ -1212,23 +1212,22 @@ impl Display for CommandOutput {
                     .to_string();
 
                 let mut builder = Builder::default();
-                builder
-                    .set_header([
-                        "iotaSignature",
-                        "digest",
-                        "rawIntentMsg",
-                        "intent",
-                        "rawTxData",
-                        "iotaAddress",
-                    ])
-                    .push_record([
-                        &data.iota_signature,
-                        &data.digest,
-                        &data.raw_intent_msg,
-                        &intent_table,
-                        &data.raw_tx_data,
-                        &data.iota_address.to_string(),
-                    ]);
+                builder.push_record([
+                    "iotaSignature",
+                    "digest",
+                    "rawIntentMsg",
+                    "intent",
+                    "rawTxData",
+                    "iotaAddress",
+                ]);
+                builder.push_record([
+                    &data.iota_signature,
+                    &data.digest,
+                    &data.raw_intent_msg,
+                    &intent_table,
+                    &data.raw_tx_data,
+                    &data.iota_address.to_string(),
+                ]);
                 let mut table = builder.build();
                 table.with(Rotate::Left);
                 table.with(tabled::settings::Style::rounded().horizontals([]));

@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle},
 };
 
 use crate::{
@@ -14,21 +14,20 @@ use crate::{
         ast::{GAS_BUDGET, GAS_COIN, JSON, SUMMARY, WARN_SHADOWS},
         ptb::PTBPreview,
     },
-    sp,
+    sp, HORIZONTAL_LINE,
 };
 
 impl<'a> Display for PTBPreview<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut builder = TableBuilder::default();
-        let columns = vec!["command", "values"];
-        builder.set_header(columns);
+        builder.push_record(["command", "values"]);
         for sp!(_, cmd) in &self.program.commands {
             if let Some((command, vals)) = cmd.to_string().split_once(' ') {
                 builder.push_record([command, vals]);
             }
         }
         // index of horizontal line to draw after commands
-        let line_index = builder.count_rows();
+        let line_index = builder.count_records();
         builder.push_record([
             GAS_BUDGET,
             self.program_metadata.gas_budget.value.to_string().as_str(),
@@ -48,16 +47,16 @@ impl<'a> Display for PTBPreview<'a> {
         // while theoretically it cannot happen because parsing the PTB requires at
         // least a gas-budget which leads to having at least 1 row,
         // check that there are actual rows in the table
-        if builder.count_rows() < 1 {
+        if builder.count_records() < 1 {
             return write!(f, "PTB is empty.");
         }
         let mut table = builder.build();
         table.with(TablePanel::header("PTB Preview"));
         table.with(TableStyle::rounded().horizontals([
-            HorizontalLine::new(1, TableStyle::modern().get_horizontal()),
-            HorizontalLine::new(2, TableStyle::modern().get_horizontal()),
-            HorizontalLine::new(2, TableStyle::modern().get_horizontal()),
-            HorizontalLine::new(line_index + 2, TableStyle::modern().get_horizontal()),
+            (1, HORIZONTAL_LINE),
+            (2, HORIZONTAL_LINE),
+            (3, HORIZONTAL_LINE),
+            (line_index + 2, HORIZONTAL_LINE),
         ]));
         table.with(tabled::settings::style::BorderSpanCorrection);
 

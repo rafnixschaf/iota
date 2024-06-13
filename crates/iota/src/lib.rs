@@ -3,6 +3,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use tabled::settings::style::{HorizontalLine, On};
+
 pub mod client_commands;
 #[macro_use]
 pub mod client_ptb;
@@ -16,3 +18,5 @@ pub mod keytool;
 pub mod shell;
 pub mod validator_commands;
 pub mod zklogin_commands_util;
+
+const HORIZONTAL_LINE: HorizontalLine<On, On, On> = HorizontalLine::filled('|');

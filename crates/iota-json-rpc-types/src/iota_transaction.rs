@@ -47,12 +47,12 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle},
 };
 
 use crate::{
     balance_changes::BalanceChange, iota_transaction::GenericSignature::Signature,
-    object_changes::ObjectChange, Filter, IotaEvent, IotaObjectRef, Page,
+    object_changes::ObjectChange, Filter, IotaEvent, IotaObjectRef, Page, HORIZONTAL_LINE,
 };
 
 // similar to EpochId of iota-types but BigInt
@@ -312,10 +312,7 @@ impl Display for IotaTransactionBlockResponse {
 
             let mut table = builder.build();
             table.with(TablePanel::header("Object Changes"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             writeln!(writer, "{}", table)?;
         }
 
@@ -326,10 +323,7 @@ impl Display for IotaTransactionBlockResponse {
             }
             let mut table = builder.build();
             table.with(TablePanel::header("Balance Changes"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             writeln!(writer, "{}", table)?;
         }
         Ok(())
@@ -958,10 +952,7 @@ impl Display for IotaTransactionBlockEffects {
 
         let mut table = builder.build();
         table.with(TablePanel::header("Transaction Effects"));
-        table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-            1,
-            TableStyle::modern().get_horizontal(),
-        )]));
+        table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
         write!(f, "{}", table)
     }
 }
@@ -1040,10 +1031,7 @@ impl Display for IotaTransactionBlockEvents {
 
             let mut table = builder.build();
             table.with(TablePanel::header("Transaction Block Events"));
-            table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )]));
+            table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
             write!(f, "{}", table)
         }
     }
@@ -1396,10 +1384,7 @@ impl Display for IotaTransactionBlock {
 
         let mut table = builder.build();
         table.with(TablePanel::header("Transaction Data"));
-        table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-            1,
-            TableStyle::modern().get_horizontal(),
-        )]));
+        table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
         write!(f, "{}", table)
     }
 }

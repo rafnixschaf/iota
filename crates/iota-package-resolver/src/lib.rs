@@ -1907,7 +1907,7 @@ mod tests {
             ],
         );
 
-        insta::assert_display_snapshot!(
+        insta::assert_snapshot!(
             sig.instantiate(&[T::U64, T::Bool]).unwrap_err(),
             @"Type Parameter 99 out of bounds (2)"
         );
@@ -2293,7 +2293,7 @@ mod tests {
             ],
         };
 
-        insta::assert_display_snapshot!(
+        insta::assert_snapshot!(
             resolver.pure_input_layouts(&ptb).await.unwrap_err(),
             @"Conflicting types for input 3: u64 and u32"
         );

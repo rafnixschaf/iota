@@ -6,10 +6,13 @@ use std::fmt::{Display, Formatter};
 
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle},
 };
 
-use crate::client_ptb::{displays::Pretty, ptb::Summary};
+use crate::{
+    client_ptb::{displays::Pretty, ptb::Summary},
+    HORIZONTAL_LINE,
+};
 impl<'a> Display for Pretty<'a, Summary> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut builder = TableBuilder::default();
@@ -25,10 +28,7 @@ impl<'a> Display for Pretty<'a, Summary> {
         builder.push_record(vec![format!("{}", Pretty(gas_cost))]);
         let mut table = builder.build();
         table.with(TablePanel::header("PTB Execution Summary"));
-        table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-            1,
-            TableStyle::modern().get_horizontal(),
-        )]));
+        table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
         write!(f, "{}", table)
     }
 }

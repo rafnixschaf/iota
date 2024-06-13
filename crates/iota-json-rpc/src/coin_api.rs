@@ -240,7 +240,7 @@ impl CoinReadApiServer for CoinReadApi {
 }
 
 #[cached(
-    type = "SizedCache<String, ObjectID>",
+    ty = "SizedCache<String, ObjectID>",
     create = "{ SizedCache::with_size(10000) }",
     convert = r#"{ format!("{}{}", package_id, object_struct_tag) }"#,
     result = true

@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 anyhow.workspace = true
-arrow = { version = "52.0.0" }
+arrow = "51.0.0"
 arrow-array.workspace = true
 async-trait.workspace = true
 axum.workspace = true

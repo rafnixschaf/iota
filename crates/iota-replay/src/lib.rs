@@ -16,6 +16,7 @@ use iota_types::{
     message_envelope::Message,
 };
 use move_vm_config::runtime::get_default_output_filepath;
+use tabled::settings::style::{HorizontalLine, On};
 use tracing::{error, info, warn};
 use transaction_provider::{FuzzStartPoint, TransactionSource};
 
@@ -28,6 +29,8 @@ pub mod fuzz_mutations;
 mod replay;
 pub mod transaction_provider;
 pub mod types;
+
+const HORIZONTAL_LINE: HorizontalLine<On, On, On> = HorizontalLine::filled('|');
 
 static DEFAULT_SANDBOX_BASE_PATH: &str =
     concat!(env!("CARGO_MANIFEST_DIR"), "/tests/sandbox_snapshots");

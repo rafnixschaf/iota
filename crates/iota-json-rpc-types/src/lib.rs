@@ -16,6 +16,7 @@ use iota_types::{base_types::ObjectID, dynamic_field::DynamicFieldInfo};
 pub use object_changes::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use tabled::settings::style::{HorizontalLine, On};
 
 #[cfg(test)]
 #[path = "unit_tests/rpc_types_tests.rs"]
@@ -33,6 +34,8 @@ mod iota_object;
 mod iota_protocol;
 mod iota_transaction;
 mod object_changes;
+
+const HORIZONTAL_LINE: HorizontalLine<On, On, On> = HorizontalLine::filled('|');
 
 pub type DynamicFieldPage = Page<DynamicFieldInfo, ObjectID>;
 /// `next_cursor` points to the last item in the page;

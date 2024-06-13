@@ -68,8 +68,7 @@ use shared_crypto::intent::Intent;
 use tabled::{
     builder::Builder as TableBuilder,
     settings::{
-        object::Cell as TableCell, style::HorizontalLine, Border as TableBorder,
-        Modify as TableModify, Panel as TablePanel, Style as TableStyle,
+        object::Cell as TableCell, Border as TableBorder, Panel as TablePanel, Style as TableStyle,
     },
 };
 use tracing::info;
@@ -77,6 +76,7 @@ use tracing::info;
 use crate::{
     client_ptb::ptb::PTB,
     key_identity::{get_identity_address, KeyIdentity},
+    HORIZONTAL_LINE,
 };
 
 #[path = "unit_tests/profiler_tests.rs"]
@@ -1021,7 +1021,7 @@ impl IotaClientCommands {
                                     )
                                 })?;
 
-                            &mut entry.insert((metadata, vec![])).1
+                            &mut entry.insert((metadata, Vec::new())).1
                         }
                         Entry::Occupied(entry) => &mut entry.into_mut().1,
                     };
@@ -1919,7 +1919,7 @@ impl Display for IotaClientCommandResult {
         match self {
             IotaClientCommandResult::Addresses(addresses) => {
                 let mut builder = TableBuilder::default();
-                builder.set_header(vec!["alias", "address", "active address"]);
+                builder.push_record(["alias", "address", "active address"]);
                 for (alias, address) in &addresses.addresses {
                     let active_address = if address == &addresses.active_address {
                         "*".to_string()
@@ -1941,10 +1941,7 @@ impl Display for IotaClientCommandResult {
                 pretty_print_balance(coins, &mut builder, *with_coins);
                 let mut table = builder.build();
                 table.with(TablePanel::header("Balance of coins owned by this address"));
-                table.with(TableStyle::rounded().horizontals([HorizontalLine::new(
-                    1,
-                    TableStyle::modern().get_horizontal(),
-                )]));
+                table.with(TableStyle::rounded().horizontals([(1, HORIZONTAL_LINE)]));
                 table.with(tabled::settings::style::BorderSpanCorrection);
                 write!(f, "{}", table)?;
             }
@@ -1972,13 +1969,9 @@ impl Display for IotaClientCommandResult {
                 }
 
                 let mut builder = TableBuilder::default();
-                builder.set_header(vec![
-                    "gasCoinId",
-                    "microsBalance (MICROS)",
-                    "iotaBalance (IOTA)",
-                ]);
+                builder.push_record(["gasCoinId", "microsBalance (MICROS)", "iotaBalance (IOTA)"]);
                 for coin in &gas_coins {
-                    builder.push_record(vec![
+                    builder.push_record([
                         coin.gas_coin_id.to_string(),
                         coin.micros_balance.to_string(),
                         coin.iota_balance.to_string(),
@@ -1996,12 +1989,9 @@ impl Display for IotaClientCommandResult {
                         gas_coins.len()
                     )));
                     table.with(TableStyle::rounded().horizontals([
-                        HorizontalLine::new(1, TableStyle::modern().get_horizontal()),
-                        HorizontalLine::new(2, TableStyle::modern().get_horizontal()),
-                        HorizontalLine::new(
-                            gas_coins.len() + 2,
-                            TableStyle::modern().get_horizontal(),
-                        ),
+                        (1, HORIZONTAL_LINE),
+                        (2, HORIZONTAL_LINE),
+                        (gas_coins.len() + 2, HORIZONTAL_LINE),
                     ]));
                     table.with(tabled::settings::style::BorderSpanCorrection);
                 }
@@ -2009,13 +1999,10 @@ impl Display for IotaClientCommandResult {
             }
             IotaClientCommandResult::NewAddress(new_address) => {
                 let mut builder = TableBuilder::default();
-                builder.push_record(vec!["alias", new_address.alias.as_str()]);
-                builder.push_record(vec!["address", new_address.address.to_string().as_str()]);
-                builder.push_record(vec![
-                    "keyScheme",
-                    new_address.key_scheme.to_string().as_str(),
-                ]);
-                builder.push_record(vec![
+                builder.push_record(["alias", new_address.alias.as_str()]);
+                builder.push_record(["address", new_address.address.to_string().as_str()]);
+                builder.push_record(["keyScheme", new_address.key_scheme.to_string().as_str()]);
+                builder.push_record([
                     "recoveryPhrase",
                     new_address.recovery_phrase.to_string().as_str(),
                 ]);
@@ -2026,14 +2013,15 @@ impl Display for IotaClientCommandResult {
                     "Created new keypair and saved it to keystore.",
                 ));
 
-                table.with(
-                    TableModify::new(TableCell::new(0, 0))
-                        .with(TableBorder::default().corner_bottom_right('┬')),
-                );
-                table.with(
-                    TableModify::new(TableCell::new(0, 0))
-                        .with(TableBorder::default().corner_top_right('─')),
-                );
+                table
+                    .modify(
+                        TableCell::new(0, 0),
+                        TableBorder::inherit(TableStyle::rounded()).set_corner_bottom_right('┬'),
+                    )
+                    .modify(
+                        TableCell::new(0, 0),
+                        TableBorder::inherit(TableStyle::rounded()).set_corner_top_right('─'),
+                    );
 
                 write!(f, "{}", table)?
             }
@@ -2155,9 +2143,9 @@ impl Display for IotaClientCommandResult {
             }
             IotaClientCommandResult::Envs(envs, active) => {
                 let mut builder = TableBuilder::default();
-                builder.set_header(["alias", "url", "active"]);
+                builder.push_record(["alias", "url", "active"]);
                 for env in envs {
-                    builder.push_record(vec![env.alias.clone(), env.rpc.clone(), {
+                    builder.push_record([env.alias.clone(), env.rpc.clone(), {
                         if Some(env.alias.as_str()) == active.as_deref() {
                             "*".to_string()
                         } else {
@@ -2179,13 +2167,13 @@ impl Display for IotaClientCommandResult {
                 used_module_ticks,
             } => {
                 let mut builder = TableBuilder::default();
-                builder.set_header(vec!["", "Module", "Function"]);
-                builder.push_record(vec![
+                builder.push_record(["", "Module", "Function"]);
+                builder.push_record([
                     "Max".to_string(),
                     max_module_ticks.to_string(),
                     max_function_ticks.to_string(),
                 ]);
-                builder.push_record(vec![
+                builder.push_record([
                     "Used".to_string(),
                     used_module_ticks.to_string(),
                     used_function_ticks.to_string(),
@@ -2552,7 +2540,7 @@ fn pretty_print_balance(
     let format_decmials = 2;
     let mut table_builder = TableBuilder::default();
     if !with_coins {
-        table_builder.set_header(vec!["coin", "balance (raw)", "balance", ""]);
+        table_builder.push_record(["coin", "balance (raw)", "balance", ""]);
     }
     for (metadata, coins) in coins_by_type {
         let (name, symbol, coin_decimals) = if let Some(metadata) = metadata {
@@ -2567,7 +2555,7 @@ fn pretty_print_balance(
 
         let balance = coins.iter().map(|x| x.balance as u128).sum::<u128>();
         let mut inner_table = TableBuilder::default();
-        inner_table.set_header(vec!["coinId", "balance (raw)", "balance", ""]);
+        inner_table.push_record(["coinId", "balance (raw)", "balance", ""]);
 
         if with_coins {
             let coin_numbers = if coins.len() != 1 { "coins" } else { "coin" };
@@ -2584,7 +2572,7 @@ fn pretty_print_balance(
                 balance_formatted
             );
             for c in coins {
-                inner_table.push_record(vec![
+                inner_table.push_record([
                     c.coin_object_id.to_string().as_str(),
                     c.balance.to_string().as_str(),
                     format_balance(
@@ -2600,16 +2588,13 @@ fn pretty_print_balance(
             table.with(TablePanel::header(summary));
             table.with(
                 TableStyle::rounded()
-                    .horizontals([
-                        HorizontalLine::new(1, TableStyle::modern().get_horizontal()),
-                        HorizontalLine::new(2, TableStyle::modern().get_horizontal()),
-                    ])
+                    .horizontals([(1, HORIZONTAL_LINE), (2, HORIZONTAL_LINE)])
                     .remove_vertical(),
             );
             table.with(tabled::settings::style::BorderSpanCorrection);
-            builder.push_record(vec![table.to_string()]);
+            builder.push_record([table.to_string()]);
         } else {
-            table_builder.push_record(vec![
+            table_builder.push_record([
                 name,
                 balance.to_string().as_str(),
                 format_balance(balance, coin_decimals, format_decmials, Some(symbol)).as_str(),
@@ -2620,14 +2605,11 @@ fn pretty_print_balance(
     let mut table = table_builder.build();
     table.with(
         TableStyle::rounded()
-            .horizontals([HorizontalLine::new(
-                1,
-                TableStyle::modern().get_horizontal(),
-            )])
+            .horizontals([(1, HORIZONTAL_LINE)])
             .remove_vertical(),
     );
     table.with(tabled::settings::style::BorderSpanCorrection);
-    builder.push_record(vec![table.to_string()]);
+    builder.push_record([table.to_string()]);
 }
 
 fn divide(value: u128, divisor: u128) -> (u128, u128) {
