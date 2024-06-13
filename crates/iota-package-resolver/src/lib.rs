@@ -488,7 +488,7 @@ impl<T: PackageStore> PackageStore for PackageStoreWithLruCache<T> {
         let candidate = {
             // Release the lock after getting the package
             let mut packages = self.packages.lock().unwrap();
-            packages.get(&id).map(Arc::clone)
+            packages.get(&id).cloned()
         };
 
         // System packages can be invalidated in the cache if a newer version exists.

@@ -980,7 +980,7 @@ impl<'backing> ChildObjectResolver for TemporaryStore<'backing> {
         child_version_upper_bound: SequenceNumber,
     ) -> IotaResult<Option<Object>> {
         // there should be no read after delete
-        debug_assert!(self.deleted.get(child).is_none());
+        debug_assert!(self.deleted.contains_key(child));
         let obj_opt = self.written.get(child).map(|(obj, _kind)| obj);
         if obj_opt.is_some() {
             Ok(obj_opt.cloned())
@@ -1000,8 +1000,8 @@ impl<'backing> ChildObjectResolver for TemporaryStore<'backing> {
         // You should never be able to try and receive an object after deleting it or
         // writing it in the same transaction since `Receiving` doesn't have
         // copy.
-        debug_assert!(self.deleted.get(receiving_object_id).is_none());
-        debug_assert!(self.written.get(receiving_object_id).is_none());
+        debug_assert!(!self.deleted.contains_key(receiving_object_id));
+        debug_assert!(!self.written.contains_key(receiving_object_id));
         self.store.get_object_received_at_version(
             owner,
             receiving_object_id,

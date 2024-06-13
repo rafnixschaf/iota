@@ -416,7 +416,8 @@ mod tests {
         context::Context,
         core_thread::{CoreError, CoreThreadDispatcher},
         network::NetworkClient,
-        storage::mem_store::MemStore, ValidationError,
+        storage::mem_store::MemStore,
+        ValidationError,
     };
 
     /// `NoopTransactionVerifier` accepts all transactions.
