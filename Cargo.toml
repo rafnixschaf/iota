@@ -308,7 +308,7 @@ http = "0.2.8"
 http-body = "0.4.5"
 humantime = "2.1.0"
 hyper = "0.14.20"
-hyper-rustls = { version = "0.25", features = ["webpki-roots", "http2"] }
+hyper-rustls = { version = "0.25.0", features = ["webpki-roots", "http2"] }
 im = "15.1.0"
 impl-trait-for-tuples = "0.2.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
@@ -379,7 +379,7 @@ rusoto_kms = { version = "0.48.0", default_features = false, features = ["rustls
 russh = "0.43.0"
 russh-keys = "0.43.0"
 rust-version = "0.4.0"
-rustls = { version = "0.21.6", features = ["dangerous_configuration"] }
+rustls = { version = "0.21.12" }
 rustls-pemfile = "1.0.2"
 rustversion = "1.0.17"
 rustyline = "14.0.0"
@@ -418,7 +418,7 @@ thiserror = "1.0.60"
 tiny-bip39 = "1.0.0"
 tokio = "1.37.0"
 tokio-retry = "0.3.0"
-tokio-rustls = "0.24"
+tokio-rustls = "0.24.1"
 tokio-stream = { version = "0.1.15", features = ["sync", "net"] }
 tokio-util = "0.7.11"
 toml = { version = "0.8.12", features = ["preserve_order"] }
