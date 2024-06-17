@@ -11,6 +11,7 @@ use move_core_types::{
     identifier::Identifier,
     language_storage::{StructTag, TypeTag},
 };
+use serde_yml::nested_singleton_map_serialize;
 
 use crate::sandbox::utils::on_disk_state_view::OnDiskStateView;
 
@@ -45,7 +46,9 @@ pub fn generate_struct_layouts(
                 },
             );
             layout_builder.build_struct_layout(&struct_tag)?;
-            let layout = serde_yml::to_string(layout_builder.registry())?;
+            let mut layout = Vec::new();
+            nested_singleton_map_serialize!(layout_builder.registry(), &mut layout)?;
+            let layout = String::from_utf8(layout)?;
             state.save_struct_layouts(&layout)?;
             println!("{}", layout);
         } else {
