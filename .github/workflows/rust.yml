@@ -252,8 +252,8 @@ jobs:
       #     path: ~/.cargo/registry/src/**/librocksdb-sys-*
 
       # See '.cargo/config' for list of enabled/disappled clippy lints
-      - name: cargo clippy
-        run: cargo xclippy -- -D warnings
+      - name: Check Clippy Lints
+        run: cargo ci-clippy
 
   rustfmt:
     needs: diff
@@ -264,7 +264,7 @@ jobs:
       - name: Install latest nightly
         run: rustup toolchain install nightly --component rustfmt --allow-downgrade
       - name: Check Rust formatting
-        run: cargo +nightly fmt --check
+        run: cargo ci-fmt
 
   dprint-format:
     runs-on: [ubuntu-latest]
