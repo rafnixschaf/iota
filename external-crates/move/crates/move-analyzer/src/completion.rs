@@ -43,9 +43,9 @@ fn keywords() -> Vec<CompletionItem> {
         .chain(PRIMITIVE_TYPES.iter())
         .map(|label| {
             let kind = if label == &"copy" || label == &"move" {
-                CompletionItemKind::Operator
+                CompletionItemKind::OPERATOR
             } else {
-                CompletionItemKind::Keyword
+                CompletionItemKind::KEYWORD
             };
             completion_item(label, kind)
         })
@@ -56,7 +56,7 @@ fn keywords() -> Vec<CompletionItem> {
 fn primitive_types() -> Vec<CompletionItem> {
     PRIMITIVE_TYPES
         .iter()
-        .map(|label| completion_item(label, CompletionItemKind::Keyword))
+        .map(|label| completion_item(label, CompletionItemKind::KEYWORD))
         .collect()
 }
 
@@ -65,7 +65,7 @@ fn primitive_types() -> Vec<CompletionItem> {
 fn builtins() -> Vec<CompletionItem> {
     BUILTINS
         .iter()
-        .map(|label| completion_item(label, CompletionItemKind::Function))
+        .map(|label| completion_item(label, CompletionItemKind::FUNCTION))
         .collect()
 }
 
@@ -116,12 +116,12 @@ fn identifiers(buffer: &str, symbols: &Symbols, path: &PathBuf) -> Vec<Completio
                     .iter()
                     .any(|m| m.functions().contains_key(&Symbol::from(*label)))
                 {
-                    completion_item(label, CompletionItemKind::Function)
+                    completion_item(label, CompletionItemKind::FUNCTION)
                 } else {
-                    completion_item(label, CompletionItemKind::Text)
+                    completion_item(label, CompletionItemKind::TEXT)
                 }
             } else {
-                completion_item(label, CompletionItemKind::Text)
+                completion_item(label, CompletionItemKind::TEXT)
             }
         })
         .collect()
@@ -168,14 +168,9 @@ pub fn on_completion_request(
     let parameters = serde_json::from_value::<CompletionParams>(request.params.clone())
         .expect("could not deserialize completion request");
 
-    let path = parameters
-        .text_document_position
-        .text_document
-        .uri
-        .to_file_path()
-        .unwrap();
+    let path = parameters.text_document_position.text_document.uri.path();
     let mut buffer = String::new();
-    if let Ok(mut f) = ide_files.join(path.to_string_lossy()).unwrap().open_file() {
+    if let Ok(mut f) = ide_files.join(path.as_str()).unwrap().open_file() {
         if f.read_to_string(&mut buffer).is_err() {
             eprintln!(
                 "Could not read '{:?}' when handling completion request",
@@ -203,7 +198,7 @@ pub fn on_completion_request(
                 items.extend_from_slice(&builtins());
             }
         }
-        let identifiers = identifiers(buffer.as_str(), symbols, &path);
+        let identifiers = identifiers(buffer.as_str(), symbols, &PathBuf::from(path.as_str()));
         items.extend_from_slice(&identifiers);
     } else {
         // no file content

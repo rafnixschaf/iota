@@ -106,7 +106,6 @@ use move_package::{
 };
 use move_symbol_pool::Symbol;
 use tempfile::tempdir;
-use url::Url;
 use vfs::{
     impls::{memory::MemoryFS, overlay::OverlayFS, physical::PhysicalFS},
     VfsPath,
@@ -3212,12 +3211,14 @@ pub fn on_go_to_def_request(context: &Context, request: &Request, symbols: &Symb
     let parameters = serde_json::from_value::<GotoDefinitionParams>(request.params.clone())
         .expect("could not deserialize go-to-def request");
 
-    let fpath = parameters
-        .text_document_position_params
-        .text_document
-        .uri
-        .to_file_path()
-        .unwrap();
+    let fpath = PathBuf::from(
+        parameters
+            .text_document_position_params
+            .text_document
+            .uri
+            .path()
+            .as_str(),
+    );
     let loc = parameters.text_document_position_params.position;
     let line = loc.line;
     let col = loc.character;
@@ -3239,7 +3240,7 @@ pub fn on_go_to_def_request(context: &Context, request: &Request, symbols: &Symb
             };
             let path = symbols.file_name_mapping.get(&u.def_loc.fhash).unwrap();
             let loc = Location {
-                uri: Url::from_file_path(path).unwrap(),
+                uri: path.to_string_lossy().parse().unwrap(),
                 range,
             };
             Some(serde_json::to_value(loc).unwrap())
@@ -3252,12 +3253,14 @@ pub fn on_go_to_type_def_request(context: &Context, request: &Request, symbols: 
     let parameters = serde_json::from_value::<GotoTypeDefinitionParams>(request.params.clone())
         .expect("could not deserialize go-to-type-def request");
 
-    let fpath = parameters
-        .text_document_position_params
-        .text_document
-        .uri
-        .to_file_path()
-        .unwrap();
+    let fpath = PathBuf::from(
+        parameters
+            .text_document_position_params
+            .text_document
+            .uri
+            .path()
+            .as_str(),
+    );
     let loc = parameters.text_document_position_params.position;
     let line = loc.line;
     let col = loc.character;
@@ -3277,7 +3280,7 @@ pub fn on_go_to_type_def_request(context: &Context, request: &Request, symbols: 
                 };
                 let path = symbols.file_name_mapping.get(&u.def_loc.fhash).unwrap();
                 let loc = Location {
-                    uri: Url::from_file_path(path).unwrap(),
+                    uri: path.to_string_lossy().parse().unwrap(),
                     range,
                 };
                 Some(serde_json::to_value(loc).unwrap())
@@ -3292,12 +3295,14 @@ pub fn on_references_request(context: &Context, request: &Request, symbols: &Sym
     let parameters = serde_json::from_value::<ReferenceParams>(request.params.clone())
         .expect("could not deserialize references request");
 
-    let fpath = parameters
-        .text_document_position
-        .text_document
-        .uri
-        .to_file_path()
-        .unwrap();
+    let fpath = PathBuf::from(
+        parameters
+            .text_document_position
+            .text_document
+            .uri
+            .path()
+            .as_str(),
+    );
     let loc = parameters.text_document_position.position;
     let line = loc.line;
     let col = loc.character;
@@ -3327,7 +3332,7 @@ pub fn on_references_request(context: &Context, request: &Request, symbols: &Sym
                         };
                         let path = symbols.file_name_mapping.get(&ref_loc.fhash).unwrap();
                         locs.push(Location {
-                            uri: Url::from_file_path(path).unwrap(),
+                            uri: path.to_string_lossy().parse().unwrap(),
                             range,
                         });
                     }
@@ -3348,12 +3353,14 @@ pub fn on_hover_request(context: &Context, request: &Request, symbols: &Symbols)
     let parameters = serde_json::from_value::<HoverParams>(request.params.clone())
         .expect("could not deserialize hover request");
 
-    let fpath = parameters
-        .text_document_position_params
-        .text_document
-        .uri
-        .to_file_path()
-        .unwrap();
+    let fpath = PathBuf::from(
+        parameters
+            .text_document_position_params
+            .text_document
+            .uri
+            .path()
+            .as_str(),
+    );
     let loc = parameters.text_document_position_params.position;
     let line = loc.line;
     let col = loc.character;
@@ -3430,7 +3437,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
     let parameters = serde_json::from_value::<DocumentSymbolParams>(request.params.clone())
         .expect("could not deserialize document symbol request");
 
-    let fpath = parameters.text_document.uri.to_file_path().unwrap();
+    let fpath = PathBuf::from(parameters.text_document.uri.path().as_str());
     eprintln!("on_document_symbol_request: {:?}", fpath);
 
     let empty_mods: BTreeSet<ModuleDefs> = BTreeSet::new();
@@ -3440,7 +3447,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
     for mod_def in mods {
         let name = mod_def.ident.module.clone().to_string();
         let detail = Some(mod_def.ident.clone().to_string());
-        let kind = SymbolKind::Module;
+        let kind = SymbolKind::MODULE;
         let range = Range {
             start: mod_def.start,
             end: mod_def.start,
@@ -3459,7 +3466,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
             children.push(DocumentSymbol {
                 name: sym.clone().to_string(),
                 detail: None,
-                kind: SymbolKind::Constant,
+                kind: SymbolKind::CONSTANT,
                 range: const_range,
                 selection_range: const_range,
                 children: None,
@@ -3482,7 +3489,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
             children.push(DocumentSymbol {
                 name: sym.clone().to_string(),
                 detail: None,
-                kind: SymbolKind::Struct,
+                kind: SymbolKind::STRUCT,
                 range: struct_range,
                 selection_range: struct_range,
                 children: Some(fields),
@@ -3507,7 +3514,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
             children.push(DocumentSymbol {
                 name: sym.clone().to_string(),
                 detail,
-                kind: SymbolKind::Function,
+                kind: SymbolKind::FUNCTION,
                 range: func_range,
                 selection_range: func_range,
                 children: None,
@@ -3554,7 +3561,7 @@ fn handle_struct_fields(struct_def: StructDef, fields: &mut Vec<DocumentSymbol>)
         fields.push(DocumentSymbol {
             name: field_def.name.clone().to_string(),
             detail: None,
-            kind: SymbolKind::Field,
+            kind: SymbolKind::FIELD,
             range: field_range,
             selection_range: field_range,
             children: None,

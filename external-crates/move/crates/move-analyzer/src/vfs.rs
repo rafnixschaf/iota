@@ -64,7 +64,7 @@ pub fn on_text_document_sync_notification(
         ide_files: &VfsPath,
         file_path: PathBuf,
         first_access: bool,
-    ) -> Option<Box<dyn Write + Send>> {
+    ) -> Option<impl Write + Send> {
         let Some(vfs_path) = ide_files.join(file_path.to_string_lossy()).ok() else {
             eprintln!(
                 "Could not construct file path for file creation at {:?}",
@@ -102,13 +102,7 @@ pub fn on_text_document_sync_notification(
             let parameters =
                 serde_json::from_value::<DidOpenTextDocumentParams>(notification.params.clone())
                     .expect("could not deserialize notification");
-            let Some(file_path) = parameters.text_document.uri.to_file_path().ok() else {
-                eprintln!(
-                    "Could not create file path from URI {:?}",
-                    parameters.text_document.uri
-                );
-                return;
-            };
+            let file_path = PathBuf::from(parameters.text_document.uri.path().as_str());
             let Some(mut vfs_file) = vfs_file_create(
                 &ide_files_root,
                 file_path.clone(),
@@ -129,13 +123,7 @@ pub fn on_text_document_sync_notification(
                 serde_json::from_value::<DidChangeTextDocumentParams>(notification.params.clone())
                     .expect("could not deserialize notification");
 
-            let Some(file_path) = parameters.text_document.uri.to_file_path().ok() else {
-                eprintln!(
-                    "Could not create file path from URI {:?}",
-                    parameters.text_document.uri
-                );
-                return;
-            };
+            let file_path = PathBuf::from(parameters.text_document.uri.path().as_str());
             let Some(mut vfs_file) = vfs_file_create(
                 &ide_files_root,
                 file_path.clone(),
@@ -156,13 +144,7 @@ pub fn on_text_document_sync_notification(
             let parameters =
                 serde_json::from_value::<DidSaveTextDocumentParams>(notification.params.clone())
                     .expect("could not deserialize notification");
-            let Some(file_path) = parameters.text_document.uri.to_file_path().ok() else {
-                eprintln!(
-                    "Could not create file path from URI {:?}",
-                    parameters.text_document.uri
-                );
-                return;
-            };
+            let file_path = PathBuf::from(parameters.text_document.uri.path().as_str());
             let Some(mut vfs_file) = vfs_file_create(
                 &ide_files_root,
                 file_path.clone(),
@@ -186,13 +168,7 @@ pub fn on_text_document_sync_notification(
             let parameters =
                 serde_json::from_value::<DidCloseTextDocumentParams>(notification.params.clone())
                     .expect("could not deserialize notification");
-            let Some(file_path) = parameters.text_document.uri.to_file_path().ok() else {
-                eprintln!(
-                    "Could not create file path from URI {:?}",
-                    parameters.text_document.uri
-                );
-                return;
-            };
+            let file_path = PathBuf::from(parameters.text_document.uri.path().as_str());
             vfs_file_remove(&ide_files_root, file_path.clone());
         }
         _ => eprintln!("invalid notification '{}'", notification.method),

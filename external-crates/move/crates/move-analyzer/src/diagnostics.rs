@@ -12,7 +12,6 @@ use lsp_types::{Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, Lo
 use move_command_line_common::files::FileHash;
 use move_ir_types::location::Loc;
 use move_symbol_pool::Symbol;
-use url::Url;
 
 use crate::utils::get_loc;
 
@@ -53,7 +52,7 @@ pub fn lsp_diagnostics(
                                     get_loc(&lloc.file_hash(), lloc.end(), files, file_id_mapping)?;
                                 let lpath = file_name_mapping.get(&lloc.file_hash()).unwrap();
                                 let lpos = Location::new(
-                                    Url::from_file_path(lpath).unwrap(),
+                                    lpath.to_string_lossy().parse().unwrap(),
                                     Range::new(lstart, lend),
                                 );
                                 Some(DiagnosticRelatedInformation {
@@ -98,10 +97,10 @@ pub fn lsp_empty_diagnostics(
 /// understood by the language server.
 fn severity(s: Severity) -> DiagnosticSeverity {
     match s {
-        Severity::Bug => DiagnosticSeverity::Error,
-        Severity::Error => DiagnosticSeverity::Error,
-        Severity::Warning => DiagnosticSeverity::Warning,
-        Severity::Note => DiagnosticSeverity::Information,
-        Severity::Help => DiagnosticSeverity::Hint,
+        Severity::Bug => DiagnosticSeverity::ERROR,
+        Severity::Error => DiagnosticSeverity::ERROR,
+        Severity::Warning => DiagnosticSeverity::WARNING,
+        Severity::Note => DiagnosticSeverity::INFORMATION,
+        Severity::Help => DiagnosticSeverity::HINT,
     }
 }
