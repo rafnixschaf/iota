@@ -109,7 +109,7 @@ jobs:
         run: rustup toolchain install nightly --component rustfmt --allow-downgrade
       - name: Check Rust formatting
         run: |
-          cargo ci-fmt-external
+          cargo +nightly ci-fmt-external
 
   cargo-deny:
     name: cargo-deny (advisories, licenses, bans, ...)

@@ -9,7 +9,7 @@ clippy-lints = [
   "-Aclippy::manual_slice_size_calculation",
 ]
 
-ci-fmt = "+nightly fmt --check"
+ci-fmt = "fmt --check"
 ci-fmt-external = "ci-fmt --manifest-path external-crates/move/Cargo.toml --all"
 ci-clippy = "clippy --all-targets --all-features -- -D warnings"
 ci-clippy-external = "clippy --manifest-path external-crates/move/Cargo.toml -- clippy-lints -D warnings"

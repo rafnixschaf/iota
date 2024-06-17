@@ -264,7 +264,7 @@ jobs:
       - name: Install latest nightly
         run: rustup toolchain install nightly --component rustfmt --allow-downgrade
       - name: Check Rust formatting
-        run: cargo ci-fmt
+        run: cargo +nightly ci-fmt
 
   dprint-format:
     runs-on: [ubuntu-latest]
