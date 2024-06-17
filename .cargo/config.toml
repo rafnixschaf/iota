@@ -12,7 +12,7 @@ ci-clippy-external = [
   "-Aclippy::new_without_default",
   "-Aclippy::box_default",
   "-Aclippy::manual_slice_size_calculation",
-  "-Dwarnings"
+  "-Dwarnings",
 ]
 ci-license = "license-template --template .license_template"
 
