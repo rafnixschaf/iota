@@ -3,6 +3,7 @@
 # Some of these allows are to avoid code churn; others are filed as issues on the `sui` repo now.
 move-clippy = [
   "clippy",
+  "--manifest-path external-crates/move/Cargo.toml",
   "--",
   "-Wclippy::all",
   "-Wclippy::disallowed_methods",
