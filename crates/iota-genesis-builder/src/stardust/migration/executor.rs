@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap, HashSet},
     sync::Arc,
 };
 
@@ -15,8 +15,9 @@ use iota_framework::BuiltInFramework;
 use iota_move_build::CompiledPackage;
 use iota_move_natives_v2::all_natives;
 use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_sdk::types::block::output::{
-    AliasOutput, BasicOutput, FoundryOutput, NativeTokens, NftOutput, OutputId, TokenId,
+use iota_sdk::types::block::{
+    address::Address,
+    output::{AliasOutput, BasicOutput, FoundryOutput, NativeTokens, NftOutput, OutputId, TokenId},
 };
 use iota_types::{
     balance::Balance,
@@ -71,6 +72,8 @@ pub(super) struct Executor {
     /// Map the stardust token id [`TokenId`] to the on-chain info of the
     /// published foundry objects.
     native_tokens: HashMap<TokenId, FoundryLedgerData>,
+    /// Tracks ownership relationships between Stardust outputs.
+    pub(crate) ownership_deps: HashMap<Address, HashSet<Address>>,
 }
 
 impl Executor {
@@ -120,6 +123,7 @@ impl Executor {
             move_vm,
             metrics,
             native_tokens: Default::default(),
+            ownership_deps: Default::default(),
         })
     }
 
@@ -302,7 +306,14 @@ impl Executor {
         let alias_id = ObjectID::new(*alias.alias_id().or_from_output_id(&header.output_id()));
         let move_alias = crate::stardust::types::Alias::try_from_stardust(alias_id, alias)?;
 
-        // TODO: We should ensure that no circular ownership exists.
+        // We ensure that no circular ownership exists by first caching ownership dependencies.
+        let alias_owner_address = alias.governor_address().clone();
+        let alias_address = alias.alias_address(&header.output_id());
+        self.ownership_deps
+            .entry(alias_owner_address)
+            .or_default()
+            .insert(alias_address.into());
+
         let alias_output_owner = stardust_to_iota_address_owner(alias.governor_address())?;
 
         let package_deps = InputObjects::new(self.load_packages(PACKAGE_DEPS).collect());
@@ -638,7 +649,14 @@ impl Executor {
         let nft_id = ObjectID::new(*nft.nft_id().or_from_output_id(&header.output_id()));
         let move_nft = Nft::try_from_stardust(nft_id, nft)?;
 
-        // TODO: We should ensure that no circular ownership exists.
+        // We ensure that no circular ownership exists by first caching ownership dependencies.
+        let nft_owner_address = nft.address().clone();
+        let nft_address = nft.nft_address(&header.output_id());
+        self.ownership_deps
+            .entry(nft_owner_address)
+            .or_default()
+            .insert(nft_address.into());
+
         let nft_output_owner_address = stardust_to_iota_address(nft.address())?;
         let nft_output_owner = stardust_to_iota_address_owner(nft.address())?;
 
