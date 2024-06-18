@@ -66,36 +66,34 @@ fn main() -> anyhow::Result<()> {
     println!("{stat:?}");
     println!("NFT/Alias owner count: {}", ownership_map.len());
 
-    // find cycles
+    // find asset ownership cycles
     let mut trapped_assets = Vec::new();
-    for parent in ownership_map.keys() {
-        let mut visit = VecDeque::new();
-        let mut chain = VecDeque::new();
+    for owner in ownership_map.keys() {
+        let mut visit: VecDeque<Address> = vec![owner.clone()].into();
+        let mut dependency_chain = VecDeque::new();
         let mut descending = false;
-        visit.push_back(parent.clone());
-        'traversal: while !visit.is_empty() {
-            let parent = visit.pop_back().unwrap();
-            chain.push_back(parent.clone());
-            let children = ownership_map.get(&parent).unwrap();
 
-            for child in children {
-                if ownership_map.contains_key(child) {
-                    if !chain.contains(child) {
-                        visit.push_back(child.clone());
+        'traversal: while let Some(owner) = visit.pop_back() {
+            dependency_chain.push_back(owner.clone());
+            let owned = ownership_map.get(&owner).unwrap();
+            for addr in owned {
+                // check if addr itself owns other assets, otherwise we can ignore it
+                if ownership_map.contains_key(addr) {
+                    if !dependency_chain.contains(addr) {
+                        visit.push_back(addr.clone());
                         descending = true;
                     } else {
-                        chain.push_back(child.clone());
+                        dependency_chain.push_back(addr.clone());
                         println!(
-                            "Detected a cycle! Tried to add {child} which is also a parent. Cycle:\n{chain:#?}"
+                            "Detected a cycle! Tried to add {addr} which is also a parent. Cycle:\n{dependency_chain:#?}"
                         );
-                        trapped_assets.push(child.clone());
+                        trapped_assets.push(addr.clone());
                         break 'traversal;
                     }
                 }
             }
-
             if !descending {
-                chain.pop_back();
+                dependency_chain.pop_back();
             }
         }
     }
