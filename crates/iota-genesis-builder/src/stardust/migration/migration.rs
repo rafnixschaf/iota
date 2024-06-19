@@ -4,14 +4,17 @@
 //! Contains the logic for the migration process.
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet, VecDeque},
     io::{prelude::Write, BufWriter},
 };
 
 use anyhow::Result;
 use iota_move_build::CompiledPackage;
 use iota_protocol_config::ProtocolVersion;
-use iota_sdk::types::block::output::{FoundryOutput, Output, OutputId};
+use iota_sdk::types::block::{
+    address::Address,
+    output::{FoundryOutput, Output, OutputId},
+};
 use iota_types::{
     base_types::{IotaAddress, ObjectID, TxContext},
     epoch_data::EpochData,
@@ -106,6 +109,18 @@ impl Migration {
                 (foundries, outputs)
             },
         );
+        // We do not migrate "trapped" Aliases and NFTs (i.e. assets that are
+        // transitively owning themselves)
+        let trapped_assets = find_addresses_with_ownership_cycle(&outputs);
+        info!(
+            "Removing {} assets with ownership cycle...",
+            trapped_assets.len()
+        );
+        outputs.retain(|(_, output)| match output {
+            Output::Alias(alias) => !trapped_assets.contains(alias.governor_address()),
+            Output::Nft(nft) => !trapped_assets.contains(nft.address()),
+            _ => true,
+        });
         // We sort the outputs to make sure the order of outputs up to
         // a certain milestone timestamp remains the same between runs.
         //
@@ -273,4 +288,57 @@ pub(super) fn create_migration_context(target_network: MigrationTargetNetwork) -
         &target_network.migration_transaction_digest(),
         &EpochData::new_genesis(0),
     )
+}
+
+fn find_addresses_with_ownership_cycle<'a>(
+    outputs: impl IntoIterator<Item = &'a (OutputHeader, Output)>,
+) -> Vec<Address> {
+    let ownership_map = outputs.into_iter().fold(
+        Default::default(),
+        |mut ownership_map: HashMap<Address, HashSet<Address>>, (header, output)| {
+            match output {
+                Output::Alias(alias) => {
+                    let owner = alias.governor_address().clone();
+                    let owned = alias.alias_address(&header.output_id()).into();
+                    ownership_map.entry(owner).or_default().insert(owned);
+                }
+                Output::Nft(nft) => {
+                    let owner = nft.address().clone();
+                    let owned = nft.nft_address(&header.output_id()).into();
+                    ownership_map.entry(owner).or_default().insert(owned);
+                }
+                _ => (),
+            }
+            ownership_map
+        },
+    );
+
+    let mut res = Vec::new();
+    for owner in ownership_map.keys() {
+        let mut visit: VecDeque<Address> = vec![owner.clone()].into();
+        let mut dependency_chain = VecDeque::new();
+        let mut descending = false;
+
+        'traversal: while let Some(owner) = visit.pop_back() {
+            dependency_chain.push_back(owner.clone());
+            let owned = ownership_map.get(&owner).unwrap();
+            for addr in owned {
+                // check if addr itself owns other assets, otherwise we can ignore it
+                if ownership_map.contains_key(addr) {
+                    if !dependency_chain.contains(addr) {
+                        visit.push_back(addr.clone());
+                        descending = true;
+                    } else {
+                        dependency_chain.push_back(addr.clone());
+                        res.push(addr.clone());
+                        break 'traversal;
+                    }
+                }
+            }
+            if !descending {
+                dependency_chain.pop_back();
+            }
+        }
+    }
+    res
 }
