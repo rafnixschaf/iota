@@ -303,7 +303,19 @@ fn find_addresses_with_ownership_cycle<'a>(
                     ownership_map.entry(owner).or_default().insert(owned);
                 }
                 Output::Nft(nft) => {
-                    let owner = nft.address().clone();
+                    let timestamp = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .expect("clock went backwards")
+                        .as_secs()
+                        .try_into()
+                        .unwrap();
+
+                    let owner = nft
+                        .unlock_conditions()
+                        .expiration()
+                        .and_then(|expiration| expiration.return_address_expired(timestamp))
+                        .unwrap_or_else(|| nft.address())
+                        .clone();
                     let owned = nft.nft_address(&header.output_id()).into();
                     ownership_map.entry(owner).or_default().insert(owned);
                 }
