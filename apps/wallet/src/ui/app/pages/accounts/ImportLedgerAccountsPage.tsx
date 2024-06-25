@@ -26,8 +26,9 @@ import {
 import Overlay from '../../components/overlay';
 import { getIotaApplicationErrorMessage } from '../../helpers/errorMessages';
 import { useAccounts } from '../../hooks/useAccounts';
+import { AccountType } from '_src/background/accounts/Account';
 
-const numLedgerAccountsToDeriveByDefault = 10;
+const NUM_LEDGER_ACCOUNTS_TO_DERIVE_BY_DEFAULT = 10;
 
 export function ImportLedgerAccountsPage() {
     const [searchParams] = useSearchParams();
@@ -43,7 +44,7 @@ export function ImportLedgerAccountsPage() {
         isPending: areLedgerAccountsLoading,
         isError: encounteredDerviceAccountsError,
     } = useDeriveLedgerAccounts({
-        numAccountsToDerive: numLedgerAccountsToDeriveByDefault,
+        numAccountsToDerive: NUM_LEDGER_ACCOUNTS_TO_DERIVE_BY_DEFAULT,
         select: (ledgerAccounts) => {
             return ledgerAccounts.filter(
                 ({ address }) => !existingAccounts?.some((account) => account.address === address),
@@ -157,7 +158,7 @@ export function ImportLedgerAccountsPage() {
                         disabled={isUnlockButtonDisabled}
                         onClick={() => {
                             setAccountsFormValues({
-                                type: 'ledger',
+                                type: AccountType.Ledger,
                                 accounts: selectedLedgerAccounts.map(
                                     ({ address, derivationPath, publicKey }) => ({
                                         address,
@@ -168,7 +169,7 @@ export function ImportLedgerAccountsPage() {
                             });
                             navigate(
                                 `/accounts/protect-account?${new URLSearchParams({
-                                    accountType: 'ledger',
+                                    accountType: AccountType.Ledger,
                                     successRedirect,
                                 }).toString()}`,
                             );

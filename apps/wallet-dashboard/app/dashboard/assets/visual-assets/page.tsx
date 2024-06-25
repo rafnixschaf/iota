@@ -6,18 +6,29 @@
 import React from 'react';
 import { IotaObjectData } from '@iota/iota.js/client';
 import { AssetCard, VirtualList } from '@/components/index';
+import { useCurrentAccount } from '@iota/dapp-kit';
+import { hasDisplayData, useGetOwnedObjects } from '@iota/core';
 import { useRouter } from 'next/navigation';
-import { HARCODED_VISUAL_ASSETS } from '@/lib/mocks';
 
 function VisualAssetsPage(): JSX.Element {
+    const account = useCurrentAccount();
     const router = useRouter();
+    const { data: ownedObjects } = useGetOwnedObjects(account?.address);
+    const visualAssets =
+        ownedObjects?.pages
+            .flatMap((page) => page.data)
+            .filter((asset) => asset.data && asset.data.objectId && hasDisplayData(asset))
+            .map((response) => response.data!) ?? [];
 
-    const virtualItem = (asset: IotaObjectData): JSX.Element => (
-        <AssetCard key={asset.objectId} asset={asset} />
-    );
+    const virtualItem = (asset: IotaObjectData): JSX.Element => <AssetCard asset={asset} />;
 
     const handleClick = (objectId: string) => {
         router.push(`/dashboard/assets/visual-assets/${objectId}`);
+    };
+
+    const calculateEstimateSize = (index: number) => {
+        const asset = visualAssets[index];
+        return asset.display?.data ? 240 : 130;
     };
 
     return (
@@ -25,8 +36,8 @@ function VisualAssetsPage(): JSX.Element {
             <h1>VISUAL ASSETS</h1>
             <div className="flex w-1/2">
                 <VirtualList
-                    items={HARCODED_VISUAL_ASSETS}
-                    estimateSize={() => 130}
+                    items={visualAssets}
+                    estimateSize={calculateEstimateSize}
                     render={virtualItem}
                     onClick={(asset) => handleClick(asset.objectId)}
                 />

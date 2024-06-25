@@ -16,20 +16,23 @@ import { autoLockDataToMinutes } from '../../hooks/useAutoLockMinutes';
 import { useAutoLockMinutesMutation } from '../../hooks/useAutoLockMinutesMutation';
 import { useCreateAccountsMutation, type CreateType } from '../../hooks/useCreateAccountMutation';
 import { Heading } from '../../shared/heading';
+import { CreateAccountType } from '../../components/accounts/AccountsFormContext';
+import { AccountType } from '_src/background/accounts/Account';
 
-const allowedAccountTypes: CreateType[] = [
-    'new-mnemonic',
-    'import-mnemonic',
-    'mnemonic-derived',
-    'import-seed',
-    'imported',
-    'ledger',
+const ALLOWED_ACCOUNT_TYPES: CreateType[] = [
+    CreateAccountType.NewMnemonic,
+    CreateAccountType.ImportMnemonic,
+    CreateAccountType.ImportSeed,
+    AccountType.MnemonicDerived,
+    AccountType.SeedDerived,
+    AccountType.Imported,
+    AccountType.Ledger,
 ];
 
-type AllowedAccountTypes = (typeof allowedAccountTypes)[number];
+type AllowedAccountTypes = (typeof ALLOWED_ACCOUNT_TYPES)[number];
 
 function isAllowedAccountType(accountType: string): accountType is AllowedAccountTypes {
-    return allowedAccountTypes.includes(accountType as CreateType);
+    return ALLOWED_ACCOUNT_TYPES.includes(accountType as CreateType);
 }
 
 export function ProtectAccountPage() {
@@ -59,7 +62,10 @@ export function ProtectAccountPage() {
                     type,
                     password,
                 });
-                if (type === 'new-mnemonic' && isMnemonicSerializedUiAccount(createdAccounts[0])) {
+                if (
+                    type === CreateAccountType.NewMnemonic &&
+                    isMnemonicSerializedUiAccount(createdAccounts[0])
+                ) {
                     navigate(`/accounts/backup/${createdAccounts[0].sourceID}`, {
                         replace: true,
                         state: {

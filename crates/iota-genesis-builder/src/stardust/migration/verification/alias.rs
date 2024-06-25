@@ -11,22 +11,20 @@ use iota_types::{
     dynamic_field::{derive_dynamic_field_id, DynamicFieldInfo, Field},
     in_memory_storage::InMemoryStorage,
     object::Owner,
+    stardust::output::{
+        Alias, AliasOutput, ALIAS_DYNAMIC_OBJECT_FIELD_KEY, ALIAS_DYNAMIC_OBJECT_FIELD_KEY_TYPE,
+    },
     TypeTag,
 };
 
-use crate::stardust::{
-    migration::{
-        executor::FoundryLedgerData,
-        verification::{
-            created_objects::CreatedObjects,
-            util::{
-                verify_address_owner, verify_issuer_feature, verify_metadata_feature,
-                verify_native_tokens, verify_parent, verify_sender_feature,
-            },
+use crate::stardust::migration::{
+    executor::FoundryLedgerData,
+    verification::{
+        created_objects::CreatedObjects,
+        util::{
+            verify_address_owner, verify_issuer_feature, verify_metadata_feature,
+            verify_native_tokens, verify_parent, verify_sender_feature,
         },
-    },
-    types::{
-        Alias, AliasOutput, ALIAS_DYNAMIC_OBJECT_FIELD_KEY, ALIAS_DYNAMIC_OBJECT_FIELD_KEY_TYPE,
     },
 };
 
@@ -87,12 +85,12 @@ pub(super) fn verify_alias_output(
 
     // Amount
     ensure!(
-        created_output.iota.value() == output.amount(),
+        created_output.balance.value() == output.amount(),
         "amount mismatch: found {}, expected {}",
-        created_output.iota.value(),
+        created_output.balance.value(),
         output.amount()
     );
-    *total_value += created_output.iota.value();
+    *total_value += created_output.balance.value();
 
     // Native Tokens
     verify_native_tokens::<Field<String, Balance>>(
@@ -168,18 +166,18 @@ pub(super) fn verify_alias_output(
     ensure!(created_objects.coin().is_err(), "unexpected coin found");
 
     ensure!(
-        created_objects.coin_metadata().is_err(),
-        "unexpected coin metadata found"
+        created_objects.native_token_coin().is_err(),
+        "unexpected native token coin found"
     );
 
     ensure!(
-        created_objects.minted_coin().is_err(),
-        "unexpected minted coin found"
+        created_objects.coin_manager().is_err(),
+        "unexpected coin manager found"
     );
 
     ensure!(
-        created_objects.max_supply_policy().is_err(),
-        "unexpected max supply policy found"
+        created_objects.coin_manager_treasury_cap().is_err(),
+        "unexpected coin manager treasury cap found"
     );
 
     ensure!(

@@ -2,9 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { type AccountType, type SerializedUIAccount } from '_src/background/accounts/Account';
-import { type ZkLoginProvider } from '_src/background/accounts/zklogin/providers';
-import { isZkLoginAccountSerializedUI } from '_src/background/accounts/zklogin/ZkLoginAccount';
+import { AccountType, type SerializedUIAccount } from '_src/background/accounts/Account';
 import { AccountIcon } from '_src/ui/app/components/accounts/AccountIcon';
 import { AccountItem } from '_src/ui/app/components/accounts/AccountItem';
 import { useAccountsFormContext } from '_src/ui/app/components/accounts/AccountsFormContext';
@@ -32,26 +30,15 @@ import { useMutation } from '@tanstack/react-query';
 import { forwardRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
-const accountTypeToLabel: Record<AccountType, string> = {
-    'mnemonic-derived': 'Passphrase Derived',
-    'seed-derived': 'Seed Derived',
-    imported: 'Imported',
-    ledger: 'Ledger',
-    zkLogin: 'zkLogin',
-};
-
-const providerToLabel: Record<ZkLoginProvider, string> = {
-    google: 'Google',
-    twitch: 'Twitch',
-    facebook: 'Facebook',
-    kakao: 'Kakao',
+const ACCOUNT_TYPE_TO_LABEL: Record<AccountType, string> = {
+    [AccountType.MnemonicDerived]: 'Passphrase Derived',
+    [AccountType.SeedDerived]: 'Seed Derived',
+    [AccountType.Imported]: 'Imported',
+    [AccountType.Ledger]: 'Ledger',
 };
 
 export function getGroupTitle(aGroupAccount: SerializedUIAccount) {
-    // TODO: revisit this logic for determining account provider
-    return isZkLoginAccountSerializedUI(aGroupAccount)
-        ? providerToLabel[aGroupAccount?.provider] ?? 'zkLogin'
-        : accountTypeToLabel[aGroupAccount?.type] || '';
+    return ACCOUNT_TYPE_TO_LABEL[aGroupAccount?.type] || '';
 }
 
 // todo: we probbaly have some duplication here with the various FooterLink / ButtonOrLink
@@ -163,8 +150,8 @@ export function AccountGroup({
     accountSourceID?: string;
 }) {
     const createAccountMutation = useCreateAccountsMutation();
-    const isMnemonicDerivedGroup = type === 'mnemonic-derived';
-    const isSeedDerivedGroup = type === 'seed-derived';
+    const isMnemonicDerivedGroup = type === AccountType.MnemonicDerived;
+    const isSeedDerivedGroup = type === AccountType.SeedDerived;
     const [accountsFormValues, setAccountsFormValues] = useAccountsFormContext();
     const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
     const { data: accountSources } = useAccountSources();
@@ -248,10 +235,7 @@ export function AccountGroup({
                 <VerifyPasswordModal
                     open
                     onVerify={async (password) => {
-                        if (
-                            accountsFormValues.current &&
-                            accountsFormValues.current.type !== 'zkLogin'
-                        ) {
+                        if (accountsFormValues.current) {
                             await createAccountMutation.mutateAsync({
                                 type: accountsFormValues.current.type,
                                 password,

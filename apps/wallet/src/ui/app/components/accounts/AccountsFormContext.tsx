@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { type ZkLoginProvider } from '_src/background/accounts/zklogin/providers';
+import type { AccountType } from '_src/background/accounts/Account';
 import {
     createContext,
     useCallback,
@@ -13,16 +13,21 @@ import {
     type ReactNode,
 } from 'react';
 
+export enum CreateAccountType {
+    NewMnemonic = 'new-mnemonic',
+    ImportMnemonic = 'import-mnemonic',
+    ImportSeed = 'import-seed',
+}
+
 export type AccountsFormValues =
-    | { type: 'zkLogin'; provider: ZkLoginProvider }
-    | { type: 'new-mnemonic' }
-    | { type: 'import-mnemonic'; entropy: string }
-    | { type: 'mnemonic-derived'; sourceID: string }
-    | { type: 'import-seed'; seed: string }
-    | { type: 'seed-derived'; sourceID: string }
-    | { type: 'imported'; keyPair: string }
+    | { type: CreateAccountType.NewMnemonic }
+    | { type: CreateAccountType.ImportMnemonic; entropy: string }
+    | { type: CreateAccountType.ImportSeed; seed: string }
+    | { type: AccountType.MnemonicDerived; sourceID: string }
+    | { type: AccountType.SeedDerived; sourceID: string }
+    | { type: AccountType.Imported; keyPair: string }
     | {
-          type: 'ledger';
+          type: AccountType.Ledger;
           accounts: { publicKey: string; derivationPath: string; address: string }[];
       }
     | null;

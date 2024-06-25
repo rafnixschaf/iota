@@ -39,14 +39,14 @@ import {
 import { accountSourcesEvents } from '../account-sources/events';
 import { MnemonicAccountSource } from '../account-sources/MnemonicAccountSource';
 import { accountsHandleUIMessage, getAllSerializedUIAccounts } from '../accounts';
-import { type AccountType } from '../accounts/Account';
 import { accountsEvents } from '../accounts/events';
 import { getAutoLockMinutes, notifyUserActive, setAutoLockMinutes } from '../auto-lock-accounts';
-import { backupDB, getDB, settingsKeys } from '../db';
+import { backupDB, getDB, SETTINGS_KEYS } from '../db';
 import { clearStatus, doMigration, getStatus } from '../storage-migration';
 import NetworkEnv from '../NetworkEnv';
 import { Connection } from './Connection';
 import { SeedAccountSource } from '../account-sources/SeedAccountSource';
+import { AccountSourceType } from '../account-sources/AccountSource';
 
 export class UiConnection extends Connection {
     public static readonly CHANNEL: PortChannelName = 'iota_ui<->background';
@@ -174,7 +174,7 @@ export class UiConnection extends Connection {
                 await db.delete();
                 await db.open();
                 // prevents future run of auto backup process of the db (we removed everything nothing to backup after logout)
-                await db.settings.put({ setting: settingsKeys.isPopulated, value: true });
+                await db.settings.put({ setting: SETTINGS_KEYS.isPopulated, value: true });
                 this.send(createMessage({ type: 'done' }, id));
             } else if (isMethodPayload(payload, 'getAutoLockMinutes')) {
                 await this.send(
@@ -212,21 +212,18 @@ export class UiConnection extends Connection {
                     ) {
                         throw new Error('Invalid account source type');
                     }
-                    if (type === 'mnemonic') {
+                    if (type === AccountSourceType.Mnemonic) {
                         await accountSource.verifyRecoveryData(data.entropy);
                     }
-                    if (type === 'seed') {
+                    if (type === AccountSourceType.Seed) {
                         await accountSource.verifyRecoveryData(data.seed);
                     }
                 }
                 const db = await getDB();
-                const zkLoginType: AccountType = 'zkLogin';
                 const accountSourceIDs = recoveryData.map(({ accountSourceID }) => accountSourceID);
                 await db.transaction('rw', db.accountSources, db.accounts, async () => {
                     await db.accountSources.where('id').noneOf(accountSourceIDs).delete();
                     await db.accounts
-                        .where('type')
-                        .notEqual(zkLoginType)
                         .filter(
                             (anAccount) =>
                                 !('sourceID' in anAccount) ||
@@ -236,7 +233,7 @@ export class UiConnection extends Connection {
                         .delete();
                     for (const data of recoveryData) {
                         const { accountSourceID, type } = data;
-                        if (type === 'mnemonic') {
+                        if (type === AccountSourceType.Mnemonic) {
                             await db.accountSources.update(accountSourceID, {
                                 encryptedData: await Dexie.waitFor(
                                     MnemonicAccountSource.createEncryptedData(
@@ -246,7 +243,7 @@ export class UiConnection extends Connection {
                                 ),
                             });
                         }
-                        if (type === 'seed') {
+                        if (type === AccountSourceType.Seed) {
                             await db.accountSources.update(accountSourceID, {
                                 encryptedData: await Dexie.waitFor(
                                     SeedAccountSource.createEncryptedData(data.seed, password),
