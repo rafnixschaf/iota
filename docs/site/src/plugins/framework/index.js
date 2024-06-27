@@ -26,6 +26,14 @@ const IOTASYS_PATH = path.join(
   __dirname,
   "../../../../../crates/iota-framework/docs/iota-system",
 );
+const STARDUST_PATH = path.join(
+    __dirname,
+    "../../../../../crates/iota-framework/docs/stardust",
+);
+const TIMELOCK_PATH = path.join(
+    __dirname,
+    "../../../../../crates/iota-framework/docs/timelock",
+);
 const DOCS_PATH = path.join(
   __dirname,
   "../../../../content/references/framework",
@@ -67,11 +75,15 @@ const frameworkPlugin = (context, options) => {
       const stdlibFiles = recurseFiles(STDLIB_PATH);
       const deepbookFiles = recurseFiles(DEEPBOOK_PATH);
       const iotasysFiles = recurseFiles(IOTASYS_PATH);
+      const stardustFiles = recurseFiles(STARDUST_PATH);
+      const timelockFiles = recurseFiles(TIMELOCK_PATH);
       const allFiles = [
         frameworkFiles,
         stdlibFiles,
-        deepbookFiles,
+        // deepbookFiles, Disable deepbook docs for now.
         iotasysFiles,
+        stardustFiles,
+        //timelockFiles, TODO: Enabling this results in broken links, needs some love
       ];
       allFiles.forEach((theseFiles) => {
         theseFiles.forEach((file) => {
@@ -85,7 +97,7 @@ const frameworkPlugin = (context, options) => {
           const reMarkdown = markdown
             .replace(/<a\s+(.*?)\.md(.*?)>/g, `<a $1$2>`)
             .replace(
-              /(title: .*)Module `(0x[1-9a-f]{1,4}::)(.*)`/g,
+              /(title: .*)Module `(0x[0-9a-f]{1,4}::)(.*)`/g,
               `$1 Module $2$3\nsidebar_label: $3`,
             )
             .replace(/(?<!<pre>)<code>(.*?)<\/code>/gs, `$1`)
