@@ -56,10 +56,10 @@ To bring up everything:
 ./run.sh all
 ```
 
-To bring up 4 validators, three full nodes (one with the backup feature enabled), and one indexer, use the following command:
+To bring up 4 validators, three full nodes (one with the backup feature enabled), one indexer, and one faucet, use the following command:
 
 ```
-./run.sh pure backup indexer
+./run.sh faucet backup indexer
 ```
 
 ### Ports
@@ -80,13 +80,13 @@ To bring up 4 validators, three full nodes (one with the backup feature enabled)
     - JSON-RPC: http://127.0.0.1:9003
     - Metrics: http://127.0.0.1:9187
 
-- indexer-1:
-    - JSON-RPC: http://127.0.0.1:9004
-    - Metrics: http://127.0.0.1:9181
-
 - faucet-1:
     - JSON-RPC: http://127.0.0.1:5003
     - Metrics: http://127.0.0.1:9188
+
+- indexer-1:
+    - JSON-RPC: http://127.0.0.1:9004
+    - Metrics: http://127.0.0.1:9181
 
 - indexer-2:
     - JSON-RPC: http://127.0.0.1:9005
