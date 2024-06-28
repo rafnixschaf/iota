@@ -27,3 +27,5 @@ tracing.workspace = true
 
 [target.'cfg(msim)'.dependencies]
 msim.workspace = true
+tokio.workspace = true
+real_tokio = { git = "https://github.com/mystenmark/tokio-madsim-fork.git", rev = "e47aafebf98e9c1734a8848a1876d5946c44bdd1", features = ["full"] }

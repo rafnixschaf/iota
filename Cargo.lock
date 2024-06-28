@@ -7519,9 +7519,11 @@ dependencies = [
  "msim",
  "narwhal-network",
  "rand 0.8.5",
+ "real_tokio",
  "serde",
  "telemetry-subscribers",
  "tempfile",
+ "tokio",
  "tower",
  "tracing",
 ]

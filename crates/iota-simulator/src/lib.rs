@@ -199,3 +199,43 @@ pub mod random {
         })
     }
 }
+
+/// TODO: This is a temporary fix to a problem in `msim_macros`, where it
+/// generates code like this:
+///
+/// ```rust
+/// let (stop_tx, stop_rx) = ::tokio::sync::oneshot::channel();
+/// let watchdog =
+///     iota_simulator::runtime::start_watchdog(rt.clone(), inner_seed, watchdog_timeout, stop_rx);
+/// ```
+///
+/// Unfortunately, this uses the local `tokio` of the caller, rather than the
+/// `real_tokio` crate in the `msim` workspace that is expected by
+/// `start_watchdog`. Replacing the local tokio in each crate where sim tests
+/// are used is not a good option, as it conflicts with other crates' usage of
+/// tokio. This solution resolves the problem by shadowing the method and
+/// converting the channel type with an additional adapter task.
+#[cfg(msim)]
+pub mod runtime {
+    use std::{
+        sync::{Arc, RwLock},
+        time::Duration,
+    };
+
+    pub use msim::runtime::*;
+
+    /// This is an adapter fn to convert the mismatched oneshot types used by
+    /// msim
+    pub fn start_watchdog(
+        rt: Arc<RwLock<Option<Runtime>>>,
+        inner_seed: u64,
+        timeout: Duration,
+        stop: tokio::sync::oneshot::Receiver<()>,
+    ) -> std::thread::JoinHandle<()> {
+        let (sender, receiver) = real_tokio::sync::oneshot::channel();
+        tokio::spawn(async {
+            sender.send(stop.await.unwrap()).unwrap();
+        });
+        msim::runtime::start_watchdog(rt, inner_seed, timeout, receiver)
+    }
+}
