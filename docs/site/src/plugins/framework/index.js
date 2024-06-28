@@ -83,7 +83,7 @@ const frameworkPlugin = (context, options) => {
         // deepbookFiles, Disable deepbook docs for now.
         iotasysFiles,
         stardustFiles,
-        //timelockFiles, TODO: Enabling this results in broken links, needs some love
+        timelockFiles,
       ];
       allFiles.forEach((theseFiles) => {
         theseFiles.forEach((file) => {
@@ -94,16 +94,16 @@ const frameworkPlugin = (context, options) => {
           // Remove code blocks without pre's. Render automatically adds
           // pre element that messes up formatting.
           // Remove empty code blocks because it looks lame.
+          const filename = file.replace(/.*\/docs\/(.*)$/, `$1`);
+          const parts = filename.split("/");
           const reMarkdown = markdown
             .replace(/<a\s+(.*?)\.md(.*?)>/g, `<a $1$2>`)
             .replace(
               /(title: .*)Module `(0x[0-9a-f]{1,4}::)(.*)`/g,
-              `$1 Module $2$3\nsidebar_label: $3`,
+              `$1 Module $2$3\nsidebar_label: $3\nslug: `+parts[parts.length-1].replace('\.md',''),
             )
             .replace(/(?<!<pre>)<code>(.*?)<\/code>/gs, `$1`)
             .replace(/<pre><code><\/code><\/pre>/g, "");
-          const filename = file.replace(/.*\/docs\/(.*)$/, `$1`);
-          const parts = filename.split("/");
           const fileWrite = path.join(DOCS_PATH, filename);
           let newDir = DOCS_PATH;
 
