@@ -13,9 +13,15 @@ import { useRouter } from 'next/navigation';
 function VisualAssetsPage(): JSX.Element {
     const account = useCurrentAccount();
     const router = useRouter();
-    const { data } = useGetOwnedObjects(account?.address);
+    const {
+        data: ownedObjects,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useGetOwnedObjects(account?.address);
+
     const visualAssets =
-        data?.pages
+        ownedObjects?.pages
             .flatMap((page) => page.data)
             .filter((asset) => asset.data && asset.data.objectId && hasDisplayData(asset))
             .map((response) => response.data!) ?? [];
@@ -26,13 +32,21 @@ function VisualAssetsPage(): JSX.Element {
         router.push(`/dashboard/assets/visual-assets/${objectId}`);
     };
 
+    const calculateEstimateSize = (index: number) => {
+        const asset = visualAssets[index];
+        return asset.display?.data ? 180 : 130;
+    };
+
     return (
         <div className="flex h-full w-full flex-col items-center justify-center space-y-4">
             <h1>VISUAL ASSETS</h1>
             <div className="flex w-1/2">
                 <VirtualList
                     items={visualAssets}
-                    estimateSize={() => 130}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    fetchNextPage={fetchNextPage}
+                    estimateSize={calculateEstimateSize}
                     render={virtualItem}
                     onClick={(asset) => handleClick(asset.objectId)}
                 />

@@ -4,28 +4,35 @@
 use std::str::FromStr;
 
 use iota_sdk::types::block::{
-    address::Ed25519Address,
+    address::{AliasAddress, Ed25519Address},
     output::{
-        feature::Irc30Metadata,
+        feature::{Irc30Metadata, MetadataFeature},
         unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
+            AddressUnlockCondition, ExpirationUnlockCondition,
+            ImmutableAliasAddressUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition,
         },
-        AliasId, BasicOutputBuilder, NativeToken, SimpleTokenScheme,
+        AliasId, BasicOutputBuilder, Feature, FoundryOutputBuilder, NativeToken, SimpleTokenScheme,
+        TokenScheme,
     },
     payload::transaction::TransactionId,
 };
-use iota_types::base_types::{IotaAddress, ObjectID};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    stardust::{
+        coin_type::CoinType, output::basic::BASIC_OUTPUT_MODULE_NAME, stardust_to_iota_address,
+    },
+};
 
 use crate::stardust::{
     migration::{
         tests::{
-            create_foundry, extract_native_token_from_bag, random_output_header, unlock_object,
+            create_foundry, extract_native_tokens_from_bag, random_output_header, unlock_object,
             ExpectedAssets, UnlockObjectTestResult,
         },
         Migration, MigrationTargetNetwork,
     },
-    types::{output::BASIC_OUTPUT_MODULE_NAME, snapshot::OutputHeader, stardust_to_iota_address},
+    types::output_header::OutputHeader,
 };
 
 /// Test the id of a `BasicOutput` that is transformed to a simple coin.
@@ -41,7 +48,13 @@ fn basic_simple_coin_id() {
         .finish()
         .unwrap();
 
-    let mut migration = Migration::new(1, 1_000_000, MigrationTargetNetwork::Mainnet).unwrap();
+    let mut migration = Migration::new(
+        1,
+        1_000_000,
+        MigrationTargetNetwork::Mainnet,
+        CoinType::Iota,
+    )
+    .unwrap();
     migration
         .run_migration([(header.clone(), stardust_basic.clone().into())])
         .unwrap();
@@ -49,7 +62,7 @@ fn basic_simple_coin_id() {
         .output_objects_map
         .get(&header.output_id())
         .unwrap()
-        .gas_coin()
+        .coin()
         .unwrap();
     let expected_object_id = ObjectID::new(header.output_id().hash());
     assert_eq!(expected_object_id, *migrated_object_id);
@@ -68,6 +81,7 @@ fn basic_simple_coin_id_with_expired_timelock() {
                 "0xb191c4bc825ac6983789e50545d5ef07a1d293a98ad974fc9498cb1812345678",
             )
             .unwrap(),
+            Default::default(),
             rand::random(),
             rand::random(),
             rand::random(),
@@ -88,6 +102,7 @@ fn basic_simple_coin_id_with_expired_timelock() {
             target_milestone_timestamp_sec,
             1_000_000,
             MigrationTargetNetwork::Mainnet,
+            CoinType::Iota,
         )
         .unwrap();
         migration
@@ -97,7 +112,7 @@ fn basic_simple_coin_id_with_expired_timelock() {
             .output_objects_map
             .get(&header.output_id())
             .unwrap();
-        let migrated_object_id = created_objects.gas_coin().unwrap();
+        let migrated_object_id = created_objects.coin().unwrap();
         let expected_object_id = ObjectID::new(header.output_id().hash());
         assert_eq!(expected_object_id, *migrated_object_id);
         // No output should have been created.
@@ -119,7 +134,13 @@ fn basic_id() {
         .finish()
         .unwrap();
 
-    let mut migration = Migration::new(1, 1_000_000, MigrationTargetNetwork::Mainnet).unwrap();
+    let mut migration = Migration::new(
+        1,
+        1_000_000,
+        MigrationTargetNetwork::Mainnet,
+        CoinType::Iota,
+    )
+    .unwrap();
     migration
         .run_migration([(header.clone(), stardust_basic.clone().into())])
         .unwrap();
@@ -157,8 +178,80 @@ fn basic_simple_coin_migration_with_native_token() {
         (foundry_header, foundry_output.into()),
         (header, stardust_basic.into()),
     ];
-    let mut migration = Migration::new(1, 1_000_000, MigrationTargetNetwork::Mainnet).unwrap();
+    let mut migration = Migration::new(
+        1,
+        1_000_000,
+        MigrationTargetNetwork::Mainnet,
+        CoinType::Iota,
+    )
+    .unwrap();
     migration.run_migration(outputs).unwrap();
+}
+
+#[test]
+fn basic_simple_coin_migration_with_native_tokens() {
+    let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
+    let basic_header = random_output_header();
+    let basic_output_id = basic_header.output_id();
+
+    let mut outputs = Vec::new();
+    let mut basic_builder = BasicOutputBuilder::new_with_amount(1_000_000)
+        .add_unlock_condition(AddressUnlockCondition::new(random_address));
+
+    for i in 1..=10 {
+        let foundry_header = random_output_header();
+        let token_scheme = SimpleTokenScheme::new(100_000, 0, 100_000_000).unwrap();
+        let irc_30_metadata = Irc30Metadata::new(format!("Rustcoin{i}"), format!("Rust{i}"), 0);
+        let foundry_output =
+            FoundryOutputBuilder::new_with_amount(0, i, TokenScheme::Simple(token_scheme))
+                .add_unlock_condition(ImmutableAliasAddressUnlockCondition::new(
+                    AliasAddress::new(AliasId::null()),
+                ))
+                .add_immutable_feature(Feature::Metadata(
+                    MetadataFeature::new(irc_30_metadata).unwrap(),
+                ))
+                .finish()
+                .unwrap();
+        let native_token = NativeToken::new(foundry_output.id().into(), 100).unwrap();
+        basic_builder = basic_builder.add_native_token(native_token);
+        outputs.push((foundry_header, foundry_output.into()));
+    }
+
+    let basic_output = basic_builder.finish().unwrap();
+    outputs.push((basic_header, basic_output.into()));
+
+    let mut migration = Migration::new(
+        1,
+        1_000_000,
+        MigrationTargetNetwork::Mainnet,
+        CoinType::Iota,
+    )
+    .unwrap();
+    migration.run_migration(outputs.clone()).unwrap();
+
+    let created_gas_coin_id = migration
+        .output_objects_map
+        .get(&basic_output_id)
+        .unwrap()
+        .coin()
+        .unwrap();
+    let expected_gas_coin_id = ObjectID::new(basic_output_id.hash());
+    assert_eq!(
+        created_gas_coin_id, &expected_gas_coin_id,
+        "unexpected gas coin id"
+    );
+
+    let created_native_token_ids = migration
+        .output_objects_map
+        .get(&basic_output_id)
+        .unwrap()
+        .native_tokens()
+        .unwrap();
+    assert_eq!(
+        created_native_token_ids.len(),
+        10,
+        "unexpected number of created native token objects"
+    );
 }
 
 #[test]
@@ -176,7 +269,7 @@ fn basic_migration_with_native_token() {
     let header = random_output_header();
     let output_id = header.output_id();
 
-    let stardust_basic = BasicOutputBuilder::new_with_amount(1_000_000)
+    let basic_output = BasicOutputBuilder::new_with_amount(1_000_000)
         .add_unlock_condition(AddressUnlockCondition::new(random_address))
         .add_unlock_condition(
             StorageDepositReturnUnlockCondition::new(random_address, 10, 1000).unwrap(),
@@ -185,18 +278,69 @@ fn basic_migration_with_native_token() {
         .finish()
         .unwrap();
 
+    let native_tokens = basic_output.native_tokens().clone();
+
     let outputs = [
         (foundry_header, foundry_output.into()),
-        (header, stardust_basic.into()),
+        (header, basic_output.into()),
     ];
 
-    extract_native_token_from_bag(
+    extract_native_tokens_from_bag(
         output_id,
         1_000_000,
         outputs,
         BASIC_OUTPUT_MODULE_NAME,
-        native_token,
+        native_tokens,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
+    )
+    .unwrap();
+}
+
+#[test]
+fn basic_migration_with_native_tokens() {
+    let random_address = Ed25519Address::from(rand::random::<[u8; Ed25519Address::LENGTH]>());
+    let basic_header = random_output_header();
+    let basic_output_id = basic_header.output_id();
+
+    let mut outputs = Vec::new();
+    let mut basic_builder = BasicOutputBuilder::new_with_amount(1_000_000)
+        .add_unlock_condition(AddressUnlockCondition::new(random_address))
+        .add_unlock_condition(
+            StorageDepositReturnUnlockCondition::new(random_address, 10, 1000).unwrap(),
+        );
+
+    for i in 1..=10 {
+        let foundry_header = random_output_header();
+        let token_scheme = SimpleTokenScheme::new(100_000, 0, 100_000_000).unwrap();
+        let irc_30_metadata = Irc30Metadata::new(format!("Rustcoin{i}"), format!("Rust{i}"), 0);
+        let foundry_output =
+            FoundryOutputBuilder::new_with_amount(0, i, TokenScheme::Simple(token_scheme))
+                .add_unlock_condition(ImmutableAliasAddressUnlockCondition::new(
+                    AliasAddress::new(AliasId::null()),
+                ))
+                .add_immutable_feature(Feature::Metadata(
+                    MetadataFeature::new(irc_30_metadata).unwrap(),
+                ))
+                .finish()
+                .unwrap();
+        let native_token = NativeToken::new(foundry_output.id().into(), 100).unwrap();
+        basic_builder = basic_builder.add_native_token(native_token);
+        outputs.push((foundry_header, foundry_output.into()));
+    }
+
+    let basic_output = basic_builder.finish().unwrap();
+    let native_tokens = basic_output.native_tokens().clone();
+    outputs.push((basic_header, basic_output.into()));
+
+    extract_native_tokens_from_bag(
+        basic_output_id,
+        1_000_000,
+        outputs,
+        BASIC_OUTPUT_MODULE_NAME,
+        native_tokens,
+        ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -232,6 +376,7 @@ fn basic_migration_with_timelock_unlocked() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::Success,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -265,6 +410,7 @@ fn basic_migration_with_timelock_still_locked() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::ERROR_TIMELOCK_NOT_EXPIRED_FAILURE,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -303,6 +449,7 @@ fn basic_migration_with_expired_unlock_condition() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::ERROR_WRONG_SENDER_FAILURE,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 
@@ -316,6 +463,7 @@ fn basic_migration_with_expired_unlock_condition() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::Success,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -354,6 +502,7 @@ fn basic_migration_with_unexpired_unlock_condition() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::ERROR_WRONG_SENDER_FAILURE,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 
@@ -367,6 +516,7 @@ fn basic_migration_with_unexpired_unlock_condition() {
         epoch_start_timestamp_ms as u64,
         UnlockObjectTestResult::Success,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -399,6 +549,7 @@ fn basic_migration_with_storage_deposit_return_unlock_condition() {
         0,
         UnlockObjectTestResult::Success,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap();
 }
@@ -427,6 +578,7 @@ fn basic_migration_with_incorrect_total_supply() {
         0,
         UnlockObjectTestResult::Success,
         ExpectedAssets::BalanceBag,
+        CoinType::Iota,
     )
     .unwrap_err();
 

@@ -4,12 +4,13 @@
 use anyhow::{anyhow, bail, Result};
 use iota_types::base_types::ObjectID;
 
-/// Defines objects that may have been created by migrating an [`Output`].
+/// Defines objects that may have been created by migrating an
+/// [`Output`](iota_sdk::types::block::output::Output).
 #[derive(Default)]
 pub struct CreatedObjects {
     output: Option<ObjectID>,
     package: Option<ObjectID>,
-    gas_coin: Option<ObjectID>,
+    coin: Option<ObjectID>,
     native_token_coin: Option<ObjectID>,
     native_tokens: Option<Vec<ObjectID>>,
     coin_manager: Option<ObjectID>,
@@ -45,17 +46,17 @@ impl CreatedObjects {
         Ok(())
     }
 
-    pub fn gas_coin(&self) -> Result<&ObjectID> {
-        self.gas_coin
+    pub fn coin(&self) -> Result<&ObjectID> {
+        self.coin
             .as_ref()
-            .ok_or_else(|| anyhow!("no created gas coin object"))
+            .ok_or_else(|| anyhow!("no created coin object"))
     }
 
-    pub(crate) fn set_gas_coin(&mut self, id: ObjectID) -> Result<()> {
-        if let Some(id) = self.gas_coin {
-            bail!("gas coin already set: {id}")
+    pub(crate) fn set_coin(&mut self, id: ObjectID) -> Result<()> {
+        if let Some(id) = self.coin {
+            bail!("coin already set: {id}")
         }
-        self.gas_coin.replace(id);
+        self.coin.replace(id);
         Ok(())
     }
 
