@@ -80,7 +80,7 @@ module iota_system::iota_system {
         id: UID,
         iota_treasury_cap: TreasuryCap<IOTA>,
         validators: vector<Validator>,
-        storage_fund: Balance<IOTA>,
+        storage_deposits: Balance<IOTA>,
         protocol_version: u64,
         epoch_start_timestamp_ms: u64,
         parameters: SystemParameters,
@@ -90,7 +90,7 @@ module iota_system::iota_system {
         let system_state = iota_system_state_inner::create(
             iota_treasury_cap,
             validators,
-            storage_fund,
+            storage_deposits,
             protocol_version,
             epoch_start_timestamp_ms,
             parameters,
@@ -678,15 +678,9 @@ module iota_system::iota_system {
     }
 
     #[test_only]
-    public fun get_storage_fund_total_balance(wrapper: &mut IotaSystemState): u64 {
+    public fun get_storage_deposits_total_balance(wrapper: &mut IotaSystemState): u64 {
         let self = load_system_state(wrapper);
-        self.get_storage_fund_total_balance()
-    }
-
-    #[test_only]
-    public fun get_storage_fund_object_rebates(wrapper: &mut IotaSystemState): u64 {
-        let self = load_system_state(wrapper);
-        self.get_storage_fund_object_rebates()
+        self.get_storage_deposits_total_balance()
     }
 
     #[test_only]

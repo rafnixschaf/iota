@@ -11,7 +11,7 @@ module iota_system::iota_system_state_inner {
     use iota_system::validator_set::{Self, ValidatorSet};
     use iota_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
     use iota_system::stake_subsidy::StakeSubsidy;
-    use iota_system::storage_fund::{Self, StorageFund};
+    use iota_system::storage_deposits::{Self, StorageDeposits};
     use iota_system::staking_pool::PoolTokenExchangeRate;
     use iota::vec_map::{Self, VecMap};
     use iota::vec_set::{Self, VecSet};
@@ -115,7 +115,7 @@ module iota_system::iota_system_state_inner {
         /// Contains all information about the validators.
         validators: ValidatorSet,
         /// The storage fund.
-        storage_fund: StorageFund,
+        storage_deposits: StorageDeposits,
         /// A list of system config parameters.
         parameters: SystemParameters,
         /// The reference gas price for the current epoch.
@@ -165,7 +165,7 @@ module iota_system::iota_system_state_inner {
         /// Contains all information about the validators.
         validators: ValidatorSet,
         /// The storage fund.
-        storage_fund: StorageFund,
+        storage_deposits: StorageDeposits,
         /// A list of system config parameters.
         parameters: SystemParametersV2,
         /// The reference gas price for the current epoch.
@@ -253,7 +253,7 @@ module iota_system::iota_system_state_inner {
             system_state_version: genesis_system_state_version(),
             iota_treasury_cap,
             validators,
-            storage_fund: storage_fund::new(initial_storage_fund),
+            storage_deposits: storage_deposits::new(initial_storage_fund),
             parameters,
             reference_gas_price,
             validator_report_records: vec_map::empty(),
@@ -300,7 +300,7 @@ module iota_system::iota_system_state_inner {
             system_state_version: _,
             iota_treasury_cap,
             validators,
-            storage_fund,
+            storage_deposits,
             parameters,
             reference_gas_price,
             validator_report_records,
@@ -329,7 +329,7 @@ module iota_system::iota_system_state_inner {
             system_state_version: 2,
             iota_treasury_cap,
             validators,
-            storage_fund,
+            storage_deposits,
             parameters: SystemParametersV2 {
                 epoch_duration_ms,
                 stake_subsidy_start_epoch,
@@ -817,8 +817,8 @@ module iota_system::iota_system_state_inner {
 
     /// This function should be called at the end of an epoch, and advances the system to the next epoch.
     /// It does the following things:
-    /// 1. Add storage charge to the storage fund.
-    /// 2. Burn the storage rebates from the storage fund. These are already refunded to transaction sender's
+    /// 1. Add storage charge to the storage deposits.
+    /// 2. Burn the storage rebates from the storage deposits. These are already refunded to transaction sender's
     ///    gas coins.
     /// 3. Distribute computation charge to validator stake.
     /// 4. Update all validators.
@@ -857,8 +857,8 @@ module iota_system::iota_system_state_inner {
         self.safe_mode_non_refundable_storage_fee = 0;
 
         let total_validators_stake = self.validators.total_stake();
-        let storage_fund_balance = self.storage_fund.total_balance();
-        let total_stake = storage_fund_balance + total_validators_stake;
+        let storage_deposits_balance = self.storage_deposits.total_balance();
+        let total_stake = storage_deposits_balance + total_validators_stake;
 
         let storage_charge = storage_reward.value();
         let computation_charge = computation_reward.value();
@@ -881,7 +881,7 @@ module iota_system::iota_system_state_inner {
         let total_stake_u128 = total_stake as u128;
         let computation_charge_u128 = computation_charge as u128;
 
-        let storage_fund_reward_amount = storage_fund_balance as u128 * computation_charge_u128 / total_stake_u128;
+        let storage_fund_reward_amount = storage_deposits_balance as u128 * computation_charge_u128 / total_stake_u128;
         let mut storage_fund_reward = computation_reward.split(storage_fund_reward_amount as u64);
 
         self.epoch = self.epoch + 1;
@@ -922,7 +922,7 @@ module iota_system::iota_system_state_inner {
         
         self.iota_treasury_cap.supply_mut().decrease_supply(leftover_staking_rewards);
         let refunded_storage_rebate =
-            self.storage_fund.advance_epoch(
+            self.storage_deposits.advance_epoch(
                 storage_reward,
                 storage_rebate_amount,
                 non_refundable_storage_fee_amount,
@@ -936,7 +936,7 @@ module iota_system::iota_system_state_inner {
                 total_stake: new_total_stake,
                 storage_charge,
                 storage_rebate: storage_rebate_amount,
-                storage_fund_balance: self.storage_fund.total_balance(),
+                storage_fund_balance: self.storage_deposits.total_balance(),
                 stake_subsidy_amount,
                 total_gas_fees: computation_charge,
                 total_stake_rewards_distributed: computation_reward_distributed + storage_fund_reward_distributed,
@@ -1008,12 +1008,8 @@ module iota_system::iota_system_state_inner {
         }
     }
 
-    public(package) fun get_storage_fund_total_balance(self: &IotaSystemStateInnerV2): u64 {
-        self.storage_fund.total_balance()
-    }
-
-    public(package) fun get_storage_fund_object_rebates(self: &IotaSystemStateInnerV2): u64 {
-        self.storage_fund.total_object_storage_rebates()
+    public(package) fun get_storage_deposits_total_balance(self: &IotaSystemStateInnerV2): u64 {
+        self.storage_deposits.total_balance()
     }
 
     public(package) fun pool_exchange_rates(

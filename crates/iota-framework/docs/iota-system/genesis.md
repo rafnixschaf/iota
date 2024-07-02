@@ -367,7 +367,7 @@ all the information we need in the system.
     } = token_distribution_schedule;
 
     <b>let</b> subsidy_fund = iota_supply.split(stake_subsidy_fund_micros);
-    <b>let</b> <a href="storage_fund.md#0x3_storage_fund">storage_fund</a> = <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>();
+    <b>let</b> storage_fund = <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>();
 
     // Create all the `Validator` structs
     <b>let</b> <b>mut</b> validators = <a href="../move-stdlib/vector.md#0x1_vector">vector</a>[];
@@ -459,7 +459,7 @@ all the information we need in the system.
         iota_system_state_id,
         iota_treasury_cap,
         validators,
-        <a href="storage_fund.md#0x3_storage_fund">storage_fund</a>,
+        storage_fund,
         genesis_chain_parameters.protocol_version,
         genesis_chain_parameters.chain_start_timestamp_ms,
         system_parameters,

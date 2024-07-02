@@ -57,8 +57,7 @@ title: Module `0x3::iota_system_state_inner`
 -  [Function `validator_staking_pool_id`](#0x3_iota_system_state_inner_validator_staking_pool_id)
 -  [Function `validator_staking_pool_mappings`](#0x3_iota_system_state_inner_validator_staking_pool_mappings)
 -  [Function `get_reporters_of`](#0x3_iota_system_state_inner_get_reporters_of)
--  [Function `get_storage_fund_total_balance`](#0x3_iota_system_state_inner_get_storage_fund_total_balance)
--  [Function `get_storage_fund_object_rebates`](#0x3_iota_system_state_inner_get_storage_fund_object_rebates)
+-  [Function `get_storage_deposits_total_balance`](#0x3_iota_system_state_inner_get_storage_deposits_total_balance)
 -  [Function `pool_exchange_rates`](#0x3_iota_system_state_inner_pool_exchange_rates)
 -  [Function `active_validator_addresses`](#0x3_iota_system_state_inner_active_validator_addresses)
 -  [Function `extract_coin_balance`](#0x3_iota_system_state_inner_extract_coin_balance)
@@ -79,7 +78,7 @@ title: Module `0x3::iota_system_state_inner`
 <b>use</b> <a href="../iota-framework/vec_set.md#0x2_vec_set">0x2::vec_set</a>;
 <b>use</b> <a href="stake_subsidy.md#0x3_stake_subsidy">0x3::stake_subsidy</a>;
 <b>use</b> <a href="staking_pool.md#0x3_staking_pool">0x3::staking_pool</a>;
-<b>use</b> <a href="storage_fund.md#0x3_storage_fund">0x3::storage_fund</a>;
+<b>use</b> <a href="storage_deposits.md#0x3_storage_deposits">0x3::storage_deposits</a>;
 <b>use</b> <a href="validator.md#0x3_validator">0x3::validator</a>;
 <b>use</b> <a href="validator_cap.md#0x3_validator_cap">0x3::validator_cap</a>;
 <b>use</b> <a href="validator_set.md#0x3_validator_set">0x3::validator_set</a>;
@@ -293,7 +292,7 @@ The top-level object containing all information of the Iota system.
  Contains all information about the validators.
 </dd>
 <dt>
-<code><a href="storage_fund.md#0x3_storage_fund">storage_fund</a>: <a href="storage_fund.md#0x3_storage_fund_StorageFund">storage_fund::StorageFund</a></code>
+<code><a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>: <a href="storage_deposits.md#0x3_storage_deposits_StorageDeposits">storage_deposits::StorageDeposits</a></code>
 </dt>
 <dd>
  The storage fund.
@@ -431,7 +430,7 @@ Uses SystemParametersV2 as the parameters.
  Contains all information about the validators.
 </dd>
 <dt>
-<code><a href="storage_fund.md#0x3_storage_fund">storage_fund</a>: <a href="storage_fund.md#0x3_storage_fund_StorageFund">storage_fund::StorageFund</a></code>
+<code><a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>: <a href="storage_deposits.md#0x3_storage_deposits_StorageDeposits">storage_deposits::StorageDeposits</a></code>
 </dt>
 <dd>
  The storage fund.
@@ -775,7 +774,7 @@ This function will be called only once in genesis.
         system_state_version: <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_genesis_system_state_version">genesis_system_state_version</a>(),
         iota_treasury_cap,
         validators,
-        <a href="storage_fund.md#0x3_storage_fund">storage_fund</a>: <a href="storage_fund.md#0x3_storage_fund_new">storage_fund::new</a>(initial_storage_fund),
+        <a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>: <a href="storage_deposits.md#0x3_storage_deposits_new">storage_deposits::new</a>(initial_storage_fund),
         parameters,
         reference_gas_price,
         validator_report_records: <a href="../iota-framework/vec_map.md#0x2_vec_map_empty">vec_map::empty</a>(),
@@ -862,7 +861,7 @@ This function will be called only once in genesis.
         system_state_version: _,
         iota_treasury_cap,
         validators,
-        <a href="storage_fund.md#0x3_storage_fund">storage_fund</a>,
+        <a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>,
         parameters,
         reference_gas_price,
         validator_report_records,
@@ -891,7 +890,7 @@ This function will be called only once in genesis.
         system_state_version: 2,
         iota_treasury_cap,
         validators,
-        <a href="storage_fund.md#0x3_storage_fund">storage_fund</a>,
+        <a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>,
         parameters: <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_SystemParametersV2">SystemParametersV2</a> {
             epoch_duration_ms,
             stake_subsidy_start_epoch,
@@ -2114,8 +2113,8 @@ gas coins.
     self.safe_mode_non_refundable_storage_fee = 0;
 
     <b>let</b> total_validators_stake = self.validators.total_stake();
-    <b>let</b> storage_fund_balance = self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance();
-    <b>let</b> total_stake = storage_fund_balance + total_validators_stake;
+    <b>let</b> storage_deposits_balance = self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.total_balance();
+    <b>let</b> total_stake = storage_deposits_balance + total_validators_stake;
 
     <b>let</b> storage_charge = storage_reward.value();
     <b>let</b> computation_charge = computation_reward.value();
@@ -2138,7 +2137,7 @@ gas coins.
     <b>let</b> total_stake_u128 = total_stake <b>as</b> u128;
     <b>let</b> computation_charge_u128 = computation_charge <b>as</b> u128;
 
-    <b>let</b> storage_fund_reward_amount = storage_fund_balance <b>as</b> u128 * computation_charge_u128 / total_stake_u128;
+    <b>let</b> storage_fund_reward_amount = storage_deposits_balance <b>as</b> u128 * computation_charge_u128 / total_stake_u128;
     <b>let</b> <b>mut</b> storage_fund_reward = computation_reward.split(storage_fund_reward_amount <b>as</b> u64);
 
     self.epoch = self.epoch + 1;
@@ -2179,7 +2178,7 @@ gas coins.
 
     self.iota_treasury_cap.supply_mut().decrease_supply(leftover_staking_rewards);
     <b>let</b> refunded_storage_rebate =
-        self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
+        self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
             storage_reward,
             storage_rebate_amount,
             non_refundable_storage_fee_amount,
@@ -2193,7 +2192,7 @@ gas coins.
             total_stake: new_total_stake,
             storage_charge,
             storage_rebate: storage_rebate_amount,
-            storage_fund_balance: self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance(),
+            storage_fund_balance: self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.total_balance(),
             stake_subsidy_amount,
             total_gas_fees: computation_charge,
             total_stake_rewards_distributed: computation_reward_distributed + storage_fund_reward_distributed,
@@ -2450,13 +2449,13 @@ Returns all the validators who are currently reporting <code>addr</code>
 
 </details>
 
-<a name="0x3_iota_system_state_inner_get_storage_fund_total_balance"></a>
+<a name="0x3_iota_system_state_inner_get_storage_deposits_total_balance"></a>
 
-## Function `get_storage_fund_total_balance`
+## Function `get_storage_deposits_total_balance`
 
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_fund_total_balance">get_storage_fund_total_balance</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_deposits_total_balance">get_storage_deposits_total_balance</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
 </code></pre>
 
 
@@ -2465,32 +2464,8 @@ Returns all the validators who are currently reporting <code>addr</code>
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_fund_total_balance">get_storage_fund_total_balance</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
-    self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance()
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x3_iota_system_state_inner_get_storage_fund_object_rebates"></a>
-
-## Function `get_storage_fund_object_rebates`
-
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_fund_object_rebates">get_storage_fund_object_rebates</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_fund_object_rebates">get_storage_fund_object_rebates</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
-    self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_object_storage_rebates()
+<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_deposits_total_balance">get_storage_deposits_total_balance</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
+    self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.total_balance()
 }
 </code></pre>
 
