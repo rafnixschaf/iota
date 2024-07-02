@@ -207,7 +207,6 @@ module iota_system::iota_system_state_inner {
         protocol_version: u64,
         reference_gas_price: u64,
         total_stake: u64,
-        storage_fund_reinvestment: u64,
         storage_charge: u64,
         storage_rebate: u64,
         storage_fund_balance: u64,
@@ -831,8 +830,6 @@ module iota_system::iota_system_state_inner {
         mut computation_reward: Balance<IOTA>,
         mut storage_rebate_amount: u64,
         mut non_refundable_storage_fee_amount: u64,
-        storage_fund_reinvest_rate: u64, // share of storage fund's rewards that's reinvested
-                                         // into storage fund, in basis point.
         reward_slashing_rate: u64, // how much rewards are slashed to punish a validator, in bps.
         epoch_start_timestamp_ms: u64, // Timestamp of the epoch start
         ctx: &mut TxContext,
@@ -842,11 +839,7 @@ module iota_system::iota_system_state_inner {
 
         let bps_denominator_u64 = BASIS_POINT_DENOMINATOR as u64;
         // Rates can't be higher than 100%.
-        assert!(
-            storage_fund_reinvest_rate <= bps_denominator_u64
-            && reward_slashing_rate <= bps_denominator_u64,
-            EBpsTooLarge,
-        );
+        assert!(reward_slashing_rate <= bps_denominator_u64, EBpsTooLarge);
 
         // TODO: remove this in later upgrade.
         if (self.parameters.stake_subsidy_start_epoch > 0) {
@@ -890,11 +883,6 @@ module iota_system::iota_system_state_inner {
 
         let storage_fund_reward_amount = storage_fund_balance as u128 * computation_charge_u128 / total_stake_u128;
         let mut storage_fund_reward = computation_reward.split(storage_fund_reward_amount as u64);
-        let storage_fund_reinvestment_amount =
-            storage_fund_reward_amount * (storage_fund_reinvest_rate as u128) / BASIS_POINT_DENOMINATOR;
-        let storage_fund_reinvestment = storage_fund_reward.split(
-            storage_fund_reinvestment_amount as u64,
-        );
 
         self.epoch = self.epoch + 1;
         // Sanity check to make sure we are advancing to the right epoch.
@@ -931,12 +919,11 @@ module iota_system::iota_system_state_inner {
         let mut leftover_staking_rewards = storage_fund_reward;
         leftover_staking_rewards.join(computation_reward);
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
-
+        
+        self.iota_treasury_cap.supply_mut().decrease_supply(leftover_staking_rewards);
         let refunded_storage_rebate =
             self.storage_fund.advance_epoch(
                 storage_reward,
-                storage_fund_reinvestment,
-                leftover_staking_rewards,
                 storage_rebate_amount,
                 non_refundable_storage_fee_amount,
             );
@@ -948,7 +935,6 @@ module iota_system::iota_system_state_inner {
                 reference_gas_price: self.reference_gas_price,
                 total_stake: new_total_stake,
                 storage_charge,
-                storage_fund_reinvestment: storage_fund_reinvestment_amount as u64,
                 storage_rebate: storage_rebate_amount,
                 storage_fund_balance: self.storage_fund.total_balance(),
                 stake_subsidy_amount,
