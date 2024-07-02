@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{fs, path::Path};
+use std::{collections::HashMap, fs, path::Path};
 
 use anyhow::{Context, Result};
 use fastcrypto::{
@@ -11,7 +11,7 @@ use fastcrypto::{
 };
 use iota_types::{
     authenticator_state::{get_authenticator_state, AuthenticatorStateInner},
-    base_types::{IotaAddress, ObjectID},
+    base_types::{IotaAddress, ObjectID, ObjectRef},
     clock::Clock,
     committee::{Committee, CommitteeWithNetworkMetadata, EpochId, ProtocolVersion},
     crypto::DefaultHash,
@@ -469,21 +469,21 @@ impl Default for GenesisCeremonyParameters {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct TokenDistributionSchedule {
-    pub stake_subsidy_fund_micros: u64,
+    pub stake_subsidy_fund_nanos: u64,
     pub allocations: Vec<TokenAllocation>,
 }
 
 impl TokenDistributionSchedule {
     pub fn validate(&self) {
-        let mut total_micros = self.stake_subsidy_fund_micros;
+        let mut total_nanos = self.stake_subsidy_fund_nanos;
 
         for allocation in &self.allocations {
-            total_micros += allocation.amount_micros;
+            total_nanos += allocation.amount_micros;
         }
 
-        if total_micros != TOTAL_SUPPLY_MICROS {
+        if total_nanos != TOTAL_SUPPLY_MICROS {
             panic!(
-                "TokenDistributionSchedule adds up to {total_micros} and not expected {TOTAL_SUPPLY_MICROS}"
+                "TokenDistributionSchedule adds up to {total_nanos} and not expected {TOTAL_SUPPLY_MICROS}"
             );
         }
     }
@@ -493,9 +493,8 @@ impl TokenDistributionSchedule {
     >(
         &self,
         validators: I,
+        timelock_allocation: HashMap<IotaAddress, u64>,
     ) {
-        use std::collections::HashMap;
-
         let mut validators: HashMap<IotaAddress, u64> =
             validators.into_iter().map(|a| (a, 0)).collect();
 
@@ -515,9 +514,17 @@ impl TokenDistributionSchedule {
         let minimum_required_stake = iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_MICROS;
         for (validator, stake) in validators {
             if stake < minimum_required_stake {
-                panic!(
-                    "validator {validator} has '{stake}' stake and does not meet the minimum required stake threshold of '{minimum_required_stake}'"
-                );
+                let meets_threshold = timelock_allocation
+                    .get(&validator)
+                    .map_or(false, |&timelock_alloc_stake| {
+                        timelock_alloc_stake + stake >= minimum_required_stake
+                    });
+
+                if !meets_threshold {
+                    panic!(
+                        "validator {validator} has '{stake}' stake and does not meet the minimum required stake threshold of '{minimum_required_stake}'"
+                    );
+                }
             }
         }
     }
@@ -541,7 +548,7 @@ impl TokenDistributionSchedule {
             .collect();
 
         let schedule = Self {
-            stake_subsidy_fund_micros: supply,
+            stake_subsidy_fund_nanos: supply,
             allocations,
         };
 
@@ -581,7 +588,7 @@ impl TokenDistributionSchedule {
         );
 
         let schedule = Self {
-            stake_subsidy_fund_micros: stake_subsidy_fund_allocation.amount_micros,
+            stake_subsidy_fund_nanos: stake_subsidy_fund_allocation.amount_micros,
             allocations,
         };
 
@@ -598,7 +605,7 @@ impl TokenDistributionSchedule {
 
         writer.serialize(TokenAllocation {
             recipient_address: IotaAddress::default(),
-            amount_micros: self.stake_subsidy_fund_micros,
+            amount_micros: self.stake_subsidy_fund_nanos,
             staked_with_validator: None,
         })?;
 
@@ -615,6 +622,18 @@ pub struct TokenAllocation {
     /// Indicates if this allocation should be staked at genesis and with which
     /// validator
     pub staked_with_validator: Option<IotaAddress>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct TimelockAllocation {
+    pub recipient_address: IotaAddress,
+    pub amount_nanos: u64,
+    /// The surplus of the total balance of the
+    /// timelock objects w.r.t. the target stake.
+    pub surplus_nanos: u64,
+    pub timelock_objects: Vec<ObjectRef>,
+    pub staked_with_validator: IotaAddress,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -654,7 +673,7 @@ impl TokenDistributionScheduleBuilder {
 
     pub fn build(&self) -> TokenDistributionSchedule {
         let schedule = TokenDistributionSchedule {
-            stake_subsidy_fund_micros: self.pool,
+            stake_subsidy_fund_nanos: self.pool,
             allocations: self.allocations.clone(),
         };
 

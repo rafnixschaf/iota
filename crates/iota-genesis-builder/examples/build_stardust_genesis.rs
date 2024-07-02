@@ -28,7 +28,7 @@ fn main() -> anyhow::Result<()> {
     for key in &key_pairs {
         builder = builder.add_validator_signature(key);
     }
-    let _genesis = builder.build();
-    println!("{:?}", _genesis);
+    let genesis = builder.build();
+    genesis.save("genesis.blob")?;
     Ok(())
 }

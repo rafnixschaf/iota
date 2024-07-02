@@ -13,14 +13,15 @@ use anyhow::{bail, Context};
 use camino::Utf8Path;
 use fastcrypto::{hash::HashFunction, traits::KeyPair};
 use iota_config::genesis::{
-    Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenAllocation,
-    TokenDistributionSchedule, TokenDistributionScheduleBuilder, UnsignedGenesis,
+    Genesis, GenesisCeremonyParameters, GenesisChainParameters, TimelockAllocation,
+    TokenDistributionSchedule, UnsignedGenesis,
 };
 use iota_execution::{self, Executor};
 use iota_framework::{BuiltInFramework, SystemPackage};
 use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use iota_sdk::types::block::address::Address;
 use iota_types::{
+    balance::Balance,
     base_types::{
         ExecutionDigests, IotaAddress, ObjectID, SequenceNumber, TransactionDigest, TxContext,
     },
@@ -34,7 +35,7 @@ use iota_types::{
     effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
     epoch_data::EpochData,
     gas::IotaGasStatus,
-    gas_coin::GasCoin,
+    gas_coin::{GasCoin, GAS},
     governance::StakedIota,
     in_memory_storage::InMemoryStorage,
     inner_temporary_store::InnerTemporaryStore,
@@ -45,17 +46,21 @@ use iota_types::{
     object::{Object, Owner},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{
-        CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectReadResult, Transaction,
+        CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,
+        Transaction,
     },
-    IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID,
+    IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION, TIMELOCK_ADDRESS,
 };
 use move_binary_format::CompiledModule;
 use move_core_types::ident_str;
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
+use stake::{delegate_genesis_stake, GenesisStake};
 use stardust::{migration::MigrationObjects, types::stardust_to_iota_address};
 use tracing::trace;
 use validator_info::{GenesisValidatorInfo, GenesisValidatorMetadata, ValidatorInfo};
 
+mod stake;
 pub mod stardust;
 pub mod validator_info;
 
@@ -74,6 +79,7 @@ pub const BROTLI_COMPRESSOR_QUALITY: u32 = 11; // Compression levels go from 0 t
 pub const BROTLI_COMPRESSOR_LG_WINDOW_SIZE: u32 = 22; // set LZ77 window size (0, 10-24) where bigger windows size improves density
 
 pub const OBJECT_SNAPSHOT_FILE_PATH: &str = "stardust_object_snapshot.bin";
+
 pub struct Builder {
     parameters: GenesisCeremonyParameters,
     token_distribution_schedule: Option<TokenDistributionSchedule>,
@@ -83,6 +89,7 @@ pub struct Builder {
     signatures: BTreeMap<AuthorityPublicKeyBytes, AuthoritySignInfo>,
     built_genesis: Option<UnsignedGenesis>,
     migration_objects: MigrationObjects,
+    genesis_stake: GenesisStake,
 }
 
 impl Default for Builder {
@@ -101,7 +108,14 @@ impl Builder {
             signatures: Default::default(),
             built_genesis: None,
             migration_objects: Default::default(),
+            genesis_stake: Default::default(),
         }
+    }
+
+    /// Checks if the genesis to be built is vanilla or if it includes Stardust
+    /// migration stakes
+    pub fn is_vanilla(&self) -> bool {
+        self.genesis_stake.is_empty()
     }
 
     pub fn with_parameters(mut self, parameters: GenesisCeremonyParameters) -> Self {
@@ -179,6 +193,8 @@ impl Builder {
         self
     }
 
+    /// Utility to load Stardust Migration Objects into the builder from a
+    /// snapshot file
     pub fn load_stardust_migration_objects(
         mut self,
         snapshot: impl AsRef<Path>,
@@ -199,25 +215,30 @@ impl Builder {
         }
 
         // Verify that all input data is valid
-        self.validate().unwrap();
-
+        self.validate_inputs().unwrap();
         let validators = self.validators.clone().into_values().collect::<Vec<_>>();
 
-        // Delegate here our stake
-        // * Input validators
-        // * Input an stardust address that will resolve to the pool of objects to
-        //   delegate stake from
-        // * Return a `Vec<TokenAllocation>`
-        let delegator =
-            stardust_to_iota_address(Address::try_from_bech32(IF_STARDUST_ADDRESS).unwrap())
-                .unwrap();
-        let genesis_stake =
-            delegate_genesis_stake(&validators, delegator, &self.migration_objects).unwrap();
-        let is_vanilla_genesis = genesis_stake.is_empty();
+        // If not vanilla then create genesis_stake
+        if !self.migration_objects.is_empty() {
+            let delegator =
+                stardust_to_iota_address(Address::try_from_bech32(IF_STARDUST_ADDRESS).unwrap())
+                    .unwrap();
+            // TODO: check whether we need to start with
+            // VALIDATOR_LOW_STAKE_THRESHOLD_MICROS
+            let minimum_stake = iota_types::governance::MIN_VALIDATOR_JOINING_STAKE_MICROS;
+            self.genesis_stake = delegate_genesis_stake(
+                &validators,
+                delegator,
+                &self.migration_objects,
+                minimum_stake,
+            )
+            .unwrap();
+        }
 
-        let token_distribution_schedule = if is_vanilla_genesis {
-            // vanilla
-            // iota-supply invariant is satisfied
+        // Verify that token distribution schedule is valid
+        self.validate_token_distribution_schedule().unwrap();
+        // Get the vanilla token distribution schedule or merge it with genesis stake
+        let token_distribution_schedule = if self.is_vanilla() {
             if let Some(token_distribution_schedule) = &self.token_distribution_schedule {
                 token_distribution_schedule.clone()
             } else {
@@ -226,33 +247,27 @@ impl Builder {
                 )
             }
         } else if let Some(token_distribution_schedule) = &self.token_distribution_schedule {
-            // iota-supply invariant breaks on the Move side
-            // * we build a valid token-distribution schedule
-            // * we have the migration distribution of the iota supply
-            let mut schedule = token_distribution_schedule.clone();
-            let delegated_amount: u64 = genesis_stake
-                .iter()
-                .map(|allocation| allocation.amount_micros)
-                .sum();
-
-            schedule.allocations.extend(genesis_stake);
-            schedule.stake_subsidy_fund_micros -= delegated_amount;
-            schedule
+            self.genesis_stake
+                .extend_vanilla_token_distribution_schedule(token_distribution_schedule.clone())
         } else {
-            // iota-supply invariant breaks on the Move side
-            // * we build a valid token-distribution schedule
-            // * and we have the migration distribution of the iota supply
-            let mut builder = TokenDistributionScheduleBuilder::new();
-            for allocation in genesis_stake {
-                builder.add_allocation(allocation);
-            }
-            builder.build()
+            self.genesis_stake.to_token_distribution_schedule()
         };
 
+        // If the genesis stake was created, then burn gas objects that were added to
+        // the token distribution schedule, because they will be created on the
+        // Move side during genesis. That means we need to prevent from being
+        // part of the initial genesis objects by evicting them here.
+        self.migration_objects.evict(
+            self.genesis_stake
+                .take_gas_coins_to_burn()
+                .into_iter()
+                .map(|(id, _, _)| id),
+        );
         let mut objects = self.migration_objects.take_objects();
         objects.extend(self.objects.values().cloned());
 
-        if !is_vanilla_genesis {
+        // Use stake_subsidy_start_epoch to mimic the burn of newly minted IOTA coins
+        if !self.is_vanilla() {
             // Because we set the `stake_subsidy_fund` as non-zero
             // we need to effectively disable subsidy rewards
             // to avoid the respective inflation effects.
@@ -261,9 +276,12 @@ impl Builder {
             // implementation.
             self.parameters.stake_subsidy_start_epoch = u64::MAX;
         }
+
+        // Finally build the genesis data
         self.built_genesis = Some(build_unsigned_genesis_data(
             &self.parameters,
             &token_distribution_schedule,
+            &self.genesis_stake.take_timelock_allocations(),
             &validators,
             &objects,
         ));
@@ -320,6 +338,7 @@ impl Builder {
     /// state is (input collection phase or output phase)
     pub fn validate(&self) -> anyhow::Result<(), anyhow::Error> {
         self.validate_inputs()?;
+        self.validate_token_distribution_schedule()?;
         self.validate_output();
         Ok(())
     }
@@ -340,10 +359,26 @@ impl Builder {
             })?;
         }
 
+        Ok(())
+    }
+
+    /// Runs through validation checks on the input token distribution schedule
+    fn validate_token_distribution_schedule(&self) -> anyhow::Result<(), anyhow::Error> {
         if let Some(token_distribution_schedule) = &self.token_distribution_schedule {
             token_distribution_schedule.validate();
             token_distribution_schedule.check_all_stake_operations_are_for_valid_validators(
                 self.validators.values().map(|v| v.info.iota_address()),
+                (!self.is_vanilla())
+                    .then(|| {
+                        self.genesis_stake
+                            .timelock_allocations()
+                            .iter()
+                            .map(|allocation| {
+                                (allocation.staked_with_validator, allocation.amount_nanos)
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default(),
             );
         }
 
@@ -524,7 +559,7 @@ impl Builder {
         let token_distribution_schedule = self.token_distribution_schedule.clone().unwrap();
         assert_eq!(
             system_state.stake_subsidy.balance.value(),
-            token_distribution_schedule.stake_subsidy_fund_micros
+            token_distribution_schedule.stake_subsidy_fund_nanos
         );
 
         let mut gas_objects: BTreeMap<ObjectID, (&Object, GasCoin)> = unsigned_genesis
@@ -673,6 +708,7 @@ impl Builder {
             signatures,
             built_genesis: None, // Leave this as none, will build and compare below
             migration_objects: Default::default(),
+            genesis_stake: Default::default(),
         };
 
         let unsigned_genesis_file = path.join(GENESIS_BUILDER_UNSIGNED_GENESIS_FILE);
@@ -751,28 +787,6 @@ impl Builder {
     }
 }
 
-fn delegate_genesis_stake(
-    _validators: &[GenesisValidatorInfo],
-    delegator: IotaAddress,
-    migration_objects: &MigrationObjects,
-) -> anyhow::Result<Vec<TokenAllocation>> {
-    // * Query migration objects by delegator
-    let _object_pool = migration_objects
-        .get_timelocks_by_owner(delegator)
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "no gas-coin like objects found for delegator {:?}",
-                delegator
-            )
-        })?;
-    // * pick whatever to cover the minimum stake required for the validators
-    // * For timelocks we need to add the stake directly by calling
-    //   Timelock::request_add_stake_
-    // * For gas coins, we need to split the balance of the coins and create the
-    //   `TokenAllocation` for each.
-    todo!()
-}
-
 // Create a Genesis Txn Context to be used when generating genesis objects by
 // hashing all of the inputs into genesis ans using that as our "Txn Digest".
 // This is done to ensure that coin objects created between chains are unique
@@ -815,6 +829,7 @@ fn get_genesis_protocol_config(version: ProtocolVersion) -> ProtocolConfig {
 fn build_unsigned_genesis_data(
     parameters: &GenesisCeremonyParameters,
     token_distribution_schedule: &TokenDistributionSchedule,
+    timelock_allocations: &[TimelockAllocation],
     validators: &[GenesisValidatorInfo],
     objects: &[Object],
 ) -> UnsignedGenesis {
@@ -834,6 +849,14 @@ fn build_unsigned_genesis_data(
     token_distribution_schedule.validate();
     token_distribution_schedule.check_all_stake_operations_are_for_valid_validators(
         genesis_validators.iter().map(|v| v.iota_address),
+        (!timelock_allocations.is_empty())
+            .then(|| {
+                timelock_allocations
+                    .iter()
+                    .map(|allocation| (allocation.staked_with_validator, allocation.amount_nanos))
+                    .collect()
+            })
+            .unwrap_or_default(),
     );
 
     let epoch_data = EpochData::new_genesis(genesis_chain_parameters.chain_start_timestamp_ms);
@@ -863,6 +886,7 @@ fn build_unsigned_genesis_data(
         &genesis_validators,
         &genesis_chain_parameters,
         token_distribution_schedule,
+        timelock_allocations,
         system_packages,
         metrics.clone(),
     );
@@ -999,6 +1023,7 @@ fn create_genesis_objects(
     validators: &[GenesisValidatorMetadata],
     parameters: &GenesisChainParameters,
     token_distribution_schedule: &TokenDistributionSchedule,
+    timelock_allocations: &[TimelockAllocation],
     system_packages: Vec<SystemPackage>,
     metrics: Arc<LimitsMetrics>,
 ) -> Vec<Object> {
@@ -1041,6 +1066,7 @@ fn create_genesis_objects(
         genesis_ctx,
         parameters,
         token_distribution_schedule,
+        timelock_allocations,
         metrics,
     )
     .unwrap();
@@ -1125,6 +1151,7 @@ pub fn generate_genesis_system_object(
     genesis_ctx: &mut TxContext,
     genesis_chain_parameters: &GenesisChainParameters,
     token_distribution_schedule: &TokenDistributionSchedule,
+    timelock_allocations: &[TimelockAllocation],
     metrics: Arc<LimitsMetrics>,
 ) -> anyhow::Result<()> {
     let protocol_config = ProtocolConfig::get_for_version(
@@ -1211,6 +1238,64 @@ pub fn generate_genesis_system_object(
             vec![],
             arguments,
         );
+
+        // Step 6: Handle the timelock allocations.
+        for allocation in timelock_allocations {
+            if allocation.surplus_nanos > 0 {
+                // Split the surplus amount.
+                let timelock = *allocation
+                    .timelock_objects
+                    .last()
+                    .expect("there should be at least two objects");
+                let arguments = vec![
+                    builder.obj(ObjectArg::ImmOrOwnedObject(timelock))?,
+                    builder.pure(allocation.surplus_nanos)?,
+                ];
+                let surplus_timelock = builder.programmable_move_call(
+                    TIMELOCK_ADDRESS.into(),
+                    ident_str!("timelocked_balance").to_owned(),
+                    ident_str!("split").to_owned(),
+                    vec![GAS::type_tag()],
+                    arguments,
+                );
+                builder.programmable_move_call(
+                    TIMELOCK_ADDRESS.into(),
+                    ident_str!("timelock").to_owned(),
+                    ident_str!("self_transfer").to_owned(),
+                    vec![Balance::type_tag(GAS::type_tag())],
+                    vec![surplus_timelock],
+                );
+            }
+            // Add the stake
+            let arguments = vec![
+                builder.obj(ObjectArg::SharedObject {
+                    id: IOTA_SYSTEM_STATE_OBJECT_ID,
+                    initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+                    mutable: true,
+                })?,
+                builder.make_obj_vec(
+                    allocation
+                        .timelock_objects
+                        .iter()
+                        .map(|&timelock| ObjectArg::ImmOrOwnedObject(timelock)),
+                )?,
+                builder.pure(allocation.staked_with_validator)?,
+            ];
+            let receipt_vector = builder.programmable_move_call(
+                TIMELOCK_ADDRESS.into(),
+                ident_str!("timelocked_staking").to_owned(),
+                ident_str!("request_add_stake_mul_bal_non_entry").to_owned(),
+                vec![],
+                arguments,
+            );
+            builder.programmable_move_call(
+                TIMELOCK_ADDRESS.into(),
+                ident_str!("timelock").to_owned(),
+                ident_str!("self_transfer_multiple").to_owned(),
+                vec![],
+                vec![receipt_vector],
+            );
+        }
         builder.finish()
     };
 
