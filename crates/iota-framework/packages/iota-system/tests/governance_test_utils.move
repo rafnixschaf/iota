@@ -73,16 +73,20 @@ module iota_system::governance_test_utils {
             ctx,
         );
 
+        let mut iota_treasury_cap = coin::create_treasury_cap_for_testing<IOTA>(ctx);
+        let supply = iota_treasury_cap.supply_mut().increase_supply(iota_supply_amount * MICROS_PER_IOTA);
+
         let stake_subsidy = stake_subsidy::create(
-            balance::create_for_testing<IOTA>(iota_supply_amount * MICROS_PER_IOTA), // iota_supply
-            0,   // stake subsidy initial distribution amount
-            10,  // stake_subsidy_period_length
-            0,   // stake_subsidy_decrease_rate
+            supply, // iota_supply
+            0,      // stake subsidy initial distribution amount
+            10,     // stake_subsidy_period_length
+            0,      // stake_subsidy_decrease_rate
             ctx,
         );
 
         iota_system::create(
             object::new(ctx), // it doesn't matter what ID iota system state has in tests
+            iota_treasury_cap,
             validators,
             balance::create_for_testing<IOTA>(storage_fund_amount * MICROS_PER_IOTA), // storage_fund
             1,   // protocol version
