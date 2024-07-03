@@ -35,13 +35,16 @@ module iota_system::storage_fund {
         self: &mut StorageFund,
         storage_charges: Balance<IOTA>,
         storage_rebate_amount: u64,
-        //TODO: try the way to configure
-        _non_refundable_storage_fee_amount: u64,
+        non_refundable_storage_fee_amount: u64,
     ) : Balance<IOTA> {
         // The storage charges for the epoch come from the storage rebate of the new objects created
         // and the new storage rebates of the objects modified during the epoch so we put the charges
         // into `total_object_storage_rebates`.
         self.total_object_storage_rebates.join(storage_charges);
+
+        // Split out the non-refundable portion of the storage rebate and put it into the non-refundable balance.
+        let non_refundable_storage_fee = self.total_object_storage_rebates.split(non_refundable_storage_fee_amount);
+        self.non_refundable_balance.join(non_refundable_storage_fee);
 
         // `storage_rebates` include the already refunded rebates of deleted objects and old rebates of modified objects and
         // should be taken out of the `total_object_storage_rebates`.
