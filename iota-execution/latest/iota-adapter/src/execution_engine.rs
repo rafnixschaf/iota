@@ -718,7 +718,13 @@ mod checked {
         let (storage_rewards, computation_rewards) = mint_epoch_rewards_in_pt(&mut builder, params);
 
         // Step 2: Advance the epoch.
-        let mut arguments = vec![storage_rewards, computation_rewards];
+        let mut arguments = vec![
+            builder
+                .pure(params.validator_target_reward)
+                .expect("bcs encoding a u64 should not fail"),
+            storage_rewards,
+            computation_rewards,
+        ];
         let call_arg_arguments = vec![
             CallArg::IOTA_SYSTEM_MUT,
             CallArg::Pure(bcs::to_bytes(&params.epoch).unwrap()),
@@ -824,6 +830,7 @@ mod checked {
         let params = AdvanceEpochParams {
             epoch: change_epoch.epoch,
             next_protocol_version: change_epoch.protocol_version,
+            validator_target_reward: protocol_config.validator_target_reward(),
             storage_charge: change_epoch.storage_charge,
             computation_charge: change_epoch.computation_charge,
             storage_rebate: change_epoch.storage_rebate,
