@@ -58,7 +58,7 @@ fn main() -> Result<(), ExitStatus> {
             .expect("Failed to run foundryup");
 
         if !output.status.success() {
-            eprintln!("Error running foundryup: {:?}", output);
+            eprintln!("Error running foundryup: {output:?}");
             exit(1);
         }
         // Update forge path
@@ -94,7 +94,7 @@ fn should_install_dependencies(dir_path: &str) -> bool {
     ];
     let mut missing_dependencies = false;
     for d in &dependencies {
-        let path = format!("{}/{}", dir_path, d);
+        let path = format!("{dir_path}/{d}");
         let path = Path::new(&path);
         if !path.exists() {
             missing_dependencies = true;
@@ -107,10 +107,7 @@ fn should_install_dependencies(dir_path: &str) -> bool {
     }
     // if any dependencies are missing, recreate an empty directory and then
     // reinstall
-    eprintln!(
-        "cargo:warning={:?} does not have all the dependnecies, re-creating",
-        dir_path
-    );
+    eprintln!("cargo:warning={dir_path:?} does not have all the dependnecies, re-creating",);
     if Path::new(&dir_path).exists() {
         fs::remove_dir_all(dir_path).unwrap();
     }

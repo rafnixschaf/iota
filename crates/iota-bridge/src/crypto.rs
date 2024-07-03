@@ -70,7 +70,7 @@ pub struct ConciseBridgeAuthorityPublicKeyBytesRef<'a>(&'a BridgeAuthorityPublic
 impl Debug for ConciseBridgeAuthorityPublicKeyBytesRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let s = Hex::encode(self.0.0.0.get(0..4).ok_or(std::fmt::Error)?);
-        write!(f, "k#{}..", s)
+        write!(f, "k#{s}..")
     }
 }
 

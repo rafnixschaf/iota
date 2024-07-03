@@ -44,8 +44,8 @@ fn reload() {
                 "logs: {}",
                 logs
             );
-            assert!(!logs.contains("This won't be captured"), "logs: {}", logs);
-            assert!(logs.contains("Now you can see this!"), "logs: {}", logs);
+            assert!(!logs.contains("This won't be captured"), "logs: {logs}");
+            assert!(logs.contains("Now you can see this!"), "logs: {logs}");
 
             fs::remove_file(entry.path()).unwrap();
             return;

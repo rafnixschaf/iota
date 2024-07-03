@@ -270,15 +270,15 @@ impl Display for IotaTransactionBlockResponse {
         writeln!(writer, "Transaction Digest: {}", &self.digest)?;
 
         if let Some(t) = &self.transaction {
-            writeln!(writer, "{}", t)?;
+            writeln!(writer, "{t}")?;
         }
 
         if let Some(e) = &self.effects {
-            writeln!(writer, "{}", e)?;
+            writeln!(writer, "{e}")?;
         }
 
         if let Some(e) = &self.events {
-            writeln!(writer, "{}", e)?;
+            writeln!(writer, "{e}")?;
         }
 
         if let Some(object_changes) = &self.object_changes {
@@ -1921,7 +1921,7 @@ impl TryInto<TypeTag> for IotaTypeTag {
 
 impl From<TypeTag> for IotaTypeTag {
     fn from(tag: TypeTag) -> Self {
-        Self(format!("{}", tag))
+        Self(format!("{tag}"))
     }
 }
 

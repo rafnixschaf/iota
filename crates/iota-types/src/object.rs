@@ -1198,7 +1198,7 @@ impl Display for PastObjectRead {
                 write!(f, "PastObjectRead::ObjectNotExists ({:?})", id)
             }
             Self::VersionFound(oref, _, _) => {
-                write!(f, "PastObjectRead::VersionFound ({:?})", oref)
+                write!(f, "PastObjectRead::VersionFound ({oref:?})")
             }
             Self::VersionNotFound(object_id, version) => {
                 write!(

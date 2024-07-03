@@ -523,8 +523,7 @@ impl<T: Cache> CertificateStore<T> {
             .map(|opt_cert| {
                 opt_cert.ok_or_else(|| {
                     RocksDBError(format!(
-                        "Certificate with some digests not found, CertificateStore invariant violation: {:?}",
-                        digests
+                        "Certificate with some digests not found, CertificateStore invariant violation: {digests:?}",
                     ))
                 })
             })
@@ -581,8 +580,7 @@ impl<T: Cache> CertificateStore<T> {
 
             let certificate = self.certificates_by_id.get(&digest)?.ok_or_else(|| {
                 RocksDBError(format!(
-                    "Certificate with id {} not found in main storage although it should",
-                    digest
+                    "Certificate with id {digest} not found in main storage although it should",
                 ))
             })?;
 

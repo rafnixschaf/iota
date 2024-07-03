@@ -40,7 +40,7 @@ async fn main() {
     if args.dump_spans {
         for message in messages.iter() {
             for span in &message.resource_spans {
-                println!("{:?}", span);
+                println!("{span:?}");
             }
         }
         return;
@@ -54,7 +54,7 @@ async fn main() {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        format!("iota-node-{}", timestamp)
+        format!("iota-node-{timestamp}")
     });
 
     println!("importing trace with service name {:?}", service_name);

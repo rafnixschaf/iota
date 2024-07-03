@@ -108,7 +108,7 @@ pub async fn generate_follow_up_tasks(input_file: &PathBuf) -> Result<()> {
     );
     let client = reqwest::Client::new();
     let request = client
-        .post(format!("{}{}", BASE_URL, CREATE_ENDPOINT))
+        .post(format!("{BASE_URL}{CREATE_ENDPOINT}"))
         .json(&body)
         .basic_auth(jira_email, Some(jira_api_key));
     debug!("request: {:?}", request);

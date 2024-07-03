@@ -104,7 +104,7 @@ impl TryFrom<&Object> for TimelockedStakedIota {
         }
 
         Err(IotaError::TypeError {
-            error: format!("Object type is not a TimelockedStakedIota: {:?}", object),
+            error: format!("Object type is not a TimelockedStakedIota: {object:?}"),
         })
     }
 }

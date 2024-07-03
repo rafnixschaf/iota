@@ -43,7 +43,7 @@ impl ProjectType {
         let mut project_opts = vec![];
         if *use_kms {
             let encryption_key_id = get_encryption_key_id(&project_name)?;
-            project_opts.push(format!("--secrets-provider=gcpkms://{}", encryption_key_id));
+            project_opts.push(format!("--secrets-provider=gcpkms://{encryption_key_id}"));
         }
         if project_dir.exists() {
             Err(anyhow!(
@@ -341,7 +341,7 @@ fn get_encryption_key_id(project_name: &str) -> Result<String> {
         Please add a new entry {1} to {2}, create a PR then land it.\n
         A Github workflow will be triggered automatically to create a key for this pulumi project.",
         project_name.bright_purple(),
-        format!("[kms.{}]", project_name).bright_purple(),
+        format!("[kms.{project_name}]").bright_purple(),
         "pulumi/meta/gcp-iam-automation/config.toml".bright_yellow()
     );
     Err(anyhow!("Missing encryption key"))

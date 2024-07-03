@@ -197,7 +197,7 @@ impl fmt::UpperHex for AccountAddress {
         }
 
         for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
+            write!(f, "{byte:02X}")?;
         }
 
         Ok(())

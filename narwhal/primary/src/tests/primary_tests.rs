@@ -416,7 +416,7 @@ async fn test_request_vote_has_missing_parents() {
     );
     // No additional missing parents will be requested.
     let result = timeout(Duration::from_secs(5), handler.request_vote(request)).await;
-    assert!(result.is_err(), "{:?}", result);
+    assert!(result.is_err(), "{result:?}");
 
     // TEST PHASE 3: Handler should return error if header is too old.
     // Increase round threshold.
@@ -440,7 +440,7 @@ async fn test_request_vote_has_missing_parents() {
     // Because round 1 certificates are not in store, the missing parents will not
     // be accepted yet.
     let result = handler.request_vote(request).await;
-    assert!(result.is_err(), "{:?}", result);
+    assert!(result.is_err(), "{result:?}");
     assert_eq!(
         // Returned error should be unretriable.
         anemo::types::response::StatusCode::BadRequest,
@@ -628,7 +628,7 @@ async fn test_request_vote_accept_missing_parents() {
     let result = timeout(Duration::from_secs(5), handler.request_vote(request))
         .await
         .unwrap();
-    assert!(result.is_err(), "{:?}", result);
+    assert!(result.is_err(), "{result:?}");
 
     // TEST PHASE 2: Handler should process missing parent certificates and succeed.
     let mut request = anemo::Request::new(RequestVoteRequest {

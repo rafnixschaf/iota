@@ -1064,7 +1064,7 @@ impl SequenceNumber {
     }
 
     pub fn increment_to(&mut self, next: SequenceNumber) {
-        debug_assert!(*self < next, "Not an increment: {} to {}", self, next);
+        debug_assert!(*self < next, "Not an increment: {self} to {next}");
         *self = next;
     }
 
@@ -1074,7 +1074,7 @@ impl SequenceNumber {
     }
 
     pub fn decrement_to(&mut self, prev: SequenceNumber) {
-        debug_assert!(prev < *self, "Not a decrement: {} to {}", self, prev);
+        debug_assert!(prev < *self, "Not a decrement: {self} to {prev}");
         *self = prev;
     }
 

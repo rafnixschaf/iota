@@ -114,7 +114,7 @@ impl AnemoClient {
                     _ => {}
                 },
                 _ = &mut sleep => {
-                    return Err(ConsensusError::PeerDisconnected(format!("{}", peer_id)));
+                    return Err(ConsensusError::PeerDisconnected(format!("{peer_id}")));
                 },
             }
         }

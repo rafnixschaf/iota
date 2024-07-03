@@ -20,7 +20,7 @@ pub fn schema_derive(input: TokenStream) -> TokenStream {
                     .map(|(idx, field)| {
                         let field_name = field.ident.as_ref().unwrap().to_string();
                         (
-                            format!("\"{}\".to_string()", field_name),
+                            format!("\"{field_name}\".to_string()"),
                             format!(
                                 "if idx == {} {{ return self.{}.clone().into(); }}",
                                 idx, field_name

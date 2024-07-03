@@ -417,7 +417,7 @@ pub struct ConciseAuthorityPublicKeyBytesRef<'a>(&'a AuthorityPublicKeyBytes);
 impl Debug for ConciseAuthorityPublicKeyBytesRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let s = Hex::encode(self.0.0.get(0..4).ok_or(std::fmt::Error)?);
-        write!(f, "k#{}..", s)
+        write!(f, "k#{s}..")
     }
 }
 
@@ -434,7 +434,7 @@ pub struct ConciseAuthorityPublicKeyBytes(AuthorityPublicKeyBytes);
 impl Debug for ConciseAuthorityPublicKeyBytes {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let s = Hex::encode(self.0.0.get(0..4).ok_or(std::fmt::Error)?);
-        write!(f, "k#{}..", s)
+        write!(f, "k#{s}..")
     }
 }
 
@@ -989,7 +989,7 @@ impl<S: IotaSignatureInner + Sized> IotaSignature for S {
 
         pk.verify(&digest, sig)
             .map_err(|e| IotaError::InvalidSignature {
-                error: format!("Fail to verify user sig {}", e),
+                error: format!("Fail to verify user sig {e}"),
             })
     }
 }

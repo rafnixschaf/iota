@@ -215,7 +215,7 @@ fn test_object_id_serde_with_expected_value() {
     let json_serialized = serde_json::to_string(&object_id).unwrap();
     let bcs_serialized = bcs::to_bytes(&object_id).unwrap();
 
-    let expected_json_address = format!("\"0x{}\"", SAMPLE_ADDRESS);
+    let expected_json_address = format!("\"0x{SAMPLE_ADDRESS}\"");
     assert_eq!(expected_json_address, json_serialized);
     assert_eq!(object_id_vec, bcs_serialized);
 }
@@ -273,7 +273,7 @@ fn test_address_serde_with_expected_value() {
     let json_serialized = serde_json::to_string(&address).unwrap();
     let bcs_serialized = bcs::to_bytes(&address).unwrap();
 
-    let expected_json_address = format!("\"0x{}\"", SAMPLE_ADDRESS);
+    let expected_json_address = format!("\"0x{SAMPLE_ADDRESS}\"");
     assert_eq!(expected_json_address, json_serialized);
     assert_eq!(SAMPLE_ADDRESS_VEC.to_vec(), bcs_serialized);
 }

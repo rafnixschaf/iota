@@ -139,8 +139,8 @@ fn verify_private_transfer(
     };
 
     if type_arguments.len() != 1 {
-        debug_assert!(false, "Expected 1 type argument for {}", fident);
-        return Err(format!("Expected 1 type argument for {}", fident));
+        debug_assert!(false, "Expected 1 type argument for {fident}");
+        return Err(format!("Expected 1 type argument for {fident}"));
     }
 
     let type_arg = &type_arguments[0];
@@ -166,13 +166,13 @@ fn verify_private_event_emit(
 ) -> Result<(), String> {
     let fident = view.identifier_at(fhandle.name);
     if fident != EVENT_FUNCTION {
-        debug_assert!(false, "unknown transfer function {}", fident);
-        return Err(format!("Calling unknown event function, {}", fident));
+        debug_assert!(false, "unknown transfer function {fident}");
+        return Err(format!("Calling unknown event function, {fident}"));
     };
 
     if type_arguments.len() != 1 {
-        debug_assert!(false, "Expected 1 type argument for {}", fident);
-        return Err(format!("Expected 1 type argument for {}", fident));
+        debug_assert!(false, "Expected 1 type argument for {fident}");
+        return Err(format!("Expected 1 type argument for {fident}"));
     }
 
     let type_arg = &type_arguments[0];

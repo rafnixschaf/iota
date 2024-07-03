@@ -1022,7 +1022,7 @@ mod tests {
         .unwrap_err();
 
         expect!["Failed to find packages in $PATH: Failed to plan copy for $PATH/foo: Both member and exclude of [workspace]: $PATH/foo"]
-        .assert_eq(&scrub_path(&format!("{:#}", err), tmp.path()));
+        .assert_eq(&scrub_path(&format!("{err:#}" ), tmp.path()));
     }
 
     #[test]
@@ -1150,7 +1150,7 @@ mod tests {
         .unwrap_err();
 
         expect!["Failed to find packages in $PATH/foo: Failed to plan copy for $PATH/foo/bar: Cutting package 'foo-bar' will overwrite existing path: $PATH/baz/bar"]
-        .assert_eq(&scrub_path(&format!("{:#}", err), tmp.path()));
+        .assert_eq(&scrub_path(&format!("{err:#}"), tmp.path()));
     }
 
     #[test]

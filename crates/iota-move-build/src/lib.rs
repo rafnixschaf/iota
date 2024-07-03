@@ -192,7 +192,7 @@ impl BuildConfig {
                 .resolution_graph_for_package(path, &mut std::io::sink())
         }
         .map_err(|err| IotaError::ModuleBuildFailure {
-            error: format!("{:?}", err),
+            error: format!("{err:?}"),
         })
     }
 }

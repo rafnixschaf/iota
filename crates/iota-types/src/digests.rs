@@ -135,7 +135,7 @@ impl fmt::UpperHex for Digest {
         }
 
         for byte in self.0 {
-            write!(f, "{:02X}", byte)?;
+            write!(f, "{byte:02X}")?;
         }
 
         Ok(())

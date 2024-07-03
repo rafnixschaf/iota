@@ -241,7 +241,7 @@ impl BaseCommitter {
                     .dag_state
                     .read()
                     .get_block(reference)
-                    .unwrap_or_else(|| panic!("Block not found in storage: {:?}", reference));
+                    .unwrap_or_else(|| panic!("Block not found in storage: {reference:?}"));
                 let is_vote = self.is_vote(&potential_vote, leader_block);
                 all_votes.insert(*reference, is_vote);
                 is_vote

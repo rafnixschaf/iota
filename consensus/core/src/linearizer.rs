@@ -120,7 +120,7 @@ impl Linearizer {
             );
             let serialized = commit
                 .serialize()
-                .unwrap_or_else(|e| panic!("Failed to serialize commit: {}", e));
+                .unwrap_or_else(|e| panic!("Failed to serialize commit: {e}"));
             let commit = TrustedCommit::new_trusted(commit, serialized);
             self.dag_state.write().add_commit(commit.clone());
             committed_sub_dags.push(sub_dag);

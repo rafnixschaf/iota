@@ -1052,7 +1052,7 @@ mod test {
                     if core.last_proposed_round() == r {
                         // Force propose new block regardless of min round delay.
                         core.try_propose(true).unwrap().unwrap_or_else(|| {
-                            panic!("Block should have been proposed for round {}", round)
+                            panic!("Block should have been proposed for round {round}")
                         });
                     }
                 }

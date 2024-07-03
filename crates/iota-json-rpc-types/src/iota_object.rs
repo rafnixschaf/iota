@@ -281,7 +281,7 @@ impl Display for IotaObjectData {
         }
         if let Some(content) = self.content.as_ref() {
             writeln!(writer, "{}", "----- Data -----".bold())?;
-            write!(writer, "{}", content)?;
+            write!(writer, "{content}")?;
         }
 
         write!(f, "{}", writer)

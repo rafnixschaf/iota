@@ -212,7 +212,7 @@ async fn read_and_scan_commits(
         let last_commit = store
             .read_last_commit()
             .expect("Read last commit should not fail");
-        assert!(last_commit.is_none(), "{:?}", last_commit);
+        assert!(last_commit.is_none(), "{last_commit:?}");
     }
 
     let written_commits = vec![
@@ -261,7 +261,7 @@ async fn read_and_scan_commits(
         let scanned_commits = store
             .scan_commits(20..25)
             .expect("Scan commits should not fail");
-        assert!(scanned_commits.is_empty(), "{:?}", scanned_commits);
+        assert!(scanned_commits.is_empty(), "{scanned_commits:?}");
     }
 
     {

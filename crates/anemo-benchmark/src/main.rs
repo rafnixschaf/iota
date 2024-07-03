@@ -189,7 +189,7 @@ async fn main() {
                 upload_requests += 1;
                 if let Some(error) = error {
                     upload_errors += 1;
-                    println!("upload error on peer {peer_id}: {:?}", error);
+                    println!("upload error on peer {peer_id}: {error:?}");
                 } else {
                     upload_bytes += args.size_up as usize;
                 }
@@ -198,7 +198,7 @@ async fn main() {
                 download_requests += 1;
                 if let Some(error) = error {
                     download_errors += 1;
-                    println!("upload error on peer {peer_id}: {:?}", error);
+                    println!("upload error on peer {peer_id}: {error:?}");
                 } else {
                     download_bytes += args.size_down as usize;
                 }

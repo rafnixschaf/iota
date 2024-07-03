@@ -302,7 +302,7 @@ impl DagState {
             ))
             .map(|r| {
                 self.get_block(r)
-                    .unwrap_or_else(|| panic!("Block {:?} should exist in DAG!", r))
+                    .unwrap_or_else(|| panic!("Block {r:?} should exist in DAG!"))
                     .clone()
             })
             .collect()
@@ -585,7 +585,7 @@ impl DagState {
                 // TODO: limit to write at most once per commit round with multi-leader.
                 self.last_committed_rounds.clone(),
             ))
-            .unwrap_or_else(|e| panic!("Failed to write to storage: {:?}", e));
+            .unwrap_or_else(|e| panic!("Failed to write to storage: {e:?}"));
         self.context
             .metrics
             .node_metrics

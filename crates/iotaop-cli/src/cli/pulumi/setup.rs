@@ -47,7 +47,7 @@ fn ensure_pulumi_authed() -> Result<()> {
 fn is_binary_in_path(binary: &str) -> bool {
     if let Ok(path) = env::var("PATH") {
         path.split(':').any(|p| {
-            let p_str = format!("{}/{}", p, binary);
+            let p_str = format!("{p}/{binary}");
             fs::metadata(p_str).is_ok()
         })
     } else {
@@ -145,7 +145,7 @@ pub fn ensure_gcloud() -> Result<()> {
             vec![
                 "bash",
                 "-c",
-                &format!("gcloud config set project {}", gcp_proj_id),
+                &format!("gcloud config set project {gcp_proj_id}"),
             ],
             Some(CommandOptions::new(true, false)),
         )?;
@@ -162,7 +162,7 @@ pub fn ensure_gcloud() -> Result<()> {
 pub fn ensure_setup() -> Result<()> {
     let home = env::var("HOME").unwrap();
     // check for marker file
-    let setup_marker = PathBuf::from(format!("{}/.iotaop/pulumi_setup", home));
+    let setup_marker = PathBuf::from(format!("{home}/.iotaop/pulumi_setup"));
     if setup_marker.exists() {
         // our work here is done, it's set up!
         Ok(())

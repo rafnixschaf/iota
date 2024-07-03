@@ -122,8 +122,7 @@ impl<A: Allower> rustls::server::ClientCertVerifier for CertVerifier<A> {
 
         if !self.allower.allowed(&public_key) {
             return Err(rustls::Error::General(format!(
-                "invalid certificate: {:?} is not in the validator set",
-                public_key,
+                "invalid certificate: {public_key:?} is not in the validator set",
             )));
         }
 
