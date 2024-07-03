@@ -20,7 +20,7 @@ title: Module `0x3::storage_deposits`
 
 ## Struct `StorageDeposits`
 
-Struct representing the storage fund, containing two <code>Balance</code>s:
+Struct representing the storage deposits, containing one <code>Balance</code>:
 - <code>storage_balance</code> has the invariant that it's the sum of <code>storage_rebate</code> of
 all objects currently stored on-chain. To maintain this invariant, the only inflow of this
 balance is storage charges collected from transactions, and the only outflow is storage rebates
@@ -80,7 +80,7 @@ Called by <code><a href="iota_system.md#0x3_iota_system">iota_system</a></code> 
 
 ## Function `advance_epoch`
 
-Called by <code><a href="iota_system.md#0x3_iota_system">iota_system</a></code> at epoch change times to process the inflows and outflows of storage fund.
+Called by <code><a href="iota_system.md#0x3_iota_system">iota_system</a></code> at epoch change times to process the inflows and outflows of storage deposits.
 
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="storage_deposits.md#0x3_storage_deposits_advance_epoch">advance_epoch</a>(self: &<b>mut</b> <a href="storage_deposits.md#0x3_storage_deposits_StorageDeposits">storage_deposits::StorageDeposits</a>, storage_charges: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, storage_rebate_amount: u64, _non_refundable_storage_fee_amount: u64): <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;

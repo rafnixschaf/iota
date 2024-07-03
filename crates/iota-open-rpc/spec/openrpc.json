@@ -1914,7 +1914,7 @@
                   "u64": "76"
                 },
                 "storage_rebate_rate": {
-                  "u64": "9900"
+                  "u64": "10000"
                 },
                 "transfer_freeze_object_cost_base": {
                   "u64": "52"
