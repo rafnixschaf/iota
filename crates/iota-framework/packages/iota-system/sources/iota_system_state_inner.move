@@ -237,7 +237,7 @@ module iota_system::iota_system_state_inner {
     public(package) fun create(
         iota_treasury_cap: TreasuryCap<IOTA>,
         validators: vector<Validator>,
-        initial_storage_fund: Balance<IOTA>,
+        initial_storage_deposits: Balance<IOTA>,
         protocol_version: u64,
         epoch_start_timestamp_ms: u64,
         parameters: SystemParameters,
@@ -253,7 +253,7 @@ module iota_system::iota_system_state_inner {
             system_state_version: genesis_system_state_version(),
             iota_treasury_cap,
             validators,
-            storage_deposits: storage_deposits::new(initial_storage_fund),
+            storage_deposits: storage_deposits::new(initial_storage_deposits),
             parameters,
             reference_gas_price,
             validator_report_records: vec_map::empty(),
