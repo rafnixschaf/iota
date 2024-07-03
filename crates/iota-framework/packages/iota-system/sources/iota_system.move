@@ -538,6 +538,7 @@ module iota_system::iota_system {
     /// 3. Distribute computation charge to validator stake.
     /// 4. Update all validators.
     fun advance_epoch(
+        validator_target_reward: u64,
         storage_reward: Balance<IOTA>,
         computation_reward: Balance<IOTA>,
         wrapper: &mut IotaSystemState,
@@ -557,6 +558,7 @@ module iota_system::iota_system {
         let storage_rebate = self.advance_epoch(
             new_epoch,
             next_protocol_version,
+            validator_target_reward,
             storage_reward,
             computation_reward,
             storage_rebate,
