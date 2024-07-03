@@ -531,7 +531,6 @@ mod checked {
             CallArg::Pure(bcs::to_bytes(&params.next_protocol_version.as_u64()).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.storage_rebate).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.non_refundable_storage_fee).unwrap()),
-            CallArg::Pure(bcs::to_bytes(&params.storage_fund_reinvest_rate).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.reward_slashing_rate).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.epoch_start_timestamp_ms).unwrap()),
         ]
@@ -633,7 +632,6 @@ mod checked {
             computation_charge: change_epoch.computation_charge,
             storage_rebate: change_epoch.storage_rebate,
             non_refundable_storage_fee: change_epoch.non_refundable_storage_fee,
-            storage_fund_reinvest_rate: protocol_config.storage_fund_reinvest_rate(),
             reward_slashing_rate: protocol_config.reward_slashing_rate(),
             epoch_start_timestamp_ms: change_epoch.epoch_start_timestamp_ms,
         };

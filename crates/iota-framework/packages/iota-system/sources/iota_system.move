@@ -42,9 +42,9 @@
 module iota_system::iota_system {
     use iota::balance::Balance;
 
-    use iota::coin::{Coin, TreasuryCap};
+    use iota::coin::Coin;
     use iota_system::staking_pool::StakedIota;
-    use iota::iota::IOTA;
+    use iota::iota::{IOTA, IotaTreasuryCap};
     use iota::table::Table;
     use iota_system::validator::Validator;
     use iota_system::validator_cap::UnverifiedValidatorOperationCap;
@@ -78,7 +78,7 @@ module iota_system::iota_system {
     /// This function will be called only once in genesis.
     public(package) fun create(
         id: UID,
-        iota_treasury_cap: TreasuryCap<IOTA>,
+        iota_treasury_cap: IotaTreasuryCap,
         validators: vector<Validator>,
         storage_deposits: Balance<IOTA>,
         protocol_version: u64,

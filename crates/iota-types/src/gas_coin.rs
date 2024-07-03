@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     balance::Balance,
     base_types::{ObjectID, SequenceNumber},
-    coin::Coin,
+    coin::{Coin, TreasuryCap},
     error::{ExecutionError, ExecutionErrorKind},
     id::UID,
     object::{Data, MoveObject, Object},
@@ -38,6 +38,7 @@ pub const TOTAL_SUPPLY_MICROS: u64 = TOTAL_SUPPLY_IOTA * MICROS_PER_IOTA;
 
 pub const GAS_MODULE_NAME: &IdentStr = ident_str!("iota");
 pub const GAS_STRUCT_NAME: &IdentStr = ident_str!("IOTA");
+pub const GAS_TREASURY_CAP_STRUCT_NAME: &IdentStr = ident_str!("IotaTreasuryCap");
 
 pub use checked::*;
 
@@ -167,6 +168,23 @@ mod checked {
     impl Display for GasCoin {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             write!(f, "Coin {{ id: {}, value: {} }}", self.id(), self.value())
+        }
+    }
+
+    // Rust version of the IotaTreasuryCap type
+    #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+    pub struct IotaTreasuryCap {
+        pub inner: TreasuryCap,
+    }
+
+    impl IotaTreasuryCap {
+        pub fn type_() -> StructTag {
+            StructTag {
+                address: IOTA_FRAMEWORK_ADDRESS,
+                module: GAS_MODULE_NAME.to_owned(),
+                name: GAS_TREASURY_CAP_STRUCT_NAME.to_owned(),
+                type_params: Vec::new(),
+            }
         }
     }
 }
