@@ -1366,7 +1366,8 @@ impl ProtocolConfig {
             // Change reward slashing rate to 100%.
             reward_slashing_rate: Some(10000),
             storage_gas_price: Some(76),
-            // 767k IOTAs.
+            // The initial target reward for validators per epoch.
+            // Refer to the IOTA tokenomics for the origin of this value.
             validator_target_reward: Some(767_000 * 1_000_000_000),
             max_transactions_per_checkpoint: Some(10_000),
             max_checkpoint_size_bytes: Some(30 * 1024 * 1024),
