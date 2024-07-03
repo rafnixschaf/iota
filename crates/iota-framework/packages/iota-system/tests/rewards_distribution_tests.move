@@ -87,11 +87,16 @@ module iota_system::rewards_distribution_tests {
         let scenario = &mut scenario_val;
         let prev_supply = total_supply(scenario);
 
+        let validator_target_reward = 100;
+        let computation_reward = 100;
+
         // need to advance epoch so validator's staking starts counting
         advance_epoch(scenario);
-        advance_epoch_with_target_reward_amounts(100, 0, 100, scenario);
+        advance_epoch_with_target_reward_amounts(validator_target_reward, 0, computation_reward, scenario);
 
         let new_supply = total_supply(scenario);
+        // Since the target reward and computation reward are the same, no new tokens should
+        // have been minted, so the supply should stay constant.
         assert!(prev_supply == new_supply, 0);
 
         scenario_val.end();
@@ -104,13 +109,16 @@ module iota_system::rewards_distribution_tests {
         let scenario = &mut scenario_val;
         let prev_supply = total_supply(scenario);
 
+        let validator_target_reward = 60;
+        let computation_reward = 100;
+
         // need to advance epoch so validator's staking starts counting
         advance_epoch(scenario);
-        advance_epoch_with_target_reward_amounts(60, 0, 100, scenario);
+        advance_epoch_with_target_reward_amounts(validator_target_reward, 0, computation_reward, scenario);
 
         let new_supply = total_supply(scenario);
-        // 40 tokens should have been burned.
-        assert!(prev_supply - 40 * MICROS_PER_IOTA == new_supply, 0);
+        // The difference between target reward and computation reward should have been burned.
+        assert!(prev_supply - (computation_reward - validator_target_reward) * MICROS_PER_IOTA == new_supply, 0);
 
         scenario_val.end();
     }
@@ -122,13 +130,16 @@ module iota_system::rewards_distribution_tests {
         let scenario = &mut scenario_val;
         let prev_supply = total_supply(scenario);
 
+        let validator_target_reward = 100;
+        let computation_reward = 60;
+
         // need to advance epoch so validator's staking starts counting
         advance_epoch(scenario);
-        advance_epoch_with_target_reward_amounts(100, 0, 60, scenario);
+        advance_epoch_with_target_reward_amounts(validator_target_reward, 0, computation_reward, scenario);
 
         let new_supply = total_supply(scenario);
-        // 40 tokens should have been minted.
-        assert!(prev_supply + 40 * MICROS_PER_IOTA == new_supply, 0);
+        // The difference between target reward and computation reward should have been minted.
+        assert!(prev_supply + (validator_target_reward - computation_reward) * MICROS_PER_IOTA == new_supply, 0);
 
         scenario_val.end();
     }
