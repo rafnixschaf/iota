@@ -183,7 +183,7 @@ impl Proposer {
         #[cfg(feature = "benchmark")]
         for digest in header.payload().keys() {
             // NOTE: This log entry is used to compute performance.
-            info!("Created {} -> {:?}", header, digest);
+            info!("Created {header} -> {digest:?}");
         }
 
         let num_of_included_digests = header.payload().len();

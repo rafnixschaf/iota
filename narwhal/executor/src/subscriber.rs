@@ -324,10 +324,7 @@ impl Subscriber {
                 match worker {
                     Ok(worker) => Some(worker.name),
                     Err(err) => {
-                        error!(
-                            "Worker {} not found for authority {}: {:?}",
-                            worker_id, authority, err
-                        );
+                        error!("Worker {worker_id} not found for authority {authority}: {err:?}",);
                         None
                     }
                 }
@@ -422,8 +419,7 @@ impl Subscriber {
             .batch_execution_latency
             .observe(batch_fetch_duration);
         debug!(
-            "Batch {:?} took {} seconds since it has been created to when it has been fetched for execution",
-            digest, batch_fetch_duration,
+            "Batch {digest:?} took {batch_fetch_duration} seconds since it has been created to when it has been fetched for execution",
         );
     }
 }

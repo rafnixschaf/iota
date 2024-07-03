@@ -111,8 +111,8 @@ impl Certifier {
         let core = async move { self.run().await };
 
         match core.await {
-            Err(err @ DagError::ShuttingDown) => debug!("{:?}", err),
-            Err(err) => panic!("{:?}", err),
+            Err(err @ DagError::ShuttingDown) => debug!("{err:?}"),
+            Err(err) => panic!("{err:?}"),
             Ok(_) => {}
         }
     }

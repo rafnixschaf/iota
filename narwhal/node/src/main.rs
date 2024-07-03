@@ -228,7 +228,7 @@ async fn main() -> Result<(), eyre::Report> {
                     match read_authority_keypair_from_file(filename) {
                         Ok(kp) => println!("{:?}", kp.public()),
                         Err(e) => {
-                            println!("Failed to read keypair at path {:?} err: {:?}", filename, e)
+                            println!("Failed to read keypair at path {filename:?} err: {e:?}")
                         }
                     }
                 }

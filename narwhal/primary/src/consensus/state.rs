@@ -393,9 +393,9 @@ impl Consensus {
         match self.run_inner().await {
             Ok(_) => {}
             Err(err @ ConsensusError::ShuttingDown) => {
-                debug!("{:?}", err)
+                debug!("{err:?}")
             }
-            Err(err) => panic!("Failed to run consensus: {:?}", err),
+            Err(err) => panic!("Failed to run consensus: {err:?}"),
         }
     }
 

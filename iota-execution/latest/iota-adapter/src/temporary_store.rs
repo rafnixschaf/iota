@@ -613,8 +613,7 @@ impl<'backing> TemporaryStore<'backing> {
             return;
         }
         tracing::debug!(
-            "Amount of unmetered storage rebate from system tx: {:?}",
-            unmetered_storage_rebate
+            "Amount of unmetered storage rebate from system tx: {unmetered_storage_rebate:?}",
         );
         let mut system_state_wrapper = self
             .read_object(&IOTA_SYSTEM_STATE_OBJECT_ID)
@@ -1264,10 +1263,7 @@ impl<'backing> ResourceResolver for TemporaryStore<'backing> {
                 );
                 Ok(Some(m.contents().to_vec()))
             }
-            other => unimplemented!(
-                "Bad object lookup: expected Move object, but got {:?}",
-                other
-            ),
+            other => unimplemented!("Bad object lookup: expected Move object, but got {other:?}",),
         }
     }
 }

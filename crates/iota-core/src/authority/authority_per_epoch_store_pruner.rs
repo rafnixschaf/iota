@@ -31,8 +31,8 @@ impl AuthorityPerEpochStorePruner {
                     _ = prune_interval.tick() => {
                         info!("Starting pruning of epoch tables");
                         match Self::prune_old_directories(&parent_path, num_latest_epoch_dbs_to_retain) {
-                            Ok(pruned_count) => info!("Finished pruning old epoch databases. Pruned {} dbs", pruned_count),
-                            Err(err) => error!("Error while removing old epoch databases {:?}", err),
+                            Ok(pruned_count) => info!("Finished pruning old epoch databases. Pruned {pruned_count} dbs"),
+                            Err(err) => error!("Error while removing old epoch databases {err:?}"),
                         }
                     }
                     _ = &mut recv => break,

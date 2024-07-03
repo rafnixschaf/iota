@@ -88,8 +88,7 @@ impl WorkerNodeInner {
             .authority_by_key(&primary_name)
             .unwrap_or_else(|| {
                 panic!(
-                    "Our node with key {:?} should be in committee",
-                    primary_name
+                    "Our node with key {primary_name:?} should be in committee",
                 )
             });
 

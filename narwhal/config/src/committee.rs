@@ -236,10 +236,7 @@ impl Committee {
     /// not found then it panics
     pub fn authority_safe(&self, identifier: &AuthorityIdentifier) -> &Authority {
         self.authorities_by_id.get(identifier).unwrap_or_else(|| {
-            panic!(
-                "Authority with id {:?} should have been in committee",
-                identifier
-            )
+            panic!("Authority with id {identifier:?} should have been in committee",)
         })
     }
 

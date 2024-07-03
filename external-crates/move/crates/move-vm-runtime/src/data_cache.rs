@@ -192,8 +192,7 @@ impl<'l, S: MoveResolver> DataStore for TransactionDataCache<'l, S> {
                     let val = match Value::simple_deserialize(&blob, &ty_layout) {
                         Some(val) => val,
                         None => {
-                            let msg =
-                                format!("Failed to deserialize resource {} at {}!", ty_tag, addr);
+                            let msg = format!("Failed to deserialize resource {ty_tag} at {addr}!");
                             return Err(PartialVMError::new(
                                 StatusCode::FAILED_TO_DESERIALIZE_RESOURCE,
                             )
@@ -208,7 +207,7 @@ impl<'l, S: MoveResolver> DataStore for TransactionDataCache<'l, S> {
                     GlobalValue::none()
                 }
                 Err(err) => {
-                    let msg = format!("Unexpected storage error: {:?}", err);
+                    let msg = format!("Unexpected storage error: {err:?}");
                     return Err(
                         PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                             .with_message(msg),
@@ -263,10 +262,10 @@ impl<'l, S: MoveResolver> DataStore for TransactionDataCache<'l, S> {
         match self.remote.get_module(module_id) {
             Ok(Some(bytes)) => Ok(bytes),
             Ok(None) => Err(PartialVMError::new(StatusCode::LINKER_ERROR)
-                .with_message(format!("Cannot find {:?} in data cache", module_id))
+                .with_message(format!("Cannot find {module_id:?} in data cache"))
                 .finish(Location::Undefined)),
             Err(err) => {
-                let msg = format!("Unexpected storage error: {:?}", err);
+                let msg = format!("Unexpected storage error: {err:?}");
                 Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                         .with_message(msg)

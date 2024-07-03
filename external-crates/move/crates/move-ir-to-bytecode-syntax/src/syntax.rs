@@ -74,7 +74,7 @@ fn consume_token(tokens: &mut Lexer, tok: Tok) -> Result<(), ParseError<Loc, any
     if tokens.peek() != tok {
         return Err(ParseError::InvalidToken {
             location: current_token_loc(tokens),
-            message: format!("expected {:?}, not {:?}", tok, tokens.peek()),
+            message: format!("expected {tok:?}, not {:?}", tokens.peek()),
         });
     }
     tokens.advance()?;
@@ -331,7 +331,7 @@ fn parse_copyable_val(tokens: &mut Lexer) -> Result<CopyableVal, ParseError<Loc,
             let buf = hex::decode(&s[2..s.len() - 1]).unwrap_or_else(|_| {
                 // The lexer guarantees this, but tracking this knowledge all the way to here is
                 // tedious
-                unreachable!("The string {:?} is not a valid hex-encoded byte array", s)
+                unreachable!("The string {s:?} is not a valid hex-encoded byte array")
             });
             tokens.advance()?;
             CopyableVal_::ByteArray(buf)
@@ -339,7 +339,7 @@ fn parse_copyable_val(tokens: &mut Lexer) -> Result<CopyableVal, ParseError<Loc,
         t => {
             return Err(ParseError::InvalidToken {
                 location: current_token_loc(tokens),
-                message: format!("unrecognized token kind {:?}", t),
+                message: format!("unrecognized token kind {t:?}"),
             });
         }
     };
@@ -708,7 +708,7 @@ fn parse_term_(tokens: &mut Lexer) -> Result<Exp_, ParseError<Loc, anyhow::Error
         }
         t => Err(ParseError::InvalidToken {
             location: current_token_loc(tokens),
-            message: format!("unrecognized token kind for term {:?}", t),
+            message: format!("unrecognized token kind for term {t:?}"),
         }),
     }
 }

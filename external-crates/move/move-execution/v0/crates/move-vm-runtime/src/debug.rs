@@ -147,9 +147,9 @@ impl DebugContext {
         println!("        Code:");
         for (i, instr) in code.iter().enumerate() {
             if i as u16 == pc {
-                println!("          > [{}] {:?}", pc, instr);
+                println!("          > [{pc}] {instr:?}");
             } else {
-                println!("            [{}] {:?}", i, instr);
+                println!("            [{i}] {instr:?}");
             }
         }
         println!("        Locals:");

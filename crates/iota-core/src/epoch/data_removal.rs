@@ -50,8 +50,7 @@ impl EpochDataRemover {
         let result = self.tx_remove.send(latest_closed_epoch).await;
         if result.is_err() {
             tracing::error!(
-                "Error sending message to data removal task for epoch {:?}",
-                latest_closed_epoch,
+                "Error sending message to data removal task for epoch {latest_closed_epoch:?}",
             );
         }
     }
@@ -66,18 +65,14 @@ pub(crate) fn remove_old_epoch_data(storage_base_path: PathBuf, epoch: Epoch) {
     // 1
     let drop_boundary = epoch - 1;
 
-    tracing::info!(
-        "Starting old epoch data removal for epoch {:?}",
-        drop_boundary
-    );
+    tracing::info!("Starting old epoch data removal for epoch {drop_boundary:?}",);
 
     // Get all the epoch stores in the base path directory
     let files = match fs::read_dir(storage_base_path) {
         Ok(f) => f,
         Err(e) => {
             tracing::error!(
-                "Data Remover cannot read the files in the storage path directory for epoch cleanup: {:?}",
-                e
+                "Data Remover cannot read the files in the storage path directory for epoch cleanup: {e:?}",
             );
             return;
         }
@@ -89,8 +84,7 @@ pub(crate) fn remove_old_epoch_data(storage_base_path: PathBuf, epoch: Epoch) {
             Ok(f) => f,
             Err(e) => {
                 tracing::error!(
-                    "Data Remover error while cleaning up storage of previous epochs: {:?}",
-                    e
+                    "Data Remover error while cleaning up storage of previous epochs: {e:?}",
                 );
                 continue;
             }
@@ -106,8 +100,7 @@ pub(crate) fn remove_old_epoch_data(storage_base_path: PathBuf, epoch: Epoch) {
             Ok(f) => f,
             Err(e) => {
                 tracing::error!(
-                    "Data Remover could not parse file in storage path into epoch for cleanup: {:?}",
-                    e
+                    "Data Remover could not parse file in storage path into epoch for cleanup: {e:?}",
                 );
                 continue;
             }
@@ -115,16 +108,10 @@ pub(crate) fn remove_old_epoch_data(storage_base_path: PathBuf, epoch: Epoch) {
 
         if file_epoch <= drop_boundary {
             if let Err(e) = fs::remove_dir_all(f.path()) {
-                tracing::error!(
-                    "Data Remover could not remove old epoch storage directory: {:?}",
-                    e
-                );
+                tracing::error!("Data Remover could not remove old epoch storage directory: {e:?}",);
             }
         }
     }
 
-    tracing::info!(
-        "Completed old epoch data removal process for epoch {:?}",
-        epoch
-    );
+    tracing::info!("Completed old epoch data removal process for epoch {epoch:?}",);
 }

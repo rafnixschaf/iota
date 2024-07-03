@@ -185,20 +185,14 @@ impl ReplayFuzzer {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Error, Clone)]
 pub enum ReplayFuzzError {
-    #[error(
-        "InvariantViolation: digest: {tx_digest}, kind: {kind}, status: {:?}",
-        exec_status
-    )]
+    #[error("InvariantViolation: digest: {tx_digest}, kind: {kind}, status: {exec_status:?}")]
     InvariantViolation {
         tx_digest: TransactionDigest,
         kind: TransactionKind,
         exec_status: ExecutionFailureStatus,
     },
 
-    #[error(
-        "LocalExecError: exec system error which may/not be related to fuzzing: {:?}.",
-        err
-    )]
+    #[error("LocalExecError: exec system error which may/not be related to fuzzing: {err:?}.")]
     LocalExecError { err: ReplayEngineError },
     // TODO: how exactly do we catch this?
     // Panic(TransactionDigest, TransactionKind),

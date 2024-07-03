@@ -563,11 +563,11 @@ impl Interpreter {
         let before = if pc > 3 { pc - 3 } else { 0 };
         let after = min(code.len(), pc + 4);
         for (idx, instr) in code.iter().enumerate().take(pc).skip(before) {
-            debug_writeln!(buf, "            [{}] {:?}", idx, instr)?;
+            debug_writeln!(buf, "            [{idx}] {instr:?}")?;
         }
-        debug_writeln!(buf, "          > [{}] {:?}", pc, &code[pc])?;
+        debug_writeln!(buf, "          > [{pc}] {:?}", &code[pc])?;
         for (idx, instr) in code.iter().enumerate().take(after).skip(pc + 1) {
-            debug_writeln!(buf, "            [{}] {:?}", idx, instr)?;
+            debug_writeln!(buf, "            [{idx}] {instr:?}")?;
         }
 
         // Print out the locals.
@@ -1297,11 +1297,7 @@ impl Frame {
             for instruction in &code[self.pc as usize..] {
                 trace!(
                     &self.function,
-                    &self.locals,
-                    self.pc,
-                    instruction,
-                    resolver,
-                    interpreter
+                    &self.locals, self.pc, instruction, resolver, interpreter
                 );
 
                 fail_point!("move_vm::interpreter_loop", |_| {
@@ -1312,7 +1308,7 @@ impl Frame {
                     )
                 });
 
-                profile_open_instr!(gas_meter, format!("{:?}", instruction));
+                profile_open_instr!(gas_meter, format!("{instruction:?}"));
 
                 let r = Self::execute_instruction(
                     &mut self.pc,
@@ -1325,7 +1321,7 @@ impl Frame {
                     instruction,
                 )?;
 
-                profile_close_instr!(gas_meter, format!("{:?}", instruction));
+                profile_close_instr!(gas_meter, format!("{instruction:?}"));
 
                 match r {
                     InstrRet::Ok => (),

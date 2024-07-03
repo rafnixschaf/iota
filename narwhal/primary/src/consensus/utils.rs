@@ -12,7 +12,7 @@ use crate::consensus::ConsensusState;
 /// Flatten the dag referenced by the input certificate. This is a classic
 /// depth-first search (pre-order): <https://en.wikipedia.org/wiki/Tree_traversal#Pre-order>
 pub fn order_dag(leader: &Certificate, state: &ConsensusState) -> Vec<Certificate> {
-    debug!("Processing sub-dag of {:?}", leader);
+    debug!("Processing sub-dag of {leader:?}");
     assert!(leader.round() > 0);
     let gc_round = leader.round().saturating_sub(state.gc_depth);
 
@@ -21,7 +21,7 @@ pub fn order_dag(leader: &Certificate, state: &ConsensusState) -> Vec<Certificat
 
     let mut buffer = vec![leader];
     while let Some(x) = buffer.pop() {
-        debug!("Sequencing {:?}", x);
+        debug!("Sequencing {x:?}");
         ordered.push(x.clone());
         if x.round() == gc_round + 1 {
             // Do not try to order parents of the certificate, since they have been GC'ed.

@@ -292,9 +292,8 @@ impl CertificateFetcher {
         let protocol_config = self.protocol_config.clone();
 
         debug!(
-            "Starting task to fetch missing certificates: max target {}, gc round {:?}",
+            "Starting task to fetch missing certificates: max target {}, gc round {gc_round:?}",
             self.targets.values().max().unwrap_or(&0),
-            gc_round
         );
         self.fetch_certificates_task
             .spawn(monitored_future!(async move {

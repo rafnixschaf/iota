@@ -98,7 +98,7 @@ pub async fn put<S: ObjectStorePutExt>(store: &S, src: &Path, bytes: Bytes) -> R
                 backoff::Error::transient(e)
             })
         } else {
-            warn!("Not copying empty file: {:?}", src);
+            warn!("Not copying empty file: {src:?}");
             Ok(())
         }
     })
@@ -116,7 +116,7 @@ pub async fn copy_file<S: ObjectStoreGetExt, D: ObjectStorePutExt>(
     if !bytes.is_empty() {
         put(dest_store, dest, bytes).await
     } else {
-        warn!("Not copying empty file: {:?}", src);
+        warn!("Not copying empty file: {src:?}");
         Ok(())
     }
 }

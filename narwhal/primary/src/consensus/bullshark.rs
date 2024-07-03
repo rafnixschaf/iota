@@ -129,7 +129,7 @@ impl Bullshark {
         state: &mut ConsensusState,
         certificate: Certificate,
     ) -> Result<(Outcome, Vec<CommittedSubDag>), ConsensusError> {
-        debug!("Processing {:?}", certificate);
+        debug!("Processing {certificate:?}");
         let round = certificate.round();
 
         // Add the new certificate to the local storage.
@@ -253,12 +253,12 @@ impl Bullshark {
         // preceding leaders in the right order. Committing a leader block means
         // committing all its dependencies.
         if stake < self.committee.validity_threshold() {
-            debug!("Leader {:?} does not have enough support", leader);
+            debug!("Leader {leader:?} does not have enough support");
             return Ok((Outcome::NotEnoughSupportForLeader, vec![]));
         }
 
         // Get an ordered list of past leaders that are linked to the current leader.
-        debug!("Leader {:?} has enough support", leader);
+        debug!("Leader {leader:?} has enough support");
 
         let mut committed_sub_dags = Vec::new();
         let mut leaders_to_commit = self.order_leaders(leader, state);
@@ -267,7 +267,7 @@ impl Bullshark {
             let sub_dag_index = state.next_sub_dag_index();
             let _span = error_span!("bullshark_process_sub_dag", sub_dag_index);
 
-            debug!("Leader {:?} has enough support", leader);
+            debug!("Leader {leader:?} has enough support");
 
             let mut min_round = leader.round();
             let mut sequence = Vec::new();

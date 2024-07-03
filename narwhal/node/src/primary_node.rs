@@ -231,7 +231,7 @@ impl PrimaryNodeInner {
         // Figure out the id for this authority
         let authority = committee
             .authority_by_key(&name)
-            .unwrap_or_else(|| panic!("Our node with key {:?} should be in committee", name));
+            .unwrap_or_else(|| panic!("Our node with key {name:?} should be in committee"));
 
         let mut handles = Vec::new();
         let (tx_consensus_round_updates, rx_consensus_round_updates) =

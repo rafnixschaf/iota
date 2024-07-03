@@ -36,8 +36,8 @@ impl AuthorizeRequest for AllowedEpoch {
             Err(Status::new_with_message(
                 StatusCode::BadRequest,
                 format!(
-                    "request from epoch {:?} does not match current epoch {:?}",
-                    epoch, self.allowed_epoch
+                    "request from epoch {epoch:?} does not match current epoch {:?}",
+                    self.allowed_epoch
                 ),
             )
             .into_response())

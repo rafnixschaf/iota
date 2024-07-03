@@ -629,8 +629,7 @@ impl PrimaryReceiverHandler {
         );
 
         debug!(
-            "Processing vote request for {:?} round:{:?}",
-            header,
+            "Processing vote request for {header:?} round:{:?}",
             header.round()
         );
 
@@ -645,8 +644,7 @@ impl PrimaryReceiverHandler {
             let unknown_digests = self.get_unknown_parent_digests(header).await?;
             if !unknown_digests.is_empty() {
                 debug!(
-                    "Received vote request for {:?} with unknown parents {:?}",
-                    header, unknown_digests
+                    "Received vote request for {header:?} with unknown parents {unknown_digests:?}",
                 );
                 return Ok(RequestVoteResponse {
                     vote: None,
@@ -727,8 +725,7 @@ impl PrimaryReceiverHandler {
             } else {
                 // For larger differences return an error, and log it
                 warn!(
-                    "Rejected header {:?} due to timestamp {} newer than {current_time}",
-                    header,
+                    "Rejected header {header:?} due to timestamp {} newer than {current_time}",
                     *header.created_at()
                 );
                 return Err(DagError::InvalidTimestamp {
@@ -774,9 +771,8 @@ impl PrimaryReceiverHandler {
                 let vote = Vote::new(header, &self.authority_id, &self.signature_service).await;
                 if vote.digest() != vote_info.vote_digest() {
                     warn!(
-                        "Authority {} submitted different header {:?} for voting",
+                        "Authority {} submitted different header {header:?} for voting",
                         header.author(),
-                        header,
                     );
                     self.metrics.votes_dropped_equivocation_protection.inc();
                     return Err(DagError::AlreadyVoted(
@@ -979,8 +975,7 @@ impl PrimaryToPrimary for PrimaryReceiverHandler {
         // many missing rounds of a downed authority.
         let (lower_bound, skip_rounds) = request.get_bounds();
         debug!(
-            "Fetching certificates after round {lower_bound} for peer {:?}, elapsed = {}ms",
-            peer,
+            "Fetching certificates after round {lower_bound} for peer {peer:?}, elapsed = {}ms",
             time_start.elapsed().as_millis(),
         );
 

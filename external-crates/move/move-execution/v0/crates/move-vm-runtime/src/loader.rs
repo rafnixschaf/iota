@@ -507,8 +507,7 @@ impl ModuleCache {
             Some(func_idx) => Ok(*func_idx),
             None => Err(
                 PartialVMError::new(StatusCode::FUNCTION_RESOLUTION_FAILURE).with_message(format!(
-                    "Cannot find {:?}::{:?} in cache for context {:?}",
-                    runtime_id, func_name, link_context,
+                    "Cannot find {runtime_id:?}::{func_name:?} in cache for context {link_context:?}",
                 )),
             ),
         }
@@ -1088,7 +1087,7 @@ impl Loader {
         // verify. It is an invariant violation if they don't.
         let module = CompiledModule::deserialize_with_config(&bytes, &self.vm_config.binary_config)
             .map_err(|err| {
-                let msg = format!("Deserialization error: {:?}", err);
+                let msg = format!("Deserialization error: {err:?}");
                 PartialVMError::new(StatusCode::CODE_DESERIALIZATION_ERROR)
                     .with_message(msg)
                     .finish(Location::Module(storage_id.clone()))
@@ -1697,8 +1696,7 @@ impl LoadedModule {
                     if idx < cursor.last_function {
                         return Err(PartialVMError::new(StatusCode::FUNCTION_RESOLUTION_FAILURE)
                             .with_message(format!(
-                                "Cannot find {:?}::{:?} in publishing module",
-                                runtime_id, func_name
+                                "Cannot find {runtime_id:?}::{func_name:?} in publishing module",
                             )));
                     }
                     if function.name.as_ident_str() == func_name {
@@ -2216,7 +2214,7 @@ impl Loader {
             Type::Reference(_) | Type::MutableReference(_) | Type::TyParam(_) => {
                 return Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                        .with_message(format!("no type tag for {:?}", ty)),
+                        .with_message(format!("no type tag for {ty:?}")),
                 );
             }
         })
@@ -2331,7 +2329,7 @@ impl Loader {
             Type::Reference(_) | Type::MutableReference(_) | Type::TyParam(_) => {
                 return Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                        .with_message(format!("no type layout for {:?}", ty)),
+                        .with_message(format!("no type layout for {ty:?}")),
                 );
             }
         })
@@ -2430,7 +2428,7 @@ impl Loader {
             Type::Reference(_) | Type::MutableReference(_) | Type::TyParam(_) => {
                 return Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                        .with_message(format!("no type layout for {:?}", ty)),
+                        .with_message(format!("no type layout for {ty:?}")),
                 );
             }
         })

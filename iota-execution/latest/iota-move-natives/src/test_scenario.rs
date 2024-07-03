@@ -680,11 +680,11 @@ fn find_all_wrapped_objects<'a>(
                     debug_assert!(fields.len() == 1);
                     &fields[0].1
                 }
-                v => unreachable!("Not reachable via Move type system: {:?}", v),
+                v => unreachable!("Not reachable via Move type system: {v:?}"),
             };
             let addr = match addr_field {
                 MoveValue::Address(a) => *a,
-                v => unreachable!("Not reachable via Move type system: {:?}", v),
+                v => unreachable!("Not reachable via Move type system: {v:?}"),
             };
             ids.insert(addr.into());
             fields

@@ -397,6 +397,6 @@ async fn submit_to_consensus(
     client
         .submit_transaction(transaction)
         .await
-        .map_err(|e| eyre::Report::msg(format!("Failed to submit to consensus: {:?}", e)))?;
+        .map_err(|e| eyre::Report::msg(format!("Failed to submit to consensus: {e:?}")))?;
     Ok(())
 }

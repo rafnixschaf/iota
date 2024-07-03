@@ -942,8 +942,7 @@ impl Synchronizer {
         }
 
         debug!(
-            "Processing certificate {:?} round:{:?}",
-            certificate,
+            "Processing certificate {certificate:?} round:{:?}",
             certificate.round()
         );
 

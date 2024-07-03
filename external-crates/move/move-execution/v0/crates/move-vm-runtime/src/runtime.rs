@@ -91,7 +91,7 @@ impl VMRuntime {
         {
             Ok(modules) => modules,
             Err(err) => {
-                warn!("[VM] module deserialization failed {:?}", err);
+                warn!("[VM] module deserialization failed {err:?}");
                 return Err(err.finish(Location::Undefined));
             }
         };

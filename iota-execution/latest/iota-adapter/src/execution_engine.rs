@@ -181,8 +181,7 @@ mod checked {
             computation_gas_cost = gas_cost_summary.computation_cost,
             storage_gas_cost = gas_cost_summary.storage_cost,
             storage_gas_rebate = gas_cost_summary.storage_rebate,
-            "Finished execution of transaction with status {:?}",
-            status
+            "Finished execution of transaction with status {status:?}",
         );
 
         // Genesis writes a special digest to indicate that an object was created during
@@ -738,7 +737,7 @@ mod checked {
 
         arguments.append(&mut call_arg_arguments.unwrap());
 
-        info!("Call arguments to advance_epoch transaction: {:?}", params);
+        info!("Call arguments to advance_epoch transaction: {params:?}");
 
         let storage_rebates = builder.programmable_move_call(
             IOTA_SYSTEM_PACKAGE_ID,
@@ -796,7 +795,7 @@ mod checked {
 
         arguments.append(&mut call_arg_arguments.unwrap());
 
-        info!("Call arguments to advance_epoch transaction: {:?}", params);
+        info!("Call arguments to advance_epoch transaction: {params:?}");
 
         builder.programmable_move_call(
             IOTA_SYSTEM_PACKAGE_ID,

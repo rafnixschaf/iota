@@ -109,8 +109,8 @@ async fn verify_certificates_v2_in_store(
     }
     if let Some(i) = missing {
         panic!(
-            "Missing certificate in store: input index {}, certificate: {:?}",
-            i, certificates[i]
+            "Missing certificate in store: input index {i}, certificate: {:?}",
+            certificates[i]
         );
     }
 
@@ -147,8 +147,8 @@ async fn verify_certificates_v1_in_store(
     }
     if let Some(i) = missing {
         panic!(
-            "Missing certificate in store: input index {}, certificate: {:?}",
-            i, certificates[i]
+            "Missing certificate in store: input index {i}, certificate: {:?}",
+            certificates[i]
         );
     }
 }

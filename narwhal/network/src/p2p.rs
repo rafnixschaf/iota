@@ -78,7 +78,7 @@ impl PrimaryToPrimaryRpc for anemo::Network {
         let response = PrimaryToPrimaryClient::new(peer)
             .fetch_certificates(request)
             .await
-            .map_err(|e| format_err!("Network error {:?}", e))?;
+            .map_err(|e| format_err!("Network error {e:?}"))?;
         Ok(response.into_body())
     }
 }
@@ -115,7 +115,7 @@ impl WorkerRpc for anemo::Network {
         let response = WorkerToWorkerClient::new(peer)
             .request_batches(request)
             .await
-            .map_err(|e| format_err!("Network error {:?}", e))?;
+            .map_err(|e| format_err!("Network error {e:?}"))?;
         Ok(response.into_body())
     }
 }
