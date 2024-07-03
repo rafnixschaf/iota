@@ -700,6 +700,13 @@ module iota_system::iota_system {
         self.get_stake_subsidy_distribution_counter()
     }
 
+    #[test_only]
+    /// Returns the total iota supply.
+    public fun get_iota_supply(wrapper: &mut IotaSystemState): u64 {
+      let self = load_system_state(wrapper);
+      self.get_total_iota_supply()
+    }
+
     // CAUTION: THIS CODE IS ONLY FOR TESTING AND THIS MACRO MUST NEVER EVER BE REMOVED.  Creates a
     // candidate validator - bypassing the proof of possession check and other metadata validation
     // in the process.
@@ -748,6 +755,7 @@ module iota_system::iota_system {
         wrapper: &mut IotaSystemState,
         new_epoch: u64,
         next_protocol_version: u64,
+        validator_target_reward: u64,
         storage_charge: u64,
         computation_charge: u64,
         storage_rebate: u64,
@@ -760,6 +768,7 @@ module iota_system::iota_system {
         let storage_reward = balance::create_for_testing(storage_charge);
         let computation_reward = balance::create_for_testing(computation_charge);
         let storage_rebate = advance_epoch(
+            validator_target_reward,
             storage_reward,
             computation_reward,
             wrapper,

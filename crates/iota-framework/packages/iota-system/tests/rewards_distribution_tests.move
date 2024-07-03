@@ -11,13 +11,15 @@ module iota_system::rewards_distribution_tests {
         advance_epoch,
         advance_epoch_with_reward_amounts,
         advance_epoch_with_reward_amounts_and_slashing_rates,
+        advance_epoch_with_target_reward_amounts,
         assert_validator_total_stake_amounts,
         assert_validator_non_self_stake_amounts,
         assert_validator_self_stake_amounts,
         create_validator_for_testing,
         create_iota_system_state_for_testing,
         stake_with,
-        total_iota_balance, unstake
+        total_iota_balance, total_supply,
+        unstake
     };
     use iota::test_utils::assert_eq;
     use iota::address;
@@ -75,6 +77,59 @@ module iota_system::rewards_distribution_tests {
 
         advance_epoch_with_reward_amounts(0, 100, scenario);
         assert_validator_total_stake_amounts(validator_addrs(), vector[100_000_025 * MICROS_PER_IOTA, 200_000_025 * MICROS_PER_IOTA, 300_000_025 * MICROS_PER_IOTA, 400_000_025 * MICROS_PER_IOTA], scenario);
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_validator_target_reward_no_supply_change() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+        let prev_supply = total_supply(scenario);
+
+        // need to advance epoch so validator's staking starts counting
+        advance_epoch(scenario);
+        advance_epoch_with_target_reward_amounts(100, 0, 100, scenario);
+
+        let new_supply = total_supply(scenario);
+        assert!(prev_supply == new_supply, 0);
+
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_validator_target_reward_deflation() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+        let prev_supply = total_supply(scenario);
+
+        // need to advance epoch so validator's staking starts counting
+        advance_epoch(scenario);
+        advance_epoch_with_target_reward_amounts(60, 0, 100, scenario);
+
+        let new_supply = total_supply(scenario);
+        // 40 tokens should have been burned.
+        assert!(prev_supply - 40 * MICROS_PER_IOTA == new_supply, 0);
+
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_validator_target_reward_inflation() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+        let prev_supply = total_supply(scenario);
+
+        // need to advance epoch so validator's staking starts counting
+        advance_epoch(scenario);
+        advance_epoch_with_target_reward_amounts(100, 0, 60, scenario);
+
+        let new_supply = total_supply(scenario);
+        // 40 tokens should have been minted.
+        assert!(prev_supply + 40 * MICROS_PER_IOTA == new_supply, 0);
+
         scenario_val.end();
     }
 
