@@ -684,6 +684,12 @@ module iota_system::iota_system {
     }
 
     #[test_only]
+    public fun get_storage_deposits_object_rebates(wrapper: &mut IotaSystemState): u64 {
+        let self = load_system_state(wrapper);
+        self.get_storage_deposits_object_rebates()
+    }
+
+    #[test_only]
     public fun get_stake_subsidy_distribution_counter(wrapper: &mut IotaSystemState): u64 {
         let self = load_system_state(wrapper);
         self.get_stake_subsidy_distribution_counter()

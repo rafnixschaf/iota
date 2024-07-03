@@ -58,6 +58,7 @@ title: Module `0x3::iota_system_state_inner`
 -  [Function `validator_staking_pool_mappings`](#0x3_iota_system_state_inner_validator_staking_pool_mappings)
 -  [Function `get_reporters_of`](#0x3_iota_system_state_inner_get_reporters_of)
 -  [Function `get_storage_deposits_total_balance`](#0x3_iota_system_state_inner_get_storage_deposits_total_balance)
+-  [Function `get_storage_deposits_object_rebates`](#0x3_iota_system_state_inner_get_storage_deposits_object_rebates)
 -  [Function `pool_exchange_rates`](#0x3_iota_system_state_inner_pool_exchange_rates)
 -  [Function `active_validator_addresses`](#0x3_iota_system_state_inner_active_validator_addresses)
 -  [Function `extract_coin_balance`](#0x3_iota_system_state_inner_extract_coin_balance)
@@ -2466,6 +2467,30 @@ Returns all the validators who are currently reporting <code>addr</code>
 
 <pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_deposits_total_balance">get_storage_deposits_total_balance</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
     self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.total_balance()
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_iota_system_state_inner_get_storage_deposits_object_rebates"></a>
+
+## Function `get_storage_deposits_object_rebates`
+
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_deposits_object_rebates">get_storage_deposits_object_rebates</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_storage_deposits_object_rebates">get_storage_deposits_object_rebates</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
+    self.<a href="storage_deposits.md#0x3_storage_deposits">storage_deposits</a>.total_object_storage_rebates()
 }
 </code></pre>
 

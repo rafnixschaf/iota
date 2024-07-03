@@ -1011,6 +1011,10 @@ module iota_system::iota_system_state_inner {
     public(package) fun get_storage_deposits_total_balance(self: &IotaSystemStateInnerV2): u64 {
         self.storage_deposits.total_balance()
     }
+    
+    public(package) fun get_storage_deposits_object_rebates(self: &IotaSystemStateInnerV2): u64 {
+        self.storage_deposits.total_object_storage_rebates()
+    }
 
     public(package) fun pool_exchange_rates(
         self: &mut IotaSystemStateInnerV2,

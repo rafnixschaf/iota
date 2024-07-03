@@ -337,6 +337,7 @@ module iota_system::rewards_distribution_tests {
         // Storage deposits balance should be the same as before.
         let mut system_state = scenario.take_shared<IotaSystemState>();
         assert_eq(system_state.get_storage_deposits_total_balance(), 1000 * MICROS_PER_IOTA);
+        assert_eq(system_state.get_storage_deposits_object_rebates(), 1000 * MICROS_PER_IOTA);
 
         test_scenario::return_shared(system_state);
         scenario_val.end();
