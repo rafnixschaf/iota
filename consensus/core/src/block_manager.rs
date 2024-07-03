@@ -124,12 +124,11 @@ impl BlockManager {
                                 continue 'block;
                             }
                             panic!(
-                                "Unsuspended block {:?} has a missing ancestor! Ancestor not found in DagState: {:?}",
-                                b, included
+                                "Unsuspended block {b:?} has a missing ancestor! Ancestor not found in DagState: {included:?}",
                             );
                         }
                         if let Err(e) = self.block_verifier.check_ancestors(&b, &ancestor_blocks) {
-                            warn!("Block {:?} failed to verify ancestors: {}", b, e);
+                            warn!("Block {b:?} failed to verify ancestors: {e}");
                             blocks_to_reject.insert(b.reference(), b);
                         } else {
                             blocks_to_accept.insert(b.reference(), b);
@@ -143,7 +142,7 @@ impl BlockManager {
                         .invalid_blocks
                         .with_label_values(&[&block_ref.author.to_string(), "accept_block"])
                         .inc();
-                    warn!("Invalid block {:?} is rejected", block);
+                    warn!("Invalid block {block:?} is rejected");
                 }
 
                 // TODO: report blocks_to_reject to peers.
@@ -307,8 +306,7 @@ impl BlockManager {
 
         assert!(
             block.missing_ancestors.remove(accepted_dependency),
-            "Block reference {} should be present in missing dependencies of {:?}",
-            block_ref,
+            "Block reference {block_ref} should be present in missing dependencies of {:?}",
             block.block
         );
 

@@ -28,7 +28,7 @@ async fn make_fut(i: usize) -> usize {
     let count = count_dist.sample(&mut OsRng);
     for _ in 0..count {
         let dur = Duration::from_millis(sleep_dist.sample(&mut OsRng));
-        trace!("sleeping for {:?}", dur);
+        trace!("sleeping for {dur:?}");
         sleep(dur).await;
     }
 

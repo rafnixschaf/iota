@@ -470,8 +470,7 @@ where
     )
     .map_err(|err| {
         IotaError::IotaSystemStateReadError(format!(
-            "Failed to load candidate address from pool mappings: {:?}",
-            err
+            "Failed to load candidate address from pool mappings: {err:?}",
         ))
     })?;
     let candidate_table_id = system_state_summary.validator_candidates_id;

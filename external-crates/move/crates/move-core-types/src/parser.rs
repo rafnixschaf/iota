@@ -70,7 +70,7 @@ fn token_as_name(tok: Token) -> Result<String> {
         Name(s) => s,
         Whitespace(_) | Address(_) | U8(_) | U16(_) | U32(_) | U64(_) | U128(_) | U256(_)
         | Bytes(_) | ColonColon | Lt | Gt | Comma | EOF => {
-            bail!("Invalid token. Expected a name but got {:?}", tok)
+            bail!("Invalid token. Expected a name but got {tok:?}")
         }
     })
 }

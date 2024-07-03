@@ -203,9 +203,8 @@ impl FunctionTargetsHolder {
             .get_data(&func_env.get_qualified_id(), variant)
             .unwrap_or_else(|| {
                 panic!(
-                    "expected function target: {} ({:?})",
+                    "expected function target: {} ({variant:?})",
                     func_env.get_full_name_str(),
-                    variant
                 )
             });
         FunctionTarget::new(func_env, data)

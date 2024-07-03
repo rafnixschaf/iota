@@ -2080,7 +2080,7 @@ impl Display for IotaClientCommandResult {
                             let mut temp = String::new();
                             let mut bcs_bytes = 0usize;
                             for m in &p.module_map {
-                                temp.push_str(&format!("{:?}\n", m));
+                                temp.push_str(&format!("{m:?}\n"));
                                 bcs_bytes += m.1.len()
                             }
                             format!("{}Number of bytes: {}", temp, bcs_bytes)
@@ -2301,7 +2301,7 @@ impl IotaClientCommandResult {
         let line = if pretty {
             format!("{self}")
         } else {
-            format!("{:?}", self)
+            format!("{self:?}")
         };
         // Log line by line
         for line in line.lines() {

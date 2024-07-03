@@ -1385,7 +1385,7 @@ impl fmt::Display for MoveObjectType {
 impl fmt::Display for ObjectType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ObjectType::Package => write!(f, "{}", PACKAGE),
+            ObjectType::Package => write!(f, "{PACKAGE}"),
             ObjectType::Struct(t) => write!(f, "{}", t),
         }
     }

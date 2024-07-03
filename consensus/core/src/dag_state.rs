@@ -85,11 +85,11 @@ impl DagState {
 
         let last_commit = store
             .read_last_commit()
-            .unwrap_or_else(|e| panic!("Failed to read from storage: {:?}", e));
+            .unwrap_or_else(|e| panic!("Failed to read from storage: {e:?}"));
         let last_committed_rounds = {
             let commit_info = store
                 .read_last_commit_info()
-                .unwrap_or_else(|e| panic!("Failed to read from storage: {:?}", e));
+                .unwrap_or_else(|e| panic!("Failed to read from storage: {e:?}"));
             if let Some(commit_info) = commit_info {
                 commit_info.last_committed_rounds
             } else {
@@ -216,7 +216,7 @@ impl DagState {
         let store_results = self
             .store
             .read_blocks(&missing_refs)
-            .unwrap_or_else(|e| panic!("Failed to read from storage: {:?}", e));
+            .unwrap_or_else(|e| panic!("Failed to read from storage: {e:?}"));
         self.context
             .metrics
             .node_metrics
@@ -287,7 +287,7 @@ impl DagState {
             }
             let block_ref = linked.pop_last().unwrap();
             let Some(block) = self.get_block(&block_ref) else {
-                panic!("Block {:?} should exist in DAG!", block_ref);
+                panic!("Block {block_ref:?} should exist in DAG!");
             };
             linked.extend(block.ancestors().iter().cloned());
         }
@@ -452,7 +452,7 @@ impl DagState {
         let store_results = self
             .store
             .contains_blocks(&missing_refs)
-            .unwrap_or_else(|e| panic!("Failed to read from storage: {:?}", e));
+            .unwrap_or_else(|e| panic!("Failed to read from storage: {e:?}"));
         self.context
             .metrics
             .node_metrics
@@ -941,8 +941,7 @@ mod test {
         expected_refs.sort(); // we need to sort as blocks with same author and round of round 11 (position 1 & 2) might not be in right lexicographical order.
         assert_eq!(
             ancestors_refs, expected_refs,
-            "Expected round 11 ancestors: {:?}. Got: {:?}",
-            expected_refs, ancestors_refs
+            "Expected round 11 ancestors: {expected_refs:?}. Got: {ancestors_refs:?}",
         );
     }
 

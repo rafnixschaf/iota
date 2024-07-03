@@ -188,7 +188,7 @@ fn test_object_id_deserialize_from_json_value() {
 #[test]
 fn test_object_id_serde_json() {
     let hex = format!("0x{}", SAMPLE_ADDRESS);
-    let json_hex = format!("\"0x{}\"", SAMPLE_ADDRESS);
+    let json_hex = format!("\"0x{SAMPLE_ADDRESS}\"");
 
     let obj_id = ObjectID::from_hex_literal(&hex).unwrap();
 

@@ -94,8 +94,7 @@ impl TryFrom<StoredCheckpoint> for RpcCheckpoint {
                 )),
                 Some(tx_digest) => TransactionDigest::try_from(tx_digest.as_slice()).map_err(|e| {
                     IndexerError::PersistentStorageDataCorruptionError(format!(
-                        "Failed to decode transaction digest: {:?} with err: {:?}",
-                        tx_digest, e
+                        "Failed to decode transaction digest: {tx_digest:?} with err: {e:?}",
                     ))
                 }),
             })

@@ -338,10 +338,10 @@ impl SignatureVerifier {
         let mut jwks = self.jwks.write();
         match jwks.entry(jwk_id.clone()) {
             im::hashmap::Entry::Occupied(_) => {
-                debug!("JWK with kid {:?} already exists", jwk_id);
+                debug!("JWK with kid {jwk_id:?} already exists");
             }
             im::hashmap::Entry::Vacant(entry) => {
-                debug!("inserting JWK with kid: {:?}", jwk_id);
+                debug!("inserting JWK with kid: {jwk_id:?}");
                 entry.insert(jwk.clone());
             }
         }

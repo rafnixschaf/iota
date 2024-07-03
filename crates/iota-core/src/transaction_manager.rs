@@ -422,14 +422,14 @@ impl TransactionManager {
                     .cache_read
                     .is_tx_already_executed(&digest)
                     .unwrap_or_else(|err| {
-                        panic!("Failed to check if tx is already executed: {:?}", err)
+                        panic!("Failed to check if tx is already executed: {err:?}")
                     })
                 {
                     // also ensure the transaction will not be retried after restart.
                     epoch_store
                         .remove_pending_execution(&digest)
                         .unwrap_or_else(|err| {
-                            panic!("remove_pending_execution should not fail: {:?}", err)
+                            panic!("remove_pending_execution should not fail: {err:?}")
                         });
                     self.metrics
                         .transaction_manager_num_enqueued_certificates
@@ -457,7 +457,7 @@ impl TransactionManager {
                     epoch_store.get_input_object_keys(&cert.key(), &input_object_kinds);
 
                 if input_object_kinds.len() != input_object_keys.len() {
-                    error!("Duplicated input objects: {:?}", input_object_kinds);
+                    error!("Duplicated input objects: {input_object_kinds:?}");
                 }
 
                 let receiving_object_entries =
@@ -505,7 +505,7 @@ impl TransactionManager {
                 receiving_objects,
                 epoch_store.epoch(),
             )
-            .unwrap_or_else(|err| panic!("Checking object existence cannot fail: {:?}", err))
+            .unwrap_or_else(|err| panic!("Checking object existence cannot fail: {err:?}"))
             .into_iter()
             .zip(input_object_cache_misses);
 
@@ -580,7 +580,7 @@ impl TransactionManager {
                 epoch_store
                     .remove_pending_execution(&digest)
                     .unwrap_or_else(|err| {
-                        panic!("remove_pending_execution should not fail: {:?}", err)
+                        panic!("remove_pending_execution should not fail: {err:?}")
                     });
                 continue;
             }
@@ -630,9 +630,7 @@ impl TransactionManager {
 
                     assert!(
                         inner.missing_inputs.entry(key).or_default().insert(digest),
-                        "Duplicated certificate {:?} for missing object {:?}",
-                        digest,
-                        key
+                        "Duplicated certificate {digest:?} for missing object {key:?}",
                     );
                     let input_txns = inner.input_objects.entry(key.id()).or_default();
                     input_txns.insert(digest, pending_cert_enqueue_time);
@@ -656,8 +654,7 @@ impl TransactionManager {
                     .pending_certificates
                     .insert(digest, pending_cert)
                     .is_none(),
-                "Duplicated pending certificate {:?}",
-                digest
+                "Duplicated pending certificate {digest:?}",
             );
 
             self.metrics

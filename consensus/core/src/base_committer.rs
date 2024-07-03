@@ -203,7 +203,7 @@ impl BaseCommitter {
                 .dag_state
                 .read()
                 .get_block(ancestor)
-                .unwrap_or_else(|| panic!("Block not found in storage: {:?}", ancestor));
+                .unwrap_or_else(|| panic!("Block not found in storage: {ancestor:?}"));
             if let Some(support) = self.find_supported_block(leader_slot, &ancestor) {
                 return Some(support);
             }
@@ -280,8 +280,7 @@ impl BaseCommitter {
         // byzantine authorities.
         if leader_blocks.len() > 1 {
             tracing::warn!(
-                "Multiple blocks found for leader slot {leader_slot}: {:?}",
-                leader_blocks
+                "Multiple blocks found for leader slot {leader_slot}: {leader_blocks:?}",
             );
         }
 

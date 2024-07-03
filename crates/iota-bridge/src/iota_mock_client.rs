@@ -215,7 +215,7 @@ impl IotaClientInner for IotaMockClient {
                 .lock()
                 .unwrap()
                 .clone()
-                .unwrap_or_else(|| panic!("No preset transaction response found for tx: {:?}", tx)),
+                .unwrap_or_else(|| panic!("No preset transaction response found for tx: {tx:?}")),
         }
     }
 

@@ -180,8 +180,7 @@ mod tests {
         assert_eq!(round, 10);
         assert!(
             leader_timeout <= timestamp - start,
-            "Leader timeout setting {:?} should be less than actual time difference {:?}",
-            leader_timeout,
+            "Leader timeout setting {leader_timeout:?} should be less than actual time difference {:?}",
             timestamp - start
         );
 

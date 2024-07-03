@@ -104,7 +104,7 @@ impl NetworkClient for TonicClient {
                 .filter_map(|r| match bcs::to_bytes(r) {
                     Ok(serialized) => Some(serialized),
                     Err(e) => {
-                        debug!("Failed to serialize block ref {:?}: {e:?}", r);
+                        debug!("Failed to serialize block ref {r:?}: {e:?}");
                         None
                     }
                 })
@@ -245,7 +245,7 @@ impl<S: NetworkService> ConsensusService for TonicServiceProxy<S> {
             .filter_map(|serialized| match bcs::from_bytes(&serialized) {
                 Ok(r) => Some(r),
                 Err(e) => {
-                    debug!("Failed to deserialize block ref {:?}: {e:?}", serialized);
+                    debug!("Failed to deserialize block ref {serialized:?}: {e:?}");
                     None
                 }
             })
@@ -370,7 +370,7 @@ fn to_host_port_str(addr: &Multiaddr) -> Result<String, &'static str> {
         (Some(Protocol::Ip4(ipaddr)), Some(Protocol::Udp(port))) => Ok(format!("{ipaddr}:{port}")),
         (Some(Protocol::Ip6(ipaddr)), Some(Protocol::Udp(port))) => Ok(format!("{ipaddr}:{port}")),
         (Some(Protocol::Dns(hostname)), Some(Protocol::Udp(port))) => {
-            Ok(format!("{}:{}", hostname, port))
+            Ok(format!("{hostname}:{port}"))
         }
 
         _ => {

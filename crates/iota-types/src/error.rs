@@ -139,7 +139,7 @@ pub enum UserInputError {
     MovePackageAsObject { object_id: ObjectID },
     #[error("A move package is expected, instead a move object is passed: {object_id}")]
     MoveObjectAsPackage { object_id: ObjectID },
-    #[error("Transaction was not signed by the correct sender: {}", error)]
+    #[error("Transaction was not signed by the correct sender: {error}")]
     IncorrectUserSignature { error: String },
 
     #[error("Object used as shared is not shared.")]
@@ -150,16 +150,14 @@ pub enum UserInputError {
     // Gas related errors
     #[error("Transaction gas payment missing.")]
     MissingGasPayment,
-    #[error("Gas object is not an owned object with owner: {:?}.", owner)]
+    #[error("Gas object is not an owned object with owner: {owner:?}.")]
     GasObjectNotOwnedObject { owner: Owner },
-    #[error("Gas budget: {:?} is higher than max: {:?}.", gas_budget, max_budget)]
+    #[error("Gas budget: {gas_budget:?} is higher than max: {max_budget:?}.")]
     GasBudgetTooHigh { gas_budget: u64, max_budget: u64 },
-    #[error("Gas budget: {:?} is lower than min: {:?}.", gas_budget, min_budget)]
+    #[error("Gas budget: {gas_budget:?} is lower than min: {min_budget:?}.")]
     GasBudgetTooLow { gas_budget: u64, min_budget: u64 },
     #[error(
-        "Balance of gas object {:?} is lower than the needed amount: {:?}.",
-        gas_balance,
-        needed_gas_amount
+        "Balance of gas object {gas_balance:?} is lower than the needed amount: {needed_gas_amount:?}."
     )]
     GasBalanceTooLow {
         gas_balance: u128,
@@ -167,16 +165,12 @@ pub enum UserInputError {
     },
     #[error("Transaction kind does not support Sponsored Transaction")]
     UnsupportedSponsoredTransactionKind,
-    #[error(
-        "Gas price {:?} under reference gas price (RGP) {:?}",
-        gas_price,
-        reference_gas_price
-    )]
+    #[error("Gas price {gas_price:?} under reference gas price (RGP) {reference_gas_price:?}")]
     GasPriceUnderRGP {
         gas_price: u64,
         reference_gas_price: u64,
     },
-    #[error("Gas price cannot exceed {:?} micros", max_gas_price)]
+    #[error("Gas price cannot exceed {max_gas_price:?} micros")]
     GasPriceTooHigh { max_gas_price: u64 },
     #[error("Object {object_id} is not a gas object")]
     InvalidGasObject { object_id: ObjectID },
@@ -184,19 +178,16 @@ pub enum UserInputError {
     InsufficientBalanceToCoverMinimalGas,
 
     #[error(
-        "Could not find the referenced object {:?} as the asked version {:?} is higher than the latest {:?}",
-        object_id,
-        asked_version,
-        latest_version
+        "Could not find the referenced object {object_id:?} as the asked version {asked_version:?} is higher than the latest {latest_version:?}"
     )]
     ObjectSequenceNumberTooHigh {
         object_id: ObjectID,
         asked_version: SequenceNumber,
         latest_version: SequenceNumber,
     },
-    #[error("Object deleted at reference {:?}.", object_ref)]
+    #[error("Object deleted at reference {object_ref:?}.")]
     ObjectDeleted { object_ref: ObjectRef },
-    #[error("Invalid Batch Transaction: {}", error)]
+    #[error("Invalid Batch Transaction: {error}")]
     InvalidBatchTransaction { error: String },
     #[error("This Move function is currently disabled and not available for call")]
     BlockedMoveFunction,

@@ -147,7 +147,7 @@ async fn test_fullnode_wal_log() -> Result<(), anyhow::Error> {
         ExecuteTransactionRequestType::WaitForLocalExecution,
     )
     .await
-    .unwrap_or_else(|e| panic!("Failed to execute transaction {:?}: {:?}", digest, e));
+    .unwrap_or_else(|e| panic!("Failed to execute transaction {digest:?}: {e:?}"));
 
     let validator_addresses = test_cluster.get_validator_pubkeys();
     assert_eq!(validator_addresses.len(), 4);
@@ -303,7 +303,7 @@ async fn test_tx_across_epoch_boundaries() {
     let start = std::time::Instant::now();
     match tokio::time::timeout(tokio::time::Duration::from_secs(15), result_rx.recv()).await {
         Ok(Some(effects_cert)) if effects_cert.epoch() == 1 => (),
-        other => panic!("unexpected error: {:?}", other),
+        other => panic!("unexpected error: {other:?}"),
     }
     info!("test completed in {:?}", start.elapsed());
 }

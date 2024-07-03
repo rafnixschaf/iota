@@ -157,8 +157,8 @@ where
         registry: Registry,
     ) -> Self {
         info!(
-            "Starting authority {}\n{:#?}\n{:#?}\n{:?}",
-            own_index, committee, parameters, protocol_config.version
+            "Starting authority {own_index}\n{committee:#?}\n{parameters:#?}\n{:?}",
+            protocol_config.version
         );
         assert!(committee.is_valid_index(own_index));
         let context = Arc::new(Context::new(
@@ -652,8 +652,7 @@ mod tests {
                     for txn in b.transactions().iter().map(|t| t.data().to_vec()) {
                         assert!(
                             expected_transactions.remove(&txn),
-                            "Transaction not submitted or already seen: {:?}",
-                            txn
+                            "Transaction not submitted or already seen: {txn:?}",
                         );
                     }
                 }

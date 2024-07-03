@@ -42,9 +42,7 @@ mod ingestion_tests {
         PgIndexerStore,
         JoinHandle<Result<(), IndexerError>>,
     ) {
-        let server_url: SocketAddr = format!("127.0.0.1:{}", DEFAULT_SERVER_PORT)
-            .parse()
-            .unwrap();
+        let server_url: SocketAddr = format!("127.0.0.1:{DEFAULT_SERVER_PORT}").parse().unwrap();
 
         let server_handle = tokio::spawn(async move {
             let chain_id = (*sim

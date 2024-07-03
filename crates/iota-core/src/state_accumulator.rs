@@ -237,7 +237,7 @@ where
         .into_iter()
         .zip(modified_at_version_keys)
         .map(|(obj, key)| {
-            obj.unwrap_or_else(|| panic!("Object for key {:?} from modified_at_versions effects does not exist in objects table", key))
+            obj.unwrap_or_else(|| panic!("Object for key {key:?} from modified_at_versions effects does not exist in objects table"))
                 .compute_object_reference()
                 .2
         })
@@ -314,7 +314,7 @@ where
         .into_iter()
         .zip(modified_at_version_keys)
         .map(|(obj, key)| {
-            obj.unwrap_or_else(|| panic!("Object for key {:?} from modified_at_versions effects does not exist in objects table", key))
+            obj.unwrap_or_else(|| panic!("Object for key {key:?} from modified_at_versions effects does not exist in objects table"))
                 .compute_object_reference()
                 .2
         })
@@ -442,8 +442,7 @@ impl StateAccumulator {
 
         if !remaining_checkpoints.is_empty() {
             debug!(
-                "Awaiting accumulation of checkpoints {:?} for epoch {} accumulation",
-                remaining_checkpoints, epoch
+                "Awaiting accumulation of checkpoints {remaining_checkpoints:?} for epoch {epoch} accumulation",
             );
         }
 

@@ -342,8 +342,7 @@ where
     let field: ValidatorWrapper = get_dynamic_field_from_store(object_store, table_id, key)
         .map_err(|err| {
             IotaError::IotaSystemStateReadError(format!(
-                "Failed to load validator wrapper from table: {:?}",
-                err
+                "Failed to load validator wrapper from table: {err:?}",
             ))
         })?;
     let versioned = field.inner;
@@ -354,8 +353,7 @@ where
                 get_dynamic_field_from_store(object_store, versioned.id.id.bytes, &version)
                     .map_err(|err| {
                         IotaError::IotaSystemStateReadError(format!(
-                            "Failed to load inner validator from the wrapper: {:?}",
-                            err
+                            "Failed to load inner validator from the wrapper: {err:?}",
                         ))
                     })?;
             Ok(validator.into_iota_validator_summary())
@@ -366,8 +364,7 @@ where
                 get_dynamic_field_from_store(object_store, versioned.id.id.bytes, &version)
                     .map_err(|err| {
                         IotaError::IotaSystemStateReadError(format!(
-                            "Failed to load inner validator from the wrapper: {:?}",
-                            err
+                            "Failed to load inner validator from the wrapper: {err:?}",
                         ))
                     })?;
             Ok(validator.into_iota_validator_summary())
@@ -378,15 +375,13 @@ where
                 get_dynamic_field_from_store(object_store, versioned.id.id.bytes, &version)
                     .map_err(|err| {
                         IotaError::IotaSystemStateReadError(format!(
-                            "Failed to load inner validator from the wrapper: {:?}",
-                            err
+                            "Failed to load inner validator from the wrapper: {err:?}",
                         ))
                     })?;
             Ok(validator.into_iota_validator_summary())
         }
         _ => Err(IotaError::IotaSystemStateReadError(format!(
-            "Unsupported Validator version: {}",
-            version
+            "Unsupported Validator version: {version}",
         ))),
     }
 }
@@ -405,8 +400,7 @@ where
         let validator: ValidatorType = get_dynamic_field_from_store(&object_store, table_id, &i)
             .map_err(|err| {
                 IotaError::IotaSystemStateReadError(format!(
-                    "Failed to load validator from table: {:?}",
-                    err
+                    "Failed to load validator from table: {err:?}",
                 ))
             })?;
         validators.push(validator);

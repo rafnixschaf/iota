@@ -134,8 +134,8 @@ fn verify_private_transfer(
     }
     if !PRIVATE_TRANSFER_FUNCTIONS.contains(&fident) {
         // unknown function, so a bug in the implementation here
-        debug_assert!(false, "unknown transfer function {}", fident);
-        return Err(format!("Calling unknown transfer function, {}", fident));
+        debug_assert!(false, "unknown transfer function {fident}");
+        return Err(format!("Calling unknown transfer function, {fident}"));
     };
 
     if type_arguments.len() != 1 {

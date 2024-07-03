@@ -153,7 +153,7 @@ impl NetworkClient for AnemoClient {
                 .filter_map(|r| match bcs::to_bytes(r) {
                     Ok(serialized) => Some(serialized),
                     Err(e) => {
-                        debug!("Failed to serialize block ref {:?}: {e:?}", r);
+                        debug!("Failed to serialize block ref {r:?}: {e:?}");
                         None
                     }
                 })
@@ -241,7 +241,7 @@ impl<S: NetworkService> ConsensusRpc for AnemoServiceProxy<S> {
             .filter_map(|serialized| match bcs::from_bytes(&serialized) {
                 Ok(r) => Some(r),
                 Err(e) => {
-                    debug!("Failed to deserialize block ref {:?}: {e:?}", serialized);
+                    debug!("Failed to deserialize block ref {serialized:?}: {e:?}");
                     None
                 }
             })
@@ -443,8 +443,8 @@ impl<S: NetworkService> NetworkManager<S> for AnemoManager {
                 // feature flag.
                 Err(e) => {
                     error!(
-                        "Failed to convert {:?} to anemo address: {:?}",
-                        authority.address, e
+                        "Failed to convert {:?} to anemo address: {e:?}",
+                        authority.address
                     );
                     continue;
                 }

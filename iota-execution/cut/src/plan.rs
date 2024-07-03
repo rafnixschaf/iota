@@ -1067,7 +1067,7 @@ mod tests {
         .unwrap_err();
 
         expect!["Packages 'bar-latest' and 'bar' map to the same cut package name"]
-            .assert_eq(&format!("{:#}", err));
+            .assert_eq(&format!("{err:#}"));
     }
 
     #[test]
@@ -1112,7 +1112,7 @@ mod tests {
         .unwrap_err();
 
         expect!["Packages 'foo-bar' and 'baz-bar' map to the same cut package path"]
-            .assert_eq(&format!("{:#}", err));
+            .assert_eq(&format!("{err:#}"));
     }
 
     #[test]

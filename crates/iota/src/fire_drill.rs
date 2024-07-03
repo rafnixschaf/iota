@@ -77,8 +77,7 @@ async fn run_metadata_rotation(metadata_rotation: MetadataRotation) -> anyhow::R
     let account_key = read_keypair_from_file(&account_key_path)?;
     let config: NodeConfig = PersistedConfig::read(&iota_node_config_path).map_err(|err| {
         err.context(format!(
-            "Cannot open Iota Node Config file at {:?}",
-            iota_node_config_path
+            "Cannot open Iota Node Config file at {iota_node_config_path:?}",
         ))
     })?;
 
@@ -172,7 +171,7 @@ async fn update_next_epoch_metadata(
 
     // Network address
     let mut new_network_address = Multiaddr::try_from(self_validator.net_address.clone()).unwrap();
-    info!("Current network address: {:?}", new_network_address);
+    info!("Current network address: {new_network_address:?}");
     let http = new_network_address.pop().unwrap();
     // pop out tcp
     new_network_address.pop().unwrap();
@@ -180,34 +179,34 @@ async fn update_next_epoch_metadata(
     let new_port = local_ip_utils::get_available_port(&localhost);
     new_network_address.push(Protocol::Tcp(new_port));
     new_network_address.push(http);
-    info!("New network address: {:?}", new_network_address);
+    info!("New network address: {new_network_address:?}");
     new_config.network_address = new_network_address.clone();
 
     // p2p address
     let mut new_external_address = config.p2p_config.external_address.clone().unwrap();
-    info!("Current P2P external address: {:?}", new_external_address);
+    info!("Current P2P external address: {new_external_address:?}");
     // pop out udp
     new_external_address.pop().unwrap();
     let new_port = local_ip_utils::get_available_port(&localhost);
     new_external_address.push(Protocol::Udp(new_port));
-    info!("New P2P external address: {:?}", new_external_address);
+    info!("New P2P external address: {new_external_address:?}");
     new_config.p2p_config.external_address = Some(new_external_address.clone());
 
     let mut new_listen_address = config.p2p_config.listen_address;
-    info!("Current P2P local listen address: {:?}", new_listen_address);
+    info!("Current P2P local listen address: {new_listen_address:?}");
     new_listen_address.set_port(new_port);
-    info!("New P2P local listen address: {:?}", new_listen_address);
+    info!("New P2P local listen address: {new_listen_address:?}");
     new_config.p2p_config.listen_address = new_listen_address;
 
     // primary address
     let mut new_primary_addresses =
         Multiaddr::try_from(self_validator.primary_address.clone()).unwrap();
-    info!("Current primary address: {:?}", new_primary_addresses);
+    info!("Current primary address: {new_primary_addresses:?}");
     // pop out udp
     new_primary_addresses.pop().unwrap();
     let new_port = local_ip_utils::get_available_port(&localhost);
     new_primary_addresses.push(Protocol::Udp(new_port));
-    info!("New primary address: {:?}", new_primary_addresses);
+    info!("New primary address: {new_primary_addresses:?}");
 
     // worker address
     let mut new_worker_addresses = Multiaddr::try_from(
@@ -219,12 +218,12 @@ async fn update_next_epoch_metadata(
             .clone(),
     )
     .unwrap();
-    info!("Current worker address: {:?}", new_worker_addresses);
+    info!("Current worker address: {new_worker_addresses:?}");
     // pop out udp
     new_worker_addresses.pop().unwrap();
     let new_port = local_ip_utils::get_available_port(&localhost);
     new_worker_addresses.push(Protocol::Udp(new_port));
-    info!("New worker address:: {:?}", new_worker_addresses);
+    info!("New worker address:: {new_worker_addresses:?}");
 
     // Save new config
     let mut new_config_path = iota_node_config_path.to_path_buf();

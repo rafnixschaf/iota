@@ -142,7 +142,7 @@ impl TransactionClient {
         let included_in_block = self.submit_no_wait(transaction).await?;
         included_in_block
             .await
-            .tap_err(|e| error!("Transaction acknowledge failed with {:?}", e))
+            .tap_err(|e| error!("Transaction acknowledge failed with {e:?}"))
             .map_err(|e| ClientError::ConsensusShuttingDown(e.to_string()))
     }
 
@@ -173,7 +173,7 @@ impl TransactionClient {
         self.sender
             .send(t)
             .await
-            .tap_err(|e| error!("Submit transaction failed with {:?}", e))
+            .tap_err(|e| error!("Submit transaction failed with {e:?}"))
             .map_err(|e| ClientError::ConsensusShuttingDown(e.to_string()))?;
         Ok(included_in_block_ack_receive)
     }
