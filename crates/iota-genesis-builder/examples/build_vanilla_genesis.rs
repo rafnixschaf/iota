@@ -1,16 +1,16 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Creating a genesis blob out of a local stardust objects snapshot.
+//! Creating a genesis vanilla blob.
 
 use iota_config::genesis::TokenDistributionScheduleBuilder;
-use iota_genesis_builder::{Builder, OBJECT_SNAPSHOT_FILE_PATH};
+use iota_genesis_builder::Builder;
 use iota_swarm_config::genesis_config::ValidatorGenesisConfigBuilder;
 use rand::rngs::OsRng;
 
 fn main() -> anyhow::Result<()> {
     // Create the builder
-    let mut builder = Builder::new().load_stardust_migration_objects(OBJECT_SNAPSHOT_FILE_PATH)?;
+    let mut builder = Builder::new();
 
     // Create validators
     let mut validators = Vec::new();
@@ -36,6 +36,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     // Save to file
-    builder.build().save("genesis.blob")?;
+    builder.build().save("genesis-vanilla.blob")?;
     Ok(())
 }
