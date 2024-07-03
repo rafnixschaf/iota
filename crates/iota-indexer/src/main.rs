@@ -21,35 +21,24 @@ async fn main() -> Result<(), IndexerError> {
         .init();
 
     let indexer_config = IndexerConfig::parse();
-    info!("Parsed indexer config: {:#?}", indexer_config);
+    info!("Parsed indexer config: {indexer_config:#?}");
 
     let db_url = indexer_config.get_db_url().map_err(|e| {
-        IndexerError::PgPoolConnectionError(format!(
-            "Failed parsing database url with error {:?}",
-            e
-        ))
+        IndexerError::PgPoolConnectionError(format!("Failed parsing database url with error {e:?}"))
     })?;
     let blocking_cp = new_pg_connection_pool(&db_url, None).map_err(|e| {
-        error!(
-            "Failed creating Postgres connection pool with error {:?}",
-            e
-        );
+        error!("Failed creating Postgres connection pool with error {e:?}");
         e
     })?;
     if indexer_config.reset_db {
         let mut conn = get_pg_pool_connection(&blocking_cp).map_err(|e| {
-            error!(
-                "Failed getting Postgres connection from connection pool with error {:?}",
-                e
-            );
+            error!("Failed getting Postgres connection from connection pool with error {e:?}");
             e
         })?;
         reset_database(&mut conn, /* drop_all */ true).map_err(|e| {
-            let db_err_msg = format!(
-                "Failed resetting database with url: {:?} and error: {:?}",
-                db_url, e
-            );
-            error!("{}", db_err_msg);
+            let db_err_msg =
+                format!("Failed resetting database with url: {db_url:?} and error: {e:?}");
+            error!("{db_err_msg}");
             IndexerError::PostgresResetError(db_err_msg)
         })?;
     }

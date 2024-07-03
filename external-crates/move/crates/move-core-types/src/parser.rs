@@ -623,9 +623,7 @@ mod tests {
             assert_eq!(
                 st.to_string().replace(' ', ""),
                 text.replace(' ', ""),
-                "text: {:?}, StructTag: {:?}",
-                text,
-                st
+                "text: {text:?}, StructTag: {st:?}",
             );
         }
     }

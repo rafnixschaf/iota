@@ -143,7 +143,7 @@ async fn commit_checkpoints<S>(
             .into_iter()
             .map(|res| {
                 if res.is_err() {
-                    error!("Failed to persist data with error: {:?}", res);
+                    error!("Failed to persist data with error: {res:?}");
                 }
                 res
             })
@@ -189,10 +189,7 @@ async fn commit_checkpoints<S>(
     metrics.total_transaction_committed.inc_by(tx_count as u64);
     info!(
         elapsed,
-        "Checkpoint {}-{} committed with {} transactions.",
-        first_checkpoint_seq,
-        last_checkpoint_seq,
-        tx_count,
+        "Checkpoint {first_checkpoint_seq}-{last_checkpoint_seq} committed with {tx_count} transactions.",
     );
     metrics
         .transaction_per_checkpoint

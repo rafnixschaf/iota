@@ -282,7 +282,7 @@ fn take_unique_ownership<T: Debug>(r: Rc<RefCell<T>>) -> PartialVMResult<T> {
         Ok(cell) => Ok(cell.into_inner()),
         Err(r) => Err(
             PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                .with_message(format!("moving value {:?} with dangling references", r)),
+                .with_message(format!("moving value {r:?} with dangling references")),
         ),
     }
 }
@@ -322,7 +322,7 @@ macro_rules! impl_vm_value_ref {
                 match self {
                     ValueImpl::$tc(x) => Ok(x),
                     _ => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                        .with_message(format!("cannot take {:?} as &{}", self, stringify!($ty)))),
+                        .with_message(format!("cannot take {self:?} as &{}", stringify!($ty)))),
                 }
             }
         }
@@ -511,7 +511,7 @@ impl ValueImpl {
             | (ContainerRef(_), _)
             | (IndexedRef(_), _) => {
                 return Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                    .with_message(format!("cannot compare values: {:?}, {:?}", self, other)));
+                    .with_message(format!("cannot compare values: {self:?}, {other:?}")));
             }
         };
 
@@ -560,8 +560,7 @@ impl Container {
             | (VecAddress(_), _) => {
                 return Err(
                     PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR).with_message(format!(
-                        "cannot compare container values: {:?}, {:?}",
-                        self, other
+                        "cannot compare container values: {self:?}, {other:?}",
                     )),
                 );
             }
@@ -673,7 +672,7 @@ impl IndexedRef {
             | (VecBool(_), _)
             | (VecAddress(_), _) => {
                 return Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                    .with_message(format!("cannot compare references {:?}, {:?}", self, other)));
+                    .with_message(format!("cannot compare references {self:?}, {other:?}")));
             }
         };
         Ok(res)
@@ -798,8 +797,7 @@ impl ContainerRef {
                 return Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                         .with_message(format!(
-                            "cannot write value {:?} to container ref {:?}",
-                            v, self
+                            "cannot write value {v:?} to container ref {self:?}",
                         )),
                 );
             }
@@ -817,10 +815,7 @@ impl IndexedRef {
             | ValueImpl::Container(_) => {
                 return Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                        .with_message(format!(
-                            "cannot write value {:?} to indexed ref {:?}",
-                            x, self
-                        )),
+                        .with_message(format!("cannot write value {x:?} to indexed ref {self:?}",)),
                 );
             }
             _ => (),
@@ -1283,7 +1278,7 @@ impl VMValueCast<IntegerValue> for Value {
             ValueImpl::U128(x) => Ok(IntegerValue::U128(x)),
             ValueImpl::U256(x) => Ok(IntegerValue::U256(x)),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to integer", v,))),
+                .with_message(format!("cannot cast {v:?} to integer"))),
         }
     }
 }
@@ -1294,7 +1289,7 @@ impl VMValueCast<Reference> for Value {
             ValueImpl::ContainerRef(r) => Ok(Reference(ReferenceImpl::ContainerRef(r))),
             ValueImpl::IndexedRef(r) => Ok(Reference(ReferenceImpl::IndexedRef(r))),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to reference", v,))),
+                .with_message(format!("cannot cast {v:?} to reference"))),
         }
     }
 }
@@ -1304,7 +1299,7 @@ impl VMValueCast<Container> for Value {
         match self.0 {
             ValueImpl::Container(c) => Ok(c),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to container", v,))),
+                .with_message(format!("cannot cast {v:?} to container"))),
         }
     }
 }
@@ -1332,7 +1327,7 @@ impl VMValueCast<Vec<u8>> for Value {
         match self.0 {
             ValueImpl::Container(Container::VecU8(r)) => take_unique_ownership(r),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to vector<u8>", v,))),
+                .with_message(format!("cannot cast {v:?} to vector<u8>"))),
         }
     }
 }
@@ -1342,7 +1337,7 @@ impl VMValueCast<Vec<u64>> for Value {
         match self.0 {
             ValueImpl::Container(Container::VecU64(r)) => take_unique_ownership(r),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to vector<u64>", v,))),
+                .with_message(format!("cannot cast {v:?} to vector<u64>"))),
         }
     }
 }
@@ -1364,12 +1359,8 @@ impl VMValueCast<Vec<Value>> for Value {
                 .with_message(
                     "cannot cast a specialized vector into a non-specialized one".to_string(),
                 )),
-            v => Err(
-                PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR).with_message(format!(
-                    "cannot cast {:?} to vector<non-specialized-type>",
-                    v,
-                )),
-            ),
+            v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
+                .with_message(format!("cannot cast {v:?} to vector<non-specialized-type>",))),
         }
     }
 }
@@ -1379,7 +1370,7 @@ impl VMValueCast<SignerRef> for Value {
         match self.0 {
             ValueImpl::ContainerRef(r) => Ok(SignerRef(r)),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to Signer reference", v,))),
+                .with_message(format!("cannot cast {v:?} to Signer reference"))),
         }
     }
 }
@@ -1389,7 +1380,7 @@ impl VMValueCast<VectorRef> for Value {
         match self.0 {
             ValueImpl::ContainerRef(r) => Ok(VectorRef(r)),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to vector reference", v,))),
+                .with_message(format!("cannot cast {v:?} to vector reference"))),
         }
     }
 }
@@ -1399,7 +1390,7 @@ impl VMValueCast<Vector> for Value {
         match self.0 {
             ValueImpl::Container(c) => Ok(Vector(c)),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to vector", v,))),
+                .with_message(format!("cannot cast {v:?} to vector"))),
         }
     }
 }
@@ -1418,7 +1409,7 @@ impl VMValueCast<u8> for IntegerValue {
         match self {
             Self::U8(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u8", v,))),
+                .with_message(format!("cannot cast {v:?} to u8"))),
         }
     }
 }
@@ -1428,7 +1419,7 @@ impl VMValueCast<u16> for IntegerValue {
         match self {
             Self::U16(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u16", v,))),
+                .with_message(format!("cannot cast {v:?} to u16"))),
         }
     }
 }
@@ -1438,7 +1429,7 @@ impl VMValueCast<u32> for IntegerValue {
         match self {
             Self::U32(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u32", v,))),
+                .with_message(format!("cannot cast {v:?} to u32"))),
         }
     }
 }
@@ -1448,7 +1439,7 @@ impl VMValueCast<u64> for IntegerValue {
         match self {
             Self::U64(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u64", v,))),
+                .with_message(format!("cannot cast {v:?} to u64"))),
         }
     }
 }
@@ -1458,7 +1449,7 @@ impl VMValueCast<u128> for IntegerValue {
         match self {
             Self::U128(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u128", v,))),
+                .with_message(format!("cannot cast {v:?} to u128"))),
         }
     }
 }
@@ -1468,7 +1459,7 @@ impl VMValueCast<u256::U256> for IntegerValue {
         match self {
             Self::U256(x) => Ok(x),
             v => Err(PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR)
-                .with_message(format!("cannot cast {:?} to u256", v,))),
+                .with_message(format!("cannot cast {v:?} to u256"))),
         }
     }
 }

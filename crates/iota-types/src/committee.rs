@@ -305,8 +305,8 @@ impl Display for Committee {
         }
         write!(
             f,
-            "Committee (epoch={:?}, voting_rights=[{}])",
-            self.epoch, voting_rights
+            "Committee (epoch={:?}, voting_rights=[{voting_rights}])",
+            self.epoch
         )
     }
 }

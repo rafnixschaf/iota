@@ -151,7 +151,7 @@ macro_rules! safe_unwrap {
                 let err = PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                     .with_message(format!("{}:{} (none)", file!(), line!()));
                 if cfg!(debug_assertions) {
-                    panic!("{:?}", err);
+                    panic!("{err:?}");
                 } else {
                     return Err(err);
                 }
@@ -170,7 +170,7 @@ macro_rules! safe_unwrap_err {
                 let err = PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                     .with_message(format!("{}:{} {:#}", file!(), line!(), e));
                 if cfg!(debug_assertions) {
-                    panic!("{:?}", err);
+                    panic!("{err:?}");
                 } else {
                     return Err(err);
                 }
@@ -187,7 +187,7 @@ macro_rules! safe_assert {
             let err = PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                 .with_message(format!("{}:{} (assert)", file!(), line!()));
             if cfg!(debug_assertions) {
-                panic!("{:?}", err)
+                panic!("{err:?}")
             } else {
                 return Err(err);
             }

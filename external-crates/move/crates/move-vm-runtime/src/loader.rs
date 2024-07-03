@@ -1697,8 +1697,7 @@ impl LoadedModule {
                     if idx < cursor.last_function {
                         return Err(PartialVMError::new(StatusCode::FUNCTION_RESOLUTION_FAILURE)
                             .with_message(format!(
-                                "Cannot find {:?}::{:?} in publishing module",
-                                runtime_id, func_name
+                                "Cannot find {runtime_id:?}::{func_name:?} in publishing module",
                             )));
                     }
                     if function.name.as_ident_str() == func_name {

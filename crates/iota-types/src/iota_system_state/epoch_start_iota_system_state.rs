@@ -220,8 +220,7 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
         {
             if iota_authority_name.0 != mysticeti_authority.authority_key.to_bytes() {
                 error!(
-                    "Mismatched authority order between Iota and Mysticeti! Index {}, Mysticeti authority {:?}\nIota authority name {}",
-                    i, mysticeti_authority, iota_authority_name
+                    "Mismatched authority order between Iota and Mysticeti! Index {i}, Mysticeti authority {mysticeti_authority:?}\nIota authority name {iota_authority_name}",
                 );
             }
         }

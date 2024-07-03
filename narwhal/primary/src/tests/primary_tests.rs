@@ -651,7 +651,7 @@ async fn test_request_vote_accept_missing_parents() {
     let result = timeout(Duration::from_secs(5), handler.request_vote(request))
         .await
         .unwrap();
-    assert!(result.is_ok(), "{:?}", result);
+    assert!(result.is_ok(), "{result:?}");
 }
 
 #[tokio::test]

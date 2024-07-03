@@ -212,7 +212,7 @@ impl<'a, T: GetModule> SerdeLayoutBuilder<'a, T> {
         let declaring_module = self
             .module_resolver
             .get_module_by_id(module_id)
-            .map_err(|e| anyhow::format_err!("{:?}", e))?
+            .map_err(|e| anyhow::format_err!("{e:?}"))?
             .expect("Failed to resolve module");
         let def = declaring_module
             .borrow()

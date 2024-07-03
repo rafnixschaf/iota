@@ -1650,7 +1650,7 @@ async fn slow_node() {
 
                 committed = true;
             }
-            _ => panic!("Unexpected outcome {:?}", outcome),
+            _ => panic!("Unexpected outcome {outcome:?}"),
         }
     }
 
@@ -1836,7 +1836,7 @@ async fn not_enough_support_and_missing_leaders_and_gc() {
 
                     committed = true;
                 }
-                _ => panic!("Unexpected outcome: {:?}", outcome),
+                _ => panic!("Unexpected outcome: {outcome:?}"),
             }
         }
     }

@@ -158,10 +158,10 @@ impl DataProviderRunner {
                 }
             }
         }
-        info!("Staleness tolerance: {:?}", staleness_tolerance);
+        info!("Staleness tolerance: {staleness_tolerance:?}");
 
         let gas_obj_ref = get_gas_obj_ref(client.read_api(), gas_coin_id, signer_address).await;
-        info!("Gas object: {:?}", gas_obj_ref);
+        info!("Gas object: {gas_obj_ref:?}");
 
         let uploader = OnChainDataUploader {
             wallet_ctx: wallet_ctx.clone(),
@@ -255,8 +255,7 @@ impl DataProvider {
             error!(
                 feed_name = self.feed_name,
                 source_name = self.source_name,
-                "Failed to retrieve data from data source: {:?}",
-                value
+                "Failed to retrieve data from data source: {value:?}",
             );
             self.metrics
                 .data_source_errors
@@ -282,7 +281,7 @@ impl DataProvider {
         let response = reqwest::Client::new().get(url).send().await?;
 
         if !response.status().is_success() {
-            anyhow::bail!("Failed to fetch data: {:?}", response);
+            anyhow::bail!("Failed to fetch data: {response:?}");
         }
 
         let json_blob: serde_json::Value = response.json().await.unwrap();
@@ -290,9 +289,7 @@ impl DataProvider {
 
         if data.is_empty() {
             anyhow::bail!(
-                "Failed to find data from json blob: {:?} with json path: {:?}",
-                json_blob,
-                json_path
+                "Failed to find data from json blob: {json_blob:?} with json path: {json_path:?}",
             );
         }
         // Assume there is one single value per request
@@ -300,15 +297,13 @@ impl DataProvider {
             Some(value_str) => match value_str.parse::<f64>() {
                 Ok(value) => Ok(value),
                 Err(_) => anyhow::bail!(
-                    "Failed to parse data {:?} as f64 from json blob: {:?}",
+                    "Failed to parse data {:?} as f64 from json blob: {json_blob:?}",
                     data[0],
-                    json_blob
                 ),
             },
             None => anyhow::bail!(
-                "Failed to parse data {:?} as string from json blob: {:?}",
+                "Failed to parse data {:?} as string from json blob: {json_blob:?}",
                 data[0],
-                json_blob
             ),
         }
     }
@@ -324,7 +319,7 @@ impl DataProvider {
                 retrieval_instant: Instant::now(),
             })
             .await
-            .tap_err(|err| error!("Failed to send data point to uploader: {:?}", err));
+            .tap_err(|err| error!("Failed to send data point to uploader: {err:?}"));
     }
 }
 

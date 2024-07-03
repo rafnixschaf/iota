@@ -67,7 +67,7 @@ impl CoverageMap {
         filename: P,
     ) -> Self {
         let file = File::open(&filename)
-            .unwrap_or_else(|_| panic!("Unable to open coverage trace file '{:?}'", filename));
+            .unwrap_or_else(|_| panic!("Unable to open coverage trace file '{filename:?}'"));
         for line in BufReader::new(file).lines() {
             let line = line.unwrap();
             let mut splits = line.split(',');
@@ -105,7 +105,7 @@ impl CoverageMap {
     pub fn from_binary_file<P: AsRef<Path> + std::fmt::Debug>(filename: P) -> Result<Self> {
         let mut bytes = Vec::new();
         File::open(&filename)
-            .map_err(|e| format_err!("{}: Coverage map file '{:?}' doesn't exist", e, filename))?
+            .map_err(|e| format_err!("{e}: Coverage map file '{filename:?}' doesn't exist"))?
             .read_to_end(&mut bytes)
             .ok()
             .ok_or_else(|| format_err!("Unable to read coverage map"))?;

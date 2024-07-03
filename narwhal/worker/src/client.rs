@@ -107,8 +107,8 @@ impl LazyNarwhalClient {
             return client;
         }
         panic!(
-            "Timed out after {:?} waiting for Narwhal worker ({}) to start!",
-            NARWHAL_WORKER_START_TIMEOUT, self.addr,
+            "Timed out after {NARWHAL_WORKER_START_TIMEOUT:?} waiting for Narwhal worker ({}) to start!",
+            self.addr,
         );
     }
 }

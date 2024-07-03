@@ -510,12 +510,8 @@ fn generate_and_run_execution_plans(
     protocol_config: &ProtocolConfig,
 ) {
     println!(
-        "Running execution plans for run_id {} for rounds={}, committee={}, gc_depth={}, modes={:?}",
-        run_id,
-        dag_rounds,
+        "Running execution plans for run_id {run_id} for rounds={dag_rounds}, committee={}, gc_depth={gc_depth}, modes={modes:?}",
         committee.size(),
-        gc_depth,
-        modes
     );
 
     let mut executed_plans = HashSet::new();
@@ -573,13 +569,8 @@ fn generate_and_run_execution_plans(
             assert_eq!(
                 committed_certificates,
                 plan_committed_certificates,
-                "Fork detected in plans for run_id={}, seed={}, rounds={}, committee={}, gc_depth={}, modes={:?}",
-                run_id,
-                seed,
-                dag_rounds,
+                "Fork detected in plans for run_id={run_id}, seed={seed}, rounds={dag_rounds}, committee={}, gc_depth={gc_depth}, modes={modes:?}",
                 committee.size(),
-                gc_depth,
-                modes
             );
         }
     }

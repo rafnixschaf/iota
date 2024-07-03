@@ -67,86 +67,72 @@ fn get_gas_meter<'a>(gas_val: u64) -> GasStatus<'a> {
 fn main_run(gas_val: u64) {
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), load_pop);
     println!(
-        "* load_pop: {} - Status: {:?}",
-        time,
+        "* load_pop: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), vec_pack_instantiated);
     println!(
-        "* vec_pack_instantiated: {} - Status: {:?}",
-        time,
+        "* vec_pack_instantiated: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), vec_pack_gen_simple);
     println!(
-        "* vec_pack_gen_simple: {} - Status: {:?}",
-        time,
+        "* vec_pack_gen_simple: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), vec_pack_gen_deep);
     println!(
-        "* vec_pack_gen_deep: {} - Status: {:?}",
-        time,
+        "* vec_pack_gen_deep: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), vec_pack_gen_deep_50);
     println!(
-        "* vec_pack_gen_deep_50: {} - Status: {:?}",
-        time,
+        "* vec_pack_gen_deep_50: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), vec_pack_gen_deep_500);
     println!(
-        "* vec_pack_gen_deep_500: {} - Status: {:?}",
-        time,
+        "* vec_pack_gen_deep_500: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), instantiated_gen_call);
     println!(
-        "* instantiated_gen_call: {} - Status: {:?}",
-        time,
+        "* instantiated_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), simple_gen_call);
     println!(
-        "* simple_gen_call: {} - Status: {:?}",
-        time,
+        "* simple_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), deep_gen_call);
     println!(
-        "* deep_gen_call: {} - Status: {:?}",
-        time,
+        "* deep_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), deep_gen_call_50);
     println!(
-        "* deep_gen_call_50: {} - Status: {:?}",
-        time,
+        "* deep_gen_call_50: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), deep_gen_call_500);
     println!(
-        "* deep_gen_call_500: {} - Status: {:?}",
-        time,
+        "* deep_gen_call_500: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), instantiated_rec_gen_call);
     println!(
-        "* instantiated_rec_gen_call: {} - Status: {:?}",
-        time,
+        "* instantiated_rec_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), simple_rec_gen_call);
     println!(
-        "* simple_rec_gen_call: {} - Status: {:?}",
-        time,
+        "* simple_rec_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
     let (res, time) = run_with_module(&mut get_gas_meter(gas_val), deep_rec_gen_call);
     println!(
-        "* deep_rec_gen_call: {} - Status: {:?}",
-        time,
+        "* deep_rec_gen_call: {time} - Status: {:?}",
         res.err().unwrap().major_status()
     );
 }

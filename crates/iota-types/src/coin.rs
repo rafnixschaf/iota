@@ -178,7 +178,7 @@ impl TryFrom<Object> for TreasuryCap {
         }
 
         Err(IotaError::TypeError {
-            error: format!("Object type is not a TreasuryCap: {:?}", object),
+            error: format!("Object type is not a TreasuryCap: {object:?}"),
         })
     }
 }
@@ -244,7 +244,7 @@ impl TryFrom<&Object> for CoinMetadata {
         }
 
         Err(IotaError::TypeError {
-            error: format!("Object type is not a CoinMetadata: {:?}", object),
+            error: format!("Object type is not a CoinMetadata: {object:?}"),
         })
     }
 }

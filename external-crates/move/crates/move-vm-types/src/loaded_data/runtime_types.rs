@@ -318,9 +318,8 @@ impl Type {
     pub fn check_eq(&self, other: &Self) -> PartialVMResult<()> {
         if self != other {
             return Err(
-                PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR).with_message(
-                    format!("Type mismatch: expected {:?}, got {:?}", self, other),
-                ),
+                PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
+                    .with_message(format!("Type mismatch: expected {self:?}, got {other:?}")),
             );
         }
         Ok(())

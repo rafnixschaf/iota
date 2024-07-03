@@ -137,7 +137,7 @@ impl QuorumWaiter {
                                     // Notify anyone waiting for this.
                                     let channel = opt_channel.take().unwrap();
                                     if let Err(e) = channel.send(()) {
-                                        warn!("Channel waiting for quorum response dropped: {:?}", e);
+                                        warn!("Channel waiting for quorum response dropped: {e:?}");
                                     }
                                     break
                                 }

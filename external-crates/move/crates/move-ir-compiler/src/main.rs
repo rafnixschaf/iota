@@ -43,7 +43,7 @@ struct Args {
 
 fn print_error_and_exit(verification_error: &VMError) -> ! {
     println!("Verification failed:");
-    println!("{:?}", verification_error);
+    println!("{verification_error:?}");
     std::process::exit(1);
 }
 
@@ -56,10 +56,10 @@ fn do_verify_module(module: &CompiledModule, dependencies: &[CompiledModule]) {
 
 fn write_output(path: &Path, buf: &[u8]) {
     let mut f = fs::File::create(path)
-        .with_context(|| format!("Unable to open output file {:?}", path))
+        .with_context(|| format!("Unable to open output file {path:?}"))
         .unwrap();
     f.write_all(buf)
-        .with_context(|| format!("Unable to write to output file {:?}", path))
+        .with_context(|| format!("Unable to write to output file {path:?}"))
         .unwrap();
 }
 
@@ -74,10 +74,7 @@ fn main() {
         .extension()
         .expect("Missing file extension for input source file");
     if extension != mvir_extension {
-        println!(
-            "Bad source file extension {:?}; expected {}",
-            extension, mvir_extension
-        );
+        println!("Bad source file extension {extension:?}; expected {mvir_extension}",);
         std::process::exit(1);
     }
 

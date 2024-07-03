@@ -197,8 +197,7 @@ impl BatchMaker {
             for id in tx_ids {
                 // NOTE: This log entry is used to compute performance.
                 tracing::info!(
-                    "Batch {:?} contains sample tx {}",
-                    digest,
+                    "Batch {digest:?} contains sample tx {}",
                     u64::from_be_bytes(id)
                 );
             }
@@ -221,14 +220,12 @@ impl BatchMaker {
                     })
                     .collect();
                 tracing::debug!(
-                    "Tracking IDs of transactions in the Batch {:?}: {:?}",
-                    digest,
-                    tracking_ids
+                    "Tracking IDs of transactions in the Batch {digest:?}: {tracking_ids:?}",
                 );
             }
 
             // NOTE: This log entry is used to compute performance.
-            tracing::info!("Batch {:?} contains {} B", digest, size);
+            tracing::info!("Batch {digest:?} contains {size} B");
         }
 
         let reason = if timeout { "timeout" } else { "size_reached" };
@@ -253,10 +250,8 @@ impl BatchMaker {
         let batch_creation_duration = self.batch_start_timestamp.elapsed().as_secs_f64();
 
         tracing::debug!(
-            "Batch {:?} took {} seconds to create due to {}",
+            "Batch {:?} took {batch_creation_duration} seconds to create due to {reason}",
             batch.digest(),
-            batch_creation_duration,
-            reason
         );
 
         // we are deliberately measuring this after the sending to the downstream
@@ -294,7 +289,7 @@ impl BatchMaker {
             let digest = batch.digest();
 
             if let Err(e) = store.insert(&digest, &batch) {
-                error!("Store failed with error: {:?}", e);
+                error!("Store failed with error: {e:?}");
                 return;
             }
 

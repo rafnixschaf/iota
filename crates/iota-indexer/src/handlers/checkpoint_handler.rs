@@ -839,8 +839,7 @@ fn try_create_dynamic_field_info(
         .cloned()
         .ok_or_else(|| {
             IndexerError::DynamicFieldError(format!(
-                "Cannot find struct layout in mapfor {:?}.",
-                struct_tag
+                "Cannot find struct layout in mapfor {struct_tag:?}."
             ))
         })?;
     let move_struct = move_object.to_move_struct(&move_struct_layout)?;
@@ -849,8 +848,7 @@ fn try_create_dynamic_field_info(
     let name_type = move_object.type_().try_extract_field_name(&type_)?;
     let bcs_name = bcs::to_bytes(&name_value.clone().undecorate()).map_err(|e| {
         IndexerError::SerdeError(format!(
-            "Failed to serialize dynamic field name {:?}: {e}",
-            name_value
+            "Failed to serialize dynamic field name {name_value:?}: {e}"
         ))
     })?;
     let name = DynamicFieldName {
@@ -862,8 +860,7 @@ fn try_create_dynamic_field_info(
             let object = latest_objects
                 .get(&object_id)
                 .ok_or(IndexerError::UncategorizedError(anyhow::anyhow!(
-                    "Failed to find object_id {:?} when trying to create dynamic field info",
-                    object_id
+                    "Failed to find object_id {object_id:?} when trying to create dynamic field info",
                 )))?;
             let version = object.version();
             let digest = object.digest();

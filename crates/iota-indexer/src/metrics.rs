@@ -29,7 +29,7 @@ pub fn start_prometheus_server(
     let fn_url_str = converted_fn_url.unwrap_or_else(|| "unknown_url".to_string());
 
     let labels = HashMap::from([("indexer_fullnode".to_string(), fn_url_str)]);
-    info!("Starting prometheus server with labels: {:?}", labels);
+    info!("Starting prometheus server with labels: {labels:?}");
     let registry = Registry::new_custom(Some("indexer".to_string()), Some(labels))?;
     let registry_service = RegistryService::new(registry.clone());
 

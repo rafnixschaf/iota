@@ -117,7 +117,7 @@ async fn test_read_causal_signed_certificates() {
         if let Some(metric) = authority.primary().await.metric(CURRENT_ROUND_METRIC).await {
             let value = metric.get_gauge().get_value();
 
-            info!("Metric -> {:?}", value);
+            info!("Metric -> {value:?}");
 
             // If the current round is increasing then it means that the
             // node starts catching up and is proposing.
@@ -145,7 +145,7 @@ async fn test_read_causal_signed_certificates() {
 
         if let Some(metric) = node.metric(CURRENT_ROUND_METRIC).await {
             let value = metric.get_gauge().get_value();
-            info!("Metric -> {:?}", value);
+            info!("Metric -> {value:?}");
 
             // If the current round is increasing then it means that the
             // node starts catching up and is proposing.
