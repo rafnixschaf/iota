@@ -1781,6 +1781,12 @@ impl AuthorityStore {
                 .expect("DB write cannot fail");
         }
 
+        // TODO: Temporarily disabled since the inflation/deflation tokenomics changes violate this invariant.
+        // We need a deeper investigation whether we want to keep this check in some form or another.
+        // For instance, we could consider checking that the supply changes by at most X tokens
+        // per epoch (where X = validator_target_reward), but it's unclear whether that would really have any benefit.
+
+        /*
         if let Some(expected_iota) = self
             .perpetual_tables
             .expected_network_iota_amount
@@ -1803,6 +1809,7 @@ impl AuthorityStore {
                 .insert(&(), &total_iota)
                 .expect("DB write cannot fail");
         }
+        */
 
         Ok(())
     }
