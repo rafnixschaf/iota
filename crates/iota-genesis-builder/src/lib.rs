@@ -35,7 +35,7 @@ use iota_types::{
     effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
     epoch_data::EpochData,
     gas::IotaGasStatus,
-    gas_coin::{GasCoin, GAS},
+    gas_coin::{GasCoin, GAS, TOTAL_SUPPLY_MICROS},
     governance::StakedIota,
     in_memory_storage::InMemoryStorage,
     inner_temporary_store::InnerTemporaryStore,
@@ -49,7 +49,7 @@ use iota_types::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,
         Transaction,
     },
-    IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID,
+    IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID,
     IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION, TIMELOCK_ADDRESS,
 };
 use move_binary_format::CompiledModule;
@@ -1163,7 +1163,7 @@ pub fn generate_genesis_system_object(
         let mut builder = ProgrammableTransactionBuilder::new();
         // Step 1: Create the IotaSystemState UID
         let iota_system_state_uid = builder.programmable_move_call(
-            IOTA_FRAMEWORK_ADDRESS.into(),
+            IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("object").to_owned(),
             ident_str!("iota_system_state").to_owned(),
             vec![],
@@ -1172,7 +1172,7 @@ pub fn generate_genesis_system_object(
 
         // Step 2: Create and share the Clock.
         builder.move_call(
-            IOTA_FRAMEWORK_ADDRESS.into(),
+            IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("clock").to_owned(),
             ident_str!("create").to_owned(),
             vec![],
@@ -1183,7 +1183,7 @@ pub fn generate_genesis_system_object(
         // (which only happens in tests).
         if protocol_config.create_authenticator_state_in_genesis() {
             builder.move_call(
-                IOTA_FRAMEWORK_ADDRESS.into(),
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 ident_str!("authenticator_state").to_owned(),
                 ident_str!("create").to_owned(),
                 vec![],
@@ -1192,7 +1192,7 @@ pub fn generate_genesis_system_object(
         }
         if protocol_config.random_beacon() {
             builder.move_call(
-                IOTA_FRAMEWORK_ADDRESS.into(),
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 ident_str!("random").to_owned(),
                 ident_str!("create").to_owned(),
                 vec![],
@@ -1201,7 +1201,7 @@ pub fn generate_genesis_system_object(
         }
         if protocol_config.enable_coin_deny_list() {
             builder.move_call(
-                IOTA_FRAMEWORK_ADDRESS.into(),
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 DENY_LIST_MODULE.to_owned(),
                 DENY_LIST_CREATE_FUNC.to_owned(),
                 vec![],
@@ -1209,19 +1209,31 @@ pub fn generate_genesis_system_object(
             )?;
         }
 
-        // Step 4: Mint the supply of IOTA.
-        let iota_supply = builder.programmable_move_call(
-            IOTA_FRAMEWORK_ADDRESS.into(),
+        // Step 4: Create the IOTA Coin.
+        let iota_treasury_cap = builder.programmable_move_call(
+            IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("iota").to_owned(),
             ident_str!("new").to_owned(),
             vec![],
             vec![],
         );
+        // TODO: This is will need to be modified after the timelock staking changes and
+        // to account for the migration objects with pre-allocated funds.
+        let total_iota_supply = builder
+            .pure(&(TOTAL_SUPPLY_MICROS))
+            .expect("serialization of u64 should succeed");
+        let total_iota = builder.programmable_move_call(
+            IOTA_FRAMEWORK_PACKAGE_ID,
+            ident_str!("iota").to_owned(),
+            ident_str!("mint_genesis_supply").to_owned(),
+            vec![],
+            vec![iota_treasury_cap, total_iota_supply],
+        );
 
         // Step 5: Run genesis.
         // The first argument is the system state uid we got from step 1 and the second
-        // one is the IOTA supply we got from step 3.
-        let mut arguments = vec![iota_system_state_uid, iota_supply];
+        // one is the IOTA `TreasuryCap` we got from step 4.
+        let mut arguments = vec![iota_system_state_uid, iota_treasury_cap, total_iota];
         let mut call_arg_arguments = vec![
             CallArg::Pure(bcs::to_bytes(&genesis_chain_parameters).unwrap()),
             CallArg::Pure(bcs::to_bytes(&genesis_validators).unwrap()),
