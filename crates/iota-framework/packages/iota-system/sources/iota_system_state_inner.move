@@ -920,7 +920,7 @@ module iota_system::iota_system_state_inner {
         leftover_staking_rewards.join(computation_reward);
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
         
-        self.iota_treasury_cap.supply_mut().decrease_supply(leftover_staking_rewards);
+        self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
         let refunded_storage_rebate =
             self.storage_fund.advance_epoch(
                 storage_reward,

@@ -2177,7 +2177,7 @@ gas coins.
     leftover_staking_rewards.join(computation_reward);
     <b>let</b> leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
-    self.iota_treasury_cap.supply_mut().decrease_supply(leftover_staking_rewards);
+    self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
     <b>let</b> refunded_storage_rebate =
         self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
             storage_reward,
