@@ -562,12 +562,6 @@ the epoch advancement transaction.
 
 </dd>
 <dt>
-<code>storage_fund_reinvestment: u64</code>
-</dt>
-<dd>
-
-</dd>
-<dt>
 <code>storage_charge: u64</code>
 </dt>
 <dd>
@@ -581,12 +575,6 @@ the epoch advancement transaction.
 </dd>
 <dt>
 <code>storage_fund_balance: u64</code>
-</dt>
-<dd>
-
-</dd>
-<dt>
-<code>stake_subsidy_amount: u64</code>
 </dt>
 <dd>
 
@@ -2099,7 +2087,7 @@ gas coins.
     epoch_start_timestamp_ms: u64, // Timestamp of the epoch start
     ctx: &<b>mut</b> TxContext,
 ) : Balance&lt;IOTA&gt; {
-    <b>let</b> prev_epoch_start_timestamp = self.epoch_start_timestamp_ms;
+    //<b>let</b> prev_epoch_start_timestamp = self.epoch_start_timestamp_ms;
     self.epoch_start_timestamp_ms = epoch_start_timestamp_ms;
 
     <b>let</b> bps_denominator_u64 = <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_BASIS_POINT_DENOMINATOR">BASIS_POINT_DENOMINATOR</a> <b>as</b> u64;
@@ -2120,49 +2108,33 @@ gas coins.
     non_refundable_storage_fee_amount = non_refundable_storage_fee_amount + self.safe_mode_non_refundable_storage_fee;
     self.safe_mode_non_refundable_storage_fee = 0;
 
-    <b>let</b> total_validators_stake = self.validators.total_stake();
-    <b>let</b> storage_fund_balance = self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance();
-    <b>let</b> total_stake = storage_fund_balance + total_validators_stake;
-
     <b>let</b> storage_charge = storage_reward.value();
     <b>let</b> computation_charge = computation_reward.value();
 
     // Include stake subsidy in the rewards given out <b>to</b> validators and stakers.
     // Delay distributing any stake subsidies until after `stake_subsidy_start_epoch`.
     // And <b>if</b> this epoch is shorter than the regular epoch duration, don't distribute any stake subsidy.
-    <b>let</b> <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a> =
-        <b>if</b> (ctx.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_epoch">epoch</a>() &gt;= self.parameters.stake_subsidy_start_epoch  &&
-            epoch_start_timestamp_ms &gt;= prev_epoch_start_timestamp + self.parameters.epoch_duration_ms)
-        {
-            self.<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>()
-        } <b>else</b> {
-            <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>()
-        };
+    // <b>let</b> <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a> =
+    //     <b>if</b> (ctx.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_epoch">epoch</a>() &gt;= self.parameters.stake_subsidy_start_epoch  &&
+    //         epoch_start_timestamp_ms &gt;= prev_epoch_start_timestamp + self.parameters.epoch_duration_ms)
+    //     {
+    //         self.<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>()
+    //     } <b>else</b> {
+    //         <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>()
+    //     };
 
-    <b>let</b> stake_subsidy_amount = <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.value();
-    computation_reward.join(<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>);
+    // <b>let</b> stake_subsidy_amount = <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.value();
+    //computation_reward.join(<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>);
 
-    <b>let</b> total_stake_u128 = total_stake <b>as</b> u128;
-    <b>let</b> computation_charge_u128 = computation_charge <b>as</b> u128;
-
-    <b>let</b> storage_fund_reward_amount = storage_fund_balance <b>as</b> u128 * computation_charge_u128 / total_stake_u128;
-    <b>let</b> <b>mut</b> storage_fund_reward = computation_reward.split(storage_fund_reward_amount <b>as</b> u64);
-    <b>let</b> storage_fund_reinvestment_amount =
-        storage_fund_reward_amount * (storage_fund_reinvest_rate <b>as</b> u128) / <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_BASIS_POINT_DENOMINATOR">BASIS_POINT_DENOMINATOR</a>;
-    <b>let</b> storage_fund_reinvestment = storage_fund_reward.split(
-        storage_fund_reinvestment_amount <b>as</b> u64,
-    );
 
     self.epoch = self.epoch + 1;
     // Sanity check <b>to</b> make sure we are advancing <b>to</b> the right epoch.
     <b>assert</b>!(new_epoch == self.epoch, <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_EAdvancedToWrongEpoch">EAdvancedToWrongEpoch</a>);
 
     <b>let</b> computation_reward_amount_before_distribution = computation_reward.value();
-    <b>let</b> storage_fund_reward_amount_before_distribution = storage_fund_reward.value();
 
     self.validators.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
         &<b>mut</b> computation_reward,
-        &<b>mut</b> storage_fund_reward,
         &<b>mut</b> self.validator_report_records,
         reward_slashing_rate,
         self.parameters.validator_low_stake_threshold,
@@ -2174,9 +2146,7 @@ gas coins.
     <b>let</b> new_total_stake = self.validators.total_stake();
 
     <b>let</b> computation_reward_amount_after_distribution = computation_reward.value();
-    <b>let</b> storage_fund_reward_amount_after_distribution = storage_fund_reward.value();
     <b>let</b> computation_reward_distributed = computation_reward_amount_before_distribution - computation_reward_amount_after_distribution;
-    <b>let</b> storage_fund_reward_distributed = storage_fund_reward_amount_before_distribution - storage_fund_reward_amount_after_distribution;
 
     self.protocol_version = next_protocol_version;
 
@@ -2185,14 +2155,12 @@ gas coins.
     // Because of precision issues <b>with</b> integer divisions, we expect that there will be some
     // remaining <a href="../iota-framework/balance.md#0x2_balance">balance</a> in `storage_fund_reward` and `computation_reward`.
     // All of these go <b>to</b> the storage fund.
-    <b>let</b> <b>mut</b> leftover_staking_rewards = storage_fund_reward;
-    leftover_staking_rewards.join(computation_reward);
+    <b>let</b> leftover_staking_rewards = computation_reward;
     <b>let</b> leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
     <b>let</b> refunded_storage_rebate =
         self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
             storage_reward,
-            storage_fund_reinvestment,
             leftover_staking_rewards,
             storage_rebate_amount,
             non_refundable_storage_fee_amount,
@@ -2205,12 +2173,11 @@ gas coins.
             reference_gas_price: self.reference_gas_price,
             total_stake: new_total_stake,
             storage_charge,
-            storage_fund_reinvestment: storage_fund_reinvestment_amount <b>as</b> u64,
             storage_rebate: storage_rebate_amount,
             storage_fund_balance: self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance(),
-            stake_subsidy_amount,
+            //stake_subsidy_amount,
             total_gas_fees: computation_charge,
-            total_stake_rewards_distributed: computation_reward_distributed + storage_fund_reward_distributed,
+            total_stake_rewards_distributed: computation_reward_distributed,
             leftover_storage_fund_inflow,
         }
     );
