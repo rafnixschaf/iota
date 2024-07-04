@@ -327,7 +327,7 @@ module iota_system::rewards_distribution_tests {
         report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_1, scenario);
 
         advance_epoch_with_reward_amounts_and_slashing_rates(
-            1000, 1000, 10_000, scenario
+            1000, 500, 10_000, scenario
         );
 
         // All validators should have 0 rewards added so their stake stays the same.
