@@ -232,12 +232,6 @@ each validator, emitted during epoch advancement.
 
 </dd>
 <dt>
-<code>storage_fund_staking_reward: u64</code>
-</dt>
-<dd>
-
-</dd>
-<dt>
 <code>pool_token_exchange_rate: <a href="staking_pool.md#0x3_staking_pool_PoolTokenExchangeRate">staking_pool::PoolTokenExchangeRate</a></code>
 </dt>
 <dd>
@@ -2371,7 +2365,6 @@ Process the pending stake changes for each validator.
 ## Function `compute_reward_adjustments`
 
 Compute both the individual reward adjustments and total reward adjustment for staking rewards
-as well as storage fund rewards.
 
 
 <pre><code><b>fun</b> <a href="validator_set.md#0x3_validator_set_compute_reward_adjustments">compute_reward_adjustments</a>(slashed_validator_indices: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;, reward_slashing_rate: u64, unadjusted_staking_reward_amounts: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;): (u64, <a href="../iota-framework/vec_map.md#0x2_vec_map_VecMap">vec_map::VecMap</a>&lt;u64, u64&gt;)
@@ -2466,7 +2459,7 @@ non-performant validators according to the input threshold.
 Given the current list of active validators, the total stake and total reward,
 calculate the amount of reward each validator should get, without taking into
 account the tallying rule results.
-Returns the unadjusted amounts of staking reward and storage fund reward for each validator.
+Returns the unadjusted amounts of staking reward for each validator.
 
 
 <pre><code><b>fun</b> <a href="validator_set.md#0x3_validator_set_compute_unadjusted_reward_distribution">compute_unadjusted_reward_distribution</a>(validators: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="validator.md#0x3_validator_Validator">validator::Validator</a>&gt;, total_voting_power: u64, total_staking_reward: u64): <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;
@@ -2494,7 +2487,6 @@ Returns the unadjusted amounts of staking reward and storage fund reward for eac
         <b>let</b> <a href="voting_power.md#0x3_voting_power">voting_power</a>: u128 = <a href="validator.md#0x3_validator">validator</a>.<a href="voting_power.md#0x3_voting_power">voting_power</a>() <b>as</b> u128;
         <b>let</b> reward_amount = <a href="voting_power.md#0x3_voting_power">voting_power</a> * (total_staking_reward <b>as</b> u128) / (total_voting_power <b>as</b> u128);
         staking_reward_amounts.push_back(reward_amount <b>as</b> u64);
-        // Storage fund's share of the rewards are equally distributed among validators.
         i = i + 1;
     };
     staking_reward_amounts
@@ -2510,8 +2502,8 @@ Returns the unadjusted amounts of staking reward and storage fund reward for eac
 ## Function `compute_adjusted_reward_distribution`
 
 Use the reward adjustment info to compute the adjusted rewards each validator should get.
-Returns the staking rewards each validator gets and the storage fund rewards each validator gets.
-The staking rewards are shared with the stakers while the storage fund ones are not.
+Returns the staking rewards each validator gets.
+The staking rewards are shared with the stakers.
 
 
 <pre><code><b>fun</b> <a href="validator_set.md#0x3_validator_set_compute_adjusted_reward_distribution">compute_adjusted_reward_distribution</a>(validators: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;<a href="validator.md#0x3_validator_Validator">validator::Validator</a>&gt;, total_voting_power: u64, total_slashed_validator_voting_power: u64, unadjusted_staking_reward_amounts: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;, total_staking_reward_adjustment: u64, individual_staking_reward_adjustments: <a href="../iota-framework/vec_map.md#0x2_vec_map_VecMap">vec_map::VecMap</a>&lt;u64, u64&gt;): <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;
