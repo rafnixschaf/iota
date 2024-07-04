@@ -901,6 +901,7 @@ module iota_system::iota_system_state_inner {
           validator_target_reward,
           computation_reward,
           &mut self.iota_treasury_cap,
+          ctx
         );
 
         self.epoch = self.epoch + 1;
@@ -980,17 +981,18 @@ module iota_system::iota_system_state_inner {
     public(package) fun match_iota_supply_to_target_reward(
       validator_target_reward: u64,
       mut computation_reward: Balance<IOTA>,
-      iota_treasury_cap: &mut iota::coin::TreasuryCap<IOTA>
+      iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
+      ctx: &TxContext,
     ): Balance<IOTA> {
       if (computation_reward.value() < validator_target_reward) {
         let tokens_to_mint = validator_target_reward - computation_reward.value();
-        let new_tokens = iota_treasury_cap.supply_mut().increase_supply(tokens_to_mint);
+        let new_tokens = iota_treasury_cap.mint_balance(tokens_to_mint, ctx);
         computation_reward.join(new_tokens);
         computation_reward
       } else if (computation_reward.value() > validator_target_reward) {
         let tokens_to_burn = computation_reward.value() - validator_target_reward;
         let rewards_to_burn = computation_reward.split(tokens_to_burn);
-        iota_treasury_cap.supply_mut().decrease_supply(rewards_to_burn);
+        iota_treasury_cap.burn_balance(rewards_to_burn, ctx);
         computation_reward
       } else {
         computation_reward
