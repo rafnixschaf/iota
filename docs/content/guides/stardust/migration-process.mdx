@@ -120,7 +120,7 @@ Other noteworthy points:
   discarded, although it can be accessed in the `Alias` object.
 - The `AliasOutput` object has a freshly generated `UID` while the `Alias` has its `UID` set to the `Alias ID` of the
   Stardust output. If the `Alias ID` was zeroed in the Stardust output, it is computed according to the protocol rules
-  from [TIP-18](https://wiki.iota.org/tips/tips/TIP-0018/) and then set. Hence, no `Alias` object in Move has a zeroed
+  from [TIP-18](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md) and then set. Hence, no `Alias` object in Move has a zeroed
   `UID`.
 - The Foundry Counter in Stardust is used to give foundries a unique ID. The Foundry ID is the concatenation of
   `Address || Serial Number || Token Scheme Type`. In Move the foundries are represented by unique packages that define
@@ -143,7 +143,7 @@ Other noteworthy points:
   `Expiration Unlock Condition` is present, by either of the two addresses in that unlock condition.
 - The `NftOutput` object has a freshly generated `UID` while the `Nft` has its `UID` set to the `Nft ID` of the Stardust
   output. If the `Nft ID` was zeroed in the Stardust output, it is computed according to the protocol rules from
-  [TIP-18](https://wiki.iota.org/tips/tips/TIP-0018/) and then set. Hence, no `Nft` object in Move has a zeroed `UID`.
+  [TIP-18](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md) and then set. Hence, no `Nft` object in Move has a zeroed `UID`.
 - The `Nft` move object contains an `Irc27Metadata` object. It is extracted from the immutable metadata of the Stardust
   NFT, if possible. If the Stardust NFT does not have valid IRC-27 metadata, it is migrated on a best-effort basis.
 

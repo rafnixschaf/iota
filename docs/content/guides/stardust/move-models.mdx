@@ -50,7 +50,7 @@ only originate from the migrated legacy stardust ledger state. The only way to c
 
 The following sections describe how the different asset types in Stardust are represented in the Move ledger.
 
-You may find more information on the original Stardust ledger and asset types in [TIP-18](https://wiki.iota.org/tips/tips/TIP-0018/).
+You may find more information on the original Stardust ledger and asset types in [TIP-18](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md).
 We consider the following Stardust asset types for the migration:
  - Base tokens (IOTA/SMR),
  - User defined native tokens,
@@ -88,10 +88,10 @@ public struct Coin<phantom T> has key, store {
 ```
 Majority of the funds on both IOTA and SMR networks are held in basic outputs, without any special unlock conditions,
 as this is the most common way a wallet stores IOTA/SMR tokens. To make the migration as seamless as possible, all
-[Basic outputs](https://wiki.iota.org/tips/tips/TIP-0018/#basic-output) from the Stardust ledger that:
+[Basic outputs](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#basic-output) from the Stardust ledger that:
     - contain IOTA or SMR tokens only (no native tokens),
-    - have only an `Address Unlock Condition` and no other [unlock conditions](https://wiki.iota.org/tips/tips/TIP-0018/#unlock-conditions), and
-    - have no [output features](https://wiki.iota.org/tips/tips/TIP-0018/#features),
+    - have only an `Address Unlock Condition` and no other [unlock conditions](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#unlock-conditions), and
+    - have no [output features](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#features),
 
 will be migrated to a `Coin<IOTA>` or `Coin<SMR>` object, respectively. The `Coin` object will be owned by the address
 in the `Address Unlock Condition` of the Stardust output.
@@ -112,7 +112,7 @@ will be migrated into the [containers](#containers) and have to be extracted fro
 
 ### Native Tokens
 
-Native tokens in Stardust are user-defined tokens that were minted via [Foundries](https://wiki.iota.org/tips/tips/TIP-0018/#foundry-output).
+Native tokens in Stardust are user-defined tokens that were minted via [Foundries](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#foundry-output).
 The foundry controls the supply of the native token and can mint new tokens. A user owned native token balance can be stored
 on any of the Stardust output types.
 
@@ -124,7 +124,7 @@ to control the supply of the token through minting and burning.
 A native token and its foundry from the Stardust ledger therefore translate to the following in the move ledger:
  - A published move package that defines the currency type ([one-time witness](../../concepts/iota-move-concepts/one-time-witness.mdx))
    for the native token. The template that is used for every native token package can be found in the [IOTA Genesis Builder](https://github.com/iotaledger/iota/blob/develop/crates/iota-genesis-builder/src/stardust/native_token/package_template/sources/native_token_template.move).
-   The parameters of the template are filled with the [IRC-30 metadata](https://wiki.iota.org/tips/tips/TIP-0030/) of the native token from Stardust.
+   The parameters of the template are filled with the [IRC-30 metadata](https://github.com/iotaledger/tips/blob/main/tips/TIP-0030/tip-0030.md) of the native token from Stardust.
  - The `CoinManager` shared object that gives access to the coin metadata and supply on-chain.
  - The [`CoinManagerTreasuryCap`](../../references/framework/iota-framework/coin_manager.md#resource-coinmanagertreasurycap)
    object that controls the supply of the native token.
@@ -139,7 +139,7 @@ output will be sent to the address of the controlling alias as `Coin<IOTA>` or `
 
 ### Aliases
 
-[Aliases](https://wiki.iota.org/tips/tips/TIP-0018/#alias-output) were primarily developed in
+[Aliases](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#alias-output) were primarily developed in
 Stardust to support IOTA Smart Contracts (ISC) that are layer 2 chains anchoring into the L1 protocol. Aliases represent
 ledger accounts for such chains, however their use has been extended for Decentralized Digital Identifiers (DID) and also as
 foundry controllers.
@@ -190,7 +190,7 @@ if they are not respected. This is required to not change semantically the rules
 ### Address Unlock Condition
 
 The most common unlock condition (which is mandatory for most outputs) in legacy Stardust is the
-[`Address Unlock Condition`](https://wiki.iota.org/tips/tips/TIP-0018/#address-unlock-condition).
+[`Address Unlock Condition`](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#address-unlock-condition).
 It simply locks the output behind an address, therefore, in move it is represented as a simple [address ownership of the
 object](../../concepts/object-ownership/address-owned.mdx).
  - All migrated objects, except the ones with Expiration Unlock Condition, become owned objects in the move ledger.
@@ -202,7 +202,7 @@ Since address ownership of the objects is native to the system, there is no need
 
 ### Storage Deposit Return Unlock Condition
 
-The [`Storage Deposit Return Unlock Condition`](https://wiki.iota.org/tips/tips/TIP-0018/#storage-deposit-return-unlock-condition)
+The [`Storage Deposit Return Unlock Condition`](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#storage-deposit-return-unlock-condition)
 is a special Stardust feature that lets the sender of an output claim back the storage deposit that was paid for the output.
 Such a feature is not needed in IOTA Rebased anymore due to the revised storage deposit model where the deposit is directly
 paid in transactions.
@@ -217,7 +217,7 @@ function is called when assets are extracted from the container, which will retu
 
 ### Timelock Unlock Condition
 
-A [stardust timelock](https://wiki.iota.org/tips/tips/TIP-0018/#timelock-unlock-condition)
+A [stardust timelock](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#timelock-unlock-condition)
 locks funds until a certain time has passed. It is modeled in move via the [`TimelockUnlockCondition`](../../references/framework/stardust/timelock_unlock_condition.md#struct-timelockunlockcondition)
 that is added to the containers during the migration process where applicable. The [`unlock()`](../../references/framework/stardust/timelock_unlock_condition.md#function-unlock)
 function is called when assets are extracted from the container, which checks if the timelock has expired and if so, unlocks the container.
@@ -236,7 +236,7 @@ treats these special outputs differently and migrates them to a separate object 
 
 ### Expiration Unlock Condition
 
-The [`Expiration Unlock Condition`](https://wiki.iota.org/tips/tips/TIP-0018/#expiration-unlock-condition)
+The [`Expiration Unlock Condition`](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#expiration-unlock-condition)
 in Stardust allows one to create a conditional transfer: if the recipient doesn't claim the output within a certain time,
 ownership is transferred back to the sender.
 
@@ -255,16 +255,16 @@ can be touched by anyone, however the move level code ensures that only the righ
 ### Deprecated Stardust Unlock Conditions
 
 The following unlock conditions from Stardust are not supported in the move ledger and are therefore not migrated:
- - [State Controller Address Unlock Condition](https://wiki.iota.org/tips/tips/TIP-0018/#state-controller-address-unlock-condition) and
- - [Governor Address Unlock Condition](https://wiki.iota.org/tips/tips/TIP-0018/#governor-address-unlock-condition):
+ - [State Controller Address Unlock Condition](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#state-controller-address-unlock-condition) and
+ - [Governor Address Unlock Condition](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#governor-address-unlock-condition):
       Used in Stardust exclusively for aliases. The move ledger simplifies aliases and gives ownership to the governor address of the alias,
       as the governor has the right to replace any state controller.
- - [Immutable Alias Address Unlock Condition](https://wiki.iota.org/tips/tips/TIP-0018/#immutable-alias-address-unlock-condition):
+ - [Immutable Alias Address Unlock Condition](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#immutable-alias-address-unlock-condition):
    With the transition to move token models, the concept of a foundry is deprecated, hence this unlock condition is obsolete.
 
 ## Output Features
 
-Stardust UTXOs introduced [output features](https://wiki.iota.org/tips/tips/TIP-0018/#features)
+Stardust UTXOs introduced [output features](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#features)
 which attach additional information to outputs. Due to the versatility of the move ledger, such explicit features are not needed
 since any developer can come up with their own features.
 
