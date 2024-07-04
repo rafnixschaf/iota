@@ -6,7 +6,7 @@
 module iota_system::governance_test_utils {
     use iota::address;
     use iota::balance;
-    use iota::iota::IOTA;
+    use iota::iota::{Self, IOTA};
     use iota::coin::{Self, Coin};
     use iota_system::staking_pool::{StakedIota, StakingPool};
     use iota::test_utils::assert_eq;
@@ -73,14 +73,23 @@ module iota_system::governance_test_utils {
             ctx,
         );
 
-        let mut iota_treasury_cap = coin::create_treasury_cap_for_testing<IOTA>(ctx);
-        let supply = iota_treasury_cap.supply_mut().increase_supply(iota_supply_amount * MICROS_PER_IOTA);
+        let mut iota_treasury_cap = iota::create_for_testing(ctx);
+
+        let stake_subsidy_balance = iota_treasury_cap.mint_balance(
+            iota_supply_amount * MICROS_PER_IOTA,
+            ctx,
+        );
 
         let stake_subsidy = stake_subsidy::create(
-            supply, // iota_supply
-            0,      // stake subsidy initial distribution amount
-            10,     // stake_subsidy_period_length
-            0,      // stake_subsidy_decrease_rate
+            stake_subsidy_balance,
+            0,  // stake subsidy initial distribution amount
+            10, // stake_subsidy_period_length
+            0,  // stake_subsidy_decrease_rate
+            ctx,
+        );
+
+        let storage_fund = iota_treasury_cap.mint_balance(
+            storage_fund_amount * MICROS_PER_IOTA,
             ctx,
         );
 
@@ -88,7 +97,7 @@ module iota_system::governance_test_utils {
             object::new(ctx), // it doesn't matter what ID iota system state has in tests
             iota_treasury_cap,
             validators,
-            balance::create_for_testing<IOTA>(storage_fund_amount * MICROS_PER_IOTA), // storage_fund
+            storage_fund, // storage_fund
             1,   // protocol version
             0,   // chain_start_timestamp_ms
             system_parameters,

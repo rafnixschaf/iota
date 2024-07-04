@@ -4,9 +4,9 @@
 
 module iota_system::iota_system_state_inner {
     use iota::balance::{Self, Balance};
-    use iota::coin::{Coin, TreasuryCap};
+    use iota::coin::Coin;
     use iota_system::staking_pool::{stake_activation_epoch, StakedIota};
-    use iota::iota::IOTA;
+    use iota::iota::{IOTA, IotaTreasuryCap};
     use iota_system::validator::{Self, Validator};
     use iota_system::validator_set::{Self, ValidatorSet};
     use iota_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
@@ -111,7 +111,7 @@ module iota_system::iota_system_state_inner {
         /// we know what version it is by inspecting IotaSystemStateInner as well.
         system_state_version: u64,
         /// The IOTA's TreasuryCap.
-        iota_treasury_cap: TreasuryCap<IOTA>,
+        iota_treasury_cap: IotaTreasuryCap,
         /// Contains all information about the validators.
         validators: ValidatorSet,
         /// The storage fund.
@@ -161,7 +161,7 @@ module iota_system::iota_system_state_inner {
         /// we know what version it is by inspecting IotaSystemStateInner as well.
         system_state_version: u64,
         /// The IOTA's TreasuryCap.
-        iota_treasury_cap: TreasuryCap<IOTA>,
+        iota_treasury_cap: IotaTreasuryCap,
         /// Contains all information about the validators.
         validators: ValidatorSet,
         /// The storage fund.
@@ -236,7 +236,7 @@ module iota_system::iota_system_state_inner {
     /// Create a new IotaSystemState object and make it shared.
     /// This function will be called only once in genesis.
     public(package) fun create(
-        iota_treasury_cap: TreasuryCap<IOTA>,
+        iota_treasury_cap: IotaTreasuryCap,
         validators: vector<Validator>,
         initial_storage_fund: Balance<IOTA>,
         protocol_version: u64,
