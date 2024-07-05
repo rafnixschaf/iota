@@ -976,7 +976,7 @@ module iota_system::iota_system_state_inner {
 
     /// Mint or burn IOTA tokens depending on the given target reward per validator
     /// and the amount of computation fees burned in this epoch.
-    public(package) fun match_computation_reward_to_target_reward(
+    fun match_computation_reward_to_target_reward(
         validator_target_reward: u64,
         mut computation_reward: Balance<IOTA>,
         iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
