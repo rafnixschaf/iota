@@ -1,4 +1,3 @@
----
 keystore:
   File: /root/.iota/iota_config/iota.keystore
 envs:

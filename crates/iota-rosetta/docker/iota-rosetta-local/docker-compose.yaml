@@ -1,4 +1,3 @@
----
 version: "3.9"
 services:
   iota-network:
@@ -36,5 +35,5 @@ services:
     command:
       - /bin/bash
       - -c
-      - |
+      - |-
         /usr/local/bin/iota-rosetta start-offline-server

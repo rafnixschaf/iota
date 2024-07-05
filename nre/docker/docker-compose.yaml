@@ -1,6 +1,4 @@
----
 version: "3"
-
 services:
   validator:
     container_name: validator
@@ -22,12 +20,7 @@ services:
       - ./genesis.blob:/opt/iota/config/genesis.blob:ro
       - ../genesis/key-pairs:/opt/iota/key-pairs/:ro
       - /opt/iota/db:/opt/iota/db:rw
-    command:
-      [
-        "/opt/iota/bin/iota-node",
-        "--config-path",
-        "/opt/iota/config/validator.yaml",
-      ]
+    command: ["/opt/iota/bin/iota-node", "--config-path", "/opt/iota/config/validator.yaml"]
     restart: on-failure
     logging:
       driver: "json-file"

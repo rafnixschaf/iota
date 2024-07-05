@@ -1,4 +1,3 @@
----
 Authority:
   STRUCT:
     - protocol_key:
@@ -162,4 +161,3 @@ WorkerSynchronizeMessage:
     - target:
         TYPENAME: AuthorityIdentifier
     - is_certified: BOOL
-

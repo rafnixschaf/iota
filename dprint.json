@@ -3,7 +3,8 @@
   "incremental": true,
   "includes": [
     "**/*.{toml}",
-    "**/*.{yml}"
+    "**/*.{yml}",
+    "**/*.{yaml}"
   ],
   "excludes": [
     "**/target/",
@@ -20,7 +21,7 @@
     "commands": [
       {
         "command": "yamlfmt {{file_path}}",
-        "exts": ["yml"]
+        "exts": ["yml", "yaml"]
       }
     ]
   },

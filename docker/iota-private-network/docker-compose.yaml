@@ -1,5 +1,4 @@
 version: "3"
-
 x-common-validator: &common-validator
   image: iota-node
   environment: &common-env
@@ -8,31 +7,19 @@ x-common-validator: &common-validator
     - RPC_WORKER_THREAD=12
     - NEW_CHECKPOINT_WARNING_TIMEOUT_MS=30000
     - NEW_CHECKPOINT_PANIC_TIMEOUT_MS=60000
-  command: &common-command
-    [
-      "/usr/local/bin/iota-node",
-      "--config-path",
-      "/opt/iota/config/validator.yaml",
-    ]
+  command: &common-command ["/usr/local/bin/iota-node", "--config-path", "/opt/iota/config/validator.yaml"]
   restart: on-failure
   logging: &common-logging
     driver: "json-file"
     options:
       max-file: "10"
       max-size: "1g"
-
 x-common-fullnode: &common-fullnode
-  <<: *common-validator
-  command:
-    [
-      "/usr/local/bin/iota-node",
-      "--config-path",
-      "/opt/iota/config/fullnode.yaml",
-    ]
-
+  !!merge <<: *common-validator
+  command: ["/usr/local/bin/iota-node", "--config-path", "/opt/iota/config/fullnode.yaml"]
 services:
   validator-1:
-    <<: *common-validator
+    !!merge <<: *common-validator
     container_name: validator-1
     hostname: validator-1
     networks:
@@ -42,9 +29,8 @@ services:
       - ./configs/validators/validator-1-8080.yaml:/opt/iota/config/validator.yaml:ro
       - ./configs/genesis/genesis.blob:/opt/iota/config/genesis.blob:ro
       - ./data/validator-1:/opt/iota/db:rw
-
   validator-2:
-    <<: *common-validator
+    !!merge <<: *common-validator
     container_name: validator-2
     hostname: validator-2
     networks:
@@ -54,9 +40,8 @@ services:
       - ./configs/validators/validator-2-8080.yaml:/opt/iota/config/validator.yaml:ro
       - ./configs/genesis/genesis.blob:/opt/iota/config/genesis.blob:ro
       - ./data/validator-2:/opt/iota/db:rw
-
   validator-3:
-    <<: *common-validator
+    !!merge <<: *common-validator
     container_name: validator-3
     hostname: validator-3
     networks:
@@ -66,9 +51,8 @@ services:
       - ./configs/validators/validator-3-8080.yaml:/opt/iota/config/validator.yaml:ro
       - ./configs/genesis/genesis.blob:/opt/iota/config/genesis.blob:ro
       - ./data/validator-3:/opt/iota/db:rw
-
   validator-4:
-    <<: *common-validator
+    !!merge <<: *common-validator
     container_name: validator-4
     hostname: validator-4
     networks:
@@ -78,9 +62,8 @@ services:
       - ./configs/validators/validator-4-8080.yaml:/opt/iota/config/validator.yaml:ro
       - ./configs/genesis/genesis.blob:/opt/iota/config/genesis.blob:ro
       - ./data/validator-4:/opt/iota/db:rw
-
   fullnode-1:
-    <<: *common-fullnode
+    !!merge <<: *common-fullnode
     container_name: fullnode-1
     hostname: fullnode-1
     networks:
@@ -95,9 +78,8 @@ services:
     ports:
       - "127.0.0.1:9000:9000/tcp"
       - "127.0.0.1:9184:9184/tcp"
-
   fullnode-2:
-    <<: *common-fullnode
+    !!merge <<: *common-fullnode
     container_name: fullnode-2
     hostname: fullnode-2
     networks:
@@ -110,9 +92,8 @@ services:
     ports:
       - "127.0.0.1:9001:9000/tcp"
       - "127.0.0.1:9185:9184/tcp"
-
   fullnode-3:
-    <<: *common-fullnode
+    !!merge <<: *common-fullnode
     container_name: fullnode-3
     hostname: fullnode-3
     networks:
@@ -125,9 +106,8 @@ services:
     ports:
       - "127.0.0.1:9002:9000/tcp"
       - "127.0.0.1:9186:9184/tcp"
-
   fullnode-4:
-    <<: *common-fullnode
+    !!merge <<: *common-fullnode
     container_name: fullnode-4
     hostname: fullnode-4
     networks:
@@ -140,7 +120,6 @@ services:
     ports:
       - "127.0.0.1:9003:9000/tcp"
       - "127.0.0.1:9187:9184/tcp"
-
   indexer-1:
     image: iota-indexer
     container_name: indexer-1
@@ -153,7 +132,7 @@ services:
       - RUST_BACKTRACE=1
       - RUST_LOG=info
       - RPC_WORKER_THREAD=12
-    command: 
+    command:
       - /usr/local/bin/iota-indexer
       - --db-url=postgres://iota_indexer:iota_indexer@postgres_primary:5432/iota_indexer
       - --rpc-client-url=http://fullnode-3:9000
@@ -168,7 +147,6 @@ services:
     depends_on:
       - fullnode-3
       - postgres_primary
-
   indexer-2:
     image: iota-indexer
     container_name: indexer-2
@@ -195,7 +173,6 @@ services:
       - postgres_replica
     volumes:
       - ./data/indexer-2:/opt/iota
-
   faucet-1:
     image: iota-tools
     container_name: faucet-1
@@ -208,7 +185,7 @@ services:
       - RUST_BACKTRACE=1
       - RUST_LOG=info
       - RPC_WORKER_THREAD=12
-    command: 
+    command:
       - /usr/local/bin/iota-faucet
       - --port=5003
       - --host-ip=0.0.0.0
@@ -223,7 +200,6 @@ services:
       - ./data/faucet-1:/wal
     depends_on:
       - fullnode-1
-
   postgres_primary:
     image: postgres:15
     user: postgres
@@ -243,14 +219,7 @@ services:
       POSTGRES_DB: iota_indexer
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
-    command: |
-      postgres 
-      -c wal_level=replica 
-      -c hot_standby=on 
-      -c max_wal_senders=10 
-      -c max_replication_slots=10 
-      -c hot_standby_feedback=on
-      -c 'max_connections=1000'
+    command: "postgres \n-c wal_level=replica \n-c hot_standby=on \n-c max_wal_senders=10 \n-c max_replication_slots=10 \n-c hot_standby_feedback=on\n-c 'max_connections=1000'\n"
     volumes:
       - ./static/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./data/primary:/var/lib/postgresql/data
@@ -260,7 +229,6 @@ services:
       timeout: 15s
       retries: 20
       start_period: 10s
-
   postgres_replica:
     image: postgres:15
     user: postgres
@@ -303,10 +271,9 @@ services:
       timeout: 15s
       retries: 20
       start_period: 10s
-
 networks:
   iota-network:
     driver: bridge
     ipam:
       config:
-      - subnet: 10.0.0.0/24
+        - subnet: 10.0.0.0/24

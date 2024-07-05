@@ -1,4 +1,3 @@
----
 # disable ufw as iptables is being manipulated directly
 - name: Disable UFW
   community.general.ufw:

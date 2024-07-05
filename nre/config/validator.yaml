@@ -1,4 +1,3 @@
----
 protocol-key-pair:
   path: /opt/iota/key-pairs/protocol.key
 worker-key-pair:

@@ -1,4 +1,3 @@
----
 version: "3.9"
 services:
   rosetta-online:
@@ -30,4 +29,3 @@ services:
         /usr/local/bin/iota-rosetta start-offline-server --env devnet
     stdin_open: true
     tty: true
-
