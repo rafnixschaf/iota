@@ -20,7 +20,7 @@
   "exec": {
     "commands": [
       {
-        "command": "yamlfmt {{file_path}}",
+        "command": "yamlfmt {{file_path}} -formatter scan_folded_as_literal=true",
         "exts": ["yml", "yaml"]
       }
     ]
