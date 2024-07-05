@@ -897,7 +897,7 @@ module iota_system::iota_system_state_inner {
             storage_fund_reinvestment_amount as u64,
         );
 
-        let mut computation_reward = match_iota_supply_to_target_reward(
+        let mut computation_reward = match_computation_reward_to_target_reward(
             validator_target_reward,
             computation_reward,
             &mut self.iota_treasury_cap,
@@ -978,7 +978,7 @@ module iota_system::iota_system_state_inner {
 
     /// Mint or burn IOTA tokens depending on the given target reward per validator
     /// and the amount of computation fees burned in this epoch.
-    public(package) fun match_iota_supply_to_target_reward(
+    public(package) fun match_computation_reward_to_target_reward(
         validator_target_reward: u64,
         mut computation_reward: Balance<IOTA>,
         iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
