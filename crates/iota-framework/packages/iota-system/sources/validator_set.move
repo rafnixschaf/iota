@@ -958,7 +958,7 @@ module iota_system::validator_set {
         }
     }
 
-    /// Compute both the individual reward adjustments and total reward adjustment for staking rewards
+    /// Compute both the individual reward adjustments and total reward adjustment for staking rewards.
     fun compute_reward_adjustments(
         mut slashed_validator_indices: vector<u64>,
         reward_slashing_rate: u64,
@@ -1109,7 +1109,7 @@ module iota_system::validator_set {
             } else {
                 validator_reward.destroy_zero();
             };
-    
+
             // Add rewards to stake staking pool to auto compound for stakers.
             validator.deposit_stake_rewards(staker_reward);
             i = i + 1;

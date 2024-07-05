@@ -896,8 +896,7 @@ module iota_system::iota_system_state_inner {
         // Derive the reference gas price for the new epoch
         self.reference_gas_price = self.validators.derive_reference_gas_price();
         // Because of precision issues with integer divisions, we expect that there will be some
-        // remaining balance in `storage_fund_reward` and `computation_reward`.
-        // All of these go to the storage fund.
+        // remaining balance in `computation_reward`.
         let leftover_staking_rewards = computation_reward;
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
