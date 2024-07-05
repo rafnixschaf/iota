@@ -1,15 +1,13 @@
 name: Attach IOTA binaries to a release
-
 on:
   release:
-    types: [ published ]
+    types: [published]
   workflow_dispatch:
     inputs:
       iota_tag:
         description: 'IOTA repo tag to build from'
         type: string
         required: true
-
 env:
   TAG_NAME: "${{ github.event.inputs.iota_tag || github.ref }}"
   CARGO_TERM_COLOR: always
@@ -32,20 +30,13 @@ env:
   RUSTUP_MAX_RETRIES: 10
   # Don't emit giant backtraces in the CI logs.
   RUST_BACKTRACE: short
-
 jobs:
   release-build:
     name: Build & Publish Binaries
     timeout-minutes: 80
     strategy:
       matrix:
-        os:
-          [
-            windows-ghcloud,
-            self-hosted-rust,
-            macos-latest-xl,
-            macos-arm64-self-hosted
-          ]
+        os: [windows-ghcloud, self-hosted-rust, macos-latest-xl, macos-arm64-self-hosted]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -57,7 +48,6 @@ jobs:
           echo "iota_tag=${iota_tag}" >> $GITHUB_ENV
           export iota_version=$(echo ${iota_tag} | sed -e 's/mainnet-v//' -e 's/testnet-v//')
           echo "iota_version=${iota_version}" >> $GITHUB_ENV
-
       - name: Configure AWS credentials
         if: ${{ env.TAG_NAME != 'main' }}
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin v4.0.2
@@ -65,7 +55,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-
       - name: Set os/arch variables (Windows)
         if: ${{ matrix.os == 'windows-ghcloud' }}
         shell: bash
@@ -73,44 +62,33 @@ jobs:
           export arch=$(uname -m)
           export os_type="windows-${arch}"
           echo "os_type=${os_type}" >> $GITHUB_ENV
-
       - name: Set os/arch variables
         if: ${{ matrix.os != 'windows-ghcloud' }}
         shell: bash
-        run: |
-          export arch=$(uname -m)
-          export system_os=$(echo ${{ matrix.os }} | cut -d- -f1)
-          export os_type="${system_os}-${arch}"
-          echo "os_type=${system_os}-${arch}" >> $GITHUB_ENV     
-
+        run: "export arch=$(uname -m)\nexport system_os=$(echo ${{ matrix.os }} | cut -d- -f1)\nexport os_type=\"${system_os}-${arch}\"\necho \"os_type=${system_os}-${arch}\" >> $GITHUB_ENV     \n"
       - name: Check if archives of binaries have already been built
         continue-on-error: true
         shell: bash
         run: |
           echo "s3_archive_exist=$(curl -Is https://iota-releases.s3.us-east-1.amazonaws.com/releases/iota-${{ env.iota_tag }}-${{ env.os_type }}.tgz | head -n 1 | grep '200 OK')" >> $GITHUB_ENV
-
       - name: Download archive, if it exists
         if: ${{ env.s3_archive_exist != '' }}
         shell: bash
         run: |
           mkdir -p ./target/release
           aws s3 cp s3://iota-releases/releases/iota-${{ env.iota_tag }}-${os_type}.tgz ./target/release/iota-${{ env.iota_tag }}-${os_type}.tgz
-
       - name: Setup caching
         if: ${{ env.s3_archive_exist == '' }}
         uses: bmwill/rust-cache@v1 # Fork of 'Swatinem/rust-cache' which allows caching additional paths          
-
       - name: Install nexttest (Windows)
         if: ${{ matrix.os == 'windows-ghcloud' && env.s3_archive_exist == '' }}
         uses: taiki-e/install-action@33022ba120c3f523d134bbbee12278fc11a3df1a # pin@nextest
-
       - name: Setup protoc (Windows)
         if: ${{ matrix.os == 'windows-ghcloud' && env.s3_archive_exist == '' }}
         uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # pin@v3.0.0
         # this avoids rate-limiting
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install postgres (Windows)
         if: ${{ matrix.os == 'windows-ghcloud' && env.s3_archive_exist == '' }}
         shell: bash
@@ -121,20 +99,17 @@ jobs:
           echo "PQ_LIB_DIR=C:\Program Files\PostgreSQL\12\lib" >> $GITHUB_ENV
           echo "PG_DATABASE_URL=postgres://postgres:root@localhost/" >> $GITHUB_ENV
           echo "PG_EXAMPLE_DATABASE_URL=postgres://postgres:root@localhost/diesel_example" >> $GITHUB_ENV
-
       - name: Checking out ${{ env.iota_tag }}
         if: ${{ env.s3_archive_exist == '' }}
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
         with:
           ref: ${{ env.iota_tag }}
-
       - name: cargo build (release) for ${{ matrix.os }} platform
         if: ${{ env.s3_archive_exist == '' }}
         shell: bash
         run: |
           [ -f ~/.cargo/env ] && source ~/.cargo/env ; cargo build --release
           cd external-crates/move && cargo build -p move-analyzer --release
-
       - name: Rename binaries for ${{ matrix.os }}
         if: ${{ matrix.os != 'windows-ghcloud' && env.s3_archive_exist == '' }}
         shell: bash
@@ -149,7 +124,6 @@ jobs:
           [ -f ./external-crates/move/target/release/move-analyzer ] && mv ./external-crates/move/target/release/move-analyzer ./external-crates/move/target/release/move-analyzer-${os_type}
           tar -cvzf ./target/release/iota-${{ env.iota_tag }}-${os_type}.tgz ./target/release/iota*-${os_type}* ./external-crates/move/target/release/move-analyzer-${os_type}
           [[ ${{ env.iota_tag }} == *"testnet"* ]] && aws s3 cp ./target/release/iota-${{ env.iota_tag }}-${os_type}.tgz s3://iota-releases/releases/iota-${{ env.iota_tag }}-${os_type}.tgz || true
-
       - name: Rename binaries for Windows
         if: ${{ matrix.os == 'windows-ghcloud' && env.s3_archive_exist == '' }}
         shell: bash
@@ -164,7 +138,6 @@ jobs:
           [ -f ./external-crates/move/target/release/move-analyzer.exe ] && mv ./external-crates/move/target/release/move-analyzer.exe ./external-crates/move/target/release/move-analyzer-${os_type}.exe
           tar -cvzf ./target/release/iota-${{ env.iota_tag }}-${os_type}.tgz ./target/release/iota*-${os_type}* ./external-crates/move/target/release/move-analyzer-${os_type}.exe
           [[ ${{ env.iota_tag }} == *"testnet"* ]] && aws s3 cp ./target/release/iota-${{ env.iota_tag }}-${os_type}.tgz s3://iota-releases/releases/iota-${{ env.iota_tag }}-${os_type}.tgz || true
-
       - name: "Publish Windows iota binary to Chocolately"
         if: ${{ matrix.os == 'windows-ghcloud' && env.s3_archive_exist == '' && contains( env.iota_tag, 'testnet') }}
         working-directory: chocolatey
@@ -186,7 +159,6 @@ jobs:
           choco pack --version ${{ env.iota_version }} configuration=release
           choco apikey --api-key ${{ secrets.CHOCO_API_KEY }} --source https://push.chocolatey.org/
           choco push iota.${{ env.iota_version }}.nupkg --source https://push.chocolatey.org/
-
       - name: Upload release artifacts for ${{ matrix.os }} platform
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
@@ -194,14 +166,12 @@ jobs:
           if-no-files-found: error
           path: |
             ./target/release/iota-${{ env.iota_tag }}-${{ env.os_type }}.tgz
-
       - name: Publish binaries for ${{ env.iota_tag }} release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # pin@v1
         with:
           tag_name: ${{ env.iota_tag }}
           files: |
             ./target/release/iota-${{ env.iota_tag }}-${{ env.os_type }}.tgz
-
   update-homebrew-formula:
     name: run brew bump-formula-pr for iota on testnet releases
     needs: release-build
@@ -228,7 +198,6 @@ jobs:
         env:
           # https://github.com/settings/tokens/new?scopes=public_repo,workflow
           COMMITTER_TOKEN: ${{ secrets.HOMEBREW_GH_FORMULA_BUMP }}
-
   update-homebrew-tap:
     name: update mysten-tap iota.rb file
     needs: release-build
@@ -239,7 +208,6 @@ jobs:
         shell: bash
         run: |
           echo "iota_tag=$(echo ${{ env.TAG_NAME }} | sed s/'refs\/tags\/'//)" >> $GITHUB_ENV
-
       # Checkout MystenLabs/homebrew-tap
       - name: Checkout Target Repository
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
@@ -249,22 +217,18 @@ jobs:
           token: ${{ secrets.HOMEBREW_TAP_REPO_READ_WRITE }}
           ref: main
           fetch-depth: 0
-
       # Download all artifacts from the previous job
       - name: Download all artifacts
         uses: actions/download-artifact@cbed621e49e4c01b044d60f6c80ea4ed6328b281 # pin@v2
-
       - name: Fetch Ubuntu x86_64 Binary and Compute SHA256
         shell: bash
         run: |
           echo "sha256_ubuntu_release=$(sha256sum iota-binaries-self-hosted-rust/iota-${{ env.iota_tag }}-ubuntu-x86_64.tgz | awk '{print $1}')" >> $GITHUB_ENV
           echo "sha256_macos_x86_release=$(sha256sum iota-binaries-macos-latest-xl/iota-${{ env.iota_tag }}-macos-x86_64.tgz  | awk '{print $1}')" >> $GITHUB_ENV
           echo "sha256_macos_arm_release=$(sha256sum iota-binaries-macos-arm64-self-hosted/iota-${{ env.iota_tag }}-macos-arm64.tgz | awk '{print $1}' )" >> $GITHUB_ENV
-
       # Install Jinja2 for templating
       - name: Install Jinja2
         run: pip install jinja2
-
       - name: Apply Jinja2 Template and Update Formula
         run: |
           python3 - <<EOF
@@ -290,7 +254,6 @@ jobs:
           with open("Formula/iota.rb", "w") as file:
             file.write(output)
           EOF
-
       # Commit and Push to Target Repository
       - name: Commit and Push to Target Repository
         uses: github-actions-x/commit@722d56b8968bf00ced78407bbe2ead81062d8baa # pin@v2.9
@@ -303,7 +266,6 @@ jobs:
           force-add: 'true'
           name: ${{ github.triggering_actor }}
           email: ${{ github.triggering_actor }}@users.noreply.github.com
-
   # Tag all iota images with release tag, so that they can be easily found
   tag-docker-hub-images:
     runs-on: self-hosted-rust

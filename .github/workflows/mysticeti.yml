@@ -1,5 +1,4 @@
 name: Mysticeti tests
-
 on:
   push:
     branches:
@@ -20,18 +19,14 @@ on:
   # Triggers the workflow every day at 05:00 UTC.
   schedule:
     - cron: '0 5 * * *'
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
 env:
   # Enable Mysticeti in tests.
   CONSENSUS: "mysticeti"
-
   # Reduce logging noise.
   RUST_LOG: "error"
-
   CARGO_TERM_COLOR: always
   # Disable incremental compilation.
   #
@@ -54,7 +49,6 @@ env:
   RUST_BACKTRACE: short
   # RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
-
 jobs:
   changes:
     runs-on: [self-hosted-rust]
@@ -67,7 +61,6 @@ jobs:
         with:
           list-files: 'json'
           filters: .github/crates-filters.yml
-  
   test:
     name: Test ${{ matrix.components }}
     timeout-minutes: 45
@@ -77,7 +70,7 @@ jobs:
       # non-deterministic `test` job.
       IOTA_SKIP_SIMTESTS: 1
     strategy:
-      matrix: 
+      matrix:
         components: ${{ fromJson(needs.changes.outputs.components) }}
       fail-fast: false
     runs-on: [self-hosted-rust]
@@ -87,7 +80,6 @@ jobs:
       - uses: taiki-e/install-action@nextest
       - name: cargo test
         run: cargo nextest run --profile ci -E 'rdeps(${{matrix.components}})' -p ${{matrix.components}}
-
   diff:
     runs-on: [self-hosted-rust]
     outputs:
@@ -95,13 +87,12 @@ jobs:
       isMove: ${{ steps.diff.outputs.isMove }}
       isReleaseNotesEligible: ${{ steps.diff.outputs.isReleaseNotesEligible }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
         with:
           ref: ${{ github.event.inputs.iota_repo_ref || github.ref }}
       - name: Detect Changes
         uses: "./.github/actions/diffs"
         id: diff
-
   test-extra:
     needs: diff
     if: needs.diff.outputs.isRust == 'true'
@@ -118,7 +109,7 @@ jobs:
           - [self-hosted-rust]
       fail-fast: false
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
         with:
           ref: ${{ github.event.inputs.iota_repo_ref || github.ref }}
       - uses: taiki-e/install-action@nextest
@@ -144,19 +135,18 @@ jobs:
       # Ensure there are no uncommitted changes in the repo after running tests
       - run: scripts/changed-files.sh
         shell: bash
-
   simtest:
     name: Simtest ${{ matrix.components }}
     needs: changes
     runs-on: [self-hosted-rust]
     strategy:
-      matrix: 
+      matrix:
         components: ${{ fromJson(needs.changes.outputs.components) }}
       fail-fast: false
     env:
       MSIM_WATCHDOG_TIMEOUT_MS: 60000
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
         with:
           ref: ${{ github.event.inputs.iota_repo_ref || github.ref }}
       - uses: taiki-e/install-action@nextest

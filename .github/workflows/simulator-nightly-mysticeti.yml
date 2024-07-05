@@ -1,8 +1,6 @@
 name: Simulator Tests with Mysticeti Enabled
-
 concurrency:
   group: ${{ github.workflow }}
-
 on:
   schedule:
     - cron: '0 13 * * *' # UTC timing is every day at 5am PST
@@ -18,14 +16,11 @@ on:
         type: string
         required: false
         default: "30"
-
 env:
   # Enable Mysticeti in tests.
   CONSENSUS: "mysticeti"
-
   IOTA_REF: "${{ github.event.inputs.iota_ref || 'main' }}"
   TEST_NUM: "${{ github.event.inputs.test_num || '30' }}"
-
 jobs:
   simtest:
     timeout-minutes: 240
@@ -35,7 +30,6 @@ jobs:
       id-token: write
       contents: read
     runs-on: self-hosted-rust
-
     steps:
       - name: Install Teleport
         uses: teleport-actions/setup@176c25dfcd19cd31a252f275d579822b243e7b9c # pin@v1.0.6
@@ -52,31 +46,25 @@ jobs:
           # Specify the length of time that the generated credentials should be
           # valid for. This is optional and defaults to "1h"
           certificate-ttl: 2h
-
       # Cargo clean and git restore on any left over files from git checkout, and deletes all remote tracking branches
       - name: Environment clean
-        run: | 
+        run: |
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 5 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && rm -rf ~/iota"
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 5 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && cd ~/ && git clone git@github.com:MystenLabs/iota.git"
- 
       # Deleting files in tmpfs that usually fill up pretty quickly after each run. Cargo clean to free up space as well.
       - name: Tmpfs and cargo clean
-        run: |  
+        run: |
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 5 ssh ubuntu@simtest-01 "sudo rm -rf /tmp/*"
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 5 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && cd ~/iota && cargo clean"
-
       # Checkout out the latest iota repo
       - name: Checkout iota repo
         run: |
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 10 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && cd ~/iota && git fetch origin && git checkout ${{ env.IOTA_REF }}"
-
       # Setting up cargo and simtest
       - name: Install simtest
         run: |
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 10 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && cd ~/iota && ./scripts/simtest/install.sh"
-
       # Run simulator tests
       - name: Run simtest
         run: |
           tsh -i ${{ steps.auth.outputs.identity-file }} --ttl 120 ssh ubuntu@simtest-01 "source ~/.bashrc && source ~/.cargo/env && cd ~/iota && RUSTUP_MAX_RETRIES=10 CARGO_TERM_COLOR=always CARGO_INCREMENTAL=0 CARGO_NET_RETRY=10 RUST_BACKTRACE=short RUST_LOG=off NUM_CPUS=24 TEST_NUM=${{ env.TEST_NUM }} ./scripts/simtest/simtest-run.sh"
-

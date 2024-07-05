@@ -2,7 +2,8 @@
   "$schema": "https://dprint.dev/schemas/v0.json",
   "incremental": true,
   "includes": [
-    "**/*.{toml}"
+    "**/*.{toml}",
+    "**/*.{yml}"
   ],
   "excludes": [
     "**/target/",
@@ -15,7 +16,16 @@
   "toml": {
     "lineWidth": 80
   },
+  "exec": {
+    "commands": [
+      {
+        "command": "yamlfmt {{file_path}}",
+        "exts": ["yml"]
+      }
+    ]
+  },
   "plugins": [
-    "https://plugins.dprint.dev/toml-0.6.2.wasm"
+    "https://plugins.dprint.dev/toml-0.6.2.wasm",
+    "https://plugins.dprint.dev/exec-0.4.4.json@c207bf9b9a4ee1f0ecb75c594f774924baf62e8e53a2ce9d873816a408cecbf7"
   ]
 }

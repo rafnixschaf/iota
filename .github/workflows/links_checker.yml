@@ -1,13 +1,10 @@
 name: Links Checker
-
 on:
   ## Allow triggering this workflow manually via GitHub CLI/web
   workflow_dispatch:
-
   ## Run this workflow automatically every week
   schedule:
     - cron: '0 0 * * *'
-
 jobs:
   link_checker:
     name: Check links and create automated issue if needed
@@ -16,8 +13,7 @@ jobs:
       LYCHEE_OUT: ./lychee/links-report
     steps:
       ## Check out code using Git
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
-
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
       - name: Check all links at *.md and doc files
         id: lychee
         uses: lycheeverse/lychee-action@v1.8.0
@@ -29,16 +25,10 @@ jobs:
           ## Allow pages replying with 200 (Ok)in at most 20 seconds
           ## This checks all md files in the repo
           args: >-
-            --verbose
-            --accept 200
-            --timeout 20
-            --max-concurrency 10
-            --no-progress
-            './**/*.md'
+            --verbose --accept 200 --timeout 20 --max-concurrency 10 --no-progress './**/*.md'
         env:
           ## Avoid rate limiting when checking github.com links
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Find the last report issue open
         uses: micalevisk/last-issue-action@v2.1
         id: last_issue
@@ -49,7 +39,6 @@ jobs:
             automated issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create issue from report file
         if: ${{ steps.last_issue.outputs.has_found == 'false' }}
         uses: peter-evans/create-issue-from-file@v4
@@ -60,7 +49,6 @@ jobs:
           labels: |
             report
             automated issue
-
       - name: Update last report open issue created
         if: ${{ steps.last_issue.outputs.has_found == 'true' }}
         uses: peter-evans/create-issue-from-file@v4
@@ -71,7 +59,6 @@ jobs:
           labels: |
             report
             automated issue
-
       - name: Close last report open issue
         if: ${{ steps.lychee.outputs.exit_code == 0 }}
         uses: peter-evans/close-issue@v3

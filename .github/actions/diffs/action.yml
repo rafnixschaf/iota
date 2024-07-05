@@ -6,7 +6,7 @@ outputs:
     value: "${{ steps.diff.outputs.isDoc }}"
   isOldDoc:
     description: True when changes happened to old doc folder
-    value: "${{ steps.diff.outputs.isOldDoc }}"    
+    value: "${{ steps.diff.outputs.isOldDoc }}"
   isRust:
     description: True when changes happened to the Rust code
     value: "${{ steps.diff.outputs.isRust }}"
@@ -16,48 +16,12 @@ outputs:
   isReleaseNotesEligible:
     description: True when changes happened in Release Notes eligible paths
     value: "${{ steps.diff.outputs.isReleaseNotesEligible }}"
-
 runs:
   using: composite
   steps:
-  - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
-  - name: Detect Changes
-    uses: dorny/paths-filter@v2.10.2
-    id: diff
-    with:
-      filters: |
-        isRust:
-          - 'consensus/**'
-          - 'crates/**'
-          - 'external-crates/**'
-          - 'narwhal/**'
-          - 'sui-execution/**'
-          - '.github/workflows/codecov.yml'
-          - '.github/workflows/rust.yml'
-          - '.github/workflows/external.yml'
-        isDoc:
-          - 'docs/content/**'
-          - '*.mdx'
-          - '.github/workflows/docs.yml'
-        isOldDoc:
-          - 'doc/**'
-          - '*.md'  
-        isMove:
-          - 'crates/sui-framework/**'
-          - 'crates/sui-framework-build/**'
-          - 'crates/sui-framework-tests/**'
-          - 'crates/sui_move/**'
-          - 'Cargo.toml'
-          - 'examples/**'
-          - 'sui_programmability/**'
-        isReleaseNotesEligible:
-          - 'consensus/**'
-          - 'crates/**'
-          - 'dashboards/**'
-          - 'doc/**'
-          - 'docker/**'
-          - 'external-crates/**'
-          - 'kiosk/**'
-          - 'narwhal/**'
-          - 'nre/**'
-          - 'sui-execution/**'
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
+    - name: Detect Changes
+      uses: dorny/paths-filter@v2.10.2
+      id: diff
+      with:
+        filters: "isRust:\n  - 'consensus/**'\n  - 'crates/**'\n  - 'external-crates/**'\n  - 'narwhal/**'\n  - 'sui-execution/**'\n  - '.github/workflows/codecov.yml'\n  - '.github/workflows/rust.yml'\n  - '.github/workflows/external.yml'\nisDoc:\n  - 'docs/content/**'\n  - '*.mdx'\n  - '.github/workflows/docs.yml'\nisOldDoc:\n  - 'doc/**'\n  - '*.md'  \nisMove:\n  - 'crates/sui-framework/**'\n  - 'crates/sui-framework-build/**'\n  - 'crates/sui-framework-tests/**'\n  - 'crates/sui_move/**'\n  - 'Cargo.toml'\n  - 'examples/**'\n  - 'sui_programmability/**'\nisReleaseNotesEligible:\n  - 'consensus/**'\n  - 'crates/**'\n  - 'dashboards/**'\n  - 'doc/**'\n  - 'docker/**'\n  - 'external-crates/**'\n  - 'kiosk/**'\n  - 'narwhal/**'\n  - 'nre/**'\n  - 'sui-execution/**'\n"
