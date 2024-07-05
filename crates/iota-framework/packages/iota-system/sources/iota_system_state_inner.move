@@ -849,11 +849,6 @@ module iota_system::iota_system_state_inner {
             EBpsTooLarge,
         );
 
-        // TODO: remove this in later upgrade.
-        if (self.parameters.stake_subsidy_start_epoch > 0) {
-            self.parameters.stake_subsidy_start_epoch = 20;
-        };
-
         // Accumulate the gas summary during safe_mode before processing any rewards:
         let safe_mode_storage_rewards = self.safe_mode_storage_rewards.withdraw_all();
         storage_reward.join(safe_mode_storage_rewards);
@@ -940,16 +935,19 @@ module iota_system::iota_system_state_inner {
         leftover_staking_rewards.join(computation_reward);
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
+        // Burning leftover rewards
+        self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
+
         let refunded_storage_rebate =
             self.storage_fund.advance_epoch(
                 storage_reward,
                 storage_fund_reinvestment,
-                leftover_staking_rewards,
                 storage_rebate_amount,
                 non_refundable_storage_fee_amount,
             );
 
         event::emit(
+            //TODO: Add additional information (e.g., how much was burned, how much was leftover, etc.)
             SystemEpochInfoEvent {
                 epoch: self.epoch,
                 protocol_version: self.protocol_version,

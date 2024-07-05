@@ -374,7 +374,7 @@ module iota_system::rewards_distribution_tests {
     #[test]
     fun test_everyone_slashed() {
         // This test is to make sure that if everyone is slashed, our protocol works as expected without aborting
-        // and all rewards go to the storage fund.
+        // and rewards are burned, and no tokens go to the storage fund.
         set_up_iota_system_state();
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
@@ -393,16 +393,16 @@ module iota_system::rewards_distribution_tests {
         report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_1, scenario);
 
         advance_epoch_with_reward_amounts_and_slashing_rates(
-            1000, 3000, 10_000, scenario
+            1000, 500, 10_000, scenario
         );
 
         // All validators should have 0 rewards added so their stake stays the same.
         assert_validator_self_stake_amounts(validator_addrs(), vector[100 * MICROS_PER_IOTA, 200 * MICROS_PER_IOTA, 300 * MICROS_PER_IOTA, 400 * MICROS_PER_IOTA], scenario);
 
         scenario.next_tx(@0x0);
-        // Storage fund balance should increase by 4000 IOTA.
+        // Storage fund balance should be the same as before.
         let mut system_state = scenario.take_shared<IotaSystemState>();
-        assert_eq(system_state.get_storage_fund_total_balance(), 4000 * MICROS_PER_IOTA);
+        assert_eq(system_state.get_storage_fund_total_balance(), 1000 * MICROS_PER_IOTA);
 
         // The entire 1000 IOTA of storage rewards should go to the object rebate portion of the storage fund.
         assert_eq(system_state.get_storage_fund_object_rebates(), 1000 * MICROS_PER_IOTA);
