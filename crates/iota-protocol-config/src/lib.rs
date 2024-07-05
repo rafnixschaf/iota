@@ -1358,7 +1358,7 @@ impl ProtocolConfig {
             obj_metadata_cost_non_refundable: Some(50),
             gas_model_version: Some(8),
             storage_rebate_rate: Some(9900),
-            storage_fund_reinvest_rate: Some(500),
+            storage_fund_reinvest_rate: Some(0),
             // Change reward slashing rate to 100%.
             reward_slashing_rate: Some(10000),
             storage_gas_price: Some(76),
