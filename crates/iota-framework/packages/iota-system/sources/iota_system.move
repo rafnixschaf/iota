@@ -703,8 +703,8 @@ module iota_system::iota_system {
     #[test_only]
     /// Returns the total iota supply.
     public fun get_iota_supply(wrapper: &mut IotaSystemState): u64 {
-      let self = load_system_state(wrapper);
-      self.get_total_iota_supply()
+        let self = load_system_state(wrapper);
+        self.get_total_iota_supply()
     }
 
     // CAUTION: THIS CODE IS ONLY FOR TESTING AND THIS MACRO MUST NEVER EVER BE REMOVED.  Creates a
