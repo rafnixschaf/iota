@@ -2158,15 +2158,18 @@ gas coins.
     <b>let</b> leftover_staking_rewards = computation_reward;
     <b>let</b> leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
+    // Burning leftover rewards
+    self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
+
     <b>let</b> refunded_storage_rebate =
         self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
             storage_reward,
-            leftover_staking_rewards,
             storage_rebate_amount,
             non_refundable_storage_fee_amount,
         );
 
     <a href="../iota-framework/event.md#0x2_event_emit">event::emit</a>(
+        //TODO: Add additional information (e.g., how much was burned, how much was leftover, etc.)
         <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_SystemEpochInfoEvent">SystemEpochInfoEvent</a> {
             epoch: self.epoch,
             protocol_version: self.protocol_version,

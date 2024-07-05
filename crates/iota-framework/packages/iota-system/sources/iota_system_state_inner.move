@@ -901,15 +901,18 @@ module iota_system::iota_system_state_inner {
         let leftover_staking_rewards = computation_reward;
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
+        // Burning leftover rewards
+        self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
+
         let refunded_storage_rebate =
             self.storage_fund.advance_epoch(
-                storage_reward,      
-                leftover_staking_rewards,                
+                storage_reward,
                 storage_rebate_amount,
                 non_refundable_storage_fee_amount,
             );
 
         event::emit(
+            //TODO: Add additional information (e.g., how much was burned, how much was leftover, etc.)
             SystemEpochInfoEvent {
                 epoch: self.epoch,
                 protocol_version: self.protocol_version,
