@@ -11,7 +11,7 @@ import {
 } from '_shared/utils/bip39';
 import { decrypt, encrypt } from '_src/shared/cryptography/keystore';
 import { mnemonicToSeedHex } from '@iota/iota.js/cryptography';
-import { Ed25519Keypair } from '@iota/iota.js/keypairs/ed25519';
+import { Ed25519Keypair, type Ed25519PublicKey } from '@iota/iota.js/keypairs/ed25519';
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import Dexie from 'dexie';
@@ -29,7 +29,7 @@ import {
     type AccountSourceSerializedUI,
 } from './AccountSource';
 import { accountSourcesEvents } from './events';
-import { makeDerivationPath } from './bipPath';
+import { type MakeDerivationOptions, makeDerivationPath } from './bip44Path';
 
 type DataDecrypted = {
     entropyHex: string;
@@ -140,15 +140,20 @@ export class MnemonicAccountSource extends AccountSource<
         accountSourcesEvents.emit('accountSourceStatusUpdated', { accountSourceID: this.id });
     }
 
-    async deriveAccount({ derivationPathIndex }: { derivationPathIndex?: number } = {}): Promise<
-        Omit<MnemonicSerializedAccount, 'id'>
-    > {
+    async deriveAccount(
+        derivationOptions?: MakeDerivationOptions,
+    ): Promise<Omit<MnemonicSerializedAccount, 'id'>> {
         const derivationPath =
-            typeof derivationPathIndex !== 'undefined'
-                ? makeDerivationPath(derivationPathIndex)
+            typeof derivationOptions !== 'undefined'
+                ? makeDerivationPath(derivationOptions)
                 : await this.#getAvailableDerivationPath();
         const keyPair = await this.deriveKeyPair(derivationPath);
         return MnemonicAccount.createNew({ keyPair, derivationPath, sourceID: this.id });
+    }
+
+    async derivePubKey(derivationOptions: MakeDerivationOptions): Promise<Ed25519PublicKey> {
+        const keyPair = await this.deriveKeyPair(makeDerivationPath(derivationOptions));
+        return keyPair.getPublicKey();
     }
 
     async deriveKeyPair(derivationPath: string) {
@@ -202,7 +207,9 @@ export class MnemonicAccountSource extends AccountSource<
         let derivationPath = '';
         let temp;
         do {
-            temp = makeDerivationPath(index++);
+            temp = makeDerivationPath({
+                accountIndex: index++,
+            });
             if (!derivationPathMap[temp]) {
                 derivationPath = temp;
             }
