@@ -562,6 +562,12 @@ the epoch advancement transaction.
 
 </dd>
 <dt>
+<code>storage_fund_reinvestment: u64</code>
+</dt>
+<dd>
+
+</dd>
+<dt>
 <code>storage_charge: u64</code>
 </dt>
 <dd>
@@ -2153,8 +2159,7 @@ gas coins.
     // Derive the reference gas price for the new epoch
     self.reference_gas_price = self.validators.derive_reference_gas_price();
     // Because of precision issues <b>with</b> integer divisions, we expect that there will be some
-    // remaining <a href="../iota-framework/balance.md#0x2_balance">balance</a> in `storage_fund_reward` and `computation_reward`.
-    // All of these go <b>to</b> the storage fund.
+    // remaining <a href="../iota-framework/balance.md#0x2_balance">balance</a> in `computation_reward`.
     <b>let</b> leftover_staking_rewards = computation_reward;
     <b>let</b> leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
@@ -2176,6 +2181,7 @@ gas coins.
             reference_gas_price: self.reference_gas_price,
             total_stake: new_total_stake,
             storage_charge,
+            storage_fund_reinvestment: 0,
             storage_rebate: storage_rebate_amount,
             storage_fund_balance: self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance(),
             stake_subsidy_amount,

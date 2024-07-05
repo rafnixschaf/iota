@@ -2364,7 +2364,7 @@ Process the pending stake changes for each validator.
 
 ## Function `compute_reward_adjustments`
 
-Compute both the individual reward adjustments and total reward adjustment for staking rewards
+Compute both the individual reward adjustments and total reward adjustment for staking rewards.
 
 
 <pre><code><b>fun</b> <a href="validator_set.md#0x3_validator_set_compute_reward_adjustments">compute_reward_adjustments</a>(slashed_validator_indices: <a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;, reward_slashing_rate: u64, unadjusted_staking_reward_amounts: &<a href="../move-stdlib/vector.md#0x1_vector">vector</a>&lt;u64&gt;): (u64, <a href="../iota-framework/vec_map.md#0x2_vec_map_VecMap">vec_map::VecMap</a>&lt;u64, u64&gt;)
