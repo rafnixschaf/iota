@@ -5,6 +5,7 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.WIKI_VERCEL_PROJECT_ID }}
 
 permissions:
+  contents: read
   pull-requests: write
 
 on:
