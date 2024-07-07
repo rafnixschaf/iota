@@ -1,0 +1,174 @@
+---
+title: telemetry-subscribers
+description: Allows for logging/tracing of the node.
+---
+
+The `telemetry-subscribers` crate is used to monitor the node's performance and metrics with flexible logging and tracing configurations.
+It is currently used in different main functions of the node, including tests.
+Typically, it is initialized at the beginning of a main function as shown below:
+```rust
+// initialize tracing
+let _guard = telemetry_subscribers::TelemetryConfig::new()
+        .with_env()
+        .init();
+```
+
+## Configuration:
+
+The `TelemetryConfig` is the type to configure various logging and tracing options, such as enabling OpenTelemetry tracing, outputting JSON logs, writing logs to files, setting log levels, defining span levels, setting panic hooks, or specifying Prometheus registries.
+It is defined as follows:
+
+```rust
+/// Configuration for different logging/tracing options
+/// ===
+/// - json_log_output: Output JSON logs to stdout only.
+/// - log_file: If defined, write output to a file starting with this name, ex
+///   app.log
+/// - log_level: error/warn/info/debug/trace, defaults to info
+#[derive(Default, Clone, Debug)]
+pub struct TelemetryConfig {
+    /// Enable OpenTelemetry tracing
+    pub enable_otlp_tracing: bool,
+    /// Enables Tokio Console debugging on port 6669
+    pub tokio_console: bool,
+    /// Output JSON logs.
+    pub json_log_output: bool,
+    /// If defined, write output to a file starting with this name, ex app.log
+    pub log_file: Option<String>,
+    /// Log level to set, defaults to info
+    pub log_string: Option<String>,
+    /// Span level - what level of spans should be created.  Note this is not
+    /// same as logging level If set to None, then defaults to INFO
+    pub span_level: Option<Level>,
+    /// Set a panic hook
+    pub panic_hook: bool,
+    /// Crash on panic
+    pub crash_on_panic: bool,
+    /// Optional Prometheus registry - if present, all enabled span latencies
+    /// are measured
+    pub prom_registry: Option<prometheus::Registry>,
+    pub sample_rate: f64,
+    /// Add directive to include trace logs with provided target
+    pub trace_target: Option<Vec<String>>,
+}
+```
+
+It implements a `with_env` function in order to set the config fields based on environment variables.
+After a `TelemetryConfig` instance is created and values are set, the `init` function will enable it.
+
+For that, the `init` first sets up a `EnvFilter` to manage which log messages are shown, based on the log level.
+Per default, the log level is set to `info`, but it can be adjusted by setting the `log_string` variable.
+Then, another filter is created for span levels.
+A span is a single unit of work and represents a specific operation, like a database query, and has a start and end time.
+Spans can be linked together to show the flow of operations in a system. Each span can include:
+a name describing the operation, timing information (start and end), attributes (key-value pairs) for extra context or relationships to other spans (parent-child).
+Spans help understand the flow of requests through a system better.
+The span filter, created by the `init` function ensures that only relevant spans are processed, which helps manage performance and logging noise.
+
+After the span filter is set up, a collection of layers is initialized. These layers send data to tokio-console for debugging or integrate with Prometheus for measuring span latencies - these layers will be separately enabled or disabled based on the configuration.
+If OTLP tracing is enabled, and `OpenTelemetryLayer` will be set up for tracing to either a file or an OTLP endpoint based on environment settings.
+After setting up all layer, a tracing subscriber is created with the configured layers and set as the global default.
+
+Ultimately, the function creates and returns `TelemetryGuards` and `TracingHandle` structs, which manage the telemetry settings.
+They should be kept active in the main function to ensure logging and tracing throughout the application's lifecycle.
+
+## Prometheus Registry:
+
+To enable Prometheus metrics, a `prometheus::Registry` can be set in the `TelemetryConfig`. In the `iota-node` it is set up as follows:
+
+```rust
+let runtimes = IotaRuntimes::new(&config);
+let metrics_rt = runtimes.metrics.enter();
+let registry_service = mysten_metrics::start_prometheus_server(config.metrics_address);
+let prometheus_registry = registry_service.default_registry();
+
+// Initialize logging
+let (_guard, filter_handle) = telemetry_subscribers::TelemetryConfig::new()
+        .with_env()
+        .with_prom_registry(&prometheus_registry)
+        .init();
+
+drop(metrics_rt);
+```
+
+In order to set up the subscriber, we enter the metrics runtime and create a Prometheus registry service.
+The `metrics_address` is the address where the Prometheus metrics will be exposed and specified in the node's configuration file.
+Per default, it is set to `0.0.0.0:9400`.
+After the Prometheus registry is created, it is passed to the `TelemetryConfig` with the `with_prom_registry` function.
+
+A bit below, a push task is started to push the metrics to the Prometheus registry.
+
+```rust
+{
+    let _enter = runtimes.metrics.enter();
+    metrics::start_metrics_push_task(&config, registry_service.clone());
+}
+```
+
+This task will push the metrics to the Prometheus registry every 60 seconds.
+It gathers all registered metrics from the `RegistryService`, assigns the current timestamp to each metric, encodes the metrics into the Protobuf format including compression and sends the compressed metrics data via an HTTP POST request to the Prometheus service.
+
+An e2e example, that illustrates how a Prometheus server is set up and metrics added:
+```rust
+#[tokio::test]
+    pub async fn test_metrics_endpoint_with_multiple_registries_add_remove() {
+        let port: u16 = 8081;
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port);
+
+        let registry_service =  start_prometheus_server(socket);
+
+        tokio::task::yield_now().await;
+
+        // now add a few registries to the service along side with metrics
+        let registry_1 = Registry::new_custom(Some("narwhal".to_string()), None).unwrap();
+        let counter_1 = IntCounter::new("counter_1", "a sample counter 1").unwrap();
+        registry_1.register(Box::new(counter_1)).unwrap();
+
+        let registry_2 = Registry::new_custom(Some("iota".to_string()), None).unwrap();
+        let counter_2 = IntCounter::new("counter_2", "a sample counter 2").unwrap();
+        registry_2.register(Box::new(counter_2.clone())).unwrap();
+
+        let registry_1_id = registry_service.add(registry_1);
+        let _registry_2_id = registry_service.add(registry_2);
+
+        // request the endpoint
+        let result = get_metrics(port).await;
+
+        assert!(result.contains(
+            "# HELP iota_counter_2 a sample counter 2
+# TYPE iota_counter_2 counter
+iota_counter_2 0"
+        ));
+
+        assert!(result.contains(
+            "# HELP narwhal_counter_1 a sample counter 1
+# TYPE narwhal_counter_1 counter
+narwhal_counter_1 0"
+        ));
+
+        // Now remove registry 1
+        assert!(registry_service.remove(registry_1_id));
+
+        // AND increase metric 2
+        counter_2.inc();
+
+        // Now pull again metrics
+        // request the endpoint
+        let result = get_metrics(port).await;
+
+        // Registry 1 metrics should not be present anymore
+        assert!(!result.contains(
+            "# HELP narwhal_counter_1 a sample counter 1
+# TYPE narwhal_counter_1 counter
+narwhal_counter_1 0"
+        ));
+
+        // Registry 2 metric should have increased by 1
+        assert!(result.contains(
+            "# HELP iota_counter_2 a sample counter 2
+# TYPE iota_counter_2 counter
+iota_counter_2 1"
+        ));
+    }
+```
+
