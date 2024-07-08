@@ -48,6 +48,7 @@ title: Module `0x3::iota_system_state_inner`
 -  [Function `update_validator_next_epoch_network_pubkey`](#0x3_iota_system_state_inner_update_validator_next_epoch_network_pubkey)
 -  [Function `update_candidate_validator_network_pubkey`](#0x3_iota_system_state_inner_update_candidate_validator_network_pubkey)
 -  [Function `advance_epoch`](#0x3_iota_system_state_inner_advance_epoch)
+-  [Function `match_computation_reward_to_target_reward`](#0x3_iota_system_state_inner_match_computation_reward_to_target_reward)
 -  [Function `epoch`](#0x3_iota_system_state_inner_epoch)
 -  [Function `protocol_version`](#0x3_iota_system_state_inner_protocol_version)
 -  [Function `system_state_version`](#0x3_iota_system_state_inner_system_state_version)
@@ -2076,7 +2077,7 @@ gas coins.
 4. Update all validators.
 
 
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(self: &<b>mut</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>, new_epoch: u64, next_protocol_version: u64, storage_reward: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, computation_reward: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, storage_rebate_amount: u64, non_refundable_storage_fee_amount: u64, reward_slashing_rate: u64, epoch_start_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(self: &<b>mut</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>, new_epoch: u64, next_protocol_version: u64, validator_target_reward: u64, storage_reward: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, computation_reward: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, storage_rebate_amount: u64, non_refundable_storage_fee_amount: u64, reward_slashing_rate: u64, epoch_start_timestamp_ms: u64, ctx: &<b>mut</b> <a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;
 </code></pre>
 
 
@@ -2089,6 +2090,7 @@ gas coins.
     self: &<b>mut</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>,
     new_epoch: u64,
     next_protocol_version: u64,
+    validator_target_reward: u64,
     <b>mut</b> storage_reward: Balance&lt;IOTA&gt;,
     <b>mut</b> computation_reward: Balance&lt;IOTA&gt;,
     <b>mut</b> storage_rebate_amount: u64,
@@ -2132,6 +2134,13 @@ gas coins.
     <b>let</b> stake_subsidy_amount = <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.value();
     computation_reward.join(<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>);
 
+
+    <b>let</b> <b>mut</b> computation_reward = <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(
+        validator_target_reward,
+        computation_reward,
+        &<b>mut</b> self.iota_treasury_cap,
+        ctx
+    );
 
     self.epoch = self.epoch + 1;
     // Sanity check <b>to</b> make sure we are advancing <b>to</b> the right epoch.
@@ -2199,6 +2208,49 @@ gas coins.
     // Return the storage rebate split from storage fund that's already refunded <b>to</b> the transaction senders.
     // This will be burnt at the last step of epoch change programmable transaction.
     refunded_storage_rebate
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_iota_system_state_inner_match_computation_reward_to_target_reward"></a>
+
+## Function `match_computation_reward_to_target_reward`
+
+Mint or burn IOTA tokens depending on the given target reward per validator
+and the amount of computation fees burned in this epoch.
+
+
+<pre><code><b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(validator_target_reward: u64, computation_reward: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;, iota_treasury_cap: &<b>mut</b> <a href="../iota-framework/iota.md#0x2_iota_IotaTreasuryCap">iota::IotaTreasuryCap</a>, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(
+    validator_target_reward: u64,
+    <b>mut</b> computation_reward: Balance&lt;IOTA&gt;,
+    iota_treasury_cap: &<b>mut</b> iota::iota::IotaTreasuryCap,
+    ctx: &TxContext,
+): Balance&lt;IOTA&gt; {
+    <b>if</b> (computation_reward.value() &lt; validator_target_reward) {
+        <b>let</b> tokens_to_mint = validator_target_reward - computation_reward.value();
+        <b>let</b> new_tokens = iota_treasury_cap.mint_balance(tokens_to_mint, ctx);
+        computation_reward.join(new_tokens);
+        computation_reward
+    } <b>else</b> <b>if</b> (computation_reward.value() &gt; validator_target_reward) {
+        <b>let</b> tokens_to_burn = computation_reward.value() - validator_target_reward;
+        <b>let</b> rewards_to_burn = computation_reward.split(tokens_to_burn);
+        iota_treasury_cap.burn_balance(rewards_to_burn, ctx);
+        computation_reward
+    } <b>else</b> {
+        computation_reward
+    }
 }
 </code></pre>
 

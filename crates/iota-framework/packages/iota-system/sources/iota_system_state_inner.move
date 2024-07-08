@@ -827,6 +827,7 @@ module iota_system::iota_system_state_inner {
         self: &mut IotaSystemStateInnerV2,
         new_epoch: u64,
         next_protocol_version: u64,
+        validator_target_reward: u64,
         mut storage_reward: Balance<IOTA>,
         mut computation_reward: Balance<IOTA>,
         mut storage_rebate_amount: u64,
@@ -870,6 +871,13 @@ module iota_system::iota_system_state_inner {
         let stake_subsidy_amount = stake_subsidy.value();
         computation_reward.join(stake_subsidy);
 
+
+        let mut computation_reward = match_computation_reward_to_target_reward(
+            validator_target_reward,
+            computation_reward,
+            &mut self.iota_treasury_cap,
+            ctx
+        );
 
         self.epoch = self.epoch + 1;
         // Sanity check to make sure we are advancing to the right epoch.
@@ -939,6 +947,29 @@ module iota_system::iota_system_state_inner {
         refunded_storage_rebate
     }
 
+    /// Mint or burn IOTA tokens depending on the given target reward per validator
+    /// and the amount of computation fees burned in this epoch.
+    fun match_computation_reward_to_target_reward(
+        validator_target_reward: u64,
+        mut computation_reward: Balance<IOTA>,
+        iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
+        ctx: &TxContext,
+    ): Balance<IOTA> {
+        if (computation_reward.value() < validator_target_reward) {
+            let tokens_to_mint = validator_target_reward - computation_reward.value();
+            let new_tokens = iota_treasury_cap.mint_balance(tokens_to_mint, ctx);
+            computation_reward.join(new_tokens);
+            computation_reward
+        } else if (computation_reward.value() > validator_target_reward) {
+            let tokens_to_burn = computation_reward.value() - validator_target_reward;
+            let rewards_to_burn = computation_reward.split(tokens_to_burn);
+            iota_treasury_cap.burn_balance(rewards_to_burn, ctx);
+            computation_reward
+        } else {
+            computation_reward
+        }
+    }
+
     /// Return the current epoch number. Useful for applications that need a coarse-grained concept of time,
     /// since epochs are ever-increasing and epoch changes are intended to happen every 24 hours.
     public(package) fun epoch(self: &IotaSystemStateInnerV2): u64 {
@@ -981,6 +1012,12 @@ module iota_system::iota_system_state_inner {
     public(package) fun validator_staking_pool_mappings(self: &IotaSystemStateInnerV2): &Table<ID, address> {
 
         self.validators.staking_pool_mappings()
+    }
+
+    #[test_only]
+    /// Returns the total iota supply.
+    public(package) fun get_total_iota_supply(self: &IotaSystemStateInnerV2): u64 {
+        self.iota_treasury_cap.total_supply()
     }
 
     /// Returns all the validators who are currently reporting `addr`

@@ -128,6 +128,7 @@ storage_rebate_rate: 9900
 storage_fund_reinvest_rate: 0
 reward_slashing_rate: 10000
 storage_gas_price: 76
+validator_target_reward: 767000000000000
 max_transactions_per_checkpoint: 10000
 max_checkpoint_size_bytes: 31457280
 buffer_stake_for_protocol_upgrade_bps: 5000
@@ -268,4 +269,3 @@ random_beacon_reduction_lower_bound: 1600
 random_beacon_dkg_timeout_round: 200
 consensus_max_transaction_size_bytes: 262144
 consensus_max_transactions_in_block_bytes: 6291456
-

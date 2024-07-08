@@ -996,7 +996,7 @@ module iota_system::iota_system_tests {
         let prev_counter = system_state.get_stake_subsidy_distribution_counter();
 
         let rebate = system_state.advance_epoch_for_testing(
-            new_epoch, 1, 0, 0, 0, 0, 0, prev_epoch_time + epoch_length, scenario.ctx()
+            new_epoch, 1, 0, 0, 0, 0, 0, 0, prev_epoch_time + epoch_length, scenario.ctx()
         );
         destroy(rebate);
         assert_eq(system_state.get_stake_subsidy_distribution_counter(), prev_counter + (if (should_increment_counter) 1 else 0));
