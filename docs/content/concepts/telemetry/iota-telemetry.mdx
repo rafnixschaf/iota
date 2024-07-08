@@ -9,20 +9,20 @@ performance and other metrics.
 Access to the telemetry data is restricted to users with appropriate permissions in the GA account.
 
 The library defines following constants:
-• `GA_API_SECRET`: The API secret for authenticating with GA.
-• `GA_EVENT_NAME`: The name of the telemetry event being tracked.
-• `GA_MEASUREMENT_ID`: The measurement ID for the GA property.
-• `GA_URL`: The endpoint URL for sending data to GA.
-• `HARDCODED_CLIENT_ID`: A hardcoded client ID required for the GA4 Measurement Protocol.
-• `IPLOOKUP_URL`: The URL used to retrieve the node's public IP address.
-• `UNKNOWN_STRING`: A fallback string used when data retrieval fails.
+- `GA_API_SECRET`: The API secret for authenticating with GA.
+- `GA_EVENT_NAME`: The name of the telemetry event being tracked.
+- `GA_MEASUREMENT_ID`: The measurement ID for the GA property.
+- `GA_URL`: The endpoint URL for sending data to GA.
+- `HARDCODED_CLIENT_ID`: A hardcoded client ID required for the GA4 Measurement Protocol.
+- `IPLOOKUP_URL`: The URL used to retrieve the node's public IP address.
+- `UNKNOWN_STRING`: A fallback string used when data retrieval fails.
 
 ## Data types:
 
 To organize the telemetry data that is to be sent:
-• `TelemetryEvent`: Represents a single event with a name and a set of parameters.
-• `TelemetryPayload`: Represents the payload to be sent, containing a client ID and a list of telemetry events.
-• `IpResponse: Represents` the structure of the IP lookup service response.
+- `TelemetryEvent`: Represents a single event with a name and a set of parameters.
+- `TelemetryPayload`: Represents the payload to be sent, containing a client ID and a list of telemetry events.
+- `IpResponse: Represents` the structure of the IP lookup service response.
 
 ## Sending the event:
 
