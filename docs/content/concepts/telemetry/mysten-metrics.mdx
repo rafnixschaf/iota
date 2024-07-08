@@ -19,7 +19,7 @@ pub struct Metrics {
 }
 ```
 
-These gauges are initialized as `IntGaugeVec` metrics in the `new` function of the `Metrics` struct and added to the provided `prometheus::Registry`.
+These gauges are initialized as `IntGaugeVec` metrics in the `Metrics::new` function and added a given `prometheus::Registry`.
 
 ```rust
 impl Metrics {
@@ -53,7 +53,7 @@ impl Metrics {
 ```
 
 These metrics can only be initialized and accessed using `OnceCell`, ensuring they are only initialized once and are thread-safe.
-Typically, `init_metrics` is called at the beginning of the main function or in a test setup.
+Typically, the `init_metrics` function is called at the beginning of a main function or in a test setup.
 
 ```rust
 static METRICS: OnceCell<Metrics> = OnceCell::new();
@@ -70,10 +70,10 @@ pub fn get_metrics() -> Option<&'static Metrics> {
 }
 ```
 
-To monitor futures and tasks in a more consistent and simple way, the crate defines multiple macros like `monitored_future!` and `spawn_monitored_task!` which wrap a given future or task, while updating their metrics.
-In order for the macros to update the metrics, they call the global `get_metrics` function to retrieve the `Metrics` struct to update the corresponding gauges.
+To monitor futures and tasks in a consistent and simple way, the crate defines multiple macros like `monitored_future!` and `spawn_monitored_task!` which wrap a given future or task, while updating metrics.
+These macros call the global `get_metrics` function to retrieve the `Metrics` struct and update the relevant gauges.
 
-To monitor code scops, the `monitored_scope` function can create a named scope, that keeps track of
+To monitor code scopes, the `monitored_scope` function can create a named scope, that keeps track of
 - the total iterations where the scope is called in the `monitored_scope_iterations` metric
 - and the total duration of the scope in the `monitored_scope_duration_ns` metric
 
@@ -107,7 +107,7 @@ the `handle_consensus_output` function:
 
 ## `RegistryService`
 
-The `RegistryService` manages multiple Prometheus registries.
+In order to manage Prometheus registries with their metrics more easily, the crate provides a `RegistryService` struct with a default registry and a collection of additional registries identified by unique UUIDs:
 
 ```rust
 
@@ -122,7 +122,104 @@ pub struct RegistryService {
 }
 ```
 
-It allows for the creation, addition, and removal of these Prometheus registries.
-By using a default registry and a collection of additional registries identified by unique UUIDs, it ensures that
-metrics can be organized. The service can gather metrics from all registries, making it easy to retrieve data.
-It supports thread-safe operations and can be cloned and shared across different parts of the node.
+This `RegistryService` allows for the creation, addition, and removal of Prometheus registries and also provides a function to gather all metrics from all registries.
+It works as follows:
+
+```rust
+        // Create a default registry
+        let default_registry = Registry::new_custom(Some("default".to_string()), None).unwrap();
+
+        // Create a registry service with the default registry
+        let registry_service = RegistryService::new(default_registry.clone());
+        let default_counter = IntCounter::new("counter", "counter_desc").unwrap();
+        default_counter.inc();
+        default_registry
+            .register(Box::new(default_counter))
+            .unwrap();
+
+        // Create another registry and add a metric to it
+        let registry_1 = Registry::new_custom(Some("narwhal".to_string()), None).unwrap();
+        registry_1
+            .register(Box::new(
+                IntCounter::new("counter_1", "counter_1_desc").unwrap(),
+            ))
+            .unwrap();
+
+        // Add the new registry to the registry service
+        let registry_1_id = registry_service.add(registry_1);
+
+        // Gather all metrics from all registries
+        let mut metrics = registry_service.gather_all();
+        metrics.sort_by(|m1, m2| Ord::cmp(m1.get_name(), m2.get_name()));
+
+        // There should be two metrics
+        assert_eq!(metrics.len(), 2);
+
+        // Check the first metric
+        let metric_default = metrics.remove(0);
+        assert_eq!(metric_default.get_name(), "default_counter");
+        assert_eq!(metric_default.get_help(), "counter_desc");
+
+        // Check the second metric
+        let metric_1 = metrics.remove(0);
+        assert_eq!(metric_1.get_name(), "narwhal_counter_1");
+        assert_eq!(metric_1.get_help(), "counter_1_desc");
+```
+
+## Exposing the prometheus metrics
+
+In order to expose the Prometheus metrics, the `RegistryService` is exposed by the `start_prometheus_server` function, which starts a HTTP server with `axum` and serves the metrics by the `/metrics` endpoint from the registries.
+
+```rust
+pub fn start_prometheus_server(addr: SocketAddr) -> RegistryService {
+    let registry = Registry::new();
+
+    let registry_service = RegistryService::new(registry);
+
+    if cfg!(msim) {
+        // prometheus uses difficult-to-support features such as
+        // TcpSocket::from_raw_fd(), so we can't yet run it in the simulator.
+        warn!("not starting prometheus server in simulator");
+        return registry_service;
+    }
+
+    let app = Router::new()
+        .route(METRICS_ROUTE, get(metrics))
+        .layer(Extension(registry_service.clone()));
+
+    tokio::spawn(async move {
+        axum::Server::bind(&addr)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    });
+
+    registry_service
+}
+```
+
+Typically, the Prometheus server is started in the main function of the node as follows:
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), AnalyticsIndexerError> {
+    let _guard = telemetry_subscribers::TelemetryConfig::new()
+        .with_env()
+        .init();
+
+    ...
+
+    let registry_service = mysten_metrics::start_prometheus_server(
+        format!(
+            "{}:{}",
+            config.client_metric_host, config.client_metric_port
+        )
+        .parse()
+        .unwrap(),
+    );
+    let registry: Registry = registry_service.default_registry();
+    mysten_metrics::init_metrics(&registry);
+
+    ...
+}
+```
