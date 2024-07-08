@@ -82,10 +82,11 @@ Ultimately, the function creates and returns `TelemetryGuards` and `TracingHandl
 subscriber.
 They should be kept active in the main function to ensure logging and tracing throughout the application's lifecycle.
 
-## Prometheus Registry:
+## Prometheus Layer
 
-To enable Prometheus monitoring, a `prometheus::Registry` must be passed to the `TelemetryConfig` using
-the `with_prom_registry` function.
+The `telemetry-subscriber` allows to measure Tokio-tracing [span](https://docs.rs/tracing/latest/tracing/span/index.html) latencies that will be recorded into Prometheus histograms directly.
+For that, a `prometheus::Registry` must be passed to the `TelemetryConfig` using the `with_prom_registry` function.
+The name of the Prometheus histogram is `tracing_span_latencies[_sum/count/bucket]´.
 For example, in the `iota-node` it is set up as follows:
 
 ```rust
@@ -97,7 +98,7 @@ let prometheus_registry = registry_service.default_registry();
 // Initialize logging
 let (_guard, filter_handle) = telemetry_subscribers::TelemetryConfig::new()
     .with_env()
-    .with_prom_registry( & prometheus_registry)
+    .with_prom_registry(&prometheus_registry)
     .init();
 
 drop(metrics_rt);
@@ -110,16 +111,3 @@ The `metrics_address` is the address where the Prometheus metrics will be expose
 configuration file.
 Per default, it is set to `0.0.0.0:9400`.
 After the default registry is created, it is passed to the `TelemetryConfig` with the `with_prom_registry` function.
-
-Additionally, in the main of `iota-node` a push task is started that pushes metrics regularly to the Prometheus service.
-
-```rust
-{
-let _enter = runtimes.metrics.enter();
-metrics::start_metrics_push_task( & config, registry_service.clone());
-}
-```
-
-Every 60 seconds, this task will gather all metrics from the `mysten-metrics::RegistryService`,
-assigns the current timestamp to each metric, encodes the metrics into the Protobuf format including compression and
-sends the compressed metrics data via an HTTP POST request to the Prometheus service.
