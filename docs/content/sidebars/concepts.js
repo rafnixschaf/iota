@@ -213,7 +213,7 @@ const concepts = [
 	},
 	{
 		type: 'category',
-		label: 'Telemetry',
+		label: 'Node Monitoring and Metrics',
 		items: [
 			'concepts/telemetry/telemetry-subscribers',
 			'concepts/telemetry/mysten-metrics',
