@@ -4,7 +4,8 @@ description: Prometheus-based metrics for the node.
 ---
 
 The `mysten-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks,
-pending futures, channel sizes, and scope activities:
+pending futures, channel sizes, and scope activities. A gauge is a type of metric that represents a single numerical value
+that can go up or down.
 
 ```rust
 #[derive(Debug)]
@@ -18,7 +19,41 @@ pub struct Metrics {
 }
 ```
 
-These metrics are initialized and accessed using `OnceCell`, ensuring they are only initialized once and are thread-safe.
+These gauges are initialized as `IntGaugeVec` metrics in the `new` function of the `Metrics` struct and added to the provided `prometheus::Registry`.
+
+```rust
+impl Metrics {
+    fn new(registry: &Registry) -> Self {
+        Self {
+            tasks: register_int_gauge_vec_with_registry!(
+                "monitored_tasks",
+                "Number of running tasks per callsite.",
+                &["callsite"],
+                registry,
+            )
+            .unwrap(),
+            futures: register_int_gauge_vec_with_registry!(
+                "monitored_futures",
+                "Number of pending futures per callsite.",
+                &["callsite"],
+                registry,
+            )
+            .unwrap(),
+            channels: register_int_gauge_vec_with_registry!(
+                "monitored_channels",
+                "Size of channels.",
+                &["name"],
+                registry,
+            )
+            .unwrap(),
+            // More metrics initialized here..
+        }
+    }
+}
+```
+
+These metrics can only be initialized and accessed using `OnceCell`, ensuring they are only initialized once and are thread-safe.
+Typically, `init_metrics` is called at the beginning of the main function or in a test setup.
 
 ```rust
 static METRICS: OnceCell<Metrics> = OnceCell::new();
@@ -35,14 +70,14 @@ pub fn get_metrics() -> Option<&'static Metrics> {
 }
 ```
 
-Macros like `monitored_future!` and `spawn_monitored_task!` wrap and monitor futures and tasks, while updating metrics
-accordingly.
-The `monitored_scope!` macro creates a named scoped object, that keeps track of
+To monitor futures and tasks in a more consistent and simple way, the crate defines multiple macros like `monitored_future!` and `spawn_monitored_task!` which wrap a given future or task, while updating their metrics.
+In order for the macros to update the metrics, they call the global `get_metrics` function to retrieve the `Metrics` struct to update the corresponding gauges.
 
-- the total iterations where the scope is called in the `monitored_scope_iterations` metric.
-- and the total duration of the scope in the `monitored_scope_duration_ns` metric.
+To monitor code scops, the `monitored_scope` function can create a named scope, that keeps track of
+- the total iterations where the scope is called in the `monitored_scope_iterations` metric
+- and the total duration of the scope in the `monitored_scope_duration_ns` metric
 
-The total duration of the scope updated when the scope is dropped.
+with the total duration of the scope being updated when the scope is dropped:
 
 ```rust
 impl Drop for MonitoredScopeGuard {
@@ -59,8 +94,7 @@ impl Drop for MonitoredScopeGuard {
 }
 ```
 
-Monitored scopes are used in multiple parts of the node.
-For example, the `consensus_handler` module uses monitored scopes to track the duration and number of iterations of
+Monitored scopes are used in multiple parts of the node. For example, the `consensus_handler` module uses monitored scopes to track the duration and number of iterations of
 the `handle_consensus_output` function:
 
 ```rust
@@ -71,7 +105,9 @@ the `handle_consensus_output` function:
 }
 ```
 
-Furthermore, the `mysten-metrics` crate defines a `RegistryService` which manages multiple Prometheus registries.
+## `RegistryService`
+
+The `RegistryService` manages multiple Prometheus registries.
 
 ```rust
 
