@@ -31,13 +31,19 @@ const COIN_TYPE: u32 = 4218;
 const OWNING_ALIAS_COUNT: u32 = 10;
 
 pub(crate) async fn outputs() -> anyhow::Result<Vec<(OutputHeader, Output)>> {
+    let randomness_seed = rand::random();
+    let mut rng = StdRng::seed_from_u64(randomness_seed);
+
+    println!("------------------------------");
+    println!("alias_ownership");
+    println!("Randomness seed: {randomness_seed}");
+    // TODO
+    println!("------------------------------\n");
+
     let mut outputs = Vec::new();
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(MNEMONIC)?;
 
     // create a randomized ownership dependency tree
-    let randomness_seed = rand::random();
-    let mut rng = StdRng::seed_from_u64(randomness_seed);
-    println!("alias_ownership randomness seed: {randomness_seed}");
 
     let alias_owners = secret_manager
         .generate_ed25519_addresses(COIN_TYPE, 0, 0..OWNING_ALIAS_COUNT, None)

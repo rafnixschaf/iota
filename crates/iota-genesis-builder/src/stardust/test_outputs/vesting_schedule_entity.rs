@@ -23,13 +23,21 @@ const VESTING_WEEKS: usize = 208;
 const VESTING_WEEKS_FREQUENCY: usize = 2;
 
 pub(crate) async fn outputs(vested_index: &mut u32) -> anyhow::Result<Vec<(OutputHeader, Output)>> {
+    let randomness_seed = random::<u64>();
+    let mut rng = StdRng::seed_from_u64(randomness_seed);
+
+    println!("------------------------------");
+    println!("vesting_schedule_entity");
+    println!("Randomness seed: {randomness_seed}");
+    println!("Mnemonic: {MNEMONIC}");
+    println!(
+        "1 account, 1 address, coin type {COIN_TYPE}, {VESTING_WEEKS} vesting weeks, frequency of {VESTING_WEEKS_FREQUENCY} weeks"
+    );
+    println!("------------------------------\n");
+
     let mut outputs = Vec::new();
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(MNEMONIC)?;
     let mut transaction_id = [0; 32];
-
-    let randomness_seed = random::<u64>();
-    let mut rng = StdRng::seed_from_u64(randomness_seed);
-    println!("vesting_schedule_entity randomness seed: {randomness_seed}");
 
     // Prepare a transaction ID with the vested reward prefix.
     transaction_id[0..28]

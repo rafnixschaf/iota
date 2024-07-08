@@ -168,8 +168,14 @@ const STARDUST_MIX: &[StardustWallet] = &[
 
 pub(crate) async fn outputs(vested_index: &mut u32) -> anyhow::Result<Vec<(OutputHeader, Output)>> {
     let randomness_seed = random::<u64>();
-    println!("stardust_mix randomness seed: {randomness_seed}");
     let mut rng = StdRng::seed_from_u64(randomness_seed);
+
+    println!("------------------------------");
+    println!("stardust_mix");
+    println!("Randomness seed: {randomness_seed}");
+    // TODO
+    println!("------------------------------\n");
+
     let mut outputs = Vec::new();
 
     let mut vested_rewards_transaction_id = [0; 32];

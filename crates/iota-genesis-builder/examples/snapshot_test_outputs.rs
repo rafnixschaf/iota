@@ -23,7 +23,7 @@ fn parse_snapshot<const VERIFY: bool>(path: impl AsRef<Path>) -> anyhow::Result<
     // Total supply is in IOTA, snapshot supply is Micros
     assert_eq!(total_supply, TOTAL_SUPPLY_IOTA * 1_000_000);
 
-    println!("Total supply: {total_supply}");
+    println!("Total supply: {total_supply}\n");
 
     Ok(())
 }
@@ -43,10 +43,12 @@ async fn main() -> anyhow::Result<()> {
         new_path.push_str(&current_path);
     }
 
+    println!("Before injecting test outputs");
     parse_snapshot::<false>(&current_path)?;
 
     add_snapshot_test_outputs::<false>(&current_path, &new_path).await?;
 
+    println!("After injecting test outputs");
     parse_snapshot::<false>(&new_path)?;
 
     Ok(())
