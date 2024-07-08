@@ -211,6 +211,15 @@ const concepts = [
 			'concepts/execution-architecture/natives',
 		],
 	},
+	{
+		type: 'category',
+		label: 'Telemetry',
+		items: [
+			'concepts/telemetry/telemetry-subscribers',
+			'concepts/telemetry/mysten-metrics',
+			'concepts/telemetry/iota-telemetry',
+		],
+	},
 	'concepts/research-papers',
 ];
 module.exports = concepts;

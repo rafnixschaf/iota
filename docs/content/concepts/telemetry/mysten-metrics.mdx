@@ -74,6 +74,7 @@ To monitor futures and tasks in a consistent and simple way, the crate defines m
 These macros call the global `get_metrics` function to retrieve the `Metrics` struct and update the relevant gauges.
 
 To monitor code scopes, the `monitored_scope` function can create a named scope, that keeps track of
+
 - the total iterations where the scope is called in the `monitored_scope_iterations` metric
 - and the total duration of the scope in the `monitored_scope_duration_ns` metric
 
