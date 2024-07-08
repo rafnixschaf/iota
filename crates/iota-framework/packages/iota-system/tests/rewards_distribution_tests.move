@@ -352,21 +352,20 @@ module iota_system::rewards_distribution_tests {
             1000, 1500, 2000, scenario
         );
 
-        // Each unslashed validator staking pool gets 300 IOTA of computation rewards + 75 IOTA of storage fund rewards +
-        // 20 IOTA (1/3) of validator 4's slashed computation reward and 5 IOTA (1/3) of validator 4's slashed
-        // storage fund reward, so in total it gets 400 IOTA of rewards.
-        // Validator 3 has a delegator with her so she gets 320 * 3/4 + 75 + 5 = 320 IOTA of rewards.
-        // Validator 4's should get 300 * 4/5 * (1 - 20%) = 192 in computation rewards and 75 * (1 - 20%) = 60 in storage rewards.
-        assert_validator_self_stake_amounts(validator_addrs(), vector[500 * MICROS_PER_IOTA, 600 * MICROS_PER_IOTA, 620 * MICROS_PER_IOTA, 652 * MICROS_PER_IOTA], scenario);
+        // Each unslashed validator staking pool gets 375 IOTA of computation rewards + 25 IOTA (1/3) of validator 4's slashed computation reward,
+        // so in total it gets 400 IOTA of rewards.
+        // Validator 3's should get (375 + 25) * 3/4 = 300 in computation rewards.
+        // Validator 4's should get (375 - 75) * 4/5 = 240 in computation rewards.
+        assert_validator_self_stake_amounts(validator_addrs(), vector[500 * MICROS_PER_IOTA, 600 * MICROS_PER_IOTA, 600 * MICROS_PER_IOTA, 640 * MICROS_PER_IOTA], scenario);
 
         // Unstake so we can check the stake rewards as well.
         unstake(STAKER_ADDR_1, 0, scenario);
         unstake(STAKER_ADDR_2, 0, scenario);
 
-        // Staker 1 gets 320 * 1/4 = 80 IOTA of rewards.
-        assert_eq(total_iota_balance(STAKER_ADDR_1, scenario), (100 + 80) * MICROS_PER_IOTA);
-        // Staker 2 gets 300 * 1/5 * (1 - 20%) = 48 IOTA of rewards.
-        assert_eq(total_iota_balance(STAKER_ADDR_2, scenario), (100 + 48) * MICROS_PER_IOTA);
+        // Staker 1 gets (375 + 25) * 1/4 = 100 IOTA of rewards.
+        assert_eq(total_iota_balance(STAKER_ADDR_1, scenario), (100 + 100) * MICROS_PER_IOTA);
+        // Staker 2 gets (375 - 75) * 1/5 = 60 IOTA of rewards.
+        assert_eq(total_iota_balance(STAKER_ADDR_2, scenario), (100 + 60) * MICROS_PER_IOTA);
 
         scenario_val.end();
     }
