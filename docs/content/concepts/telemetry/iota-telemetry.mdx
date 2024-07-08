@@ -1,20 +1,14 @@
 ---
 title: iota-telemetry
-description: Collects data from the node, packages it into structured events and sends it to Google Analytics.
+description: Collects data from the node and sends it to Google Analytics for monitoring and analysis.
 ---
 
 The `iota-telemetry` crate is used to collect data from a node, package it into structured events and send it to Google
-Analytics (GA) for monitoring and analysis.
-This document explains how it works, the data sent to GA, and how the analytics can be accessed.
-
-## How it works:
-
-The iota-telemetry crate uses the GA4 Measurement Protocol to send custom event data to Google Analytics.
-GA4 allows developers to send events from backend systems directly to GA, enabling tracking and analysis of node
+Analytics (GA). It uses the GA4 Measurement Protocol that allows backends to send custom event data, to track node
 performance and other metrics.
 Access to the telemetry data is restricted to users with appropriate permissions in the GA account.
 
-To send data to GA, the library defines following constants:
+The library defines following constants:
 •    `GA_API_SECRET`: The API secret for authenticating with GA.
 •    `GA_EVENT_NAME`: The name of the telemetry event being tracked.
 •    `GA_MEASUREMENT_ID`: The measurement ID for the GA property.
@@ -32,11 +26,11 @@ To organize the telemetry data that is to be sent:
 
 ## Sending the event:
 
-The `send_telemetry_event` function is responsible for collecting telemetry data from an AuthorityState and sending the
-events to GA. From the AuthorityState, it retrieves the current git revision using `env!("CARGO_PKG_VERSION")`, the
+The `send_telemetry_event` function collects the data from an `AuthorityState`.
+It retrieves the current git revision using `env!("CARGO_PKG_VERSION")`, the
 public IP address by calling the get_ip helper function, the chain identifier from the node state and the epoch time.
-The `get_ip` function retrieves the public IP address of the node by making a GET request to https://api.ipify.org
-?format=json. It processes the response to extract the IP address and returns it. If the request fails, it returns
-the `UNKNOWN_STRING`. After all data is retrieved, it constructs a `TelemetryEvent` and wraps it into
-a `TelemetryPayload` type containing the hardcoded client ID. Then the payload will be sent to GA as a HTTP POST request
-with content type JSON.  Once the telemetry data is sent to GA, it can be visualized and analyzed in the GA dashboard.
+The `get_ip` function retrieves the public IP address of the node by making a GET request to `https://api.ipify.org
+?format=json`. If the request fails, it returns the `UNKNOWN_STRING`.
+After all data is retrieved, it constructs a `TelemetryEvent` and wraps it into
+a `TelemetryPayload` type containing the hardcoded client ID. Then the payload will be sent to GA as an HTTP POST request
+with content type JSON which can be visualized and analyzed in the GA dashboard.
