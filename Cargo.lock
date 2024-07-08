@@ -7506,6 +7506,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "iota-sdk-tools"
+version = "1.22.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "dirs 4.0.0",
+ "dotenvy",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-move-build",
+ "iota-sdk 1.22.0",
+ "iota-types",
+ "jsonrpsee",
+ "move-core-types",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "signature 1.6.4",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "iota-simulator"
 version = "0.7.0"
 dependencies = [
@@ -14600,9 +14627,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.36.0"
+version = "1.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61285f6515fa018fb2d1e46eb21223fff441ee8db5d0f1435e8ab4f5cdb80931"
+checksum = "1adbebffeca75fcfd058afa480fb6c0b81e165a0323f9c9d39c9697e37c46787"
 dependencies = [
  "backtrace",
  "bytes",
