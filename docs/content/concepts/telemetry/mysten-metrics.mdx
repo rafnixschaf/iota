@@ -3,7 +3,8 @@ title: mysten-metrics
 description: Prometheus-based metrics for the node.
 ---
 
-The `mysten-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks, pending futures, channel sizes, and scope activities:
+The `mysten-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks,
+pending futures, channel sizes, and scope activities:
 
 ```rust
 #[derive(Debug)]
@@ -17,7 +18,7 @@ pub struct Metrics {
 }
 ```
 
-These metrics are initialized and accessed using OnceCell, ensuring they are only initialized once and are thread-safe.
+These metrics are initialized and accessed using `OnceCell`, ensuring they are only initialized once and are thread-safe.
 
 ```rust
 static METRICS: OnceCell<Metrics> = OnceCell::new();
@@ -34,8 +35,10 @@ pub fn get_metrics() -> Option<&'static Metrics> {
 }
 ```
 
-Macros like `monitored_future!` and `spawn_monitored_task!` wrap and monitor futures and tasks, while updating metrics accordingly.
-The `monitored_scope!` macro  creates a named scoped object, that keeps track of
+Macros like `monitored_future!` and `spawn_monitored_task!` wrap and monitor futures and tasks, while updating metrics
+accordingly.
+The `monitored_scope!` macro creates a named scoped object, that keeps track of
+
 - the total iterations where the scope is called in the `monitored_scope_iterations` metric.
 - and the total duration of the scope in the `monitored_scope_duration_ns` metric.
 
@@ -57,14 +60,15 @@ impl Drop for MonitoredScopeGuard {
 ```
 
 Monitored scopes are used in multiple parts of the node.
-For example, the `consensus_handler` module uses monitored scopes to track the duration and number of iterations of the `handle_consensus_output` function:
+For example, the `consensus_handler` module uses monitored scopes to track the duration and number of iterations of
+the `handle_consensus_output` function:
 
 ```rust
     async fn handle_consensus_output(&mut self, consensus_output: ConsensusOutput) {
-        let _scope = monitored_scope("HandleConsensusOutput");
-        self.handle_consensus_output_internal(consensus_output)
-            .await;
-    }
+    let _scope = monitored_scope("HandleConsensusOutput");
+    self.handle_consensus_output_internal(consensus_output)
+        .await;
+}
 ```
 
 Furthermore, the `mysten-metrics` crate defines a `RegistryService` which manages multiple Prometheus registries.
@@ -83,6 +87,6 @@ pub struct RegistryService {
 ```
 
 It allows for the creation, addition, and removal of these Prometheus registries.
-By using a default registry and a collection of additional registries identified by unique UUIDs, it ensures that metrics can be organized.
-The service can gather metrics from all registries, making it easy to retrieve data.
+By using a default registry and a collection of additional registries identified by unique UUIDs, it ensures that
+metrics can be organized. The service can gather metrics from all registries, making it easy to retrieve data.
 It supports thread-safe operations and can be cloned and shared across different parts of the node.
