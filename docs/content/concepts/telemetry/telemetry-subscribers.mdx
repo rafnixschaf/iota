@@ -3,7 +3,7 @@ title: telemetry-subscribers
 description: Allows for flexible logging and tracing of the node.
 ---
 
-The `telemetry-subscribers` crate is used for logging and tracing of the node.
+The `telemetry-subscribers` crate is used for logging and tracing the node.
 It provides a tracing subscriber with flexible options to monitor the nodes performance and behavior.
 It is currently used in different main functions of the node, including tests and is typically initialized at the
 beginning of a main function like:
@@ -17,7 +17,7 @@ let _guard = telemetry_subscribers::TelemetryConfig::new()
 
 ## Configuration
 
-The `TelemetryConfig` allows to set various configuration options, such as OpenTelemetry tracing, outputting JSON logs,
+The `TelemetryConfig` allows setting various configuration options, such as OpenTelemetry tracing, outputting JSON logs,
 writing logs to files, setting log levels, defining span levels, setting panic hooks, or specifying Prometheus
 registries.
 
@@ -62,11 +62,14 @@ After a `TelemetryConfig` instance is created and values are set, the `init` fun
 For that, the `init` first sets up a `EnvFilter` to manage which log messages are shown, based on the log level.
 Per default, the log level is set to `info`, but it can be adjusted by setting the `log_string` variable.
 Then, another filter is created for span levels.
+
 A span is a single unit of work and represents a specific operation, like a database query, and has a start and end
 time.
 Spans can be linked together to show the flow of operations in a system. Each span can include:
-a name describing the operation, timing information (start and end), attributes (key-value pairs) for extra context or
-relationships to other spans (parent-child).
+* A name describing the operation
+* Timing information (start and end)
+* Attributes (key-value pairs) for extra context or relationships to other spans (parent-child).
+
 Spans help understand the flow of requests through a system better.
 The span filter, created by the `init` function ensures that only relevant spans are processed, which helps manage
 performance and logging noise.
@@ -77,7 +80,7 @@ on the configuration.
 If OTLP tracing is enabled, and `OpenTelemetryLayer` will be set up for tracing to either a file or an OTLP endpoint
 based on environment settings.
 
-After setting up all layer, a tracing subscriber is created with the configured layers and set as the global default.
+After setting up all layers, a tracing subscriber is created with the configured layers and set as the global default.
 Ultimately, the function creates and returns `TelemetryGuards` and `TracingHandle` structs, which manage the tracing
 subscriber.
 They should be kept active in the main function to ensure logging and tracing throughout the application's lifecycle.
@@ -104,7 +107,7 @@ drop(metrics_rt);
 ```
 
 In order to set up the subscriber, it enters the metrics runtime first and creates a `RegistryService` from
-the `mysten-metrics` crate.
+the [`mysten-metrics` crate](mysten-metrics.mdx).
 It initializes the default Prometheus registry in the `RegistryService` and returns it.
 The `metrics_address` is the address where the Prometheus metrics will be exposed and can be specified in the node's
 configuration file.
