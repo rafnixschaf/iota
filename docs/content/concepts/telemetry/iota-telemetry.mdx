@@ -29,7 +29,6 @@ To organize the telemetry data that is to be sent:
 ## Sending the Event
 
 The `send_telemetry_event` function collects the data from an `AuthorityState`.
-```suggestion
 It retrieves:
 * The current git revision using `env!("CARGO_PKG_VERSION")`.
 * The public IP address by calling the `get_ip` helper function.
