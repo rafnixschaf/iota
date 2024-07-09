@@ -156,8 +156,8 @@ module iota_system::rewards_distribution_tests {
 
         advance_epoch_with_target_reward_amounts(800, 0, 400, scenario);
 
-        // The computation reward is lower than the target reward, but an additional 400 IOTA should be minted.
-        // Each validator pool gets 25% of the voting power and thus gets 25% of the reward (200 IOTA).
+        // The computation reward is lower than the target reward, so 400 IOTA should be minted.
+        // Each validator pool has 25% of the voting power and thus gets 25% of the reward (200 IOTA).
         assert_validator_total_stake_amounts(
           validator_addrs(),
           vector[
@@ -189,7 +189,7 @@ module iota_system::rewards_distribution_tests {
         advance_epoch_with_target_reward_amounts(800, 0, 1000, scenario);
 
         // The computation reward is higher than the target reward, so 200 IOTA should be burned.
-        // Each validator pool gets 25% of the voting power and thus gets 25% of the reward (200 IOTA).
+        // Each validator pool has 25% of the voting power and thus gets 25% of the reward (200 IOTA).
         assert_validator_total_stake_amounts(
           validator_addrs(),
           vector[
