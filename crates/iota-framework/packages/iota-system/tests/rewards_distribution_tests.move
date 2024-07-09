@@ -146,6 +146,70 @@ module iota_system::rewards_distribution_tests {
     }
 
     #[test]
+    fun test_validator_target_reward_higher_than_computation_reward() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        advance_epoch(scenario);
+        // V1: 100, V2: 200, V3: 300, V4: 400
+
+        advance_epoch_with_target_reward_amounts(800, 0, 400, scenario);
+
+        // The computation reward is lower than the target reward, but an additional 400 IOTA should be minted.
+        // Each validator pool gets 25% of the voting power and thus gets 25% of the reward (200 IOTA).
+        assert_validator_total_stake_amounts(
+          validator_addrs(),
+          vector[
+            (100 + 200) * MICROS_PER_IOTA,
+            (200 + 200) * MICROS_PER_IOTA,
+            (300 + 200) * MICROS_PER_IOTA,
+            (400 + 200) * MICROS_PER_IOTA,
+          ],
+          scenario
+        );
+
+        unstake(VALIDATOR_ADDR_1, 0, scenario);
+
+        // Validator should get the entire reward of 200 plus its initially staked 100 IOTA.
+        assert_eq(total_iota_balance(VALIDATOR_ADDR_1, scenario), (100+200) * MICROS_PER_IOTA);
+
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_validator_target_reward_lower_than_computation_reward() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        advance_epoch(scenario);
+        // V1: 100, V2: 200, V3: 300, V4: 400
+
+        advance_epoch_with_target_reward_amounts(800, 0, 1000, scenario);
+
+        // The computation reward is higher than the target reward, so 200 IOTA should be burned.
+        // Each validator pool gets 25% of the voting power and thus gets 25% of the reward (200 IOTA).
+        assert_validator_total_stake_amounts(
+          validator_addrs(),
+          vector[
+            (100 + 200) * MICROS_PER_IOTA,
+            (200 + 200) * MICROS_PER_IOTA,
+            (300 + 200) * MICROS_PER_IOTA,
+            (400 + 200) * MICROS_PER_IOTA,
+          ],
+          scenario
+        );
+
+        unstake(VALIDATOR_ADDR_1, 0, scenario);
+
+        // Validator should get the entire reward of 200 plus its initially staked 100 IOTA.
+        assert_eq(total_iota_balance(VALIDATOR_ADDR_1, scenario), (100+200) * MICROS_PER_IOTA);
+
+        scenario_val.end();
+    }
+
+    #[test]
     fun test_stake_rewards() {
         set_up_iota_system_state();
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
