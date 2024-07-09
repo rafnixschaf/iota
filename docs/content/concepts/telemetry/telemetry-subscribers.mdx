@@ -94,7 +94,7 @@ The name of the Prometheus histogram is `tracing_span_latencies(_sum/count/bucke
 ```rust
 let runtimes = IotaRuntimes::new( & config);
 let metrics_rt = runtimes.metrics.enter();
-let registry_service = mysten_metrics::start_prometheus_server(config.metrics_address);
+let registry_service = iota_metrics::start_prometheus_server(config.metrics_address);
 let prometheus_registry = registry_service.default_registry();
 
 // Initialize logging
@@ -107,7 +107,7 @@ drop(metrics_rt);
 ```
 
 In order to set up the subscriber, it enters the metrics runtime first and creates a `RegistryService` from
-the [`mysten-metrics` crate](mysten-metrics.mdx).
+the [`iota-metrics` crate](iota-metrics.mdx).
 It initializes the default Prometheus registry in the `RegistryService` and returns it.
 The `metrics_address` is the address where the Prometheus metrics will be exposed and can be specified in the node's
 configuration file.

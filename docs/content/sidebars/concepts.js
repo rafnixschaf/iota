@@ -216,7 +216,7 @@ const concepts = [
 		label: 'Node Monitoring and Metrics',
 		items: [
 			'concepts/telemetry/telemetry-subscribers',
-			'concepts/telemetry/mysten-metrics',
+			'concepts/telemetry/iota-metrics',
 			'concepts/telemetry/iota-telemetry',
 		],
 	},

@@ -1,9 +1,9 @@
 ---
-title: mysten-metrics
+title: iota-metrics
 description: Prometheus-based metrics for the node.
 ---
 
-The `mysten-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks,
+The `iota-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks,
 pending futures, channel sizes, and scope activities. A gauge is a type of metric that represents a single numerical value
 that can go up or down.
 
@@ -209,7 +209,7 @@ async fn main() -> Result<()> {
 
     ...
 
-    let registry_service = mysten_metrics::start_prometheus_server(
+    let registry_service = iota_metrics::start_prometheus_server(
         format!(
             "{}:{}",
             config.client_metric_host, config.client_metric_port
@@ -218,7 +218,7 @@ async fn main() -> Result<()> {
         .unwrap(),
     );
     let registry: Registry = registry_service.default_registry();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     ...
 }
