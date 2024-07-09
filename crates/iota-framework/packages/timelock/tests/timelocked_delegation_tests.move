@@ -21,6 +21,7 @@ module timelock::timelocked_stake_tests {
         add_validator_candidate,
         advance_epoch,
         advance_epoch_with_reward_amounts,
+        advance_epoch_with_target_reward_amounts,
         assert_validator_total_stake_amounts,
         create_validator_for_testing,
         create_iota_system_state_for_testing,
@@ -909,12 +910,93 @@ module timelock::timelocked_stake_tests {
         scenario_val.end();
     }
 
+    #[test]
+    fun test_timelock_validator_target_reward_higher_than_computation_reward() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_2, VALIDATOR_ADDR_2, 100, 60, scenario);
+        advance_epoch(scenario);
+        // V1: 200, V2: 200
+
+        advance_epoch_with_target_reward_amounts(800, 0, 400, scenario);
+
+        // The computation reward is lower than the target reward, so 400 IOTA should be minted.
+        // Each validator pool has 50% of the voting power and thus gets 50% of the reward (400 IOTA).
+        assert_validator_total_stake_amounts(
+          validator_addrs(),
+          vector[
+            (200 + 400) * MICROS_PER_IOTA,
+            (200 + 400) * MICROS_PER_IOTA,
+          ],
+          scenario
+        );
+
+        unstake_timelocked(STAKER_ADDR_1, 0, scenario);
+        unstake_timelocked(STAKER_ADDR_2, 0, scenario);
+
+        // Both stakers should get half the reward (= 200).
+        // Both should still have their original timelocked 100 IOTA that they staked.
+        assert_eq(total_timelocked_iota_balance(STAKER_ADDR_1, scenario), 100 * MICROS_PER_IOTA);
+        assert_eq(total_iota_balance(STAKER_ADDR_1, scenario), 200 * MICROS_PER_IOTA);
+
+        assert_eq(total_timelocked_iota_balance(STAKER_ADDR_2, scenario), 100 * MICROS_PER_IOTA);
+        assert_eq(total_iota_balance(STAKER_ADDR_2, scenario), 200 * MICROS_PER_IOTA);
+
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_timelock_validator_target_reward_lower_than_computation_reward() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        stake_timelocked_with(STAKER_ADDR_1, VALIDATOR_ADDR_1, 100, 60, scenario);
+        stake_timelocked_with(STAKER_ADDR_2, VALIDATOR_ADDR_2, 150, 60, scenario);
+        advance_epoch(scenario);
+        // V1: 200, V2: 250
+
+        advance_epoch_with_target_reward_amounts(800, 0, 1000, scenario);
+
+        // The computation reward is higher than the target reward, so 200 IOTA should be burned.
+        // Each validator pool has 50% of the voting power and thus gets 50% of the reward (400 IOTA).
+        assert_validator_total_stake_amounts(
+          validator_addrs(),
+          vector[
+            (200 + 400) * MICROS_PER_IOTA,
+            (250 + 400) * MICROS_PER_IOTA,
+          ],
+          scenario
+        );
+
+        unstake_timelocked(STAKER_ADDR_1, 0, scenario);
+        unstake_timelocked(STAKER_ADDR_2, 0, scenario);
+
+        // Both stakers should have their original timelocked IOTA that they staked.
+        // Staker 1 should get half the reward (= 200) of its staking pool.
+        assert_eq(total_timelocked_iota_balance(STAKER_ADDR_1, scenario), 100 * MICROS_PER_IOTA);
+        assert_eq(total_iota_balance(STAKER_ADDR_1, scenario), 200 * MICROS_PER_IOTA);
+
+        // Staker 1 should get 150 / 250 * 400 of the reward (= 240) of its staking pool.
+        assert_eq(total_timelocked_iota_balance(STAKER_ADDR_2, scenario), 150 * MICROS_PER_IOTA);
+        assert_eq(total_iota_balance(STAKER_ADDR_2, scenario), 240 * MICROS_PER_IOTA);
+
+        scenario_val.end();
+    }
+
     fun assert_exchange_rate_eq(
         rates: &Table<u64, PoolTokenExchangeRate>, epoch: u64, iota_amount: u64, pool_token_amount: u64
     ) {
         let rate = &rates[epoch];
         assert_eq(rate.iota_amount(), iota_amount * MICROS_PER_IOTA);
         assert_eq(rate.pool_token_amount(), pool_token_amount * MICROS_PER_IOTA);
+    }
+
+    fun validator_addrs() : vector<address> {
+        vector[VALIDATOR_ADDR_1, VALIDATOR_ADDR_2]
     }
 
     fun set_up_iota_system_state() {
@@ -926,7 +1008,7 @@ module timelock::timelocked_stake_tests {
             create_validator_for_testing(VALIDATOR_ADDR_1, 100, ctx),
             create_validator_for_testing(VALIDATOR_ADDR_2, 100, ctx)
         ];
-        create_iota_system_state_for_testing(validators, 0, 0, ctx);
+        create_iota_system_state_for_testing(validators, 500, 0, ctx);
         scenario_val.end();
     }
 
