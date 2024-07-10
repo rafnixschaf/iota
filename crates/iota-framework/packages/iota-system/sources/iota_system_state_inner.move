@@ -868,9 +868,10 @@ module iota_system::iota_system_state_inner {
                 balance::zero()
             };
 
+        // The stake subsidy fund is disabled through parameter choices in GenesisCeremonyParameters,
+        // so it is always a zero balance now. It will be fully removed in a later step.
         let stake_subsidy_amount = stake_subsidy.value();
         computation_reward.join(stake_subsidy);
-
 
         let mut computation_reward = match_computation_reward_to_target_reward(
             validator_target_reward,

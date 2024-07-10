@@ -2131,9 +2131,10 @@ gas coins.
             <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>()
         };
 
+    // The stake subsidy fund is disabled through parameter choices in GenesisCeremonyParameters,
+    // so it is always a zero <a href="../iota-framework/balance.md#0x2_balance">balance</a> now. It will be fully removed in a later step.
     <b>let</b> stake_subsidy_amount = <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.value();
     computation_reward.join(<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>);
-
 
     <b>let</b> <b>mut</b> computation_reward = <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(
         validator_target_reward,
