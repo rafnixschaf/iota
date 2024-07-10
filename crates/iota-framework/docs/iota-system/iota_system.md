@@ -83,6 +83,7 @@ the IotaSystemStateInner version, or vice versa.
 -  [Function `load_system_state`](#0x3_iota_system_load_system_state)
 -  [Function `load_system_state_mut`](#0x3_iota_system_load_system_state_mut)
 -  [Function `load_inner_maybe_upgrade`](#0x3_iota_system_load_inner_maybe_upgrade)
+-  [Function `get_total_iota_supply`](#0x3_iota_system_get_total_iota_supply)
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
@@ -1485,6 +1486,32 @@ gas coins.
     );
     <b>assert</b>!(inner.system_state_version() == self.version, <a href="iota_system.md#0x3_iota_system_EWrongInnerVersion">EWrongInnerVersion</a>);
     inner
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_iota_system_get_total_iota_supply"></a>
+
+## Function `get_total_iota_supply`
+
+Returns the total iota supply.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="iota_system.md#0x3_iota_system_get_total_iota_supply">get_total_iota_supply</a>(wrapper: &<b>mut</b> <a href="iota_system.md#0x3_iota_system_IotaSystemState">iota_system::IotaSystemState</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="iota_system.md#0x3_iota_system_get_total_iota_supply">get_total_iota_supply</a>(wrapper: &<b>mut</b> <a href="iota_system.md#0x3_iota_system_IotaSystemState">IotaSystemState</a>): u64 {
+    <b>let</b> self = <a href="iota_system.md#0x3_iota_system_load_system_state">load_system_state</a>(wrapper);
+    self.<a href="iota_system.md#0x3_iota_system_get_total_iota_supply">get_total_iota_supply</a>()
 }
 </code></pre>
 

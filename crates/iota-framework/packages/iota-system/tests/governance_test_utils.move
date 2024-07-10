@@ -366,7 +366,7 @@ module iota_system::governance_test_utils {
     /// Returns the total IOTA supply in the system state.
     public fun total_supply(scenario: &mut Scenario): u64 {
         let mut system_state = scenario.take_shared<IotaSystemState>();
-        let total_supply = system_state.get_iota_supply();
+        let total_supply = system_state.get_total_iota_supply();
         test_scenario::return_shared(system_state);
         total_supply
     }

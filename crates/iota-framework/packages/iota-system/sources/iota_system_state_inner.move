@@ -1015,7 +1015,6 @@ module iota_system::iota_system_state_inner {
         self.validators.staking_pool_mappings()
     }
 
-    #[test_only]
     /// Returns the total iota supply.
     public(package) fun get_total_iota_supply(self: &IotaSystemStateInnerV2): u64 {
         self.iota_treasury_cap.total_supply()

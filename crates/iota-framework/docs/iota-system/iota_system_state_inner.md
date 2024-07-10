@@ -57,6 +57,7 @@ title: Module `0x3::iota_system_state_inner`
 -  [Function `validator_stake_amount`](#0x3_iota_system_state_inner_validator_stake_amount)
 -  [Function `validator_staking_pool_id`](#0x3_iota_system_state_inner_validator_staking_pool_id)
 -  [Function `validator_staking_pool_mappings`](#0x3_iota_system_state_inner_validator_staking_pool_mappings)
+-  [Function `get_total_iota_supply`](#0x3_iota_system_state_inner_get_total_iota_supply)
 -  [Function `get_reporters_of`](#0x3_iota_system_state_inner_get_reporters_of)
 -  [Function `get_storage_fund_total_balance`](#0x3_iota_system_state_inner_get_storage_fund_total_balance)
 -  [Function `get_storage_fund_object_rebates`](#0x3_iota_system_state_inner_get_storage_fund_object_rebates)
@@ -2456,6 +2457,31 @@ Returns reference to the staking pool mappings that map pool ids to active valid
 <pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_validator_staking_pool_mappings">validator_staking_pool_mappings</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): &Table&lt;ID, <b>address</b>&gt; {
 
     self.validators.staking_pool_mappings()
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_iota_system_state_inner_get_total_iota_supply"></a>
+
+## Function `get_total_iota_supply`
+
+Returns the total iota supply.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_total_iota_supply">get_total_iota_supply</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_total_iota_supply">get_total_iota_supply</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
+    self.iota_treasury_cap.total_supply()
 }
 </code></pre>
 
