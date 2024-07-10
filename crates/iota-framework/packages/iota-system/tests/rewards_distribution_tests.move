@@ -159,14 +159,14 @@ module iota_system::rewards_distribution_tests {
         // The computation reward is lower than the target reward, so 400 IOTA should be minted.
         // Each validator pool has 25% of the voting power and thus gets 25% of the reward (200 IOTA).
         assert_validator_total_stake_amounts(
-          validator_addrs(),
-          vector[
-            (100 + 200) * MICROS_PER_IOTA,
-            (200 + 200) * MICROS_PER_IOTA,
-            (300 + 200) * MICROS_PER_IOTA,
-            (400 + 200) * MICROS_PER_IOTA,
-          ],
-          scenario
+            validator_addrs(),
+            vector[
+              (100 + 200) * MICROS_PER_IOTA,
+              (200 + 200) * MICROS_PER_IOTA,
+              (300 + 200) * MICROS_PER_IOTA,
+              (400 + 200) * MICROS_PER_IOTA,
+            ],
+            scenario
         );
 
         unstake(VALIDATOR_ADDR_1, 0, scenario);
@@ -191,14 +191,14 @@ module iota_system::rewards_distribution_tests {
         // The computation reward is higher than the target reward, so 200 IOTA should be burned.
         // Each validator pool has 25% of the voting power and thus gets 25% of the reward (200 IOTA).
         assert_validator_total_stake_amounts(
-          validator_addrs(),
-          vector[
-            (100 + 200) * MICROS_PER_IOTA,
-            (200 + 200) * MICROS_PER_IOTA,
-            (300 + 200) * MICROS_PER_IOTA,
-            (400 + 200) * MICROS_PER_IOTA,
-          ],
-          scenario
+            validator_addrs(),
+            vector[
+              (100 + 200) * MICROS_PER_IOTA,
+              (200 + 200) * MICROS_PER_IOTA,
+              (300 + 200) * MICROS_PER_IOTA,
+              (400 + 200) * MICROS_PER_IOTA,
+            ],
+            scenario
         );
 
         unstake(VALIDATOR_ADDR_1, 0, scenario);
@@ -324,14 +324,14 @@ module iota_system::rewards_distribution_tests {
 
         // Each validator pool gets 25% of the voting power and thus gets 25% of the reward (200 IOTA).
         assert_validator_total_stake_amounts(
-          validator_addrs(),
-          vector[
-            (200 + 200) * MICROS_PER_IOTA,
-            (200 + 200) * MICROS_PER_IOTA,
-            (300 + 200) * MICROS_PER_IOTA,
-            (400 + 200) * MICROS_PER_IOTA,
-          ],
-          scenario
+            validator_addrs(),
+            vector[
+              (200 + 200) * MICROS_PER_IOTA,
+              (200 + 200) * MICROS_PER_IOTA,
+              (300 + 200) * MICROS_PER_IOTA,
+              (400 + 200) * MICROS_PER_IOTA,
+            ],
+            scenario
         );
 
         // Unstakes the initially created StakedIota of value 100 IOTA.
