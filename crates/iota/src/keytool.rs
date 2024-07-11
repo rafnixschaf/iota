@@ -36,7 +36,7 @@ use iota_types::{
     base_types::IotaAddress,
     committee::EpochId,
     crypto::{
-        get_authority_key_pair, DefaultHash, EncodeDecodeBase64, IotaKeyPair, PublicKey, Signature,
+        get_authority_key_pair, DefaultHash, EncodeDecodeBase64, IotaKeyPair, PublicKey,
         SignatureScheme,
     },
     error::IotaResult,
@@ -44,7 +44,10 @@ use iota_types::{
     multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy},
     signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
     transaction::{TransactionData, TransactionDataAPI},
-    zk_login_authenticator::ZkLoginAuthenticator,
+};
+#[cfg(insecure)]
+use iota_types::{
+    crypto::Signature, zk_login_authenticator::ZkLoginAuthenticator,
     zk_login_util::get_zklogin_inputs,
 };
 use json_to_table::{json_to_table, Orientation};
@@ -264,6 +267,7 @@ pub enum KeyToolCommand {
     /// TESTING ONLY: Given a string of data, sign with the fixed dev-only
     /// ephemeral key and output a zkLogin signature with a fixed dev-only
     /// proof with fixed max epoch 10.
+    #[cfg(insecure)]
     ZkLoginInsecureSignPersonalMessage {
         /// The string of data to sign.
         #[clap(long)]
@@ -459,6 +463,7 @@ pub struct ZkLoginSigVerifyResponse {
     res: Option<IotaResult>,
 }
 
+#[cfg(insecure)]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZkLoginInsecureSignPersonalMessage {
@@ -486,6 +491,7 @@ pub enum CommandOutput {
     Sign(SignData),
     SignKMS(SerializedSig),
     UpdateAlias(AliasUpdate),
+    #[cfg(insecure)]
     ZkLoginInsecureSignPersonalMessage(ZkLoginInsecureSignPersonalMessage),
     ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx),
     ZkLoginSigVerify(ZkLoginSigVerifyResponse),
@@ -927,6 +933,7 @@ impl KeyToolCommand {
                 .await?;
                 CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest })
             }
+            #[cfg(insecure)]
             KeyToolCommand::ZkLoginInsecureSignPersonalMessage { data } => {
                 let msg = PersonalMessage {
                     message: data.as_bytes().to_vec(),
