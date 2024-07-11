@@ -47,6 +47,9 @@ pub const PACKAGE_DEPS: [ObjectID; 4] = [
 
 pub(crate) const NATIVE_TOKEN_BAG_KEY_TYPE: &str = "0x01::ascii::String";
 
+/// An alias for representing the timestamp of a Timelock
+pub type ExpirationTimestamp = u64;
+
 /// The orchestrator of the migration process.
 ///
 /// It is run by providing an [`Iterator`] of stardust UTXOs, and holds an inner
@@ -318,35 +321,45 @@ impl MigrationObjects {
         self.inner.is_empty()
     }
 
-    /// Get [`TimeLock`] objects created during the migration.
+    /// Get [`TimeLock`] objects created during the migration together with
+    /// their expiration timestamp.
     ///
     /// The query is filtered by the object owner.
     ///
     /// The returned objects are ordered by expiration timestamp, in descending
     /// order.
-    pub fn get_sorted_timelocks_by_owner(&self, address: IotaAddress) -> Option<Vec<&Object>> {
-        self.get_timelocks_by_owner(address).map(|mut timelocks| {
-            timelocks.sort_by_cached_key(|object| {
-                Reverse(
-                    object
-                        .to_rust::<TimeLock<Balance>>()
-                        .expect("this should be a TimeLock object")
-                        .expiration_timestamp_ms(),
-                )
-            });
-            timelocks
-        })
+    pub fn get_sorted_timelocks_and_expiration_by_owner(
+        &self,
+        address: IotaAddress,
+    ) -> Option<Vec<(&Object, ExpirationTimestamp)>> {
+        self.get_timelocks_and_expiration_by_owner(address)
+            .map(|mut timelocks| {
+                timelocks.sort_by_key(|&(_, timestamp)| Reverse(timestamp));
+                timelocks
+            })
     }
 
-    /// Get [`TimeLock`] objects created during the migration.
+    /// Get [`TimeLock`] objects created during the migration togeter with their
+    /// expiration timestamp.
     ///
     /// The query is filtered by the object owner.
-    pub fn get_timelocks_by_owner(&self, address: IotaAddress) -> Option<Vec<&Object>> {
+    pub fn get_timelocks_and_expiration_by_owner(
+        &self,
+        address: IotaAddress,
+    ) -> Option<Vec<(&Object, ExpirationTimestamp)>> {
         Some(
             self.owner_timelock
                 .get(&address)?
                 .iter()
-                .map(|i| &self.inner[*i])
+                .map(|i| {
+                    (
+                        &self.inner[*i],
+                        self.inner[*i]
+                            .to_rust::<TimeLock<Balance>>()
+                            .expect("this should be a TimeLock object")
+                            .expiration_timestamp_ms(),
+                    )
+                })
                 .collect(),
         )
     }
@@ -409,11 +422,10 @@ mod tests {
         gas_coin::GasCoin,
         id::UID,
         object::{Data, Owner},
-        timelock::timelock::TimeLock,
+        timelock::timelock::{to_genesis_object, TimeLock},
     };
 
     use super::*;
-    use crate::stardust::types::timelock::to_genesis_object;
 
     #[test]
     fn migration_objects_get_timelocks() {
@@ -460,12 +472,14 @@ mod tests {
                 .chain(expected_timelocks.clone())
                 .collect(),
         );
-        let matching_objects = migration_objects.get_timelocks_by_owner(owner).unwrap();
+        let matching_objects = migration_objects
+            .get_timelocks_and_expiration_by_owner(owner)
+            .unwrap();
         assert_eq!(
             expected_timelocks,
             matching_objects
                 .into_iter()
-                .cloned()
+                .map(|(timelock, _)| timelock.clone())
                 .collect::<Vec<Object>>()
         );
     }
