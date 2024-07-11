@@ -47,11 +47,7 @@ import NetworkEnv from '../NetworkEnv';
 import { Connection } from './Connection';
 import { SeedAccountSource } from '../account-sources/SeedAccountSource';
 import { AccountSourceType } from '../account-sources/AccountSource';
-import {
-    isGetAccountsFinderResultsRequest,
-    isInitAccountsFinder,
-    isSearchAccountsFinder,
-} from '_payloads/accounts-finder';
+import { isInitAccountsFinder, isSearchAccountsFinder } from '_payloads/accounts-finder';
 import AccountsFinder from '../accounts-finder/AccountsFinder';
 
 export class UiConnection extends Connection {
@@ -263,20 +259,18 @@ export class UiConnection extends Connection {
                 accountsEvents.emit('accountsChanged');
                 this.send(createMessage({ type: 'done' }, msg.id));
             } else if (isInitAccountsFinder(payload)) {
-                AccountsFinder.init();
+                AccountsFinder.reset();
                 this.send(createMessage({ type: 'done' }, msg.id));
             } else if (isSearchAccountsFinder(payload)) {
-                await AccountsFinder.findMore(
-                    payload.coinType,
-                    payload.gasType,
-                    payload.sourceID,
-                    payload.accountGapLimit,
-                    payload.addressGapLimit,
-                );
+                await AccountsFinder.find({
+                    accountType: payload.accountType,
+                    bip44CoinType: payload.bip44CoinType,
+                    coinType: payload.coinType,
+                    sourceID: payload.sourceID,
+                    accountGapLimit: payload.accountGapLimit,
+                    addressGapLimit: payload.addressGapLimit,
+                });
                 this.send(createMessage({ type: 'done' }, msg.id));
-            } else if (isGetAccountsFinderResultsRequest(payload)) {
-                const results = await AccountsFinder.getResults();
-                this.send(createMessage({ type: 'done', results }, msg.id));
             } else {
                 throw new Error(
                     `Unhandled message ${msg.id}. (${JSON.stringify(
