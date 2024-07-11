@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{
     fmt::{Debug, Display, Formatter},
     fs,
@@ -64,6 +65,7 @@ use crate::{
     key_identity::{get_identity_address_from_keystore, KeyIdentity},
     zklogin_commands_util::{perform_zk_login_test_tx, read_cli_line},
 };
+
 #[cfg(test)]
 #[path = "unit_tests/keytool_tests.rs"]
 mod keytool_tests;
@@ -121,7 +123,6 @@ pub enum KeyToolCommand {
         derivation_path: Option<DerivationPath>,
         word_length: Option<String>,
     },
-
     /// Add a new key to Iota CLI Keystore using either the input mnemonic
     /// phrase or a Bech32 encoded 33-byte `flag || privkey` starting with
     /// "iotaprivkey", the key scheme flag {ed25519 | secp256k1 | secp256r1}
@@ -200,7 +201,6 @@ pub enum KeyToolCommand {
         #[clap(long)]
         threshold: ThresholdUnit,
     },
-
     /// Read the content at the provided file path. The accepted format can be
     /// [enum IotaKeyPair] (Base64 encoded of 33-byte `flag || privkey`) or
     /// `type AuthorityKeyPair` (Base64 encoded `privkey`). It prints its
@@ -241,7 +241,6 @@ pub enum KeyToolCommand {
     /// address, Base64 encoded public key, the key scheme, and the key scheme
     /// flag.
     Unpack { keypair: String },
-
     /// Given the max_epoch, generate an OAuth url, ask user to paste the
     /// redirect with id_token, call salt server, then call the prover server,
     /// create a test transaction, use the ephemeral key to sign and execute it
@@ -259,7 +258,6 @@ pub enum KeyToolCommand {
         sign_with_sk: bool, /* if true, execute tx with the traditional sig (in the multisig),
                              * otherwise with the zklogin sig. */
     },
-
     /// A workaround to the above command because sometimes token pasting does
     /// not work (for Facebook). All the inputs required here are printed from
     /// the command above.
@@ -281,7 +279,6 @@ pub enum KeyToolCommand {
         #[clap(long, default_value = "false")]
         sign_with_sk: bool,
     },
-
     /// Given a zkLogin signature, parse it if valid. If `bytes` provided,
     /// parse it as either as TransactionData or PersonalMessage based on
     /// `intent_scope`. It verifies the zkLogin signature based its latest
@@ -306,7 +303,6 @@ pub enum KeyToolCommand {
         #[clap(long, default_value = "devnet")]
         network: String,
     },
-
     /// TESTING ONLY: Given a string of data, sign with the fixed dev-only
     /// ephemeral key and output a zkLogin signature with a fixed dev-only
     /// proof with fixed max epoch 10.
@@ -513,7 +509,6 @@ impl KeyToolCommand {
                 let result = convert_private_key_to_bech32(value)?;
                 CommandOutput::Convert(result)
             }
-
             KeyToolCommand::DecodeMultiSig { multisig, tx_bytes } => {
                 let pks = multisig.get_pk().pubkeys();
                 let sigs = multisig.get_sigs();
@@ -566,7 +561,6 @@ impl KeyToolCommand {
 
                 CommandOutput::DecodeMultiSig(output)
             }
-
             KeyToolCommand::DecodeOrVerifyTx { tx_bytes, sig } => {
                 let tx_bytes = Base64::decode(&tx_bytes)
                     .map_err(|e| anyhow!("Invalid base64 key: {:?}", e))?;
@@ -619,7 +613,6 @@ impl KeyToolCommand {
                     CommandOutput::Generate(key)
                 }
             },
-
             KeyToolCommand::Import {
                 alias,
                 input_string,
@@ -681,7 +674,6 @@ impl KeyToolCommand {
                 }
                 CommandOutput::List(keys)
             }
-
             KeyToolCommand::LoadKeypair { file } => {
                 let output = match read_keypair_from_file(&file) {
                     Ok(keypair) => {
@@ -720,7 +712,6 @@ impl KeyToolCommand {
                 };
                 CommandOutput::LoadKeypair(output)
             }
-
             KeyToolCommand::MultiSigAddress {
                 threshold,
                 pks,
@@ -742,7 +733,6 @@ impl KeyToolCommand {
                 }
                 CommandOutput::MultiSigAddress(output)
             }
-
             KeyToolCommand::MultiSigCombinePartialSig {
                 sigs,
                 pks,
@@ -760,7 +750,6 @@ impl KeyToolCommand {
                     multisig_serialized,
                 })
             }
-
             KeyToolCommand::MultiSigCombinePartialSigLegacy {
                 sigs,
                 pks,
@@ -783,7 +772,6 @@ impl KeyToolCommand {
                     },
                 )
             }
-
             KeyToolCommand::Show { file } => {
                 let res = read_keypair_from_file(&file);
                 match res {
@@ -811,7 +799,6 @@ impl KeyToolCommand {
                     },
                 }
             }
-
             KeyToolCommand::Sign {
                 address,
                 data,
@@ -840,7 +827,6 @@ impl KeyToolCommand {
                     iota_signature: iota_signature.encode_base64(),
                 })
             }
-
             KeyToolCommand::SignKMS {
                 data,
                 keyid,
@@ -902,7 +888,6 @@ impl KeyToolCommand {
                     serialized_sig_base64: serialized_sig,
                 })
             }
-
             KeyToolCommand::Unpack { keypair } => {
                 let keypair = IotaKeyPair::decode_base64(&keypair)
                     .map_err(|_| anyhow!("Invalid Base64 encode keypair"))?;
@@ -919,7 +904,6 @@ impl KeyToolCommand {
                 fs::write(path, out_str).unwrap();
                 CommandOutput::Show(key)
             }
-
             KeyToolCommand::ZkLoginInsecureSignPersonalMessage { data } => {
                 let msg = PersonalMessage {
                     message: data.as_bytes().to_vec(),
@@ -1087,7 +1071,6 @@ impl KeyToolCommand {
                 .await?;
                 CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest })
             }
-
             KeyToolCommand::ZkLoginSigVerify {
                 sig,
                 bytes,
