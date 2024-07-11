@@ -23,7 +23,7 @@ import {
     DELEGATED_STAKES_QUERY_STALE_TIME,
 } from '@iota/core';
 import { useIotaClientQuery } from '@iota/dapp-kit';
-import { ArrowLeft16 } from '@iota/icons';
+import { Left } from '@iota/icons';
 import type { StakeObject } from '@iota/iota.js/client';
 import { MICROS_PER_IOTA, IOTA_TYPE_ARG } from '@iota/iota.js/utils';
 // import * as Sentry from '@sentry/react';
@@ -185,7 +185,7 @@ function StakingCard() {
         },
     });
 
-    const onHandleSubmit = useCallback(
+    const onSubmit = useCallback(
         async ({ amount }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
             if (coinType === null || validatorAddress === null) {
                 return;
@@ -271,7 +271,7 @@ function StakingCard() {
                 <Formik
                     initialValues={INITIAL_VALUES}
                     validationSchema={validationSchema}
-                    onSubmit={onHandleSubmit}
+                    onSubmit={onSubmit}
                     validateOnMount
                 >
                     {({ isSubmitting, isValid, submitForm, errors, touched }) => (
@@ -331,7 +331,7 @@ function StakingCard() {
                                     variant="secondary"
                                     to="/stake"
                                     disabled={isSubmitting}
-                                    before={<ArrowLeft16 />}
+                                    before={<Left />}
                                     text="Back"
                                 />
                                 <Button
