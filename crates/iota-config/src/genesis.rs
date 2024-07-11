@@ -621,7 +621,7 @@ pub struct TokenAllocation {
     /// validator
     pub staked_with_validator: Option<IotaAddress>,
     /// Indicates if this allocation should be staked with timelock at genesis
-    /// and containe its timelock_expiration
+    /// and contains its timelock_expiration
     pub staked_with_timelock_expiration: Option<u64>,
 }
 
