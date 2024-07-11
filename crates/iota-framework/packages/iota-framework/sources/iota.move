@@ -12,19 +12,6 @@ module iota::iota {
     /// Sender is not @0x0 the system address.
     const ENotSystemAddress: u64 = 1;
 
-    #[allow(unused_const)]
-    /// The amount of Micros per Iota token based on the fact that micros is
-    /// 10^-9 of a Iota token
-    const MICROS_PER_IOTA: u64 = 1_000_000_000;
-
-    #[allow(unused_const)]
-    /// The total supply of Iota denominated in whole Iota tokens (10 Billion)
-    const TOTAL_SUPPLY_IOTA: u64 = 10_000_000_000;
-
-    #[allow(unused_const)]
-    /// The total supply of Iota denominated in Micros (10 Billion * 10^9)
-    const TOTAL_SUPPLY_MICROS: u64 = 10_000_000_000_000_000_000;
-
     /// Name of the coin
     public struct IOTA has drop {}
 
