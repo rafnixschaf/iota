@@ -1178,6 +1178,19 @@ impl From<PublicKey> for Key {
 
 impl Display for CommandOutput {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        fn table_display(
+            json_obj: serde_json::Value,
+            formatter: &mut Formatter<'_>,
+        ) -> Result<(), std::fmt::Error> {
+            let mut table = json_to_table(&json_obj);
+            let style = tabled::settings::Style::rounded().horizontals([]);
+
+            table.with(style);
+            table.array_orientation(Orientation::Column);
+
+            write!(formatter, "{}", table)
+        }
+
         match self {
             CommandOutput::Alias(update) => {
                 write!(
@@ -1185,6 +1198,13 @@ impl Display for CommandOutput {
                     "Old alias {} was updated to {}",
                     update.old_alias, update.new_alias
                 )
+            }
+            CommandOutput::List(keys) => {
+                if keys.is_empty() {
+                    writeln!(formatter, "No keys in the keystore")
+                } else {
+                    table_display(json![self], formatter)
+                }
             }
             // Sign needs to be manually built because we need to wrap the very long
             // rawTxData string and rawIntentMsg strings into multiple rows due to
@@ -1218,14 +1238,7 @@ impl Display for CommandOutput {
                 table.with(Modify::new(Rows::new(0..)).with(Width::wrap(160).keep_words()));
                 write!(formatter, "{}", table)
             }
-            _ => {
-                let json_obj = json![self];
-                let mut table = json_to_table(&json_obj);
-                let style = tabled::settings::Style::rounded().horizontals([]);
-                table.with(style);
-                table.array_orientation(Orientation::Column);
-                write!(formatter, "{}", table)
-            }
+            _ => table_display(json![self], formatter),
         }
     }
 }
