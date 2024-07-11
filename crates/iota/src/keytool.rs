@@ -74,21 +74,20 @@ mod keytool_tests;
 #[derive(Subcommand)]
 #[clap(rename_all = "kebab-case")]
 pub enum KeyToolCommand {
-    /// Update an old alias to a new one.
-    /// If a new alias is not provided, a random one will be generated.
-    #[clap(name = "update-alias")]
-    Alias {
-        old_alias: String,
-        /// The alias must start with a letter and can contain only letters,
-        /// digits, dots, hyphens (-), or underscores (_).
-        new_alias: Option<String>,
-    },
     /// Convert private key in Hex or Base64 to new format (Bech32
     /// encoded 33 byte flag || private key starting with "iotaprivkey").
     /// Hex private key format import and export are both deprecated in
     /// Iota Wallet and Iota CLI Keystore. Use `iota keytool import` if you
     /// wish to import a key to Iota Keystore.
     Convert { value: String },
+    /// Given a Base64 encoded MultiSig signature, decode its components.
+    /// If tx_bytes is passed in, verify the multisig.
+    DecodeMultiSig {
+        #[clap(long)]
+        multisig: MultiSig,
+        #[clap(long)]
+        tx_bytes: Option<String>,
+    },
     /// Given a Base64 encoded transaction bytes, decode its components. If a
     /// signature is provided, verify the signature against the transaction
     /// and output the result.
@@ -98,13 +97,11 @@ pub enum KeyToolCommand {
         #[clap(long)]
         sig: Option<GenericSignature>,
     },
-    /// Given a Base64 encoded MultiSig signature, decode its components.
-    /// If tx_bytes is passed in, verify the multisig.
-    DecodeMultiSig {
+    /// Output the private key of the given key identity in Iota CLI Keystore as
+    /// Bech32 encoded string starting with `iotaprivkey`.
+    Export {
         #[clap(long)]
-        multisig: MultiSig,
-        #[clap(long)]
-        tx_bytes: Option<String>,
+        key_identity: KeyIdentity,
     },
     /// Generate a new keypair with key scheme flag {ed25519 | secp256k1 |
     /// secp256r1} with optional derivation path, default to
@@ -140,12 +137,6 @@ pub enum KeyToolCommand {
         input_string: String,
         key_scheme: SignatureScheme,
         derivation_path: Option<DerivationPath>,
-    },
-    /// Output the private key of the given key identity in Iota CLI Keystore as
-    /// Bech32 encoded string starting with `iotaprivkey`.
-    Export {
-        #[clap(long)]
-        key_identity: KeyIdentity,
     },
     /// List all keys by its Iota address, Base64 encoded public key, key scheme
     /// name in iota.keystore.
@@ -241,22 +232,13 @@ pub enum KeyToolCommand {
     /// address, Base64 encoded public key, the key scheme, and the key scheme
     /// flag.
     Unpack { keypair: String },
-    /// Given the max_epoch, generate an OAuth url, ask user to paste the
-    /// redirect with id_token, call salt server, then call the prover server,
-    /// create a test transaction, use the ephemeral key to sign and execute it
-    /// by assembling to a serialized zkLogin signature.
-    ZkLoginSignAndExecuteTx {
-        #[clap(long)]
-        max_epoch: EpochId,
-        #[clap(long, default_value = "devnet")]
-        network: String,
-        #[clap(long, default_value = "true")]
-        fixed: bool, // if true, use a fixed kp generated from [0; 32] seed.
-        #[clap(long, default_value = "true")]
-        test_multisig: bool, // if true, use a multisig address with zklogin and a traditional kp.
-        #[clap(long, default_value = "false")]
-        sign_with_sk: bool, /* if true, execute tx with the traditional sig (in the multisig),
-                             * otherwise with the zklogin sig. */
+    /// Update an old alias to a new one.
+    /// If a new alias is not provided, a random one will be generated.
+    UpdateAlias {
+        old_alias: String,
+        /// The alias must start with a letter and can contain only letters,
+        /// digits, dots, hyphens (-), or underscores (_).
+        new_alias: Option<String>,
     },
     /// A workaround to the above command because sometimes token pasting does
     /// not work (for Facebook). All the inputs required here are printed from
@@ -278,6 +260,31 @@ pub enum KeyToolCommand {
         test_multisig: bool,
         #[clap(long, default_value = "false")]
         sign_with_sk: bool,
+    },
+    /// TESTING ONLY: Given a string of data, sign with the fixed dev-only
+    /// ephemeral key and output a zkLogin signature with a fixed dev-only
+    /// proof with fixed max epoch 10.
+    ZkLoginInsecureSignPersonalMessage {
+        /// The string of data to sign.
+        #[clap(long)]
+        data: String,
+    },
+    /// Given the max_epoch, generate an OAuth url, ask user to paste the
+    /// redirect with id_token, call salt server, then call the prover server,
+    /// create a test transaction, use the ephemeral key to sign and execute it
+    /// by assembling to a serialized zkLogin signature.
+    ZkLoginSignAndExecuteTx {
+        #[clap(long)]
+        max_epoch: EpochId,
+        #[clap(long, default_value = "devnet")]
+        network: String,
+        #[clap(long, default_value = "true")]
+        fixed: bool, // if true, use a fixed kp generated from [0; 32] seed.
+        #[clap(long, default_value = "true")]
+        test_multisig: bool, // if true, use a multisig address with zklogin and a traditional kp.
+        #[clap(long, default_value = "false")]
+        sign_with_sk: bool, /* if true, execute tx with the traditional sig (in the multisig),
+                             * otherwise with the zklogin sig. */
     },
     /// Given a zkLogin signature, parse it if valid. If `bytes` provided,
     /// parse it as either as TransactionData or PersonalMessage based on
@@ -302,14 +309,6 @@ pub enum KeyToolCommand {
         /// The network to verify the signature for, determines ZkLoginEnv.
         #[clap(long, default_value = "devnet")]
         network: String,
-    },
-    /// TESTING ONLY: Given a string of data, sign with the fixed dev-only
-    /// ephemeral key and output a zkLogin signature with a fixed dev-only
-    /// proof with fixed max epoch 10.
-    ZkLoginInsecureSignPersonalMessage {
-        /// The string of data to sign.
-        #[clap(long)]
-        data: String,
     },
 }
 
@@ -470,14 +469,13 @@ pub struct ZkLoginInsecureSignPersonalMessage {
 #[derive(Serialize)]
 #[serde(untagged)]
 pub enum CommandOutput {
-    Alias(AliasUpdate),
     Convert(ConvertOutput),
     DecodeMultiSig(DecodedMultiSigOutput),
     DecodeOrVerifyTx(DecodeOrVerifyTxOutput),
     Error(String),
+    Export(ExportedKey),
     Generate(Key),
     Import(Key),
-    Export(ExportedKey),
     List(Vec<Key>),
     LoadKeypair(KeypairData),
     MultiSigAddress(MultiSigAddress),
@@ -487,24 +485,15 @@ pub enum CommandOutput {
     Show(Key),
     Sign(SignData),
     SignKMS(SerializedSig),
-    ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx),
+    UpdateAlias(AliasUpdate),
     ZkLoginInsecureSignPersonalMessage(ZkLoginInsecureSignPersonalMessage),
+    ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx),
     ZkLoginSigVerify(ZkLoginSigVerifyResponse),
 }
 
 impl KeyToolCommand {
     pub async fn execute(self, keystore: &mut Keystore) -> Result<CommandOutput, anyhow::Error> {
         let cmd_result = Ok(match self {
-            KeyToolCommand::Alias {
-                old_alias,
-                new_alias,
-            } => {
-                let new_alias = keystore.update_alias(&old_alias, new_alias.as_deref())?;
-                CommandOutput::Alias(AliasUpdate {
-                    old_alias,
-                    new_alias,
-                })
-            }
             KeyToolCommand::Convert { value } => {
                 let result = convert_private_key_to_bech32(value)?;
                 CommandOutput::Convert(result)
@@ -584,6 +573,17 @@ impl KeyToolCommand {
                     }
                 }
             }
+            KeyToolCommand::Export { key_identity } => {
+                let address = get_identity_address_from_keystore(key_identity, keystore)?;
+                let skp = keystore.get_key(&address)?;
+                let key = ExportedKey {
+                    exported_private_key: skp
+                        .encode()
+                        .map_err(|_| anyhow!("Cannot decode keypair"))?,
+                    key: Key::from(skp),
+                };
+                CommandOutput::Export(key)
+            }
             KeyToolCommand::Generate {
                 key_scheme,
                 derivation_path,
@@ -647,17 +647,6 @@ impl KeyToolCommand {
                         CommandOutput::Import(key)
                     }
                 }
-            }
-            KeyToolCommand::Export { key_identity } => {
-                let address = get_identity_address_from_keystore(key_identity, keystore)?;
-                let skp = keystore.get_key(&address)?;
-                let key = ExportedKey {
-                    exported_private_key: skp
-                        .encode()
-                        .map_err(|_| anyhow!("Cannot decode keypair"))?,
-                    key: Key::from(skp),
-                };
-                CommandOutput::Export(key)
             }
             KeyToolCommand::List { sort_by_alias } => {
                 let mut keys = keystore
@@ -904,6 +893,40 @@ impl KeyToolCommand {
                 fs::write(path, out_str).unwrap();
                 CommandOutput::Show(key)
             }
+            KeyToolCommand::UpdateAlias {
+                old_alias,
+                new_alias,
+            } => {
+                let new_alias = keystore.update_alias(&old_alias, new_alias.as_deref())?;
+                CommandOutput::UpdateAlias(AliasUpdate {
+                    old_alias,
+                    new_alias,
+                })
+            }
+            KeyToolCommand::ZkLoginEnterToken {
+                parsed_token,
+                max_epoch,
+                jwt_randomness,
+                kp_bigint,
+                ephemeral_key_identifier,
+                network,
+                test_multisig,
+                sign_with_sk,
+            } => {
+                let tx_digest = perform_zk_login_test_tx(
+                    &parsed_token,
+                    max_epoch,
+                    &jwt_randomness,
+                    &kp_bigint,
+                    ephemeral_key_identifier,
+                    keystore,
+                    &network,
+                    test_multisig,
+                    sign_with_sk,
+                )
+                .await?;
+                CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest })
+            }
             KeyToolCommand::ZkLoginInsecureSignPersonalMessage { data } => {
                 let msg = PersonalMessage {
                     message: data.as_bytes().to_vec(),
@@ -1047,30 +1070,6 @@ impl KeyToolCommand {
                 .await?;
                 CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest })
             }
-            KeyToolCommand::ZkLoginEnterToken {
-                parsed_token,
-                max_epoch,
-                jwt_randomness,
-                kp_bigint,
-                ephemeral_key_identifier,
-                network,
-                test_multisig,
-                sign_with_sk,
-            } => {
-                let tx_digest = perform_zk_login_test_tx(
-                    &parsed_token,
-                    max_epoch,
-                    &jwt_randomness,
-                    &kp_bigint,
-                    ephemeral_key_identifier,
-                    keystore,
-                    &network,
-                    test_multisig,
-                    sign_with_sk,
-                )
-                .await?;
-                CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest })
-            }
             KeyToolCommand::ZkLoginSigVerify {
                 sig,
                 bytes,
@@ -1192,13 +1191,6 @@ impl Display for CommandOutput {
         }
 
         match self {
-            CommandOutput::Alias(update) => {
-                write!(
-                    formatter,
-                    "Old alias {} was updated to {}",
-                    update.old_alias, update.new_alias
-                )
-            }
             CommandOutput::List(keys) => {
                 if keys.is_empty() {
                     writeln!(formatter, "No keys in the keystore")
@@ -1237,6 +1229,13 @@ impl Display for CommandOutput {
                 table.with(tabled::settings::Style::rounded().horizontals([]));
                 table.with(Modify::new(Rows::new(0..)).with(Width::wrap(160).keep_words()));
                 write!(formatter, "{}", table)
+            }
+            CommandOutput::UpdateAlias(update) => {
+                write!(
+                    formatter,
+                    "Old alias {} was updated to {}",
+                    update.old_alias, update.new_alias
+                )
             }
             _ => table_display(json![self], formatter),
         }
