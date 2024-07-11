@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::anyhow;
 use bip32::DerivationPath;
-use clap::*;
+use clap::{self, Subcommand};
 use fastcrypto::{
     ed25519::Ed25519KeyPair,
     encoding::{Base64, Encoding, Hex},
