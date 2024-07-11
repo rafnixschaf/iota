@@ -697,9 +697,8 @@ module iota_system::iota_system {
         self.get_stake_subsidy_distribution_counter()
     }
 
-    #[test_only]
     /// Returns the total iota supply.
-    public fun get_iota_supply(wrapper: &mut IotaSystemState): u64 {
+    public fun get_total_iota_supply(wrapper: &mut IotaSystemState): u64 {
         let self = load_system_state(wrapper);
         self.get_total_iota_supply()
     }

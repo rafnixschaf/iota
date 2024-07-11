@@ -10,6 +10,7 @@ module iota_system::rewards_distribution_tests {
     use iota_system::governance_test_utils::{
         advance_epoch,
         advance_epoch_with_reward_amounts,
+        advance_epoch_with_reward_amounts_return_rebate,
         advance_epoch_with_reward_amounts_and_slashing_rates,
         advance_epoch_with_target_reward_amounts,
         assert_validator_total_stake_amounts,
@@ -21,7 +22,7 @@ module iota_system::rewards_distribution_tests {
         total_iota_balance, total_supply,
         unstake
     };
-    use iota::test_utils::assert_eq;
+    use iota::test_utils::{assert_eq, destroy};
     use iota::address;
 
     const VALIDATOR_ADDR_1: address = @0x1;
@@ -485,18 +486,7 @@ module iota_system::rewards_distribution_tests {
         let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
         let scenario = &mut scenario_val;
 
-        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_4, scenario);
-        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_4, scenario);
-        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_4, scenario);
-        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_3, scenario);
-        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_3, scenario);
-        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_3, scenario);
-        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_2, scenario);
-        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_2, scenario);
-        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_2, scenario);
-        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_1, scenario);
-        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_1, scenario);
-        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_1, scenario);
+        slash_all_validators(scenario);
 
         advance_epoch_with_reward_amounts_and_slashing_rates(
             1000, 500, 10_000, scenario
@@ -613,6 +603,65 @@ module iota_system::rewards_distribution_tests {
         scenario_val.end();
     }
 
+    #[test]
+    fun test_slashed_validators_leftover_burning() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        // To get the leftover, we have to slash every validator. This way, the computation reward will remain as leftover.
+        slash_all_validators(scenario);
+
+        // Pass 700 IOTA as computation reward(for an instance). 
+        advance_epoch_with_reward_amounts_and_slashing_rates(
+            1000, 700, 10_000, scenario
+        );
+
+        scenario.next_tx(@0x0);
+        // The total supply of 1000 IOTA should be reduced by 700 IOTA because the 700 IOTA becomes leftover and should be burned.
+        assert_eq(total_supply(scenario), 300 * MICROS_PER_IOTA);
+
+        scenario_val.end();
+    }
+
+    #[test]
+    #[expected_failure(abort_code = iota::balance::EOverflow)]
+    fun test_leftover_is_larger_than_supply() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        // To get the leftover, we have to slash every validator. This way, the computation reward will remain as leftover.
+        slash_all_validators(scenario);
+
+        // Pass 1700 IOTA as computation reward which is larger than the total supply of 1000 IOTA.
+        advance_epoch_with_reward_amounts_and_slashing_rates(
+            1000, 1700, 10_000, scenario
+        );
+
+        scenario_val.end();
+    }
+
+    #[test]
+    fun test_leftover_burning_after_reward_distribution() {
+        set_up_iota_system_state();
+        let mut scenario_val = test_scenario::begin(VALIDATOR_ADDR_1);
+        let scenario = &mut scenario_val;
+
+        // The leftover comes from the unequal distribution of rewards to validators.
+        // As example 1_000_000_000_1 cannot be splitted into equal parts, so it cause leftover.
+        let storage_rebate = advance_epoch_with_reward_amounts_return_rebate(1_000_000_000_1, 1_000_000_000_000, 1_000_000_000_1, 0, 0, scenario);
+        destroy(storage_rebate);
+
+        scenario.next_tx(@0x0);
+
+        // Total supply after leftover has burned.
+        // The 999,999,999,999 is obtained by subtracting the leftover from the total supply: 1,000,000,000,000 - 1 = 999,999,999,999.
+        assert_eq(total_supply(scenario), 999_999_999_999);
+
+        scenario_val.end();
+    }
+
     fun set_up_iota_system_state() {
         let mut scenario_val = test_scenario::begin(@0x0);
         let scenario = &mut scenario_val;
@@ -663,5 +712,20 @@ module iota_system::rewards_distribution_tests {
         system_state.report_validator(&cap, reportee);
         scenario.return_to_sender(cap);
         test_scenario::return_shared(system_state);
+    }
+
+    fun slash_all_validators(scenario: &mut Scenario) {
+        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_4, scenario);
+        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_4, scenario);
+        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_4, scenario);
+        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_3, scenario);
+        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_3, scenario);
+        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_3, scenario);
+        report_validator(VALIDATOR_ADDR_1, VALIDATOR_ADDR_2, scenario);
+        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_2, scenario);
+        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_2, scenario);
+        report_validator(VALIDATOR_ADDR_2, VALIDATOR_ADDR_1, scenario);
+        report_validator(VALIDATOR_ADDR_3, VALIDATOR_ADDR_1, scenario);
+        report_validator(VALIDATOR_ADDR_4, VALIDATOR_ADDR_1, scenario);
     }
 }

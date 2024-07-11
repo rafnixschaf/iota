@@ -341,7 +341,7 @@ module iota_system::validator_set {
     ///   5. At the end, we calculate the total stake for the new epoch.
     public(package) fun advance_epoch(
         self: &mut ValidatorSet,
-        computation_reward: &mut Balance<IOTA>,
+        total_validator_rewards: &mut Balance<IOTA>,
         validator_report_records: &mut VecMap<address, VecSet<address>>,
         reward_slashing_rate: u64,
         low_stake_threshold: u64,
@@ -356,7 +356,7 @@ module iota_system::validator_set {
         let unadjusted_staking_reward_amounts = compute_unadjusted_reward_distribution(
             &self.active_validators,
             total_voting_power,
-            computation_reward.value(),
+            total_validator_rewards.value(),
         );
 
         // Use the tallying rule report records for the epoch to compute validators that will be
@@ -392,7 +392,7 @@ module iota_system::validator_set {
         distribute_reward(
             &mut self.active_validators,
             &adjusted_staking_reward_amounts,
-            computation_reward,
+            total_validator_rewards,
             ctx
         );
 

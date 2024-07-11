@@ -868,11 +868,12 @@ module iota_system::iota_system_state_inner {
                 balance::zero()
             };
 
+        // The stake subsidy fund is disabled through parameter choices in GenesisCeremonyParameters,
+        // so it is always a zero balance now. It will be fully removed in a later step.
         let stake_subsidy_amount = stake_subsidy.value();
         computation_reward.join(stake_subsidy);
 
-
-        let mut computation_reward = match_computation_reward_to_target_reward(
+        let mut total_validator_rewards = match_computation_reward_to_target_reward(
             validator_target_reward,
             computation_reward,
             &mut self.iota_treasury_cap,
@@ -883,10 +884,10 @@ module iota_system::iota_system_state_inner {
         // Sanity check to make sure we are advancing to the right epoch.
         assert!(new_epoch == self.epoch, EAdvancedToWrongEpoch);
 
-        let computation_reward_amount_before_distribution = computation_reward.value();
+        let total_validator_rewards_amount_before_distribution = total_validator_rewards.value();
 
         self.validators.advance_epoch(
-            &mut computation_reward,
+            &mut total_validator_rewards,
             &mut self.validator_report_records,
             reward_slashing_rate,
             self.parameters.validator_low_stake_threshold,
@@ -897,16 +898,16 @@ module iota_system::iota_system_state_inner {
 
         let new_total_stake = self.validators.total_stake();
 
-        let computation_reward_amount_after_distribution = computation_reward.value();
-        let computation_reward_distributed = computation_reward_amount_before_distribution - computation_reward_amount_after_distribution;
+        let total_validator_rewards_amount_after_distribution = total_validator_rewards.value();
+        let total_validator_rewards_distributed = total_validator_rewards_amount_before_distribution - total_validator_rewards_amount_after_distribution;
 
         self.protocol_version = next_protocol_version;
 
         // Derive the reference gas price for the new epoch
         self.reference_gas_price = self.validators.derive_reference_gas_price();
         // Because of precision issues with integer divisions, we expect that there will be some
-        // remaining balance in `computation_reward`.
-        let leftover_staking_rewards = computation_reward;
+        // remaining balance in `total_validator_rewards`.
+        let leftover_staking_rewards = total_validator_rewards;
         let leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
         // Burning leftover rewards
@@ -932,7 +933,7 @@ module iota_system::iota_system_state_inner {
                 storage_fund_balance: self.storage_fund.total_balance(),
                 stake_subsidy_amount,
                 total_gas_fees: computation_charge,
-                total_stake_rewards_distributed: computation_reward_distributed,
+                total_stake_rewards_distributed: total_validator_rewards_distributed,
                 leftover_storage_fund_inflow,
             }
         );
@@ -1014,7 +1015,6 @@ module iota_system::iota_system_state_inner {
         self.validators.staking_pool_mappings()
     }
 
-    #[test_only]
     /// Returns the total iota supply.
     public(package) fun get_total_iota_supply(self: &IotaSystemStateInnerV2): u64 {
         self.iota_treasury_cap.total_supply()

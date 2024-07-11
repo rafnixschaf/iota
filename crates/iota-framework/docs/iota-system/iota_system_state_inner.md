@@ -57,6 +57,7 @@ title: Module `0x3::iota_system_state_inner`
 -  [Function `validator_stake_amount`](#0x3_iota_system_state_inner_validator_stake_amount)
 -  [Function `validator_staking_pool_id`](#0x3_iota_system_state_inner_validator_staking_pool_id)
 -  [Function `validator_staking_pool_mappings`](#0x3_iota_system_state_inner_validator_staking_pool_mappings)
+-  [Function `get_total_iota_supply`](#0x3_iota_system_state_inner_get_total_iota_supply)
 -  [Function `get_reporters_of`](#0x3_iota_system_state_inner_get_reporters_of)
 -  [Function `get_storage_fund_total_balance`](#0x3_iota_system_state_inner_get_storage_fund_total_balance)
 -  [Function `get_storage_fund_object_rebates`](#0x3_iota_system_state_inner_get_storage_fund_object_rebates)
@@ -2131,11 +2132,12 @@ gas coins.
             <a href="../iota-framework/balance.md#0x2_balance_zero">balance::zero</a>()
         };
 
+    // The stake subsidy fund is disabled through parameter choices in GenesisCeremonyParameters,
+    // so it is always a zero <a href="../iota-framework/balance.md#0x2_balance">balance</a> now. It will be fully removed in a later step.
     <b>let</b> stake_subsidy_amount = <a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>.value();
     computation_reward.join(<a href="stake_subsidy.md#0x3_stake_subsidy">stake_subsidy</a>);
 
-
-    <b>let</b> <b>mut</b> computation_reward = <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(
+    <b>let</b> <b>mut</b> total_validator_rewards = <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_match_computation_reward_to_target_reward">match_computation_reward_to_target_reward</a>(
         validator_target_reward,
         computation_reward,
         &<b>mut</b> self.iota_treasury_cap,
@@ -2146,10 +2148,10 @@ gas coins.
     // Sanity check <b>to</b> make sure we are advancing <b>to</b> the right epoch.
     <b>assert</b>!(new_epoch == self.epoch, <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_EAdvancedToWrongEpoch">EAdvancedToWrongEpoch</a>);
 
-    <b>let</b> computation_reward_amount_before_distribution = computation_reward.value();
+    <b>let</b> total_validator_rewards_amount_before_distribution = total_validator_rewards.value();
 
     self.validators.<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_advance_epoch">advance_epoch</a>(
-        &<b>mut</b> computation_reward,
+        &<b>mut</b> total_validator_rewards,
         &<b>mut</b> self.validator_report_records,
         reward_slashing_rate,
         self.parameters.validator_low_stake_threshold,
@@ -2160,16 +2162,16 @@ gas coins.
 
     <b>let</b> new_total_stake = self.validators.total_stake();
 
-    <b>let</b> computation_reward_amount_after_distribution = computation_reward.value();
-    <b>let</b> computation_reward_distributed = computation_reward_amount_before_distribution - computation_reward_amount_after_distribution;
+    <b>let</b> total_validator_rewards_amount_after_distribution = total_validator_rewards.value();
+    <b>let</b> total_validator_rewards_distributed = total_validator_rewards_amount_before_distribution - total_validator_rewards_amount_after_distribution;
 
     self.protocol_version = next_protocol_version;
 
     // Derive the reference gas price for the new epoch
     self.reference_gas_price = self.validators.derive_reference_gas_price();
     // Because of precision issues <b>with</b> integer divisions, we expect that there will be some
-    // remaining <a href="../iota-framework/balance.md#0x2_balance">balance</a> in `computation_reward`.
-    <b>let</b> leftover_staking_rewards = computation_reward;
+    // remaining <a href="../iota-framework/balance.md#0x2_balance">balance</a> in `total_validator_rewards`.
+    <b>let</b> leftover_staking_rewards = total_validator_rewards;
     <b>let</b> leftover_storage_fund_inflow = leftover_staking_rewards.value();
 
     // Burning leftover rewards
@@ -2195,7 +2197,7 @@ gas coins.
             storage_fund_balance: self.<a href="storage_fund.md#0x3_storage_fund">storage_fund</a>.total_balance(),
             stake_subsidy_amount,
             total_gas_fees: computation_charge,
-            total_stake_rewards_distributed: computation_reward_distributed,
+            total_stake_rewards_distributed: total_validator_rewards_distributed,
             leftover_storage_fund_inflow,
         }
     );
@@ -2455,6 +2457,31 @@ Returns reference to the staking pool mappings that map pool ids to active valid
 <pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_validator_staking_pool_mappings">validator_staking_pool_mappings</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): &Table&lt;ID, <b>address</b>&gt; {
 
     self.validators.staking_pool_mappings()
+}
+</code></pre>
+
+
+
+</details>
+
+<a name="0x3_iota_system_state_inner_get_total_iota_supply"></a>
+
+## Function `get_total_iota_supply`
+
+Returns the total iota supply.
+
+
+<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_total_iota_supply">get_total_iota_supply</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">iota_system_state_inner::IotaSystemStateInnerV2</a>): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b>(package) <b>fun</b> <a href="iota_system_state_inner.md#0x3_iota_system_state_inner_get_total_iota_supply">get_total_iota_supply</a>(self: &<a href="iota_system_state_inner.md#0x3_iota_system_state_inner_IotaSystemStateInnerV2">IotaSystemStateInnerV2</a>): u64 {
+    self.iota_treasury_cap.total_supply()
 }
 </code></pre>
 
