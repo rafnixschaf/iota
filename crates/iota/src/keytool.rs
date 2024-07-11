@@ -643,7 +643,7 @@ impl KeyToolCommand {
                         CommandOutput::Import(key)
                     }
                     Err(_) => {
-                        info!("Importing mneomonics to keystore");
+                        info!("Importing mnemonics to keystore");
                         let iota_address = keystore.import_from_mnemonic(
                             &input_string,
                             key_scheme,
@@ -883,7 +883,7 @@ impl KeyToolCommand {
                 };
 
                 // Sign the message, normalize the signature and then compacts it
-                // serialize_compact is loaded as bytes for Secp256k1Sinaturere
+                // serialize_compact is loaded as bytes for Secp256k1Signature
                 let response = kms.sign(request).await?;
                 let sig_bytes_der = response
                     .signature
