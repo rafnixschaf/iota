@@ -344,16 +344,14 @@ impl Builder {
             CertifiedCheckpointSummary::new(checkpoint, signatures, &committee).unwrap()
         };
 
-        let genesis = Genesis::new(
+        Genesis::new(
             checkpoint,
             checkpoint_contents,
             transaction,
             effects,
             events,
             objects,
-        );
-
-        genesis
+        )
     }
 
     /// Validates the entire state of the build, no matter what the internal
