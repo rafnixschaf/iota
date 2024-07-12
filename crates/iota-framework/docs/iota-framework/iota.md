@@ -16,7 +16,6 @@ It has 9 decimals, and the smallest unit (10^-9) is called "nano".
 -  [Function `burn`](#0x2_iota_burn)
 -  [Function `burn_balance`](#0x2_iota_burn_balance)
 -  [Function `total_supply`](#0x2_iota_total_supply)
--  [Function `mint_genesis_supply`](#0x2_iota_mint_genesis_supply)
 
 
 <pre><code><b>use</b> <a href="../move-stdlib/option.md#0x1_option">0x1::option</a>;
@@ -304,34 +303,6 @@ Return the total number of IOTA's in circulation.
 
 <pre><code><b>public</b> <b>fun</b> <a href="../iota-framework/iota.md#0x2_iota_total_supply">total_supply</a>(cap: &<a href="../iota-framework/iota.md#0x2_iota_IotaTreasuryCap">IotaTreasuryCap</a>): u64 {
     cap.inner.<a href="../iota-framework/iota.md#0x2_iota_total_supply">total_supply</a>()
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x2_iota_mint_genesis_supply"></a>
-
-## Function `mint_genesis_supply`
-
-Increase the IOTA supply.
-This should be called only once during genesis creation.
-
-
-<pre><code><b>fun</b> <a href="../iota-framework/iota.md#0x2_iota_mint_genesis_supply">mint_genesis_supply</a>(cap: &<b>mut</b> <a href="../iota-framework/iota.md#0x2_iota_IotaTreasuryCap">iota::IotaTreasuryCap</a>, value: u64, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>): <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">iota::IOTA</a>&gt;
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>fun</b> <a href="../iota-framework/iota.md#0x2_iota_mint_genesis_supply">mint_genesis_supply</a>(cap: &<b>mut</b> <a href="../iota-framework/iota.md#0x2_iota_IotaTreasuryCap">IotaTreasuryCap</a>, value: u64, ctx: &TxContext): Balance&lt;<a href="../iota-framework/iota.md#0x2_iota_IOTA">IOTA</a>&gt; {
-    <b>assert</b>!(ctx.epoch() == 0, <a href="../iota-framework/iota.md#0x2_iota_EAlreadyMinted">EAlreadyMinted</a>);
-
-    cap.<a href="../iota-framework/iota.md#0x2_iota_mint_balance">mint_balance</a>(value, ctx)
 }
 </code></pre>
 

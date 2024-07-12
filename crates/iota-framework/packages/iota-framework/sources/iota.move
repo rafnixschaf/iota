@@ -84,15 +84,6 @@ module iota::iota {
         cap.inner.total_supply()
     }
 
-    #[allow(unused_function)]
-    /// Increase the IOTA supply.
-    /// This should be called only once during genesis creation.
-    fun mint_genesis_supply(cap: &mut IotaTreasuryCap, value: u64, ctx: &TxContext): Balance<IOTA> {
-        assert!(ctx.epoch() == 0, EAlreadyMinted);
-
-        cap.mint_balance(value, ctx)
-    }
-
     #[test_only]
     public fun create_for_testing(ctx: &mut TxContext): IotaTreasuryCap {
         // The `new` function must be called here to be sure that the test function
