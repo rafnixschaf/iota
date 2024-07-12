@@ -1215,7 +1215,7 @@ pub fn generate_genesis_system_object(
             )?;
         }
 
-        // Step 4: Create the IOTA Coin.
+        // Step 4: Create the IOTA Coin Treasury Cap.
         let iota_treasury_cap = builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("iota").to_owned(),
