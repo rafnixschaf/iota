@@ -2,11 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// Coin<IOTA> is the token used to pay for gas in Iota.
-/// It has 9 decimals, and the smallest unit (10^-9) is called "micros".
+/// Coin<IOTA> is the token used to pay for gas in IOTA.
+/// It has 9 decimals, and the smallest unit (10^-9) is called "nano".
 module iota::iota {
     use iota::balance::Balance;
     use iota::coin::{Self, Coin, TreasuryCap};
+    use iota::url;
 
     const EAlreadyMinted: u64 = 0;
     /// Sender is not @0x0 the system address.
@@ -32,10 +33,9 @@ module iota::iota {
             IOTA {},
             9,
             b"IOTA",
-            b"Iota",
-            // TODO: add appropriate description and logo url
-            b"",
-            option::none(),
+            b"IOTA",
+            b"The main (gas)token of the IOTA Network.",
+            option::some(url::new_unsafe_from_bytes(b"https://iota.org/logo.png")),
             ctx
         );
 

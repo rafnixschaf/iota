@@ -2,8 +2,8 @@
 title: Module `0x2::iota`
 ---
 
-Coin<IOTA> is the token used to pay for gas in Iota.
-It has 9 decimals, and the smallest unit (10^-9) is called "micros".
+Coin<IOTA> is the token used to pay for gas in IOTA.
+It has 9 decimals, and the smallest unit (10^-9) is called "nano".
 
 
 -  [Struct `IOTA`](#0x2_iota_IOTA)
@@ -135,10 +135,9 @@ This should be called only once during genesis creation.
         <a href="../iota-framework/iota.md#0x2_iota_IOTA">IOTA</a> {},
         9,
         b"<a href="../iota-framework/iota.md#0x2_iota_IOTA">IOTA</a>",
-        b"Iota",
-        // TODO: add appropriate description and logo <a href="../iota-framework/url.md#0x2_url">url</a>
-        b"",
-        <a href="../move-stdlib/option.md#0x1_option_none">option::none</a>(),
+        b"<a href="../iota-framework/iota.md#0x2_iota_IOTA">IOTA</a>",
+        b"The main (gas)token of the <a href="../iota-framework/iota.md#0x2_iota_IOTA">IOTA</a> Network.",
+        <a href="../move-stdlib/option.md#0x1_option_some">option::some</a>(<a href="../iota-framework/url.md#0x2_url_new_unsafe_from_bytes">url::new_unsafe_from_bytes</a>(b"https://<a href="../iota-framework/iota.md#0x2_iota">iota</a>.org/logo.png")),
         ctx
     );
 
