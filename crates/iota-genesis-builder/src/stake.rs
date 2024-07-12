@@ -52,18 +52,14 @@ impl GenesisStake {
             && self.timelocks_to_burn.is_empty()
     }
 
-    /// Calculate the total amount of token allocations.
-    pub fn sum_token_allocation(&self) -> u64 {
-        self.token_allocation
-            .iter()
-            .map(|allocation| allocation.amount_nanos)
-            .sum()
-    }
-
     /// Create a new valid [`TokenDistributionSchedule`] from the
     /// inner token allocations.
     pub fn to_token_distribution_schedule(&self) -> TokenDistributionSchedule {
         let mut builder = TokenDistributionScheduleBuilder::new();
+
+        // TODO: calculate/store the pre-minted supply and call the
+        // `add_pre_minted_supply` function.
+
         for allocation in self.token_allocation.clone() {
             builder.add_allocation(allocation);
         }
@@ -83,7 +79,6 @@ impl GenesisStake {
         vanilla_schedule
             .allocations
             .extend(self.token_allocation.clone());
-        vanilla_schedule.stake_subsidy_fund_nanos -= self.sum_token_allocation();
         vanilla_schedule.validate();
         vanilla_schedule
     }
