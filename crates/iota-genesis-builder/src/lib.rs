@@ -49,7 +49,10 @@ use iota_types::{
     object::{Object, Owner},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     stardust::stardust_to_iota_address,
-    timelock::stardust_upgrade_label::STARDUST_UPGRADE_LABEL_VALUE,
+    timelock::{
+        stardust_upgrade_label::STARDUST_UPGRADE_LABEL_VALUE,
+        timelocked_staked_iota::TimelockedStakedIota,
+    },
     transaction::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,
         Transaction,
@@ -317,6 +320,10 @@ impl Builder {
         if self.built_genesis.is_none() {
             self.build_and_cache_unsigned_genesis();
         }
+
+        // Verify that all on-chain state was properly created
+        self.validate().unwrap();
+
         let UnsignedGenesis {
             checkpoint,
             checkpoint_contents,
@@ -345,9 +352,6 @@ impl Builder {
             events,
             objects,
         );
-
-        // Verify that all on-chain state was properly created
-        self.validate().unwrap();
 
         genesis
     }
@@ -579,33 +583,72 @@ impl Builder {
             .iter()
             .filter_map(|o| StakedIota::try_from(o).ok().map(|s| (o.id(), (o, s))))
             .collect();
+        let mut timelock_staked_iota_objects: BTreeMap<ObjectID, (&Object, TimelockedStakedIota)> =
+            unsigned_genesis
+                .objects()
+                .iter()
+                .filter_map(|o| {
+                    TimelockedStakedIota::try_from(o)
+                        .ok()
+                        .map(|s| (o.id(), (o, s)))
+                })
+                .collect();
 
         for allocation in token_distribution_schedule.allocations {
             if let Some(staked_with_validator) = allocation.staked_with_validator {
                 let staking_pool_id = *address_to_pool_id
                     .get(&staked_with_validator)
                     .expect("staking pool should exist");
-                let staked_iota_object_id = staked_iota_objects
-                    .iter()
-                    .find(|(_k, (o, s))| {
-                        let Owner::AddressOwner(owner) = &o.owner else {
-                            panic!("gas object owner must be address owner");
-                        };
-                        *owner == allocation.recipient_address
-                            && s.principal() == allocation.amount_nanos
-                            && s.pool_id() == staking_pool_id
-                    })
-                    .map(|(k, _)| *k)
-                    .expect("all allocations should be present");
-                let staked_iota_object =
-                    staked_iota_objects.remove(&staked_iota_object_id).unwrap();
-                assert_eq!(
-                    staked_iota_object.0.owner,
-                    Owner::AddressOwner(allocation.recipient_address)
-                );
-                assert_eq!(staked_iota_object.1.principal(), allocation.amount_nanos);
-                assert_eq!(staked_iota_object.1.pool_id(), staking_pool_id);
-                assert_eq!(staked_iota_object.1.activation_epoch(), 0);
+                if let Some(expiration) = allocation.staked_with_timelock_expiration {
+                    let timelock_staked_iota_object_id = timelock_staked_iota_objects
+                        .iter()
+                        .find(|(_k, (o, s))| {
+                            let Owner::AddressOwner(owner) = &o.owner else {
+                                panic!("gas object owner must be address owner");
+                            };
+                            *owner == allocation.recipient_address
+                                && s.principal() == allocation.amount_nanos
+                                && s.pool_id() == staking_pool_id
+                                && s.expiration_timestamp_ms() == expiration
+                        })
+                        .map(|(k, _)| *k)
+                        .expect("all allocations should be present");
+                    let timelock_staked_iota_object = timelock_staked_iota_objects
+                        .remove(&timelock_staked_iota_object_id)
+                        .unwrap();
+                    assert_eq!(
+                        timelock_staked_iota_object.0.owner,
+                        Owner::AddressOwner(allocation.recipient_address)
+                    );
+                    assert_eq!(
+                        timelock_staked_iota_object.1.principal(),
+                        allocation.amount_nanos
+                    );
+                    assert_eq!(timelock_staked_iota_object.1.pool_id(), staking_pool_id);
+                    assert_eq!(timelock_staked_iota_object.1.activation_epoch(), 0);
+                } else {
+                    let staked_iota_object_id = staked_iota_objects
+                        .iter()
+                        .find(|(_k, (o, s))| {
+                            let Owner::AddressOwner(owner) = &o.owner else {
+                                panic!("gas object owner must be address owner");
+                            };
+                            *owner == allocation.recipient_address
+                                && s.principal() == allocation.amount_nanos
+                                && s.pool_id() == staking_pool_id
+                        })
+                        .map(|(k, _)| *k)
+                        .expect("all allocations should be present");
+                    let staked_iota_object =
+                        staked_iota_objects.remove(&staked_iota_object_id).unwrap();
+                    assert_eq!(
+                        staked_iota_object.0.owner,
+                        Owner::AddressOwner(allocation.recipient_address)
+                    );
+                    assert_eq!(staked_iota_object.1.principal(), allocation.amount_nanos);
+                    assert_eq!(staked_iota_object.1.pool_id(), staking_pool_id);
+                    assert_eq!(staked_iota_object.1.activation_epoch(), 0);
+                }
             } else {
                 let gas_object_id = gas_objects
                     .iter()
