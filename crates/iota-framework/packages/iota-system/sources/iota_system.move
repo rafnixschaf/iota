@@ -532,11 +532,14 @@ module iota_system::iota_system {
     #[allow(unused_function)]
     /// This function should be called at the end of an epoch, and advances the system to the next epoch.
     /// It does the following things:
-    /// 1. Add storage charge to the storage fund.
+    /// 1. Add storage reward to the storage fund.
     /// 2. Burn the storage rebates from the storage fund. These are already refunded to transaction sender's
     ///    gas coins.
-    /// 3. Distribute computation charge to validator stake.
-    /// 4. Update all validators.
+    /// 3. Mint or burn IOTA tokens depending on whether the validator target reward is greater
+    /// or smaller than the computation reward.
+    /// 4. Distribute the target reward to the validators.
+    /// 5. Burn any leftover rewards.
+    /// 6. Update all validators.
     fun advance_epoch(
         validator_target_reward: u64,
         storage_reward: Balance<IOTA>,
