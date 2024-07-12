@@ -1231,23 +1231,23 @@ pub fn generate_genesis_system_object(
             vec![],
         );
 
-        let total_iota_supply = builder
+        let pre_minted_supply_amount = builder
             .pure(&(token_distribution_schedule.pre_minted_supply))
             .expect("serialization of u64 should succeed");
-        let total_iota = builder.programmable_move_call(
+        let pre_minted_supply = builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("iota").to_owned(),
             ident_str!("mint_balance").to_owned(),
             vec![],
-            vec![iota_treasury_cap, total_iota_supply],
+            vec![iota_treasury_cap, pre_minted_supply_amount],
         );
 
         builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
             BALANCE_MODULE_NAME.to_owned(),
             ident_str!("destroy_genesis_supply").to_owned(),
-            vec![],
-            vec![total_iota],
+            vec![GAS::type_tag()],
+            vec![pre_minted_supply],
         );
 
         // Step 5: Create System Timelock Cap.
