@@ -1231,7 +1231,7 @@ pub fn generate_genesis_system_object(
         let total_iota = builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!("iota").to_owned(),
-            ident_str!("mint_genesis_supply").to_owned(),
+            ident_str!("mint_balance").to_owned(),
             vec![],
             vec![iota_treasury_cap, total_iota_supply],
         );
