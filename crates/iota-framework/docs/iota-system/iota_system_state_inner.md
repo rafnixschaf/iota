@@ -2165,8 +2165,8 @@ or smaller than the computation reward.
 
     <b>let</b> new_total_stake = self.validators.total_stake();
 
-    <b>let</b> total_validator_rewards_amount_after_distribution = total_validator_rewards.value();
-    <b>let</b> total_validator_rewards_distributed = total_validator_rewards_amount_before_distribution - total_validator_rewards_amount_after_distribution;
+    <b>let</b> remaining_validator_rewards_amount_after_distribution = total_validator_rewards.value();
+    <b>let</b> total_validator_rewards_distributed = total_validator_rewards_amount_before_distribution - remaining_validator_rewards_amount_after_distribution;
 
     self.protocol_version = next_protocol_version;
 
