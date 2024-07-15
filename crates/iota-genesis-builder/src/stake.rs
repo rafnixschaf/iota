@@ -66,7 +66,7 @@ impl GenesisStake {
     pub fn to_token_distribution_schedule(&self) -> TokenDistributionSchedule {
         let mut builder = TokenDistributionScheduleBuilder::new();
 
-        builder.add_pre_minted_supply(TOTAL_SUPPLY_NANOS - self.sum_token_allocation());
+        builder.set_pre_minted_supply(TOTAL_SUPPLY_NANOS - self.sum_token_allocation());
 
         for allocation in self.token_allocation.clone() {
             builder.add_allocation(allocation);

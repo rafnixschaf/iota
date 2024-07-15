@@ -634,7 +634,7 @@ impl TokenDistributionScheduleBuilder {
         }
     }
 
-    pub fn add_pre_minted_supply(&mut self, pre_minted_supply: u64) {
+    pub fn set_pre_minted_supply(&mut self, pre_minted_supply: u64) {
         self.pre_minted_supply = pre_minted_supply;
     }
 
