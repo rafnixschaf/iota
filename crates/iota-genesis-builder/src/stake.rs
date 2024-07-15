@@ -87,6 +87,7 @@ impl GenesisStake {
         vanilla_schedule
             .allocations
             .extend(self.token_allocation.clone());
+        vanilla_schedule.pre_minted_supply = TOTAL_SUPPLY_NANOS - self.sum_token_allocation();
         vanilla_schedule.validate();
         vanilla_schedule
     }
