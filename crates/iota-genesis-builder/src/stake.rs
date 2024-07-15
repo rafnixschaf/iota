@@ -7,6 +7,7 @@ use iota_config::genesis::{
 };
 use iota_types::{
     base_types::{IotaAddress, ObjectRef},
+    gas_coin::TOTAL_SUPPLY_NANOS,
     object::Object,
     stardust::coin_kind::get_gas_balance_maybe,
 };
@@ -52,13 +53,20 @@ impl GenesisStake {
             && self.timelocks_to_burn.is_empty()
     }
 
+    /// Calculate the total amount of token allocations.
+    pub fn sum_token_allocation(&self) -> u64 {
+        self.token_allocation
+            .iter()
+            .map(|allocation| allocation.amount_nanos)
+            .sum()
+    }
+
     /// Create a new valid [`TokenDistributionSchedule`] from the
     /// inner token allocations.
     pub fn to_token_distribution_schedule(&self) -> TokenDistributionSchedule {
         let mut builder = TokenDistributionScheduleBuilder::new();
 
-        // TODO: calculate/store the pre-minted supply and call the
-        // `add_pre_minted_supply` function.
+        builder.add_pre_minted_supply(TOTAL_SUPPLY_NANOS - self.sum_token_allocation());
 
         for allocation in self.token_allocation.clone() {
             builder.add_allocation(allocation);
