@@ -79,7 +79,7 @@ module iota_system::genesis {
     const ENotCalledAtGenesis: u64 = 0;
     /// The `create` function was called with duplicate validators.
     const EDuplicateValidator: u64 = 1;
-    /// The `create` function was called with wrong pre-mined supply.
+    /// The `create` function was called with wrong pre-minted supply.
     const EWrongPreMintedSupply: u64 = 2;
 
     #[allow(unused_function)]

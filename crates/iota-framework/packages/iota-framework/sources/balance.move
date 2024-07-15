@@ -20,7 +20,7 @@ module iota::balance {
     const ENotEnough: u64 = 2;
     /// Sender is not @0x0 the system address.
     const ENotSystemAddress: u64 = 3;
-    /// Epoch is not 0 the genesis epoch.
+    /// Epoch is not 0 (the genesis epoch).
     const ENotGenesisEpoch: u64 = 4;
 
     /// A Supply of T. Used for minting and burning.
@@ -116,8 +116,8 @@ module iota::balance {
 
     #[allow(unused_function)]
     /// CAUTION: this function destroys a `Balance` without decreasing the supply.
-    /// It should only be called by the genesis txn to destroy IOTA supply
-    /// which created during the migration and nowhere else.
+    /// It should only be called by the genesis txn to destroy parts of the IOTA supply
+    /// which was created during the migration and for no other reason.
     fun destroy_genesis_supply<T>(self: Balance<T>, ctx: &TxContext) {
         assert!(ctx.sender() == @0x0, ENotSystemAddress);
         assert!(ctx.epoch() == 0, ENotGenesisEpoch);

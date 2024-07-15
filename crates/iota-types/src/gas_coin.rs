@@ -187,6 +187,7 @@ mod checked {
             }
         }
 
+        /// Returns the total `Supply` of `Coin<IOTA>`.
         pub fn total_supply(&self) -> &Supply {
             &self.inner.total_supply
         }

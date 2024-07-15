@@ -343,7 +343,7 @@ The <code>create</code> function was called with duplicate validators.
 
 <a name="0x3_genesis_EWrongPreMintedSupply"></a>
 
-The <code>create</code> function was called with wrong pre-mined supply.
+The <code>create</code> function was called with wrong pre-minted supply.
 
 
 <pre><code><b>const</b> <a href="genesis.md#0x3_genesis_EWrongPreMintedSupply">EWrongPreMintedSupply</a>: u64 = 2;

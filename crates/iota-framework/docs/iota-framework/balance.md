@@ -126,7 +126,7 @@ For when trying to withdraw more than there is.
 
 <a name="0x2_balance_ENotGenesisEpoch"></a>
 
-Epoch is not 0 the genesis epoch.
+Epoch is not 0 (the genesis epoch).
 
 
 <pre><code><b>const</b> <a href="../iota-framework/balance.md#0x2_balance_ENotGenesisEpoch">ENotGenesisEpoch</a>: u64 = 4;
@@ -466,8 +466,8 @@ and nowhere else.
 ## Function `destroy_genesis_supply`
 
 CAUTION: this function destroys a <code><a href="../iota-framework/balance.md#0x2_balance_Balance">Balance</a></code> without decreasing the supply.
-It should only be called by the genesis txn to destroy IOTA supply
-which created during the migration and nowhere else.
+It should only be called by the genesis txn to destroy parts of the IOTA supply
+which was created during the migration and for no other reason.
 
 
 <pre><code><b>fun</b> <a href="../iota-framework/balance.md#0x2_balance_destroy_genesis_supply">destroy_genesis_supply</a>&lt;T&gt;(self: <a href="../iota-framework/balance.md#0x2_balance_Balance">balance::Balance</a>&lt;T&gt;, ctx: &<a href="../iota-framework/tx_context.md#0x2_tx_context_TxContext">tx_context::TxContext</a>)

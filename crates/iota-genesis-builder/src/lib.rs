@@ -568,7 +568,7 @@ impl Builder {
         let allocations_amount: u64 = token_distribution_schedule
             .allocations
             .iter()
-            .map(|a| a.amount_nanos)
+            .map(|allocation| allocation.amount_nanos)
             .sum();
 
         assert_eq!(

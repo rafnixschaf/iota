@@ -575,7 +575,7 @@ impl TokenDistributionSchedule {
         );
         assert!(
             pre_minted_supply.staked_with_validator.is_none(),
-            "Can't stake the stake the pre-minted supply amount",
+            "Can't stake the pre-minted supply amount",
         );
 
         let schedule = Self {
