@@ -94,6 +94,7 @@ impl GenesisStake {
         vanilla_schedule
     }
 
+    /// Calculates the part of the IOTA supply that is pre-minted.
     fn calculate_pre_minted_supply(&self) -> u64 {
         TOTAL_SUPPLY_NANOS - self.sum_token_allocation()
     }
