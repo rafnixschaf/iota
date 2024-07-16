@@ -541,7 +541,7 @@ mod tests {
         let eth_event_idx = 0;
         let (log, _action) = get_test_log_and_action(contract_address, eth_tx_hash, eth_event_idx);
         eth_mock_provider
-            .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
+            .add_response(
                 "eth_getTransactionReceipt",
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {

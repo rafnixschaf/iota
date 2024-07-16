@@ -163,7 +163,7 @@ pub fn mock_get_logs(
     logs: Vec<Log>,
 ) {
     mock_provider
-        .add_response::<[Filter; 1], Vec<Log>, Vec<Log>>(
+        .add_response(
             "eth_getLogs",
             [Filter {
                 block_option: FilterBlockOption::Range {
@@ -179,7 +179,7 @@ pub fn mock_get_logs(
 
     for log in logs {
         mock_provider
-            .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
+            .add_response(
                 "eth_getTransactionReceipt",
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {

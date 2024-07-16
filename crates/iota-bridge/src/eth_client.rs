@@ -290,7 +290,7 @@ mod tests {
         let (good_log, bridge_action) = get_test_log_and_action(EthAddress::ZERO, eth_tx_hash, 1);
         // Mocks `eth_getTransactionReceipt` to return `log` and `good_log` in order
         mock_provider
-            .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
+            .add_response(
                 "eth_getTransactionReceipt",
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
@@ -372,7 +372,7 @@ mod tests {
         let (log, _bridge_action) =
             get_test_log_and_action(EthAddress::repeat_byte(4), eth_tx_hash, 0);
         mock_provider
-            .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
+            .add_response(
                 "eth_getTransactionReceipt",
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
@@ -410,7 +410,7 @@ mod tests {
         let (log, bridge_action) =
             get_test_log_and_action(EthAddress::repeat_byte(6), eth_tx_hash, 0);
         mock_provider
-            .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
+            .add_response(
                 "eth_getTransactionReceipt",
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {

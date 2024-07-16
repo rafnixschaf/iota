@@ -6,7 +6,7 @@
 //! from `ethers-rs`.
 
 use std::{
-    borrow::{Borrow, Cow},
+    borrow::Cow,
     collections::HashMap,
     fmt::Debug,
     pin::Pin,
@@ -50,7 +50,7 @@ impl EthMockTransport {
         params: Option<&RawValue>,
     ) -> Result<Value, RpcError<TransportErrorKind>> {
         let params = match params {
-            Some(params) if params.get().is_empty() => MockParams::Value(params.get().to_string()),
+            Some(params) if !params.get().is_empty() => MockParams::Value(params.get().to_string()),
             Some(_) | None => MockParams::Zst,
         };
         Ok(responses
@@ -61,18 +61,18 @@ impl EthMockTransport {
             .clone())
     }
 
-    pub fn add_response<P: Serialize + Send + Sync, S: Serialize + Send + Sync, K: Borrow<S>>(
+    pub fn add_response<P: Serialize + Send + Sync, S: Serialize + Send + Sync>(
         &self,
         method: &str,
         params: P,
-        data: K,
+        data: S,
     ) -> anyhow::Result<()> {
         let params = if std::mem::size_of::<P>() == 0 {
             MockParams::Zst
         } else {
             MockParams::Value(serde_json::to_value(params)?.to_string())
         };
-        let value = serde_json::to_value(data.borrow())?;
+        let value = serde_json::to_value(data)?;
         self.responses
             .lock()
             .unwrap()
@@ -165,11 +165,11 @@ impl EthMockProvider {
         }
     }
 
-    pub fn add_response<P: Serialize + Send + Sync, S: Serialize + Send + Sync, K: Borrow<S>>(
+    pub fn add_response<P: Serialize + Send + Sync, S: Serialize + Send + Sync>(
         &self,
         method: &str,
         params: P,
-        data: K,
+        data: S,
     ) -> anyhow::Result<()> {
         self.inner
             .client()
