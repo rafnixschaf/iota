@@ -5983,6 +5983,7 @@ dependencies = [
  "tokio",
  "tracing",
  "unescape",
+ "url",
 ]
 
 [[package]]
@@ -6294,6 +6295,7 @@ dependencies = [
  "iota-config",
  "iota-core",
  "iota-faucet",
+ "iota-genesis-builder",
  "iota-graphql-rpc",
  "iota-indexer",
  "iota-json",
