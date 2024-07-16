@@ -39,7 +39,7 @@ use jsonrpsee::{
         client::{Subscription, SubscriptionClientT},
         params::ArrayParams,
     },
-    ws_client::{WsClient, WsClientBuilder},
+    ws_client::{PingConfig, WsClient, WsClientBuilder},
 };
 use move_core_types::account_address::AccountAddress;
 use move_package::{BuildConfig as MoveBuildConfig, LintFlag};
@@ -485,7 +485,7 @@ pub async fn watch_for_upgrades(
     };
 
     let client: WsClient = WsClientBuilder::default()
-        .ping_interval(WS_PING_INTERVAL)
+        .enable_ws_ping(PingConfig::new().ping_interval(WS_PING_INTERVAL))
         .build(websocket_url)
         .await?;
     let mut subscription: Subscription<IotaTransactionBlockEffects> = client

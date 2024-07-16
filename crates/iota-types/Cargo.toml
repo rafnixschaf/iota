@@ -47,7 +47,6 @@ serde_with.workspace = true
 signature.workspace = true
 static_assertions.workspace = true
 strum.workspace = true
-strum_macros.workspace = true
 tap.workspace = true
 thiserror.workspace = true
 tonic.workspace = true

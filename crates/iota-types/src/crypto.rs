@@ -1621,7 +1621,7 @@ pub mod bcs_signable_test {
 }
 
 #[derive(
-    Clone, Copy, Deserialize, Serialize, JsonSchema, Debug, EnumString, strum_macros::Display,
+    Clone, Copy, Deserialize, Serialize, JsonSchema, Debug, EnumString, strum::Display,
 )]
 #[strum(serialize_all = "lowercase")]
 pub enum SignatureScheme {

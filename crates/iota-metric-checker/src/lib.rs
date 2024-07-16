@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use humantime::parse_duration;
 use serde::Deserialize;
-use strum_macros::Display;
+use strum::Display;
 
 pub mod query;
 

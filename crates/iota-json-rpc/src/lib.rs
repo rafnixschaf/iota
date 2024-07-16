@@ -13,7 +13,7 @@ use iota_json_rpc_api::{
     CLIENT_SDK_TYPE_HEADER, CLIENT_SDK_VERSION_HEADER, CLIENT_TARGET_API_VERSION_HEADER,
 };
 use iota_open_rpc::{Module, Project};
-use jsonrpsee::RpcModule;
+use jsonrpsee::{types::ErrorObjectOwned, RpcModule};
 pub use object_changes::*;
 use prometheus::Registry;
 use tokio::runtime::Handle;
@@ -157,7 +157,9 @@ impl JsonRpcServerBuilder {
 
         let rpc_docs = self.rpc_doc.clone();
         let mut module = self.module.clone();
-        module.register_method("rpc.discover", move |_, _| Ok(rpc_docs.clone()))?;
+        module.register_method("rpc.discover", move |_, _, _| {
+            Result::<_, ErrorObjectOwned>::Ok(rpc_docs.clone())
+        })?;
         let methods_names = module.method_names().collect::<Vec<_>>();
 
         let metrics_logger = MetricsLogger::new(&self.registry, &methods_names);

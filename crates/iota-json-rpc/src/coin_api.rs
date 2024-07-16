@@ -26,12 +26,13 @@ use mockall::automock;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use mysten_metrics::spawn_monitored_task;
 use tap::TapFallible;
-use tracing::{debug, info, instrument};
+use tracing::{debug, instrument};
 
 use crate::{
     authority_state::StateRead,
     error::{Error, IotaRpcInputError, RpcInterimResult},
-    with_tracing, IotaRpcModule,
+    logger::with_tracing,
+    IotaRpcModule,
 };
 
 pub fn parse_to_struct_tag(coin_type: &str) -> Result<StructTag, IotaRpcInputError> {
@@ -88,22 +89,26 @@ impl CoinReadApiServer for CoinReadApi {
         cursor: Option<ObjectID>,
         limit: Option<usize>,
     ) -> RpcResult<CoinPage> {
-        with_tracing!(async move {
-            let coin_type_tag = parse_to_type_tag(coin_type)?;
+        with_tracing(
+            async move {
+                let coin_type_tag = parse_to_type_tag(coin_type)?;
 
-            let cursor = match cursor {
-                Some(c) => (coin_type_tag.to_string(), c),
-                // If cursor is not specified, we need to start from the beginning of the coin type,
-                // which is the minimal possible ObjectID.
-                None => (coin_type_tag.to_string(), ObjectID::ZERO),
-            };
+                let cursor = match cursor {
+                    Some(c) => (coin_type_tag.to_string(), c),
+                    // If cursor is not specified, we need to start from the beginning of the coin
+                    // type, which is the minimal possible ObjectID.
+                    None => (coin_type_tag.to_string(), ObjectID::ZERO),
+                };
 
-            self.internal
-                .get_coins_iterator(
-                    owner, cursor, limit, true, // only care about one type of coin
-                )
-                .await
-        })
+                self.internal
+                    .get_coins_iterator(
+                        owner, cursor, limit, true, // only care about one type of coin
+                    )
+                    .await
+            },
+            None,
+        )
+        .await
     }
 
     #[instrument(skip(self))]
@@ -114,41 +119,45 @@ impl CoinReadApiServer for CoinReadApi {
         cursor: Option<ObjectID>,
         limit: Option<usize>,
     ) -> RpcResult<CoinPage> {
-        with_tracing!(async move {
-            let cursor = match cursor {
-                Some(object_id) => {
-                    let obj = self.internal.get_object(&object_id).await?;
-                    match obj {
-                        Some(obj) => {
-                            let coin_type = obj.coin_type_maybe();
-                            if coin_type.is_none() {
-                                Err(IotaRpcInputError::GenericInvalid(
-                                    "cursor is not a coin".to_string(),
-                                ))
-                            } else {
-                                Ok((coin_type.unwrap().to_string(), object_id))
+        with_tracing(
+            async move {
+                let cursor = match cursor {
+                    Some(object_id) => {
+                        let obj = self.internal.get_object(&object_id).await?;
+                        match obj {
+                            Some(obj) => {
+                                let coin_type = obj.coin_type_maybe();
+                                if coin_type.is_none() {
+                                    Err(IotaRpcInputError::GenericInvalid(
+                                        "cursor is not a coin".to_string(),
+                                    ))
+                                } else {
+                                    Ok((coin_type.unwrap().to_string(), object_id))
+                                }
                             }
+                            None => Err(IotaRpcInputError::GenericInvalid(
+                                "cursor not found".to_string(),
+                            )),
                         }
-                        None => Err(IotaRpcInputError::GenericInvalid(
-                            "cursor not found".to_string(),
-                        )),
                     }
-                }
-                None => {
-                    // If cursor is None, start from the beginning
-                    Ok((String::from_utf8([0u8].to_vec()).unwrap(), ObjectID::ZERO))
-                }
-            }?;
+                    None => {
+                        // If cursor is None, start from the beginning
+                        Ok((String::from_utf8([0u8].to_vec()).unwrap(), ObjectID::ZERO))
+                    }
+                }?;
 
-            let coins = self
-                .internal
-                .get_coins_iterator(
-                    owner, cursor, limit, false, // return all types of coins
-                )
-                .await?;
+                let coins = self
+                    .internal
+                    .get_coins_iterator(
+                        owner, cursor, limit, false, // return all types of coins
+                    )
+                    .await?;
 
-            Ok(coins)
-        })
+                Ok(coins)
+            },
+            None,
+        )
+        .await
     }
 
     #[instrument(skip(self))]
@@ -157,85 +166,101 @@ impl CoinReadApiServer for CoinReadApi {
         owner: IotaAddress,
         coin_type: Option<String>,
     ) -> RpcResult<Balance> {
-        with_tracing!(async move {
-            let coin_type_tag = parse_to_type_tag(coin_type)?;
-            let balance = self
-                .internal
-                .get_balance(owner, coin_type_tag.clone())
-                .await
-                .tap_err(|e| {
-                    debug!(?owner, "Failed to get balance with error: {:?}", e);
-                })?;
-            Ok(Balance {
-                coin_type: coin_type_tag.to_string(),
-                coin_object_count: balance.num_coins as usize,
-                total_balance: balance.balance as u128,
-                // note: LockedCoin is deprecated
-                locked_balance: Default::default(),
-            })
-        })
+        with_tracing(
+            async move {
+                let coin_type_tag = parse_to_type_tag(coin_type)?;
+                let balance = self
+                    .internal
+                    .get_balance(owner, coin_type_tag.clone())
+                    .await
+                    .tap_err(|e| {
+                        debug!(?owner, "Failed to get balance with error: {:?}", e);
+                    })?;
+                Ok(Balance {
+                    coin_type: coin_type_tag.to_string(),
+                    coin_object_count: balance.num_coins as usize,
+                    total_balance: balance.balance as u128,
+                    // note: LockedCoin is deprecated
+                    locked_balance: Default::default(),
+                })
+            },
+            None,
+        )
+        .await
     }
 
     #[instrument(skip(self))]
     async fn get_all_balances(&self, owner: IotaAddress) -> RpcResult<Vec<Balance>> {
-        with_tracing!(async move {
-            let all_balance = self.internal.get_all_balance(owner).await.tap_err(|e| {
-                debug!(?owner, "Failed to get all balance with error: {:?}", e);
-            })?;
-            Ok(all_balance
-                .iter()
-                .map(|(coin_type, balance)| {
-                    Balance {
-                        coin_type: coin_type.to_string(),
-                        coin_object_count: balance.num_coins as usize,
-                        total_balance: balance.balance as u128,
-                        // note: LockedCoin is deprecated
-                        locked_balance: Default::default(),
-                    }
-                })
-                .collect())
-        })
+        with_tracing(
+            async move {
+                let all_balance = self.internal.get_all_balance(owner).await.tap_err(|e| {
+                    debug!(?owner, "Failed to get all balance with error: {:?}", e);
+                })?;
+                Ok(all_balance
+                    .iter()
+                    .map(|(coin_type, balance)| {
+                        Balance {
+                            coin_type: coin_type.to_string(),
+                            coin_object_count: balance.num_coins as usize,
+                            total_balance: balance.balance as u128,
+                            // note: LockedCoin is deprecated
+                            locked_balance: Default::default(),
+                        }
+                    })
+                    .collect())
+            },
+            None,
+        )
+        .await
     }
 
     #[instrument(skip(self))]
     async fn get_coin_metadata(&self, coin_type: String) -> RpcResult<Option<IotaCoinMetadata>> {
-        with_tracing!(async move {
-            let coin_struct = parse_to_struct_tag(&coin_type)?;
-            let metadata_object = self
-                .internal
-                .find_package_object(
-                    &coin_struct.address.into(),
-                    CoinMetadata::type_(coin_struct),
-                )
-                .await
-                .ok();
-            Ok(metadata_object.and_then(|v: Object| v.try_into().ok()))
-        })
+        with_tracing(
+            async move {
+                let coin_struct = parse_to_struct_tag(&coin_type)?;
+                let metadata_object = self
+                    .internal
+                    .find_package_object(
+                        &coin_struct.address.into(),
+                        CoinMetadata::type_(coin_struct),
+                    )
+                    .await
+                    .ok();
+                Ok(metadata_object.and_then(|v: Object| v.try_into().ok()))
+            },
+            None,
+        )
+        .await
     }
 
     #[instrument(skip(self))]
     async fn get_total_supply(&self, coin_type: String) -> RpcResult<Supply> {
-        with_tracing!(async move {
-            let coin_struct = parse_to_struct_tag(&coin_type)?;
-            Ok(if GAS::is_gas(&coin_struct) {
-                Supply {
-                    value: TOTAL_SUPPLY_MICROS,
-                }
-            } else {
-                let treasury_cap_object = self
-                    .internal
-                    .find_package_object(
-                        &coin_struct.address.into(),
-                        TreasuryCap::type_(coin_struct),
+        with_tracing(
+            async move {
+                let coin_struct = parse_to_struct_tag(&coin_type)?;
+                Ok(if GAS::is_gas(&coin_struct) {
+                    Supply {
+                        value: TOTAL_SUPPLY_MICROS,
+                    }
+                } else {
+                    let treasury_cap_object = self
+                        .internal
+                        .find_package_object(
+                            &coin_struct.address.into(),
+                            TreasuryCap::type_(coin_struct),
+                        )
+                        .await?;
+                    let treasury_cap = TreasuryCap::from_bcs_bytes(
+                        treasury_cap_object.data.try_as_move().unwrap().contents(),
                     )
-                    .await?;
-                let treasury_cap = TreasuryCap::from_bcs_bytes(
-                    treasury_cap_object.data.try_as_move().unwrap().contents(),
-                )
-                .map_err(Error::from)?;
-                treasury_cap.total_supply
-            })
-        })
+                    .map_err(Error::from)?;
+                    treasury_cap.total_supply
+                })
+            },
+            None,
+        )
+        .await
     }
 }
 

@@ -51,16 +51,26 @@ impl Error {
     }
 }
 
-impl From<jsonrpsee::core::Error> for Error {
-    fn from(err: jsonrpsee::core::Error) -> Self {
-        // The following code relies on jsonrpsee's From<Error> for ErrorObjectOwned
-        // implementation It converts any variant that is not Error::Call into
+impl From<jsonrpsee::core::ClientError> for Error {
+    fn from(err: jsonrpsee::core::ClientError) -> Self {
+        // The following code converts any variant that is not Error::Call into
         // an ErrorObject with UNKNOWN_ERROR_CODE
-        let error_object_owned: ErrorObjectOwned = err.into();
+        let error_object_owned = error_object_from_rpc(err);
         Error {
             code: error_object_owned.code(),
             message: error_object_owned.message().to_string(),
-            data: None,
+            data: error_object_owned
+                .data()
+                .map(|v| serde_json::from_str(v.get()).expect("raw json is always valid")),
         }
+    }
+}
+
+fn error_object_from_rpc(rpc_err: jsonrpsee::core::ClientError) -> ErrorObjectOwned {
+    match rpc_err {
+        jsonrpsee::core::ClientError::Call(e) => {
+            ErrorObjectOwned::owned(e.code(), e.message().to_owned(), e.data())
+        }
+        _ => ErrorObjectOwned::owned::<()>(UNKNOWN_ERROR_CODE, rpc_err.to_string(), None),
     }
 }

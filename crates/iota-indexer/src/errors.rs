@@ -8,7 +8,13 @@ use iota_types::{
     base_types::ObjectIDParseError,
     error::{IotaError, IotaObjectResponseError, UserInputError},
 };
-use jsonrpsee::{core::Error as RpcError, types::error::CallError};
+use jsonrpsee::{
+    core::ClientError as RpcError,
+    types::{
+        error::{INTERNAL_ERROR_CODE, UNKNOWN_ERROR_CODE},
+        ErrorObjectOwned,
+    },
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -146,12 +152,29 @@ impl<T> Context<T> for Result<T, IndexerError> {
 
 impl From<IndexerError> for RpcError {
     fn from(e: IndexerError) -> Self {
-        RpcError::Call(CallError::Failed(e.into()))
+        RpcError::Call(ErrorObjectOwned::owned::<()>(
+            INTERNAL_ERROR_CODE,
+            e.to_string(),
+            None,
+        ))
+    }
+}
+
+impl From<IndexerError> for ErrorObjectOwned {
+    fn from(value: IndexerError) -> Self {
+        error_object_from_rpc(value.into())
     }
 }
 
 impl From<tokio::task::JoinError> for IndexerError {
     fn from(value: tokio::task::JoinError) -> Self {
         IndexerError::UncategorizedError(anyhow::Error::from(value))
+    }
+}
+
+pub(crate) fn error_object_from_rpc(rpc_err: RpcError) -> ErrorObjectOwned {
+    match rpc_err {
+        RpcError::Call(e) => ErrorObjectOwned::owned(e.code(), e.message().to_owned(), e.data()),
+        _ => ErrorObjectOwned::owned::<()>(UNKNOWN_ERROR_CODE, rpc_err.to_string(), None),
     }
 }
