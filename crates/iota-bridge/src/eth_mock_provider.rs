@@ -24,7 +24,10 @@ use alloy::{
 use async_trait::async_trait;
 use futures::Future;
 use serde::Serialize;
-use serde_json::Value;
+use serde_json::{
+    value::{to_raw_value, RawValue},
+    Value,
+};
 
 /// Helper type that can be used to pass through the `params` value.
 /// This is necessary because the wrapper provider is supposed to skip the
@@ -36,7 +39,76 @@ enum MockParams {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct EthMockTransport;
+pub struct EthMockTransport {
+    responses: Arc<Mutex<HashMap<(String, MockParams), Value>>>,
+}
+
+impl EthMockTransport {
+    async fn request(
+        responses: &Mutex<HashMap<(String, MockParams), Value>>,
+        method: &str,
+        params: Option<&RawValue>,
+    ) -> Result<Value, RpcError<TransportErrorKind>> {
+        let params = if params.is_none() || params.unwrap().get().is_empty() {
+            MockParams::Zst
+        } else {
+            MockParams::Value(params.unwrap().get().to_string())
+        };
+        Ok(responses
+            .lock()
+            .unwrap()
+            .get(&(method.to_string(), params))
+            .ok_or(RpcError::NullResp)?
+            .clone())
+    }
+
+    pub fn add_response<P: Serialize + Send + Sync, S: Serialize + Send + Sync, K: Borrow<S>>(
+        &self,
+        method: &str,
+        params: P,
+        data: K,
+    ) -> anyhow::Result<()> {
+        let params = if std::mem::size_of::<P>() == 0 {
+            MockParams::Zst
+        } else {
+            MockParams::Value(serde_json::to_value(params)?.to_string())
+        };
+        let value = serde_json::to_value(data.borrow())?;
+        self.responses
+            .lock()
+            .unwrap()
+            .insert((method.to_owned(), params), value);
+        Ok(())
+    }
+
+    async fn inner_call(
+        responses: Arc<Mutex<HashMap<(String, MockParams), Value>>>,
+        req: RequestPacket,
+    ) -> Result<ResponsePacket, RpcError<TransportErrorKind>> {
+        Ok(match req {
+            RequestPacket::Single(req) => ResponsePacket::Single(Response {
+                id: req.id().clone(),
+                payload: Self::request(&responses, req.method(), req.params())
+                    .await
+                    .and_then(|v| to_raw_value(&v).map_err(RpcError::SerError))
+                    .map(ResponsePayload::Success)?,
+            }),
+            RequestPacket::Batch(reqs) => {
+                let mut resps = Vec::new();
+                for req in reqs {
+                    resps.push(Response {
+                        id: req.id().clone(),
+                        payload: Self::request(&responses, req.method(), req.params())
+                            .await
+                            .and_then(|v| to_raw_value(&v).map_err(RpcError::SerError))
+                            .map(ResponsePayload::Success)?,
+                    });
+                }
+                ResponsePacket::Batch(resps)
+            }
+        })
+    }
+}
 
 impl tower::Service<RequestPacket> for EthMockTransport {
     type Response = ResponsePacket;
@@ -51,26 +123,7 @@ impl tower::Service<RequestPacket> for EthMockTransport {
     }
 
     fn call(&mut self, req: RequestPacket) -> Self::Future {
-        let resp = match req {
-            RequestPacket::Single(req) => ResponsePacket::Single(Response {
-                id: req.id().clone(),
-                payload: ResponsePayload::Success(req.into_serialized()),
-            }),
-            RequestPacket::Batch(reqs) => ResponsePacket::Batch(
-                reqs.into_iter()
-                    .map(|req| Response {
-                        id: req.id().clone(),
-                        payload: ResponsePayload::Success(req.into_serialized()),
-                    })
-                    .collect(),
-            ),
-        };
-
-        // create a response in a future.
-        let fut = async { Ok(resp) };
-
-        // Return the response as an immediate future
-        Box::pin(fut)
+        Box::pin(Self::inner_call(self.responses.clone(), req))
     }
 }
 
@@ -78,7 +131,6 @@ impl tower::Service<RequestPacket> for EthMockTransport {
 #[derive(Clone, Debug)]
 pub struct EthMockProvider {
     inner: RootProvider<EthMockTransport>,
-    responses: Arc<Mutex<HashMap<(String, MockParams), Value>>>,
 }
 
 impl Default for EthMockProvider {
@@ -103,28 +155,7 @@ impl Provider<EthMockTransport> for EthMockProvider {
         R: RpcReturn,
         Self: Sized,
     {
-        let params = if std::mem::size_of::<P>() == 0 {
-            MockParams::Zst
-        } else {
-            MockParams::Value(
-                serde_json::to_value(params)
-                    .map_err(|err| RpcError::SerError(err))?
-                    .to_string(),
-            )
-        };
-        let element = self
-            .responses
-            .lock()
-            .unwrap()
-            .get(&(method.to_string(), params))
-            .ok_or(RpcError::NullResp)?
-            .clone();
-        let res: R = R::deserialize(&element).map_err(|err| RpcError::DeserError {
-            err,
-            text: element.to_string(),
-        })?;
-
-        Ok(res)
+        self.inner.raw_request(method, params).await
     }
 }
 
@@ -132,7 +163,6 @@ impl EthMockProvider {
     pub fn new() -> Self {
         Self {
             inner: RootProvider::new(RpcClient::new(EthMockTransport::default(), true)),
-            responses: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -142,17 +172,10 @@ impl EthMockProvider {
         params: P,
         data: K,
     ) -> anyhow::Result<()> {
-        let params = if std::mem::size_of::<P>() == 0 {
-            MockParams::Zst
-        } else {
-            MockParams::Value(serde_json::to_value(params)?.to_string())
-        };
-        let value = serde_json::to_value(data.borrow())?;
-        self.responses
-            .lock()
-            .unwrap()
-            .insert((method.to_owned(), params), value);
-        Ok(())
+        self.inner
+            .client()
+            .transport()
+            .add_response(method, params, data)
     }
 }
 

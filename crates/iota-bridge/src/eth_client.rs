@@ -322,10 +322,7 @@ mod tests {
             .get_finalized_bridge_action_maybe(eth_tx_hash, 0)
             .await
             .unwrap_err();
-        match error {
-            BridgeError::TxNotFinalized => {}
-            _ => panic!("expected TxNotFinalized"),
-        };
+        assert_eq!(error, BridgeError::TxNotFinalized);
 
         // 778 is now finalized
         mock_last_finalized_block(&mock_provider, 778);
@@ -335,20 +332,14 @@ mod tests {
             .await
             .unwrap_err();
         // Receipt only has 2 logs
-        match error {
-            BridgeError::NoBridgeEventsInTxPosition => {}
-            _ => panic!("expected NoBridgeEventsInTxPosition"),
-        };
+        assert_eq!(error, BridgeError::NoBridgeEventsInTxPosition);
 
         let error = client
             .get_finalized_bridge_action_maybe(eth_tx_hash, 0)
             .await
             .unwrap_err();
         // Same, `log` is not a BridgeEvent
-        match error {
-            BridgeError::NoBridgeEventsInTxPosition => {}
-            _ => panic!("expected NoBridgeEventsInTxPosition"),
-        };
+        assert_eq!(error, BridgeError::NoBridgeEventsInTxPosition);
 
         let action = client
             .get_finalized_bridge_action_maybe(eth_tx_hash, 1)
@@ -413,10 +404,7 @@ mod tests {
             .get_finalized_bridge_action_maybe(eth_tx_hash, 0)
             .await
             .unwrap_err();
-        match error {
-            BridgeError::TxNotFinalized => {}
-            _ => panic!("expected TxNotFinalized"),
-        };
+        assert_eq!(error, BridgeError::BridgeEventInUnrecognizedEthContract);
 
         // Ok if emitted from the right contract
         let (log, bridge_action) =

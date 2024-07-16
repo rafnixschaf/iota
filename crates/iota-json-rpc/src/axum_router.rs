@@ -297,7 +297,7 @@ pub mod ws {
                             let response =
                                 process_raw_request(&service, &msg, bounded_subscriptions.clone(), &sink).await;
                             if let Some(response) = response {
-                                let _ = sink.send(response.into_result());
+                                sink.send(response.into_result()).await.ok();
                             }
                         }
                     } else {
@@ -373,6 +373,7 @@ pub mod ws {
                         MethodKind::MethodCall,
                         TransportProtocol::Http,
                     );
+                    tracing::info!("calling {name} sync");
                     Some((callback)(
                         id,
                         params,
@@ -391,6 +392,7 @@ pub mod ws {
                     let id = id.into_owned();
                     let params = params.into_owned();
 
+                    tracing::info!("calling {name} async");
                     Some(
                         (callback)(
                             id,

@@ -232,7 +232,6 @@ allow-git = [
   "https://github.com/mystenmark/tokio-madsim-fork.git",
   "https://github.com/nextest-rs/nexlint.git",
   "https://github.com/nextest-rs/datatest-stable.git",
-  "https://github.com/wlmyng/jsonrpsee.git",
   "https://github.com/zhiburt/tabled.git",
 ]
 
