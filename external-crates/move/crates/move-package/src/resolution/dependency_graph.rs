@@ -1567,8 +1567,7 @@ impl fmt::Display for Package {
                 subdir,
                 package_name: _,
             }) => {
-                let custom_key =
-                    package_hooks::custom_dependency_key().ok_or_else(|| fmt::Error)?;
+                let custom_key = package_hooks::custom_dependency_key().ok_or(fmt::Error)?;
 
                 f.write_str(&custom_key)?;
                 write!(f, " = ")?;
@@ -1692,7 +1691,7 @@ fn str_escape(s: &str) -> String {
 
 /// Escape a path to output in a TOML file.
 fn path_escape(p: &Path) -> Result<String, fmt::Error> {
-    p.to_str().map(str_escape).ok_or_else(|| fmt::Error)
+    p.to_str().map(str_escape).ok_or(fmt::Error)
 }
 
 fn format_deps(

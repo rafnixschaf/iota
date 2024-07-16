@@ -46,6 +46,7 @@ anemo.workspace = true
 reqwest.workspace = true
 
 [dev-dependencies]
+move-bytecode-utils.workspace = true
 pretty_assertions.workspace = true
 serde.workspace = true
 serde-reflection.workspace = true

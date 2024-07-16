@@ -36,14 +36,15 @@ use iota_types::{
     },
     utils::DEFAULT_ADDRESS_SEED,
 };
+use move_bytecode_utils::layout::YamlRegistry;
 use move_core_types::language_storage::{StructTag, TypeTag};
 use pretty_assertions::assert_str_eq;
 use rand::{rngs::StdRng, SeedableRng};
-use serde::{Deserialize, Serialize};
-use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
+use serde_reflection::{Result, Samples, Tracer, TracerConfig};
 use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
 use typed_store::TypedStoreError;
-fn get_registry() -> Result<Registry> {
+
+fn get_registry() -> Result<YamlRegistry> {
     let config = TracerConfig::default()
         .record_samples_for_structs(true)
         .record_samples_for_newtype_structs(true);
@@ -177,7 +178,7 @@ fn get_registry() -> Result<Registry> {
     tracer.trace_type::<CheckpointContents>(&samples)?;
     tracer.trace_type::<CheckpointSummary>(&samples)?;
 
-    tracer.registry()
+    Ok(YamlRegistry(tracer.registry()?))
 }
 
 #[derive(Debug, Parser, Clone, Copy, ValueEnum)]
@@ -199,15 +200,9 @@ struct Options {
 
 const FILE_PATH: &str = "iota-core/tests/staged/iota.yaml";
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(transparent)]
-struct YamlRegistry(
-    #[serde(with = "serde_yaml::with::singleton_map_recursive")] serde_reflection::Registry,
-);
-
 fn main() {
     let options = Options::parse();
-    let registry = YamlRegistry(get_registry().unwrap());
+    let registry = get_registry().unwrap();
     match options.action {
         Action::Print => {
             let content = serde_yaml::to_string(&registry).unwrap();

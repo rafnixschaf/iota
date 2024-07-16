@@ -31,7 +31,7 @@ iota-sdk.workspace = true
 iota-source-validation.workspace = true
 
 # axum.workspace = true
-axum = { workspace = true, features = ["macros"]}
+axum = { workspace = true, features = ["macros"] }
 const-str.workspace = true
 git-version.workspace = true
 move-compiler.workspace = true
