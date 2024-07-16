@@ -173,6 +173,18 @@ const config = {
           autoCollapseCategories: false,
         },
       },
+      colorMode:{
+        defaultMode: 'dark'
+      },
+      announcementBar:{
+        id: 'integrate_your_exchange',
+        content:
+            '<a target="_blank" rel="noopener noreferrer" href="/developer/exchange-integration/">Integrate your exchange</a>. If you supported Stardust, please make sure to also <a target="_blank" rel="noopener noreferrer" href="/developer/stardust/exchanges"> migrate from Stardust</a>.',
+        isCloseable: false,
+        backgroundColor: '#0101ff',
+        textColor: '#FFFFFF',
+
+      },
       navbar: {
         title: "",
         logo: {
@@ -181,20 +193,20 @@ const config = {
         },
         items: [
           {
-            label: "Guides",
-            to: "guides",
+            label: "About IOTA",
+            to: "about-iota",
           },
           {
-            label: "Concepts",
-            to: "concepts",
+              label: "Developers",
+              to: "developer",
           },
           {
-            label: "Standards",
-            to: "standards",
+              label: "Node Operators",
+              to: "operator",
           },
           {
-            label: "References",
-            to: "references",
+              label: "References",
+              to: "references",
           },
         ],
       },
