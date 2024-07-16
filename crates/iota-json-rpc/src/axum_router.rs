@@ -14,7 +14,7 @@ use jsonrpsee::{
         error::{ErrorCode, BATCHES_NOT_SUPPORTED_CODE, BATCHES_NOT_SUPPORTED_MSG},
         ErrorObject, Id, InvalidRequest, Params, Request,
     },
-    BoundedSubscriptions, ConnectionId, MethodCallback, MethodKind, MethodResponse,
+    BoundedSubscriptions, ConnectionId, Extensions, MethodCallback, MethodKind, MethodResponse,
 };
 use serde_json::value::RawValue;
 
@@ -33,15 +33,17 @@ pub struct JsonRpcService<L> {
 
     /// Registered server methods.
     methods: Methods,
+    extensions: Extensions,
     rpc_router: RpcRouter,
 }
 
 impl<L> JsonRpcService<L> {
-    pub fn new(methods: Methods, rpc_router: RpcRouter, logger: L) -> Self {
+    pub fn new(methods: Methods, rpc_router: RpcRouter, logger: L, extensions: Extensions) -> Self {
         Self {
             methods,
             rpc_router,
             logger,
+            extensions,
             id_provider: Arc::new(RandomIntegerIdProvider),
         }
     }
@@ -53,6 +55,7 @@ impl<L: Logger> JsonRpcService<L> {
             logger: &self.logger,
             methods: &self.methods,
             rpc_router: &self.rpc_router,
+            extensions: &self.extensions,
             max_response_body_size: MAX_RESPONSE_SIZE,
             request_start: self.logger.on_request(TransportProtocol::Http),
         }
@@ -66,6 +69,7 @@ impl<L: Logger> JsonRpcService<L> {
         ws::WsCallData {
             logger: &self.logger,
             methods: &self.methods,
+            extensions: &self.extensions,
             max_response_body_size: MAX_RESPONSE_SIZE,
             request_start: self.logger.on_request(TransportProtocol::Http),
             bounded_subscriptions,
@@ -140,6 +144,7 @@ async fn process_request<L: Logger>(
         methods,
         rpc_router,
         logger,
+        extensions,
         max_response_body_size,
         request_start,
     } = call;
@@ -167,7 +172,12 @@ async fn process_request<L: Logger>(
                     MethodKind::MethodCall,
                     TransportProtocol::Http,
                 );
-                (callback)(id, params, max_response_body_size as usize, todo!())
+                (callback)(
+                    id,
+                    params,
+                    max_response_body_size as usize,
+                    extensions.clone(),
+                )
             }
             MethodCallback::Async(callback) => {
                 logger.on_call(
@@ -185,7 +195,7 @@ async fn process_request<L: Logger>(
                     params,
                     conn_id,
                     max_response_body_size as usize,
-                    todo!(),
+                    extensions.clone(),
                 )
                 .await
             }
@@ -226,6 +236,7 @@ pub(crate) struct CallData<'a, L: Logger> {
     logger: &'a L,
     methods: &'a Methods,
     rpc_router: &'a RpcRouter,
+    extensions: &'a Extensions,
     max_response_body_size: u32,
     request_start: L::Instant,
 }
@@ -251,6 +262,7 @@ pub mod ws {
         pub bounded_subscriptions: BoundedSubscriptions,
         pub id_provider: &'a dyn IdProvider,
         pub methods: &'a Methods,
+        pub extensions: &'a Extensions,
         pub max_response_body_size: u32,
         pub sink: &'a MethodSink,
         pub logger: &'a L,
@@ -324,6 +336,7 @@ pub mod ws {
         let WsCallData {
             methods,
             logger,
+            extensions,
             max_response_body_size,
             request_start,
             bounded_subscriptions,
@@ -361,7 +374,7 @@ pub mod ws {
                         id,
                         params,
                         max_response_body_size as usize,
-                        todo!(),
+                        extensions.clone(),
                     ))
                 }
                 MethodCallback::Async(callback) => {
@@ -381,7 +394,7 @@ pub mod ws {
                             params,
                             conn_id,
                             max_response_body_size as usize,
-                            todo!(),
+                            extensions.clone(),
                         )
                         .await,
                     )
@@ -400,7 +413,14 @@ pub mod ws {
                             subscription_permit,
                             id_provider,
                         };
-                        (callback)(id.clone(), params, sink.clone(), conn_state, todo!()).await;
+                        (callback)(
+                            id.clone(),
+                            params,
+                            sink.clone(),
+                            conn_state,
+                            extensions.clone(),
+                        )
+                        .await;
                         None
                     } else {
                         Some(MethodResponse::error(
@@ -423,7 +443,7 @@ pub mod ws {
                         params,
                         conn_id,
                         max_response_body_size as usize,
-                        todo!(),
+                        extensions.clone(),
                     ))
                 }
             },

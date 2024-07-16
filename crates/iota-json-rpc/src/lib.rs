@@ -13,7 +13,7 @@ use iota_json_rpc_api::{
     CLIENT_SDK_TYPE_HEADER, CLIENT_SDK_VERSION_HEADER, CLIENT_TARGET_API_VERSION_HEADER,
 };
 use iota_open_rpc::{Module, Project};
-use jsonrpsee::{types::ErrorObjectOwned, RpcModule};
+use jsonrpsee::{types::ErrorObjectOwned, Extensions, RpcModule};
 pub use object_changes::*;
 use prometheus::Registry;
 use tokio::runtime::Handle;
@@ -168,8 +168,12 @@ impl JsonRpcServerBuilder {
             .layer(Self::trace_layer())
             .layer(Self::cors()?);
 
-        let service =
-            crate::axum_router::JsonRpcService::new(module.into(), rpc_router, metrics_logger);
+        let service = crate::axum_router::JsonRpcService::new(
+            module.into(),
+            rpc_router,
+            metrics_logger,
+            Extensions::new(),
+        );
 
         let mut router = axum::Router::new();
 
