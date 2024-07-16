@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub use alloy::primitives::TxHash as EthTransactionHash;
 use alloy::{
-    primitives::{Address as EthAddress, B256},
+    primitives::{Address as EthAddress, TxHash},
     rpc::types::Log,
     sol_types::SolValue,
 };
@@ -629,7 +629,7 @@ impl Message for BridgeAction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EthLog {
     pub block_number: u64,
-    pub tx_hash: B256,
+    pub tx_hash: TxHash,
     pub log_index_in_tx: u16,
     // TODO: pull necessary fields from `Log`.
     pub log: Log,

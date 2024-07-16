@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use alloy::{
-    primitives::{Address as EthAddress, B256},
+    primitives::{Address as EthAddress, TxHash},
     sol_types::SolEventInterface,
 };
 use iota_types::base_types::IotaAddress;
@@ -47,7 +47,7 @@ impl EthBridgeEvent {
 impl EthBridgeEvent {
     pub fn try_into_bridge_action(
         self,
-        eth_tx_hash: B256,
+        eth_tx_hash: TxHash,
         eth_event_index: u16,
     ) -> Option<BridgeAction> {
         match self {
