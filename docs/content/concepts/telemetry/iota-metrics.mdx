@@ -3,7 +3,7 @@ title: Metrics
 description: Prometheus-based metrics for the node.
 ---
 
-The `iota-metrics` crate defines a `Metrics` struct with various `IntGaugeVec` metrics to monitor running tasks,
+The `iota-metrics` crate defines a `Metrics` struct with various [IntGaugeVec][] metrics to monitor running tasks,
 pending futures, channel sizes, and scope activities. A gauge is a type of metric that represents a single numerical value
 that can go up or down.
 
@@ -228,3 +228,5 @@ Additionally, instead of exposing the metrics via HTTP only, the metrics can als
 The `iota-node` crate, for example, starts a push task `start_metrics_push_task` that pushes all metrics regularly to a given endpoint defined in the `NodeConfig.`
 This push task assigns the current timestamp to each metric, encodes the metrics into the Protobuf format, adds compression and
 pushes the compressed metrics data via an HTTP POST.
+
+[IntGaugeVec]: https://docs.rs/prometheus/latest/prometheus/type.IntGaugeVec.html
