@@ -7,6 +7,7 @@ license = "Apache-2.0"
 publish = false
 
 [dependencies]
+alloy = { version = "0.1.4", features = ["sol-types", "dyn-abi", "json", "contract", "rpc", "json-rpc", "rpc-client", "rpc-types", "transports", "transport-http", "transport-ipc", "signers", "consensus", "transport-ipc-mock"] }
 anyhow.workspace = true
 arc-swap.workspace = true
 async-trait.workspace = true
@@ -15,7 +16,6 @@ backoff.workspace = true
 bcs.workspace = true
 clap.workspace = true
 const-str.workspace = true
-ethers = "2.0"
 eyre.workspace = true
 fastcrypto.workspace = true
 futures.workspace = true
@@ -42,6 +42,7 @@ tap.workspace = true
 telemetry-subscribers.workspace = true
 tempfile.workspace = true
 tokio = { workspace = true, features = ["full"] }
+tower.workspace = true
 tracing.workspace = true
 typed-store.workspace = true
 typed-store-derive.workspace = true

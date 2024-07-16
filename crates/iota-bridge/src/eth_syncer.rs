@@ -10,7 +10,7 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use ethers::types::Address as EthAddress;
+use alloy::{primitives::Address as EthAddress, providers::Provider, transports::Transport};
 use mysten_metrics::spawn_logged_monitored_task;
 use tokio::{
     sync::watch,
@@ -35,11 +35,7 @@ pub struct EthSyncer<P> {
 /// Map from contract address to their start block.
 pub type EthTargetAddresses = HashMap<EthAddress, u64>;
 
-#[allow(clippy::new_without_default)]
-impl<P> EthSyncer<P>
-where
-    P: ethers::providers::JsonRpcClient + 'static,
-{
+impl<P: 'static> EthSyncer<P> {
     pub fn new(eth_client: Arc<EthClient<P>>, contract_addresses: EthTargetAddresses) -> Self {
         Self {
             eth_client,
@@ -47,13 +43,16 @@ where
         }
     }
 
-    pub async fn run(
+    pub async fn run<T: Transport + Clone>(
         self,
     ) -> BridgeResult<(
         Vec<JoinHandle<()>>,
         mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
         watch::Receiver<u64>,
-    )> {
+    )>
+    where
+        P: Provider<T>,
+    {
         let (eth_evnets_tx, eth_events_rx) = mysten_metrics::metered_channel::channel(
             ETH_EVENTS_CHANNEL_SIZE,
             &mysten_metrics::get_metrics()
@@ -86,10 +85,12 @@ where
         Ok((task_handles, eth_events_rx, last_finalized_block_rx))
     }
 
-    async fn run_finalized_block_refresh_task(
+    async fn run_finalized_block_refresh_task<T: Transport + Clone>(
         last_finalized_block_sender: watch::Sender<u64>,
         eth_client: Arc<EthClient<P>>,
-    ) {
+    ) where
+        P: Provider<T>,
+    {
         tracing::info!("Starting finalized block refresh task.");
         let mut last_block_number = 0;
         let mut interval = time::interval(FINALIZED_BLOCK_QUERY_INTERVAL);
@@ -118,13 +119,15 @@ where
     }
 
     // TODO: define a type for block number for readability
-    async fn run_event_listening_task(
+    async fn run_event_listening_task<T: Transport + Clone>(
         contract_address: EthAddress,
         mut start_block: u64,
         mut last_finalized_block_receiver: watch::Receiver<u64>,
         events_sender: mysten_metrics::metered_channel::Sender<(EthAddress, u64, Vec<EthLog>)>,
         eth_client: Arc<EthClient<P>>,
-    ) {
+    ) where
+        P: Provider<T>,
+    {
         tracing::info!(contract_address=?contract_address, "Starting eth events listening task from block {start_block}");
         let mut more_blocks = false;
         loop {
@@ -187,7 +190,7 @@ where
 mod tests {
     use std::{collections::HashSet, str::FromStr};
 
-    use ethers::types::{Log, TxHash, U256, U64};
+    use alloy::{primitives::TxHash, rpc::types::Log};
     use prometheus::Registry;
     use tokio::sync::mpsc::error::TryRecvError;
 
@@ -206,17 +209,17 @@ mod tests {
         mock_last_finalized_block(&mock_provider, 777);
         let client = EthClient::new_mocked(
             mock_provider.clone(),
-            HashSet::from_iter(vec![EthAddress::zero()]),
+            HashSet::from_iter(vec![EthAddress::ZERO]),
         );
         let result = client.get_last_finalized_block_id().await.unwrap();
         assert_eq!(result, 777);
 
-        let addresses = HashMap::from_iter(vec![(EthAddress::zero(), 100)]);
+        let addresses = HashMap::from_iter(vec![(EthAddress::ZERO, 100)]);
         let log = Log {
-            address: EthAddress::zero(),
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(777)),
-            log_index: Some(U256::from(3)),
+            inner: alloy::primitives::Log::empty(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(777),
+            log_index: Some(3),
             ..Default::default()
         };
         let eth_log = EthLog {
@@ -227,7 +230,7 @@ mod tests {
         };
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             100,
             777,
             vec![log.clone()],
@@ -243,14 +246,14 @@ mod tests {
         finalized_block_rx.changed().await.unwrap();
         assert_eq!(*finalized_block_rx.borrow(), 777);
         let (contract_address, end_block, received_logs) = logs_rx.recv().await.unwrap();
-        assert_eq!(contract_address, EthAddress::zero());
+        assert_eq!(contract_address, EthAddress::ZERO);
         assert_eq!(end_block, 777);
         assert_eq!(received_logs, vec![eth_log.clone()]);
         assert_eq!(logs_rx.try_recv().unwrap_err(), TryRecvError::Empty);
 
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             778,
             888,
             vec![log.clone()],
@@ -261,7 +264,7 @@ mod tests {
         finalized_block_rx.changed().await.unwrap();
         assert_eq!(*finalized_block_rx.borrow(), 888);
         let (contract_address, end_block, received_logs) = logs_rx.recv().await.unwrap();
-        assert_eq!(contract_address, EthAddress::zero());
+        assert_eq!(contract_address, EthAddress::ZERO);
         assert_eq!(end_block, 888);
         assert_eq!(received_logs, vec![eth_log]);
         assert_eq!(logs_rx.try_recv().unwrap_err(), TryRecvError::Empty);
@@ -285,33 +288,38 @@ mod tests {
             HashSet::from_iter(vec![another_address]),
         );
 
-        let addresses = HashMap::from_iter(vec![(EthAddress::zero(), 100), (another_address, 200)]);
+        let addresses = HashMap::from_iter(vec![(EthAddress::ZERO, 100), (another_address, 200)]);
 
         let log1 = Log {
-            address: EthAddress::zero(),
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(101)),
-            log_index: Some(U256::from(5)),
+            inner: alloy::primitives::Log::empty(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(101),
+            log_index: Some(5),
             ..Default::default()
         };
         let eth_log1 = EthLog {
-            block_number: log1.block_number.unwrap().as_u64(),
+            block_number: log1.block_number.unwrap(),
             tx_hash: log1.transaction_hash.unwrap(),
             log_index_in_tx: 0,
             log: log1.clone(),
         };
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             100,
             198,
             vec![log1.clone()],
         );
         let log2 = Log {
-            address: another_address,
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(201)),
-            log_index: Some(U256::from(6)),
+            inner: alloy::primitives::Log::new(
+                another_address,
+                Default::default(),
+                Default::default(),
+            )
+            .unwrap(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(201),
+            log_index: Some(6),
             ..Default::default()
         };
         // Mock logs for another_address although it shouldn't be queried. We don't
@@ -340,34 +348,39 @@ mod tests {
         assert_eq!(logs_rx.try_recv().unwrap_err(), TryRecvError::Empty);
 
         let log1 = Log {
-            address: EthAddress::zero(),
-            block_number: Some(U64::from(200)),
-            transaction_hash: Some(TxHash::random()),
-            log_index: Some(U256::from(7)),
+            inner: alloy::primitives::Log::empty(),
+            block_number: Some(200),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            log_index: Some(7),
             ..Default::default()
         };
         let eth_log1 = EthLog {
-            block_number: log1.block_number.unwrap().as_u64(),
+            block_number: log1.block_number.unwrap(),
             tx_hash: log1.transaction_hash.unwrap(),
             log_index_in_tx: 0,
             log: log1.clone(),
         };
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             199,
             400,
             vec![log1.clone()],
         );
         let log2 = Log {
-            address: another_address,
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(201)),
-            log_index: Some(U256::from(9)),
+            inner: alloy::primitives::Log::new(
+                another_address,
+                Default::default(),
+                Default::default(),
+            )
+            .unwrap(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(201),
+            log_index: Some(9),
             ..Default::default()
         };
         let eth_log2 = EthLog {
-            block_number: log2.block_number.unwrap().as_u64(),
+            block_number: log2.block_number.unwrap(),
             tx_hash: log2.transaction_hash.unwrap(),
             log_index_in_tx: 0,
             log: log2.clone(),
@@ -413,24 +426,24 @@ mod tests {
         mock_last_finalized_block(&mock_provider, last_finalized_block);
         let client = EthClient::new_mocked(
             mock_provider.clone(),
-            HashSet::from_iter(vec![EthAddress::zero()]),
+            HashSet::from_iter(vec![EthAddress::ZERO]),
         );
         let result = client.get_last_finalized_block_id().await.unwrap();
         assert_eq!(result, last_finalized_block);
 
-        let addresses = HashMap::from_iter(vec![(EthAddress::zero(), start_block)]);
+        let addresses = HashMap::from_iter(vec![(EthAddress::ZERO, start_block)]);
         let log = Log {
-            address: EthAddress::zero(),
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(start_block)),
-            log_index: Some(U256::from(3)),
+            inner: alloy::primitives::Log::empty(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(start_block),
+            log_index: Some(3),
             ..Default::default()
         };
         let log2 = Log {
-            address: EthAddress::zero(),
-            transaction_hash: Some(TxHash::random()),
-            block_number: Some(U64::from(last_finalized_block)),
-            log_index: Some(U256::from(3)),
+            inner: alloy::primitives::Log::empty(),
+            transaction_hash: Some(TxHash::new(rand::random())),
+            block_number: Some(last_finalized_block),
+            log_index: Some(3),
             ..Default::default()
         };
         let eth_log = EthLog {
@@ -448,7 +461,7 @@ mod tests {
         // First query handles [start, start + ETH_LOG_QUERY_MAX_BLOCK_RANGE - 1]
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             start_block,
             start_block + ETH_LOG_QUERY_MAX_BLOCK_RANGE - 1,
             vec![log.clone()],
@@ -457,7 +470,7 @@ mod tests {
         // last_finalized_block]
         mock_get_logs(
             &mock_provider,
-            EthAddress::zero(),
+            EthAddress::ZERO,
             start_block + ETH_LOG_QUERY_MAX_BLOCK_RANGE,
             last_finalized_block,
             vec![log2.clone()],
@@ -472,11 +485,11 @@ mod tests {
         finalized_block_rx.changed().await.unwrap();
         assert_eq!(*finalized_block_rx.borrow(), last_finalized_block);
         let (contract_address, end_block, received_logs) = logs_rx.recv().await.unwrap();
-        assert_eq!(contract_address, EthAddress::zero());
+        assert_eq!(contract_address, EthAddress::ZERO);
         assert_eq!(end_block, start_block + ETH_LOG_QUERY_MAX_BLOCK_RANGE - 1);
         assert_eq!(received_logs, vec![eth_log.clone()]);
         let (contract_address, end_block, received_logs) = logs_rx.recv().await.unwrap();
-        assert_eq!(contract_address, EthAddress::zero());
+        assert_eq!(contract_address, EthAddress::ZERO);
         assert_eq!(end_block, last_finalized_block);
         assert_eq!(received_logs, vec![eth_log2.clone()]);
         Ok(())

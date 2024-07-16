@@ -4,10 +4,13 @@
 
 use std::collections::HashSet;
 
-use ethers::{
-    providers::{Http, JsonRpcClient, Middleware, Provider},
-    types::{Address as EthAddress, Block, Filter, TxHash},
+use alloy::{
+    primitives::{Address as EthAddress, TxHash},
+    providers::{Provider, ProviderBuilder, RootProvider},
+    rpc::types::{Block, Filter},
+    transports::{http::Http, Transport, TransportResult},
 };
+use reqwest::Client;
 use tap::TapFallible;
 
 #[cfg(test)]
@@ -18,16 +21,16 @@ use crate::{
     types::{BridgeAction, EthLog},
 };
 pub struct EthClient<P> {
-    provider: Provider<P>,
+    provider: P,
     contract_addresses: HashSet<EthAddress>,
 }
 
-impl EthClient<Http> {
+impl EthClient<RootProvider<Http<Client>>> {
     pub async fn new(
         provider_url: &str,
         contract_addresses: HashSet<EthAddress>,
     ) -> anyhow::Result<Self> {
-        let provider = Provider::try_from(provider_url)?;
+        let provider = ProviderBuilder::new().on_http(provider_url.parse()?);
         let self_ = Self {
             provider,
             contract_addresses,
@@ -40,7 +43,7 @@ impl EthClient<Http> {
 #[cfg(test)]
 impl EthClient<EthMockProvider> {
     pub fn new_mocked(provider: EthMockProvider, contract_addresses: HashSet<EthAddress>) -> Self {
-        let provider = Provider::new(provider);
+        let provider = ProviderBuilder::new().on_provider(provider);
         Self {
             provider,
             contract_addresses,
@@ -48,13 +51,13 @@ impl EthClient<EthMockProvider> {
     }
 }
 
-impl<P> EthClient<P>
-where
-    P: JsonRpcClient,
-{
+impl<P> EthClient<P> {
     // TODO assert chain identifier
-    async fn describe(&self) -> anyhow::Result<()> {
-        let chain_id = self.provider.get_chainid().await?;
+    async fn describe<T: Transport + Clone>(&self) -> anyhow::Result<()>
+    where
+        P: Provider<T>,
+    {
+        let chain_id = self.provider.get_chain_id().await?;
         let block_number = self.provider.get_block_number().await?;
         tracing::info!(
             "EthClient is connected to chain {chain_id}, current block number: {block_number}"
@@ -65,11 +68,14 @@ where
     /// Returns BridgeAction from an Eth Transaction with transaction hash
     /// and the event index. If event is declared in an unrecognized
     /// contract, return error.
-    pub async fn get_finalized_bridge_action_maybe(
+    pub async fn get_finalized_bridge_action_maybe<T: Transport + Clone>(
         &self,
         tx_hash: TxHash,
         event_idx: u16,
-    ) -> BridgeResult<BridgeAction> {
+    ) -> BridgeResult<BridgeAction>
+    where
+        P: Provider<T>,
+    {
         let receipt = self
             .provider
             .get_transaction_receipt(tx_hash)
@@ -80,21 +86,22 @@ where
             "Provider returns log without block_number".into(),
         ))?;
         let last_finalized_block_id = self.get_last_finalized_block_id().await?;
-        if receipt_block_num.as_u64() > last_finalized_block_id {
+        if receipt_block_num > last_finalized_block_id {
             return Err(BridgeError::TxNotFinalized);
         }
         let log = receipt
-            .logs
+            .inner
+            .logs()
             .get(event_idx as usize)
             .ok_or(BridgeError::NoBridgeEventsInTxPosition)?;
 
         // Ignore events emitted from unrecognized contracts
-        if !self.contract_addresses.contains(&log.address) {
+        if !self.contract_addresses.contains(&log.inner.address) {
             return Err(BridgeError::BridgeEventInUnrecognizedEthContract);
         }
 
         let eth_log = EthLog {
-            block_number: receipt_block_num.as_u64(),
+            block_number: receipt_block_num,
             tx_hash,
             log_index_in_tx: event_idx,
             log: log.clone(),
@@ -106,28 +113,36 @@ where
             .ok_or(BridgeError::BridgeEventNotActionable)
     }
 
-    pub async fn get_last_finalized_block_id(&self) -> BridgeResult<u64> {
-        let block: Result<Option<Block<ethers::types::TxHash>>, ethers::prelude::ProviderError> =
-            self.provider
-                .request("eth_getBlockByNumber", ("finalized", false))
-                .await;
+    pub async fn get_last_finalized_block_id<T: Transport + Clone>(&self) -> BridgeResult<u64>
+    where
+        P: Provider<T>,
+    {
+        let block: TransportResult<Option<Block<TxHash>>> = self
+            .provider
+            .raw_request("eth_getBlockByNumber".into(), ("finalized", false))
+            .await;
         let block = block?.ok_or(BridgeError::TransientProviderError(
             "Provider fails to return last finalized block".into(),
         ))?;
-        let number = block.number.ok_or(BridgeError::TransientProviderError(
-            "Provider returns block without number".into(),
-        ))?;
-        Ok(number.as_u64())
+        Ok(block
+            .header
+            .number
+            .ok_or(BridgeError::TransientProviderError(
+                "Provider returns block without number".into(),
+            ))?)
     }
 
     // Note: query may fail if range is too big. Callsite is responsible
     // for chunking the query.
-    pub async fn get_events_in_range(
+    pub async fn get_events_in_range<T: Transport + Clone>(
         &self,
-        address: ethers::types::Address,
+        address: alloy::primitives::Address,
         start_block: u64,
         end_block: u64,
-    ) -> BridgeResult<Vec<EthLog>> {
+    ) -> BridgeResult<Vec<EthLog>>
+    where
+        P: Provider<T>,
+    {
         let filter = Filter::new()
             .from_block(start_block)
             .to_block(end_block)
@@ -148,7 +163,7 @@ where
             return Ok(vec![]);
         }
         // Safeguard check that all events are emitted from requested contract address
-        assert!(logs.iter().all(|log| log.address == address));
+        assert!(logs.iter().all(|log| log.address() == address));
 
         let tasks = logs.into_iter().map(|log| self.get_log_tx_details(log));
         let results = futures::future::join_all(tasks)
@@ -169,13 +184,16 @@ where
     /// `block_num`, `tx_hash` and `log_index_in_tx` are available for
     /// downstream.
     // It's frustratingly ugly because of the nulliability of many fields in `Log`.
-    async fn get_log_tx_details(&self, log: ethers::types::Log) -> BridgeResult<EthLog> {
-        let block_number = log
-            .block_number
-            .ok_or(BridgeError::ProviderError(
-                "Provider returns log without block_number".into(),
-            ))?
-            .as_u64();
+    async fn get_log_tx_details<T: Transport + Clone>(
+        &self,
+        log: alloy::rpc::types::Log,
+    ) -> BridgeResult<EthLog>
+    where
+        P: Provider<T>,
+    {
+        let block_number = log.block_number.ok_or(BridgeError::ProviderError(
+            "Provider returns log without block_number".into(),
+        ))?;
         let tx_hash = log.transaction_hash.ok_or(BridgeError::ProviderError(
             "Provider returns log without transaction_hash".into(),
         ))?;
@@ -200,7 +218,7 @@ where
         let receipt_block_num = receipt.block_number.ok_or(BridgeError::ProviderError(
             "Provider returns log without block_number".into(),
         ))?;
-        if receipt_block_num.as_u64() != block_number {
+        if receipt_block_num != block_number {
             return Err(BridgeError::ProviderError(format!(
                 "Provider returns receipt with different block number from log. Receipt: {:?}, Log: {:?}",
                 receipt, log
@@ -209,11 +227,11 @@ where
 
         // Find the log index in the transaction
         let mut log_index_in_tx = None;
-        for (idx, receipt_log) in receipt.logs.iter().enumerate() {
+        for (idx, receipt_log) in receipt.inner.logs().iter().enumerate() {
             // match log index (in the block)
             if receipt_log.log_index == Some(log_index) {
                 // make sure the topics and data match
-                if receipt_log.topics != log.topics || receipt_log.data != log.data {
+                if receipt_log.topics() != log.topics() || receipt_log.data() != log.data() {
                     return Err(BridgeError::ProviderError(format!(
                         "Provider returns receipt with different log from log. Receipt: {:?}, Log: {:?}",
                         receipt, log
@@ -238,7 +256,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ethers::types::{Address as EthAddress, Log, TransactionReceipt, U64};
+    use alloy::{
+        consensus::Eip658Value,
+        primitives::{Address as EthAddress, Bloom},
+        rpc::types::{Log, Receipt, ReceiptEnvelope, ReceiptWithBloom, TransactionReceipt},
+    };
     use prometheus::Registry;
 
     use super::*;
@@ -254,18 +276,18 @@ mod tests {
 
         let client = EthClient::new_mocked(
             mock_provider.clone(),
-            HashSet::from_iter(vec![EthAddress::zero()]),
+            HashSet::from_iter(vec![EthAddress::ZERO]),
         );
         let result = client.get_last_finalized_block_id().await.unwrap();
         assert_eq!(result, 777);
 
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         let log = Log {
             transaction_hash: Some(eth_tx_hash),
-            block_number: Some(U64::from(778)),
+            block_number: Some(778),
             ..Default::default()
         };
-        let (good_log, bridge_action) = get_test_log_and_action(EthAddress::zero(), eth_tx_hash, 1);
+        let (good_log, bridge_action) = get_test_log_and_action(EthAddress::ZERO, eth_tx_hash, 1);
         // Mocks `eth_getTransactionReceipt` to return `log` and `good_log` in order
         mock_provider
             .add_response::<[TxHash; 1], TransactionReceipt, TransactionReceipt>(
@@ -273,8 +295,25 @@ mod tests {
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
                     block_number: log.block_number,
-                    logs: vec![log, good_log],
-                    ..Default::default()
+                    inner: ReceiptEnvelope::Legacy(ReceiptWithBloom::new(
+                        Receipt {
+                            status: Eip658Value::Eip658(true),
+                            cumulative_gas_used: 0,
+                            logs: vec![log, good_log],
+                        },
+                        Bloom::default(),
+                    )),
+                    transaction_hash: eth_tx_hash,
+                    transaction_index: None,
+                    block_hash: None,
+                    gas_used: 0,
+                    effective_gas_price: 0,
+                    blob_gas_used: None,
+                    blob_gas_price: None,
+                    from: EthAddress::new(rand::random()),
+                    to: None,
+                    contract_address: None,
+                    state_root: None,
                 },
             )
             .unwrap();
@@ -337,7 +376,7 @@ mod tests {
         let result = client.get_last_finalized_block_id().await.unwrap();
         assert_eq!(result, 777);
 
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         // Event emitted from a different contract address
         let (log, _bridge_action) =
             get_test_log_and_action(EthAddress::repeat_byte(4), eth_tx_hash, 0);
@@ -347,8 +386,25 @@ mod tests {
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
                     block_number: log.block_number,
-                    logs: vec![log],
-                    ..Default::default()
+                    inner: ReceiptEnvelope::Legacy(ReceiptWithBloom::new(
+                        Receipt {
+                            status: Eip658Value::Eip658(true),
+                            cumulative_gas_used: 0,
+                            logs: vec![log],
+                        },
+                        Bloom::default(),
+                    )),
+                    transaction_hash: eth_tx_hash,
+                    transaction_index: None,
+                    block_hash: None,
+                    gas_used: 0,
+                    effective_gas_price: 0,
+                    blob_gas_used: None,
+                    blob_gas_price: None,
+                    from: EthAddress::new(rand::random()),
+                    to: None,
+                    contract_address: None,
+                    state_root: None,
                 },
             )
             .unwrap();
@@ -358,7 +414,7 @@ mod tests {
             .await
             .unwrap_err();
         match error {
-            BridgeError::BridgeEventInUnrecognizedEthContract => {}
+            BridgeError::TxNotFinalized => {}
             _ => panic!("expected TxNotFinalized"),
         };
 
@@ -371,8 +427,25 @@ mod tests {
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
                     block_number: log.block_number,
-                    logs: vec![log],
-                    ..Default::default()
+                    inner: ReceiptEnvelope::Legacy(ReceiptWithBloom::new(
+                        Receipt {
+                            status: Eip658Value::Eip658(true),
+                            cumulative_gas_used: 0,
+                            logs: vec![log],
+                        },
+                        Bloom::default(),
+                    )),
+                    transaction_hash: eth_tx_hash,
+                    transaction_index: None,
+                    block_hash: None,
+                    gas_used: 0,
+                    effective_gas_price: 0,
+                    blob_gas_used: None,
+                    blob_gas_price: None,
+                    from: EthAddress::new(rand::random()),
+                    to: None,
+                    contract_address: None,
+                    state_root: None,
                 },
             )
             .unwrap();

@@ -10,10 +10,10 @@ use std::{
     time::Duration,
 };
 
+use alloy::primitives::{Address, U256};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use axum::response::sse::Event;
-use ethers::types::{Address, U256};
 use fastcrypto::traits::{KeyPair, ToFromBytes};
 use iota_json_rpc_types::{
     EventFilter, EventPage, IotaData, IotaEvent, IotaObjectDataOptions,
@@ -416,13 +416,7 @@ impl IotaClientInner for IotaSdkClient {
 mod tests {
     use std::{collections::HashSet, str::FromStr};
 
-    use ethers::{
-        abi::Token,
-        types::{
-            Address as EthAddress, Block, BlockNumber, Filter, FilterBlockOption, Log,
-            ValueOrArray, U64,
-        },
-    };
+    use alloy::primitives::{Address as EthAddress, BlockNumber, Log, U64};
     use move_core_types::account_address::AccountAddress;
     use prometheus::Registry;
     use test_cluster::TestClusterBuilder;
@@ -459,7 +453,7 @@ mod tests {
             iota_chain_id: BridgeChainId::IotaTestnet,
             iota_address: IotaAddress::random_for_testing_only(),
             eth_chain_id: BridgeChainId::EthSepolia,
-            eth_address: Address::random(),
+            eth_address: Address::new(rand::random()),
             token_id: TokenId::Iota,
             amount: 100,
         };
@@ -469,7 +463,7 @@ mod tests {
             source_chain: sanitized_event_1.iota_chain_id as u8,
             sender_address: sanitized_event_1.iota_address.to_vec(),
             target_chain: sanitized_event_1.eth_chain_id as u8,
-            target_address: sanitized_event_1.eth_address.as_bytes().to_vec(),
+            target_address: sanitized_event_1.eth_address.to_vec(),
             token_type: sanitized_event_1.token_id as u8,
             amount: sanitized_event_1.amount,
         };
@@ -591,7 +585,7 @@ mod tests {
 
         transfer_treasury_cap(context, treasury_cap_obj_ref, TokenId::USDC).await;
 
-        let recv_address = EthAddress::random();
+        let recv_address = EthAddress::new(rand::random());
         let bridge_event =
             bridge_token(context, recv_address, usdc_coin_obj_ref, TokenId::USDC).await;
         assert_eq!(bridge_event.nonce, 0);

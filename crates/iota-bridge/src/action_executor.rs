@@ -490,7 +490,7 @@ mod tests {
             _handles,
             gas_object_ref,
             iota_address,
-        ) = setup();
+        ) = setup().await;
 
         // TODO: remove once we don't rely on env var to get object id
         std::env::set_var("ROOT_BRIDGE_OBJECT_ID", "0x09");
@@ -663,7 +663,7 @@ mod tests {
             _handles,
             gas_object_ref,
             iota_address,
-        ) = setup();
+        ) = setup().await;
 
         // TODO: remove once we don't rely on env var to get object id
         std::env::set_var("ROOT_BRIDGE_OBJECT_ID", "0x09");
@@ -780,7 +780,7 @@ mod tests {
             _handles,
             _gas_object_ref,
             _iota_address,
-        ) = setup();
+        ) = setup().await;
 
         // TODO: remove once we don't rely on env var to get object id
         std::env::set_var("ROOT_BRIDGE_OBJECT_ID", "0x09");
@@ -858,7 +858,7 @@ mod tests {
             _handles,
             gas_object_ref,
             iota_address,
-        ) = setup();
+        ) = setup().await;
 
         // TODO: remove once we don't rely on env var to get object id
         std::env::set_var("ROOT_BRIDGE_OBJECT_ID", "0x09");
@@ -1033,7 +1033,7 @@ mod tests {
     }
 
     #[allow(clippy::type_complexity)]
-    fn setup() -> (
+    async fn setup() -> (
         mysten_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
         mysten_metrics::metered_channel::Sender<CertifiedBridgeActionExecutionWrapper>,
         IotaMockClient,
@@ -1076,7 +1076,8 @@ mod tests {
         let (mut handles, authorities, secrets) = get_test_authorities_and_run_mock_bridge_server(
             vec![2500, 2500, 2500, 2500],
             vec![mock0.clone(), mock1.clone(), mock2.clone(), mock3.clone()],
-        );
+        )
+        .await;
 
         let committee = BridgeCommittee::new(authorities).unwrap();
 

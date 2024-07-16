@@ -41,9 +41,9 @@ rocksdb.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 simulacrum.workspace = true
-snowflake-api = { version = "0.6.0" }
+snowflake-api = { version = "0.9.0" }
 strum.workspace = true
-tap = { version = "1.0.1", features = [] }
+tap = "1.0.1"
 telemetry-subscribers.workspace = true
 tempfile.workspace = true
 thiserror.workspace = true

@@ -135,7 +135,7 @@ fn build_token_bridge_approve_transaction(
                     bridge_event.nonce,
                     bridge_event.iota_address.to_vec(),
                     bridge_event.eth_chain_id,
-                    bridge_event.eth_address.to_fixed_bytes().to_vec(),
+                    bridge_event.eth_address.to_vec(),
                     bridge_event.token_id,
                     bridge_event.amount,
                 )
@@ -145,7 +145,7 @@ fn build_token_bridge_approve_transaction(
                 (
                     bridge_event.eth_chain_id,
                     bridge_event.nonce,
-                    bridge_event.eth_address.to_fixed_bytes().to_vec(),
+                    bridge_event.eth_address.to_vec(),
                     bridge_event.iota_chain_id,
                     bridge_event.iota_address.to_vec(),
                     bridge_event.token_id,

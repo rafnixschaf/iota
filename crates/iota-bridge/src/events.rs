@@ -9,7 +9,7 @@
 
 use std::str::FromStr;
 
-use ethers::types::Address as EthAddress;
+use alloy::primitives::Address as EthAddress;
 use fastcrypto::encoding::{Encoding, Hex};
 use iota_json_rpc_types::IotaEvent;
 use iota_types::{base_types::IotaAddress, digests::TransactionDigest};
@@ -190,7 +190,7 @@ impl IotaBridgeEvent {
 pub mod tests {
     use std::str::FromStr;
 
-    use ethers::types::Address as EthAddress;
+    use alloy::primitives::Address as EthAddress;
     use iota_json_rpc_types::IotaEvent;
     use iota_types::{
         base_types::{IotaAddress, ObjectID},
@@ -212,7 +212,7 @@ pub mod tests {
             iota_chain_id: BridgeChainId::IotaTestnet,
             iota_address: IotaAddress::random_for_testing_only(),
             eth_chain_id: BridgeChainId::EthSepolia,
-            eth_address: EthAddress::random(),
+            eth_address: EthAddress::new(rand::random()),
             token_id: TokenId::Iota,
             amount: 100,
         };
@@ -222,7 +222,7 @@ pub mod tests {
             source_chain: sanitized_event.iota_chain_id as u8,
             sender_address: sanitized_event.iota_address.to_vec(),
             target_chain: sanitized_event.eth_chain_id as u8,
-            target_address: sanitized_event.eth_address.as_bytes().to_vec(),
+            target_address: sanitized_event.eth_address.to_vec(),
             token_type: sanitized_event.token_id as u8,
             amount: sanitized_event.amount,
         };

@@ -122,13 +122,13 @@ impl BridgeRequestHandlerTrait for BridgeRequestMockHandler {
     }
 }
 
-pub fn run_mock_server(
+pub async fn run_mock_server(
     socket_address: SocketAddr,
     mock_handler: BridgeRequestMockHandler,
 ) -> tokio::task::JoinHandle<()> {
     tracing::info!("Starting mock server at {}", socket_address);
+    let listener = tokio::net::TcpListener::bind(socket_address).await.unwrap();
     tokio::spawn(async move {
-        let listener = tokio::net::TcpListener::bind(socket_address).await.unwrap();
         axum::serve(
             listener,
             make_router(Arc::new(mock_handler)).into_make_service(),

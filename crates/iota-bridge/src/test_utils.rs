@@ -8,12 +8,13 @@ use std::{
     path::PathBuf,
 };
 
-use ethers::{
-    abi::{long_signature, ParamType},
-    types::{
-        Address as EthAddress, Block, BlockNumber, Filter, FilterBlockOption, Log,
-        TransactionReceipt, TxHash, ValueOrArray, U64,
+use alloy::{
+    consensus::{Eip658Value, ReceiptEnvelope, ReceiptWithBloom},
+    primitives::{Address as EthAddress, Bloom, TxHash, U256},
+    rpc::types::{
+        Block, Filter, FilterBlockOption, FilterSet, Header, Log, Receipt, TransactionReceipt,
     },
+    sol_types::{SolEvent, SolValue},
 };
 use fastcrypto::{
     encoding::{Encoding, Hex},
@@ -83,14 +84,14 @@ pub fn get_test_iota_to_eth_bridge_action(
             iota_chain_id: BridgeChainId::IotaLocalTest,
             iota_address: IotaAddress::random_for_testing_only(),
             eth_chain_id: BridgeChainId::EthLocalTest,
-            eth_address: EthAddress::random(),
+            eth_address: EthAddress::new(rand::random()),
             token_id: TokenId::Iota,
             amount: amount.unwrap_or(100_000),
         },
     })
 }
 
-pub fn run_mock_bridge_server(
+pub async fn run_mock_bridge_server(
     mock_handlers: Vec<BridgeRequestMockHandler>,
 ) -> (Vec<JoinHandle<()>>, Vec<u16>) {
     let mut handles = vec![];
@@ -102,14 +103,15 @@ pub fn run_mock_bridge_server(
         let server_handle = run_mock_server(
             SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), port),
             mock_handler.clone(),
-        );
+        )
+        .await;
         ports.push(port);
         handles.push(server_handle);
     }
     (handles, ports)
 }
 
-pub fn get_test_authorities_and_run_mock_bridge_server(
+pub async fn get_test_authorities_and_run_mock_bridge_server(
     voting_power: Vec<u64>,
     mock_handlers: Vec<BridgeRequestMockHandler>,
 ) -> (
@@ -118,7 +120,7 @@ pub fn get_test_authorities_and_run_mock_bridge_server(
     Vec<BridgeAuthorityKeyPair>,
 ) {
     assert_eq!(voting_power.len(), mock_handlers.len());
-    let (handles, ports) = run_mock_bridge_server(mock_handlers);
+    let (handles, ports) = run_mock_bridge_server(mock_handlers).await;
     let mut authorites = vec![];
     let mut secrets = vec![];
     for (port, vp) in ports.iter().zip(voting_power) {
@@ -139,8 +141,11 @@ pub fn sign_action_with_key(
 }
 
 pub fn mock_last_finalized_block(mock_provider: &EthMockProvider, block_number: u64) {
-    let block = Block::<ethers::types::TxHash> {
-        number: Some(U64::from(block_number)),
+    let block = Block::<TxHash> {
+        header: Header {
+            number: Some(block_number),
+            ..Default::default()
+        },
         ..Default::default()
     };
     mock_provider
@@ -157,20 +162,20 @@ pub fn mock_get_logs(
     to_block: u64,
     logs: Vec<Log>,
 ) {
-    mock_provider.add_response::<[ethers::types::Filter; 1], Vec<ethers::types::Log>, Vec<ethers::types::Log>>(
-        "eth_getLogs",
-        [
-            Filter {
+    mock_provider
+        .add_response::<[Filter; 1], Vec<Log>, Vec<Log>>(
+            "eth_getLogs",
+            [Filter {
                 block_option: FilterBlockOption::Range {
-                    from_block: Some(BlockNumber::Number(U64::from(from_block))),
-                    to_block: Some(BlockNumber::Number(U64::from(to_block))),
+                    from_block: Some(from_block.into()),
+                    to_block: Some(to_block.into()),
                 },
-                address: Some(ValueOrArray::Value(address)),
-                topics: [None, None, None, None],
-            }
-        ],
-        logs.clone(),
-    ).unwrap();
+                address: FilterSet::from(address),
+                topics: Default::default(),
+            }],
+            logs.clone(),
+        )
+        .unwrap();
 
     for log in logs {
         mock_provider
@@ -179,12 +184,33 @@ pub fn mock_get_logs(
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
                     block_number: log.block_number,
-                    logs: vec![log],
-                    ..Default::default()
+                    inner: ReceiptEnvelope::Legacy(ReceiptWithBloom::new(
+                        Receipt {
+                            status: Eip658Value::Eip658(true),
+                            cumulative_gas_used: 0,
+                            logs: vec![log],
+                        },
+                        Bloom::default(),
+                    )),
+                    transaction_hash: TxHash::new(rand::random()),
+                    transaction_index: None,
+                    block_hash: None,
+                    gas_used: 0,
+                    effective_gas_price: 0,
+                    blob_gas_used: None,
+                    blob_gas_price: None,
+                    from: EthAddress::new(rand::random()),
+                    to: None,
+                    contract_address: None,
+                    state_root: None,
                 },
             )
             .unwrap();
     }
+}
+
+alloy::sol! {
+    event TokensBridgedToIota(uint8 v1, uint64 v2, uint8 v3, uint8 v4, uint64 v5, address a, bytes b);
 }
 
 /// Returns a test Log and corresponding BridgeAction
@@ -196,52 +222,40 @@ pub fn get_test_log_and_action(
 ) -> (Log, BridgeAction) {
     let token_code = 3u8;
     let amount = 10000000u64;
-    let source_address = EthAddress::random();
+    let source_address = EthAddress::new(rand::random());
     let iota_address: IotaAddress = IotaAddress::random_for_testing_only();
     let target_address = Hex::decode(&iota_address.to_string()).unwrap();
-    // Note: must use `encode` rather than `encode_packaged`
-    let encoded = ethers::abi::encode(&[
+    let encoded = (
         // u8 is encoded as u256 in abi standard
-        ethers::abi::Token::Uint(ethers::types::U256::from(token_code)),
-        ethers::abi::Token::Uint(ethers::types::U256::from(amount)),
-        ethers::abi::Token::Address(source_address),
-        ethers::abi::Token::Bytes(target_address.clone()),
-    ]);
+        U256::from(token_code),
+        U256::from(amount),
+        source_address,
+        &target_address,
+    )
+        .abi_encode_params();
+    let topics = vec![
+        TokensBridgedToIota::SIGNATURE_HASH,
+        hex!("0000000000000000000000000000000000000000000000000000000000000001").into(), /* chain id: iota testnet */
+        hex!("0000000000000000000000000000000000000000000000000000000000000010").into(), /* nonce: 16 */
+        hex!("000000000000000000000000000000000000000000000000000000000000000b").into(), /* chain id: sepolia */
+    ];
     let log = Log {
-        address: contract_address,
-        topics: vec![
-            long_signature(
-                "TokensBridgedToIota",
-                &[
-                    ParamType::Uint(8),
-                    ParamType::Uint(64),
-                    ParamType::Uint(8),
-                    ParamType::Uint(8),
-                    ParamType::Uint(64),
-                    ParamType::Address,
-                    ParamType::Bytes,
-                ],
-            ),
-            hex!("0000000000000000000000000000000000000000000000000000000000000001").into(), /* chain id: iota testnet */
-            hex!("0000000000000000000000000000000000000000000000000000000000000010").into(), /* nonce: 16 */
-            hex!("000000000000000000000000000000000000000000000000000000000000000b").into(), /* chain id: sepolia */
-        ],
-        data: encoded.into(),
-        block_hash: Some(TxHash::random()),
-        block_number: Some(1.into()),
+        inner: alloy::primitives::Log::new(contract_address, topics, encoded.into()).unwrap(),
+        block_hash: Some(TxHash::new(rand::random())),
+        block_number: Some(1),
         transaction_hash: Some(tx_hash),
-        log_index: Some(0.into()),
+        log_index: Some(0),
         ..Default::default()
     };
-    let topic_1: [u8; 32] = log.topics[1].into();
-    let topic_3: [u8; 32] = log.topics[3].into();
+    let topic_1: [u8; 32] = log.topics()[1].into();
+    let topic_3: [u8; 32] = log.topics()[3].into();
 
     let bridge_action = BridgeAction::EthToIotaBridgeAction(EthToIotaBridgeAction {
         eth_tx_hash: tx_hash,
         eth_event_index: event_index,
         eth_bridge_event: EthToIotaTokenBridgeV1 {
             eth_chain_id: BridgeChainId::try_from(topic_1[topic_1.len() - 1]).unwrap(),
-            nonce: u64::from_be_bytes(log.topics[2].as_ref()[24..32].try_into().unwrap()),
+            nonce: u64::from_be_bytes(log.topics()[2][24..32].try_into().unwrap()),
             iota_chain_id: BridgeChainId::try_from(topic_3[topic_3.len() - 1]).unwrap(),
             token_id: TokenId::try_from(token_code).unwrap(),
             amount,
@@ -421,7 +435,7 @@ pub async fn bridge_token(
             vec![
                 CallArg::Object(*get_root_bridge_object_arg()),
                 CallArg::Pure(bcs::to_bytes(&(BridgeChainId::EthLocalTest as u8)).unwrap()),
-                CallArg::Pure(bcs::to_bytes(&recv_address.as_bytes()).unwrap()),
+                CallArg::Pure(bcs::to_bytes(&recv_address).unwrap()),
                 CallArg::Object(ObjectArg::ImmOrOwnedObject(token_ref)),
             ],
         )

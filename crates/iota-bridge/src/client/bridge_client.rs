@@ -103,8 +103,8 @@ impl BridgeClient {
             BridgeAction::EvmContractUpgradeAction(a) => {
                 let chain_id = (a.chain_id as u8).to_string();
                 let nonce = a.nonce.to_string();
-                let proxy_address = Hex::encode(a.proxy_address.as_bytes());
-                let new_impl_address = Hex::encode(a.new_impl_address.as_bytes());
+                let proxy_address = Hex::encode(a.proxy_address);
+                let new_impl_address = Hex::encode(a.new_impl_address);
                 let path = format!(
                     "sign/upgrade_evm_contract/{chain_id}/{nonce}/{proxy_address}/{new_impl_address}"
                 );
@@ -174,7 +174,10 @@ impl BridgeClient {
 
 #[cfg(test)]
 mod tests {
-    use ethers::types::{Address as EthAddress, TxHash};
+    use alloy::{
+        primitives::{Address as EthAddress, TxHash},
+        sol_types::SolValue,
+    };
     use fastcrypto::{
         hash::{HashFunction, Keccak256},
         traits::KeyPair,
@@ -264,7 +267,7 @@ mod tests {
         let mock_handler = BridgeRequestMockHandler::new();
 
         // start server
-        let (_handles, ports) = run_mock_bridge_server(vec![mock_handler.clone()]);
+        let (_handles, ports) = run_mock_bridge_server(vec![mock_handler.clone()]).await;
 
         let port = ports[0];
 
@@ -380,7 +383,7 @@ mod tests {
                 nonce: 1,
                 iota_address: IotaAddress::random_for_testing_only(),
                 eth_chain_id: BridgeChainId::EthSepolia,
-                eth_address: EthAddress::random(),
+                eth_address: EthAddress::new(rand::random()),
                 token_id: TokenId::USDT,
                 amount: 1,
             },
@@ -393,7 +396,7 @@ mod tests {
             )
         );
 
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         let eth_event_index = 6;
         let action = BridgeAction::EthToIotaBridgeAction(crate::types::EthToIotaBridgeAction {
             eth_tx_hash,
@@ -401,7 +404,7 @@ mod tests {
             eth_bridge_event: EthToIotaTokenBridgeV1 {
                 eth_chain_id: BridgeChainId::EthSepolia,
                 nonce: 1,
-                eth_address: EthAddress::random(),
+                eth_address: EthAddress::new(rand::random()),
                 iota_chain_id: BridgeChainId::IotaDevnet,
                 iota_address: IotaAddress::random_for_testing_only(),
                 token_id: TokenId::USDT,
@@ -513,7 +516,7 @@ mod tests {
             "sign/upgrade_evm_contract/12/123/0606060606060606060606060606060606060606/0909090909090909090909090909090909090909/5cd8a76b",
         );
 
-        call_data.extend(ethers::abi::encode(&[ethers::abi::Token::Uint(42.into())]));
+        call_data.extend([42u64].abi_encode_params());
         let action =
             BridgeAction::EvmContractUpgradeAction(crate::types::EvmContractUpgradeAction {
                 nonce: 123,

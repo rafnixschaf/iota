@@ -10,7 +10,7 @@
 
 use std::sync::Arc;
 
-use ethers::types::Address as EthAddress;
+use alloy::primitives::Address as EthAddress;
 use iota_json_rpc_types::IotaEvent;
 use iota_types::Identifier;
 use mysten_metrics::spawn_logged_monitored_task;
@@ -143,7 +143,7 @@ where
         store: Arc<BridgeOrchestratorTables>,
         executor_tx: mysten_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
         mut eth_events_rx: mysten_metrics::metered_channel::Receiver<(
-            ethers::types::Address,
+            alloy::primitives::Address,
             u64,
             Vec<EthLog>,
         )>,
@@ -206,7 +206,7 @@ where
 mod tests {
     use std::str::FromStr;
 
-    use ethers::types::{Address as EthAddress, TxHash};
+    use alloy::primitives::{Address as EthAddress, TxHash};
     use prometheus::Registry;
 
     use super::*;
@@ -285,10 +285,11 @@ mod tests {
             store.clone(),
         )
         .run(executor);
-        let address = EthAddress::random();
-        let (log, bridge_action) = get_test_log_and_action(address, TxHash::random(), 10);
+        let address = EthAddress::new(rand::random());
+        let (log, bridge_action) =
+            get_test_log_and_action(address, TxHash::new(rand::random()), 10);
         let log_index_in_tx = 10;
-        let log_block_num = log.block_number.unwrap().as_u64();
+        let log_block_num = log.block_number.unwrap();
         let eth_log = EthLog {
             log: log.clone(),
             tx_hash: log.transaction_hash.unwrap(),

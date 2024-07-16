@@ -9,8 +9,8 @@ use std::{
     sync::Arc,
 };
 
+use alloy::{primitives::Address as EthAddress, providers::RootProvider, transports::http::Http};
 use anyhow::anyhow;
-use ethers::types::Address as EthAddress;
 use fastcrypto::traits::EncodeDecodeBase64;
 use iota_config::Config;
 use iota_sdk::IotaClient as IotaSdkClient;
@@ -21,6 +21,7 @@ use iota_types::{
     object::Owner,
     Identifier,
 };
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use tracing::info;
@@ -118,7 +119,7 @@ impl BridgeNodeConfig {
             .map(|addr| EthAddress::from_str(addr))
             .collect::<Result<Vec<_>, _>>()?;
         let eth_client = Arc::new(
-            EthClient::<ethers::providers::Http>::new(
+            EthClient::<RootProvider<Http<Client>>>::new(
                 &self.eth_rpc_url,
                 HashSet::from_iter(eth_bridge_contracts.iter().cloned()),
             )
@@ -268,7 +269,7 @@ pub struct BridgeServerConfig {
     pub server_listen_port: u16,
     pub metrics_port: u16,
     pub iota_client: Arc<IotaClient<IotaSdkClient>>,
-    pub eth_client: Arc<EthClient<ethers::providers::Http>>,
+    pub eth_client: Arc<EthClient<RootProvider<Http<Client>>>>,
     /// A list of approved governance actions. Action in this list will be
     /// signed when requested by client.
     pub approved_governance_actions: Vec<BridgeAction>,
@@ -281,7 +282,7 @@ pub struct BridgeClientConfig {
     pub gas_object_ref: ObjectRef,
     pub metrics_port: u16,
     pub iota_client: Arc<IotaClient<IotaSdkClient>>,
-    pub eth_client: Arc<EthClient<ethers::providers::Http>>,
+    pub eth_client: Arc<EthClient<RootProvider<Http<Client>>>>,
     pub db_path: PathBuf,
     pub eth_bridge_contracts: Vec<EthAddress>,
     pub iota_bridge_modules: Vec<Identifier>,

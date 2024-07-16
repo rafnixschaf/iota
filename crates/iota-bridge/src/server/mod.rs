@@ -6,13 +6,13 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
+use alloy::primitives::Address as EthAddress;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     routing::get,
     Json, Router,
 };
-use ethers::types::Address as EthAddress;
 use fastcrypto::{
     encoding::{Encoding, Hex},
     traits::ToFromBytes,
@@ -70,7 +70,7 @@ pub(crate) fn make_router(
             COMMITTEE_BLOCKLIST_UPDATE_PATH,
             get(handle_update_committee_blocklist_action),
         )
-        .route(EMERGENCY_BUTTON_PATH, get(handle_emergecny_action))
+        .route(EMERGENCY_BUTTON_PATH, get(handle_emergency_action))
         .route(LIMIT_UPDATE_PATH, get(handle_limit_update_action))
         .route(
             ASSET_PRICE_UPDATE_PATH,
@@ -156,7 +156,7 @@ async fn handle_update_committee_blocklist_action(
     Ok(sig)
 }
 
-async fn handle_emergecny_action(
+async fn handle_emergency_action(
     Path((chain_id, nonce, action_type)): Path<(u8, u64, u8)>,
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
@@ -175,9 +175,9 @@ async fn handle_emergecny_action(
     Ok(sig)
 }
 
-async fn handle_limit_update_action(
+async fn handle_limit_update_action<H: BridgeRequestHandlerTrait + Sync + Send>(
     Path((chain_id, nonce, sending_chain_id, new_usd_limit)): Path<(u8, u64, u8, u64)>,
-    State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
+    State(handler): State<Arc<H>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
         BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
@@ -275,7 +275,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_bridge_server_handle_blocklist_update_action_path() {
-        let client = setup();
+        let client = setup().await;
 
         let pub_key_bytes = BridgeAuthorityPublicKeyBytes::from_bytes(
             &Hex::decode("02321ede33d2c2d7a8a152f275a1484edef2098f034121a602cb7d767d38680aa4")
@@ -293,7 +293,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_bridge_server_handle_emergency_action_path() {
-        let client = setup();
+        let client = setup().await;
 
         let action = BridgeAction::EmergencyAction(EmergencyAction {
             nonce: 55,
@@ -305,7 +305,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_bridge_server_handle_limit_update_action_path() {
-        let client = setup();
+        let client = setup().await;
 
         let action = BridgeAction::LimitUpdateAction(LimitUpdateAction {
             nonce: 15,
@@ -318,7 +318,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_bridge_server_handle_asset_price_update_action_path() {
-        let client = setup();
+        let client = setup().await;
 
         let action = BridgeAction::AssetPriceUpdateAction(AssetPriceUpdateAction {
             nonce: 266,
@@ -331,7 +331,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_bridge_server_handle_evm_contract_upgrade_action_path() {
-        let client = setup();
+        let client = setup().await;
 
         let action = BridgeAction::EvmContractUpgradeAction(EvmContractUpgradeAction {
             nonce: 123,
@@ -352,10 +352,10 @@ mod tests {
         client.request_sign_bridge_action(action).await.unwrap();
     }
 
-    fn setup() -> BridgeClient {
+    async fn setup() -> BridgeClient {
         let mock = BridgeRequestMockHandler::new();
         let (_handles, authorities, mut secrets) =
-            get_test_authorities_and_run_mock_bridge_server(vec![10000], vec![mock.clone()]);
+            get_test_authorities_and_run_mock_bridge_server(vec![10000], vec![mock.clone()]).await;
         mock.set_signer(secrets.swap_remove(0));
         let committee = BridgeCommittee::new(authorities).unwrap();
         let pub_key = committee.members().keys().next().unwrap();

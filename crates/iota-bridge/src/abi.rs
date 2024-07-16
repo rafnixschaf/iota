@@ -2,10 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use ethers::{
-    abi::RawLog,
-    contract::{abigen, EthLogDecode},
-    types::Address as EthAddress,
+use alloy::{
+    primitives::{Address as EthAddress, B256},
+    sol_types::SolEventInterface,
 };
 use iota_types::base_types::IotaAddress;
 use serde::{Deserialize, Serialize};
@@ -18,25 +17,25 @@ use crate::{
 // TODO: write a macro to handle variants
 
 // TODO: Add other events
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum EthBridgeEvent {
-    EthIotaBridgeEvents(EthIotaBridgeEvents),
+    EthIotaBridgeEvents(EthIotaBridge::EthIotaBridgeEvents),
 }
 
-abigen!(
+alloy::sol!(
+    #[derive(Debug, Serialize, Deserialize)]
+    #[sol(rpc)]
     EthIotaBridge,
-    "abi/iota_bridge.json",
-    event_derives(serde::Deserialize, serde::Serialize)
+    "abi/iota_bridge.json"
 );
 
 impl EthBridgeEvent {
     pub fn try_from_eth_log(log: &EthLog) -> Option<EthBridgeEvent> {
-        let raw_log = RawLog {
-            topics: log.log.topics.clone(),
-            data: log.log.data.to_vec(),
-        };
-
-        if let Ok(decoded) = EthIotaBridgeEvents::decode_log(&raw_log) {
+        if let Ok(decoded) = EthIotaBridge::EthIotaBridgeEvents::decode_raw_log(
+            log.log.topics(),
+            log.log.data().data.as_ref(),
+            true,
+        ) {
             return Some(EthBridgeEvent::EthIotaBridgeEvents(decoded));
         }
 
@@ -48,13 +47,13 @@ impl EthBridgeEvent {
 impl EthBridgeEvent {
     pub fn try_into_bridge_action(
         self,
-        eth_tx_hash: ethers::types::H256,
+        eth_tx_hash: B256,
         eth_event_index: u16,
     ) -> Option<BridgeAction> {
         match self {
             EthBridgeEvent::EthIotaBridgeEvents(event) => {
                 match event {
-                    EthIotaBridgeEvents::TokensBridgedToIotaFilter(event) => {
+                    EthIotaBridge::EthIotaBridgeEvents::TokensBridgedToIota(event) => {
                         let bridge_event = match EthToIotaTokenBridgeV1::try_from(&event) {
                             Ok(bridge_event) => bridge_event,
                             // This only happens when solidity code does not align with rust code.
@@ -98,17 +97,17 @@ pub struct EthToIotaTokenBridgeV1 {
     pub amount: u64,
 }
 
-impl TryFrom<&TokensBridgedToIotaFilter> for EthToIotaTokenBridgeV1 {
+impl TryFrom<&EthIotaBridge::TokensBridgedToIota> for EthToIotaTokenBridgeV1 {
     type Error = BridgeError;
-    fn try_from(event: &TokensBridgedToIotaFilter) -> BridgeResult<Self> {
+    fn try_from(event: &EthIotaBridge::TokensBridgedToIota) -> BridgeResult<Self> {
         Ok(Self {
             nonce: event.nonce,
-            iota_chain_id: BridgeChainId::try_from(event.destination_chain_id)?,
-            eth_chain_id: BridgeChainId::try_from(event.source_chain_id)?,
-            iota_address: IotaAddress::from_bytes(event.target_address.as_ref())?,
-            eth_address: event.source_address,
-            token_id: TokenId::try_from(event.token_code)?,
-            amount: event.iota_adjusted_amount,
+            iota_chain_id: BridgeChainId::try_from(event.destinationChainId)?,
+            eth_chain_id: BridgeChainId::try_from(event.sourceChainId)?,
+            iota_address: IotaAddress::from_bytes(event.targetAddress.as_ref())?,
+            eth_address: event.sourceAddress,
+            token_id: TokenId::try_from(event.tokenCode)?,
+            amount: event.iotaAdjustedAmount,
         })
     }
 }

@@ -6,11 +6,12 @@
 
 use std::{num::NonZeroUsize, str::FromStr, sync::Arc};
 
+use alloy::{primitives::TxHash, providers::Provider, transports::http::Http};
 use async_trait::async_trait;
 use axum::Json;
-use ethers::{providers::JsonRpcClient, types::TxHash};
 use iota_types::digests::TransactionDigest;
 use lru::LruCache;
+use reqwest::Client;
 use tap::TapFallible;
 use tokio::sync::{oneshot, Mutex};
 use tracing::{info, instrument};
@@ -78,10 +79,7 @@ where
 }
 
 #[async_trait::async_trait]
-impl<C> ActionVerifier<(TxHash, u16)> for EthActionVerifier<C>
-where
-    C: JsonRpcClient + Send + Sync + 'static,
-{
+impl<P: Provider<Http<Client>>> ActionVerifier<(TxHash, u16)> for EthActionVerifier<P> {
     async fn verify(&self, key: (TxHash, u16)) -> BridgeResult<BridgeAction> {
         let (tx_hash, event_idx) = key;
         self.eth_client
@@ -207,15 +205,16 @@ pub struct BridgeRequestHandler {
 }
 
 impl BridgeRequestHandler {
-    pub fn new<
-        SC: IotaClientInner + Send + Sync + 'static,
-        EP: JsonRpcClient + Send + Sync + 'static,
-    >(
+    pub fn new<SC, EP>(
         signer: BridgeAuthorityKeyPair,
         iota_client: Arc<IotaClient<SC>>,
         eth_client: Arc<EthClient<EP>>,
         approved_governance_actions: Vec<BridgeAction>,
-    ) -> Self {
+    ) -> Self
+    where
+        SC: IotaClientInner + Send + Sync + 'static,
+        EP: Provider<Http<Client>> + Send + Sync + 'static,
+    {
         let (iota_signer_tx, iota_rx) = mysten_metrics::metered_channel::channel(
             1000,
             &mysten_metrics::get_metrics()
@@ -321,7 +320,11 @@ impl BridgeRequestHandlerTrait for BridgeRequestHandler {
 mod tests {
     use std::collections::HashSet;
 
-    use ethers::types::{Address as EthAddress, TransactionReceipt};
+    use alloy::{
+        consensus::{Eip658Value, Receipt, ReceiptEnvelope, ReceiptWithBloom},
+        primitives::{Address as EthAddress, Bloom},
+        rpc::types::TransactionReceipt,
+    };
     use iota_json_rpc_types::IotaEvent;
     use iota_types::{base_types::IotaAddress, crypto::get_key_pair};
 
@@ -338,6 +341,17 @@ mod tests {
             LimitUpdateAction, TokenId,
         },
     };
+
+    #[async_trait::async_trait]
+    impl ActionVerifier<(TxHash, u16)> for EthActionVerifier<EthMockProvider> {
+        async fn verify(&self, key: (TxHash, u16)) -> BridgeResult<BridgeAction> {
+            let (tx_hash, event_idx) = key;
+            self.eth_client
+                .get_finalized_bridge_action_maybe(tx_hash, event_idx)
+                .await
+                .tap_ok(|action| info!("Eth action found: {:?}", action))
+        }
+    }
 
     #[tokio::test]
     async fn test_iota_signer_with_cache() {
@@ -423,7 +437,7 @@ mod tests {
             source_chain: BridgeChainId::IotaLocalTest as u8,
             sender_address: IotaAddress::random_for_testing_only().to_vec(),
             target_chain: BridgeChainId::EthLocalTest as u8,
-            target_address: EthAddress::random().as_bytes().to_vec(),
+            target_address: EthAddress::new(rand::random()).to_vec(),
             token_type: TokenId::USDC as u8,
             amount: 12345,
         };
@@ -481,7 +495,7 @@ mod tests {
         let (_, kp): (_, BridgeAuthorityKeyPair) = get_key_pair();
         let signer = Arc::new(kp);
         let eth_mock_provider = EthMockProvider::default();
-        let contract_address = EthAddress::random();
+        let contract_address = EthAddress::new(rand::random());
         let eth_client = EthClient::new_mocked(
             eth_mock_provider.clone(),
             HashSet::from_iter(vec![contract_address]),
@@ -492,7 +506,7 @@ mod tests {
         let mut eth_signer_with_cache = SignerWithCache::new(signer.clone(), eth_verifier);
 
         // Test `get_cache_entry` creates a new entry if not exist
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         let eth_event_idx = 42;
         assert!(
             eth_signer_with_cache
@@ -523,7 +537,7 @@ mod tests {
         );
 
         // Test `sign` caches Ok result
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         let eth_event_idx = 0;
         let (log, _action) = get_test_log_and_action(contract_address, eth_tx_hash, eth_event_idx);
         eth_mock_provider
@@ -532,12 +546,29 @@ mod tests {
                 [log.transaction_hash.unwrap()],
                 TransactionReceipt {
                     block_number: log.block_number,
-                    logs: vec![log.clone()],
-                    ..Default::default()
+                    inner: ReceiptEnvelope::Legacy(ReceiptWithBloom::new(
+                        Receipt {
+                            status: Eip658Value::Eip658(true),
+                            cumulative_gas_used: 0,
+                            logs: vec![log.clone()],
+                        },
+                        Bloom::default(),
+                    )),
+                    transaction_hash: eth_tx_hash,
+                    transaction_index: None,
+                    block_hash: None,
+                    gas_used: 0,
+                    effective_gas_price: 0,
+                    blob_gas_used: None,
+                    blob_gas_price: None,
+                    from: EthAddress::new(rand::random()),
+                    to: None,
+                    contract_address: None,
+                    state_root: None,
                 },
             )
             .unwrap();
-        mock_last_finalized_block(&eth_mock_provider, log.block_number.unwrap().as_u64());
+        mock_last_finalized_block(&eth_mock_provider, log.block_number.unwrap());
 
         eth_signer_with_cache
             .sign((eth_tx_hash, eth_event_idx))

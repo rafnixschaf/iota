@@ -4,8 +4,12 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use ethers::types::H256 as EthTransactionHash;
-use ethers::types::{Address as EthAddress, Log, H256};
+pub use alloy::primitives::TxHash as EthTransactionHash;
+use alloy::{
+    primitives::{Address as EthAddress, B256},
+    rpc::types::Log,
+    sol_types::SolValue,
+};
 use fastcrypto::hash::{HashFunction, Keccak256};
 use iota_types::{
     base_types::{IotaAddress, IOTA_ADDRESS_LENGTH},
@@ -248,7 +252,7 @@ impl IotaToEthBridgeAction {
         // Add dest address length
         bytes.push(EthAddress::len_bytes() as u8);
         // Add dest address
-        bytes.extend_from_slice(e.eth_address.as_bytes());
+        bytes.extend(e.eth_address);
 
         // Add token id
         bytes.push(e.token_id as u8);
@@ -285,7 +289,7 @@ impl EthToIotaBridgeAction {
         // Add source address length
         bytes.push(EthAddress::len_bytes() as u8);
         // Add source address
-        bytes.extend_from_slice(e.eth_address.as_bytes());
+        bytes.extend(e.eth_address);
         // Add dest chain id
         bytes.push(e.iota_chain_id as u8);
         // Add dest address length
@@ -336,14 +340,10 @@ impl BlocklistCommitteeAction {
         bytes.push(u8::try_from(self.blocklisted_members.len()).unwrap());
 
         // Add list of updated members
-        // Members are represented as pubkey dervied evm addresses (20 bytes)
-        let members_bytes = self
-            .blocklisted_members
-            .iter()
-            .map(|m| m.to_eth_address().to_fixed_bytes().to_vec())
-            .collect::<Vec<_>>();
-        for members_bytes in members_bytes {
-            bytes.extend_from_slice(&members_bytes);
+        // Members are represented as pubkey derived evm addresses (20 bytes)
+
+        for members_bytes in &self.blocklisted_members {
+            bytes.extend(members_bytes.to_eth_address());
         }
         bytes
     }
@@ -459,11 +459,8 @@ impl EvmContractUpgradeAction {
         // Add chain id
         bytes.push(self.chain_id as u8);
         // Add payload
-        let encoded = ethers::abi::encode(&[
-            ethers::abi::Token::Address(self.proxy_address),
-            ethers::abi::Token::Address(self.new_impl_address),
-            ethers::abi::Token::Bytes(self.call_data.clone()),
-        ]);
+        let encoded =
+            (self.proxy_address, self.new_impl_address, &self.call_data).abi_encode_params();
         bytes.extend_from_slice(&encoded);
         bytes
     }
@@ -633,7 +630,7 @@ impl Message for BridgeAction {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EthLog {
     pub block_number: u64,
-    pub tx_hash: H256,
+    pub tx_hash: B256,
     pub log_index_in_tx: u16,
     // TODO: pull necessary fields from `Log`.
     pub log: Log,
@@ -708,10 +705,7 @@ pub struct MoveTypeBridgeRecord {
 mod tests {
     use std::{collections::HashSet, str::FromStr};
 
-    use ethers::{
-        abi::ParamType,
-        types::{Address as EthAddress, TxHash},
-    };
+    use alloy::primitives::{Bytes, TxHash};
     use fastcrypto::{
         encoding::{Encoding, Hex},
         hash::HashFunction,
@@ -737,7 +731,7 @@ mod tests {
         let iota_tx_event_index = 1u16;
         let eth_chain_id = BridgeChainId::EthSepolia;
         let iota_address = IotaAddress::random_for_testing_only();
-        let eth_address = EthAddress::random();
+        let eth_address = EthAddress::new(rand::random());
         let token_id = TokenId::USDC;
         let amount = 1_000_000;
 
@@ -769,7 +763,7 @@ mod tests {
         let iota_address_bytes = iota_address.to_vec(); // len: 32
         let dest_chain_id_bytes = vec![eth_chain_id as u8]; // len: 1
         let eth_address_length_bytes = vec![EthAddress::len_bytes() as u8]; // len: 1
-        let eth_address_bytes = eth_address.as_bytes().to_vec(); // len: 20
+        let eth_address_bytes = eth_address.to_vec(); // len: 20
 
         let token_id_bytes = vec![token_id as u8]; // len: 1
         let token_amount_bytes = amount.to_be_bytes().to_vec(); // len: 8
@@ -1166,7 +1160,7 @@ mod tests {
         let function_signature = "newMockFunction(bool)";
         let selector = &Keccak256::digest(function_signature).digest[0..4];
         let mut call_data = selector.to_vec();
-        call_data.extend(ethers::abi::encode(&[ethers::abi::Token::Bool(true)]));
+        call_data.extend([true].abi_encode_params());
         assert_eq!(
             Hex::encode(call_data.clone()),
             "417795ef0000000000000000000000000000000000000000000000000000000000000001"
@@ -1214,10 +1208,7 @@ mod tests {
         let function_signature = "newMockFunction(bool,uint8)";
         let selector = &Keccak256::digest(function_signature).digest[0..4];
         let mut call_data = selector.to_vec();
-        call_data.extend(ethers::abi::encode(&[
-            ethers::abi::Token::Bool(true),
-            ethers::abi::Token::Uint(42u8.into()),
-        ]));
+        call_data.extend((true, 42u32).abi_encode_params());
         assert_eq!(
             Hex::encode(call_data.clone()),
             "be8fc25d0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a"
@@ -1299,9 +1290,8 @@ mod tests {
                 Hex::encode(BRIDGE_MESSAGE_PREFIX)
             )
         );
-        let types = vec![ParamType::Address, ParamType::Address, ParamType::Bytes];
         // Ensure that the call data (start from byte 30) can be decoded
-        ethers::abi::decode(&types, &data[30..]).unwrap();
+        <(EthAddress, EthAddress, Bytes)>::abi_decode_params(&data[30..], true).unwrap();
     }
 
     #[test]
@@ -1309,7 +1299,7 @@ mod tests {
         telemetry_subscribers::init_for_testing();
         let registry = Registry::new();
         mysten_metrics::init_metrics(&registry);
-        let eth_tx_hash = TxHash::random();
+        let eth_tx_hash = TxHash::new(rand::random());
         let eth_event_index = 1u16;
 
         let nonce = 10u64;

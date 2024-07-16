@@ -4,9 +4,9 @@
 
 use std::fmt::{Debug, Display, Formatter};
 
-use ethers::{
-    core::k256::{ecdsa::VerifyingKey, elliptic_curve::sec1::ToEncodedPoint},
-    types::Address as EthAddress,
+use alloy::{
+    primitives::Address as EthAddress,
+    signers::k256::{ecdsa::VerifyingKey, elliptic_curve::sec1::ToEncodedPoint, AffinePoint},
 };
 use fastcrypto::{
     encoding::{Encoding, Hex},
@@ -37,7 +37,7 @@ impl BridgeAuthorityPublicKeyBytes {
     pub fn to_eth_address(&self) -> EthAddress {
         // unwrap: the conversion should not fail
         let pubkey = VerifyingKey::from_sec1_bytes(self.as_bytes()).unwrap();
-        let affine: &ethers::core::k256::AffinePoint = pubkey.as_ref();
+        let affine: &AffinePoint = pubkey.as_ref();
         let encoded = affine.to_encoded_point(false);
         let pubkey = &encoded.as_bytes()[1..];
         assert_eq!(pubkey.len(), 64, "raw public key must be 64 bytes");
@@ -173,7 +173,7 @@ pub fn verify_signed_bridge_action(
 mod tests {
     use std::{str::FromStr, sync::Arc};
 
-    use ethers::types::Address as EthAddress;
+    use alloy::primitives::Address as EthAddress;
     use fastcrypto::traits::{KeyPair, ToFromBytes};
     use iota_types::{base_types::IotaAddress, crypto::get_key_pair, digests::TransactionDigest};
     use prometheus::Registry;
