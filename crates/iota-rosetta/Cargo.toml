@@ -10,7 +10,7 @@ publish = false
 anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
-axum-extra.workspace = true
+axum-extra = { workspace = true, features = ["typed-header"] }
 bcs.workspace = true
 clap.workspace = true
 eyre.workspace = true
