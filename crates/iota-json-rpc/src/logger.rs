@@ -39,9 +39,6 @@ impl std::fmt::Display for TransportProtocol {
 /// Defines a logger specifically for WebSocket connections with callbacks
 /// during the RPC request life-cycle. The primary use case for this is to
 /// collect timings for a larger metrics collection solution.
-///
-/// See the [`ServerBuilder::set_logger`](../../jsonrpsee_server/struct.
-/// ServerBuilder.html#method.set_logger) for examples.
 pub trait Logger: Send + Sync + Clone + 'static {
     /// Intended to carry timestamp of a request, for example
     /// `std::time::Instant`. How the trait measures time, if at all, is
