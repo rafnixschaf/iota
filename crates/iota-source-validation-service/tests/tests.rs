@@ -317,7 +317,8 @@ async fn test_api_route() -> anyhow::Result<()> {
         metrics: None,
         sources_list,
     }));
-    tokio::spawn(async { serve(app_state).await.expect("Cannot start service.") });
+
+    serve(app_state).await.expect("Cannot start service");
 
     let client = Client::new();
 
@@ -329,7 +330,7 @@ async fn test_api_route() -> anyhow::Result<()> {
         ))
         .send()
         .await
-        .expect("Request failed.")
+        .expect("Request failed")
         .json::<SourceResponse>()
         .await?;
 

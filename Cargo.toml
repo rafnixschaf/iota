@@ -377,7 +377,7 @@ schemars = { version = "0.8.10", features = ["either"] }
 scopeguard = "1.1"
 serde = { version = "1.0.144", features = ["derive", "rc"] }
 serde-name = "0.2.1"
-serde-reflection = "0.3.6"
+serde-reflection = "0.4.0"
 serde_json = { version = "1.0.95", features = ["preserve_order", "arbitrary_precision"] }
 serde_repr = "0.1"
 serde_test = "1.0.147"

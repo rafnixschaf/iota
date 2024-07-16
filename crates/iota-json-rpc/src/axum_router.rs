@@ -130,7 +130,7 @@ async fn process_raw_request<L: Logger>(
     } else if let Ok(_batch) = serde_json::from_str::<Vec<&RawValue>>(raw_request) {
         MethodResponse::error(
             Id::Null,
-            ErrorObject::borrowed(BATCHES_NOT_SUPPORTED_CODE, &BATCHES_NOT_SUPPORTED_MSG, None),
+            ErrorObject::borrowed(BATCHES_NOT_SUPPORTED_CODE, BATCHES_NOT_SUPPORTED_MSG, None),
         )
     } else {
         let (id, code) = prepare_error(raw_request);
@@ -324,7 +324,7 @@ pub mod ws {
         } else if let Ok(_batch) = serde_json::from_str::<Vec<&RawValue>>(raw_request) {
             Some(MethodResponse::error(
                 Id::Null,
-                ErrorObject::borrowed(BATCHES_NOT_SUPPORTED_CODE, &BATCHES_NOT_SUPPORTED_MSG, None),
+                ErrorObject::borrowed(BATCHES_NOT_SUPPORTED_CODE, BATCHES_NOT_SUPPORTED_MSG, None),
             ))
         } else {
             let (id, code) = prepare_error(raw_request);

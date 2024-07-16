@@ -104,7 +104,7 @@ where
     type Future = BoxFuture<'static, io::Result<(Self::Stream, Self::Service)>>;
 
     fn accept(&self, stream: I, service: S) -> Self::Future {
-        let acceptor = self.inner.clone();
+        let acceptor = self.inner;
         let config = self.config.clone();
         let handshake_timeout = self.handshake_timeout;
 

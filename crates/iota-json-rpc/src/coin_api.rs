@@ -447,7 +447,6 @@ mod tests {
         utils::create_fake_transaction,
         TypeTag,
     };
-    use jsonrpsee::types::ErrorObjectOwned;
     use mockall::{mock, predicate};
     use move_core_types::{account_address::AccountAddress, language_storage::StructTag};
 
@@ -586,7 +585,6 @@ mod tests {
     }
 
     mod get_coins_tests {
-        use jsonrpsee::types::ErrorObjectOwned;
 
         use super::{super::*, *};
 
@@ -754,13 +752,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected = expect![
                 "Invalid struct type: 0x2::invalid::struct::tag. Got error: Expected end of token stream. Got: ::"
             ];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         #[tokio::test]
@@ -775,12 +772,11 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected =
                 expect!["Invalid struct type: 0x2::iota:🤵. Got error: unrecognized token: :🤵"];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         // Unexpected error scenarios
@@ -803,13 +799,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::INVALID_PARAMS_CODE
             );
             let expected = expect!["Index store not available on this Fullnode."];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         #[tokio::test]
@@ -829,13 +824,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::INTERNAL_ERROR_CODE
             );
             let expected = expect!["Storage error: mock rocksdb error"];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
     }
 
@@ -932,12 +926,11 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
-            assert_eq!(error_object.code(), -32602);
+            assert_eq!(error_result.code(), -32602);
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected = expect!["cursor is not a coin"];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         #[tokio::test]
@@ -954,16 +947,14 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected = expect!["cursor not found"];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
     }
 
     mod get_balance_tests {
-        use jsonrpsee::types::ErrorObjectOwned;
 
         use super::{super::*, *};
         // Success scenarios
@@ -1050,13 +1041,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected = expect![
                 "Invalid struct type: 0x2::invalid::struct::tag. Got error: Expected end of token stream. Got: ::"
             ];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         // Unexpected error scenarios
@@ -1077,13 +1067,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::INVALID_PARAMS_CODE
             );
             let expected = expect!["Index store not available on this Fullnode."];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         #[tokio::test]
@@ -1103,19 +1092,17 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
 
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::INTERNAL_ERROR_CODE
             );
             let expected = expect!["Error executing mock db error"];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
     }
 
     mod get_all_balances_tests {
-        use jsonrpsee::types::ErrorObjectOwned;
 
         use super::{super::*, *};
 
@@ -1195,13 +1182,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::INVALID_PARAMS_CODE
             );
             let expected = expect!["Index store not available on this Fullnode."];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
     }
 
@@ -1379,13 +1365,12 @@ mod tests {
 
             assert!(response.is_err());
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             let expected = expect!["-32602"];
-            expected.assert_eq(&error_object.code().to_string());
+            expected.assert_eq(&error_result.code().to_string());
             let expected = expect![
                 "Cannot find object [0x2::coin::TreasuryCap<0xf::test_coin::TEST_COIN>] from [0x000000000000000000000000000000000000000000000000000000000000000f] package event."
             ];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
 
         #[tokio::test]
@@ -1421,15 +1406,14 @@ mod tests {
 
             let response = coin_read_api.get_total_supply(coin_name.clone()).await;
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
             assert_eq!(
-                error_object.code(),
+                error_result.code(),
                 jsonrpsee::types::error::CALL_EXECUTION_FAILED_CODE
             );
             let expected = expect![
                 "Failure deserializing object in the requested format: \"Unable to deserialize TreasuryCap object: remaining input\""
             ];
-            expected.assert_eq(error_object.message());
+            expected.assert_eq(error_result.message());
         }
     }
 }

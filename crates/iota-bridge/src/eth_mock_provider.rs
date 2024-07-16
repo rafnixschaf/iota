@@ -49,10 +49,9 @@ impl EthMockTransport {
         method: &str,
         params: Option<&RawValue>,
     ) -> Result<Value, RpcError<TransportErrorKind>> {
-        let params = if params.is_none() || params.unwrap().get().is_empty() {
-            MockParams::Zst
-        } else {
-            MockParams::Value(params.unwrap().get().to_string())
+        let params = match params {
+            Some(params) if params.get().is_empty() => MockParams::Value(params.get().to_string()),
+            Some(_) | None => MockParams::Zst,
         };
         Ok(responses
             .lock()

@@ -148,7 +148,7 @@ impl<A: Allower + std::fmt::Debug + 'static> rustls::server::danger::ClientCertV
         cert.verify_for_usage(
             SUPPORTED_SIG_ALGS,
             &trustroots,
-            &chain,
+            chain,
             now,
             webpki::KeyUsage::client_auth(),
             None,

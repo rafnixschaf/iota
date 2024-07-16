@@ -466,6 +466,7 @@ impl Checkpointed for Cursor {
     }
 }
 
+#[allow(clippy::manual_async_fn)]
 impl Loader<SeqNumKey> for Db {
     type Value = Checkpoint;
     type Error = Error;
@@ -526,6 +527,7 @@ impl Loader<SeqNumKey> for Db {
     }
 }
 
+#[allow(clippy::manual_async_fn)]
 impl Loader<DigestKey> for Db {
     type Value = Checkpoint;
     type Error = Error;

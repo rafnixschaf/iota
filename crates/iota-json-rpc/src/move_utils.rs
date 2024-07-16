@@ -311,7 +311,6 @@ impl MoveUtilsServer for MoveUtils {
 mod tests {
 
     mod get_normalized_move_module_tests {
-        use jsonrpsee::types::ErrorObjectOwned;
         use move_binary_format::file_format::basic_test_module;
 
         use super::super::*;
@@ -364,10 +363,9 @@ mod tests {
                 .get_normalized_move_module(package, module_name)
                 .await;
             let error_result = response.unwrap_err();
-            let error_object: ErrorObjectOwned = error_result.into();
 
-            assert_eq!(error_object.code(), -32602);
-            assert_eq!(error_object.message(), &error_string);
+            assert_eq!(error_result.code(), -32602);
+            assert_eq!(error_result.message(), &error_string);
         }
     }
 }

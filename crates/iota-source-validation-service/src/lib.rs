@@ -539,7 +539,9 @@ pub struct AppState {
     pub sources_list: NetworkLookup,
 }
 
-pub async fn serve(app_state: Arc<RwLock<AppState>>) -> anyhow::Result<()> {
+pub async fn serve(
+    app_state: Arc<RwLock<AppState>>,
+) -> anyhow::Result<tokio::task::JoinHandle<anyhow::Result<()>>> {
     let app = Router::new()
         .route("/api", get(api_route))
         .route("/api/list", get(list_route))
@@ -554,7 +556,9 @@ pub async fn serve(app_state: Arc<RwLock<AppState>>) -> anyhow::Result<()> {
         )
         .with_state(app_state);
     let listener = TcpListener::bind(host_port()).await?;
-    Ok(axum::serve(listener, app.into_make_service()).await?)
+    Ok(tokio::spawn(async {
+        Ok(axum::serve(listener, app.into_make_service()).await?)
+    }))
 }
 
 #[derive(Deserialize)]
@@ -641,8 +645,8 @@ async fn check_version_header(
     match version {
         Some(v) if v != IOTA_SOURCE_VALIDATION_VERSION => {
             let error = format!(
-                "Unsupported version '{v}' specified in header \
-		 {IOTA_SOURCE_VALIDATION_VERSION_HEADER}"
+                "Unsupported version '{v}' specified in header {}",
+                IOTA_SOURCE_VALIDATION_VERSION_HEADER
             );
             let mut headers = HeaderMap::new();
             headers.insert(

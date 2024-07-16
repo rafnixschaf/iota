@@ -12,6 +12,7 @@ use fastcrypto::{
 };
 use mysten_network::Multiaddr;
 use rand::{prelude::StdRng, SeedableRng};
+use serde::{Deserialize, Serialize};
 use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
 use types::{
     Batch, BatchDigest, Certificate, CertificateDigest, Header, HeaderDigest, HeaderV1Builder,
@@ -163,9 +164,15 @@ struct Options {
 
 const FILE_PATH: &str = "node/tests/staged/narwhal.yaml";
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(transparent)]
+struct YamlRegistry(
+    #[serde(with = "serde_yaml::with::singleton_map_recursive")] serde_reflection::Registry,
+);
+
 fn main() {
     let options = Options::parse();
-    let registry = get_registry().unwrap();
+    let registry = YamlRegistry(get_registry().unwrap());
     match options.action {
         Action::Print => {
             let content = serde_yaml::to_string(&registry).unwrap();
@@ -181,7 +188,7 @@ fn main() {
             // cargo -q run --example narwhal-generate-format -- print >
             // tests/staged/narwhal.yaml
             let reference = std::fs::read_to_string(FILE_PATH).unwrap();
-            let reference: Registry = serde_yaml::from_str(&reference).unwrap();
+            let reference: YamlRegistry = serde_yaml::from_str(&reference).unwrap();
             pretty_assertions::assert_eq!(reference, registry);
         }
     }

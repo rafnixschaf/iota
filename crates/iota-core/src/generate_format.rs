@@ -39,6 +39,7 @@ use iota_types::{
 use move_core_types::language_storage::{StructTag, TypeTag};
 use pretty_assertions::assert_str_eq;
 use rand::{rngs::StdRng, SeedableRng};
+use serde::{Deserialize, Serialize};
 use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
 use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
 use typed_store::TypedStoreError;
@@ -198,9 +199,15 @@ struct Options {
 
 const FILE_PATH: &str = "iota-core/tests/staged/iota.yaml";
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(transparent)]
+struct YamlRegistry(
+    #[serde(with = "serde_yaml::with::singleton_map_recursive")] serde_reflection::Registry,
+);
+
 fn main() {
     let options = Options::parse();
-    let registry = get_registry().unwrap();
+    let registry = YamlRegistry(get_registry().unwrap());
     match options.action {
         Action::Print => {
             let content = serde_yaml::to_string(&registry).unwrap();

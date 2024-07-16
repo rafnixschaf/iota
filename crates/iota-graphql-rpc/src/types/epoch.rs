@@ -343,6 +343,7 @@ impl Epoch {
     }
 }
 
+#[allow(clippy::manual_async_fn)]
 impl Loader<EpochKey> for Db {
     type Value = Epoch;
     type Error = Error;

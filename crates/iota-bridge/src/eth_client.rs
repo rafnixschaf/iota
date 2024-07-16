@@ -124,12 +124,12 @@ impl<P> EthClient<P> {
         let block = block?.ok_or(BridgeError::TransientProviderError(
             "Provider fails to return last finalized block".into(),
         ))?;
-        Ok(block
+        block
             .header
             .number
             .ok_or(BridgeError::TransientProviderError(
                 "Provider returns block without number".into(),
-            ))?)
+            ))
     }
 
     // Note: query may fail if range is too big. Callsite is responsible
