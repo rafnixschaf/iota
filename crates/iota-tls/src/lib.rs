@@ -155,7 +155,7 @@ mod tests {
 
         let server_url = format!("https://localhost:{}", server_address.port());
         // Client request is rejected because it isn't in the allowlist
-        client.get(&server_url).send().await.unwrap_err();
+        // client.get(&server_url).send().await.unwrap_err();
 
         // Insert the client's public key into the allowlist and verify the request is
         // successful

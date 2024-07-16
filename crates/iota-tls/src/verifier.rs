@@ -8,13 +8,20 @@ use std::{
 };
 
 use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes};
-use rustls::CertificateError;
+use rustls::{
+    crypto::{verify_tls12_signature, verify_tls13_signature, WebPkiSupportedAlgorithms},
+    CertificateError,
+};
 use webpki::{
     anchor_from_trusted_cert,
     types::{CertificateDer, PrivateKeyDer, SignatureVerificationAlgorithm, UnixTime},
 };
 
 static SUPPORTED_SIG_ALGS: &[&dyn SignatureVerificationAlgorithm] = &[webpki::ring::ED25519];
+static RUSTLS_SUPPORTED_ALGS: WebPkiSupportedAlgorithms = WebPkiSupportedAlgorithms {
+    all: SUPPORTED_SIG_ALGS,
+    mapping: &[(rustls::SignatureScheme::ED25519, SUPPORTED_SIG_ALGS)],
+};
 
 pub type ValidatorAllowlist = Arc<RwLock<HashSet<Ed25519PublicKey>>>;
 
@@ -159,20 +166,20 @@ impl<A: Allower + std::fmt::Debug + 'static> rustls::server::danger::ClientCertV
 
     fn verify_tls12_signature(
         &self,
-        _message: &[u8],
-        _cert: &CertificateDer<'_>,
-        _dss: &rustls::DigitallySignedStruct,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
     ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-        Err(rustls::Error::General("unsupported".to_owned()))
+        verify_tls12_signature(message, cert, dss, &RUSTLS_SUPPORTED_ALGS)
     }
 
     fn verify_tls13_signature(
         &self,
-        _message: &[u8],
-        _cert: &CertificateDer<'_>,
-        _dss: &rustls::DigitallySignedStruct,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &rustls::DigitallySignedStruct,
     ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
-        Err(rustls::Error::General("unsupported".to_owned()))
+        verify_tls13_signature(message, cert, dss, &RUSTLS_SUPPORTED_ALGS)
     }
 
     fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {

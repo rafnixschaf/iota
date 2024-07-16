@@ -853,12 +853,6 @@ mod tests {
                     "$PATH/iota-execution/exec-cut",
                 },
                 packages: {
-                    "move-core-types": CutPackage {
-                        dst_name: "move-core-types-feature",
-                        src_path: "$PATH/external-crates/move/crates/move-core-types",
-                        dst_path: "$PATH/iota-execution/cut-move-core-types",
-                        ws_state: Exclude,
-                    },
                     "iota-adapter-latest": CutPackage {
                         dst_name: "iota-adapter-feature",
                         src_path: "$PATH/iota-execution/latest/iota-adapter",
@@ -876,6 +870,12 @@ mod tests {
                         src_path: "$PATH/iota-execution/latest/iota-verifier",
                         dst_path: "$PATH/iota-execution/exec-cut/iota-verifier",
                         ws_state: Member,
+                    },
+                    "move-core-types": CutPackage {
+                        dst_name: "move-core-types-feature",
+                        src_path: "$PATH/external-crates/move/crates/move-core-types",
+                        dst_path: "$PATH/iota-execution/cut-move-core-types",
+                        ws_state: Exclude,
                     },
                 },
             }"#]]
@@ -954,12 +954,6 @@ mod tests {
                     "$PATH/iota-execution/feature",
                 },
                 packages: {
-                    "move-core-types": CutPackage {
-                        dst_name: "move-core-types-feature",
-                        src_path: "$PATH/external-crates/move/crates/move-core-types",
-                        dst_path: "$PATH/iota-execution/feature/move/crates/move-core-types",
-                        ws_state: Exclude,
-                    },
                     "iota-adapter-latest": CutPackage {
                         dst_name: "iota-adapter-feature",
                         src_path: "$PATH/iota-execution/latest/iota-adapter",
@@ -977,6 +971,12 @@ mod tests {
                         src_path: "$PATH/iota-execution/latest/iota-verifier",
                         dst_path: "$PATH/iota-execution/feature/iota-verifier",
                         ws_state: Member,
+                    },
+                    "move-core-types": CutPackage {
+                        dst_name: "move-core-types-feature",
+                        src_path: "$PATH/external-crates/move/crates/move-core-types",
+                        dst_path: "$PATH/iota-execution/feature/move/crates/move-core-types",
+                        ws_state: Exclude,
                     },
                 },
             }"#]]
@@ -1361,12 +1361,6 @@ mod tests {
                     "$PATH/iota-execution/exec-cut",
                 },
                 packages: {
-                    "move-core-types": CutPackage {
-                        dst_name: "move-core-types-feature",
-                        src_path: "$PATH/external-crates/move/crates/move-core-types",
-                        dst_path: "$PATH/iota-execution/cut-move-core-types",
-                        ws_state: Unknown,
-                    },
                     "iota-adapter-latest": CutPackage {
                         dst_name: "iota-adapter-feature",
                         src_path: "$PATH/iota-execution/latest/iota-adapter",
@@ -1383,6 +1377,12 @@ mod tests {
                         dst_name: "iota-verifier-feature",
                         src_path: "$PATH/iota-execution/latest/iota-verifier",
                         dst_path: "$PATH/iota-execution/exec-cut/iota-verifier",
+                        ws_state: Unknown,
+                    },
+                    "move-core-types": CutPackage {
+                        dst_name: "move-core-types-feature",
+                        src_path: "$PATH/external-crates/move/crates/move-core-types",
+                        dst_path: "$PATH/iota-execution/cut-move-core-types",
                         ws_state: Unknown,
                     },
                 },

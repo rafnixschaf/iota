@@ -15,7 +15,7 @@ use itertools::Itertools;
 use jsonrpsee::{
     core::{ClientError as RpcError, RegisterMethodError},
     types::{
-        error::{ErrorCode, INTERNAL_ERROR_CODE, UNKNOWN_ERROR_CODE},
+        error::{ErrorCode, CALL_EXECUTION_FAILED_CODE, INTERNAL_ERROR_CODE, UNKNOWN_ERROR_CODE},
         ErrorObject, ErrorObjectOwned,
     },
 };
@@ -112,7 +112,7 @@ impl From<Error> for RpcError {
                     ))
                 }
                 _ => RpcError::Call(ErrorObject::owned::<()>(
-                    UNKNOWN_ERROR_CODE,
+                    CALL_EXECUTION_FAILED_CODE,
                     err.to_string(),
                     None,
                 )),
@@ -131,7 +131,7 @@ impl From<Error> for RpcError {
                     ))
                 }
                 _ => RpcError::Call(ErrorObject::owned::<()>(
-                    UNKNOWN_ERROR_CODE,
+                    CALL_EXECUTION_FAILED_CODE,
                     err.to_string(),
                     None,
                 )),
@@ -152,7 +152,7 @@ impl From<Error> for RpcError {
                     ))
                 }
                 _ => RpcError::Call(ErrorObject::owned::<()>(
-                    UNKNOWN_ERROR_CODE,
+                    CALL_EXECUTION_FAILED_CODE,
                     iota_error.to_string(),
                     None,
                 )),
@@ -297,7 +297,7 @@ impl From<Error> for RpcError {
                 }
             }
             _ => RpcError::Call(ErrorObject::owned::<()>(
-                UNKNOWN_ERROR_CODE,
+                CALL_EXECUTION_FAILED_CODE,
                 e.to_string(),
                 None,
             )),
