@@ -77,7 +77,7 @@ performance and logging noise.
 After the span filter is set up, a collection of layers is initialized. These layers send data to tokio-console for
 debugging or integrate with Prometheus for measuring span latencies. Each layer layers will be enabled or disabled based
 on the configuration.
-If OTLP tracing is enabled, and `OpenTelemetryLayer` will be set up for tracing to either a file or an OTLP endpoint
+If OTLP tracing is enabled, an `OpenTelemetryLayer` will be set up for tracing to either a file or an OTLP endpoint
 based on environment settings.
 
 After setting up all layers, a tracing subscriber is created with the configured layers and set as the global default.
