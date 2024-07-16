@@ -46,5 +46,6 @@ iota-move-build.workspace = true
 iota-sdk.workspace = true
 rand.workspace = true
 reqwest.workspace = true
+signature = { workspace = true, features = ["rand_core"] }
 tempfile.workspace = true
 test-cluster.workspace = true

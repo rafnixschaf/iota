@@ -110,6 +110,9 @@ mod tests {
     #[tokio::test]
     async fn axum_acceptor() {
         use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .unwrap();
 
         let mut rng = rand::thread_rng();
         let client_keypair = Ed25519KeyPair::generate(&mut rng);

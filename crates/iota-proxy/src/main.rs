@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::env;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use iota_proxy::{
     admin::{
@@ -61,6 +61,10 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .map_err(|_| anyhow!("failed to install ring crypto provider"))?;
+
     let (_guard, _handle) = TelemetryConfig::new().init();
 
     let args = Args::parse();
@@ -72,51 +76,44 @@ async fn main() -> Result<()> {
         config.listen_address, config.remote_write.url
     );
 
-    let listener = std::net::TcpListener::bind(config.listen_address).unwrap();
+    let listener = std::net::TcpListener::bind(config.listen_address)?;
 
     let (tls_config, allower) =
         // we'll only use the dynamic peers in some cases - it makes little sense to run with the statics
         // since this first mode allows all.
         if config.dynamic_peers.certificate_file.is_none() || config.dynamic_peers.private_key.is_none() {
             (
-                create_server_cert_default_allow(config.dynamic_peers.hostname.unwrap())
-                    .expect("unable to create self-signed server cert"),
+                create_server_cert_default_allow(config.dynamic_peers.hostname.ok_or_else(|| anyhow!("missing hostname"))?)
+                    .map_err(|e| anyhow!("unable to create self-signed server cert: {e}"))?,
                 None,
             )
         } else {
             create_server_cert_enforce_peer(config.dynamic_peers, config.static_peers)
-                .expect("unable to create tls server config")
+                .map_err(|e| anyhow!("unable to create tls server config: {e}"))?
         };
-    let histogram_listener = tokio::net::TcpListener::bind(config.histogram_address)
-        .await
-        .unwrap();
-    let metrics_listener = tokio::net::TcpListener::bind(config.metrics_address)
-        .await
-        .unwrap();
+    let histogram_listener = tokio::net::TcpListener::bind(config.histogram_address).await?;
+    let metrics_listener = tokio::net::TcpListener::bind(config.metrics_address).await?;
     let acceptor = TlsAcceptor::new(tls_config);
     let client = make_reqwest_client(config.remote_write, APP_USER_AGENT);
     let histogram_relay = histogram_relay::start_prometheus_server(histogram_listener);
     let registry_service = metrics::start_prometheus_server(metrics_listener);
     let prometheus_registry = registry_service.default_registry();
-    prometheus_registry
-        .register(mysten_metrics::uptime_metric(
-            "iota-proxy",
-            VERSION,
-            "unavailable",
-        ))
-        .unwrap();
+    prometheus_registry.register(mysten_metrics::uptime_metric(
+        "iota-proxy",
+        VERSION,
+        "unavailable",
+    ))?;
     let app = app(
         Labels {
             network: config.network,
-            inventory_hostname: env::var("INVENTORY_HOSTNAME")
-                .expect("INVENTORY_HOSTNAME not found in environment"),
+            inventory_hostname: env::var("INVENTORY_HOSTNAME")?,
         },
         client,
         histogram_relay,
         allower,
     );
 
-    server(listener, app, Some(acceptor)).await.unwrap();
+    server(listener, app, Some(acceptor)).await?;
 
     Ok(())
 }

@@ -1666,9 +1666,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-dynamodb"
-version = "1.37.0"
+version = "1.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68e3e4257dc0abce20aabccd0017b1aca0f09e563b92456af37378e85821168b"
+checksum = "96e202fcea6bec47c2c4c1d910fbf2b6d1f89ef8177040ebea84405ad34de558"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -1689,9 +1689,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-ec2"
-version = "1.58.0"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "938992f9b1d5168a640663afacd2730ce129f7a6c87e487b1a53c970f5f00666"
+checksum = "91d145fb9e8ef6c783263d86d41d56c87b5e59b8ce28d9986de794a1ddfc42dc"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -3167,7 +3167,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tonic 0.12.0",
- "tonic-build",
+ "tonic-build 0.12.0",
  "tower",
  "tracing",
  "typed-store",
@@ -4982,16 +4982,19 @@ checksum = "42012b0f064e01aa58b545fe3727f90f7dd4020f4a3ea735b50344965f5a57e9"
 
 [[package]]
 name = "gcp-bigquery-client"
-version = "0.18.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7fe3895eb99784b8ad2776688b41e068e918d18ebb736dafb1a321bce46c749"
+checksum = "3301e7c26a4d5caef79ec6325faf14a90cbb7ff5e82e2d6acddc2c5c9fdd6fb5"
 dependencies = [
  "async-stream",
  "async-trait",
  "dyn-clone",
- "hyper 0.14.30",
- "hyper-rustls 0.25.0",
+ "flate2",
+ "hyper 1.4.1",
+ "hyper-util",
  "log",
+ "prost 0.12.6",
+ "prost-types 0.12.6",
  "reqwest 0.12.5",
  "serde",
  "serde_json",
@@ -4999,6 +5002,8 @@ dependencies = [
  "time",
  "tokio",
  "tokio-stream",
+ "tonic 0.11.0",
+ "tonic-build 0.11.0",
  "url",
  "yup-oauth2",
 ]
@@ -5540,23 +5545,6 @@ dependencies = [
 
 [[package]]
 name = "hyper-rustls"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "399c78f9338483cb7e630c8474b07268983c6bd5acee012e4211f9f7bb21b070"
-dependencies = [
- "futures-util",
- "http 0.2.12",
- "hyper 0.14.30",
- "log",
- "rustls 0.22.4",
- "rustls-native-certs 0.7.1",
- "rustls-pki-types",
- "tokio",
- "tokio-rustls 0.25.0",
-]
-
-[[package]]
-name = "hyper-rustls"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee4be2c948921a1a5320b629c4193916ed787a7f7f293fd3f7f5a6c9de74155"
@@ -5972,7 +5960,7 @@ dependencies = [
  "shared-crypto",
  "shell-words",
  "shlex",
- "signature 1.6.4",
+ "signature 2.2.0",
  "tabled",
  "tap",
  "telemetry-subscribers",
@@ -6441,7 +6429,7 @@ dependencies = [
  "serde_with",
  "serde_yaml",
  "shared-crypto",
- "signature 1.6.4",
+ "signature 2.2.0",
  "static_assertions",
  "tap",
  "telemetry-subscribers",
@@ -7036,7 +7024,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-crypto",
- "signature 1.6.4",
+ "signature 2.2.0",
  "tap",
  "telemetry-subscribers",
  "thiserror",
@@ -7143,7 +7131,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-crypto",
- "signature 1.6.4",
+ "signature 2.2.0",
  "slip10_ed25519",
  "tempfile",
  "tiny-bip39",
@@ -7341,7 +7329,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tonic 0.12.0",
- "tonic-build",
+ "tonic-build 0.12.0",
  "tower",
  "tracing",
 ]
@@ -7544,7 +7532,7 @@ dependencies = [
  "once_cell",
  "prometheus",
  "prost 0.13.1",
- "prost-build",
+ "prost-build 0.13.1",
  "protobuf",
  "rand 0.8.5",
  "reqwest 0.12.5",
@@ -7557,6 +7545,7 @@ dependencies = [
  "snap",
  "telemetry-subscribers",
  "tokio",
+ "tokio-rustls 0.26.0",
  "tower",
  "tower-http",
  "tracing",
@@ -7657,7 +7646,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-crypto",
- "signature 1.6.4",
+ "signature 2.2.0",
  "strum 0.26.3",
  "telemetry-subscribers",
  "tempfile",
@@ -8311,7 +8300,7 @@ dependencies = [
  "serde_with",
  "serde_yaml",
  "shared-crypto",
- "signature 1.6.4",
+ "signature 2.2.0",
  "static_assertions",
  "strum 0.26.3",
  "tap",
@@ -10535,7 +10524,7 @@ dependencies = [
  "proptest",
  "proptest-derive",
  "prost 0.13.1",
- "prost-build",
+ "prost-build 0.13.1",
  "protobuf-src",
  "rand 0.8.5",
  "roaring",
@@ -10546,7 +10535,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tonic 0.12.0",
- "tonic-build",
+ "tonic-build 0.12.0",
  "tracing",
  "typed-store",
 ]
@@ -12053,6 +12042,29 @@ dependencies = [
 
 [[package]]
 name = "prost-build"
+version = "0.12.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22505a5c94da8e3b7c2996394d1c933236c4d743e81a410bcca4e6989fc066a4"
+dependencies = [
+ "bytes",
+ "heck 0.5.0",
+ "itertools 0.12.1",
+ "log",
+ "multimap",
+ "once_cell",
+ "petgraph 0.6.5",
+ "prettyplease 0.2.20",
+ "prost 0.12.6",
+ "prost-types 0.12.6",
+ "pulldown-cmark",
+ "pulldown-cmark-to-cmark",
+ "regex",
+ "syn 2.0.71",
+ "tempfile",
+]
+
+[[package]]
+name = "prost-build"
 version = "0.13.1"
 source = "git+https://github.com/tokio-rs/prost#ee619460ef1f84c5c033d08b7a5b606116e0b414"
 dependencies = [
@@ -12138,6 +12150,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57206b407293d2bcd3af849ce869d52068623f19e1b5ff8e8778e3309439682b"
+dependencies = [
+ "bitflags 2.6.0",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
+version = "10.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0194e6e1966c23cc5fd988714f85b18d548d773e81965413555d96569931833d"
+dependencies = [
+ "pulldown-cmark",
 ]
 
 [[package]]
@@ -12494,7 +12526,7 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.7",
- "tokio-macros 2.2.0 (git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1)",
+ "tokio-macros 2.2.0",
  "windows-sys 0.48.0",
 ]
 
@@ -14855,9 +14887,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.36.0"
+version = "1.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61285f6515fa018fb2d1e46eb21223fff441ee8db5d0f1435e8ab4f5cdb80931"
+checksum = "ba4f4a02a7a80d6f274636f0aa95c7e383b912d41fe721a31f29e29698585a4a"
 dependencies = [
  "backtrace",
  "bytes",
@@ -14868,7 +14900,7 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.7",
- "tokio-macros 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-macros 2.3.0",
  "tracing",
  "windows-sys 0.48.0",
 ]
@@ -14886,8 +14918,7 @@ dependencies = [
 [[package]]
 name = "tokio-macros"
 version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
+source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1#e47aafebf98e9c1734a8848a1876d5946c44bdd1"
 dependencies = [
  "proc-macro2 1.0.86",
  "quote 1.0.36",
@@ -14896,8 +14927,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.2.0"
-source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1#e47aafebf98e9c1734a8848a1876d5946c44bdd1"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f5ae998a069d4b5aba8ee9dad856af7d520c3699e6159b185c2acd48155d39a"
 dependencies = [
  "proc-macro2 1.0.86",
  "quote 1.0.36",
@@ -15099,7 +15131,11 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "prost 0.12.6",
+ "rustls-native-certs 0.7.1",
+ "rustls-pemfile 2.1.2",
+ "rustls-pki-types",
  "tokio",
+ "tokio-rustls 0.25.0",
  "tokio-stream",
  "tower",
  "tower-layer",
@@ -15141,13 +15177,26 @@ dependencies = [
 
 [[package]]
 name = "tonic-build"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be4ef6dd70a610078cb4e338a0f79d06bc759ff1b22d2120c2ff02ae264ba9c2"
+dependencies = [
+ "prettyplease 0.2.20",
+ "proc-macro2 1.0.86",
+ "prost-build 0.12.6",
+ "quote 1.0.36",
+ "syn 2.0.71",
+]
+
+[[package]]
+name = "tonic-build"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "690943cc223adcdd67bb597a2e573ead1b88e999ba37528fe8e6356bf44b29b6"
 dependencies = [
  "prettyplease 0.2.20",
  "proc-macro2 1.0.86",
- "prost-build",
+ "prost-build 0.13.1",
  "quote 1.0.36",
  "syn 2.0.71",
 ]
@@ -16305,28 +16354,28 @@ dependencies = [
 
 [[package]]
 name = "yup-oauth2"
-version = "8.3.2"
+version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b61da40aeb0907a65f7fb5c1de83c5a224d6a9ebb83bf918588a2bb744d636b8"
+checksum = "4ed5f19242090128c5809f6535cc7b8d4e2c32433f6c6005800bbc20a644a7f0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "futures",
- "http 0.2.12",
- "hyper 0.14.30",
- "hyper-rustls 0.24.2",
- "itertools 0.12.1",
+ "http 1.1.0",
+ "http-body-util",
+ "hyper 1.4.1",
+ "hyper-rustls 0.27.2",
+ "hyper-util",
  "log",
  "percent-encoding",
- "rustls 0.22.4",
- "rustls-pemfile 1.0.4",
+ "rustls 0.23.11",
+ "rustls-pemfile 2.1.2",
  "seahash",
  "serde",
  "serde_json",
  "time",
  "tokio",
- "tower-service",
  "url",
 ]
 

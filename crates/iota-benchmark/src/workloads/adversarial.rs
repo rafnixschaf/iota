@@ -23,7 +23,7 @@ use rand::{
     Rng,
 };
 use regex::Regex;
-use strum::{EnumCount, IntoEnumIterator, EnumIter};
+use strum::{EnumCount, EnumIter, IntoEnumIterator};
 use tracing::debug;
 
 use super::{

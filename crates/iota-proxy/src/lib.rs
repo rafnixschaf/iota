@@ -80,6 +80,9 @@ mod tests {
     /// probabaly moving this test elsewhere and renaming it.
     #[tokio::test]
     async fn axum_acceptor() {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .unwrap();
         // generate self-signed certificates
         let CertKeyPair(client_priv_cert, client_pub_key) =
             admin::generate_self_cert("iota".into());
