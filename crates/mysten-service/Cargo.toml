@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 anyhow.workspace = true
 axum.workspace = true
+futures.workspace = true
 mysten-metrics.workspace = true
 prometheus.workspace = true
 serde.workspace = true

@@ -16,7 +16,8 @@ pub use verifier::{AllowAll, Allower, CertVerifier, HashSetAllow, ValidatorAllow
 #[cfg(test)]
 mod tests {
     use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
-    use rustls::server::ClientCertVerifier;
+    use rustls::server::danger::ClientCertVerifier;
+    use webpki::types::UnixTime;
 
     use super::*;
 
@@ -34,11 +35,7 @@ mod tests {
 
         // The bob passes validation
         verifier
-            .verify_client_cert(
-                &random_cert_bob.rustls_certificate(),
-                &[],
-                std::time::SystemTime::now(),
-            )
+            .verify_client_cert(&random_cert_bob.rustls_certificate(), &[], UnixTime::now())
             .unwrap();
 
         // The alice passes validation
@@ -46,7 +43,7 @@ mod tests {
             .verify_client_cert(
                 &random_cert_alice.rustls_certificate(),
                 &[],
-                std::time::SystemTime::now(),
+                UnixTime::now(),
             )
             .unwrap();
     }
@@ -76,30 +73,18 @@ mod tests {
 
         // The allowed cert passes validation
         verifier
-            .verify_client_cert(
-                &allowed_cert.rustls_certificate(),
-                &[],
-                std::time::SystemTime::now(),
-            )
+            .verify_client_cert(&allowed_cert.rustls_certificate(), &[], UnixTime::now())
             .unwrap();
 
         // The disallowed cert fails validation
         verifier
-            .verify_client_cert(
-                &disallowed_cert.rustls_certificate(),
-                &[],
-                std::time::SystemTime::now(),
-            )
+            .verify_client_cert(&disallowed_cert.rustls_certificate(), &[], UnixTime::now())
             .unwrap_err();
 
         // After removing the allowed public key from the set it now fails validation
         allowlist.inner_mut().write().unwrap().clear();
         verifier
-            .verify_client_cert(
-                &allowed_cert.rustls_certificate(),
-                &[],
-                std::time::SystemTime::now(),
-            )
+            .verify_client_cert(&allowed_cert.rustls_certificate(), &[], UnixTime::now())
             .unwrap_err();
     }
 
@@ -118,11 +103,7 @@ mod tests {
 
         // Allowed public key but the server-name in the cert is not the required "iota"
         verifier
-            .verify_client_cert(
-                &cert.rustls_certificate(),
-                &[],
-                std::time::SystemTime::now(),
-            )
+            .verify_client_cert(&cert.rustls_certificate(), &[], UnixTime::now())
             .unwrap_err();
     }
 

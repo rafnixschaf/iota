@@ -4,10 +4,11 @@
 
 use std::{env, net::SocketAddr, str::FromStr};
 
+use axum::body::Body;
 pub use balance_changes::*;
 use hyper::{
     header::{HeaderName, HeaderValue},
-    Body, Method, Request,
+    Method, Request,
 };
 use iota_json_rpc_api::{
     CLIENT_SDK_TYPE_HEADER, CLIENT_SDK_VERSION_HEADER, CLIENT_TARGET_API_VERSION_HEADER,
@@ -114,7 +115,7 @@ impl JsonRpcServerBuilder {
 
     fn trace_layer() -> TraceLayer<
         tower_http::classify::SharedClassifier<tower_http::classify::ServerErrorsAsFailures>,
-        impl tower_http::trace::MakeSpan<hyper::Body> + Clone,
+        impl tower_http::trace::MakeSpan<Body> + Clone,
         (),
         (),
         (),
@@ -244,10 +245,20 @@ impl JsonRpcServerBuilder {
     ) -> Result<ServerHandle, Error> {
         let app = self.to_router(server_type)?;
 
-        let server = axum::Server::bind(&listen_address).serve(app.into_make_service());
+        let listener = tokio::net::TcpListener::bind(listen_address)
+            .await
+            .map_err(|e| {
+                Error::UnexpectedError(format!("invalid listen address {listen_address}: {e}"))
+            })?;
 
-        let addr = server.local_addr();
-        let handle = tokio::spawn(async move { server.await.unwrap() });
+        let addr = listener.local_addr().map_err(|e| {
+            Error::UnexpectedError(format!("invalid listen address {listen_address}: {e}"))
+        })?;
+        let handle = tokio::spawn(async move {
+            axum::serve(listener, app.into_make_service())
+                .await
+                .unwrap()
+        });
 
         let handle = ServerHandle {
             handle: ServerHandleInner::Axum(handle),

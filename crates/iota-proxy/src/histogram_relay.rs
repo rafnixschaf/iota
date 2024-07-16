@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::{
     collections::VecDeque,
-    net::TcpListener,
     sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -15,6 +14,7 @@ use prometheus::{
     proto::{Metric, MetricFamily},
     register_counter_vec, register_histogram_vec, CounterVec, HistogramVec,
 };
+use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{
     trace::{DefaultOnResponse, TraceLayer},
@@ -51,7 +51,7 @@ static RELAY_DURATION: Lazy<HistogramVec> = Lazy::new(|| {
 // and endpoint that prometheus agent can use to poll for the metrics.
 // A RegistryService is returned that can be used to get access in prometheus
 // Registries.
-pub fn start_prometheus_server(addr: TcpListener) -> HistogramRelay {
+pub fn start_prometheus_server(listener: TcpListener) -> HistogramRelay {
     let relay = HistogramRelay::new();
     let app = Router::new()
         .route(METRICS_ROUTE, get(metrics))
@@ -67,9 +67,7 @@ pub fn start_prometheus_server(addr: TcpListener) -> HistogramRelay {
         );
 
     tokio::spawn(async move {
-        axum::Server::from_tcp(addr)
-            .unwrap()
-            .serve(app.into_make_service())
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     });

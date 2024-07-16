@@ -1,11 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use std::net::TcpListener;
 
 use axum::{extract::Extension, http::StatusCode, routing::get, Router};
 use mysten_metrics::RegistryService;
 use prometheus::{Registry, TextEncoder};
+use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{
     trace::{DefaultOnResponse, TraceLayer},
@@ -19,7 +19,7 @@ const METRICS_ROUTE: &str = "/metrics";
 // and endpoint that prometheus agent can use to poll for the metrics.
 // A RegistryService is returned that can be used to get access in prometheus
 // Registries.
-pub fn start_prometheus_server(addr: TcpListener) -> RegistryService {
+pub fn start_prometheus_server(listener: TcpListener) -> RegistryService {
     let registry = Registry::new();
 
     let registry_service = RegistryService::new(registry);
@@ -38,9 +38,7 @@ pub fn start_prometheus_server(addr: TcpListener) -> RegistryService {
         );
 
     tokio::spawn(async move {
-        axum::Server::from_tcp(addr)
-            .unwrap()
-            .serve(app.into_make_service())
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     });

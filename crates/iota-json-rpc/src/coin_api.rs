@@ -241,7 +241,7 @@ impl CoinReadApiServer for CoinReadApi {
                 let coin_struct = parse_to_struct_tag(&coin_type)?;
                 Ok(if GAS::is_gas(&coin_struct) {
                     Supply {
-                        value: TOTAL_SUPPLY_MICROS,
+                        value: TOTAL_SUPPLY_NANOS,
                     }
                 } else {
                     let treasury_cap_object = self
@@ -265,7 +265,7 @@ impl CoinReadApiServer for CoinReadApi {
 }
 
 #[cached(
-    type = "SizedCache<String, ObjectID>",
+    ty = "SizedCache<String, ObjectID>",
     create = "{ SizedCache::with_size(10000) }",
     convert = r#"{ format!("{}{}", package_id, object_struct_tag) }"#,
     result = true

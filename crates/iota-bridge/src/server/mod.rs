@@ -53,8 +53,8 @@ pub const EVM_CONTRACT_UPGRADE_PATH: &str =
     "/sign/upgrade_evm_contract/:chain_id/:nonce/:proxy_address/:new_impl_address";
 
 pub async fn run_server(socket_address: &SocketAddr, handler: BridgeRequestHandler) {
-    axum::Server::bind(socket_address)
-        .serve(make_router(Arc::new(handler)).into_make_service())
+    let listener = tokio::net::TcpListener::bind(socket_address).await.unwrap();
+    axum::serve(listener, make_router(Arc::new(handler)).into_make_service())
         .await
         .unwrap();
 }

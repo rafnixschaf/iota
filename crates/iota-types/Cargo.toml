@@ -30,7 +30,6 @@ move-ir-types.workspace = true
 move-vm-profiler.workspace = true
 move-vm-test-utils.workspace = true
 move-vm-types.workspace = true
-nonempty.workspace = true
 num-bigint = { version = "0.4", default-features = false, features = ["rand"] }
 num-rational = "0.4"
 num-traits = "0.2.18"

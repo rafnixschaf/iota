@@ -561,7 +561,7 @@ fn stake_status(
 /// 1, it will be cleared when the epoch changes. rates are in descending order
 /// by epoch.
 #[cached(
-    type = "SizedCache<EpochId, Vec<ValidatorExchangeRates>>",
+    ty = "SizedCache<EpochId, Vec<ValidatorExchangeRates>>",
     create = "{ SizedCache::with_size(1) }",
     convert = "{ _current_epoch }",
     result = true

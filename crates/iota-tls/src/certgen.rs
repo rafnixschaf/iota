@@ -5,6 +5,7 @@
 use fastcrypto::ed25519::{Ed25519PrivateKey, Ed25519PublicKey};
 use pkcs8::EncodePrivateKey;
 use rcgen::{CertificateParams, KeyPair, SignatureAlgorithm};
+use webpki::types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
 
 pub struct SelfSignedCertificate {
     inner: rcgen::Certificate,
@@ -17,14 +18,14 @@ impl SelfSignedCertificate {
         }
     }
 
-    pub fn rustls_certificate(&self) -> rustls::Certificate {
+    pub fn rustls_certificate(&self) -> CertificateDer<'static> {
         let cert_bytes = self.inner.serialize_der().unwrap();
-        rustls::Certificate(cert_bytes)
+        CertificateDer::from(cert_bytes)
     }
 
-    pub fn rustls_private_key(&self) -> rustls::PrivateKey {
+    pub fn rustls_private_key(&self) -> PrivateKeyDer<'static> {
         let private_key_bytes = self.inner.serialize_private_key_der();
-        rustls::PrivateKey(private_key_bytes)
+        PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(private_key_bytes))
     }
 
     pub fn reqwest_identity(&self) -> reqwest::tls::Identity {
@@ -54,17 +55,17 @@ fn generate_self_signed_tls_certificate(
 
 fn generate_cert(keypair: &ed25519::KeypairBytes, server_name: &str) -> rcgen::Certificate {
     let pkcs8 = keypair.to_pkcs8_der().unwrap();
-    let key_der = rustls::PrivateKey(pkcs8.as_bytes().to_vec());
+    let key_der = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(pkcs8.as_bytes()));
     private_key_to_certificate(vec![server_name.to_owned()], &key_der).unwrap()
 }
 
 fn private_key_to_certificate(
     subject_names: impl Into<Vec<String>>,
-    private_key: &rustls::PrivateKey,
+    private_key: &PrivateKeyDer,
 ) -> Result<rcgen::Certificate, anyhow::Error> {
     let alg = &rcgen::PKCS_ED25519;
 
-    let certificate = gen_certificate(subject_names, (private_key.0.as_ref(), alg))?;
+    let certificate = gen_certificate(subject_names, (private_key.secret_der(), alg))?;
     Ok(certificate)
 }
 
@@ -86,12 +87,12 @@ fn gen_certificate(
 }
 
 pub(crate) fn public_key_from_certificate(
-    certificate: &rustls::Certificate,
+    certificate: &CertificateDer,
 ) -> Result<Ed25519PublicKey, anyhow::Error> {
     use fastcrypto::traits::ToFromBytes;
     use x509_parser::{certificate::X509Certificate, prelude::FromDer};
 
-    let cert = X509Certificate::from_der(certificate.0.as_ref())
+    let cert = X509Certificate::from_der(certificate.as_ref())
         .map_err(|e| rustls::Error::General(e.to_string()))?;
     let spki = cert.1.public_key();
     let public_key_bytes =

@@ -22,8 +22,7 @@ where
 pub async fn serve(app: Router) -> Result<()> {
     // run it with hyper on localhost:3000
     debug!("listening on http://localhost:{}", DEFAULT_PORT);
-    axum::Server::bind(&format!("0.0.0.0:{}", DEFAULT_PORT).parse()?)
-        .serve(app.into_make_service())
-        .await?;
+    let listener = tokio::net::TcpListener::bind(("0.0.0.0", DEFAULT_PORT)).await?;
+    axum::serve(listener, app.into_make_service()).await?;
     Ok(())
 }

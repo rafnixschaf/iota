@@ -11,7 +11,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use aws_config::timeout::TimeoutConfig;
+use aws_config::{timeout::TimeoutConfig, BehaviorVersion};
 use aws_sdk_dynamodb::{
     primitives::Blob,
     types::{AttributeValue, PutRequest, WriteRequest},
@@ -68,7 +68,7 @@ impl KVStoreWorker {
             .operation_attempt_timeout(Duration::from_secs(10))
             .connect_timeout(Duration::from_secs(3))
             .build();
-        let aws_config = aws_config::from_env()
+        let aws_config = aws_config::defaults(BehaviorVersion::latest())
             .credentials_provider(credentials)
             .region(Region::new(config.aws_region))
             .timeout_config(timeout_config)
@@ -106,7 +106,7 @@ impl KVStoreWorker {
                             "bcs",
                             AttributeValue::B(Blob::new(bcs::to_bytes(value.borrow())?)),
                         )
-                        .build(),
+                        .build()?,
                 ))
                 .build();
             items.push(item);

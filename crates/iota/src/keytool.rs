@@ -13,13 +13,14 @@ use clap::*;
 use fastcrypto::{
     ed25519::Ed25519KeyPair,
     encoding::{Base64, Encoding, Hex},
+    error::FastCryptoError,
     hash::HashFunction,
     secp256k1::recoverable::Secp256k1Sig,
     traits::{KeyPair, ToFromBytes},
 };
 use fastcrypto_zkp::bn254::{
     utils::{get_oidc_url, get_token_exchange_url},
-    zk_login::{fetch_jwks, JwkId, OIDCProvider, JWK},
+    zk_login::{JwkId, OIDCProvider, JWK},
     zk_login_api::ZkLoginEnv,
 };
 use im::hashmap::HashMap as ImHashMap;
@@ -1171,6 +1172,31 @@ impl KeyToolCommand {
 
         cmd_result
     }
+}
+
+pub async fn fetch_jwks(
+    provider: &OIDCProvider,
+    client: &reqwest::Client,
+) -> Result<Vec<(JwkId, JWK)>, FastCryptoError> {
+    let response = client
+        .get(provider.get_config().jwk_endpoint)
+        .send()
+        .await
+        .map_err(|e| {
+            FastCryptoError::GeneralError(format!(
+                "Failed to get JWK {:?} {:?}",
+                e.to_string(),
+                provider
+            ))
+        })?;
+    let bytes = response.bytes().await.map_err(|e| {
+        FastCryptoError::GeneralError(format!(
+            "Failed to get bytes {:?} {:?}",
+            e.to_string(),
+            provider
+        ))
+    })?;
+    fastcrypto_zkp::bn254::zk_login::parse_jwks(&bytes, provider)
 }
 
 impl From<&IotaKeyPair> for Key {

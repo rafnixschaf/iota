@@ -4,7 +4,10 @@
 
 use std::sync::Arc;
 
-use axum::extract::{Json, State};
+use axum::{
+    body::Body,
+    extract::{Json, State},
+};
 use hyper::HeaderMap;
 use iota_json_rpc_api::CLIENT_TARGET_API_VERSION_HEADER;
 use jsonrpsee::{
@@ -80,11 +83,11 @@ impl<L: Logger> JsonRpcService<L> {
 }
 
 /// Create a response body.
-fn from_template<S: Into<hyper::Body>>(
+fn from_template<S: Into<Body>>(
     status: hyper::StatusCode,
     body: S,
     content_type: &'static str,
-) -> hyper::Response<hyper::Body> {
+) -> hyper::Response<Body> {
     hyper::Response::builder()
         .status(status)
         .header(
@@ -98,7 +101,7 @@ fn from_template<S: Into<hyper::Body>>(
 }
 
 /// Create a valid JSON response.
-pub(crate) fn ok_response(body: String) -> hyper::Response<hyper::Body> {
+pub(crate) fn ok_response(body: String) -> hyper::Response<Body> {
     const JSON: &str = "application/json; charset=utf-8";
     from_template(hyper::StatusCode::OK, body, JSON)
 }

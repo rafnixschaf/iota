@@ -35,7 +35,7 @@ macro_rules! var {
 
 #[cfg(test)]
 mod tests {
-    use std::{net::TcpListener, time::Duration};
+    use std::time::Duration;
 
     use axum::{
         http::{header, StatusCode},
@@ -46,6 +46,7 @@ mod tests {
     use multiaddr::Multiaddr;
     use prometheus::{Encoder, PROTOBUF_FORMAT};
     use protobuf::RepeatedField;
+    use tokio::net::TcpListener;
 
     use super::*;
     use crate::{
@@ -66,9 +67,7 @@ mod tests {
         let app = Router::new().route("/v1/push", post(handler));
 
         // run it
-        axum::Server::from_tcp(listener)
-            .unwrap()
-            .serve(app.into_make_service())
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     }
@@ -87,7 +86,8 @@ mod tests {
         let CertKeyPair(server_priv_cert, _) = admin::generate_self_cert("localhost".into());
 
         // create a fake rpc server
-        let dummy_remote_write_listener = std::net::TcpListener::bind("localhost:0").unwrap();
+        let dummy_remote_write_listener =
+            tokio::net::TcpListener::bind("localhost:0").await.unwrap();
         let dummy_remote_write_address = dummy_remote_write_listener.local_addr().unwrap();
         let dummy_remote_write_url = format!(
             "http://localhost:{}/v1/push",

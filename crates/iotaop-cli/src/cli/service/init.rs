@@ -81,7 +81,7 @@ fn add_member_to_workspace(path: &Path) -> Result<()> {
     let workspace_toml_path = &crates_dir.join("../Cargo.toml");
     // read the workspace toml
     let toml_content = fs::read_to_string(workspace_toml_path)?;
-    let mut toml = toml_content.parse::<toml_edit::Document>()?;
+    let mut toml = toml_content.parse::<toml_edit::DocumentMut>()?;
     toml["workspace"]["members"]
         .as_array_mut()
         .unwrap()
@@ -120,7 +120,7 @@ fn create_rust_service(path: &Path) -> Result<()> {
     let main_rs = PROJECT_DIR.get_file("src/main.rs").unwrap();
     let main_body = main_rs.contents();
     let cargo_body = std::str::from_utf8(cargo_toml.contents())?;
-    let mut toml_content = cargo_body.parse::<toml_edit::Document>()?;
+    let mut toml_content = cargo_body.parse::<toml_edit::DocumentMut>()?;
     toml_content["package"]["name"] = toml_edit::value(path.file_name().unwrap().to_str().unwrap());
     create_dir_all(path.join("src"))?;
     let mut main_file = File::create(path.join("src/main.rs"))?;

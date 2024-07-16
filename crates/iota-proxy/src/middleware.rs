@@ -6,12 +6,14 @@ use std::sync::Arc;
 use axum::{
     async_trait,
     body::Bytes,
-    extract::{Extension, FromRequest},
-    headers::{ContentLength, ContentType},
-    http::{Request, StatusCode},
+    extract::{Extension, FromRequest, Request},
+    http::StatusCode,
     middleware::Next,
     response::Response,
-    BoxError, TypedHeader,
+};
+use axum_extra::{
+    headers::{ContentLength, ContentType},
+    TypedHeader,
 };
 use bytes::Buf;
 use hyper::header::CONTENT_ENCODING;
@@ -41,20 +43,20 @@ static MIDDLEWARE_HEADERS: Lazy<CounterVec> = Lazy::new(|| {
 });
 
 /// we expect iota-node to send us an http header content-length encoding.
-pub async fn expect_content_length<B>(
+pub async fn expect_content_length(
     TypedHeader(content_length): TypedHeader<ContentLength>,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request,
+    next: Next,
 ) -> Result<Response, (StatusCode, &'static str)> {
     MIDDLEWARE_HEADERS.with_label_values(&["content-length", &format!("{}", content_length.0)]);
     Ok(next.run(request).await)
 }
 
 /// we expect iota-node to send us an http header content-type encoding.
-pub async fn expect_mysten_proxy_header<B>(
+pub async fn expect_mysten_proxy_header(
     TypedHeader(content_type): TypedHeader<ContentType>,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request,
+    next: Next,
 ) -> Result<Response, (StatusCode, &'static str)> {
     match format!("{content_type}").as_str() {
         prometheus::PROTOBUF_FORMAT => Ok(next.run(request).await),
@@ -70,11 +72,11 @@ pub async fn expect_mysten_proxy_header<B>(
 
 /// we expect that calling iota-nodes are known on the blockchain and we enforce
 /// their pub key tls creds here
-pub async fn expect_valid_public_key<B>(
+pub async fn expect_valid_public_key(
     Extension(allower): Extension<Arc<IotaNodeProvider>>,
     Extension(tls_connect_info): Extension<TlsConnectionInfo>,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request,
+    next: Next,
 ) -> Result<Response, (StatusCode, &'static str)> {
     let Some(public_key) = tls_connect_info.public_key() else {
         error!("unable to obtain public key from connecting client");
@@ -102,16 +104,13 @@ pub async fn expect_valid_public_key<B>(
 pub struct LenDelimProtobuf(pub Vec<MetricFamily>);
 
 #[async_trait]
-impl<S, B> FromRequest<S, B> for LenDelimProtobuf
+impl<S> FromRequest<S> for LenDelimProtobuf
 where
     S: Send + Sync,
-    B: http_body::Body + Send + 'static,
-    B::Data: Send,
-    B::Error: Into<BoxError>,
 {
     type Rejection = (StatusCode, String);
 
-    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let should_be_snappy = req
             .headers()
             .get(CONTENT_ENCODING)

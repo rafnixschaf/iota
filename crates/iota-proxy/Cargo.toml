@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 anyhow.workspace = true
 axum.workspace = true
+axum-extra = { workspace = true, features = ["typed-header"] }
 axum-server.workspace = true
 bytes.workspace = true
 clap.workspace = true

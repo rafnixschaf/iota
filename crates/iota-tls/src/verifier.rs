@@ -8,8 +8,13 @@ use std::{
 };
 
 use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes};
+use rustls::CertificateError;
+use webpki::{
+    anchor_from_trusted_cert,
+    types::{CertificateDer, PrivateKeyDer, SignatureVerificationAlgorithm, UnixTime},
+};
 
-static SUPPORTED_SIG_ALGS: &[&webpki::SignatureAlgorithm] = &[&webpki::ED25519];
+static SUPPORTED_SIG_ALGS: &[&dyn SignatureVerificationAlgorithm] = &[webpki::ring::ED25519];
 
 pub type ValidatorAllowlist = Arc<RwLock<HashSet<Ed25519PublicKey>>>;
 
@@ -23,7 +28,7 @@ pub trait Allower: Send + Sync {
 }
 
 /// AllowAll will allow all public certificates to be validated, it fails open
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct AllowAll;
 
 impl Allower for AllowAll {
@@ -34,7 +39,7 @@ impl Allower for AllowAll {
 
 /// HashSetAllow restricts keys to those that are found in the member set.
 /// non-members will not be allowed.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct HashSetAllow {
     inner: ValidatorAllowlist,
 }
@@ -75,14 +80,13 @@ impl<A> CertVerifier<A> {
     }
 }
 
-impl<A: Allower + 'static> CertVerifier<A> {
+impl<A: Allower + std::fmt::Debug + 'static> CertVerifier<A> {
     pub fn rustls_server_config(
         self,
-        certificates: Vec<rustls::Certificate>,
-        private_key: rustls::PrivateKey,
+        certificates: Vec<CertificateDer<'static>>,
+        private_key: PrivateKeyDer<'static>,
     ) -> Result<rustls::ServerConfig, rustls::Error> {
         let mut config = rustls::ServerConfig::builder()
-            .with_safe_defaults()
             .with_client_cert_verifier(std::sync::Arc::new(self))
             .with_single_cert(certificates, private_key)?;
         config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
@@ -91,7 +95,9 @@ impl<A: Allower + 'static> CertVerifier<A> {
     }
 }
 
-impl<A: Allower> rustls::server::ClientCertVerifier for CertVerifier<A> {
+impl<A: Allower + std::fmt::Debug + 'static> rustls::server::danger::ClientCertVerifier
+    for CertVerifier<A>
+{
     fn offer_client_auth(&self) -> bool {
         true
     }
@@ -100,7 +106,7 @@ impl<A: Allower> rustls::server::ClientCertVerifier for CertVerifier<A> {
         true
     }
 
-    fn client_auth_root_subjects(&self) -> &[rustls::DistinguishedName] {
+    fn root_hint_subjects(&self) -> &[rustls::DistinguishedName] {
         // Since we're relying on self-signed certificates and not on CAs, continue the
         // handshake without passing a list of CA DNs
         &[]
@@ -113,10 +119,10 @@ impl<A: Allower> rustls::server::ClientCertVerifier for CertVerifier<A> {
     // 2. we call webpki's certificate verification
     fn verify_client_cert(
         &self,
-        end_entity: &rustls::Certificate,
-        intermediates: &[rustls::Certificate],
-        now: std::time::SystemTime,
-    ) -> Result<rustls::server::ClientCertVerified, rustls::Error> {
+        end_entity: &CertificateDer,
+        intermediates: &[CertificateDer],
+        now: UnixTime,
+    ) -> Result<rustls::server::danger::ClientCertVerified, rustls::Error> {
         // Step 1: Check this matches the key we expect
         let public_key = public_key_from_certificate(end_entity)?;
 
@@ -130,51 +136,68 @@ impl<A: Allower> rustls::server::ClientCertVerifier for CertVerifier<A> {
         // We now check we're receiving correctly signed data with the expected key
         // Step 1: prepare arguments
         let (cert, chain, trustroots) = prepare_for_self_signed(end_entity, intermediates)?;
-        let now = webpki::Time::try_from(now).map_err(|_| rustls::Error::FailedToGetCurrentTime)?;
 
         // Step 2: call verification from webpki
-        let cert = cert
-            .verify_for_usage(
-                SUPPORTED_SIG_ALGS,
-                &trustroots,
-                &chain,
-                now,
-                webpki::KeyUsage::client_auth(),
-                &[],
-            )
-            .map_err(pki_error)
-            .map(|_| cert)?;
+        cert.verify_for_usage(
+            SUPPORTED_SIG_ALGS,
+            &trustroots,
+            &chain,
+            now,
+            webpki::KeyUsage::client_auth(),
+            None,
+            None,
+        )
+        .map_err(pki_error)?;
 
         // Ensure the cert is valid for the network name
-        let dns_nameref =
-            webpki::SubjectNameRef::try_from_ascii_str(crate::IOTA_VALIDATOR_SERVER_NAME)
-                .map_err(|_| rustls::Error::UnsupportedNameType)?;
-        cert.verify_is_valid_for_subject_name(dns_nameref)
+        let dns_nameref = webpki::types::ServerName::try_from(crate::IOTA_VALIDATOR_SERVER_NAME)
+            .map_err(|_| rustls::Error::UnsupportedNameType)?;
+        cert.verify_is_valid_for_subject_name(&dns_nameref)
             .map_err(pki_error)
-            .map(|_| rustls::server::ClientCertVerified::assertion())
+            .map(|_| rustls::server::danger::ClientCertVerified::assertion())
+    }
+
+    fn verify_tls12_signature(
+        &self,
+        _message: &[u8],
+        _cert: &CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Err(rustls::Error::General("unsupported".to_owned()))
+    }
+
+    fn verify_tls13_signature(
+        &self,
+        _message: &[u8],
+        _cert: &CertificateDer<'_>,
+        _dss: &rustls::DigitallySignedStruct,
+    ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+        Err(rustls::Error::General("unsupported".to_owned()))
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+        vec![rustls::SignatureScheme::ED25519]
     }
 }
 
 type CertChainAndRoots<'a> = (
     webpki::EndEntityCert<'a>,
-    Vec<&'a [u8]>,
-    Vec<webpki::TrustAnchor<'a>>,
+    &'a [CertificateDer<'a>],
+    Vec<webpki::types::TrustAnchor<'a>>,
 );
 
 // This prepares arguments for webpki, including a trust anchor which is the end
 // entity of the certificate (which embodies a self-signed certificate by
 // definition)
 fn prepare_for_self_signed<'a>(
-    end_entity: &'a rustls::Certificate,
-    intermediates: &'a [rustls::Certificate],
+    end_entity: &'a CertificateDer,
+    intermediates: &'a [CertificateDer],
 ) -> Result<CertChainAndRoots<'a>, rustls::Error> {
     // EE cert must appear first.
-    let cert = webpki::EndEntityCert::try_from(end_entity.0.as_ref()).map_err(pki_error)?;
-
-    let intermediates: Vec<&'a [u8]> = intermediates.iter().map(|cert| cert.0.as_ref()).collect();
+    let cert = webpki::EndEntityCert::try_from(end_entity).map_err(pki_error)?;
 
     // reinterpret the certificate as a root, materializing the self-signed policy
-    let root = webpki::TrustAnchor::try_from_cert_der(end_entity.0.as_ref()).map_err(pki_error)?;
+    let root = anchor_from_trusted_cert(end_entity).map_err(pki_error)?;
 
     Ok((cert, intermediates, vec![root]))
 }
@@ -182,24 +205,22 @@ fn prepare_for_self_signed<'a>(
 fn pki_error(error: webpki::Error) -> rustls::Error {
     use webpki::Error::*;
     match error {
-        BadDer | BadDerTime => {
-            rustls::Error::InvalidCertificate(rustls::CertificateError::BadEncoding)
-        }
+        BadDer | BadDerTime => rustls::Error::InvalidCertificate(CertificateError::BadEncoding),
         InvalidSignatureForPublicKey
         | UnsupportedSignatureAlgorithm
         | UnsupportedSignatureAlgorithmForPublicKey => {
-            rustls::Error::InvalidCertificate(rustls::CertificateError::BadSignature)
+            rustls::Error::InvalidCertificate(CertificateError::BadSignature)
         }
         e => rustls::Error::General(format!("invalid peer certificate: {e}")),
     }
 }
 
 pub(crate) fn public_key_from_certificate(
-    certificate: &rustls::Certificate,
+    certificate: &CertificateDer,
 ) -> Result<Ed25519PublicKey, rustls::Error> {
     use x509_parser::{certificate::X509Certificate, prelude::FromDer};
 
-    let cert = X509Certificate::from_der(certificate.0.as_ref())
+    let cert = X509Certificate::from_der(certificate.as_ref())
         .map_err(|e| rustls::Error::General(e.to_string()))?;
     let spki = cert.1.public_key();
     let public_key_bytes =
