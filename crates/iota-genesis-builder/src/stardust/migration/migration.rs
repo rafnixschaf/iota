@@ -419,7 +419,7 @@ pub(super) fn create_migration_context(
 ) -> TxContext {
     TxContext::new(
         &IotaAddress::default(),
-        &target_network.migration_transaction_digest(&coin_type),
+        &target_network.migration_transaction_digest(coin_type),
         &EpochData::new_genesis(0),
     )
 }
