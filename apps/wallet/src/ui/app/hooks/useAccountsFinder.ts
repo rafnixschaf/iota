@@ -1,25 +1,24 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { type AddressFromFinder } from '_src/shared/accounts';
 import { useBackgroundClient } from './useBackgroundClient';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { IOTA_COIN_TYPE_ID, GAS_TYPE_ARG } from '../redux/slices/iota-objects/Coin';
-import { type GetAccountsFinderResultsResponse } from '_src/shared/messaging/messages/payloads/accounts-finder';
+import { useQueryClient } from '@tanstack/react-query';
+import { IOTA_TYPE_ARG } from '@iota/iota.js/utils';
+import { IOTA_BIP44_COIN_TYPE } from '../redux/slices/iota-objects/Coin';
 import { type AllowedAccountTypes } from '_src/background/accounts-finder';
 
 export interface UseAccountFinderOptions {
     accountType?: AllowedAccountTypes;
-    coinType?: number;
-    gasType?: string;
+    bip44CoinType?: number;
+    coinType?: string;
     accountGapLimit?: number;
     addressGapLimit?: number;
     sourceID: string;
 }
 
 export function useAccountsFinder({
-    coinType = IOTA_COIN_TYPE_ID,
-    gasType = GAS_TYPE_ARG,
+    bip44CoinType = IOTA_BIP44_COIN_TYPE,
+    coinType = IOTA_TYPE_ARG,
     addressGapLimit,
     accountGapLimit,
     sourceID,
@@ -27,15 +26,6 @@ export function useAccountsFinder({
 }: UseAccountFinderOptions) {
     const backgroundClient = useBackgroundClient();
     const queryClient = useQueryClient();
-    const accountsQuery = useQuery<AddressFromFinder[]>({
-        queryKey: ['accounts-finder-results'],
-        async queryFn() {
-            const response = await backgroundClient.getLastAccountFinderResults();
-            const payload = response.payload as GetAccountsFinderResultsResponse;
-            return payload.results;
-        },
-        enabled: !!sourceID,
-    });
 
     async function reset() {
         await backgroundClient.resetAccountsFinder();
@@ -44,13 +34,13 @@ export function useAccountsFinder({
         });
     }
 
-    async function searchMore() {
+    async function search() {
         if (!accountType) return;
 
         await backgroundClient.searchAccountsFinder({
             accountType,
-            bip44CoinType: coinType,
-            coinType: gasType,
+            bip44CoinType,
+            coinType,
             sourceID,
             accountGapLimit,
             addressGapLimit,
@@ -61,8 +51,7 @@ export function useAccountsFinder({
     }
 
     return {
-        ...accountsQuery,
         reset,
-        searchMore,
+        search,
     };
 }
