@@ -328,33 +328,33 @@ jobs:
       - name: Check execution builds
         run: cargo build -p iota-execution
 
-  #indexer:
-  #  name: indexer
-  #  needs: diff
-  #  if: needs.diff.outputs.isRust == 'true'
-  #  timeout-minutes: 45
-  #  runs-on: [self-hosted-rust]
-  #  services:
-  #    postgres:
-  #      image: postgres
-  #      env:
-  #        POSTGRES_PASSWORD: postgrespw
-  #      options: >-
-  #        --health-cmd pg_isready
-  #        --health-interval 10s
-  #        --health-timeout 5s
-  #        --health-retries 5
-  #      ports:
-  #        - 5432:5432
-  #  steps:
-  #    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
-  #    - name: integration-test-with-postgres
-  #      #We only have 1 instance of postgres DB, can only run test in single thread
-  #      run: |
-  #        cargo test --package iota-indexer --test integration_tests --features pg_integration -- --test-threads=1
-  #      env:
-  #        POSTGRES_HOST: localhost
-  #        POSTGRES_PORT: 5432
+    #indexer:
+    #  name: indexer
+    #  needs: diff
+    #  if: needs.diff.outputs.isRust == 'true'
+    #  timeout-minutes: 45
+    #  runs-on: [self-hosted-rust]
+    #  services:
+    #    postgres:
+    #      image: postgres
+    #      env:
+    #        POSTGRES_PASSWORD: postgrespw
+    #      options: >-
+    #        --health-cmd pg_isready
+    #        --health-interval 10s
+    #        --health-timeout 5s
+    #        --health-retries 5
+    #      ports:
+    #        - 5432:5432
+    #  steps:
+    #    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # Pin v4.1.1
+    #    - name: integration-test-with-postgres
+    #      #We only have 1 instance of postgres DB, can only run test in single thread
+    #      run: |
+    #        cargo test --package iota-indexer --test integration_tests --features pg_integration -- --test-threads=1
+    #      env:
+    #        POSTGRES_HOST: localhost
+    #        POSTGRES_PORT: 5432
 
   graphql-rpc:
     name: graphql-rpc
@@ -362,11 +362,12 @@ jobs:
     if: needs.diff.outputs.isRust == 'true'
     timeout-minutes: 45
     runs-on: [self-hosted-rust]
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
     services:
       postgres:
         image: postgres
-        env:
-          POSTGRES_PASSWORD: postgrespw
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -383,18 +384,15 @@ jobs:
       - name: Setup db
         run: |
           PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U $POSTGRES_USER -c 'CREATE DATABASE iota_indexer;' -c 'ALTER SYSTEM SET max_connections = 500;'
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgrespw
       - run: docker restart --time 0 postgres_container
       - run: sleep 5
       - name: tests-requiring-postgres
         run: |
-          cargo nextest run --test-threads 1 --package iota-graphql-rpc --test e2e_tests --test examples_validation_tests --features pg_integration
-          cargo nextest run --test-threads 1 --package iota-graphql-rpc --lib --features pg_integration -- test_query_cost
-          cargo nextest run --test-threads 8 --package iota-graphql-e2e-tests --features pg_integration
-          cargo nextest run --test-threads 1 --package iota-cluster-test --test local_cluster_test --features pg_integration
-          cargo nextest run --test-threads 1 --package iota-indexer --test ingestion_tests --features pg_integration
+          cargo nextest run --no-fail-fast --test-threads 1 --package iota-graphql-rpc --test e2e_tests --test examples_validation_tests --features pg_integration
+          cargo nextest run --no-fail-fast --test-threads 1 --package iota-graphql-rpc --lib --features pg_integration -- test_query_cost
+          cargo nextest run --no-fail-fast --test-threads 8 --package iota-graphql-e2e-tests --features pg_integration
+          cargo nextest run --no-fail-fast --test-threads 1 --package iota-cluster-test --test local_cluster_test --features pg_integration
+          cargo nextest run --no-fail-fast --test-threads 1 --package iota-indexer --test ingestion_tests --features pg_integration
 
         env:
           POSTGRES_HOST: localhost
