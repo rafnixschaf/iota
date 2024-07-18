@@ -393,7 +393,3 @@ jobs:
           cargo nextest run --no-fail-fast --test-threads 8 --package iota-graphql-e2e-tests --features pg_integration
           cargo nextest run --no-fail-fast --test-threads 1 --package iota-cluster-test --test local_cluster_test --features pg_integration
           cargo nextest run --no-fail-fast --test-threads 1 --package iota-indexer --test ingestion_tests --features pg_integration
-
-        env:
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
