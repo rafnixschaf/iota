@@ -7,7 +7,6 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use aws_config::BehaviorVersion;
 use aws_runtime::env_config::file::{EnvConfigFileKind, EnvConfigFiles};
 use aws_sdk_ec2::{
     config::Region,
@@ -64,7 +63,7 @@ impl AwsClient {
 
         let mut clients = HashMap::new();
         for region in settings.regions.clone() {
-            let sdk_config = aws_config::defaults(BehaviorVersion::latest())
+            let sdk_config = aws_config::from_env()
                 .region(Region::new(region.clone()))
                 .profile_files(profile_files.clone())
                 .load()

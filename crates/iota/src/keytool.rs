@@ -8,7 +8,6 @@ use std::{
 };
 
 use anyhow::anyhow;
-use aws_config::BehaviorVersion;
 use aws_sdk_kms::{
     primitives::Blob,
     types::{MessageType, SigningAlgorithmSpec},
@@ -875,7 +874,7 @@ impl KeyToolCommand {
                 info!("Digest to sign: {:?}", Base64::encode(digest));
 
                 // Set up the KMS client in default region.
-                let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+                let config = aws_config::from_env().load().await;
                 let kms = KmsClient::new(&config);
 
                 // Sign the message, normalize the signature and then compacts it
