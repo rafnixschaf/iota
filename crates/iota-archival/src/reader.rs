@@ -580,7 +580,7 @@ impl ArchiveReader {
                     .expect("store operation should not fail");
                 Ok::<VerifiedCheckpoint, anyhow::Error>(verified_checkpoint)
             })
-            .map_err(|e| anyhow!("Failed to get verified checkpoint: {:?}", e))
+            .map_err(|e| anyhow!("Failed to get verified checkpoint: {e:?}"))
     }
 
     async fn get_summary_files(

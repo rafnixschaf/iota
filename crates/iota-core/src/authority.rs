@@ -3207,7 +3207,7 @@ impl AuthorityState {
 
         let checkpoint = self
             .get_checkpoint_by_sequence_number(0)
-            .tap_err(|e| error!("Failed to get genesis checkpoint: {:?}", e))
+            .tap_err(|e| error!("Failed to get genesis checkpoint: {e:?}"))
             .ok()?
             .tap_none(|| error!("Genesis checkpoint is missing from DB"))?;
         // It's ok if the value is already set due to data races.

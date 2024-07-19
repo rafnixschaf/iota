@@ -345,7 +345,7 @@ fn benchmark_genesis(
     let primary_network_key_files = (0..ips.len())
         .map(|i| {
             let mut path = working_directory.clone();
-            path.push(format!("primary-{}-network-key.json", i));
+            path.push(format!("primary-{i}-network-key.json"));
             path
         })
         .collect::<Vec<_>>();
@@ -641,9 +641,9 @@ async fn run(
                 worker_store_path.push(parent);
             }
             if let Some(file_name) = store_path.file_name().and_then(|name| name.to_str()) {
-                worker_store_path.push(format!("{}-{}", file_name, worker_id));
+                worker_store_path.push(format!("{file_name}-{worker_id}"));
             } else {
-                worker_store_path.push(format!("worker-db-{}", worker_id));
+                worker_store_path.push(format!("worker-db-{worker_id}"));
             }
             let worker_store =
                 NodeStorage::reopen(worker_store_path, Some(certificate_store_cache_metrics));

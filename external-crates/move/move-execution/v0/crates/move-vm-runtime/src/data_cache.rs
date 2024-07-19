@@ -208,7 +208,7 @@ impl<'l, S: MoveResolver> DataStore for TransactionDataCache<'l, S> {
                     GlobalValue::none()
                 }
                 Err(err) => {
-                    let msg = format!("Unexpected storage error: {:?}", err);
+                    let msg = format!("Unexpected storage error: {err:?}");
                     return Err(
                         PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                             .with_message(msg),
@@ -266,7 +266,7 @@ impl<'l, S: MoveResolver> DataStore for TransactionDataCache<'l, S> {
                 .with_message(format!("Cannot find {:?} in data cache", module_id))
                 .finish(Location::Undefined)),
             Err(err) => {
-                let msg = format!("Unexpected storage error: {:?}", err);
+                let msg = format!("Unexpected storage error: {err:?}");
                 Err(
                     PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                         .with_message(msg)

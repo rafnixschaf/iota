@@ -160,11 +160,11 @@ impl OnDiskStateView {
                 let script: CompiledScript;
                 let view = if is_module {
                     module = CompiledModule::deserialize_with_defaults(&bytes)
-                        .map_err(|e| anyhow!("Failure deserializing module: {:?}", e))?;
+                        .map_err(|e| anyhow!("Failure deserializing module: {e:?}"))?;
                     BinaryIndexedView::Module(&module)
                 } else {
                     script = CompiledScript::deserialize(&bytes)
-                        .map_err(|e| anyhow!("Failure deserializing script: {:?}", e))?;
+                        .map_err(|e| anyhow!("Failure deserializing script: {e:?}"))?;
                     BinaryIndexedView::Script(&script)
                 };
                 // TODO: find or create source map and pass it to disassembler
@@ -248,7 +248,7 @@ impl OnDiskStateView {
         self.module_paths()
             .map(|path| {
                 CompiledModule::deserialize_with_defaults(&Self::get_bytes(&path)?.unwrap())
-                    .map_err(|e| anyhow!("Failed to deserialized module: {:?}", e))
+                    .map_err(|e| anyhow!("Failed to deserialized module: {e:?}"))
             })
             .collect::<Result<Vec<CompiledModule>>>()
     }

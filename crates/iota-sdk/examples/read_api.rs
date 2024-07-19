@@ -78,7 +78,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .try_get_parsed_past_object(object_id, version, iota_data_options.clone())
         .await?;
     println!(" *** Past Object *** ");
-    println!("{:?}", past_object);
+    println!("{past_object:?}");
     println!(" *** Past Object ***\n");
 
     let iota_get_past_object_request = past_object.clone().into_object()?;

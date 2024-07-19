@@ -552,7 +552,7 @@ impl KeyToolCommand {
 
                 if tx_bytes.is_some() {
                     let tx_bytes = Base64::decode(&tx_bytes.unwrap())
-                        .map_err(|e| anyhow!("Invalid base64 tx bytes: {:?}", e))?;
+                        .map_err(|e| anyhow!("Invalid base64 tx bytes: {e:?}"))?;
                     let tx_data: TransactionData = bcs::from_bytes(&tx_bytes)?;
                     let s = GenericSignature::MultiSig(multisig);
                     let res = s.verify_authenticator(
@@ -568,8 +568,8 @@ impl KeyToolCommand {
             }
 
             KeyToolCommand::DecodeOrVerifyTx { tx_bytes, sig } => {
-                let tx_bytes = Base64::decode(&tx_bytes)
-                    .map_err(|e| anyhow!("Invalid base64 key: {:?}", e))?;
+                let tx_bytes =
+                    Base64::decode(&tx_bytes).map_err(|e| anyhow!("Invalid base64 key: {e:?}"))?;
                 let tx_data: TransactionData = bcs::from_bytes(&tx_bytes)?;
                 match sig {
                     None => CommandOutput::DecodeOrVerifyTx(DecodeOrVerifyTxOutput {
@@ -822,7 +822,7 @@ impl KeyToolCommand {
                 let intent_clone = intent.clone();
                 let msg: TransactionData =
                     bcs::from_bytes(&Base64::decode(&data).map_err(|e| {
-                        anyhow!("Cannot deserialize data as TransactionData {:?}", e)
+                        anyhow!("Cannot deserialize data as TransactionData {e:?}")
                     })?)?;
                 let intent_msg = IntentMessage::new(intent, msg);
                 let raw_intent_msg: String = Base64::encode(bcs::to_bytes(&intent_msg)?);

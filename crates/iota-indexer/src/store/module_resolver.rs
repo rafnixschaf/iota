@@ -129,7 +129,7 @@ impl IndexerStorePackageModuleResolver {
         };
         let object = bcs::from_bytes::<Object>(&bcs)?;
         Package::read(&object).map_err(|e| {
-            IndexerError::PostgresReadError(format!("Failed parsing object to package: {:?}", e))
+            IndexerError::PostgresReadError(format!("Failed parsing object to package: {e:?}"))
         })
     }
 }

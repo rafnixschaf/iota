@@ -140,7 +140,7 @@ async fn enable_tracing(
 
     if let Some(trace_file) = trace_file {
         if let Err(err) = state.tracing_handle.update_trace_file(&trace_file) {
-            response.push(format!("can't update trace file: {:?}", err));
+            response.push(format!("can't update trace file: {err:?}"));
             return (StatusCode::BAD_REQUEST, response.join("\n"));
         } else {
             response.push(format!("trace file set to {:?}", trace_file));
@@ -169,7 +169,7 @@ async fn enable_tracing(
             (StatusCode::OK, response.join("\n"))
         }
         Err(err) => {
-            response.push(format!("can't update filter: {:?}", err));
+            response.push(format!("can't update filter: {err:?}"));
             (StatusCode::BAD_REQUEST, response.join("\n"))
         }
     }

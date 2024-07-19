@@ -16,7 +16,7 @@ macro_rules! with_tracing {
             let interim_result: RpcInterimResult<_> = $future.await;
             let elapsed = start.elapsed();
             let result: RpcResult<_> = interim_result.map_err(|e: Error| {
-                let anyhow_error = anyhow!("{:?}", e);
+                let anyhow_error = anyhow!("{e:?}");
 
                 let rpc_error: RpcError = e.into();
                 if !matches!(rpc_error, RpcError::Call(CallError::InvalidParams(_))) {

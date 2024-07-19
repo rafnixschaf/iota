@@ -178,11 +178,11 @@ impl DBCheckpointHandler {
                         Ok(epochs) => {
                             self.metrics.first_missing_db_checkpoint_epoch.set(epochs.first().cloned().unwrap_or(0) as i64);
                             if let Err(err) = self.upload_db_checkpoints_to_object_store(epochs).await {
-                                error!("Failed to upload db checkpoint to remote store with err: {:?}", err);
+                                error!("Failed to upload db checkpoint to remote store with err: {err:?}");
                             }
                         }
                         Err(err) => {
-                            error!("Failed to find missing db checkpoints in remote store: {:?}", err);
+                            error!("Failed to find missing db checkpoints in remote store: {err:?}");
                         }
                     }
                 },

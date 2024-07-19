@@ -703,7 +703,7 @@ impl IndexStore {
             // NOTE: filter via checkpoint sequence number is implemented in
             // `get_transactions` of authority.rs.
             Some(_) => Err(IotaError::UserInputError {
-                error: UserInputError::Unsupported(format!("{:?}", filter)),
+                error: UserInputError::Unsupported(format!("{filter:?}")),
             }),
             None => {
                 let iter = self.tables.transaction_order.unbounded_iter();
@@ -1365,7 +1365,7 @@ impl IndexStore {
             .await
             .unwrap()
             .map_err(|e| {
-                IotaError::ExecutionError(format!("Failed to read balance frm DB: {:?}", e))
+                IotaError::ExecutionError(format!("Failed to read balance frm DB: {e:?}"))
             });
         }
 
@@ -1403,7 +1403,7 @@ impl IndexStore {
                 .await
                 .unwrap()
                 .map_err(|e| {
-                    IotaError::ExecutionError(format!("Failed to read balance frm DB: {:?}", e))
+                    IotaError::ExecutionError(format!("Failed to read balance frm DB: {e:?}"))
                 })
             })
             .await
@@ -1429,7 +1429,7 @@ impl IndexStore {
             .await
             .unwrap()
             .map_err(|e| {
-                IotaError::ExecutionError(format!("Failed to read all balance from DB: {:?}", e))
+                IotaError::ExecutionError(format!("Failed to read all balance from DB: {e:?}"))
             });
         }
 

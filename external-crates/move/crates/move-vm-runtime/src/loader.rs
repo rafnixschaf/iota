@@ -1088,7 +1088,7 @@ impl Loader {
         // verify. It is an invariant violation if they don't.
         let module = CompiledModule::deserialize_with_config(&bytes, &self.vm_config.binary_config)
             .map_err(|err| {
-                let msg = format!("Deserialization error: {:?}", err);
+                let msg = format!("Deserialization error: {err:?}");
                 PartialVMError::new(StatusCode::CODE_DESERIALIZATION_ERROR)
                     .with_message(msg)
                     .finish(Location::Module(storage_id.clone()))

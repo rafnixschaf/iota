@@ -219,6 +219,6 @@ pub fn on_completion_request(
         .sender
         .send(lsp_server::Message::Response(response))
     {
-        eprintln!("could not send completion response: {:?}", err);
+        eprintln!("could not send completion response: {err:?}");
     }
 }

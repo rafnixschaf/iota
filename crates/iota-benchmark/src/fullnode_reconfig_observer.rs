@@ -86,8 +86,7 @@ impl ReconfigObserver<NetworkAuthorityClient> for FullNodeReconfigObserver {
                                 quorum_driver.update_validators(Arc::new(auth_agg)).await
                             }
                             Err(err) => error!(
-                                "Can't create AuthorityAggregator from IotaSystemState: {:?}",
-                                err
+                                "Can't create AuthorityAggregator from IotaSystemState: {err:?}"
                             ),
                         }
                     } else {
@@ -97,7 +96,7 @@ impl ReconfigObserver<NetworkAuthorityClient> for FullNodeReconfigObserver {
                         );
                     }
                 }
-                Err(err) => error!("Can't get IotaSystemState from Full Node: {:?}", err,),
+                Err(err) => error!("Can't get IotaSystemState from Full Node: {err:?}"),
             }
         }
     }

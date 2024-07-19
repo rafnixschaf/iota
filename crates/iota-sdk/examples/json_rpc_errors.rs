@@ -22,7 +22,7 @@ async fn main() -> Result<(), anyhow::Error> {
         println!("{converted}");
         println!("{}", converted.is_client_error());
     } else {
-        bail!("Expected Error::RpcError, got {:?}", error);
+        bail!("Expected Error::RpcError, got {error:?}");
     }
     Ok(())
 }

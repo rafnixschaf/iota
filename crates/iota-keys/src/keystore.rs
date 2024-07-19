@@ -134,14 +134,14 @@ pub trait AccountKeystore: Send + Sync {
         derivation_path: Option<DerivationPath>,
     ) -> Result<IotaAddress, anyhow::Error> {
         let mnemonic = Mnemonic::from_phrase(phrase, Language::English)
-            .map_err(|e| anyhow::anyhow!("Invalid mnemonic phrase: {:?}", e))?;
+            .map_err(|e| anyhow::anyhow!("Invalid mnemonic phrase: {e:?}"))?;
         let seed = Seed::new(&mnemonic, "");
         match derive_key_pair_from_path(seed.as_bytes(), derivation_path, &key_scheme) {
             Ok((address, kp)) => {
                 self.add_key(None, kp)?;
                 Ok(address)
             }
-            Err(e) => Err(anyhow!("error getting keypair {:?}", e)),
+            Err(e) => Err(anyhow!("error getting keypair {e:?}")),
         }
     }
 }

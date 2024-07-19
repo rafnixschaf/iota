@@ -234,7 +234,7 @@ impl From<IotaRpcError> for ReplayEngineError {
                 ReplayEngineError::IotaRpcRequestTimeout
             }
             _ => ReplayEngineError::IotaRpcError {
-                err: format!("{:?}", err),
+                err: format!("{err:?}"),
             },
         }
     }

@@ -750,7 +750,7 @@ impl SymbolicatorRunner {
                             the source files are located in a sub-directory of a package containing
                             a Move.toml file. "
                             ))) {
-                                eprintln!("could not pass missing manifest error: {:?}", err);
+                                eprintln!("could not pass missing manifest error: {err:?}");
                             }
                             continue;
                         }
@@ -779,13 +779,13 @@ impl SymbolicatorRunner {
                                 }
                                 // set/reset (previous) diagnostics
                                 if let Err(err) = sender.send(Ok(lsp_diagnostics)) {
-                                    eprintln!("could not pass diagnostics: {:?}", err);
+                                    eprintln!("could not pass diagnostics: {err:?}");
                                 }
                             }
                             Err(err) => {
-                                eprintln!("symbolication failed: {:?}", err);
+                                eprintln!("symbolication failed: {err:?}");
                                 if let Err(err) = sender.send(Err(err)) {
-                                    eprintln!("could not pass compiler error: {:?}", err);
+                                    eprintln!("could not pass compiler error: {err:?}");
                                 }
                             }
                         }
@@ -3413,7 +3413,7 @@ pub fn on_use_request(
         .sender
         .send(lsp_server::Message::Response(response))
     {
-        eprintln!("could not send use response: {:?}", err);
+        eprintln!("could not send use response: {err:?}");
     }
 }
 
@@ -3529,7 +3529,7 @@ pub fn on_document_symbol_request(context: &Context, request: &Request, symbols:
         .sender
         .send(lsp_server::Message::Response(response))
     {
-        eprintln!("could not send use response: {:?}", err);
+        eprintln!("could not send use response: {err:?}");
     }
 }
 

@@ -156,7 +156,7 @@ impl CheckpointReader {
             match self.remote_fetcher_receiver.as_mut().unwrap().try_recv() {
                 Ok(Ok(checkpoint)) => checkpoints.push(checkpoint),
                 Ok(Err(err)) => {
-                    error!("remote reader transient error {:?}", err);
+                    error!("remote reader transient error {err:?}");
                     self.remote_fetcher_receiver = None;
                     break;
                 }
@@ -269,7 +269,7 @@ impl CheckpointReader {
         std::fs::create_dir_all(self.path.clone()).expect("failed to create a directory");
         let mut watcher = notify::recommended_watcher(move |res| {
             if let Err(err) = res {
-                eprintln!("watch error: {:?}", err);
+                eprintln!("watch error: {err:?}");
             }
             inotify_sender
                 .blocking_send(())

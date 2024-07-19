@@ -171,7 +171,7 @@ mod checked {
                         ])
                         .inc();
                     return Err(IotaError::ModuleVerificationFailure {
-                        error: format!("Verification timedout: {}", e),
+                        error: format!("Verification timedout: {e}"),
                     });
                 };
             } else if let Err(err) = iota_verify_module_metered_check_timeout_only(

@@ -52,7 +52,7 @@ macro_rules! exit_main {
         match $result {
             Ok(_) => (),
             Err(err) => {
-                let err = format!("{:?}", err);
+                let err = format!("{err:?}");
                 println!("{}", err.bold().red());
                 std::process::exit(1);
             }
@@ -300,7 +300,7 @@ pub enum IotaObjectResponseError {
     },
     #[error("Unknown Error.")]
     Unknown,
-    #[error("Display Error: {:?}", error)]
+    #[error("Display Error: {error:?}")]
     DisplayError { error: String },
     // TODO: also integrate IotaPastObjectResponse (VersionNotFound,  VersionTooHigh)
 }
@@ -310,10 +310,10 @@ pub enum IotaObjectResponseError {
     Eq, PartialEq, Clone, Debug, Serialize, Deserialize, Error, Hash, AsRefStr, IntoStaticStr,
 )]
 pub enum IotaError {
-    #[error("Error checking transaction input objects: {:?}", error)]
+    #[error("Error checking transaction input objects: {error:?}")]
     UserInputError { error: UserInputError },
 
-    #[error("Error checking transaction object: {:?}", error)]
+    #[error("Error checking transaction object: {error:?}")]
     IotaObjectResponseError { error: IotaObjectResponseError },
 
     #[error("Expecting a single owner, shared ownership found")]
@@ -531,11 +531,11 @@ pub enum IotaError {
     TransactionOrchestratorLocalExecutionError { error: String },
 
     // Errors returned by authority and client read API's
-    #[error("Failure serializing transaction in the requested format: {:?}", error)]
+    #[error("Failure serializing transaction in the requested format: {error:?}")]
     TransactionSerializationError { error: String },
-    #[error("Failure serializing object in the requested format: {:?}", error)]
+    #[error("Failure serializing object in the requested format: {error:?}")]
     ObjectSerializationError { error: String },
-    #[error("Failure deserializing object in the requested format: {:?}", error)]
+    #[error("Failure deserializing object in the requested format: {error:?}")]
     ObjectDeserializationError { error: String },
     #[error("Event store component is not active on this node")]
     NoEventStore,
@@ -546,7 +546,7 @@ pub enum IotaError {
         errors: Vec<(AuthorityName, IotaError)>,
         action: String,
     },
-    #[error("Invalid transaction range query to the fullnode: {:?}", error)]
+    #[error("Invalid transaction range query to the fullnode: {error:?}")]
     FullNodeInvalidTxRangeQuery { error: String },
 
     // Errors related to the authority-consensus interface.
@@ -574,7 +574,7 @@ pub enum IotaError {
     ValidatorHaltedAtEpochEnd,
     #[error("Validator has stopped operations for this epoch")]
     EpochEnded,
-    #[error("Error when advancing epoch: {:?}", error)]
+    #[error("Error when advancing epoch: {error:?}")]
     AdvanceEpochError { error: String },
 
     #[error("Transaction Expired")]
@@ -585,10 +585,10 @@ pub enum IotaError {
     #[error("{1} - {0}")]
     RpcError(String, String),
 
-    #[error("Use of disabled feature: {:?}", error)]
+    #[error("Use of disabled feature: {error:?}")]
     UnsupportedFeatureError { error: String },
 
-    #[error("Unable to communicate with the Quorum Driver channel: {:?}", error)]
+    #[error("Unable to communicate with the Quorum Driver channel: {error:?}")]
     QuorumDriverCommunicationError { error: String },
 
     #[error("Operation timed out")]

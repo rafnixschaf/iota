@@ -47,7 +47,7 @@ impl SystemStateObserver {
                                 }
                             }
                             Err(err) => {
-                                error!("Failed to get system state object: {:?}", err);
+                                error!("Failed to get system state object: {err:?}");
                             }
                         }
                     }

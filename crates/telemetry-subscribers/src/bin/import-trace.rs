@@ -57,7 +57,7 @@ async fn main() {
         format!("iota-node-{timestamp}")
     });
 
-    println!("importing trace with service name {:?}", service_name);
+    println!("importing trace with service name {service_name:?}");
 
     for mut message in messages {
         println!(

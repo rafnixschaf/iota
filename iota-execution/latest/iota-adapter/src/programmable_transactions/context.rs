@@ -211,7 +211,7 @@ mod checked {
                     .move_gas_status_mut()
                     .set_profiler(GasProfiler::init(
                         &vm.config().profiler_config,
-                        format!("{}", tx_digest),
+                        format!("{tx_digest}"),
                         remaining_gas,
                     ));
             }

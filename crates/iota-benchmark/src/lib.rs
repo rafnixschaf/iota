@@ -754,7 +754,7 @@ impl ValidatorProxy for FullNodeProxy {
                 Err(err) => {
                     error!(
                         ?tx_digest,
-                        retry_cnt, "Transaction failed with err: {:?}", err
+                        retry_cnt, "Transaction failed with err: {err:?}"
                     );
                     retry_cnt += 1;
                 }

@@ -203,7 +203,7 @@ impl SubmitToConsensus for TransactionsClient<iota_network::tonic::transport::Ch
         self.clone()
             .submit_transaction(TransactionProto { transaction: bytes })
             .await
-            .map_err(|e| IotaError::ConsensusConnectionBroken(format!("{:?}", e)))
+            .map_err(|e| IotaError::ConsensusConnectionBroken(format!("{e:?}")))
             .tap_err(|r| {
                 // Will be logged by caller as well.
                 warn!("Submit transaction failed with: {:?}", r);
@@ -237,7 +237,7 @@ impl SubmitToConsensus for LazyNarwhalClient {
         client
             .submit_transaction(transaction)
             .await
-            .map_err(|e| IotaError::FailedToSubmitToConsensus(format!("{:?}", e)))
+            .map_err(|e| IotaError::FailedToSubmitToConsensus(format!("{e:?}")))
             .tap_err(|r| {
                 // Will be logged by caller as well.
                 warn!("Submit transaction failed with: {:?}", r);
@@ -841,7 +841,7 @@ impl ConsensusAdapter {
                 None,
                 epoch_store,
             ) {
-                warn!("Error when sending end of publish message: {:?}", err);
+                warn!("Error when sending end of publish message: {err:?}");
             }
         }
         self.metrics
@@ -955,7 +955,7 @@ impl ReconfigurationInitiator for Arc<ConsensusAdapter> {
                 None,
                 epoch_store,
             ) {
-                warn!("Error when sending end of publish message: {:?}", err);
+                warn!("Error when sending end of publish message: {err:?}");
             }
         }
     }

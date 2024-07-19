@@ -211,7 +211,7 @@ mod checked {
                     .move_gas_status_mut()
                     .set_profiler(GasProfiler::init(
                         &vm.config().profiler_config,
-                        format!("{}", tx_digest),
+                        format!("{tx_digest}"),
                         remaining_gas,
                     ));
             }
@@ -1512,7 +1512,7 @@ mod checked {
                     .with_message(format!("Cannot find {:?} in data cache", module_id))
                     .finish(Location::Undefined)),
                 Err(err) => {
-                    let msg = format!("Unexpected storage error: {:?}", err);
+                    let msg = format!("Unexpected storage error: {err:?}");
                     Err(
                         PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                             .with_message(msg)

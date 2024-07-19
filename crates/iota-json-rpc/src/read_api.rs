@@ -231,7 +231,7 @@ impl ReadApi {
             let digests_clone = digests.clone();
             let transactions =
                 self.transaction_kv_store.multi_get_tx(&digests_clone).await.tap_err(
-                    |err| debug!(digests=?digests_clone, "Failed to multi get transactions: {:?}", err),
+                    |err| debug!(digests=?digests_clone, "Failed to multi get transactions: {err:?}"),
                 )?;
 
             for ((_digest, cache_entry), txn) in

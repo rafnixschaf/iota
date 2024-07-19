@@ -160,9 +160,9 @@ impl ConsensusManagerTrait for NarwhalManager {
                 Err(e) => {
                     primary_retries += 1;
                     if primary_retries >= MAX_PRIMARY_RETRIES {
-                        panic!("Unable to start Narwhal Primary: {:?}", e);
+                        panic!("Unable to start Narwhal Primary: {e:?}");
                     }
-                    tracing::error!("Unable to start Narwhal Primary: {:?}, retrying", e);
+                    tracing::error!("Unable to start Narwhal Primary: {e:?}, retrying");
                     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 }
             }
@@ -198,9 +198,9 @@ impl ConsensusManagerTrait for NarwhalManager {
                 Err(e) => {
                     worker_retries += 1;
                     if worker_retries >= MAX_WORKER_RETRIES {
-                        panic!("Unable to start Narwhal Worker: {:?}", e);
+                        panic!("Unable to start Narwhal Worker: {e:?}");
                     }
-                    tracing::error!("Unable to start Narwhal Worker: {:?}, retrying", e);
+                    tracing::error!("Unable to start Narwhal Worker: {e:?}, retrying");
                     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 }
             }

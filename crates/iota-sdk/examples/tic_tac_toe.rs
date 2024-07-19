@@ -343,14 +343,14 @@ impl TicTacToeState {
         let mut row_num = 1;
         for row in &self.gameboard {
             println!();
-            print!("{} ", row_num);
+            print!("{row_num} ");
             for cell in row {
                 let mark = match cell {
                     0 => "X",
                     1 => "O",
                     _ => " ",
                 };
-                print!("|  {}  ", mark)
+                print!("|  {mark}  ")
             }
             println!("|");
             print!("  ├-----┼-----┼-----┤");

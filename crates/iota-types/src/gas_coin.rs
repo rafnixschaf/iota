@@ -143,7 +143,7 @@ mod checked {
             let gas_coin: GasCoin = bcs::from_bytes(value.contents()).map_err(|err| {
                 ExecutionError::new_with_source(
                     ExecutionErrorKind::InvalidGasObject,
-                    format!("Unable to deserialize gas object: {:?}", err),
+                    format!("Unable to deserialize gas object: {err:?}"),
                 )
             })?;
             Ok(gas_coin)

@@ -1142,7 +1142,7 @@ mod checked {
         if module_ident == (&IOTA_FRAMEWORK_ADDRESS, EVENT_MODULE) {
             return Err(ExecutionError::new_with_source(
                 ExecutionErrorKind::NonEntryFunctionInvoked,
-                format!("Cannot directly call functions in iota::{}", EVENT_MODULE),
+                format!("Cannot directly call functions in iota::{EVENT_MODULE}"),
             ));
         }
 

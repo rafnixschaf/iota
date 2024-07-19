@@ -52,7 +52,7 @@ macro_rules! retry_with_max_elapsed_time {
                     Err(e) => {
                         // For simplicity we treat every error as transient so we can retry until
                         // max_elapsed_time
-                        tracing::debug!("Retrying due to error: {:?}", e);
+                        tracing::debug!("Retrying due to error: {e:?}");
                         return Err(backoff::Error::transient(e));
                     }
                 }

@@ -131,7 +131,7 @@ impl CFG {
                 edges.push((parent_block_id, target_blocks - 1));
             }
         }
-        debug!("Edges: {:?}", edges);
+        debug!("Edges: {edges:?}");
 
         // Build the CFG
         let mut cfg = CFG {

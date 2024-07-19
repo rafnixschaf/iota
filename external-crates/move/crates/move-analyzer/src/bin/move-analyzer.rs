@@ -187,7 +187,7 @@ fn main() {
                                         .connection
                                         .sender
                                         .send(lsp_server::Message::Notification(notification)) {
-                                            eprintln!("could not send diagnostics response: {:?}", err);
+                                            eprintln!("could not send diagnostics response: {err:?}");
                                         };
                                 }
                             },
@@ -203,13 +203,13 @@ fn main() {
                                     .connection
                                     .sender
                                     .send(lsp_server::Message::Notification(notification)) {
-                                        eprintln!("could not send compiler error response: {:?}", err);
+                                        eprintln!("could not send compiler error response: {err:?}");
                                     };
                             },
                         }
                     },
                     Err(error) =>
-                        eprintln!("symbolicator message error: {:?}", error),
+                        eprintln!("symbolicator message error: {error:?}"),
                 }
             },
             recv(context.connection.receiver) -> message => {
@@ -233,7 +233,7 @@ fn main() {
                             _ => on_notification(ide_files_root.clone(), &symbolicator_runner, &notification),
                         }
                     }
-                    Err(error) => eprintln!("IDE message error: {:?}", error),
+                    Err(error) => eprintln!("IDE message error: {error:?}"),
                 }
             }
         };
@@ -266,7 +266,7 @@ fn on_request(
             .sender
             .send(lsp_server::Message::Response(response))
         {
-            eprintln!("could not send shutdown response: {:?}", err);
+            eprintln!("could not send shutdown response: {err:?}");
         }
         return true;
     }
@@ -301,7 +301,7 @@ fn on_request(
                 .sender
                 .send(lsp_server::Message::Response(response))
             {
-                eprintln!("could not send shutdown response: {:?}", err);
+                eprintln!("could not send shutdown response: {err:?}");
             }
             return true;
         }

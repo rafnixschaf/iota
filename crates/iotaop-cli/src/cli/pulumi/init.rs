@@ -230,11 +230,7 @@ fn remove_stack(backend: &str, project_name: &str, stack_name: &str) -> Result<(
     let stack_str = format!("{backend}/{project_name}/{stack_name}");
     debug!("cleaning up {}...", &stack_str);
     run_cmd(
-        vec![
-            "bash",
-            "-c",
-            &format!("pulumi stack rm {} --yes", stack_str),
-        ],
+        vec!["bash", "-c", &format!("pulumi stack rm {stack_str} --yes")],
         None,
     )?;
     warn!(

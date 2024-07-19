@@ -47,11 +47,11 @@ impl BridgeOrchestratorTables {
                 actions.iter().map(|a| (a.digest(), a)),
             )
             .map_err(|e| {
-                BridgeError::StorageError(format!("Couldn't insert into pending_actions: {:?}", e))
+                BridgeError::StorageError(format!("Couldn't insert into pending_actions: {e:?}"))
             })?;
         batch
             .write()
-            .map_err(|e| BridgeError::StorageError(format!("Couldn't write batch: {:?}", e)))
+            .map_err(|e| BridgeError::StorageError(format!("Couldn't write batch: {e:?}")))
     }
 
     pub(crate) fn remove_pending_actions(
@@ -62,7 +62,7 @@ impl BridgeOrchestratorTables {
         batch
             .delete_batch(&self.pending_actions, actions)
             .map_err(|e| {
-                BridgeError::StorageError(format!("Couldn't delete from pending_actions: {:?}", e))
+                BridgeError::StorageError(format!("Couldn't delete from pending_actions: {e:?}"))
             })?;
         batch
             .write()

@@ -62,7 +62,7 @@ impl<'a> Display for Pretty<'a, IotaProgrammableTransactionBlock> {
                 1,
                 TableStyle::modern().get_horizontal(),
             )]));
-            write!(f, "\n{}", table)?;
+            write!(f, "\n{table}")?;
         } else {
             write!(f, "\n  No input objects for this transaction")?;
         }
@@ -82,7 +82,7 @@ impl<'a> Display for Pretty<'a, IotaProgrammableTransactionBlock> {
                 1,
                 TableStyle::modern().get_horizontal(),
             )]));
-            write!(f, "\n{}", table)
+            write!(f, "\n{table}")
         } else {
             write!(f, "\n  No commands for this transaction")
         }
@@ -184,9 +184,9 @@ impl<'a> Display for Pretty<'a, IotaArgument> {
 
         let output = match argument {
             IotaArgument::GasCoin => "GasCoin".to_string(),
-            IotaArgument::Input(i) => format!("Input  {}", i),
-            IotaArgument::Result(i) => format!("Result {}", i),
-            IotaArgument::NestedResult(j, k) => format!("Nested Result {}: {}", j, k),
+            IotaArgument::Input(i) => format!("Input  {i}"),
+            IotaArgument::Result(i) => format!("Result {i}"),
+            IotaArgument::NestedResult(j, k) => format!("Nested Result {j}: {k}"),
         };
         write!(f, "{}", output)
     }

@@ -151,7 +151,7 @@ async fn main() -> Result<()> {
     });
     let joined = handle.join();
     if let Err(err) = joined {
-        Err(anyhow!("Failed to join client runtime: {:?}", err))
+        Err(anyhow!("Failed to join client runtime: {err:?}"))
     } else {
         // send signal to stop the server runtime
         bench_setup

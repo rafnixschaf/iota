@@ -85,7 +85,7 @@ fn generate_bridge_authority_key_and_write_to_file(path: &PathBuf) -> Result<(),
     );
     let base64_encoded = kp.encode_base64();
     std::fs::write(path, base64_encoded)
-        .map_err(|err| anyhow!("Failed to write encoded key to path: {:?}", err))
+        .map_err(|err| anyhow!("Failed to write encoded key to path: {err:?}"))
 }
 
 /// Generate Bridge Client key (Secp256k1KeyPair or Ed25519KeyPair) and write to
@@ -111,7 +111,7 @@ fn generate_bridge_client_key_and_write_to_file(
 
     let contents = kp.encode_base64();
     std::fs::write(path, contents)
-        .map_err(|err| anyhow!("Failed to write encoded key to path: {:?}", err))
+        .map_err(|err| anyhow!("Failed to write encoded key to path: {err:?}"))
 }
 
 /// Generate Bridge Node Config template and write to a file.

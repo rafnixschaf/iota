@@ -212,7 +212,7 @@ where
                 store
                     .remove_pending_actions(&[action.digest()])
                     .unwrap_or_else(|e| {
-                        panic!("Write to DB should not fail: {:?}", e);
+                        panic!("Write to DB should not fail: {e:?}");
                     });
                 true
             }
@@ -259,7 +259,7 @@ where
                     .expect("Sending to execution queue should not fail");
             }
             Err(e) => {
-                warn!("Failed to collect sigs for bridge action: {:?}", e);
+                warn!("Failed to collect sigs for bridge action: {e:?}");
 
                 if attempt_times >= MAX_SIGNING_ATTEMPTS {
                     error!(
@@ -394,7 +394,7 @@ where
                 store
                     .remove_pending_actions(&[action.digest()])
                     .unwrap_or_else(|e| {
-                        panic!("Write to DB should not fail: {:?}", e);
+                        panic!("Write to DB should not fail: {e:?}");
                     })
             }
             IotaExecutionStatus::Failure { error } => {

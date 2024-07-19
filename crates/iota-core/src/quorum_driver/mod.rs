@@ -119,7 +119,7 @@ impl<A: Clone> QuorumDriver<A> {
         self.task_sender
             .send(task.clone())
             .await
-            .tap_err(|e| debug!(?task, "Failed to enqueue task: {:?}", e))
+            .tap_err(|e| debug!(?task, "Failed to enqueue task: {e:?}"))
             .tap_ok(|_| {
                 debug!(?task, "Enqueued task.");
                 self.metrics.current_requests_in_flight.inc();

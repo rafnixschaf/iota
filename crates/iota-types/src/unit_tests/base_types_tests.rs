@@ -76,7 +76,7 @@ fn test_signatures_serde() {
     let s = Signature::new_secure(&IntentMessage::new(Intent::iota_transaction(), foo), &sec1);
 
     let serialized = bcs::to_bytes(&s).unwrap();
-    println!("{:?}", serialized);
+    println!("{serialized:?}");
     let deserialized: Signature = bcs::from_bytes(&serialized).unwrap();
     assert_eq!(deserialized.as_ref(), s.as_ref());
 }

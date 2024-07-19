@@ -1171,7 +1171,7 @@ async fn sync_checkpoint_contents_from_archive<S>(
                     )
                     .await
                 {
-                    warn!("State sync from archive failed with error: {:?}", err);
+                    warn!("State sync from archive failed with error: {err:?}");
                 } else {
                     info!(
                         "State sync from archive is complete. Checkpoints downloaded = {:?}, Txns downloaded = {:?}",

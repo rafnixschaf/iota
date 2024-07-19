@@ -103,7 +103,7 @@ impl TryFrom<MoveTokenBridgeEvent> for EmittedIotaToEthTokenBridgeV1 {
         }
 
         let iota_address = IotaAddress::from_bytes(event.sender_address)
-            .map_err(|e| BridgeError::Generic(format!("Failed to convert MoveTokenBridgeEvent to EmittedIotaToEthTokenBridgeV1. Failed to convert sender_address to IotaAddress: {:?}", e)))?;
+            .map_err(|e| BridgeError::Generic(format!("Failed to convert MoveTokenBridgeEvent to EmittedIotaToEthTokenBridgeV1. Failed to convert sender_address to IotaAddress: {e:?}")))?;
         let eth_address = EthAddress::from_str(&Hex::encode(&event.target_address))?;
 
         Ok(Self {

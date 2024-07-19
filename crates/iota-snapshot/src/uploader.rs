@@ -153,7 +153,7 @@ impl StateSnapshotUploader {
                         let first_missing_epoch = epochs.first().cloned().unwrap_or(0);
                         self.metrics.first_missing_state_snapshot_epoch.set(first_missing_epoch as i64);
                         if let Err(err) = self.upload_state_snapshot_to_object_store(epochs).await {
-                            error!("Failed to upload state snapshot to remote store with err: {:?}", err);
+                            error!("Failed to upload state snapshot to remote store with err: {err:?}");
                         } else {
                             debug!("Successfully completed snapshot upload loop");
                         }

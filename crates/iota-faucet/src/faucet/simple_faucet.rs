@@ -220,7 +220,7 @@ impl SimpleFaucet {
                         }
                     }
                     Err(err) => {
-                        error!("{:?}", err);
+                        error!("{err:?}");
                     }
                 }
             }

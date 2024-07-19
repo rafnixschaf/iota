@@ -1079,7 +1079,7 @@ where
                             Ok(None) => {},
                             Err(err) => {
                                 let concise_name = name.concise();
-                                debug!(?tx_digest, name=?concise_name, weight, "Error processing transaction from validator: {:?}", err);
+                                debug!(?tx_digest, name=?concise_name, weight, "Error processing transaction from validator: {err:?}");
                                 self.metrics
                                     .process_tx_errors
                                     .with_label_values(&[&display_name, err.as_ref()])
@@ -1551,7 +1551,7 @@ where
                         },
                         Err(err) => {
                             let concise_name = name.concise();
-                            debug!(?tx_digest, name=?concise_name, "Error processing certificate from validator: {:?}", err);
+                            debug!(?tx_digest, name=?concise_name, "Error processing certificate from validator: {err:?}");
                             metrics
                                 .process_cert_errors
                                 .with_label_values(&[&display_name, err.as_ref()])

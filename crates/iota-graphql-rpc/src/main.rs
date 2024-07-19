@@ -120,7 +120,7 @@ async fn main() {
             tokio::select! {
                 result = graphql_service_handle => {
                     if let Err(e) = result {
-                        println!("GraphQL service crashed or exited with error: {:?}", e);
+                        println!("GraphQL service crashed or exited with error: {e:?}");
                     }
                 }
                 _ = tokio::signal::ctrl_c() => {

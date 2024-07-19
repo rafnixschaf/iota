@@ -21,7 +21,7 @@ async fn main() -> Result<(), anyhow::Error> {
     // for demonstration purposes, we set to make a transaction
     let digest = split_coin_digest(&iota, &active_address).await?;
     let events = iota.event_api().get_events(digest).await?;
-    println!("{:?}", events);
+    println!("{events:?}");
     println!(" *** Get events ***\n ");
 
     let descending = true;

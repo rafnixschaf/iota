@@ -112,7 +112,7 @@ impl BridgeClient {
                     path
                 } else {
                     let call_data = Hex::encode(a.call_data.clone());
-                    format!("{}/{}", path, call_data)
+                    format!("{path}/{call_data}")
                 }
             }
         }

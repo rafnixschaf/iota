@@ -1683,7 +1683,7 @@ impl<'a> IotaTestAdapter {
         }
         events
             .iter()
-            .map(|event| self.stabilize_str(format!("{:?}", event)))
+            .map(|event| self.stabilize_str(format!("{event:?}")))
             .collect::<Vec<_>>()
             .join(", ")
     }

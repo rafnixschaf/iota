@@ -501,7 +501,7 @@ impl Interpreter {
         // a verification error cannot happen at runtime so change it into an invariant
         // violation.
         if err.status_type() == StatusType::Verification {
-            error!("Verification error during runtime: {:?}", err);
+            error!("Verification error during runtime: {err:?}");
             let new_err = PartialVMError::new(StatusCode::VERIFICATION_ERROR);
             let new_err = match err.message() {
                 None => new_err,

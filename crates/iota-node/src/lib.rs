@@ -377,7 +377,7 @@ impl IotaNode {
 
                                     let txn = ConsensusTransaction::new_jwk_fetched(authority, id, jwk);
                                     consensus_adapter.submit(txn, None, &epoch_store)
-                                        .tap_err(|e| warn!("Error when submitting JWKs to consensus {:?}", e))
+                                        .tap_err(|e| warn!("Error when submitting JWKs to consensus {e:?}"))
                                         .ok();
                                 }
                             }
@@ -764,7 +764,7 @@ impl IotaNode {
         spawn_monitored_task!(async move {
             let result = Self::monitor_reconfiguration(node_copy).await;
             if let Err(error) = result {
-                warn!("Reconfiguration finished with error {:?}", error);
+                warn!("Reconfiguration finished with error {error:?}");
             }
         });
 

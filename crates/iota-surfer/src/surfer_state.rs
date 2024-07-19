@@ -179,7 +179,7 @@ impl SurferState {
             {
                 Ok(effects) => break effects,
                 Err(e) => {
-                    error!("Error executing transaction: {:?}", e);
+                    error!("Error executing transaction: {e:?}");
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
@@ -312,7 +312,7 @@ impl SurferState {
             "Number of entry functions discovered: {:?}",
             entry_functions.len()
         );
-        debug!("Entry functions: {:?}", entry_functions);
+        debug!("Entry functions: {entry_functions:?}");
         self.entry_functions.write().await.extend(entry_functions);
     }
 
@@ -340,7 +340,7 @@ impl SurferState {
                     break response;
                 }
                 Err(err) => {
-                    error!("Failed to publish package: {:?}", err);
+                    error!("Failed to publish package: {err:?}");
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }

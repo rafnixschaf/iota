@@ -251,7 +251,7 @@ pub fn build_from_resolution_graph(
     let (package, fn_info) = match result {
         Err(error) => {
             return Err(IotaError::ModuleBuildFailure {
-                error: format!("{:?}", error),
+                error: format!("{error:?}"),
             });
         }
         Ok((package, fn_info)) => (package, fn_info),

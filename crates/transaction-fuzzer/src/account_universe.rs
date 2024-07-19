@@ -26,7 +26,7 @@ static UNIVERSE_SIZE: Lazy<usize> = Lazy::new(|| {
         Ok(s) => match s.parse::<usize>() {
             Ok(val) => val,
             Err(err) => {
-                panic!("Could not parse universe size, aborting: {:?}", err);
+                panic!("Could not parse universe size, aborting: {err:?}");
             }
         },
         Err(env::VarError::NotPresent) => 30,

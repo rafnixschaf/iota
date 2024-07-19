@@ -201,7 +201,7 @@ impl BridgeNodeConfig {
                     .iter()
                     .map(|module| Identifier::from_str(module))
                     .collect::<Result<Vec<_>, _>>()
-                    .map_err(|e| anyhow!("Error parsing iota module: {:?}", e))?
+                    .map_err(|e| anyhow!("Error parsing iota module: {e:?}"))?
             }
             None => {
                 return Err(anyhow!(
@@ -301,7 +301,7 @@ pub fn read_bridge_authority_key(path: &PathBuf) -> Result<BridgeAuthorityKeyPai
     let contents = std::fs::read_to_string(path)?;
 
     BridgeAuthorityKeyPair::decode_base64(contents.as_str().trim())
-        .map_err(|e| anyhow!("Error decoding authority key: {:?}", e))
+        .map_err(|e| anyhow!("Error decoding authority key: {e:?}"))
 }
 
 /// Read Bridge client key (any IotaKeyPair) from a file.
@@ -316,5 +316,5 @@ pub fn read_bridge_client_key(path: &PathBuf) -> Result<IotaKeyPair, anyhow::Err
     let contents = std::fs::read_to_string(path)?;
 
     IotaKeyPair::decode_base64(contents.as_str().trim())
-        .map_err(|e| anyhow!("Error decoding authority key: {:?}", e))
+        .map_err(|e| anyhow!("Error decoding authority key: {e:?}"))
 }

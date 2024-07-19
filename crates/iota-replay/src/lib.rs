@@ -313,7 +313,7 @@ pub async fn execute_replay_command(
                     match TransactionDigest::from_str(&tx_digest.expect("Unable to readline")) {
                         Ok(digest) => digest,
                         Err(e) => {
-                            panic!("Error parsing tx digest: {:?}", e);
+                            panic!("Error parsing tx digest: {e:?}");
                         }
                     },
                 );
@@ -331,7 +331,7 @@ pub async fn execute_replay_command(
                     {
                         Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                         Err(e) => {
-                            error!("Error executing batch: {:?}", e);
+                            error!("Error executing batch: {e:?}");
                             if terminate_early {
                                 return Err(e);
                             }
@@ -355,7 +355,7 @@ pub async fn execute_replay_command(
                 {
                     Ok(_) => info!("Batch executed successfully: {:?}", chunk),
                     Err(e) => {
-                        error!("Error executing batch: {:?}", e);
+                        error!("Error executing batch: {e:?}");
                         if terminate_early {
                             return Err(e);
                         }
@@ -529,7 +529,7 @@ pub async fn execute_replay_command(
                         total_succeeded += succeeded;
                     }
                     Err(e) => {
-                        error!("Task failed: {:?}", e);
+                        error!("Task failed: {e:?}");
                     }
                 });
             info!(
@@ -582,7 +582,7 @@ pub async fn execute_replay_command(
                     return Ok(None);
                 }
                 Err(e) => {
-                    error!("Epoch {} replay failed: {:?}", epoch, e);
+                    error!("Epoch {epoch} replay failed: {e:?}");
                     return Err(e);
                 }
             }

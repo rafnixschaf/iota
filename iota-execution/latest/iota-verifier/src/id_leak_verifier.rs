@@ -319,7 +319,7 @@ fn call(
         .any(|makes_fresh| function == *makes_fresh)
     {
         if return_.0.len() != 1 {
-            debug_assert!(false, "{:?} should have a single return value", function);
+            debug_assert!(false, "{function:?} should have a single return value");
             return Err(PartialVMError::new(StatusCode::UNKNOWN_VERIFICATION_ERROR)
                 .with_message("Should have a single return value".to_string())
                 .with_sub_status(
