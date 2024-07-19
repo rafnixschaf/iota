@@ -365,9 +365,13 @@ jobs:
     env:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespw
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
     services:
       postgres:
         image: postgres
+        env:
+          POSTGRES_PASSWORD: postgrespw
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
