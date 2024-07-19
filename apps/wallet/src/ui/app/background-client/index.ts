@@ -40,10 +40,12 @@ import { queryClient } from '../helpers/queryClient';
 import { ACCOUNT_SOURCES_QUERY_KEY } from '../hooks/useAccountSources';
 import { AccountSourceType } from '_src/background/account-sources/AccountSource';
 import {
-    type GetAccountsFinderResultsRequest,
-    type InitAccountsFinder,
-    type SearchAccountsFinder,
+    type DeriveBipPathAccountsFinder,
+    isDeriveBipPathAccountsFinderResponse,
+    type PersistAccountsFinder,
+    type SourceStrategyToPersist,
 } from '_src/shared/messaging/messages/payloads/accounts-finder';
+import { type MakeDerivationOptions } from '_src/background/account-sources/bip44Path';
 
 const ENTITIES_TO_CLIENT_QUERY_KEYS: Record<UIAccessibleEntityType, QueryKey> = {
     accounts: ACCOUNTS_QUERY_KEY,
@@ -536,42 +538,32 @@ export class BackgroundClient {
         );
     }
 
-    public async initAccountsFinder() {
-        await lastValueFrom(
+    public deriveBipPathAccountsFinder(sourceID: string, derivationOptions: MakeDerivationOptions) {
+        return lastValueFrom(
             this.sendMessage(
-                createMessage<InitAccountsFinder>({
-                    type: 'init-accounts-finder',
-                }),
-            ).pipe(take(1)),
-        );
-    }
-
-    public async searchAccountsFinder(
-        coinType: number,
-        gasType: string,
-        sourceID: string,
-        accountGapLimit: number,
-        addressGapLimit: number,
-    ) {
-        await lastValueFrom(
-            this.sendMessage(
-                createMessage<SearchAccountsFinder>({
-                    type: 'search-accounts-finder',
-                    coinType,
-                    gasType,
+                createMessage<DeriveBipPathAccountsFinder>({
+                    type: 'derive-bip-path-accounts-finder',
                     sourceID,
-                    accountGapLimit,
-                    addressGapLimit,
+                    derivationOptions,
                 }),
-            ).pipe(take(1)),
+            ).pipe(
+                take(1),
+                map(({ payload }) => {
+                    if (isDeriveBipPathAccountsFinderResponse(payload)) {
+                        return payload;
+                    }
+                    throw new Error('Unexpected response type');
+                }),
+            ),
         );
     }
 
-    public async getLastAccountFinderResults() {
-        return await lastValueFrom(
+    public async persistAccountsFinder(sourceStrategy: SourceStrategyToPersist) {
+        await lastValueFrom(
             this.sendMessage(
-                createMessage<GetAccountsFinderResultsRequest>({
-                    type: 'get-accounts-finder-results-request',
+                createMessage<PersistAccountsFinder>({
+                    type: 'persist-accounts-finder',
+                    sourceStrategy,
                 }),
             ).pipe(take(1)),
         );
