@@ -2419,7 +2419,7 @@ impl AuthorityState {
                 .tap_err(|e| {
                     warn!(
                         ?tx_digest,
-                        "Post processing - Couldn't process events for tx: {}", e
+                        "Post processing - Couldn't process events for tx: {e}"
                     )
                 })?;
 
@@ -2977,12 +2977,12 @@ impl AuthorityState {
             .expensive_check_iota_conservation(cur_epoch_store)
         {
             if cfg!(debug_assertions) {
-                panic!("{}", err);
+                panic!("{err}");
             } else {
                 // We cannot panic in production yet because it is known that there are some
                 // inconsistencies in testnet. We will enable this once we make it balanced
                 // again in testnet.
-                warn!("Iota conservation consistency check failed: {}", err);
+                warn!("Iota conservation consistency check failed: {err}");
             }
         } else {
             info!("Iota conservation consistency check passed");

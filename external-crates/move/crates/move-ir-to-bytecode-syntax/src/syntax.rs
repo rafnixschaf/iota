@@ -30,7 +30,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::ParseError::*;
         match *self {
-            User { ref error, .. } => write!(f, "{}", error),
+            User { ref error, .. } => write!(f, "{error}"),
             InvalidToken {
                 ref location,
                 ref message,

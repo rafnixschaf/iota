@@ -272,7 +272,7 @@ impl CheckpointSummary {
             .tap_err(|err| {
                 warn!(
                     checkpoint_seq = self.sequence_number,
-                    "unable to compute checkpoint age: {}", err
+                    "unable to compute checkpoint age: {err}"
                 )
             })
             .ok();

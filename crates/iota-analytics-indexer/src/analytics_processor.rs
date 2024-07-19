@@ -179,7 +179,7 @@ impl<S: Serialize + ParquetSchema + 'static> AnalyticsProcessor<S> {
             self.config.checkpoint_dir.to_path_buf(),
             &self.config.file_type.dir_prefix(),
         )?
-        .join(format!("{}{}", EPOCH_DIR_PREFIX, self.current_epoch));
+        .join(format!("{EPOCH_DIR_PREFIX}{}", self.current_epoch));
         Ok(path)
     }
 

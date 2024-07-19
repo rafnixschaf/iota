@@ -218,7 +218,7 @@ impl<A: Clone> QuorumDriver<A> {
         // TransactionOrchestrator should be subscribing to this queue all the
         // time. However the if QuorumDriver is used elsewhere log may be noisy.
         if let Err(err) = self.effects_subscribe_sender.send(effects_queue_result) {
-            warn!(?tx_digest, "No subscriber found for effects: {}", err);
+            warn!(?tx_digest, "No subscriber found for effects: {err}");
         }
         debug!(?tx_digest, "notify QuorumDriver task result");
         self.notifier.notify(tx_digest, response);

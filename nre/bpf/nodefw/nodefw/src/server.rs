@@ -2,7 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::fwmap::Firewall;
+use std::{
+    net::SocketAddr,
+    sync::{Arc, RwLock},
+    time::Duration,
+};
+
 use axum::{
     extract::DefaultBodyLimit,
     http::StatusCode,
@@ -10,11 +15,10 @@ use axum::{
     Extension, Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
-use std::sync::{Arc, RwLock};
-use std::time::Duration;
-use tokio::signal;
-use tokio::signal::unix::{signal as nix_signal, SignalKind};
+use tokio::{
+    signal,
+    signal::unix::{signal as nix_signal, SignalKind},
+};
 use tokio_util::sync::CancellationToken;
 use tower::ServiceBuilder;
 use tower_http::{
@@ -22,6 +26,8 @@ use tower_http::{
     LatencyUnit,
 };
 use tracing::{error, info, Level};
+
+use crate::fwmap::Firewall;
 
 pub struct ServerConfig {
     pub ctx: CancellationToken,
@@ -102,7 +108,7 @@ async fn block_addresses(
 ) -> (StatusCode, &'static str) {
     let mut fw_guard = fw.write().unwrap();
     if let Err(e) = fw_guard.block_addresses(request.addresses) {
-        error!("unable to block requested address; {}", e);
+        error!("unable to block requested address; {e}");
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             "unknown error encountered",
@@ -118,7 +124,7 @@ async fn list_addresses(
     let addresses = match fw_guard.list_addresses() {
         Ok(v) => v,
         Err(e) => {
-            error!("unable to block requested address; {}", e);
+            error!("unable to block requested address; {e}");
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(BlockAddresses { addresses: vec![] }),

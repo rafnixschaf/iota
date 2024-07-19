@@ -74,7 +74,7 @@ pub fn run_instruction(
             (
                 effects.iter().fold(initial_state, |acc, effect| {
                     effect(&acc)
-                        .unwrap_or_else(|err| panic!("Error applying instruction effect: {}", err))
+                        .unwrap_or_else(|err| panic!("Error applying instruction effect: {err}"))
                 }),
                 instruction,
             )
@@ -92,7 +92,7 @@ pub fn run_instruction(
             (
                 effects.iter().fold(initial_state, |acc, effect| {
                     effect(&acc)
-                        .unwrap_or_else(|err| panic!("Error applying instruction effect: {}", err))
+                        .unwrap_or_else(|err| panic!("Error applying instruction effect: {err}"))
                 }),
                 instruction,
             )
@@ -100,7 +100,7 @@ pub fn run_instruction(
         Effects::NoTyParams(effects) => (
             effects.iter().fold(initial_state, |acc, effect| {
                 effect(&acc)
-                    .unwrap_or_else(|err| panic!("Error applying instruction effect: {}", err))
+                    .unwrap_or_else(|err| panic!("Error applying instruction effect: {err}"))
             }),
             instruction,
         ),

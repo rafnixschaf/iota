@@ -25,7 +25,7 @@ macro_rules! assert_error_contains {
     ($err:expr, $sub:expr) => {
         let err = $err.to_string();
         let sub = $sub;
-        assert!(err.contains(sub), "{}", err);
+        assert!(err.contains(sub), "{err}");
     };
 }
 

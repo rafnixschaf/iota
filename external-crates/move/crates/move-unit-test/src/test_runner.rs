@@ -384,7 +384,7 @@ impl SharedTestingConfig {
                 Flags::testing(),
                 Some(WarningFilters::unused_warnings_filter_for_test()),
             )
-            .unwrap_or_else(|e| panic!("Unable to build stackless bytecode: {}", e));
+            .unwrap_or_else(|e| panic!("Unable to build stackless bytecode: {e}"));
 
             if model.has_errors() {
                 let mut stderr = StandardStream::stderr(ColorChoice::Always);

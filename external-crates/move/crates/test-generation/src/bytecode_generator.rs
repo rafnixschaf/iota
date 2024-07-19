@@ -538,7 +538,7 @@ impl<'a> BytecodeGenerator<'a> {
                         // Ignore the effect
                         acc
                     } else {
-                        unreachable!("Error applying instruction effect: {}", err);
+                        unreachable!("Error applying instruction effect: {err}");
                     }
                 })
             })
@@ -655,7 +655,7 @@ impl<'a> BytecodeGenerator<'a> {
                 }
                 Err(err) => {
                     // Could not complete the bytecode sequence; reset to empty
-                    error!("{}", err);
+                    error!("{err}");
                     return Some((Vec::new(), abstract_state_in));
                 }
             }

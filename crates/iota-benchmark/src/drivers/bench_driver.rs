@@ -787,7 +787,7 @@ async fn run_bench_worker(
                 }
             }
             Err(err) => {
-                error!("{}", err);
+                error!("{err}");
                 if err
                     .downcast::<QuorumDriverError>()
                     .and_then(|err| {

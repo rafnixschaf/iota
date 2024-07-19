@@ -183,7 +183,7 @@ impl fmt::LowerHex for AccountAddress {
         }
 
         for byte in &self.0 {
-            write!(f, "{:02x}", byte)?;
+            write!(f, "{byte:02x}")?;
         }
 
         Ok(())

@@ -296,7 +296,7 @@ impl BatchMaker {
                 metadata,
             };
             if let Err(e) = client.report_own_batch(message).await {
-                warn!("Failed to report our batch: {}", e);
+                warn!("Failed to report our batch: {e}");
                 // Drop all response handlers to signal error, since we
                 // cannot ensure the primary has actually signaled the
                 // batch will eventually be sent.

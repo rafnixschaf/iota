@@ -33,8 +33,8 @@ pub fn deserialize(binary: &[u8]) -> Result<JsValue, JsErr> {
 }
 
 #[wasm_bindgen]
-/// Update the identifiers in the module bytecode, given a map of old -> new identifiers.
-/// Returns the updated bytecode.
+/// Update the identifiers in the module bytecode, given a map of old -> new
+/// identifiers. Returns the updated bytecode.
 ///
 /// ```javascript
 /// import * as template from '@iota/move-binary-template';
@@ -64,7 +64,7 @@ pub fn update_identifiers(binary: &[u8], map: JsValue) -> Result<Box<[u8]>, JsEr
             }
 
             *ident = Identifier::new(new).map_err(|err| JsErr {
-                display: format!("{}", err),
+                display: format!("{err}"),
                 message: err.to_string(),
             })?;
         }
@@ -112,7 +112,7 @@ pub fn update_identifiers(binary: &[u8], map: JsValue) -> Result<Box<[u8]>, JsEr
     compiled_module
         .serialize(&mut binary)
         .map_err(|err| JsErr {
-            display: format!("{}", err),
+            display: format!("{err}"),
             message: err.to_string(),
         })?;
 
@@ -123,9 +123,10 @@ pub fn update_identifiers(binary: &[u8], map: JsValue) -> Result<Box<[u8]>, JsEr
 /// Updates a constant in the constant pool. Because constants don't have names,
 /// the only way to identify them is by their type and value.
 ///
-/// The value of a constant is BCS-encoded and the type is a string representation
-/// of the `SignatureToken` enum. String identifier for `SignatureToken` is a
-/// capitalized version of the type: U8, Address, Vector(Bool), Vector(U8), etc.
+/// The value of a constant is BCS-encoded and the type is a string
+/// representation of the `SignatureToken` enum. String identifier for
+/// `SignatureToken` is a capitalized version of the type: U8, Address,
+/// Vector(Bool), Vector(U8), etc.
 ///
 /// ```javascript
 /// import * as template from '@iota/move-binary-template';
@@ -156,7 +157,7 @@ pub fn update_constants(
     compiled_module
         .serialize(&mut binary)
         .map_err(|err| JsErr {
-            display: format!("{}", err),
+            display: format!("{err}"),
             message: err.to_string(),
         })?;
 
@@ -172,8 +173,8 @@ pub struct Constant {
 }
 
 #[wasm_bindgen]
-/// Convenience method to analyze the constant pool; returns all constants in order
-/// with their type and BCS value.
+/// Convenience method to analyze the constant pool; returns all constants in
+/// order with their type and BCS value.
 ///
 /// ```javascript
 /// import * as template from '@iota/move-binary-template';
@@ -202,7 +203,7 @@ pub fn serialize(json_module: JsValue) -> Result<Box<[u8]>, JsErr> {
     compiled_module
         .serialize(&mut binary)
         .map_err(|err| JsErr {
-            display: format!("{}", err),
+            display: format!("{err}"),
             message: err.to_string(),
         })?;
 
@@ -227,7 +228,7 @@ impl Into<JsValue> for JsErr {
 impl<T: std::error::Error> From<T> for JsErr {
     fn from(err: T) -> Self {
         JsErr {
-            display: format!("{}", err),
+            display: format!("{err}"),
             message: err.to_string(),
         }
     }

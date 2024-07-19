@@ -119,7 +119,7 @@ pub fn publish(
                     let res =
                         session.publish_module_bundle(module_bytes_vec, sender, &mut gas_status);
                     if let Err(err) = res {
-                        println!("Invalid multi-module publishing: {}", err);
+                        println!("Invalid multi-module publishing: {err}");
                         if let Location::Module(module_id) = err.location() {
                             // find the module where error occurres and explain
                             if let Some(unit) = modules_to_publish

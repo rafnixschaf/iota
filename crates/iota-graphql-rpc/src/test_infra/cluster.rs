@@ -127,7 +127,7 @@ pub async fn serve_executor(
 
     let (pg_store, pg_handle) = start_test_indexer_impl(
         Some(db_url),
-        format!("http://{}", executor_server_url),
+        format!("http://{executor_server_url}"),
         ReaderWriterConfig::writer_mode(snapshot_config.clone()),
         Some(graphql_connection_config.db_name()),
     )

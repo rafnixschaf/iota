@@ -87,7 +87,7 @@ impl IotaTxValidator {
         self.epoch_store
             .signature_verifier
             .verify_certs_and_checkpoints(cert_batch, ckpt_batch)
-            .tap_err(|e| warn!("batch verification error: {}", e))
+            .tap_err(|e| warn!("batch verification error: {e}"))
             .wrap_err("Malformed batch (failed to verify)")?;
 
         // All checkpoint sigs have been verified, forward them to the checkpoint

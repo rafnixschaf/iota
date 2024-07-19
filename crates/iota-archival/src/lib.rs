@@ -133,7 +133,7 @@ pub struct FileMetadata {
 
 impl FileMetadata {
     pub fn file_path(&self) -> Path {
-        let dir_path = Path::from(format!("{}{}", EPOCH_DIR_PREFIX, self.epoch_num));
+        let dir_path = Path::from(format!("{EPOCH_DIR_PREFIX}{}", self.epoch_num));
         match self.file_type {
             FileType::CheckpointContent => dir_path.child(&*format!(
                 "{}.{CHECKPOINT_FILE_SUFFIX}",
@@ -413,7 +413,7 @@ pub async fn verify_archive_with_genesis_config(
         {
             Ok(_) => return Ok(()),
             Err(e) => {
-                error!("Error while verifying archive: {}", e);
+                error!("Error while verifying archive: {e}");
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
         }
@@ -540,6 +540,6 @@ where
         .get_highest_synced_checkpoint()
         .map_err(|_| anyhow!("Failed to read watermark"))?
         .sequence_number;
-    info!("Highest verified checkpoint: {}", end);
+    info!("Highest verified checkpoint: {end}");
     Ok(())
 }

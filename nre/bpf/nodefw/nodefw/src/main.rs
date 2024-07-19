@@ -2,17 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::{Arc, RwLock};
+
 use anyhow::Context;
-use aya::include_bytes_aligned;
-use aya::programs::{Xdp, XdpFlags};
-use aya::BpfLoader;
+use aya::{
+    include_bytes_aligned,
+    programs::{Xdp, XdpFlags},
+    BpfLoader,
+};
 use aya_log::BpfLogger;
 use clap::{Parser, ValueEnum};
-use nodefw::fwmap::{ttl_watcher, Firewall};
-use nodefw::server;
-use nodefw::time::get_ktime_get_ns;
+use nodefw::{
+    fwmap::{ttl_watcher, Firewall},
+    server,
+    time::get_ktime_get_ns,
+};
 use nodefw_common::Meta;
-use std::sync::{Arc, RwLock};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 
@@ -31,7 +36,8 @@ enum Mode {
     Skb,
 }
 
-// we wrap XdpFlags in our own struct to decouple it from clap's derive requirements.
+// we wrap XdpFlags in our own struct to decouple it from clap's derive
+// requirements.
 impl From<Mode> for XdpFlags {
     fn from(m: Mode) -> Self {
         match m {
@@ -64,10 +70,10 @@ async fn main() -> Result<(), anyhow::Error> {
     // bool == require META to be declared in ebpf code
     loader.set_global("META", &meta, true);
 
-    // This will include your eBPF object file as raw bytes at compile-time and load it at
-    // runtime. This approach is recommended for most real-world use cases. If you would
-    // like to specify the eBPF program at runtime rather than at compile-time, you can
-    // reach for `Bpf::load_file` instead.
+    // This will include your eBPF object file as raw bytes at compile-time and load
+    // it at runtime. This approach is recommended for most real-world use
+    // cases. If you would like to specify the eBPF program at runtime rather
+    // than at compile-time, you can reach for `Bpf::load_file` instead.
     #[cfg(debug_assertions)]
     let mut bpf = loader.load(include_bytes_aligned!(
         "../../target/bpfel-unknown-none/debug/nodefw"
@@ -78,7 +84,7 @@ async fn main() -> Result<(), anyhow::Error> {
     ))?;
     if let Err(e) = BpfLogger::init(&mut bpf) {
         // This can happen if you remove all log statements from your eBPF program.
-        warn!("failed to initialize eBPF logger: {}", e);
+        warn!("failed to initialize eBPF logger: {e}");
     }
 
     let ctx = CancellationToken::new();

@@ -213,7 +213,7 @@ impl CheckpointExecutor {
             {
                 self.checkpoint_store
                     .prune_local_summaries()
-                    .tap_err(|e| error!("Failed to prune local summaries: {}", e))
+                    .tap_err(|e| error!("Failed to prune local summaries: {e}"))
                     .ok();
 
                 // be extra careful to ensure we don't have orphans

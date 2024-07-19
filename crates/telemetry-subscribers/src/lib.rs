@@ -156,7 +156,7 @@ impl TracingHandle {
             tokio::spawn(async move {
                 tokio::time::sleep(duration).await;
                 if let Err(e) = trace.update(trace_filter_env) {
-                    error!("failed to reset trace filter: {}", e);
+                    error!("failed to reset trace filter: {e}");
                 }
             });
             res
@@ -174,7 +174,7 @@ impl TracingHandle {
         if let Some(trace) = &self.trace {
             let trace_filter_env = env::var("TRACE_FILTER").unwrap_or_else(|_| "off".to_string());
             if let Err(e) = trace.update(trace_filter_env) {
-                error!("failed to reset trace filter: {}", e);
+                error!("failed to reset trace filter: {e}");
             }
         }
     }

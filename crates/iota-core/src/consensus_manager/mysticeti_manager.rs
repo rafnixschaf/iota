@@ -74,7 +74,7 @@ impl MysticetiManager {
     #[allow(unused)]
     fn get_store_path(&self, epoch: EpochId) -> PathBuf {
         let mut store_path = self.storage_base_path.clone();
-        store_path.push(format!("{}", epoch));
+        store_path.push(format!("{epoch}"));
         store_path
     }
 }

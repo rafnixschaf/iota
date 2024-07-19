@@ -333,7 +333,7 @@ impl TestCluster {
                         Ok(Some(run_with_range)) => Some(run_with_range),
                         Ok(None) => None,
                         Err(e) => {
-                            error!("failed recv from iota-node shutdown channel: {}", e);
+                            error!("failed recv from iota-node shutdown channel: {e}");
                             None
                         },
                     }

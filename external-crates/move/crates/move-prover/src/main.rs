@@ -12,7 +12,7 @@ use move_prover::{cli::Options, run_move_prover};
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         let mut c = e.source();
         while let Some(s) = c {
             eprintln!("caused by: {}", s);

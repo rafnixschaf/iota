@@ -202,7 +202,7 @@ impl DebugContext {
                 let mut input = String::new();
                 match io::stdin().read_line(&mut input) {
                     Ok(_) => match input.parse::<DebugCommand>() {
-                        Err(err) => println!("{}", err),
+                        Err(err) => println!("{err}"),
                         Ok(command) => match command {
                             DebugCommand::Step | DebugCommand::StepSC => {
                                 self.should_take_input = true;
@@ -250,7 +250,7 @@ impl DebugContext {
                         },
                     },
                     Err(err) => {
-                        println!("Error reading input: {}", err);
+                        println!("Error reading input: {err}");
                         break;
                     }
                 }

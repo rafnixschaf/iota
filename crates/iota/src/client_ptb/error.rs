@@ -193,7 +193,7 @@ fn build_error_report(file_string: &str, error: PTBError) -> miette::Report {
         Severity::Error => "Error when processing PTB".to_string(),
     };
     match help {
-        Some(help_msg) => miette!(labels = vec![label], help = help_msg, "{}", error_string),
+        Some(help_msg) => miette!(labels = vec![label], help = help_msg, "{error_string}"),
         None => miette!(
             labels = vec![label],
             severity = severity,

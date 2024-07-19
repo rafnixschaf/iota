@@ -2866,7 +2866,7 @@ pub mod debug {
                 print(buf, x)?;
             }
         }
-        debug_write!(buf, "{}", end)?;
+        debug_write!(buf, "{end}")?;
         Ok(())
     }
 

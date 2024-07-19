@@ -114,7 +114,7 @@ impl Server {
                         info!("Shutdown signal received, terminating graphql service");
                     })
                     .await
-                    .map_err(|e| Error::Internal(format!("Server run failed: {}", e)))
+                    .map_err(|e| Error::Internal(format!("Server run failed: {e}")))
             })
         };
 

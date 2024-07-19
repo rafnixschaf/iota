@@ -50,7 +50,7 @@ use crate::config::{Args, EXECUTE_UNVERIFIED_MODULE, RUN_ON_VM};
 fn run_verifier(module: CompiledModule) -> Result<CompiledModule, String> {
     match verify_module_unmetered(&module) {
         Ok(_) => Ok(module),
-        Err(err) => Err(format!("Module verification failed: {:#?}", err)),
+        Err(err) => Err(format!("Module verification failed: {err:#?}")),
     }
 }
 
@@ -300,7 +300,7 @@ pub fn bytecode_generation(
                 Some(verified_module)
             }
             Err(e) => {
-                error!("{}", e);
+                error!("{e}");
                 let uid = rng.gen::<u64>();
                 output_error_case(module.clone(), output_path.clone(), uid, tid);
                 if EXECUTE_UNVERIFIED_MODULE {
@@ -324,7 +324,7 @@ pub fn bytecode_generation(
                             status = Status::Valid;
                         }
                         _ => {
-                            error!("{}", e);
+                            error!("{e}");
                             let uid = rng.gen::<u64>();
                             output_error_case(module.clone(), output_path.clone(), uid, tid);
                         }

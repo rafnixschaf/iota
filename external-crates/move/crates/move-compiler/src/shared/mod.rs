@@ -67,8 +67,8 @@ pub fn parse_named_address(s: &str) -> anyhow::Result<(String, NumericalAddress)
         );
     }
     let name = before_after[0].parse()?;
-    let addr = NumericalAddress::parse_str(before_after[1])
-        .map_err(|err| anyhow::format_err!("{}", err))?;
+    let addr =
+        NumericalAddress::parse_str(before_after[1]).map_err(|err| anyhow::format_err!("{err}"))?;
 
     Ok((name, addr))
 }

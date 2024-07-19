@@ -30,7 +30,7 @@ impl ExecutionState for SimpleExecutionState {
                         .send(transaction.clone())
                         .await
                     {
-                        eprintln!("Failed to send txn in SimpleExecutionState: {}", err);
+                        eprintln!("Failed to send txn in SimpleExecutionState: {err}");
                     }
                 }
             }

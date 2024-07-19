@@ -87,7 +87,7 @@ fn test_primary_with_consensus() {
             // This is expected to run indefinitely => will hit the timeout
             Ok(None) => continue,
             Err(e) => {
-                panic!("error waiting for child process: {}", e);
+                panic!("error waiting for child process: {e}");
             }
         }
     }

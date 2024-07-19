@@ -97,7 +97,7 @@ impl FaucetClient for RemoteFaucetClient {
             .unwrap();
 
         if let Some(error) = faucet_response.error {
-            panic!("Failed to get gas tokens with error: {}", error)
+            panic!("Failed to get gas tokens with error: {error}")
         };
 
         faucet_response
@@ -126,7 +126,7 @@ impl FaucetClient for RemoteFaucetClient {
             .unwrap();
 
         if let Some(error) = faucet_response.error {
-            panic!("Failed to get gas tokens with error: {}", error)
+            panic!("Failed to get gas tokens with error: {error}")
         };
 
         faucet_response
@@ -179,7 +179,7 @@ impl FaucetClient for LocalFaucetClient {
             .simple_faucet
             .send(Uuid::new_v4(), request_address, &[200_000_000_000; 5])
             .await
-            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {}", err));
+            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {err}"));
 
         receipt.into()
     }
@@ -188,7 +188,7 @@ impl FaucetClient for LocalFaucetClient {
             .simple_faucet
             .batch_send(Uuid::new_v4(), request_address, &[200_000_000_000; 5])
             .await
-            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {}", err));
+            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {err}"));
 
         receipt.into()
     }
@@ -197,7 +197,7 @@ impl FaucetClient for LocalFaucetClient {
             .simple_faucet
             .get_batch_send_status(task_id)
             .await
-            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {}", err));
+            .unwrap_or_else(|err| panic!("Failed to get gas tokens with error: {err}"));
 
         status.into()
     }

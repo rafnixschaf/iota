@@ -560,13 +560,13 @@ impl ReadApiServer for ReadApi {
                         Ok(response) => Ok(response),
                         Err(error) => {
                             error!("Failed to fetch object with error: {error:?}");
-                            Err(format!("Error: {}", error))
+                            Err(format!("Error: {error}"))
                         }
                     })
                     .collect();
 
                 let objects = objects_result.map_err(|err| {
-                    Error::UnexpectedError(format!("Failed to fetch objects with error: {}", err))
+                    Error::UnexpectedError(format!("Failed to fetch objects with error: {err}"))
                 })?;
 
                 self.metrics

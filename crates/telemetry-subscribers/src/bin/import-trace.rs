@@ -110,7 +110,7 @@ where
             .ok_or_else(|| io::Error::new(io::ErrorKind::UnexpectedEof, "Buffer underflow"))?;
 
         let msg = M::decode(msg_bytes).map_err(|e| {
-            io::Error::new(io::ErrorKind::InvalidData, format!("Decode error: {}", e))
+            io::Error::new(io::ErrorKind::InvalidData, format!("Decode error: {e}"))
         })?;
         messages.push(msg);
 

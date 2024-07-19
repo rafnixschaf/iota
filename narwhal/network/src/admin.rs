@@ -62,11 +62,11 @@ pub fn start_admin_server(
                     }
                     Err(err) => {
                         if total_retries == 0 {
-                            error!("{}", err);
+                            error!("{err}");
                             panic!("Failed to boot admin {socket_address}: {err}");
                         }
 
-                        error!("{}", err);
+                        error!("{err}");
 
                         // just sleep for a bit before retrying in case the port
                         // has not been de-allocated

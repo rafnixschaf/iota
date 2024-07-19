@@ -128,8 +128,7 @@ fn clear_fail_point_impl(identifier: &'static str) {
     with_fp_map(move |map| {
         assert!(
             map.remove(identifier).is_some(),
-            "fail point {:?} does not exist",
-            identifier
+            "fail point {identifier:?} does not exist",
         );
     })
 }

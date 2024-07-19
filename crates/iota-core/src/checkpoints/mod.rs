@@ -1216,7 +1216,7 @@ impl CheckpointBuilder {
             if last_checkpoint_of_epoch {
                 info!(
                     checkpoint_seq = sequence_number,
-                    "creating last checkpoint of epoch {}", epoch
+                    "creating last checkpoint of epoch {epoch}"
                 );
                 if let Some(stats) = self.tables.get_epoch_stats(epoch, &summary) {
                     self.epoch_store

@@ -2,15 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{
-    db_backend::{BalanceQuery, Explain, Explained, GenericQueryBuilder},
-    db_data_provider::{DbValidationError, PageLimit, TypeFilterError},
-};
-use crate::{
-    context_data::db_data_provider::PgManager,
-    error::Error,
-    types::{object::DeprecatedObjectFilter, iota_address::IotaAddress},
-};
+use std::str::FromStr;
+
 use async_trait::async_trait;
 use diesel::{
     pg::Pg,
@@ -18,7 +11,6 @@ use diesel::{
     BoolExpressionMethods, ExpressionMethods, PgConnection, QueryDsl, QueryResult, RunQueryDsl,
     TextExpressionMethods,
 };
-use std::str::FromStr;
 use iota_indexer::{
     schema::{display, objects},
     types::OwnerType,
@@ -26,6 +18,16 @@ use iota_indexer::{
 use iota_types::parse_iota_struct_tag;
 use tap::TapFallible;
 use tracing::{info, warn};
+
+use super::{
+    db_backend::{BalanceQuery, Explain, Explained, GenericQueryBuilder},
+    db_data_provider::{DbValidationError, PageLimit, TypeFilterError},
+};
+use crate::{
+    context_data::db_data_provider::PgManager,
+    error::Error,
+    types::{iota_address::IotaAddress, object::DeprecatedObjectFilter},
+};
 
 pub(crate) const EXPLAIN_COSTING_LOG_TARGET: &str = "gql-explain-costing";
 
@@ -258,9 +260,9 @@ impl PgQueryExecutor for PgManager {
             .map_err(|e| Error::Internal(e.to_string()))
     }
 
-    /// Takes a query_builder_fn that returns Result<QueryFragment> and a lambda to execute the query
-    /// Spawns a blocking task that determines the cost of the query fragment
-    /// And if within limits, then executes the query
+    /// Takes a query_builder_fn that returns Result<QueryFragment> and a lambda
+    /// to execute the query Spawns a blocking task that determines the cost
+    /// of the query fragment And if within limits, then executes the query
     async fn run_query_async_with_cost<T, Q, QResult, EF, E, F>(
         &self,
         mut query_builder_fn: Q,
@@ -287,7 +289,7 @@ impl PgQueryExecutor for PgManager {
                     .tap_err(|e| {
                         warn!(
                             target: EXPLAIN_COSTING_LOG_TARGET,
-                            "Failed to get explain result: {}", e
+                            "Failed to get explain result: {e}"
                         )
                     })
                     .ok(); // Fine to not propagate this error as explain-based costing is not critical today
@@ -297,7 +299,7 @@ impl PgQueryExecutor for PgManager {
                         .tap_err(|e| {
                             warn!(
                                 target: EXPLAIN_COSTING_LOG_TARGET,
-                                "Failed to get cost from explain result: {}", e
+                                "Failed to get cost from explain result: {e}"
                             )
                         })
                         .ok(); // Fine to not propagate this error as explain-based costing is not critical today

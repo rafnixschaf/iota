@@ -158,7 +158,7 @@ fn bytecode_verifier_mismatch_bug(
     };
     Diagnostics::from(vec![diag!(
         Bug::BytecodeVerification,
-        (loc, format!("ICE failed bytecode verifier: {:#?}", e)),
+        (loc, format!("ICE failed bytecode verifier: {e:#?}")),
     )])
 }
 

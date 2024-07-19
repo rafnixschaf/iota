@@ -2,25 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::server::BlockAddress;
-use crate::time::{get_ktime_get_ns, ttl};
+use std::{
+    cmp::Ordering,
+    collections::BinaryHeap,
+    net::{IpAddr, Ipv6Addr},
+    ops::Deref,
+    str::FromStr,
+    sync::{Arc, RwLock},
+    time::Duration,
+};
+
 use anyhow::Result;
-use aya::maps::MapData;
-use aya::util::nr_cpus;
 use aya::{
-    maps::{PerCpuHashMap, PerCpuValues},
+    maps::{MapData, PerCpuHashMap, PerCpuValues},
+    util::nr_cpus,
     Bpf,
 };
 use log::{error, info, warn};
 use nodefw_common::Rule;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::net::{IpAddr, Ipv6Addr};
-use std::ops::Deref;
-use std::str::FromStr;
-use std::sync::{Arc, RwLock};
-use std::time::Duration;
 use tokio_util::sync::CancellationToken;
+
+use crate::{
+    server::BlockAddress,
+    time::{get_ktime_get_ns, ttl},
+};
 
 pub struct Firewall {
     inner: Arc<RwLock<PerCpuHashMap<MapData, [u8; 16usize], Rule>>>,
@@ -45,7 +50,7 @@ impl Firewall {
                 Ok(IpAddr::V4(v)) => v.to_ipv6_compatible(),
                 Ok(IpAddr::V6(v)) => v,
                 Err(e) => {
-                    error!("{}", e);
+                    error!("{e}");
                     return Err(e.into());
                 }
             };
@@ -106,7 +111,7 @@ impl Firewall {
                     // add or remove in a certain combination.  the kernel guarantees safe
                     // access and sets but sometimes a get or a remove will fail until
                     // thing settle.
-                    warn!("unable to remove key {}", e);
+                    warn!("unable to remove key {e}");
                     break;
                 };
                 let removed = Ipv6Addr::from(expiry.key);

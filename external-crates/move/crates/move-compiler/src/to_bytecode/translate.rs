@@ -210,7 +210,7 @@ fn module(
             Err(e) => {
                 compilation_env.add_diag(diag!(
                     Bug::BytecodeGeneration,
-                    (ident_loc, format!("IR ERROR: {}", e))
+                    (ident_loc, format!("IR ERROR: {e}"))
                 ));
                 return None;
             }

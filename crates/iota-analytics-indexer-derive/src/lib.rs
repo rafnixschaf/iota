@@ -22,8 +22,7 @@ pub fn schema_derive(input: TokenStream) -> TokenStream {
                         (
                             format!("\"{field_name}\".to_string()"),
                             format!(
-                                "if idx == {} {{ return self.{}.clone().into(); }}",
-                                idx, field_name
+                                "if idx == {idx} {{ return self.{field_name}.clone().into(); }}",
                             ),
                         )
                     })

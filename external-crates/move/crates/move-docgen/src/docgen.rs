@@ -753,7 +753,7 @@ impl<'env> Docgen<'env> {
             Err(e) => {
                 self.env.error(
                     &self.env.unknown_loc(),
-                    &format!("The Graphviz tool \"dot\" is not available. {}", e),
+                    &format!("The Graphviz tool \"dot\" is not available. {e}"),
                 );
                 return;
             }
@@ -766,7 +766,7 @@ impl<'env> Docgen<'env> {
             .unwrap()
             .write_all(dot_src.as_bytes())
         {
-            self.env.error(&self.env.unknown_loc(), &format!("{}", e));
+            self.env.error(&self.env.unknown_loc(), &format!("{e}"));
             return;
         }
 
@@ -784,7 +784,7 @@ impl<'env> Docgen<'env> {
                 }
             }
             Err(e) => {
-                self.env.error(&self.env.unknown_loc(), &format!("{}", e));
+                self.env.error(&self.env.unknown_loc(), &format!("{e}"));
             }
         }
     }

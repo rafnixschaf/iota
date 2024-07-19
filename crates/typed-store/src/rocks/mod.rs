@@ -748,7 +748,7 @@ impl<K, V> DBMap<K, V> {
                         if let Err(e) = tokio::task::spawn_blocking(move || {
                             Self::report_metrics(&db, &cf, &db_metrics);
                         }).await {
-                            error!("Failed to log metrics with error: {}", e);
+                            error!("Failed to log metrics with error: {e}");
                         }
                     }
                     _ = &mut recv => break,

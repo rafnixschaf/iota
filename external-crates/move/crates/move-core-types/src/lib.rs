@@ -44,6 +44,6 @@ pub(crate) fn fmt_list<T: fmt::Display>(
             write!(f, ", {}", x)?;
         }
     }
-    write!(f, "{}", end)?;
+    write!(f, "{end}")?;
     Ok(())
 }

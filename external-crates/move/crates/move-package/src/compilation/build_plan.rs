@@ -109,7 +109,7 @@ impl BuildPlan {
                     Please fix the errors in your current edition before attempting to migrate."
                 )?;
                 if let Err(err) = writer.write_all(&diags_buf) {
-                    anyhow::bail!("Cannot output compiler diagnostics: {}", err);
+                    anyhow::bail!("Cannot output compiler diagnostics: {err}");
                 }
                 anyhow::bail!("Compilation error");
             }
@@ -137,7 +137,7 @@ impl BuildPlan {
                     let diags_buf =
                         report_diagnostics_to_buffer_with_env_color(&files, error_diags);
                     if let Err(err) = std::io::stdout().write_all(&diags_buf) {
-                        anyhow::bail!("Cannot output compiler diagnostics: {}", err);
+                        anyhow::bail!("Cannot output compiler diagnostics: {err}");
                     }
                     anyhow::bail!("Compilation error");
                 }

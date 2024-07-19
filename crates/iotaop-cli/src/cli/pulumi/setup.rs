@@ -27,7 +27,7 @@ fn get_current_time() -> std::time::Duration {
 
 fn ensure_pulumi_authed() -> Result<()> {
     let home = env::var("HOME").unwrap();
-    let creds_filepath = PathBuf::from(format!("{}/.pulumi/credentials.json", home));
+    let creds_filepath = PathBuf::from(format!("{home}/.pulumi/credentials.json"));
     if !creds_filepath.exists() {
         info!(
             "{}",
