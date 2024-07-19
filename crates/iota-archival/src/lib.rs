@@ -322,9 +322,7 @@ pub fn read_manifest_from_bytes(vec: Vec<u8>) -> Result<Manifest> {
     let computed_digest = hasher.finalize().digest;
     if computed_digest != sha3_digest {
         return Err(anyhow!(
-            "Manifest corrupted, computed checksum: {:?}, stored checksum: {:?}",
-            computed_digest,
-            sha3_digest
+            "Manifest corrupted, computed checksum: {computed_digest:?}, stored checksum: {sha3_digest:?}",
         ));
     }
     manifest_reader.rewind()?;

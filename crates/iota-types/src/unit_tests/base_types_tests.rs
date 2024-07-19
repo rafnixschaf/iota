@@ -121,7 +121,7 @@ fn test_object_id_conversions() {}
 fn test_object_id_display() {
     let hex = SAMPLE_ADDRESS;
     let id = ObjectID::from_str(hex).unwrap();
-    assert_eq!(format!("{:?}", id), format!("0x{hex}"));
+    assert_eq!(format!("{id:?}"), format!("0x{hex}"));
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn test_object_id_zero_padding() {
 fn test_address_display() {
     let hex = SAMPLE_ADDRESS;
     let id = IotaAddress::from_str(hex).unwrap();
-    assert_eq!(format!("{:?}", id), format!("0x{hex}"));
+    assert_eq!(format!("{id:?}"), format!("0x{hex}"));
 }
 
 #[test]

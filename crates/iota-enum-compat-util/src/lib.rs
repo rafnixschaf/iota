@@ -31,8 +31,7 @@ pub fn check_enum_compat_order<T: EnumOrderMap>(snapshot_file: PathBuf) {
         match new_map.get(&pos) {
             None => {
                 panic!(
-                    "Enum variant {} has been removed. Not allowed: enum must be backward compatible.",
-                    val
+                    "Enum variant {val} has been removed. Not allowed: enum must be backward compatible.",
                 );
             }
             Some(new_val) if new_val == &val => continue,

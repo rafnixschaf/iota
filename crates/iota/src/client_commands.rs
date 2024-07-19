@@ -2500,7 +2500,7 @@ impl Display for SwitchResponse {
         if let Some(env) = &self.env {
             writeln!(writer, "Active environment switched to [{env}]")?;
         }
-        write!(f, "{}", writer)
+        write!(f, "{writer}")
     }
 }
 

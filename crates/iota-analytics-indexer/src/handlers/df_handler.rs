@@ -114,8 +114,7 @@ impl DynamicFieldHandler {
 
         let bcs_name = bcs::to_bytes(&name_value.clone().undecorate()).map_err(|e| {
             IndexerError::SerdeError(format!(
-                "Failed to serialize dynamic field name {:?}: {e}",
-                name_value
+                "Failed to serialize dynamic field name {name_value:?}: {e}",
             ))
         })?;
         let name = DynamicFieldName {

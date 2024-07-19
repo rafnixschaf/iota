@@ -123,7 +123,7 @@ impl fmt::Display for AggregateSourceVerificationError {
         let AggregateSourceVerificationError(errors) = self;
         match &errors[..] {
             [] => unreachable!("Aggregate error with no errors"),
-            [error] => write!(f, "{}", error)?,
+            [error] => write!(f, "{error}")?,
             errors => {
                 writeln!(f, "Multiple source verification errors found:")?;
                 for error in errors {

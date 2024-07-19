@@ -389,7 +389,7 @@ pub struct AuthorityPublicKeyBytes(
 impl AuthorityPublicKeyBytes {
     fn fmt_impl(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         let s = Hex::encode(self.0);
-        write!(f, "k#{}", s)?;
+        write!(f, "k#{s}")?;
         Ok(())
     }
 }
@@ -1582,7 +1582,7 @@ impl<'a> VerificationObligation<'a> {
             }
 
             IotaError::InvalidSignature {
-                error: format!("Failed to batch verify aggregated auth sig: {}", e),
+                error: format!("Failed to batch verify aggregated auth sig: {e}"),
             }
         })?;
         Ok(())

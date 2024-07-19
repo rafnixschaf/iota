@@ -289,7 +289,7 @@ impl<'a> ObjectRuntime<'a> {
             self.metrics.excessive_transferred_move_object_ids
         ) {
             return Err(PartialVMError::new(StatusCode::MEMORY_LIMIT_EXCEEDED)
-                .with_message(format!("Transferring more than {} IDs is not allowed", lim))
+                .with_message(format!("Transferring more than {lim} IDs is not allowed"))
                 .with_sub_status(
                     VMMemoryLimitExceededSubStatusCode::TRANSFER_ID_COUNT_LIMIT_EXCEEDED as u64,
                 ));

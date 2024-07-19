@@ -328,7 +328,7 @@ impl ExecutionStatus {
         match self {
             ExecutionStatus::Success => {}
             ExecutionStatus::Failure { .. } => {
-                panic!("Unable to unwrap() on {:?}", self);
+                panic!("Unable to unwrap() on {self:?}");
             }
         }
     }
@@ -336,7 +336,7 @@ impl ExecutionStatus {
     pub fn unwrap_err(self) -> (ExecutionFailureStatus, Option<CommandIndex>) {
         match self {
             ExecutionStatus::Success { .. } => {
-                panic!("Unable to unwrap() on {:?}", self);
+                panic!("Unable to unwrap() on {self:?}");
             }
             ExecutionStatus::Failure { error, command } => (error, command),
         }

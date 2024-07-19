@@ -151,7 +151,7 @@ impl TreasuryCap {
     /// Create a TreasuryCap from BCS bytes
     pub fn from_bcs_bytes(content: &[u8]) -> Result<Self, IotaError> {
         bcs::from_bytes(content).map_err(|err| IotaError::ObjectDeserializationError {
-            error: format!("Unable to deserialize TreasuryCap object: {}", err),
+            error: format!("Unable to deserialize TreasuryCap object: {err}"),
         })
     }
 
@@ -210,7 +210,7 @@ impl CoinMetadata {
     /// Create a coin from BCS bytes
     pub fn from_bcs_bytes(content: &[u8]) -> Result<Self, IotaError> {
         bcs::from_bytes(content).map_err(|err| IotaError::ObjectDeserializationError {
-            error: format!("Unable to deserialize CoinMetadata object: {}", err),
+            error: format!("Unable to deserialize CoinMetadata object: {err}"),
         })
     }
 

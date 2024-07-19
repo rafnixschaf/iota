@@ -296,7 +296,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
                 .with_label_values(&[&peer.to_string(), "send_block"])
                 .inc();
             let e = ConsensusError::UnexpectedAuthority(signed_block.author(), peer);
-            info!("Block with wrong authority from {}: {}", peer, e);
+            info!("Block with wrong authority from {peer}: {e}");
             return Err(e);
         }
 
@@ -308,7 +308,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
                 .invalid_blocks
                 .with_label_values(&[&peer.to_string(), "send_block"])
                 .inc();
-            info!("Invalid block from {}: {}", peer, e);
+            info!("Invalid block from {peer}: {e}");
             return Err(e);
         }
         let verified_block = VerifiedBlock::new_verified(signed_block, serialized_block);

@@ -750,7 +750,7 @@ mod tests {
     fn test_no_workspace() {
         let err = Workspace::read(env!("CARGO_MANIFEST_DIR")).unwrap_err();
         expect!["No [workspace] found at $PATH/iota-execution/cut/Cargo.toml/Cargo.toml"]
-            .assert_eq(&scrub_path(&format!("{:#}", err), repo_root()));
+            .assert_eq(&scrub_path(&format!("{err:#}"), repo_root()));
     }
 
     #[test]
@@ -787,7 +787,7 @@ mod tests {
 
         let err = Workspace::read(&tmp).unwrap_err();
         expect!["Failed to read workspace.members: 'members' field is not an array of strings"]
-            .assert_eq(&scrub_path(&format!("{:#}", err), repo_root()));
+            .assert_eq(&scrub_path(&format!("{err:#}"), repo_root()));
     }
 
     #[test]
@@ -806,7 +806,7 @@ mod tests {
 
         let err = Workspace::read(&tmp).unwrap_err();
         expect!["Failed to read workspace.members: Canonicalizing path 'i_dont_exist': No such file or directory (os error 2)"]
-        .assert_eq(&scrub_path(&format!("{:#}", err), repo_root()));
+        .assert_eq(&scrub_path(&format!("{err:#}"), repo_root()));
     }
 
     #[test]

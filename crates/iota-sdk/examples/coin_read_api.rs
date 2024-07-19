@@ -85,8 +85,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .get_all_balances(active_address)
         .await?;
     println!(" *** Balance + Total Balance *** ");
-    println!("Balance: {:?}", balance);
-    println!("Total Balance: {:?}", total_balance);
+    println!("Balance: {balance:?}");
+    println!("Total Balance: {total_balance:?}");
     println!(" *** Balance + Total Balance ***\n ");
 
     // Return the coin metadata for the Coin<IOTA>
@@ -96,7 +96,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .await?;
 
     println!(" *** Coin Metadata *** ");
-    println!("{:?}", coin_metadata);
+    println!("{coin_metadata:?}");
     println!(" *** Coin Metadata ***\n ");
 
     // Total Supply
@@ -105,7 +105,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .get_total_supply("0x2::iota::IOTA".to_string())
         .await?;
     println!(" *** Total Supply *** ");
-    println!("{:?}", total_supply);
+    println!("{total_supply:?}");
     println!(" *** Total Supply ***\n ");
 
     // ************ END OF COIN READ API ************ //

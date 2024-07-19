@@ -83,7 +83,7 @@ impl AnemoClient {
 
         // If we're not connected we'll need to check to see if the Peer is a KnownPeer
         if network.known_peers().get(&peer_id).is_none() {
-            return Err(ConsensusError::UnknownNetworkPeer(format!("{}", peer_id)));
+            return Err(ConsensusError::UnknownNetworkPeer(format!("{peer_id}")));
         }
 
         let (mut subscriber, _) = network.subscribe().map_err(|e| {

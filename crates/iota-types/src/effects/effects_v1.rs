@@ -331,7 +331,7 @@ impl Display for TransactionEffectsV1 {
                 writeln!(writer, "  - ID: {id} , Owner: {owner}")?;
             }
         }
-        write!(f, "{}", writer)
+        write!(f, "{writer}")
     }
 }
 

@@ -452,7 +452,7 @@ impl Display for IotaTransactionBlockKind {
                 writeln!(writer, "Transaction Kind: End of Epoch Transaction")?;
             }
         }
-        write!(f, "{}", writer)
+        write!(f, "{writer}")
     }
 }
 

@@ -547,8 +547,7 @@ async fn test_move_call_args_linter_command() -> Result<(), anyhow::Error> {
     let package = if let IotaClientCommandResult::Publish(response) = resp {
         assert!(
             response.status_ok().unwrap(),
-            "Command failed: {:?}",
-            response
+            "Command failed: {response:?}",
         );
         response
             .effects
@@ -1843,8 +1842,7 @@ async fn test_native_transfer() -> Result<(), anyhow::Error> {
     let (mut_obj1, mut_obj2) = if let IotaClientCommandResult::Transfer(response) = resp {
         assert!(
             response.status_ok().unwrap(),
-            "Command failed: {:?}",
-            response
+            "Command failed: {response:?}",
         );
         (
             response
@@ -1983,8 +1981,8 @@ fn test_bug_1078() {
     ));
     let mut writer = String::new();
     // fmt ObjectRead should not fail.
-    write!(writer, "{}", read).unwrap();
-    write!(writer, "{:?}", read).unwrap();
+    write!(writer, "{read}").unwrap();
+    write!(writer, "{read:?}").unwrap();
 }
 
 #[sim_test]
@@ -2258,7 +2256,7 @@ async fn test_merge_coin() -> Result<(), anyhow::Error> {
     .execute(context)
     .await?;
     let g = if let IotaClientCommandResult::MergeCoin(r) = resp {
-        assert!(r.status_ok().unwrap(), "Command failed: {:?}", r);
+        assert!(r.status_ok().unwrap(), "Command failed: {r:?}");
         let object_id = r
             .effects
             .as_ref()
@@ -2380,7 +2378,7 @@ async fn test_split_coin() -> Result<(), anyhow::Error> {
     .await?;
 
     let (updated_coin, new_coins) = if let IotaClientCommandResult::SplitCoin(r) = resp {
-        assert!(r.status_ok().unwrap(), "Command failed: {:?}", r);
+        assert!(r.status_ok().unwrap(), "Command failed: {r:?}");
         let updated_object_id = r
             .effects
             .as_ref()
@@ -2448,7 +2446,7 @@ async fn test_split_coin() -> Result<(), anyhow::Error> {
     .await?;
 
     let (updated_coin, new_coins) = if let IotaClientCommandResult::SplitCoin(r) = resp {
-        assert!(r.status_ok().unwrap(), "Command failed: {:?}", r);
+        assert!(r.status_ok().unwrap(), "Command failed: {r:?}");
         let updated_object_id = r
             .effects
             .as_ref()
@@ -2519,7 +2517,7 @@ async fn test_split_coin() -> Result<(), anyhow::Error> {
     .await?;
 
     let (updated_coin, new_coins) = if let IotaClientCommandResult::SplitCoin(r) = resp {
-        assert!(r.status_ok().unwrap(), "Command failed: {:?}", r);
+        assert!(r.status_ok().unwrap(), "Command failed: {r:?}");
         let updated_object_id = r
             .effects
             .as_ref()

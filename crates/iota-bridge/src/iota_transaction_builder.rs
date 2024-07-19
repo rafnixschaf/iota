@@ -61,19 +61,19 @@ pub fn get_iota_token_type_tag(token_id: TokenId) -> TypeTag {
         type_tags.insert(TokenId::Iota, GAS::type_tag());
         type_tags.insert(
             TokenId::BTC,
-            TypeTag::from_str(&format!("{:?}::btc::BTC", package_id)).unwrap(),
+            TypeTag::from_str(&format!("{package_id:?}::btc::BTC")).unwrap(),
         );
         type_tags.insert(
             TokenId::ETH,
-            TypeTag::from_str(&format!("{:?}::eth::ETH", package_id)).unwrap(),
+            TypeTag::from_str(&format!("{package_id:?}::eth::ETH")).unwrap(),
         );
         type_tags.insert(
             TokenId::USDC,
-            TypeTag::from_str(&format!("{:?}::usdc::USDC", package_id)).unwrap(),
+            TypeTag::from_str(&format!("{package_id:?}::usdc::USDC")).unwrap(),
         );
         type_tags.insert(
             TokenId::USDT,
-            TypeTag::from_str(&format!("{:?}::usdt::USDT", package_id)).unwrap(),
+            TypeTag::from_str(&format!("{package_id:?}::usdt::USDT")).unwrap(),
         );
         type_tags
     });

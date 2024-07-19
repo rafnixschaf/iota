@@ -648,7 +648,7 @@ impl AuthorityDetails {
         let worker = internal
             .workers
             .get_mut(&id)
-            .unwrap_or_else(|| panic!("Worker with id {} not found ", id));
+            .unwrap_or_else(|| panic!("Worker with id {id} not found "));
 
         worker.start(keypair, client, preserve_store).await;
     }
@@ -659,7 +659,7 @@ impl AuthorityDetails {
         internal
             .workers
             .get(&id)
-            .unwrap_or_else(|| panic!("Worker with id {} not found ", id))
+            .unwrap_or_else(|| panic!("Worker with id {id} not found "))
             .stop()
             .await;
     }

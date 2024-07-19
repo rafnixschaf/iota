@@ -257,7 +257,7 @@ async fn test_upgrade_package_happy_path() {
 
     match effects.into_status().unwrap_err().0 {
         ExecutionFailureStatus::MoveAbort(_, 42) => { /* nop */ }
-        err => panic!("Unexpected error: {:#?}", err),
+        err => panic!("Unexpected error: {err:#?}"),
     };
 
     let (digest, modules) = build_upgrade_test_modules("stage1_basic_compatibility_valid");
@@ -927,7 +927,7 @@ async fn test_publish_transitive_happy_path() {
 
     match call_effects.into_status().unwrap_err().0 {
         ExecutionFailureStatus::MoveAbort(_, 42) => { /* nop */ }
-        err => panic!("Unexpected error: {:#?}", err),
+        err => panic!("Unexpected error: {err:#?}"),
     };
 }
 
@@ -1250,7 +1250,7 @@ async fn test_conflicting_versions_across_calls() {
     // verify that execution aborts
     match call_error.0 {
         ExecutionFailureStatus::MoveAbort(_, 42) => { /* nop */ }
-        err => panic!("Unexpected error: {:#?}", err),
+        err => panic!("Unexpected error: {err:#?}"),
     };
 
     // verify that execution aborts in the second (counting from 0) command

@@ -246,7 +246,7 @@ impl Store for RocksDBStore {
         let mut blocks = vec![];
         for (r, block) in refs.into_iter().zip(results.into_iter()) {
             blocks.push(
-                block.unwrap_or_else(|| panic!("Storage inconsistency: block {:?} not found!", r)),
+                block.unwrap_or_else(|| panic!("Storage inconsistency: block {r:?} not found!")),
             );
         }
         Ok(blocks)

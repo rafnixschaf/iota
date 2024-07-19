@@ -214,11 +214,11 @@ pub fn accessors_macro(input: TokenStream) -> TokenStream {
                 match self {
                     #(
                         ProtocolConfigValue::#inner_types(x) => {
-                            write!(writer, "{}", x)?;
+                            write!(writer, "{x}")?;
                         }
                     )*
                 }
-                write!(f, "{}", writer)
+                write!(f, "{writer}")
             }
         }
     };

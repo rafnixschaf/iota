@@ -125,7 +125,7 @@ pub async fn perform_zk_login_test_tx(
             zk_login_inputs.get_iss(),
         )?)?
     };
-    println!("Sender: {:?}", sender);
+    println!("Sender: {sender:?}");
 
     // Request some coin from faucet and build a test transaction.
     let iota = IotaClientBuilder::default().build(fullnode_url).await?;

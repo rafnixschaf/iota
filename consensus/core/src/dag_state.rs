@@ -254,7 +254,7 @@ impl DagState {
     /// checked.
     pub(crate) fn get_uncommitted_blocks_at_round(&self, round: Round) -> Vec<VerifiedBlock> {
         if round <= self.last_commit_round() {
-            panic!("Round {} have committed blocks!", round);
+            panic!("Round {round} have committed blocks!");
         }
 
         let mut blocks = vec![];

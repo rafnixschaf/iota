@@ -55,7 +55,7 @@ pub fn start_admin_server(
                             .serve(router.into_make_service())
                             .await
                             .unwrap_or_else(|err| {
-                                panic!("Failed to boot admin {}: {err}", socket_address)
+                                panic!("Failed to boot admin {socket_address}: {err}")
                             });
 
                         return;
@@ -63,7 +63,7 @@ pub fn start_admin_server(
                     Err(err) => {
                         if total_retries == 0 {
                             error!("{}", err);
-                            panic!("Failed to boot admin {}: {}", socket_address, err);
+                            panic!("Failed to boot admin {socket_address}: {err}");
                         }
 
                         error!("{}", err);

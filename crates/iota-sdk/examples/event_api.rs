@@ -30,7 +30,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .query_events(EventFilter::All(vec![]), None, Some(5), descending) // query first 5 events in descending order
         .await?;
     println!(" *** Query events *** ");
-    println!("{:?}", query_events);
+    println!("{query_events:?}");
     println!(" *** Query events ***\n ");
 
     let ws = IotaClientBuilder::default()

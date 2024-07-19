@@ -438,7 +438,7 @@ impl CheckpointStore {
                 .get_checkpoint_contents(&verified_checkpoint.content_digest)
                 .map(|opt_contents| {
                     opt_contents
-                        .map(|contents| format!("{:?}", contents))
+                        .map(|contents| format!("{contents:?}"))
                         .unwrap_or_else(|| {
                             format!(
                                 "Verified checkpoint contents not found, digest: {:?}",
@@ -458,7 +458,7 @@ impl CheckpointStore {
                 .get_checkpoint_contents(&local_checkpoint.content_digest)
                 .map(|opt_contents| {
                     opt_contents
-                        .map(|contents| format!("{:?}", contents))
+                        .map(|contents| format!("{contents:?}"))
                         .unwrap_or_else(|| {
                             format!(
                                 "Local checkpoint contents not found, digest: {:?}",
@@ -1784,8 +1784,8 @@ async fn diagnose_split_brain(
         .into_path()
         .join(Path::new("checkpoint_fork_dump.txt"));
     let mut file = File::create(path).unwrap();
-    write!(file, "{}", fork_logs_text).unwrap();
-    debug!("{}", fork_logs_text);
+    write!(file, "{fork_logs_text}").unwrap();
+    debug!("{fork_logs_text}");
 
     fail_point!("split_brain_reached");
 }

@@ -284,7 +284,7 @@ impl Display for IotaObjectData {
             write!(writer, "{content}")?;
         }
 
-        write!(f, "{}", writer)
+        write!(f, "{writer}")
     }
 }
 
@@ -831,7 +831,7 @@ impl Display for IotaParsedData {
                 )?;
             }
         }
-        write!(f, "{}", writer)
+        write!(f, "{writer}")
     }
 }
 

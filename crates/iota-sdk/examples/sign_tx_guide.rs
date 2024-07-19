@@ -97,7 +97,7 @@ async fn main() -> Result<(), anyhow::Error> {
     // replace `skp_determ_0` with the variable names above
     let pk = skp_determ_0.public();
     let sender = IotaAddress::from(&pk);
-    println!("Sender: {:?}", sender);
+    println!("Sender: {sender:?}");
 
     // make sure the sender has a gas coin as an example.
     request_tokens_from_faucet(sender, &iota_client).await?;

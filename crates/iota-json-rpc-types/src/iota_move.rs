@@ -340,13 +340,13 @@ impl Display for IotaMoveValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut writer = String::new();
         match self {
-            IotaMoveValue::Number(value) => write!(writer, "{}", value)?,
-            IotaMoveValue::Bool(value) => write!(writer, "{}", value)?,
-            IotaMoveValue::Address(value) => write!(writer, "{}", value)?,
-            IotaMoveValue::String(value) => write!(writer, "{}", value)?,
+            IotaMoveValue::Number(value) => write!(writer, "{value}")?,
+            IotaMoveValue::Bool(value) => write!(writer, "{value}")?,
+            IotaMoveValue::Address(value) => write!(writer, "{value}")?,
+            IotaMoveValue::String(value) => write!(writer, "{value}")?,
             IotaMoveValue::UID { id } => write!(writer, "{id}")?,
-            IotaMoveValue::Struct(value) => write!(writer, "{}", value)?,
-            IotaMoveValue::Option(value) => write!(writer, "{:?}", value)?,
+            IotaMoveValue::Struct(value) => write!(writer, "{value}")?,
+            IotaMoveValue::Option(value) => write!(writer, "{value:?}")?,
             IotaMoveValue::Vector(vec) => {
                 write!(
                     writer,

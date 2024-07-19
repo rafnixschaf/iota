@@ -45,7 +45,7 @@ pub fn schema_derive(input: TokenStream) -> TokenStream {
 
             fn get_column(&self, idx: usize) -> ParquetValue {
                 #getter_implementation_tokens
-                panic!("not supported column {:?}", idx);
+                panic!("not supported column {idx:?}");
             }
         }
     }

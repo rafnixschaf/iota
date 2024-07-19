@@ -176,7 +176,7 @@ fn run_pulumi_new_from_template(
 }
 
 fn run_go_mod_tidy(project_dir_str: &str) -> Result<()> {
-    let cmd = &format!("cd {} && go mod tidy", project_dir_str);
+    let cmd = &format!("cd {project_dir_str} && go mod tidy");
     info!(
         "running `{}` to make sure all Golang dependencies are installed.",
         cmd
@@ -191,7 +191,7 @@ fn run_pulumi_preview(project_dir_str: &str) -> Result<()> {
         vec![
             "bash",
             "-c",
-            &format!("pulumi preview -C {}", project_dir_str),
+            &format!("pulumi preview -C {project_dir_str}"),
         ],
         None,
     )?;
@@ -227,7 +227,7 @@ fn get_current_backend() -> Result<String> {
 }
 
 fn remove_stack(backend: &str, project_name: &str, stack_name: &str) -> Result<()> {
-    let stack_str = format!("{}/{}/{}", backend, project_name, stack_name);
+    let stack_str = format!("{backend}/{project_name}/{stack_name}");
     debug!("cleaning up {}...", &stack_str);
     run_cmd(
         vec![

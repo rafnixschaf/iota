@@ -223,7 +223,7 @@ async fn sync_checkpoint_list_to_latest(config: &Config) -> anyhow::Result<()> {
 
         let target_epoch = last_epoch + 1;
         // Print target
-        println!("Target Epoch: {}", target_epoch);
+        println!("Target Epoch: {target_epoch}");
         let mut found_summary = None;
 
         while start < end {

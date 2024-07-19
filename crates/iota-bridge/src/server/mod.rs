@@ -131,15 +131,15 @@ async fn handle_update_committee_blocklist_action(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let blocklist_type = BlocklistType::try_from(blocklist_type).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid blocklist action type: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid blocklist action type: {err:?}"))
     })?;
     let blocklisted_members = keys
         .split(',')
         .map(|s| {
-            let bytes = Hex::decode(s).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let bytes = Hex::decode(s).map_err(|e| anyhow::anyhow!("{e:?}"))?;
             BridgeAuthorityPublicKeyBytes::from_bytes(&bytes)
                 .map_err(|e| anyhow::anyhow!("{:?}", e))
         })
@@ -161,10 +161,10 @@ async fn handle_emergecny_action(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let action_type = EmergencyActionType::try_from(action_type).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid emergency action type: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid emergency action type: {err:?}"))
     })?;
     let action = BridgeAction::EmergencyAction(EmergencyAction {
         chain_id,
@@ -180,10 +180,10 @@ async fn handle_limit_update_action(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let sending_chain_id = BridgeChainId::try_from(sending_chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let action = BridgeAction::LimitUpdateAction(LimitUpdateAction {
         chain_id,
@@ -200,10 +200,10 @@ async fn handle_asset_price_update_action(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let token_id = TokenId::try_from(token_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid token id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid token id: {err:?}"))
     })?;
     let action = BridgeAction::AssetPriceUpdateAction(AssetPriceUpdateAction {
         chain_id,
@@ -226,10 +226,10 @@ async fn handle_evm_contract_upgrade_with_calldata(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let call_data = Hex::decode(&calldata).map_err(|e| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid call data: {:?}", e))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid call data: {e:?}"))
     })?;
     let action = BridgeAction::EvmContractUpgradeAction(EvmContractUpgradeAction {
         chain_id,
@@ -252,7 +252,7 @@ async fn handle_evm_contract_upgrade(
     State(handler): State<Arc<impl BridgeRequestHandlerTrait + Sync + Send>>,
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
-        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
+        BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {err:?}"))
     })?;
     let action = BridgeAction::EvmContractUpgradeAction(EvmContractUpgradeAction {
         chain_id,

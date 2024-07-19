@@ -643,7 +643,7 @@ impl TName for Ability {
 
 impl fmt::Debug for LeadingNameAccess_ {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 
