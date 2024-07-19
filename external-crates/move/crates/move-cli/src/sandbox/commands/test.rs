@@ -115,7 +115,7 @@ fn determine_package_nest_depth(
 fn pad_tmp_path(tmp_dir: &Path, pad_amount: usize) -> anyhow::Result<PathBuf> {
     let mut tmp_dir = tmp_dir.to_path_buf();
     for i in 0..pad_amount {
-        tmp_dir.push(format!("{}", i));
+        tmp_dir.push(format!("{i}"));
     }
     std::fs::create_dir_all(&tmp_dir)?;
     Ok(tmp_dir)

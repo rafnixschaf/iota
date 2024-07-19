@@ -26,7 +26,7 @@ async fn main() {
         let account_key: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let network_key: NetworkKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let validator = ValidatorInfo {
-            name: format!("Validator {}", i),
+            name: format!("Validator {i}"),
             protocol_key: key.public().into(),
             worker_key: worker_key.public().clone(),
             account_address: IotaAddress::from(account_key.public()),

@@ -589,7 +589,7 @@ impl AbstractState {
             self.register = Some(abstract_value.clone());
             Ok(())
         } else {
-            Err(VMError::new(format!("Local does not exist at index {}", i)))
+            Err(VMError::new(format!("Local does not exist at index {i}")))
         }
     }
 
@@ -614,7 +614,7 @@ impl AbstractState {
             ));
             Ok(())
         } else {
-            Err(VMError::new(format!("Local does not exist at index {}", i)))
+            Err(VMError::new(format!("Local does not exist at index {i}")))
         }
     }
 
@@ -626,7 +626,7 @@ impl AbstractState {
                 .insert(i, (abstract_value.clone(), availability));
             Ok(())
         } else {
-            Err(VMError::new(format!("Local does not exist at index {}", i)))
+            Err(VMError::new(format!("Local does not exist at index {i}")))
         }
     }
 
@@ -640,7 +640,7 @@ impl AbstractState {
         if let Some((_, availability1)) = self.locals.get(&i) {
             Ok(availability == *availability1)
         } else {
-            Err(VMError::new(format!("Local does not exist at index {}", i)))
+            Err(VMError::new(format!("Local does not exist at index {i}")))
         }
     }
 
@@ -650,7 +650,7 @@ impl AbstractState {
         if let Some((abstract_value, _)) = self.locals.get(&i) {
             Ok(abstract_value.abilities.has_ability(ability))
         } else {
-            Err(VMError::new(format!("Local does not exist at index {}", i)))
+            Err(VMError::new(format!("Local does not exist at index {i}")))
         }
     }
 

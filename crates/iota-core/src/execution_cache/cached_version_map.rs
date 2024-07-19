@@ -235,7 +235,7 @@ mod tests {
     fn truncate_map_to_smaller_size() {
         let mut map = CachedVersionMap::default();
         for i in 1..=5 {
-            map.insert(seq(i), format!("Item {}", i));
+            map.insert(seq(i), format!("Item {i}"));
         }
         map.truncate_to(3);
         assert_eq!(map.values.len(), 3);

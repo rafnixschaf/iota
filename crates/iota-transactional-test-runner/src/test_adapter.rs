@@ -358,7 +358,7 @@ impl<'a> MoveTestAdapter<'a> for IotaTestAdapter {
             if !output.is_empty() {
                 output.push_str(", ")
             }
-            write!(output, "{}: object({})", account, fake).unwrap()
+            write!(output, "{account}: object({fake})").unwrap()
         }
         for object_id in object_ids {
             test_adapter.enumerate_fake(object_id);

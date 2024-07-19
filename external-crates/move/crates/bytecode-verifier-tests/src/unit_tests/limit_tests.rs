@@ -815,7 +815,7 @@ fn multi_struct(module: &mut CompiledModule, count: usize) {
     for i in 0..count {
         module
             .identifiers
-            .push(Identifier::new(format!("A_{}", i)).unwrap());
+            .push(Identifier::new(format!("A_{i}")).unwrap());
         module.struct_handles.push(StructHandle {
             module: module.self_module_handle_idx,
             name: IdentifierIndex((module.identifiers.len() - 1) as u16),
@@ -835,7 +835,7 @@ fn multi_fields(module: &mut CompiledModule, count: usize) {
         for i in 0..count {
             module
                 .identifiers
-                .push(Identifier::new(format!("f_{}", i)).unwrap());
+                .push(Identifier::new(format!("f_{i}")).unwrap());
             fields.push(FieldDefinition {
                 name: Default::default(),
                 signature: TypeSignature(SignatureToken::U8),
@@ -852,7 +852,7 @@ fn multi_fields_except_one(module: &mut CompiledModule, idx: usize, count: usize
         for i in 0..count {
             module
                 .identifiers
-                .push(Identifier::new(format!("f_{}", i)).unwrap());
+                .push(Identifier::new(format!("f_{i}")).unwrap());
             fields.push(FieldDefinition {
                 name: Default::default(),
                 signature: TypeSignature(SignatureToken::U8),
@@ -867,7 +867,7 @@ fn multi_functions(module: &mut CompiledModule, count: usize) {
     for i in 0..count {
         module
             .identifiers
-            .push(Identifier::new(format!("func_{}", i)).unwrap());
+            .push(Identifier::new(format!("func_{i}")).unwrap());
         module.function_handles.push(FunctionHandle {
             module: module.self_module_handle_idx,
             name: IdentifierIndex((module.identifiers.len() - 1) as u16),

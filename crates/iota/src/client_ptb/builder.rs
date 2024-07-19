@@ -761,9 +761,9 @@ impl<'a> PTBBuilder<'a> {
             // find a similar identifier to suggest.
             PTBArg::Identifier(i) => match self.did_you_mean_identifier(&i) {
                 Some(similars) => {
-                    error!(arg_loc => help: { "{}", similars }, "Unresolved identifier: '{}'", i)
+                    error!(arg_loc => help: { "{}", similars }, "Unresolved identifier: '{i}'")
                 }
-                None => error!(arg_loc, "Unresolved identifier: '{}'", i),
+                None => error!(arg_loc, "Unresolved identifier: '{i}'"),
             },
         }
     }

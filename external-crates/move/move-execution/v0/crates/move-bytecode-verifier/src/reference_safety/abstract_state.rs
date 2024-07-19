@@ -69,9 +69,9 @@ enum Label {
 impl std::fmt::Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Label::Local(i) => write!(f, "local#{}", i),
-            Label::Global(i) => write!(f, "resource@{}", i),
-            Label::Field(i) => write!(f, "field#{}", i),
+            Label::Local(i) => write!(f, "local#{i}"),
+            Label::Global(i) => write!(f, "resource@{i}"),
+            Label::Field(i) => write!(f, "field#{i}"),
         }
     }
 }

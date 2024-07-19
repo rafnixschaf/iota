@@ -144,7 +144,7 @@ impl Scenario {
         };
 
         for i in 0..num_steps {
-            println!("running with cache eviction after step {}", i);
+            println!("running with cache eviction after step {i}");
             let count = Arc::new(AtomicU32::new(0));
             let action = Box::new(|s: &mut Scenario| {
                 s.evict_caches();

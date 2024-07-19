@@ -56,11 +56,11 @@ pub fn iota_config_dir() -> Result<PathBuf, anyhow::Error> {
 }
 
 pub fn validator_config_file(address: Multiaddr, i: usize) -> String {
-    multiaddr_to_filename(address).unwrap_or(format!("validator-config-{}.yaml", i))
+    multiaddr_to_filename(address).unwrap_or(format!("validator-config-{i}.yaml"))
 }
 
 pub fn ssfn_config_file(address: Multiaddr, i: usize) -> String {
-    multiaddr_to_filename(address).unwrap_or(format!("ssfn-config-{}.yaml", i))
+    multiaddr_to_filename(address).unwrap_or(format!("ssfn-config-{i}.yaml"))
 }
 
 fn multiaddr_to_filename(address: Multiaddr) -> Option<String> {

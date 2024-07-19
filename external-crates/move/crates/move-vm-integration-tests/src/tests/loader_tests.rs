@@ -1242,7 +1242,7 @@ fn dependency_chain(start: u64, end: u64, modules: &mut Vec<CompiledModule>) {
     modules.push(module);
 
     for i in start..end {
-        let name = format!("A{}", i);
+        let name = format!("A{i}");
         let dep_name = format!("A{}", i - 1);
         let deps = vec![dep_name];
         let module = empty_module_with_dependencies(name, deps);
@@ -1292,7 +1292,7 @@ fn friend_chain(start: u64, end: u64, modules: &mut Vec<CompiledModule>) {
     modules.push(module);
 
     for i in start..end {
-        let name = format!("A{}", i);
+        let name = format!("A{i}");
         let dep_name = format!("A{}", i - 1);
         let deps = vec![dep_name];
         let module = empty_module_with_friends(name, deps);

@@ -96,7 +96,7 @@ fn test_bicliques() {
     // create other functions
     for i in 1..(NUM_FUNCTIONS + 1) {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i + 2),
@@ -214,7 +214,7 @@ fn test_merge_state_large_graph() {
 
     for i in 0..NUM_FUNCTIONS {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i + 3),
@@ -302,7 +302,7 @@ fn test_merge_state() {
 
     for i in 0..NUM_FUNCTIONS {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i + 1),
@@ -387,7 +387,7 @@ fn test_copyloc_pop() {
 
     for i in 0..NUM_FUNCTIONS {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i),

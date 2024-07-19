@@ -53,7 +53,7 @@ async fn test_publish_primitive() {
     let mut builder = ProgrammableTransactionBuilder::new();
 
     for i in 1..200 {
-        let ticker = format!("IOTA {}", i);
+        let ticker = format!("IOTA {i}");
 
         let value = builder
             .input(CallArg::Pure(
@@ -150,7 +150,7 @@ async fn test_publish_complex_value() {
         .unwrap();
 
     for i in 1..200 {
-        let ticker = format!("IOTA {}", i);
+        let ticker = format!("IOTA {i}");
 
         let value = builder
             .input(CallArg::Pure(

@@ -118,7 +118,7 @@ fn test_large_types() {
     // other fcts
     for i in 0..NUM_FUNCTIONS {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i + 4),

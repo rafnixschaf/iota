@@ -466,7 +466,7 @@ mod tests {
         // The format for type from its `Display` impl does not technically match the
         // format that the RPC expects from the data layer (where a type's
         // package should be canonicalized), but it will suffice.
-        data_with_tag(format!("{}", tag), layout, data)
+        data_with_tag(format!("{tag}"), layout, data)
     }
 
     fn data_with_tag<T: Serialize>(

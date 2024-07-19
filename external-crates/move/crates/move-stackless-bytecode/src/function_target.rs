@@ -506,7 +506,7 @@ impl<'env> fmt::Display for FunctionTarget<'env> {
                 if i > 0 {
                     write!(f, ", ")?;
                 }
-                write!(f, "#{}", i)?;
+                write!(f, "#{i}")?;
                 if i >= tparams_count_defined {
                     write!(f, "*")?; // denotes a ghost type parameter
                 }

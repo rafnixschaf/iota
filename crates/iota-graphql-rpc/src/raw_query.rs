@@ -148,7 +148,7 @@ impl RawQuery {
         }
 
         for (i, sql) in sql_components {
-            result.push_str(&format!("${}", i));
+            result.push_str(&format!("${i}"));
             result.push_str(sql);
         }
 

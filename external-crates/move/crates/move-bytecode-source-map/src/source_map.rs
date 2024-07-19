@@ -138,7 +138,7 @@ impl StructSourceMap {
         }
 
         for i in 0..struct_handle.type_parameters.len() {
-            let name = format!("Ty{}", i);
+            let name = format!("Ty{i}");
             self.add_type_parameter((name, default_loc))
         }
         Ok(())
@@ -247,21 +247,21 @@ impl FunctionSourceMap {
     ) -> Result<()> {
         // Generate names for each type parameter
         for i in 0..type_parameters.len() {
-            let name = format!("Ty{}", i);
+            let name = format!("Ty{i}");
             self.add_type_parameter((name, default_loc))
         }
 
         // Generate names for each parameter
         let params = view.signature_at(parameters);
         for i in 0..params.0.len() {
-            let name = format!("Arg{}", i);
+            let name = format!("Arg{i}");
             self.add_parameter_mapping((name, default_loc))
         }
 
         if let Some(code) = code {
             let locals = view.signature_at(code.locals);
             for i in 0..locals.0.len() {
-                let name = format!("loc{}", i);
+                let name = format!("loc{i}");
                 self.add_local_mapping((name, default_loc))
             }
         }

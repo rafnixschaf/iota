@@ -904,9 +904,9 @@ impl<'a> fmt::Display for RootDisplay<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self.root {
             Root::Global(g) => write!(f, "{}", g.display(self.env)),
-            Root::Local(i) => write!(f, "Loc({})", i), // TODO: print name if available
-            Root::Formal(i) => write!(f, "Formal({})", i), // TODO: print name if available
-            Root::Return(i) => write!(f, "Ret({})", i),
+            Root::Local(i) => write!(f, "Loc({i})"), // TODO: print name if available
+            Root::Formal(i) => write!(f, "Formal({i})"), // TODO: print name if available
+            Root::Return(i) => write!(f, "Ret({i})"),
         }
     }
 }

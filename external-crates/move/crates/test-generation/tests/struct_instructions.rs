@@ -36,7 +36,7 @@ fn generate_module_with_struct(resource: bool) -> CompiledModule {
     for i in 0..num_fields {
         module
             .identifiers
-            .push(Identifier::new(format!("string{}", i)).unwrap());
+            .push(Identifier::new(format!("string{i}")).unwrap());
         let str_pool_idx = IdentifierIndex::new(i + 1);
         fields.push(FieldDefinition {
             name: str_pool_idx,

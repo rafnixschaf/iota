@@ -54,7 +54,7 @@ fn many_backedges() {
     // create other functions
     for i in 1..(NUM_FUNCTIONS + 1) {
         m.identifiers
-            .push(Identifier::new(format!("f{}", i)).unwrap());
+            .push(Identifier::new(format!("f{i}")).unwrap());
         m.function_handles.push(FunctionHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(i + 1), // the +1 accounts for returns_bool_and_u64

@@ -2270,7 +2270,7 @@ impl<'env> StructEnv<'env> {
                     .enumerate()
                     .map(|(i, k)| {
                         TypeParameter(
-                            pool.make(&format!("$tv{}", i)),
+                            pool.make(&format!("$tv{i}")),
                             AbilityConstraint(k.constraints),
                         )
                     })
@@ -2300,7 +2300,7 @@ impl<'env> StructEnv<'env> {
                             .ok()
                             .and_then(|smap| smap.type_parameters.get(i))
                             .map(|(s, _)| s.clone())
-                            .unwrap_or_else(|| format!("unknown#{}", i));
+                            .unwrap_or_else(|| format!("unknown#{i}"));
                         TypeParameter(
                             self.module_env.env.symbol_pool.make(&name),
                             AbilityConstraint(k.constraints),
@@ -2732,7 +2732,7 @@ impl<'env> FunctionEnv<'env> {
             .enumerate()
             .map(|(i, k)| {
                 TypeParameter(
-                    self.module_env.env.symbol_pool.make(&format!("$tv{}", i)),
+                    self.module_env.env.symbol_pool.make(&format!("$tv{i}")),
                     AbilityConstraint(*k),
                 )
             })
@@ -2754,7 +2754,7 @@ impl<'env> FunctionEnv<'env> {
                     .ok()
                     .and_then(|fmap| fmap.type_parameters.get(i))
                     .map(|(s, _)| s.clone())
-                    .unwrap_or_else(|| format!("unknown#{}", i));
+                    .unwrap_or_else(|| format!("unknown#{i}"));
                 TypeParameter(
                     self.module_env.env.symbol_pool.make(&name),
                     AbilityConstraint(*k),

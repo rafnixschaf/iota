@@ -1190,7 +1190,7 @@ impl AstDebug for StructDefinition {
             w.write("native ");
         }
 
-        w.write(&format!("struct {}", name));
+        w.write(&format!("struct {name}"));
         type_parameters.ast_debug(w);
         match fields {
             StructFields::Defined(fields) => w.block(|w| {
@@ -1201,7 +1201,7 @@ impl AstDebug for StructDefinition {
             }),
             StructFields::Positional(types) => w.block(|w| {
                 w.semicolon(types.iter().enumerate(), |w, (i, st)| {
-                    w.write(&format!("pos{}: ", i));
+                    w.write(&format!("pos{i}: "));
                     st.ast_debug(w);
                 });
             }),

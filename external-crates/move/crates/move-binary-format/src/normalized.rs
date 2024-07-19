@@ -715,7 +715,7 @@ impl std::fmt::Display for Type {
             Type::Bool => write!(f, "bool"),
             Type::Reference(r) => write!(f, "&{}", r),
             Type::MutableReference(r) => write!(f, "&mut {}", r),
-            Type::TypeParameter(i) => write!(f, "T{:?}", i),
+            Type::TypeParameter(i) => write!(f, "T{i:?}"),
         }
     }
 }

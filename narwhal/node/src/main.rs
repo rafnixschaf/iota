@@ -328,7 +328,7 @@ fn benchmark_genesis(
     let primary_key_files = (0..ips.len())
         .map(|i| {
             let mut path = working_directory.clone();
-            path.push(format!("primary-{}-key.json", i));
+            path.push(format!("primary-{i}-key.json"));
             path
         })
         .collect::<Vec<_>>();

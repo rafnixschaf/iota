@@ -133,7 +133,7 @@ pub fn format_signature_token(view: &BinaryIndexedView, t: &SignatureToken) -> S
         SignatureToken::MutableReference(inner) => {
             format!("&mut {}", format_signature_token(view, inner))
         }
-        SignatureToken::TypeParameter(i) => format!("T{}", i),
+        SignatureToken::TypeParameter(i) => format!("T{i}"),
 
         SignatureToken::Struct(idx) => format_signature_token_struct(view, *idx, &[]),
         SignatureToken::StructInstantiation(struct_inst) => {

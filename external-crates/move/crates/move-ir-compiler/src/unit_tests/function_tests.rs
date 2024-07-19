@@ -13,7 +13,7 @@ fn generate_function(name: &str, num_formals: usize, num_locals: usize) -> Strin
     code.reserve(30 * (num_formals + num_locals));
 
     for i in 0..num_formals {
-        write!(&mut code, "formal_{}: u64", i).unwrap();
+        write!(&mut code, "formal_{i}: u64").unwrap();
         if i < num_formals - 1 {
             code.push_str(", ");
         }
@@ -22,7 +22,7 @@ fn generate_function(name: &str, num_formals: usize, num_locals: usize) -> Strin
     code.push_str(") {\n");
 
     for i in 0..num_locals {
-        writeln!(&mut code, "let x_{}: u64;", i).unwrap();
+        writeln!(&mut code, "let x_{i}: u64;").unwrap();
     }
     code.push_str("label b0:\n");
     for i in 0..num_locals {
