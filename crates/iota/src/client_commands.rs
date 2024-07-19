@@ -1928,7 +1928,7 @@ impl Display for IotaClientCommandResult {
                 let mut table = builder.build();
                 let style = TableStyle::rounded();
                 table.with(style);
-                write!(f, "{}", table)?
+                write!(f, "{table}")?
             }
             IotaClientCommandResult::Balance(coins, with_coins) => {
                 if coins.is_empty() {
@@ -1943,7 +1943,7 @@ impl Display for IotaClientCommandResult {
                     TableStyle::modern().get_horizontal(),
                 )]));
                 table.with(tabled::settings::style::BorderSpanCorrection);
-                write!(f, "{}", table)?;
+                write!(f, "{table}")?;
             }
             IotaClientCommandResult::DynamicFieldQuery(df_refs) => {
                 let df_refs = DynamicFieldOutput {
@@ -1956,7 +1956,7 @@ impl Display for IotaClientCommandResult {
                 let mut table = json_to_table(&json_obj);
                 let style = TableStyle::rounded().horizontals([]);
                 table.with(style);
-                write!(f, "{}", table)?
+                write!(f, "{table}")?
             }
             IotaClientCommandResult::Gas(gas_coins) => {
                 let gas_coins = gas_coins
@@ -2002,7 +2002,7 @@ impl Display for IotaClientCommandResult {
                     ]));
                     table.with(tabled::settings::style::BorderSpanCorrection);
                 }
-                write!(f, "{}", table)?;
+                write!(f, "{table}")?;
             }
             IotaClientCommandResult::NewAddress(new_address) => {
                 let mut builder = TableBuilder::default();
@@ -2032,7 +2032,7 @@ impl Display for IotaClientCommandResult {
                         .with(TableBorder::default().corner_top_right('─')),
                 );
 
-                write!(f, "{}", table)?
+                write!(f, "{table}")?
             }
             IotaClientCommandResult::Object(object_read) => match object_read.object() {
                 Ok(obj) => {
@@ -2062,10 +2062,10 @@ impl Display for IotaClientCommandResult {
             }
             IotaClientCommandResult::Upgrade(response)
             | IotaClientCommandResult::Publish(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::TransactionBlock(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::RawObject(raw_object_read) => {
                 let raw_object = match raw_object_read.object() {
@@ -2086,10 +2086,10 @@ impl Display for IotaClientCommandResult {
                     },
                     Err(err) => format!("{err}").red().to_string(),
                 };
-                writeln!(writer, "{}", raw_object)?;
+                writeln!(writer, "{raw_object}")?;
             }
             IotaClientCommandResult::Call(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::SerializedUnsignedTransaction(tx_data) => {
                 writeln!(
@@ -2106,19 +2106,19 @@ impl Display for IotaClientCommandResult {
                 )?;
             }
             IotaClientCommandResult::Transfer(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::TransferIota(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::Pay(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::PayIota(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::PayAllIota(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::SyncClientState => {
                 writeln!(writer, "Client state sync complete.")?;
@@ -2127,13 +2127,13 @@ impl Display for IotaClientCommandResult {
                 writeln!(writer, "{}", ci)?;
             }
             IotaClientCommandResult::SplitCoin(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::MergeCoin(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::Switch(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::ActiveAddress(response) => {
                 match response {
@@ -2142,7 +2142,7 @@ impl Display for IotaClientCommandResult {
                 };
             }
             IotaClientCommandResult::ExecuteSignedTx(response) => {
-                write!(writer, "{}", response)?;
+                write!(writer, "{response}")?;
             }
             IotaClientCommandResult::ActiveEnv(env) => {
                 write!(writer, "{}", env.as_deref().unwrap_or("None"))?;
@@ -2164,7 +2164,7 @@ impl Display for IotaClientCommandResult {
                 }
                 let mut table = builder.build();
                 table.with(TableStyle::rounded());
-                write!(f, "{}", table)?
+                write!(f, "{table}")?
             }
             IotaClientCommandResult::VerifySource => {
                 writeln!(writer, "Source verification succeeded!")?;
@@ -2197,7 +2197,7 @@ impl Display for IotaClientCommandResult {
                     table.with(TablePanel::header("Module will pass metering check!"));
                 }
                 table.with(tabled::settings::style::BorderSpanCorrection);
-                writeln!(f, "{}", table)?;
+                writeln!(f, "{table}")?;
             }
             IotaClientCommandResult::NoOutput => {}
             IotaClientCommandResult::PTB(_) => {} // this is handled in PTB execute

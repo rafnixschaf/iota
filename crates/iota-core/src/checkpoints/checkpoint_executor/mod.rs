@@ -740,8 +740,7 @@ async fn handle_execution_effects(
                 if checkpoint.sequence_number > highest_seq + 1 {
                     trace!(
                         "Checkpoint {} is still executing. Highest executed = {}",
-                        checkpoint.sequence_number,
-                        highest_seq
+                        checkpoint.sequence_number, highest_seq
                     );
                     continue;
                 }
@@ -789,7 +788,7 @@ async fn handle_execution_effects(
                 }
                 periods += 1;
             }
-            Ok(Err(err)) => panic!("Failed to notify_read_executed_effects: {:?}", err),
+            Ok(Err(err)) => panic!("Failed to notify_read_executed_effects: {err:?}"),
             Ok(Ok(effects)) => {
                 for (tx_digest, expected_digest, actual_effects) in
                     izip!(&all_tx_digests, &execution_digests, &effects)
@@ -1178,7 +1177,7 @@ async fn execute_transactions(
         .checkpoint_exec_latency_us
         .report(exec_elapsed.as_micros() as u64);
     if checkpoint.sequence_number % CHECKPOINT_PROGRESS_LOG_COUNT_INTERVAL == 0 {
-        info!("Checkpoint execution took {:?}", exec_elapsed);
+        info!("Checkpoint execution took {exec_elapsed:?}");
     }
 
     Ok(())

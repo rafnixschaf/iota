@@ -114,7 +114,7 @@ async fn test_publish_primitive() {
         )
         .await
         .unwrap();
-    println!("{:#?}", result)
+    println!("{result:#?}")
 }
 
 #[ignore]
@@ -219,7 +219,7 @@ async fn test_publish_complex_value() {
         )
         .await
         .unwrap();
-    println!("{:#?}", result)
+    println!("{result:#?}")
 }
 
 #[ignore]

@@ -217,7 +217,7 @@ fn main() {
         }
     };
 
-    println!("start id = {}", start_id);
+    println!("start id = {start_id}");
 
     // let mut end_id: i64 = start_id +1;
 

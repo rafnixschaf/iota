@@ -249,7 +249,7 @@ impl ReadApi {
                 .multi_get_fx_by_tx_digest(&digests_clone)
                 .await
                 .tap_err(
-                    |err| debug!(digests=?digests_clone, "Failed to multi get effects for transactions: {:?}", err),
+                    |err| debug!(digests=?digests_clone, "Failed to multi get effects for transactions: {err:?}"),
                 )?;
             for ((_digest, cache_entry), e) in
                 temp_response.iter_mut().zip(effects_list.into_iter())
@@ -264,7 +264,7 @@ impl ReadApi {
             .multi_get_transaction_checkpoint(&digests)
             .await
             .tap_err(
-                |err| debug!(digests=?digests, "Failed to multi get checkpoint sequence number: {:?}", err))?;
+                |err| debug!(digests=?digests, "Failed to multi get checkpoint sequence number: {err:?}"))?;
         for ((_digest, cache_entry), seq) in temp_response
             .iter_mut()
             .zip(checkpoint_seq_list.into_iter())
@@ -493,7 +493,7 @@ impl ReadApiServer for ReadApi {
             let state = self.state.clone();
             let object_read = spawn_monitored_task!(async move {
                 state.get_object_read(&object_id).map_err(|e| {
-                    warn!(?object_id, "Failed to get object: {:?}", e);
+                    warn!(?object_id, "Failed to get object: {e:?}");
                     Error::from(e)
                 })
             })
@@ -706,7 +706,7 @@ impl ReadApiServer for ReadApi {
             let transaction_kv_store = self.transaction_kv_store.clone();
             let transaction = spawn_monitored_task!(async move {
                 transaction_kv_store.get_tx(digest).await.map_err(|err| {
-                    debug!(tx_digest=?digest, "Failed to get transaction: {:?}", err);
+                    debug!(tx_digest=?digest, "Failed to get transaction: {err:?}");
                     Error::from(err)
                 })
             })
@@ -734,7 +734,7 @@ impl ReadApiServer for ReadApi {
                             .get_fx_by_tx_digest(digest)
                             .await
                             .map_err(|err| {
-                                debug!(tx_digest=?digest, "Failed to get effects: {:?}", err);
+                                debug!(tx_digest=?digest, "Failed to get effects: {err:?}");
                                 Error::from(err)
                             })
                     })

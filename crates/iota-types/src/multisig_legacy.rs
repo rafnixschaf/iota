@@ -202,7 +202,7 @@ impl MultiSigLegacy {
             let pk = s.to_public_key()?;
             let inserted = bitmap.insert(multisig_pk.get_index(&pk).ok_or(
                 IotaError::IncorrectSigner {
-                    error: format!("pk does not exist: {:?}", pk),
+                    error: format!("pk does not exist: {pk:?}"),
                 },
             )?);
             if !inserted {

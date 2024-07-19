@@ -1468,7 +1468,7 @@ where
     fn from_signable_bytes(bytes: &[u8]) -> Result<Self, Error> {
         // Remove name tag before deserialization using BCS
         let name = serde_name::trace_name::<Self>().expect("Self should be a struct or an enum");
-        let name_byte_len = format!("{}::", name).bytes().len();
+        let name_byte_len = format!("{name}::").bytes().len();
         Ok(bcs::from_bytes(bytes.get(name_byte_len..).ok_or_else(
             || anyhow!("Failed to deserialize to {name}."),
         )?)?)

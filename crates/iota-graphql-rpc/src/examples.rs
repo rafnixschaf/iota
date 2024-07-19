@@ -239,7 +239,7 @@ fn test_generate_markdown() {
                 ChangeTag::Insert => "+++",
                 ChangeTag::Equal => "   ",
             };
-            res.push(format!("{}{}", sign, change));
+            res.push(format!("{sign}{change}"));
         }
         panic!(
             "Doc examples have changed. Please run `iota-graphql-rpc generate-examples` to update the docs. Diff: {}",

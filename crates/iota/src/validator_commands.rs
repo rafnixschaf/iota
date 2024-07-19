@@ -810,11 +810,11 @@ async fn display_metadata(
             validator_address
         ),
         Some((status, info)) => {
-            println!("{}'s valdiator status: {:?}", validator_address, status);
+            println!("{validator_address}'s valdiator status: {status:?}");
             if json {
                 println!("{}", serde_json::to_string_pretty(&info)?);
             } else {
-                println!("{:#?}", info);
+                println!("{info:#?}");
             }
         }
     }

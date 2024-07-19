@@ -585,27 +585,27 @@ impl OnChainDataUploader {
                                 String::from(UserInputError::ObjectVersionUnavailableForConsumption { provided_obj_ref: random_object_ref(), current_version: 0.into() }.as_ref())
                             );
                         if err.to_string().contains(stale_obj_error) {
-                            error!(?tx_digest, "Failed to submit tx, it looks like gas object is stale : {:?}", err);
+                            error!(?tx_digest, "Failed to submit tx, it looks like gas object is stale : {err:?}");
                             let new_ref = get_gas_obj_ref(self.client.read_api(), self.gas_obj_ref.0, self.signer_address).await;
                             self.gas_obj_ref = new_ref;
                             info!("Gas object updated: {:?}", new_ref);
                             anyhow::bail!("Gas object is stale, now updated to {:?}. tx_digest={:?}", new_ref, tx_digest);
                         } else {
-                            error!(?tx_digest, "Failed to submit tx, with non recoverable error: {:?}", err);
-                            anyhow::bail!("Non-retryable error {:?}. tx_digest={:?}", err, tx_digest);
+                            error!(?tx_digest, "Failed to submit tx, with non recoverable error: {err:?}");
+                            anyhow::bail!("Non-retryable error {err:?}. tx_digest={tx_digest:?}");
                         }
                     }
                     // Likely retryable error?
                     error!(?tx_digest, "Failed to submit tx, with (likely) recoverable error: {:?}. Remaining retry times: {}", err, retry_attempts);
                     retry_attempts -= 1;
                     if retry_attempts <= 0 {
-                        anyhow::bail!("Too many RPC errors: {}. tx_digest={:?}", err, tx_digest);
+                        anyhow::bail!("Too many RPC errors: {err}. tx_digest={tx_digest:?}");
                     }
                 }
                 // All other errors are unexpected
                 Err(err) => {
-                    error!(?tx_digest, "Failed to submit tx, with unexpected error: {:?}", err);
-                    anyhow::bail!("Unexpected error in tx submission {:?}. tx_digest={:?}", err, tx_digest);
+                    error!(?tx_digest, "Failed to submit tx, with unexpected error: {err:?}");
+                    anyhow::bail!("Unexpected error in tx submission {err:?}. tx_digest={tx_digest:?}");
                 }
             }
         }

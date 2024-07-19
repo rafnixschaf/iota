@@ -288,8 +288,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "min_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -303,8 +303,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p25_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -318,8 +318,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p50_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -333,8 +333,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p75_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -348,8 +348,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p90_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -363,8 +363,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p99_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -378,8 +378,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "p999_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,
@@ -393,8 +393,8 @@ impl BenchmarkCmp<'_> {
         let speedup = 1.0 / (1.0 + diff_ratio);
         Comparison {
             name: "max_latency".to_string(),
-            old_value: format!("{:.2}", old),
-            new_value: format!("{:.2}", new),
+            old_value: format!("{old:.2}"),
+            new_value: format!("{new:.2}"),
             diff,
             diff_ratio,
             speedup,

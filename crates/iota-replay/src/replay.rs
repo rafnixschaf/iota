@@ -124,7 +124,7 @@ impl ExecutionSandboxState {
                 ChangeTag::Insert => "+++",
                 ChangeTag::Equal => "   ",
             };
-            res.push(format!("{}{}", sign, change));
+            res.push(format!("{sign}{change}"));
         }
 
         res.join("")

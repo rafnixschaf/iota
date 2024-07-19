@@ -176,7 +176,7 @@ impl AuthorityStore {
                 .expect("Epoch start configuration must be set in non-empty DB")
         };
         let cur_epoch = perpetual_tables.get_recovery_epoch_at_restart()?;
-        info!("Epoch start config: {:?}", epoch_start_configuration);
+        info!("Epoch start config: {epoch_start_configuration:?}");
         info!("Cur epoch: {:?}", cur_epoch);
         let this = Self::open_inner(
             genesis,
@@ -1890,7 +1890,7 @@ impl AuthorityStore {
                                 prev = (object_key, object);
                             }
                             Err(err) => {
-                                warn!("Object iterator encounter RocksDB error {:?}", err);
+                                warn!("Object iterator encounter RocksDB error {err:?}");
                                 return Err(err);
                             }
                         }
@@ -1982,7 +1982,7 @@ impl AuthorityStore {
             .unbounded_iter()
             .filter_map(|(key, _)| if key.0 == object_id { Some(key) } else { None })
             .collect();
-        info!("Removing all versions of object: {:?}", entries);
+        info!("Removing all versions of object: {entries:?}");
         self.perpetual_tables.objects.multi_remove(entries).unwrap();
     }
 

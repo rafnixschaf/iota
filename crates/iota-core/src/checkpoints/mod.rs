@@ -846,7 +846,7 @@ impl CheckpointBuilder {
                     "Making checkpoint at commit height"
                 );
                 if let Err(e) = self.make_checkpoint(height, pending).await {
-                    error!("Error while making checkpoint, will retry in 1s: {:?}", e);
+                    error!("Error while making checkpoint, will retry in 1s: {e:?}");
                     tokio::time::sleep(Duration::from_secs(1)).await;
                     self.metrics.checkpoint_errors.inc();
                     continue 'main;
@@ -1067,7 +1067,7 @@ impl CheckpointBuilder {
                 .zip(transactions_and_sizes.into_iter())
             {
                 let (transaction, size) = transaction_and_size
-                    .unwrap_or_else(|| panic!("Could not find executed transaction {:?}", effects));
+                    .unwrap_or_else(|| panic!("Could not find executed transaction {effects:?}"));
                 // ConsensusCommitPrologue and AuthenticatorStateUpdate are guaranteed to be
                 // processed before we reach here
                 if !matches!(

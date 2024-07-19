@@ -392,7 +392,7 @@ mod tests {
         });
         assert_eq!(
             logs_set,
-            HashSet::from_iter(vec![format!("{:?}", eth_log1), format!("{:?}", eth_log2)])
+            HashSet::from_iter(vec![format!("{eth_log1:?}"), format!("{eth_log2:?}")])
         );
         // No more finalized block change, no more logs.
         assert_eq!(logs_rx.try_recv().unwrap_err(), TryRecvError::Empty);

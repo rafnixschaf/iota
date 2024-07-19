@@ -259,7 +259,7 @@ impl AuthorityStorePruner {
         let mut effect_digests = vec![];
         for effects in effects_to_prune {
             let effects_digest = effects.digest();
-            debug!("Pruning effects {:?}", effects_digest);
+            debug!("Pruning effects {effects_digest:?}");
             effect_digests.push(effects_digest);
 
             if let Some(event_digest) = effects.events_digest() {
@@ -625,8 +625,8 @@ impl AuthorityStorePruner {
                     .await;
                     let mut sleep_interval_secs = 1;
                     match result {
-                        Err(err) => error!("Failed to compact sst file: {:?}", err),
-                        Ok(Err(err)) => error!("Failed to compact sst file: {:?}", err),
+                        Err(err) => error!("Failed to compact sst file: {err:?}"),
+                        Ok(Err(err)) => error!("Failed to compact sst file: {err:?}"),
                         Ok(Ok(None)) => {
                             sleep_interval_secs = 3600;
                         }
@@ -651,12 +651,12 @@ impl AuthorityStorePruner {
                 tokio::select! {
                     _ = objects_prune_interval.tick(), if config.num_epochs_to_retain != u64::MAX => {
                         if let Err(err) = Self::prune_objects_for_eligible_epochs(&perpetual_db, &checkpoint_store, &objects_lock_table, config, metrics.clone(), indirect_objects_threshold, epoch_duration_ms).await {
-                            error!("Failed to prune objects: {:?}", err);
+                            error!("Failed to prune objects: {err:?}");
                         }
                     },
                     _ = checkpoints_prune_interval.tick(), if !matches!(config.num_epochs_to_retain_for_checkpoints(), None | Some(u64::MAX) | Some(0)) => {
                         if let Err(err) = Self::prune_checkpoints_for_eligible_epochs(&perpetual_db, &checkpoint_store, &objects_lock_table, config, metrics.clone(), indirect_objects_threshold, archive_readers.clone(), epoch_duration_ms).await {
-                            error!("Failed to prune checkpoints: {:?}", err);
+                            error!("Failed to prune checkpoints: {err:?}");
                         }
                     },
                     _ = &mut recv => break,

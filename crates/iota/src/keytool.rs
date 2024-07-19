@@ -849,7 +849,7 @@ impl KeyToolCommand {
             } => {
                 // Currently only supports secp256k1 keys
                 let pk_owner = PublicKey::decode_base64(&base64pk)
-                    .map_err(|e| anyhow!("Invalid base64 key: {:?}", e))?;
+                    .map_err(|e| anyhow!("Invalid base64 key: {e:?}"))?;
                 let address_owner = IotaAddress::from(&pk_owner);
                 info!("Address For Corresponding KMS Key: {}", address_owner);
                 info!("Raw tx_bytes to execute: {}", data);
@@ -857,7 +857,7 @@ impl KeyToolCommand {
                 info!("Intent: {:?}", intent);
                 let msg: TransactionData =
                     bcs::from_bytes(&Base64::decode(&data).map_err(|e| {
-                        anyhow!("Cannot deserialize data as TransactionData {:?}", e)
+                        anyhow!("Cannot deserialize data as TransactionData {e:?}")
                     })?)?;
                 let intent_msg = IntentMessage::new(intent, msg);
                 info!(
@@ -1096,7 +1096,7 @@ impl KeyToolCommand {
                 network,
             } => {
                 match GenericSignature::from_bytes(
-                    &Base64::decode(&sig).map_err(|e| anyhow!("Invalid base64 sig: {:?}", e))?,
+                    &Base64::decode(&sig).map_err(|e| anyhow!("Invalid base64 sig: {e:?}"))?,
                 )? {
                     GenericSignature::ZkLoginAuthenticator(zk) => {
                         if bytes.is_none() || curr_epoch.is_none() {
@@ -1126,7 +1126,7 @@ impl KeyToolCommand {
                             IntentScope::TransactionData => {
                                 let tx_data: TransactionData = bcs::from_bytes(
                                     &Base64::decode(&bytes.unwrap())
-                                        .map_err(|e| anyhow!("Invalid base64 tx data: {:?}", e))?,
+                                        .map_err(|e| anyhow!("Invalid base64 tx data: {e:?}"))?,
                                 )?;
 
                                 let res = zk.verify_authenticator(
@@ -1141,11 +1141,10 @@ impl KeyToolCommand {
                                 (serde_json::to_string(&tx_data)?, res)
                             }
                             IntentScope::PersonalMessage => {
-                                let data: PersonalMessage = bcs::from_bytes(
-                                    &Base64::decode(&bytes.unwrap()).map_err(|e| {
-                                        anyhow!("Invalid base64 personal message data: {:?}", e)
-                                    })?,
-                                )?;
+                                let data: PersonalMessage =
+                                    bcs::from_bytes(&Base64::decode(&bytes.unwrap()).map_err(
+                                        |e| anyhow!("Invalid base64 personal message data: {e:?}"),
+                                    )?)?;
 
                                 let res = zk.verify_authenticator(
                                     &IntentMessage::new(Intent::personal_message(), data.clone()),

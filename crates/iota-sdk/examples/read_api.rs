@@ -30,7 +30,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .get_owned_objects(active_address, None, None, Some(5))
         .await?;
     println!(" *** Owned Objects ***");
-    println!("{:?}", owned_objects);
+    println!("{owned_objects:?}");
     println!(" *** Owned Objects ***\n");
 
     // Dynamic Fields
@@ -40,7 +40,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .get_dynamic_fields(parent_object_id, None, None)
         .await?;
     println!(" *** Dynamic Fields ***");
-    println!("{:?}", dynamic_fields);
+    println!("{dynamic_fields:?}");
     println!(" *** Dynamic Fields ***\n");
     if let Some(dynamic_field_info) = dynamic_fields.data.into_iter().next() {
         println!(" *** First Dynamic Field ***");
