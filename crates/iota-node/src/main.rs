@@ -149,11 +149,10 @@ fn main() {
 
         // when we get a shutdown signal from iota-node, forward it on to the
         // runtime_shutdown_channel here in main to signal all runtimes to shutdown.
-        if shutdown_rx.recv().await.is_ok() {
-            runtime_shutdown_tx
-                .send(())
-                .expect("failed to forward shutdown signal from iota-node to iota-node main");
-        }
+        _ = shutdown_rx.recv().await;
+        runtime_shutdown_tx
+            .send(())
+            .expect("failed to forward shutdown signal from iota-node to iota-node main");
         // TODO: Do we want to provide a way for the node to gracefully shutdown?
         loop {
             tokio::time::sleep(Duration::from_secs(1000)).await;
