@@ -130,7 +130,9 @@ fn main() {
     let (runtime_shutdown_tx, runtime_shutdown_rx) = broadcast::channel::<()>(1);
 
     runtimes.iota_node.spawn(async move {
-        match iota_node::IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION).await {
+        match iota_node::IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION)
+            .await
+        {
             Ok(iota_node) => node_once_cell_clone
                 .set(iota_node)
                 .expect("Failed to set node in AsyncOnceCell"),
@@ -145,12 +147,12 @@ fn main() {
         let node = node_once_cell_clone.get().await;
         let mut shutdown_rx = node.subscribe_to_shutdown_channel();
 
-        // when we get a shutdown signal from iota-node, forward it on to the runtime_shutdown_channel here in
-        // main to signal runtimes to all shutdown.
-        tokio::select! {
-           _ = shutdown_rx.recv() => {
-                runtime_shutdown_tx.send(()).expect("failed to forward shutdown signal from iota-node to iota-node main");
-            }
+        // when we get a shutdown signal from iota-node, forward it on to the
+        // runtime_shutdown_channel here in main to signal all runtimes to shutdown.
+        if shutdown_rx.recv().await.is_ok() {
+            runtime_shutdown_tx
+                .send(())
+                .expect("failed to forward shutdown signal from iota-node to iota-node main");
         }
         // TODO: Do we want to provide a way for the node to gracefully shutdown?
         loop {
