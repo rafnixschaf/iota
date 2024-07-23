@@ -2,102 +2,128 @@
 // SPDX-License-Identifier: Apache-2.0
 
 module.exports = {
-	plugins: ['@tanstack/query', 'unused-imports', 'prettier', 'header', 'require-extensions'],
-	extends: [
-		'eslint:recommended',
-		'react-app',
-		'plugin:@tanstack/eslint-plugin-query/recommended',
-		'prettier',
-		'plugin:prettier/recommended',
-		'plugin:import/typescript',
-	],
-	settings: {
-		react: {
-			version: '18',
-		},
-		'import/resolver': {
-			typescript: true,
-		},
-	},
-	env: {
-		es2020: true,
-	},
-	root: true,
-	ignorePatterns: [
-		'node_modules',
-		'build',
-		'dist',
-		'coverage',
-		'apps/icons/src',
-		'next-env.d.ts',
-		'doc/book',
-		'external-crates',
-		'storybook-static',
-		'.next',
-	],
-	rules: {
-		'no-case-declarations': 'off',
-		'no-implicit-coercion': [2, { number: true, string: true, boolean: false }],
-		'@typescript-eslint/no-redeclare': 'off',
-		'@typescript-eslint/ban-types': [
-			'error',
-			{
-				types: {
-					Buffer: 'Buffer usage increases bundle size and is not consistently implemented on web.',
-				},
-				extendDefaults: true,
-			},
-		],
-		'no-restricted-globals': [
-			'error',
-			{
-				name: 'Buffer',
-				message: 'Buffer usage increases bundle size and is not consistently implemented on web.',
-			},
-		],
-		'header/header': [
-			2,
-			'line',
-			[' Copyright (c) Mysten Labs, Inc.', ' SPDX-License-Identifier: Apache-2.0'],
-		],
-		'@typescript-eslint/no-unused-vars': [
-			'error',
-			{
-				argsIgnorePattern: '^_',
-				varsIgnorePattern: '^_',
-				vars: 'all',
-				args: 'none',
-				ignoreRestSiblings: true,
-			},
-		],
-	},
-	overrides: [
-		{
-			files: ['sdk/**/*'],
-			rules: {
-				'require-extensions/require-extensions': 'error',
-				'require-extensions/require-index': 'error',
-				'@typescript-eslint/consistent-type-imports': ['error'],
-				'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
-				'import/no-cycle': ['error'],
-			},
-		},
-		{
-			files: ['apps/explorer/**/*'],
-			rules: {
-				'import/no-duplicates': ['error'],
-				'import/no-anonymous-default-export': 'off',
-				'@typescript-eslint/consistent-type-imports': [
-					'error',
-					{
-						prefer: 'type-imports',
-						disallowTypeAnnotations: true,
-						fixStyle: 'inline-type-imports',
-					},
-				],
-				'@typescript-eslint/unified-signatures': 'error',
-				'@typescript-eslint/parameter-properties': 'error',
-				'react/jsx-key': ['error', {}],
+    plugins: ['@tanstack/query', 'unused-imports', 'prettier', 'header', 'require-extensions'],
+    extends: [
+        'eslint:recommended',
+        'plugin:@tanstack/eslint-plugin-query/recommended',
+        'prettier',
+        'plugin:prettier/recommended',
+        'plugin:import/typescript',
+        'plugin:@typescript-eslint/recommended',
+    ],
+    settings: {
+        react: {
+            version: '18',
+        },
+        'import/resolver': {
+            typescript: true,
+        },
+    },
+    env: {
+        es2020: true,
+    },
+    root: true,
+    ignorePatterns: [
+        'coverage',
+        'apps/icons/src',
+        'next-env.d.ts',
+        'doc/book',
+        'external-crates',
+        'storybook-static',
+        '**/*.config.js',
+        '**/*.config.ts',
+        '**/preprocess.mjs',
+        '**/storybook-static',
+        '**/node_modules',
+        'sdk/build-scripts/src/build-package.ts',
+        'sdk/build-scripts/src/build-dapp-kit.ts',
+        'sdk/create-dapp/bin/index.js',
+        '**/build',
+        '**/dist/',
+        '**/.next/',
+        '**/.swc/',
+        '**/out/',
+        '**/*.md',
+    ],
+    rules: {
+        'no-case-declarations': 'off',
+        'no-implicit-coercion': [2, { number: true, string: true, boolean: false }],
+        '@typescript-eslint/no-redeclare': 'off',
+        '@typescript-eslint/ban-types': [
+            'error',
+            {
+                types: {
+                    Buffer: 'Buffer usage increases bundle size and is not consistently implemented on web.',
+                },
+                extendDefaults: true,
+            },
+        ],
+        'no-restricted-globals': [
+            'error',
+            {
+                name: 'Buffer',
+                message:
+                    'Buffer usage increases bundle size and is not consistently implemented on web.',
+            },
+        ],
+        'header/header': [
+            2,
+            'line',
+            [
+                {
+                    pattern: ' Copyright \\(c\\) (2024 IOTA Stiftung|Mysten Labs, Inc.)?',
+                },
+                {
+                    pattern:
+                        ' ((SPDX-License-Identifier: Apache-2.0)|(Modifications Copyright \\(c\\) 2024 IOTA Stiftung))',
+                },
+            ],
+        ],
+        '@typescript-eslint/no-unused-vars': [
+            'error',
+            {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                vars: 'all',
+                args: 'none',
+                ignoreRestSiblings: true,
+            },
+        ],
+    },
+    overrides: [
+        {
+            files: ['sdk/**/*'],
+            rules: {
+                'require-extensions/require-extensions': 'error',
+                'require-extensions/require-index': 'error',
+                '@typescript-eslint/consistent-type-imports': ['error'],
+                'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+                'import/no-cycle': ['error'],
+                '@typescript-eslint/no-explicit-any': 'off',
+            },
+        },
+        {
+            files: ['sdk/graphql-transport/**/*'],
+            rules: {
+                '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+            },
+        },
+        {
+            files: ['apps/explorer/**/*'],
+            rules: {
+                'import/no-duplicates': ['error'],
+                'import/no-anonymous-default-export': 'off',
+                '@typescript-eslint/consistent-type-imports': [
+                    'error',
+                    {
+                        prefer: 'type-imports',
+                        disallowTypeAnnotations: true,
+                        fixStyle: 'inline-type-imports',
+                    },
+                ],
+                '@typescript-eslint/unified-signatures': 'error',
+                '@typescript-eslint/parameter-properties': 'error',
+                'react/jsx-key': ['error', {}],
 
 				'react/boolean-prop-naming': 'off',
 				'react/jsx-boolean-value': ['error', 'never'],
