@@ -14,7 +14,8 @@ use iota_types::{
     committee::EpochId, messages_checkpoint::CheckpointSequenceNumber, multiaddr::Multiaddr,
 };
 use mysten_common::sync::async_once_cell::AsyncOnceCell;
-use tokio::{sync::broadcast, time::sleep};
+use tokio::time::sleep;
+use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
 const GIT_REVISION: &str = {
@@ -126,8 +127,9 @@ fn main() {
     let node_once_cell_clone = node_once_cell.clone();
     let rpc_runtime = runtimes.json_rpc.handle().clone();
 
-    // let iota-node signal main to shutdown runtimes
-    let (runtime_shutdown_tx, runtime_shutdown_rx) = broadcast::channel::<()>(1);
+    // mian thread signal to shutdown al runtimes
+    let shutdown_signal = CancellationToken::new();
+    let shutdown_signal_clone = shutdown_signal.clone();
 
     runtimes.iota_node.spawn(async move {
         match IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION).await {
@@ -145,12 +147,10 @@ fn main() {
         let node = node_once_cell_clone.get().await;
         let mut shutdown_rx = node.subscribe_to_shutdown_channel();
 
-        // when we get a shutdown signal from iota-node, forward it on to the
-        // runtime_shutdown_channel here in main to signal all runtimes to shutdown.
+        // when we get a shutdown signal from iota-node, forward it to the
+        // main thread to signal all runtimes to shutdown
         _ = shutdown_rx.recv().await;
-        runtime_shutdown_tx
-            .send(())
-            .expect("failed to forward shutdown signal from iota-node to iota-node main");
+        shutdown_signal_clone.cancel();
         // TODO: Do we want to provide a way for the node to gracefully shutdown?
         loop {
             tokio::time::sleep(Duration::from_secs(1000)).await;
@@ -195,33 +195,31 @@ fn main() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(wait_termination(runtime_shutdown_rx));
+        .block_on(wait_termination(shutdown_signal));
 
     // Drop and wait all runtimes on main thread
     drop(runtimes);
 }
 
 #[cfg(not(unix))]
-async fn wait_termination(mut shutdown_rx: broadcast::Receiver<()>) {
+async fn wait_termination(shutdown_signal: CancellationToken) {
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {},
-        _ = shutdown_rx.recv() => {},
+        _ = shutdown_signal.cancelled() => {},
     }
 }
 
 #[cfg(unix)]
-async fn wait_termination(mut shutdown_rx: broadcast::Receiver<()>) {
-    use futures::FutureExt;
+async fn wait_termination(shutdown_signal: CancellationToken) {
     use tokio::signal::unix::*;
 
-    let sigint = tokio::signal::ctrl_c().boxed();
+    let sigint = tokio::signal::ctrl_c();
     let mut sigterm = signal(SignalKind::terminate()).unwrap();
-    let sigterm_recv = sigterm.recv().boxed();
-    let shutdown_recv = shutdown_rx.recv().boxed();
+    let sigterm_recv = sigterm.recv();
 
     tokio::select! {
         _ = sigint => {},
         _ = sigterm_recv => {},
-        _ = shutdown_recv => {},
+        _ = shutdown_signal.cancelled() => {},
     }
 }
