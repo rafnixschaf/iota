@@ -127,7 +127,7 @@ fn main() {
     let node_once_cell_clone = node_once_cell.clone();
     let rpc_runtime = runtimes.json_rpc.handle().clone();
 
-    // mian thread signal to shutdown al runtimes
+    // main thread signal to shutdown all runtimes
     let shutdown_signal = CancellationToken::new();
     let shutdown_signal_clone = shutdown_signal.clone();
 
