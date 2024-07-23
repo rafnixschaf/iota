@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[test]
-#[rustfmt::skip]
 fn test_format() {
+    #[rustfmt::skip]
     // If this test breaks and you intended a format change, you need to run to get
     // the fresh format: 
     // # cargo -q run --example narwhal-generate-format -- print > narwhal/node/tests/staged/narwhal.yaml
