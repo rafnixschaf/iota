@@ -577,7 +577,7 @@ fn test_basic_args_linter_top_level() {
     );
 
     // Need to verify this specially
-    // BCS serialzes addresses like vectors so there's a length prefix, which makes
+    // BCS serializes addresses like vectors so there's a length prefix, which makes
     // the vec longer by 1
     assert_eq!(
         args[1].0,
@@ -614,7 +614,7 @@ fn test_basic_args_linter_top_level() {
     );
 
     // Need to verify this specially
-    // BCS serialzes addresses like vectors so there's a length prefix, which makes
+    // BCS serializes addresses like vectors so there's a length prefix, which makes
     // the vec longer by 1
     assert_eq!(
         args[1].0,
