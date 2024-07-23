@@ -4,7 +4,11 @@ title: Creating an ERC-721-like NFT
 
 ## How this works in Solidity / EVM
 
-NFTs (Non-Fungible-Tokens) are a popular building block commonly used in the EVM ecosystem. The most widely used standard on EVM-based chains is the ERC-721 standard, which allows a smart contract to mint and transfer NFTs with some basic metadata. These standard NFTs can be used on many different platforms in a common way to be viewed, traded, and used in other ways. 
+NFTs (Non-Fungible-Tokens) are a popular building block commonly used in the EVM ecosystem. The most widely used standard on EVM-based chains is the ERC-721 standard, which allows a smart contract to mint and transfer NFTs with some basic metadata. These standard NFTs can be used on many different platforms in a common way to be viewed, traded, and used in other ways.
+
+:::tip
+For more detailed information on this topic, please refer to the EVM documentation [here](/guides/developer/iota-chains/how-tos/ERC721)
+:::
 
 Here's an example of a typical ERC-721 NFT built with Solidity on an EVM chain:
 
@@ -109,7 +113,7 @@ module example::examplenft {
 }
 ```
 
-This is just a simplified NFT that anyone can mint, with just a name in it as metadata. It can freely be transferred and burned, and the metadata can be directly accessed through the object from another contract. Given that this is just a normal object being created, there's little to add to this code example. It's straightforward if you know the basics of working with objects in IOTA. 
+This is just a simplified NFT that anyone can mint, with just a name in it as metadata. It can freely be transferred and burned, and the metadata can be directly accessed through the object from another contract. Given that this is just a normal object being created, there's little to add to this code example. It's straightforward if you know the basics of working with objects in IOTA.
 
 ### Using Object Display
 
@@ -119,13 +123,12 @@ The framework has a built-in feature to represent objects with templates that ca
 
 To sum up the most important differences between the two approaches:
 
-| Solidity/EVM                                                                                                                       | IOTA Move                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| NFTs as a contract implementing a standard                                                                                         | Every object is an NFT by default!                                                                                                       |
-| All state within the same contract                                                                                                 | State within the NFT objects that can be transferred to anyone, with an off-chain useable representation possible with `Object Display`. |
-| Token logic is usually abstracted in externally imported libraries                                                                 | Object logic for using and transferring objects (and thus NFTs) is part of the standard framework and is always the same.                  |
-| NFTs can only be found if you have the smart contract address of that NFT                                                          | All NFTs are available in your wallet/account, given that they are sent to you as objects.                                                    |
-| Non-enforced standard functionality (you can implement the ERC-721 functions as you please, including in for users' undesired ways) | Enforced standard functionality for objects with customizability where needed.                                                          |
+| Solidity/EVM                                                                                                                        | IOTA Move                                                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| NFTs as a contract implementing a standard                                                                                          | Every object is an NFT by default!                                                                                                       |
+| All state within the same contract                                                                                                  | State within the NFT objects that can be transferred to anyone, with an off-chain useable representation possible with `Object Display`. |
+| Token logic is usually abstracted in externally imported libraries                                                                  | Object logic for using and transferring objects (and thus NFTs) is part of the standard framework and is always the same.                |
+| NFTs can only be found if you have the smart contract address of that NFT                                                           | All NFTs are available in your wallet/account, given that they are sent to you as objects.                                               |
+| Non-enforced standard functionality (you can implement the ERC-721 functions as you please, including in for users' undesired ways) | Enforced standard functionality for objects with customizability where needed.                                                           |
 
-NFTs in Move are clearly a big improvement over the afterthought counterparts in the EVM/Solidity ecosystem. There are more assurances and better usability when it comes to asset management. 
-
+NFTs in Move are clearly a big improvement over the afterthought counterparts in the EVM/Solidity ecosystem. There are more assurances and better usability when it comes to asset management.
