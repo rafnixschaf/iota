@@ -13,6 +13,9 @@ CREATE TABLE epochs
     epoch_total_transactions        BIGINT,
     last_checkpoint_id              BIGINT,
     epoch_end_timestamp             BIGINT,
+     -- The following fields are from SystemEpochInfoEvent emitted
+    -- **after** advancing to the next epoch
+    storage_fund_reinvestment       BIGINT,
     storage_charge                  BIGINT,
     storage_rebate                  BIGINT,
     stake_subsidy_amount            BIGINT,
