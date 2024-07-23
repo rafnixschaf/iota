@@ -256,7 +256,11 @@ impl CoinReadApiServer for CoinReadApi {
                             &coin_struct.address.into(),
                             TreasuryCap::type_(coin_struct),
                         )
-                        .map_err(Error::from)?;
+                        .await?;
+                    let treasury_cap = TreasuryCap::from_bcs_bytes(
+                        treasury_cap_object.data.try_as_move().unwrap().contents(),
+                    )
+                    .map_err(Error::from)?;
                     treasury_cap.total_supply
                 })
             },
