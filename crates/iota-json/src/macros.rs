@@ -7,7 +7,7 @@ macro_rules! call_args {
         ($($value:expr),*) => {
         Ok::<_, anyhow::Error>(vec![$(iota_json::call_arg!($value)?,)*])
     };
-    }
+}
 
 #[macro_export]
 macro_rules! call_arg {
@@ -74,4 +74,4 @@ macro_rules! type_args {
         }
         Ok::<_, anyhow::Error>(vec![$($value.to_iota_json()?,)*])
     }};
-    }
+}
