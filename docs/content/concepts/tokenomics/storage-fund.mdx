@@ -30,7 +30,6 @@ The _deletion option_ should not be confused with deleting past transactions. Ac
 The storage fund size is fixed throughout each epoch, with its size changing at the epoch boundary according to the net inflows accumulated throughout the epoch. Inflows and outflows correspond to:
 
 - Inflows from the storage fees paid for transactions executed during the current epoch.
-- Inflows from reinvestments of the fund’s returns into new principal. Specifically, the share $(1-\gamma)$ of stake rewards accrued to the storage fund that is not paid out to validators.
 - Outflows from storage fee rebates paid to users who delete the data associated with past transactions.
 
 The key property of the rebate function is that it limits storage fund outflows to be always less than the original storage flow, at the individual transaction level. This mechanism guarantees that the storage fund is never depleted and that its size moves in line with the amount of data held in storage.
