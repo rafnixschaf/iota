@@ -40,11 +40,8 @@ use test_cluster::TestClusterBuilder;
 /// Two exchanges rates are needed to calculate the APY in the API. Epoch 0
 /// always has an initial exchange rate set which cannot be used, so we need to
 /// calculate APY from epoch 1 and 2. Since we need epoch 0 to start staking
-/// anyway, and only have the stake of the pool at the expected number starting
-/// from epoch 1, this is totally fine.
-///
-/// Note that we don't get exactly 8% APY but slightly above, since the total
-/// stake of the pool
+/// anyway, and only have the stake of the pool at the expected number (a
+/// quarter of 3.5B IOTAs) starting from epoch 1, this is totally fine.
 #[sim_test]
 async fn test_apy() {
     // We need a large stake for low enough APY values such that they are not
