@@ -56,7 +56,7 @@
 /// applications and not use it for direct trading (eg sending to another
 /// account).
 ///
-/// ### Using multiple Transfer Policies for different "tracks":
+/// ### Using multiple Transfer Policies for different 'tracks':
 ///
 /// Every `purchase` or `purchase_with_purchase_cap` creates a `TransferRequest`
 /// hot potato which must be resolved in a matching `TransferPolicy` for the
@@ -115,7 +115,7 @@ module iota::kiosk {
     const EListedExclusively: u64 = 4;
     /// `PurchaseCap` does not match the `Kiosk`.
     const EWrongKiosk: u64 = 5;
-    /// Tryng to exclusively list an already listed item.
+    /// Trying to exclusively list an already listed item.
     const EAlreadyListed: u64 = 6;
     /// Trying to call `uid_mut` when `allow_extensions` set to false.
     const EUidAccessNotAllowed: u64 = 7;
