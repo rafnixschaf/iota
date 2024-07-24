@@ -1,5 +1,4 @@
-// Copyright (c) Mysten Labs, Inc.
-// Modifications Copyright (c) 2024 IOTA Stiftung
+// Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use fastcrypto::ed25519::Ed25519KeyPair;
@@ -58,6 +57,7 @@ async fn test_apy() {
     let mut test_cluster = TestClusterBuilder::new()
         .set_genesis_config(genesis_config)
         .with_epoch_duration_ms(10_000)
+        .with_num_validators(4)
         .build()
         .await;
 
