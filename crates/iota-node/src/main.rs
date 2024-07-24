@@ -15,8 +15,9 @@ use iota_types::{
 };
 use mysten_common::sync::async_once_cell::AsyncOnceCell;
 use tokio::time::sleep;
-use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
+
+type NodeOnceCell = Arc<AsyncOnceCell<Arc<IotaNode>>>;
 
 const GIT_REVISION: &str = {
     if let Some(revision) = option_env!("GIT_REVISION") {
@@ -127,10 +128,6 @@ fn main() {
     let node_once_cell_clone = node_once_cell.clone();
     let rpc_runtime = runtimes.json_rpc.handle().clone();
 
-    // main thread signal to shutdown all runtimes
-    let shutdown_signal = CancellationToken::new();
-    let shutdown_signal_clone = shutdown_signal.clone();
-
     runtimes.iota_node.spawn(async move {
         match IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION).await {
             Ok(iota_node) => node_once_cell_clone
@@ -143,14 +140,10 @@ fn main() {
             }
         }
 
-        // get node, subscribe to shutdown channel
-        let node = node_once_cell_clone.get().await;
-        let mut shutdown_rx = node.subscribe_to_shutdown_channel();
-
-        // when we get a shutdown signal from iota-node, forward it to the
-        // main thread to signal all runtimes to shutdown
-        _ = shutdown_rx.recv().await;
-        shutdown_signal_clone.cancel();
+        // Once the iota-node was started get a copy of its shutdown signal
+        let shutdown_signal = node_once_cell_clone.get().await.shutdown_signal();
+        // The future will be resolved when the iota-node will shutdown
+        shutdown_signal.cancelled().await;
         // TODO: Do we want to provide a way for the node to gracefully shutdown?
         loop {
             tokio::time::sleep(Duration::from_secs(1000)).await;
@@ -181,8 +174,9 @@ fn main() {
         iota_node::admin::run_admin_server(node, admin_interface_port, filter_handle).await
     });
 
+    let node_once_cell_clone = node_once_cell.clone();
     runtimes.metrics.spawn(async move {
-        let node = node_once_cell.get().await;
+        let node = node_once_cell_clone.get().await;
         let state = node.state();
         loop {
             send_telemetry_event(state.clone(), is_validator).await;
@@ -195,14 +189,14 @@ fn main() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(wait_termination(shutdown_signal));
+        .block_on(wait_termination(node_once_cell));
 
     // Drop and wait all runtimes on main thread
     drop(runtimes);
 }
 
 #[cfg(not(unix))]
-async fn wait_termination(shutdown_signal: CancellationToken) {
+async fn wait_termination(node: NodeOnceCell) {
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {},
         _ = shutdown_signal.cancelled() => {},
@@ -210,12 +204,13 @@ async fn wait_termination(shutdown_signal: CancellationToken) {
 }
 
 #[cfg(unix)]
-async fn wait_termination(shutdown_signal: CancellationToken) {
+async fn wait_termination(node: NodeOnceCell) {
     use tokio::signal::unix::*;
 
     let sigint = tokio::signal::ctrl_c();
     let mut sigterm = signal(SignalKind::terminate()).unwrap();
     let sigterm_recv = sigterm.recv();
+    let shutdown_signal = node.get().await.shutdown_signal();
 
     tokio::select! {
         _ = sigint => {},

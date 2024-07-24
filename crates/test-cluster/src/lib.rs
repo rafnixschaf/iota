@@ -11,7 +11,7 @@ use std::{
     time::Duration,
 };
 
-use futures::{future::join_all, StreamExt};
+use futures::{future::join_all, FutureExt, StreamExt};
 use iota_config::{
     node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange},
     Config, NodeConfig, PersistedConfig, IOTA_CLIENT_CONFIG, IOTA_KEYSTORE_FILENAME,
@@ -65,7 +65,7 @@ use tokio::{
     task::JoinHandle,
     time::{sleep, timeout, Instant},
 };
-use tracing::{error, info};
+use tracing::info;
 
 const NUM_VALIDATOR: usize = 4;
 
@@ -320,25 +320,13 @@ impl TestCluster {
         &self,
         timeout_dur: Duration,
     ) -> Option<RunWithRange> {
-        let mut shutdown_channel_rx = self
+        let (run_with_range, shutdown_signal) = self
             .fullnode_handle
             .iota_node
-            .with(|node| node.subscribe_to_shutdown_channel());
+            .with(|node| (node.get_config().run_with_range, node.shutdown_signal()));
 
         timeout(timeout_dur, async move {
-            tokio::select! {
-                msg = shutdown_channel_rx.recv() =>
-                {
-                    match msg {
-                        Ok(Some(run_with_range)) => Some(run_with_range),
-                        Ok(None) => None,
-                        Err(e) => {
-                            error!("failed recv from iota-node shutdown channel: {}", e);
-                            None
-                        },
-                    }
-                },
-            }
+            shutdown_signal.cancelled().map(|_| run_with_range).await
         })
         .await
         .expect("Timed out waiting for cluster to hit target epoch and recv shutdown signal from iota-node")

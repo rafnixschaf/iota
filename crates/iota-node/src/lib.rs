@@ -25,7 +25,7 @@ use futures::TryFutureExt;
 pub use handle::IotaNodeHandle;
 use iota_archival::{reader::ArchiveReaderBalancer, writer::ArchiveWriter};
 use iota_config::{
-    node::{ConsensusProtocol, DBCheckpointConfig, RunWithRange},
+    node::{ConsensusProtocol, DBCheckpointConfig},
     node_config_metrics::NodeConfigMetrics,
     object_storage_config::{ObjectStoreConfig, ObjectStoreType},
     ConsensusConfig, NodeConfig,
@@ -115,6 +115,7 @@ use tokio::{
     sync::{broadcast, mpsc, watch, Mutex},
     task::JoinHandle,
 };
+use tokio_util::sync::CancellationToken;
 use tower::ServiceBuilder;
 use tracing::{debug, error, error_span, info, warn, Instrument};
 use typed_store::{rocks::default_db_options, DBMetrics};
@@ -232,8 +233,8 @@ pub struct IotaNode {
     _state_archive_handle: Option<broadcast::Sender<()>>,
 
     _state_snapshot_uploader_handle: Option<broadcast::Sender<()>>,
-    // Channel to allow signaling upstream to shutdown iota-node
-    shutdown_channel_tx: broadcast::Sender<Option<RunWithRange>>,
+    // Signal upstream to shutdown iota-node
+    shutdown_signal: CancellationToken,
 }
 
 impl fmt::Debug for IotaNode {
@@ -727,9 +728,6 @@ impl IotaNode {
             None
         };
 
-        // setup shutdown channel
-        let (shutdown_channel, _) = broadcast::channel::<Option<RunWithRange>>(1);
-
         let node = Self {
             config,
             validator_components: Mutex::new(validator_components),
@@ -755,7 +753,7 @@ impl IotaNode {
 
             _state_archive_handle: state_archive_handle,
             _state_snapshot_uploader_handle: state_snapshot_handle,
-            shutdown_channel_tx: shutdown_channel,
+            shutdown_signal: CancellationToken::new(),
         };
 
         info!("IotaNode started!");
@@ -775,8 +773,10 @@ impl IotaNode {
         self.end_of_epoch_channel.subscribe()
     }
 
-    pub fn subscribe_to_shutdown_channel(&self) -> broadcast::Receiver<Option<RunWithRange>> {
-        self.shutdown_channel_tx.subscribe()
+    /// Get a copy of the shutdown signal, it can be used
+    /// as an event when iota-node shuts down
+    pub fn shutdown_signal(&self) -> CancellationToken {
+        self.shutdown_signal.child_token()
     }
 
     pub fn current_epoch_for_testing(&self) -> EpochId {
@@ -1514,9 +1514,9 @@ impl IotaNode {
 
             if stop_condition == StopReason::RunWithRangeCondition {
                 IotaNode::shutdown(&self).await;
-                self.shutdown_channel_tx
-                    .send(run_with_range)
-                    .expect("RunWithRangeCondition met but failed to send shutdown message");
+                // Everyone having a copy of the shutdown signal
+                // will be notified
+                self.shutdown_signal.cancel();
                 return Ok(());
             }
 
