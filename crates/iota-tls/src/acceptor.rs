@@ -2,6 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+//! The functionality in this file is taken from https://docs.rs/axum-server/0.6.0/axum_server/tls_rustls/struct.RustlsAcceptor.html
+//! because axum-server's rustls dependency is very out of date, and enabling
+//! the `tsl-rustls` feature causes conflicts in our own usage of that lib.
+
 use std::{fmt, io, sync::Arc, time::Duration};
 
 use arc_swap::ArcSwap;
