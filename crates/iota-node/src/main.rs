@@ -197,6 +197,8 @@ fn main() {
 
 #[cfg(not(unix))]
 async fn wait_termination(node: NodeOnceCell) {
+    let shutdown_signal = node.get().await.shutdown_signal();
+
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {},
         _ = shutdown_signal.cancelled() => {},
