@@ -14,61 +14,48 @@ use iota_types::{
 };
 use test_cluster::TestClusterBuilder;
 
-/// Assuming the following parameters (in IOTAs):
+/// This e2e test ensures that the tokenomics implementation gives an ~8% APY
+/// under certain assumptions. These assumptions are:
 ///
-/// - VALIDATOR_LOW_STAKE_THRESHOLD_NANOS = 1_500_00
-/// - COMMISSION_RATE = 2%
-/// - VALIDATOR_TARGET_REWARD = 767_000
-/// - SINGLE_VALIDATOR_REWARD = VALIDATOR_TARGET_REWARD / 4
-/// - SINGLE_VALIDATOR_COMMISSION = 0.02 * SINGLE_VALIDATOR_REWARD
-/// - STAKE = 3_500_000_000
+/// - A total stake of 3.5B IOTA.
+/// - The default validator commission of 2%.
+/// - A validator target reward of 767K IOTA.
 ///
-/// After epoch 0, we expect the validator to which we staked to have:
-/// - An iota_balance of the original staked 1_500_000 plus the distributed
-///   rewards of SINGLE_VALIDATOR_REWARD - SINGLE_VALIDATOR_COMMISSION =
-///   1_687_915.
-/// - The pool should have a total stake of the originally staked 1_500_000 plus
-///   the newly staked STAKE plus the entire reward it received (=
-///   SINGLE_VALIDATOR_REWARD, since the commission is also staked) =
-///   3_501_691_750.
-/// - The new pool token balance is then given by
-/// (pool_token_epoch_0 * new_stake) / iota_balance_after_rewards = (1_500_000 *
-/// 3_501_691_750) / 1_687_915 = 3_111_849_604.
+/// This test uses the TestCluster which has limitations on how the validators
+/// can be set up. Only the validator committee size can be changed, but not
+/// their initial stakes, so this complicates the test a little. We use the
+/// default number of 4 validators and their initial stake of
+/// VALIDATOR_LOW_STAKE_THRESHOLD_NANOS. Note that in this case, each validator
+/// has 25% of the total voting power which results in each pool getting 25% of
+/// the target reward. In order to get the total stake up to the 3.5B IOTA, we
+/// would have to add that amount of stake to *each* pool. But: APY is
+/// calculated from the exchange rates of a single pool, which is independent of
+/// the total stake. So we actually only need to add a quarter of that stake
+/// (875M IOTA) to a single pool. Hence, in the test we delegate that
+/// number of IOTAs to a validator.
+/// Note that this imbalance doesn't mean this pool has a higher voting power
+/// and thus gets more rewards, it still gets 25%. See the voting power
+/// calculation function for why that is.
 ///
-/// Finally, this gives us the exchange rate for that pool for epoch 1:
-/// iota_amount = 3_501_691_750
-/// pool_token = 3_111_849_604
-/// rate_epoch1 = pool_token / iota_amount ~= 0.8886703418122358
+/// Two exchanges rates are needed to calculate the APY in the API. Epoch 0
+/// always has an initial exchange rate set which cannot be used, so we need to
+/// calculate APY from epoch 1 and 2. Since we need epoch 0 to start staking
+/// anyway, and only have the stake of the pool at the expected number starting
+/// from epoch 1, this is totally fine.
 ///
-/// After epoch 1, we expect the validator to which we staked to have
-/// - An iota_balance of the previously staked 3_501_691_750 plus the
-///   distributed rewards of SINGLE_VALIDATOR_REWARD -
-///   SINGLE_VALIDATOR_COMMISSION = 3_501_879_665.
-/// - The pool should have a total stake of the previously staked 3_501_691_750
-///   plus the entire reward it received (= SINGLE_VALIDATOR_REWARD, since the
-///   commission is also staked) = 3_501_883_500.
-/// - The new pool token balance is then given by
-/// (pool_token_epoch_1 * new_stake) / iota_balance_after_rewards =
-/// (3_111_849_604 * 3_501_883_500) / 3_501_879_665 = 3_111_853_012.
-///
-/// Finally, this gives us the exchange rate for that pool for epoch 1:
-/// iota_amount = 3_501_883_500
-/// pool_token = 3_111_853_012
-/// rate_epoch2 = pool_token / iota_amount ~= 0.8886226547118051
-///
-/// And with those two rates we can calculate the APY:
-/// apy = ((rate_epoch1/rate_epoch2)^365) - 1 ~= 0.019779937783565904
+/// Note that we don't get exactly 8% APY but slightly above, since the total
+/// stake of the pool
 #[sim_test]
 async fn test_apy() {
     // We need a large stake for low enough APY values such that they are not
     // filtered out by the APY calculation function.
-    let stake = 3_500_000_000 * NANOS_PER_IOTA;
+    let pool_stake = 3_500_000_000 * NANOS_PER_IOTA / 4;
     let mut rng = rand::thread_rng();
     let mut genesis_config = GenesisConfig::for_local_testing();
     let (address, keypair): (_, Ed25519KeyPair) = get_key_pair_from_rng(&mut rng);
     genesis_config.accounts.extend([AccountConfig {
         address: Some(address),
-        gas_amounts: vec![DEFAULT_GAS_AMOUNT, stake],
+        gas_amounts: vec![DEFAULT_GAS_AMOUNT, pool_stake],
     }]);
 
     let mut test_cluster = TestClusterBuilder::new()
@@ -77,6 +64,8 @@ async fn test_apy() {
         .build()
         .await;
 
+    // We need to add the key to the wallet store since a transaction must be signed
+    // for that address.
     test_cluster
         .wallet
         .config
@@ -139,5 +128,6 @@ async fn test_apy() {
         .unwrap();
 
     // See description above for the origin of this value.
-    assert!((validator_apy.apy - 0.01977).abs() < 0.01);
+    // Assert that the value is off by at most 0.2 percentage points.
+    assert!((validator_apy.apy - 0.08).abs() < 0.002);
 }
