@@ -3,7 +3,9 @@
 
 use core::str::FromStr;
 
-use iota_sdk::{IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
+use anyhow::anyhow;
+use iota_config::{iota_config_dir, IOTA_CLIENT_CONFIG};
+use iota_sdk::{wallet_context::WalletContext, IotaClientBuilder, IOTA_LOCAL_NETWORK_URL};
 use iota_sdk_tools::{
     query::{Query, Queryable as _},
     Client,
@@ -17,15 +19,27 @@ async fn main() -> anyhow::Result<()> {
     set_up_logging()?;
 
     let mut args = std::env::args().skip(1);
-    let address = args.next().expect("no address specified");
+    let address = args.next();
     let network = args
         .next()
         .unwrap_or_else(|| IOTA_LOCAL_NETWORK_URL.to_owned());
 
-    let client = Client::new(
-        IotaClientBuilder::default().build(network).await?,
-        IotaAddress::from_str(&address)?,
-    )?;
+    let config_path = iota_config_dir()?.join(IOTA_CLIENT_CONFIG);
+
+    let (iota_client, active_address) = if config_path.exists() {
+        let mut context = WalletContext::new(&config_path, None, None)?;
+
+        (context.get_client().await?, context.active_address().ok())
+    } else {
+        (IotaClientBuilder::default().build(network).await?, None)
+    };
+
+    let address = match address {
+        Some(a) => IotaAddress::from_str(&a)?,
+        None => active_address.ok_or_else(|| anyhow!("no active or provided address found"))?,
+    };
+
+    let client = Client::new(iota_client, address)?;
 
     // Publish a module
     let (published, txn) = client

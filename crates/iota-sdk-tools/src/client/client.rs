@@ -358,7 +358,11 @@ impl ClientData {
                 .into_iter()
                 .max_by_key(|g| g.coin.value());
         }
-        let budget = gas_budget.unwrap_or_else(|| gas.iter().map(|g| g.coin.value()).sum());
+        let max_tx_gas =
+            self.read_api().get_protocol_config(None).await?.attributes["max_tx_gas"].as_u64();
+        let budget = gas_budget
+            .unwrap_or_else(|| gas.iter().map(|g| g.coin.value()).sum())
+            .min(max_tx_gas);
         trace!("Gas Budget: {budget}");
         Ok(budget)
     }

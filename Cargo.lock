@@ -7270,6 +7270,7 @@ dependencies = [
  "bcs",
  "dirs 4.0.0",
  "dotenvy",
+ "iota-config",
  "iota-json",
  "iota-json-rpc-types",
  "iota-keys",
