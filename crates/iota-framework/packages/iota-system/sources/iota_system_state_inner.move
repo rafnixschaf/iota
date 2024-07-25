@@ -847,11 +847,6 @@ module iota_system::iota_system_state_inner {
         // Rates can't be higher than 100%.
         assert!(reward_slashing_rate <= bps_denominator_u64, EBpsTooLarge);
 
-        // TODO: remove this in later upgrade.
-        if (self.parameters.stake_subsidy_start_epoch > 0) {
-            self.parameters.stake_subsidy_start_epoch = 20;
-        };
-
         // Accumulate the gas summary during safe_mode before processing any rewards:
         let safe_mode_storage_charges = self.safe_mode_storage_charges.withdraw_all();
         storage_charge.join(safe_mode_storage_charges);
@@ -930,14 +925,12 @@ module iota_system::iota_system_state_inner {
             );
 
         event::emit(
-            //TODO: Add additional information (e.g., how much was burned, how much was leftover, etc.)
             SystemEpochInfoEvent {
                 epoch: self.epoch,
                 protocol_version: self.protocol_version,
                 reference_gas_price: self.reference_gas_price,
                 total_stake: new_total_stake,
                 storage_charge: storage_charge_value,
-                // TODO: remove(obsolete)
                 storage_rebate: storage_rebate_amount,
                 storage_fund_balance: self.storage_fund.total_balance(),
                 // TODO: remove(obsolete)
