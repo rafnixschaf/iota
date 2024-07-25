@@ -6,7 +6,9 @@ use std::collections::BTreeMap;
 
 use fastcrypto::error::FastCryptoError;
 use hyper::header::InvalidHeaderValue;
-use iota_json_rpc_api::{TRANSACTION_EXECUTION_CLIENT_ERROR_CODE, TRANSIENT_ERROR_CODE};
+use iota_json_rpc_api::{
+    error_object_from_rpc, TRANSACTION_EXECUTION_CLIENT_ERROR_CODE, TRANSIENT_ERROR_CODE,
+};
 use iota_types::{
     error::{IotaError, IotaObjectResponseError, UserInputError},
     quorum_driver_types::QuorumDriverError,
@@ -15,7 +17,7 @@ use itertools::Itertools;
 use jsonrpsee::{
     core::{ClientError as RpcError, RegisterMethodError},
     types::{
-        error::{ErrorCode, CALL_EXECUTION_FAILED_CODE, INTERNAL_ERROR_CODE, UNKNOWN_ERROR_CODE},
+        error::{ErrorCode, CALL_EXECUTION_FAILED_CODE, INTERNAL_ERROR_CODE},
         ErrorObject, ErrorObjectOwned,
     },
 };
@@ -359,13 +361,6 @@ impl From<IotaRpcInputError> for RpcError {
 impl From<IotaRpcInputError> for ErrorObjectOwned {
     fn from(value: IotaRpcInputError) -> Self {
         error_object_from_rpc(value.into())
-    }
-}
-
-pub(crate) fn error_object_from_rpc(rpc_err: RpcError) -> ErrorObjectOwned {
-    match rpc_err {
-        RpcError::Call(e) => ErrorObjectOwned::owned(e.code(), e.message().to_owned(), e.data()),
-        _ => ErrorObjectOwned::owned::<()>(UNKNOWN_ERROR_CODE, rpc_err.to_string(), None),
     }
 }
 

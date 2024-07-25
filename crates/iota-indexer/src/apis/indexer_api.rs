@@ -7,7 +7,7 @@ use iota_json_rpc::{
     name_service::{Domain, NameRecord, NameServiceConfig},
     IotaRpcModule,
 };
-use iota_json_rpc_api::{cap_page_limit, IndexerApiServer};
+use iota_json_rpc_api::{cap_page_limit, internal_error, IndexerApiServer};
 use iota_json_rpc_types::{
     DynamicFieldPage, EventFilter, EventPage, IotaObjectData, IotaObjectDataOptions,
     IotaObjectResponse, IotaObjectResponseQuery, IotaTransactionBlockResponseQuery, ObjectsPage,
@@ -23,11 +23,7 @@ use iota_types::{
     object::ObjectRead,
     TypeTag,
 };
-use jsonrpsee::{
-    core::RpcResult,
-    types::{error::INTERNAL_ERROR_CODE, ErrorObjectOwned},
-    PendingSubscriptionSink, RpcModule,
-};
+use jsonrpsee::{core::RpcResult, PendingSubscriptionSink, RpcModule};
 
 use crate::{indexer_reader::IndexerReader, IndexerError};
 
@@ -126,10 +122,10 @@ impl IndexerApi {
             .await
             .into_iter()
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None))?
+            .map_err(internal_error)?
             .into_iter()
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None))?;
+            .map_err(internal_error)?;
 
         Ok(Page {
             data,
@@ -265,9 +261,8 @@ impl IndexerApiServer for IndexerApi {
             | iota_types::object::ObjectRead::Deleted(_) => {}
             iota_types::object::ObjectRead::Exists(object_ref, o, layout) => {
                 return Ok(IotaObjectResponse::new_with_data(
-                    IotaObjectData::new(object_ref, o, layout, options, None).map_err(|e| {
-                        ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                    })?,
+                    IotaObjectData::new(object_ref, o, layout, options, None)
+                        .map_err(internal_error)?,
                 ));
             }
         }
@@ -291,9 +286,8 @@ impl IndexerApiServer for IndexerApi {
             | iota_types::object::ObjectRead::Deleted(_) => {}
             iota_types::object::ObjectRead::Exists(object_ref, o, layout) => {
                 return Ok(IotaObjectResponse::new_with_data(
-                    IotaObjectData::new(object_ref, o, layout, options, None).map_err(|e| {
-                        ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                    })?,
+                    IotaObjectData::new(object_ref, o, layout, options, None)
+                        .map_err(internal_error)?,
                 ));
             }
         }

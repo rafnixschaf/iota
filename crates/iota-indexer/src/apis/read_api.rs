@@ -4,7 +4,7 @@
 
 use async_trait::async_trait;
 use iota_json_rpc::{error::IotaRpcInputError, IotaRpcModule};
-use iota_json_rpc_api::{ReadApiServer, QUERY_MAX_RESULT_LIMIT};
+use iota_json_rpc_api::{internal_error, ReadApiServer, QUERY_MAX_RESULT_LIMIT};
 use iota_json_rpc_types::{
     Checkpoint, CheckpointId, CheckpointPage, IotaEvent, IotaGetPastObjectRequest,
     IotaLoadedChildObjectsResponse, IotaObjectData, IotaObjectDataOptions, IotaObjectResponse,
@@ -20,11 +20,7 @@ use iota_types::{
     iota_serde::BigInt,
     object::ObjectRead,
 };
-use jsonrpsee::{
-    core::RpcResult,
-    types::{error::INTERNAL_ERROR_CODE, ErrorObjectOwned},
-    RpcModule,
-};
+use jsonrpsee::{core::RpcResult, RpcModule};
 
 use crate::{errors::IndexerError, indexer_reader::IndexerReader};
 
@@ -90,13 +86,7 @@ impl ReadApiServer for ReadApi {
                             return Ok(IotaObjectResponse::new(
                                 Some(
                                     IotaObjectData::new(object_ref, o, layout, options, None)
-                                        .map_err(|e| {
-                                            ErrorObjectOwned::owned::<()>(
-                                                INTERNAL_ERROR_CODE,
-                                                e.to_string(),
-                                                None,
-                                            )
-                                        })?,
+                                        .map_err(internal_error)?,
                                 ),
                                 Some(IotaObjectResponseError::DisplayError {
                                     error: e.to_string(),
@@ -106,9 +96,8 @@ impl ReadApiServer for ReadApi {
                     }
                 }
                 Ok(IotaObjectResponse::new_with_data(
-                    IotaObjectData::new(object_ref, o, layout, options, display_fields).map_err(
-                        |e| ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None),
-                    )?,
+                    IotaObjectData::new(object_ref, o, layout, options, display_fields)
+                        .map_err(internal_error)?,
                 ))
             }
             ObjectRead::Deleted((object_id, version, digest)) => Ok(
@@ -211,7 +200,7 @@ impl ReadApiServer for ReadApi {
     }
 
     async fn get_checkpoint(&self, id: CheckpointId) -> RpcResult<Checkpoint> {
-        self.get_checkpoint(id).await.map_err(Into::into)
+        Ok(self.get_checkpoint(id).await?)
     }
 
     async fn get_checkpoints(

@@ -7,7 +7,9 @@ use std::{cmp::max, collections::BTreeMap, sync::Arc};
 use async_trait::async_trait;
 use cached::{proc_macro::cached, SizedCache};
 use iota_core::authority::AuthorityState;
-use iota_json_rpc_api::{GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics};
+use iota_json_rpc_api::{
+    error_object_from_rpc, GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics,
+};
 use iota_json_rpc_types::{
     DelegatedStake, DelegatedTimelockedStake, IotaCommittee, Stake, StakeStatus, TimelockedStake,
     ValidatorApy, ValidatorApys,
@@ -35,7 +37,7 @@ use tracing::{info, instrument};
 
 use crate::{
     authority_state::StateRead,
-    error::{error_object_from_rpc, Error, IotaRpcInputError, RpcInterimResult},
+    error::{Error, IotaRpcInputError, RpcInterimResult},
     logger::with_tracing,
     IotaRpcModule, ObjectProvider,
 };

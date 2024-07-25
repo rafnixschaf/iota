@@ -3,17 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_json_rpc::IotaRpcModule;
-use iota_json_rpc_api::{validate_limit, ExtendedApiServer, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS};
+use iota_json_rpc_api::{
+    internal_error, validate_limit, ExtendedApiServer, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS,
+};
 use iota_json_rpc_types::{
     CheckpointedObjectID, EpochInfo, EpochPage, IotaObjectResponseQuery, Page, QueryObjectsPage,
 };
 use iota_open_rpc::Module;
 use iota_types::iota_serde::BigInt;
-use jsonrpsee::{
-    core::RpcResult,
-    types::{error::INTERNAL_ERROR_CODE, ErrorObjectOwned},
-    RpcModule,
-};
+use jsonrpsee::{core::RpcResult, RpcModule};
 
 use crate::indexer_reader::IndexerReader;
 
@@ -35,8 +33,8 @@ impl ExtendedApiServer for ExtendedApi {
         limit: Option<usize>,
         descending_order: Option<bool>,
     ) -> RpcResult<EpochPage> {
-        let limit = validate_limit(limit, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS)
-            .map_err(|e| ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None))?;
+        let limit =
+            validate_limit(limit, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS).map_err(internal_error)?;
         let mut epochs = self
             .inner
             .spawn_blocking(move |this| {

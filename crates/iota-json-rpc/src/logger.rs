@@ -6,6 +6,7 @@ use std::{net::SocketAddr, time::Duration};
 
 use anyhow::anyhow;
 use futures::Future;
+use iota_json_rpc_api::error_object_from_rpc;
 use jsonrpsee::{
     core::{ClientError as RpcError, RpcResult},
     server::HttpRequest,
@@ -14,7 +15,7 @@ use jsonrpsee::{
 };
 use tracing::{error, info, Instrument, Span};
 
-use crate::error::{error_object_from_rpc, RpcInterimResult};
+use crate::error::RpcInterimResult;
 
 /// The transport protocol used to send or receive a call or request.
 #[derive(Debug, Copy, Clone)]

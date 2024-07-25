@@ -4,17 +4,12 @@
 
 use fastcrypto::error::FastCryptoError;
 use iota_json_rpc::name_service::NameServiceError;
+use iota_json_rpc_api::{error_object_from_rpc, internal_error};
 use iota_types::{
     base_types::ObjectIDParseError,
     error::{IotaError, IotaObjectResponseError, UserInputError},
 };
-use jsonrpsee::{
-    core::ClientError as RpcError,
-    types::{
-        error::{INTERNAL_ERROR_CODE, UNKNOWN_ERROR_CODE},
-        ErrorObjectOwned,
-    },
-};
+use jsonrpsee::{core::ClientError as RpcError, types::ErrorObjectOwned};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -152,11 +147,7 @@ impl<T> Context<T> for Result<T, IndexerError> {
 
 impl From<IndexerError> for RpcError {
     fn from(e: IndexerError) -> Self {
-        RpcError::Call(ErrorObjectOwned::owned::<()>(
-            INTERNAL_ERROR_CODE,
-            e.to_string(),
-            None,
-        ))
+        RpcError::Call(internal_error(e))
     }
 }
 
@@ -169,12 +160,5 @@ impl From<IndexerError> for ErrorObjectOwned {
 impl From<tokio::task::JoinError> for IndexerError {
     fn from(value: tokio::task::JoinError) -> Self {
         IndexerError::UncategorizedError(anyhow::Error::from(value))
-    }
-}
-
-pub(crate) fn error_object_from_rpc(rpc_err: RpcError) -> ErrorObjectOwned {
-    match rpc_err {
-        RpcError::Call(e) => ErrorObjectOwned::owned(e.code(), e.message().to_owned(), e.data()),
-        _ => ErrorObjectOwned::owned::<()>(UNKNOWN_ERROR_CODE, rpc_err.to_string(), None),
     }
 }

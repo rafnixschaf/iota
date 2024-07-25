@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use fastcrypto::encoding::Base64;
 use iota_core::authority::AuthorityState;
 use iota_json::IotaJsonValue;
-use iota_json_rpc_api::{TransactionBuilderOpenRpc, TransactionBuilderServer};
+use iota_json_rpc_api::{internal_error, TransactionBuilderOpenRpc, TransactionBuilderServer};
 use iota_json_rpc_types::{
     IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse,
     IotaTransactionBlockBuilderMode, IotaTypeTag, RPCTransactionRequestParams,
@@ -20,11 +20,7 @@ use iota_types::{
     base_types::{IotaAddress, ObjectID, ObjectInfo},
     iota_serde::BigInt,
 };
-use jsonrpsee::{
-    core::RpcResult,
-    types::{error::INTERNAL_ERROR_CODE, ErrorObjectOwned},
-    RpcModule,
-};
+use jsonrpsee::{core::RpcResult, RpcModule};
 use move_core_types::language_storage::StructTag;
 
 use crate::{authority_state::StateRead, IotaRpcModule};
@@ -96,8 +92,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .0
             .transfer_object(signer, object_id, gas, *gas_budget, recipient)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn transfer_iota(
@@ -118,8 +114,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
                 amount.map(|a| *a),
             )
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn pay(
@@ -142,8 +138,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
                 *gas_budget,
             )
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn pay_iota(
@@ -164,8 +160,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
                 *gas_budget,
             )
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn pay_all_iota(
@@ -179,8 +175,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .0
             .pay_all_iota(signer, input_coins, recipient, *gas_budget)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn publish(
@@ -195,13 +191,13 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .into_iter()
             .map(|data| data.to_vec().map_err(|e| anyhow::anyhow!(e)))
             .collect::<Result<Vec<_>, _>>()
-            .map_err(rpc_error_from_internal)?;
+            .map_err(internal_error)?;
         let data = self
             .0
             .publish(sender, compiled_modules, dependencies, gas, *gas_budget)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn split_coin(
@@ -217,8 +213,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .0
             .split_coin(signer, coin_object_id, split_amounts, gas, *gas_budget)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn split_coin_equal(
@@ -233,8 +229,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .0
             .split_coin_equal(signer, coin_object_id, *split_count, gas, *gas_budget)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn merge_coin(
@@ -249,8 +245,8 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             .0
             .merge_coins(signer, primary_coin, coin_to_merge, gas, *gas_budget)
             .await
-            .map_err(rpc_error_from_internal)?;
-        Ok(TransactionBlockBytes::from_data(data).map_err(rpc_error_from_internal)?)
+            .map_err(internal_error)?;
+        Ok(TransactionBlockBytes::from_data(data).map_err(internal_error)?)
     }
 
     async fn move_call(
@@ -279,9 +275,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
                     None,
                 )
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 
     async fn batch_transaction(
@@ -296,9 +292,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .batch_transaction(signer, params, gas, *gas_budget)
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 
     async fn request_add_stake(
@@ -315,9 +311,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_add_stake(signer, coins, amount, validator, gas, *gas_budget)
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 
     async fn request_withdraw_stake(
@@ -331,9 +327,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_withdraw_stake(signer, staked_iota, gas, *gas_budget)
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 
     async fn request_add_timelocked_stake(
@@ -348,9 +344,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_add_timelocked_stake(signer, locked_balance, validator, gas, *gas_budget)
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 
     async fn request_withdraw_timelocked_stake(
@@ -364,9 +360,9 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_withdraw_timelocked_stake(signer, timelocked_staked_iota, gas, *gas_budget)
                 .await
-                .map_err(rpc_error_from_internal)?,
+                .map_err(internal_error)?,
         )
-        .map_err(rpc_error_from_internal)?)
+        .map_err(internal_error)?)
     }
 }
 
@@ -378,8 +374,4 @@ impl IotaRpcModule for TransactionBuilderApi {
     fn rpc_doc_module() -> Module {
         TransactionBuilderOpenRpc::module_doc()
     }
-}
-
-fn rpc_error_from_internal(err: anyhow::Error) -> ErrorObjectOwned {
-    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, err.to_string(), None)
 }
