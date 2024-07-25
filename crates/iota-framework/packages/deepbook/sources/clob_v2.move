@@ -1289,11 +1289,11 @@ module deepbook::clob_v2 {
         // We first retrieve the PriceLevel with the lowest price by calling min_leaf on the asks Critbit Tree.
         // We then match the market order by iterating through open orders on that price level in ascending order of the order id.
         // Open orders that are being filled are removed from the order book.
-        // We stop the iteration untill all quantities are filled.
+        // We stop the iteration until all quantities are filled.
         // If the total quantity of open orders at the lowest price level is not large enough to fully fill the market order,
         // we move on to the next price level by calling next_leaf on the asks Critbit Tree and repeat the same procedure.
         // Continue iterating over the price levels in ascending order until the market order is completely filled.
-        // If ther market order cannot be completely filled even after consuming all the open ask orders,
+        // If their market order cannot be completely filled even after consuming all the open ask orders,
         // the unfilled quantity will be cancelled.
         // Market ask order follows similar procedure.
         // The difference is that market ask order is matched against the open bid orders.
@@ -1789,7 +1789,7 @@ module deepbook::clob_v2 {
     /// Skip any order_id that is invalid.
     /// Note that this function can reduce gas cost even further if caller has multiple orders at the same price level,
     /// and if orders with the same price are grouped together in the vector.
-    /// For example, if we have the following order_id to price mapping, {0: 100., 1: 200., 2: 100., 3: 200.}.
+    /// For example, if we have the following order_id to price mapping, \{0: 100., 1: 200., 2: 100., 3: 200.}.
     /// Grouping order_ids like [0, 2, 1, 3] would make it the most gas efficient.
     public fun batch_cancel_order<BaseAsset, QuoteAsset>(
         pool: &mut Pool<BaseAsset, QuoteAsset>,
@@ -1863,7 +1863,7 @@ module deepbook::clob_v2 {
     /// Clean up expired orders
     /// Note that this function can reduce gas cost if orders
     /// with the same price are grouped together in the vector because we would not need the computation to find the tick_index.
-    /// For example, if we have the following order_id to price mapping, {0: 100., 1: 200., 2: 100., 3: 200.}.
+    /// For example, if we have the following order_id to price mapping, \{0: 100., 1: 200., 2: 100., 3: 200.}.
     /// Grouping order_ids like [0, 2, 1, 3] would make it the most gas efficient.
     /// Order owners should be the owner addresses from the account capacities which placed the orders,
     /// and they should correspond to the order IDs one by one.
@@ -2010,7 +2010,7 @@ module deepbook::clob_v2 {
         let (price_low_, _) = critbit::min_leaf(&pool.bids);
         let (price_high_, _) = critbit::max_leaf(&pool.bids);
 
-        // If price_low is greater than the higest element in the tree, we return empty
+        // If price_low is greater than the highest element in the tree, we return empty
         if (price_low > price_high_) {
             return (price_vec, depth_vec)
         };
@@ -2100,7 +2100,7 @@ module deepbook::clob_v2 {
         (price_vec, depth_vec)
     }
 
-    /// internal func to retrive single depth of a tick price
+    /// internal func to retrieve single depth of a tick price
     fun get_level2_book_status(
         open_orders: &CritbitTree<TickLevel>,
         price: u64,

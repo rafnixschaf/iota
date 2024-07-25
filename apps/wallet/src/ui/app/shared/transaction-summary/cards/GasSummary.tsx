@@ -4,14 +4,17 @@
 import ExplorerLink from '_src/ui/app/components/explorer-link';
 import { ExplorerLinkType } from '_src/ui/app/components/explorer-link/ExplorerLinkType';
 import { useActiveAddress } from '_src/ui/app/hooks';
-import { GAS_TYPE_ARG } from '_src/ui/app/redux/slices/iota-objects/Coin';
 import { useFormatCoin, type GasSummaryType } from '@iota/core';
-import { formatAddress } from '@iota/iota.js/utils';
+import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota.js/utils';
 
 import { Text } from '../../text';
 
-export function GasSummary({ gasSummary }: { gasSummary?: GasSummaryType }) {
-    const [gas, symbol] = useFormatCoin(gasSummary?.totalGas, GAS_TYPE_ARG);
+interface GasSummaryProps {
+    gasSummary?: GasSummaryType;
+}
+
+export function GasSummary({ gasSummary }: GasSummaryProps) {
+    const [gas, symbol] = useFormatCoin(gasSummary?.totalGas, IOTA_TYPE_ARG);
     const address = useActiveAddress();
 
     if (!gasSummary) return null;
@@ -51,7 +54,7 @@ export function GasSummary({ gasSummary }: { gasSummary?: GasSummaryType }) {
                                 Sponsor
                             </Text>
                             <ExplorerLink
-                                type={ExplorerLinkType.address}
+                                type={ExplorerLinkType.Address}
                                 address={gasSummary.owner}
                                 className="text-hero-dark no-underline"
                             >

@@ -12,7 +12,10 @@ use iota_config::{
     node::{DEFAULT_COMMISSION_RATE, DEFAULT_VALIDATOR_GAS_PRICE},
     Config,
 };
-use iota_genesis_builder::validator_info::{GenesisValidatorInfo, ValidatorInfo};
+use iota_genesis_builder::{
+    validator_info::{GenesisValidatorInfo, ValidatorInfo},
+    SnapshotSource,
+};
 use iota_types::{
     base_types::IotaAddress,
     crypto::{
@@ -215,7 +218,7 @@ impl ValidatorGenesisConfigBuilder {
             narwhal_worker_address,
             consensus_address,
             consensus_internal_worker_address: None,
-            stake: iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_MICROS,
+            stake: iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_NANOS,
             name: None,
         }
     }
@@ -227,6 +230,7 @@ pub struct GenesisConfig {
     pub validator_config_info: Option<Vec<ValidatorGenesisConfig>>,
     pub parameters: GenesisCeremonyParameters,
     pub accounts: Vec<AccountConfig>,
+    pub migration_sources: Vec<SnapshotSource>,
 }
 
 impl Config for GenesisConfig {}
@@ -257,8 +261,9 @@ impl GenesisConfig {
             account.gas_amounts.iter().for_each(|a| {
                 allocations.push(TokenAllocation {
                     recipient_address: address,
-                    amount_micros: *a,
+                    amount_nanos: *a,
                     staked_with_validator: None,
+                    staked_with_timelock_expiration: None,
                 });
             });
         }
@@ -276,7 +281,7 @@ fn default_multiaddr_address() -> Multiaddr {
 }
 
 fn default_stake() -> u64 {
-    iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_MICROS
+    iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_NANOS
 }
 
 fn default_bls12381_key_pair() -> AuthorityKeyPair {
@@ -410,6 +415,7 @@ impl GenesisConfig {
             validator_config_info: Some(validator_config_info),
             parameters,
             accounts: account_configs,
+            migration_sources: Default::default(),
         }
     }
 

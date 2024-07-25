@@ -43,7 +43,8 @@ module.exports = {
         '**/dist/',
         '**/.next/',
         '**/.swc/',
-        '**/out/'
+        '**/out/',
+        '**/*.md',
     ],
     rules: {
         'no-case-declarations': 'off',
@@ -214,7 +215,7 @@ module.exports = {
                                 name: 'react-router-dom',
                                 importNames: ['Link', 'useNavigate', 'useSearchParams'],
                                 message:
-                                    'Please use `LinkWithQuery`, `useSearchParamsMerged`, and `useNavigateWithQuery` from "~/ui/utils/LinkWithQuery" instead.',
+                                    'Please use `LinkWithQuery`, `useSearchParamsMerged`, and `useNavigateWithQuery` from "~/components/ui/LinkWithQuery" instead.',
                             },
                         ],
                     },

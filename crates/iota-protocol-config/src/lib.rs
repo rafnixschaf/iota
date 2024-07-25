@@ -16,7 +16,7 @@ use tracing::{info, warn};
 
 /// The minimum and maximum protocol versions supported by this build.
 const MIN_PROTOCOL_VERSION: u64 = 1;
-const MAX_PROTOCOL_VERSION: u64 = 1;
+pub const MAX_PROTOCOL_VERSION: u64 = 1;
 
 // Record history of protocol version allocations here:
 //
@@ -654,6 +654,10 @@ pub struct ProtocolConfig {
 
     /// Unit gas price, Micros per internal gas unit.
     storage_gas_price: Option<u64>,
+
+    /// The number of tokens that the set of validators should receive per
+    /// epoch.
+    validator_target_reward: Option<u64>,
 
     /// === Core Protocol ===
 
@@ -1353,10 +1357,13 @@ impl ProtocolConfig {
             obj_data_cost_refundable: Some(100),
             obj_metadata_cost_non_refundable: Some(50),
             gas_model_version: Some(8),
-            storage_rebate_rate: Some(9900),
+            storage_rebate_rate: Some(10000),
             // Change reward slashing rate to 100%.
             reward_slashing_rate: Some(10000),
             storage_gas_price: Some(76),
+            // The initial target reward for validators per epoch.
+            // Refer to the IOTA tokenomics for the origin of this value.
+            validator_target_reward: Some(767_000 * 1_000_000_000),
             max_transactions_per_checkpoint: Some(10_000),
             max_checkpoint_size_bytes: Some(30 * 1024 * 1024),
 
@@ -1583,7 +1590,7 @@ impl ProtocolConfig {
 
             gas_rounding_step: Some(1_000),
 
-            execution_version: Some(3),
+            execution_version: Some(1),
 
             // We maintain the same total size limit for events, but increase the number of
             // events that can be emitted.
@@ -1992,10 +1999,10 @@ mod test {
                 .is_none()
         );
         assert!(
-            prot.feature_flags
+            !prot
+                .feature_flags
                 .attr_map()
-                .get("some random string")
-                .is_none()
+                .contains_key("some random string")
         );
 
         // Was false in v1 on Mainnet

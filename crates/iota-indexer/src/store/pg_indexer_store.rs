@@ -175,7 +175,7 @@ impl PgIndexerStore {
         object_id: ObjectID,
         version: Option<SequenceNumber>,
     ) -> Result<ObjectRead, IndexerError> {
-        // TOOD: read remote object_history kv store
+        // TODO: read remote object_history kv store
         read_only_blocking!(&self.blocking_cp, |conn| {
             let query =
                 objects::dsl::objects.filter(objects::dsl::object_id.eq(object_id.to_vec()));
@@ -727,9 +727,11 @@ impl PgIndexerStore {
                             epochs::total_gas_fees.eq(excluded(epochs::total_gas_fees)),
                             epochs::total_stake_rewards_distributed
                                 .eq(excluded(epochs::total_stake_rewards_distributed)),
-                            epochs::leftover_storage_fund_inflow
-                                .eq(excluded(epochs::leftover_storage_fund_inflow)),
+                            epochs::burnt_leftover_amount
+                                .eq(excluded(epochs::burnt_leftover_amount)),
                             epochs::epoch_commitments.eq(excluded(epochs::epoch_commitments)),
+                            epochs::burnt_tokens_amount.eq(excluded(epochs::burnt_tokens_amount)),
+                            epochs::minted_tokens_amount.eq(excluded(epochs::minted_tokens_amount)),
                         ))
                         .execute(conn)?;
                 }

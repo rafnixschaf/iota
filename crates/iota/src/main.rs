@@ -24,6 +24,7 @@ const GIT_REVISION: &str = {
 };
 
 const VERSION: &str = {
+    #[allow(clippy::const_is_empty)]
     if GIT_REVISION.is_empty() {
         env!("CARGO_PKG_VERSION")
     } else {
@@ -85,6 +86,11 @@ async fn main() {
                 .with_env()
                 .init()
         }
+
+        IotaCommand::Start { .. } => telemetry_subscribers::TelemetryConfig::new()
+            .with_log_level("info")
+            .with_env()
+            .init(),
 
         _ => telemetry_subscribers::TelemetryConfig::new()
             .with_log_level("error")

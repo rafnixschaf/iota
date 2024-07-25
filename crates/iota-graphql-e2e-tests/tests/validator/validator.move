@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-// Test the change of APY with heavy transactions
+// Test heavy transactions.
 
-//# init --protocol-version 39 --simulator --accounts A --addresses P0=0x0
+//# init --protocol-version 1 --simulator --accounts A --addresses P0=0x0
 
 //# advance-epoch
 
@@ -55,7 +55,6 @@ module P0::m {
     validatorSet {
       activeValidators {
         nodes {
-          apy
           name
         }
       }
@@ -105,7 +104,6 @@ module P0::m {
     validatorSet {
       activeValidators {
         nodes {
-          apy
           name
           reportRecords {
             nodes {

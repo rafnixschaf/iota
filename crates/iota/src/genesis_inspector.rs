@@ -9,7 +9,7 @@ use iota_config::genesis::UnsignedGenesis;
 use iota_types::{
     base_types::ObjectID,
     coin::CoinMetadata,
-    gas_coin::{GasCoin, MICROS_PER_IOTA, TOTAL_SUPPLY_MICROS},
+    gas_coin::{GasCoin, IotaTreasuryCap, NANOS_PER_IOTA},
     governance::StakedIota,
     iota_system_state::IotaValidatorGenesis,
     move_package::MovePackage,
@@ -114,7 +114,7 @@ pub(crate) fn examine_genesis_checkpoint(genesis: UnsignedGenesis) {
     );
 
     // Always check the Total Supply
-    examine_total_supply(&iota_distribution, false);
+    examine_total_supply(&system_object.iota_treasury_cap, &iota_distribution, false);
 
     // Main loop for inspection
     let main_options: Vec<&str> =
@@ -127,7 +127,7 @@ pub(crate) fn examine_genesis_checkpoint(genesis: UnsignedGenesis) {
         .prompt();
         match ans {
             Ok(name) if name == STR_IOTA_DISTRIBUTION => {
-                examine_total_supply(&iota_distribution, true)
+                examine_total_supply(&system_object.iota_treasury_cap, &iota_distribution, true)
             }
             Ok(name) if name == STR_VALIDATORS => {
                 examine_validators(&validator_options, &validator_map);
@@ -251,6 +251,7 @@ fn examine_object(
 }
 
 fn examine_total_supply(
+    iota_treasury_cap: &IotaTreasuryCap,
     iota_distribution: &BTreeMap<String, BTreeMap<String, (&str, u64)>>,
     print: bool,
 ) {
@@ -268,21 +269,21 @@ fn examine_total_supply(
         if print {
             println!("Owner {:?}", owner);
             println!(
-                "Total Amount of Iota/StakedIota Owned: {amount_sum} MICROS or {} IOTA:",
-                amount_sum / MICROS_PER_IOTA
+                "Total Amount of Iota/StakedIota Owned: {amount_sum} NANOS or {} IOTA:",
+                amount_sum / NANOS_PER_IOTA
             );
             println!("{:#?}\n", coins);
         }
     }
-    assert_eq!(total_iota, TOTAL_SUPPLY_MICROS);
+    assert_eq!(total_iota, iota_treasury_cap.total_supply().value);
     // Always print this.
     println!(
-        "Total Supply of Iota: {total_iota} MICROS or {} IOTA",
-        total_iota / MICROS_PER_IOTA
+        "Total Supply of Iota: {total_iota} NANOS or {} IOTA",
+        total_iota / NANOS_PER_IOTA
     );
     println!(
-        "Total Amount of StakedIota: {total_staked_iota} MICROS or {} IOTA\n",
-        total_staked_iota / MICROS_PER_IOTA
+        "Total Amount of StakedIota: {total_staked_iota} NANOS or {} IOTA\n",
+        total_staked_iota / NANOS_PER_IOTA
     );
     if print {
         print_divider("Iota Distribution");

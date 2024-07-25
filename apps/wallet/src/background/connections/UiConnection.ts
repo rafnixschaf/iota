@@ -25,7 +25,7 @@ import {
     type MethodPayload,
     type UIAccessibleEntityType,
 } from '_src/shared/messaging/messages/payloads/MethodPayload';
-import { toEntropy } from '_src/shared/utils/bip39';
+import { toEntropy } from '_src/shared/utils';
 import Dexie from 'dexie';
 import { BehaviorSubject, filter, switchMap, takeUntil } from 'rxjs';
 import Browser from 'webextension-polyfill';
@@ -38,14 +38,23 @@ import {
 } from '../account-sources';
 import { accountSourcesEvents } from '../account-sources/events';
 import { MnemonicAccountSource } from '../account-sources/MnemonicAccountSource';
-import { accountsHandleUIMessage, getAllSerializedUIAccounts } from '../accounts';
+import {
+    accountsHandleUIMessage,
+    addNewAccounts,
+    getAccountsByAddress,
+    getAllSerializedUIAccounts,
+} from '../accounts';
 import { accountsEvents } from '../accounts/events';
 import { getAutoLockMinutes, notifyUserActive, setAutoLockMinutes } from '../auto-lock-accounts';
-import { backupDB, getDB, settingsKeys } from '../db';
+import { backupDB, getDB, SETTINGS_KEYS } from '../db';
 import { clearStatus, doMigration, getStatus } from '../storage-migration';
 import NetworkEnv from '../NetworkEnv';
 import { Connection } from './Connection';
 import { SeedAccountSource } from '../account-sources/SeedAccountSource';
+import { AccountSourceType } from '../account-sources/AccountSource';
+import { isDeriveBipPathAccountsFinder, isPersistAccountsFinder } from '_payloads/accounts-finder';
+import type { SerializedAccount } from '../accounts/Account';
+import { LedgerAccount } from '../accounts/LedgerAccount';
 
 export class UiConnection extends Connection {
     public static readonly CHANNEL: PortChannelName = 'iota_ui<->background';
@@ -173,10 +182,10 @@ export class UiConnection extends Connection {
                 await db.delete();
                 await db.open();
                 // prevents future run of auto backup process of the db (we removed everything nothing to backup after logout)
-                await db.settings.put({ setting: settingsKeys.isPopulated, value: true });
+                await db.settings.put({ setting: SETTINGS_KEYS.isPopulated, value: true });
                 this.send(createMessage({ type: 'done' }, id));
             } else if (isMethodPayload(payload, 'getAutoLockMinutes')) {
-                await this.send(
+                this.send(
                     createMessage<MethodPayload<'getAutoLockMinutesResponse'>>(
                         {
                             type: 'method-payload',
@@ -188,11 +197,11 @@ export class UiConnection extends Connection {
                 );
             } else if (isMethodPayload(payload, 'setAutoLockMinutes')) {
                 await setAutoLockMinutes(payload.args.minutes);
-                await this.send(createMessage({ type: 'done' }, msg.id));
+                this.send(createMessage({ type: 'done' }, msg.id));
                 return true;
             } else if (isMethodPayload(payload, 'notifyUserActive')) {
-                await notifyUserActive();
-                await this.send(createMessage({ type: 'done' }, msg.id));
+                notifyUserActive();
+                this.send(createMessage({ type: 'done' }, msg.id));
                 return true;
             } else if (isMethodPayload(payload, 'resetPassword')) {
                 const { password, recoveryData } = payload.args;
@@ -211,10 +220,10 @@ export class UiConnection extends Connection {
                     ) {
                         throw new Error('Invalid account source type');
                     }
-                    if (type === 'mnemonic') {
+                    if (type === AccountSourceType.Mnemonic) {
                         await accountSource.verifyRecoveryData(data.entropy);
                     }
-                    if (type === 'seed') {
+                    if (type === AccountSourceType.Seed) {
                         await accountSource.verifyRecoveryData(data.seed);
                     }
                 }
@@ -232,7 +241,7 @@ export class UiConnection extends Connection {
                         .delete();
                     for (const data of recoveryData) {
                         const { accountSourceID, type } = data;
-                        if (type === 'mnemonic') {
+                        if (type === AccountSourceType.Mnemonic) {
                             await db.accountSources.update(accountSourceID, {
                                 encryptedData: await Dexie.waitFor(
                                     MnemonicAccountSource.createEncryptedData(
@@ -242,7 +251,7 @@ export class UiConnection extends Connection {
                                 ),
                             });
                         }
-                        if (type === 'seed') {
+                        if (type === AccountSourceType.Seed) {
                             await db.accountSources.update(accountSourceID, {
                                 encryptedData: await Dexie.waitFor(
                                     SeedAccountSource.createEncryptedData(data.seed, password),
@@ -254,7 +263,76 @@ export class UiConnection extends Connection {
                 await backupDB();
                 accountSourcesEvents.emit('accountSourcesChanged');
                 accountsEvents.emit('accountsChanged');
-                await this.send(createMessage({ type: 'done' }, msg.id));
+                this.send(createMessage({ type: 'done' }, msg.id));
+            } else if (isDeriveBipPathAccountsFinder(payload)) {
+                const accountSource = await getAccountSourceByID(payload.sourceID);
+
+                if (!accountSource) {
+                    throw new Error('Could not find account source');
+                }
+
+                const publicKey = await accountSource.derivePubKey(payload.derivationOptions);
+
+                this.send(
+                    createMessage(
+                        {
+                            type: 'derive-bip-path-accounts-finder-response',
+                            publicKey: publicKey.toBase64(),
+                        },
+                        msg.id,
+                    ),
+                );
+            } else if (isPersistAccountsFinder(payload)) {
+                let derivedAccounts: Omit<SerializedAccount, 'id'>[] = [];
+
+                switch (payload.sourceStrategy.type) {
+                    case 'software':
+                        const accountSource = await getAccountSourceByID(
+                            payload.sourceStrategy.sourceID,
+                        );
+
+                        if (!accountSource) {
+                            throw new Error('Could not find account source');
+                        }
+
+                        derivedAccounts = await Promise.all(
+                            payload.sourceStrategy.bipPaths.map((addressBipPath) =>
+                                accountSource.deriveAccount(addressBipPath),
+                            ),
+                        );
+                        break;
+                    case 'ledger':
+                        for (const address of payload.sourceStrategy.addresses) {
+                            derivedAccounts.push(
+                                await LedgerAccount.createNew({
+                                    password: payload.sourceStrategy.password,
+                                    ...address,
+                                }),
+                            );
+                        }
+                }
+
+                // Filter those accounts that already exist so they are not duplicated
+                const derivedAccountsNonExistent: Omit<SerializedAccount, 'id'>[] = (
+                    await Promise.all(
+                        derivedAccounts.map(async (account) => {
+                            const foundAccounts = await getAccountsByAddress(account.address);
+                            for (const foundAccount of foundAccounts) {
+                                if (foundAccount.type === account.type) {
+                                    // Do not persist accounts with the same address and type
+                                    return undefined;
+                                }
+                            }
+
+                            return account;
+                        }),
+                    )
+                ).filter(Boolean) as Omit<SerializedAccount, 'id'>[];
+
+                // Actually persist the accounts
+                await addNewAccounts(derivedAccountsNonExistent);
+
+                this.send(createMessage({ type: 'done' }, msg.id));
             } else {
                 throw new Error(
                     `Unhandled message ${msg.id}. (${JSON.stringify(

@@ -51,7 +51,9 @@ pub fn verify_module(
     // initializer). The reason for it is that the IOTA coin is only instantiated
     // during genesis. It is easiest to simply special-case this module particularly
     // that this is framework code and thus deemed correct.
-    if ModuleId::new(IOTA_FRAMEWORK_ADDRESS, ident_str!("iota").to_owned()) == module.self_id() {
+    let self_id = module.self_id();
+
+    if ModuleId::new(IOTA_FRAMEWORK_ADDRESS, ident_str!("iota").to_owned()) == self_id {
         return Ok(());
     }
 

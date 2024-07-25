@@ -10,12 +10,12 @@ use crate::{
     diagnostics::{Diagnostic, WarningFilters},
     editions::Flavor,
     expansion::ast::{AbilitySet, Fields, ModuleIdent, Mutability, Visibility},
+    iota_mode::*,
     naming::ast::{
         self as N, BuiltinTypeName_, FunctionSignature, StructFields, Type, TypeName_, Type_, Var,
     },
     parser::ast::{Ability_, FunctionName, StructName},
     shared::{program_info::TypingProgramInfo, CompilationEnv, Identifier},
-    iota_mode::*,
     typing::{
         ast::{self as T, ModuleCall},
         core::{ability_not_satisfied_tips, error_format, error_format_, Subst},
@@ -946,13 +946,10 @@ fn exp(context: &mut Context, e: &T::Exp) {
 }
 
 fn otw_special_cases(context: &Context) -> bool {
-    BRIDGE_SUPPORTED_ASSET
-        .iter()
-        .any(|token| context.current_module().value.is(BRIDGE_ADDR_NAME, token))
-        || context
-            .current_module()
-            .value
-            .is(IOTA_ADDR_NAME, IOTA_MODULE_NAME)
+    context
+        .current_module()
+        .value
+        .is(IOTA_ADDR_NAME, IOTA_MODULE_NAME)
 }
 
 fn check_event_emit(context: &mut Context, loc: Loc, mcall: &ModuleCall) {

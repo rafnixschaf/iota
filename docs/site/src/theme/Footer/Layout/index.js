@@ -20,7 +20,10 @@ export default function FooterLayout({ style, links, logo, copyright }) {
   return (
     <footer className={styles.footer}>
       <div className={styles.footerWrap}>
-        <div className={styles.footerLogo}>{logo}</div>
+        <div className={styles.footerLogoWrap}>
+          <div className={styles.footerLogo}>{logo}</div>
+          <div className={styles.footerCopy}>{copyright}</div>
+        </div>
         <div className={styles.footerContent}>
           <div className={styles.footerLinks}>
             <Link to="https://discord.gg/IOTA">
@@ -39,7 +42,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://twitter.com/Mysten_Labs">
+            <Link to="https://x.com/iota">
               <svg
                 width="32"
                 height="32"
@@ -55,7 +58,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://medium.com/mysten-labs">
+            <Link to="https://medium.com/@iotafoundation">
               <svg
                 width="32"
                 height="32"
@@ -71,7 +74,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://www.linkedin.com/company/mysten-labs/">
+            <Link to="https://de.linkedin.com/company/iotafoundation">
               <svg
                 width="32"
                 height="32"
@@ -86,7 +89,6 @@ export default function FooterLayout({ style, links, logo, copyright }) {
               </svg>
             </Link>
           </div>
-          <div className={styles.footerCopy}>{copyright}</div>
         </div>
       </div>
     </footer>
