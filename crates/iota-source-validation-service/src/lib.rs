@@ -645,8 +645,7 @@ async fn check_version_header(
     match version {
         Some(v) if v != IOTA_SOURCE_VALIDATION_VERSION => {
             let error = format!(
-                "Unsupported version '{v}' specified in header {}",
-                IOTA_SOURCE_VALIDATION_VERSION_HEADER
+                "Unsupported version '{v}' specified in header {IOTA_SOURCE_VALIDATION_VERSION_HEADER}",
             );
             let mut headers = HeaderMap::new();
             headers.insert(
