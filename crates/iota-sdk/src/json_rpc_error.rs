@@ -1,7 +1,8 @@
-use iota_json_rpc_api::error_object_from_rpc;
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
+use iota_json_rpc_api::error_object_from_rpc;
 pub use iota_json_rpc_api::{TRANSACTION_EXECUTION_CLIENT_ERROR_CODE, TRANSIENT_ERROR_CODE};
 use jsonrpsee::types::error::UNKNOWN_ERROR_CODE;
 use thiserror::Error;
