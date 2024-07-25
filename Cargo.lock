@@ -6487,7 +6487,6 @@ dependencies = [
  "iota-simulator",
  "iota-snapshot",
  "iota-storage",
- "iota-tls",
  "iota-types",
  "move-vm-profiler",
  "mysten-common",
@@ -7127,29 +7126,6 @@ dependencies = [
  "tower",
  "tower-http",
  "uuid",
-]
-
-[[package]]
-name = "iota-tls"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "axum 0.7.5",
- "axum-server",
- "ed25519 1.5.3",
- "fastcrypto",
- "pin-project-lite",
- "pkcs8 0.9.0",
- "rand 0.8.5",
- "rcgen",
- "reqwest 0.12.5",
- "rustls 0.23.11",
- "rustls-webpki 0.102.6",
- "tokio",
- "tokio-rustls 0.26.0",
- "tower-layer",
- "x509-parser",
 ]
 
 [[package]]

@@ -7,7 +7,7 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use clap::{ArgGroup, Parser};
 use iota_config::{node::RunWithRange, Config, NodeConfig};
 use iota_core::runtime::IotaRuntimes;
-use iota_node::{metrics, IotaNode};
+use iota_node::IotaNode;
 use iota_protocol_config::SupportedProtocolVersions;
 use iota_types::{
     committee::EpochId, messages_checkpoint::CheckpointSequenceNumber, multiaddr::Multiaddr,
@@ -105,11 +105,6 @@ fn main() {
         "Started Prometheus HTTP endpoint at {}",
         config.metrics_address
     );
-
-    {
-        let _enter = runtimes.metrics.enter();
-        metrics::start_metrics_push_task(&config, registry_service.clone());
-    }
 
     if let Some(listen_address) = args.listen_address {
         config.network_address = listen_address;
