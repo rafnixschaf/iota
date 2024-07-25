@@ -279,9 +279,7 @@ impl TransactionBuilderServer for TransactionBuilderApi {
                     None,
                 )
                 .await
-                .map_err(|e| {
-                    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                })?,
+                .map_err(rpc_error_from_internal)?,
         )
         .map_err(rpc_error_from_internal)?)
     }
@@ -298,9 +296,7 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .batch_transaction(signer, params, gas, *gas_budget)
                 .await
-                .map_err(|e| {
-                    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                })?,
+                .map_err(rpc_error_from_internal)?,
         )
         .map_err(rpc_error_from_internal)?)
     }
@@ -319,9 +315,7 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_add_stake(signer, coins, amount, validator, gas, *gas_budget)
                 .await
-                .map_err(|e| {
-                    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                })?,
+                .map_err(rpc_error_from_internal)?,
         )
         .map_err(rpc_error_from_internal)?)
     }
@@ -337,9 +331,7 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_withdraw_stake(signer, staked_iota, gas, *gas_budget)
                 .await
-                .map_err(|e| {
-                    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                })?,
+                .map_err(rpc_error_from_internal)?,
         )
         .map_err(rpc_error_from_internal)?)
     }
@@ -356,9 +348,7 @@ impl TransactionBuilderServer for TransactionBuilderApi {
             self.0
                 .request_add_timelocked_stake(signer, locked_balance, validator, gas, *gas_budget)
                 .await
-                .map_err(|e| {
-                    ErrorObjectOwned::owned::<()>(INTERNAL_ERROR_CODE, e.to_string(), None)
-                })?,
+                .map_err(rpc_error_from_internal)?,
         )
         .map_err(rpc_error_from_internal)?)
     }

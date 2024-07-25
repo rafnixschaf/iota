@@ -260,6 +260,8 @@ pub mod ws {
 
     use super::*;
 
+    const MAX_WS_MESSAGE_BUFFER: usize = 100;
+
     #[derive(Debug, Clone)]
     pub(crate) struct WsCallData<'a, L: Logger> {
         pub bounded_subscriptions: BoundedSubscriptions,
@@ -285,7 +287,7 @@ pub mod ws {
 
     async fn ws_json_rpc_handler<L: Logger>(mut socket: WebSocket, service: JsonRpcService<L>) {
         #[allow(clippy::disallowed_methods)]
-        let (tx, mut rx) = mpsc::channel::<String>(100);
+        let (tx, mut rx) = mpsc::channel::<String>(MAX_WS_MESSAGE_BUFFER);
         let sink = MethodSink::new_with_limit(tx, MAX_RESPONSE_SIZE);
         let bounded_subscriptions = BoundedSubscriptions::new(100);
 
