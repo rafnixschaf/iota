@@ -1016,7 +1016,7 @@ mod tests {
         let g = Genesis::new_from_file("path/to/file");
 
         let s = serde_yml::to_string(&g).unwrap();
-        assert_eq!("---\ngenesis-file-location: path/to/file\n", s);
+        assert_eq!("genesis-file-location: path/to/file\n", s);
         let loaded_genesis: Genesis = serde_yml::from_str(&s).unwrap();
         assert_eq!(g, loaded_genesis);
     }
