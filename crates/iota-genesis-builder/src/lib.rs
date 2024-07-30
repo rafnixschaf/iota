@@ -748,7 +748,7 @@ impl Builder {
 
         // Load parameters
         let parameters_file = path.join(GENESIS_BUILDER_PARAMETERS_FILE);
-        let parameters = serde_yaml::from_slice(&fs::read(&parameters_file).context(format!(
+        let parameters = serde_yml::from_slice(&fs::read(&parameters_file).context(format!(
             "unable to read genesis parameters file {parameters_file}"
         ))?)
         .context("unable to deserialize genesis parameters")?;
@@ -756,7 +756,7 @@ impl Builder {
         // Load migration objects if any
         let migration_sources_file = path.join(GENESIS_BUILDER_MIGRATION_SOURCES_FILE);
         let migration_sources: Vec<SnapshotSource> = if migration_sources_file.exists() {
-            serde_yaml::from_slice(
+            serde_yml::from_slice(
                 &fs::read(migration_sources_file)
                     .context("unable to read migration sources file")?,
             )
@@ -784,7 +784,7 @@ impl Builder {
             }
 
             let path = entry.path();
-            let validator_info: GenesisValidatorInfo = serde_yaml::from_slice(&fs::read(path)?)
+            let validator_info: GenesisValidatorInfo = serde_yml::from_slice(&fs::read(path)?)
                 .with_context(|| format!("unable to load validator info for {path}"))?;
             committee.insert(validator_info.info.protocol_key(), validator_info);
         }
@@ -850,7 +850,7 @@ impl Builder {
 
         // Write parameters
         let parameters_file = path.join(GENESIS_BUILDER_PARAMETERS_FILE);
-        fs::write(parameters_file, serde_yaml::to_string(&self.parameters)?)?;
+        fs::write(parameters_file, serde_yml::to_string(&self.parameters)?)?;
 
         if let Some(token_distribution_schedule) = &self.token_distribution_schedule {
             token_distribution_schedule.to_csv(fs::File::create(
@@ -873,7 +873,7 @@ impl Builder {
         for (_pubkey, validator) in self.validators {
             fs::write(
                 committee_dir.join(validator.info.name()),
-                &serde_yaml::to_string(&validator)?,
+                &serde_yml::to_string(&validator)?,
             )?;
         }
 
@@ -886,7 +886,7 @@ impl Builder {
 
         if !self.migration_sources.is_empty() {
             let file = path.join(GENESIS_BUILDER_MIGRATION_SOURCES_FILE);
-            fs::write(file, serde_yaml::to_string(&self.migration_sources)?)?;
+            fs::write(file, serde_yml::to_string(&self.migration_sources)?)?;
         }
 
         Ok(())

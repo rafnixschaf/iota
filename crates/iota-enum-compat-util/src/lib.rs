@@ -15,7 +15,7 @@ pub fn check_enum_compat_order<T: EnumOrderMap>(snapshot_file: PathBuf) {
         if err.kind() == std::io::ErrorKind::NotFound {
             // Create the file if not exists
             let mut file = std::fs::File::create(snapshot_file).unwrap();
-            let content: String = serde_yaml::to_string(&new_map).unwrap();
+            let content: String = serde_yml::to_string(&new_map).unwrap();
 
             write!(file, "{}", content).unwrap();
             return;
@@ -24,7 +24,7 @@ pub fn check_enum_compat_order<T: EnumOrderMap>(snapshot_file: PathBuf) {
     }
 
     let existing_map: std::collections::BTreeMap<u64, String> =
-        serde_yaml::from_str(&std::fs::read_to_string(snapshot_file.clone()).unwrap()).unwrap();
+        serde_yml::from_str(&std::fs::read_to_string(snapshot_file.clone()).unwrap()).unwrap();
 
     // Check that the new map includes the existing map in order
     for (pos, val) in existing_map {
@@ -46,7 +46,7 @@ pub fn check_enum_compat_order<T: EnumOrderMap>(snapshot_file: PathBuf) {
 
     // Update the file
     let mut file = std::fs::File::create(snapshot_file).unwrap();
-    let content: String = serde_yaml::to_string(&new_map).unwrap();
+    let content: String = serde_yml::to_string(&new_map).unwrap();
 
     write!(file, "{}", content).unwrap();
 }

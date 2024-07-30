@@ -3722,7 +3722,7 @@ dependencies = [
 name = "enum-compat-util"
 version = "0.1.0"
 dependencies = [
- "serde_yaml",
+ "serde_yml",
 ]
 
 [[package]]
@@ -5140,7 +5140,7 @@ dependencies = [
  "rustyline-derive",
  "serde",
  "serde_json",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "shell-words",
  "shlex",
@@ -5466,7 +5466,7 @@ dependencies = [
  "reqwest 0.12.5",
  "serde",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "tempfile",
  "tracing",
 ]
@@ -5553,7 +5553,7 @@ dependencies = [
  "serde-reflection",
  "serde_json",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "signature 2.2.0",
  "static_assertions",
@@ -5655,7 +5655,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "serde_yaml",
+ "serde_yml",
  "telemetry-subscribers",
  "tempfile",
  "tokio",
@@ -5746,7 +5746,7 @@ dependencies = [
 name = "iota-enum-compat-util"
 version = "0.1.0"
 dependencies = [
- "serde_yaml",
+ "serde_yml",
 ]
 
 [[package]]
@@ -5920,7 +5920,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "tempfile",
  "thiserror",
@@ -5998,7 +5998,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "serial_test",
  "shared-crypto",
  "similar",
@@ -6283,7 +6283,7 @@ dependencies = [
  "move-core-types",
  "serde",
  "serde_json",
- "serde_yaml",
+ "serde_yml",
  "tokio",
 ]
 
@@ -6311,7 +6311,7 @@ dependencies = [
  "prometheus-http-query",
  "reqwest 0.12.5",
  "serde",
- "serde_yaml",
+ "serde_yml",
  "strum 0.26.3",
  "telemetry-subscribers",
  "tokio",
@@ -6353,7 +6353,7 @@ dependencies = [
  "prometheus",
  "rand 0.8.5",
  "serde_json",
- "serde_yaml",
+ "serde_yml",
  "telemetry-subscribers",
  "tempfile",
  "tokio",
@@ -6633,7 +6633,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "shellexpand",
  "similar",
@@ -7093,7 +7093,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "tempfile",
  "tracing",
@@ -7312,7 +7312,7 @@ dependencies = [
  "serde-name",
  "serde_json",
  "serde_with",
- "serde_yaml",
+ "serde_yml",
  "shared-crypto",
  "signature 2.2.0",
  "static_assertions",
@@ -7417,7 +7417,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_json",
- "serde_yaml",
+ "serde_yml",
  "telemetry-subscribers",
  "tempfile",
  "tokio",
@@ -7993,6 +7993,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libyml"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64804cc6a5042d4f05379909ba25b503ec04e2c082151d62122d5dcaa274b961"
+
+[[package]]
 name = "libz-sys"
 version = "1.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8354,7 +8360,7 @@ dependencies = [
  "petgraph 0.5.1",
  "serde",
  "serde-reflection",
- "serde_yaml",
+ "serde_yml",
 ]
 
 [[package]]
@@ -8426,7 +8432,7 @@ dependencies = [
  "move-vm-runtime",
  "move-vm-test-utils",
  "move-vm-types",
- "serde_yaml",
+ "serde_yml",
  "tempfile",
  "toml_edit 0.22.17",
  "walkdir",
@@ -8671,7 +8677,7 @@ dependencies = [
  "petgraph 0.5.1",
  "regex",
  "serde",
- "serde_yaml",
+ "serde_yml",
  "sha2 0.9.9",
  "tempfile",
  "toml 0.8.16",
@@ -9301,7 +9307,7 @@ dependencies = [
  "reqwest 0.12.5",
  "serde",
  "serde-reflection",
- "serde_yaml",
+ "serde_yml",
  "telemetry-subscribers",
  "thiserror",
  "tokio",
@@ -12459,16 +12465,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_yaml"
-version = "0.9.34+deprecated"
+name = "serde_yml"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+checksum = "48e76bab63c3fd98d27c17f9cbce177f64a91f5e69ac04cafe04e1bb25d1dc3c"
 dependencies = [
  "indexmap 2.2.6",
  "itoa",
+ "libyml",
+ "log",
+ "memchr",
  "ryu",
  "serde",
- "unsafe-libyaml",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -14354,12 +14364,6 @@ dependencies = [
  "crypto-common",
  "subtle",
 ]
-
-[[package]]
-name = "unsafe-libyaml"
-version = "0.2.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "unsigned-varint"

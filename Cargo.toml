@@ -371,7 +371,7 @@ serde_json = { version = "1.0.95", features = ["preserve_order", "arbitrary_prec
 serde_repr = "0.1"
 serde_test = "1.0.147"
 serde_with = { version = "2.3.3", features = ["hex"] }
-serde_yaml = "0.9.34"
+serde_yml = "0.0"
 serial_test = "2.0.0"
 shell-words = "1.1.0"
 shellexpand = "3.1.0"

@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
 
     let args: Vec<String> = env::args().collect();
     assert_eq!(args.len(), 2, "configuration yaml file is required");
-    let config: IndexerConfig = serde_yaml::from_str(&std::fs::read_to_string(&args[1])?)?;
+    let config: IndexerConfig = serde_yml::from_str(&std::fs::read_to_string(&args[1])?)?;
 
     // setup metrics
     let _guard = telemetry_subscribers::TelemetryConfig::new()

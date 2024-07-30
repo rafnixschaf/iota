@@ -15,7 +15,7 @@ git-version.workspace = true
 once_cell = { workspace = true, optional = true }
 prometheus.workspace = true
 serde_json.workspace = true
-serde_yaml.workspace = true
+serde_yml.workspace = true
 tracing.workspace = true
 
 move-binary-format.workspace = true

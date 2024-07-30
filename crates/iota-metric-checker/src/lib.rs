@@ -191,7 +191,7 @@ mod tests {
                   failure_condition: Greater
         "#;
 
-        let config: Config = serde_yaml::from_str(config).unwrap();
+        let config: Config = serde_yml::from_str(config).unwrap();
 
         let expected_range_query = Query {
             query: "histogram_quantile(0.50, sum by(le) (rate(round_latency{network=\"testnet\"}[15m])))".to_string(),

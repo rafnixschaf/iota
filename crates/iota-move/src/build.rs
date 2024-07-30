@@ -80,7 +80,7 @@ impl Build {
         }
 
         if generate_struct_layouts {
-            let layout_str = serde_yaml::to_string(&pkg.generate_struct_layouts()).unwrap();
+            let layout_str = serde_yml::to_string(&pkg.generate_struct_layouts()).unwrap();
             // store under <package_path>/build/<package_name>/layouts/struct_layouts.yaml
             let mut layout_filename = pkg.path;
             layout_filename.push("build");

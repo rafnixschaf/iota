@@ -15,5 +15,5 @@ move-binary-format.workspace = true
 move-core-types.workspace = true
 petgraph.workspace = true
 serde.workspace = true
-serde_yaml.workspace = true
+serde_yml.workspace = true
 serde-reflection.workspace = true

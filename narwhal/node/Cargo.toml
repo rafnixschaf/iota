@@ -50,7 +50,7 @@ move-bytecode-utils.workspace = true
 pretty_assertions.workspace = true
 serde.workspace = true
 serde-reflection.workspace = true
-serde_yaml.workspace = true
+serde_yml.workspace = true
 test-utils = { path = "../test-utils", package = "narwhal-test-utils" }
 
 [features]

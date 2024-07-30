@@ -55,7 +55,7 @@ pub struct SerdeLayoutBuilder<'a, T> {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(transparent)]
-pub struct YamlRegistry(#[serde(with = "serde_yaml::with::singleton_map_recursive")] pub Registry);
+pub struct YamlRegistry(#[serde(with = "serde_yml::with::singleton_map_recursive")] pub Registry);
 
 impl core::ops::Deref for YamlRegistry {
     type Target = Registry;
