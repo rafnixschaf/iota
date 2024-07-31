@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-bcs.workspace = true
 tokio.workspace = true
 
 bcs.workspace = true
