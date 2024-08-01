@@ -71,10 +71,12 @@ async fn main() -> Result<(), anyhow::Error> {
         .next()
         .ok_or(anyhow!("No coins found for sender"))?;
 
-    // Get Basic Output object
+    // This object id was fetched manually. It refers to a Basic Output object that
+    // contains some Native Tokens.
     let basic_output_object_id = ObjectID::from_hex_literal(
         "0xde09139ed46b9f5f876671e4403f312fad867c5ae5d300a252e4b6a6f1fa1fbd",
     )?;
+    // Get Basic Output object
     let basic_output_object = iota_client
         .read_api()
         .get_object_with_options(
