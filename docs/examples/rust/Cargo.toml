@@ -1,7 +1,10 @@
 [package]
 name = "docs-examples"
 version.workspace = true
+authors = ["IOTA Stiftung"]
 edition = "2021"
+license = "Apache-2.0"
+publish = false
 
 [dependencies]
 anyhow.workspace = true
