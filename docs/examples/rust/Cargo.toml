@@ -23,3 +23,7 @@ path = "stardust/nft-output-claim.rs"
 [[example]]
 name = "alias-output-claim"
 path = "stardust/alias-output-claim.rs"
+
+[[example]]
+name = "basic-output-claim"
+path = "stardust/basic-output-claim.rs"
