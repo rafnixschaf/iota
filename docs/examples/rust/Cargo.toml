@@ -6,15 +6,21 @@ edition = "2021"
 license = "Apache-2.0"
 publish = false
 
-[dependencies]
+[dev-dependencies]
 anyhow.workspace = true
+bcs.workspace = true
+bip32.workspace = true
 tokio.workspace = true
 
-bcs.workspace = true
 iota-keys.workspace = true
 iota-sdk.workspace = true
 move-core-types.workspace = true
+serde_json.workspace = true
 shared-crypto.workspace = true
+
+[[example]]
+name = "address_unlock_condition"
+path = "stardust/address_unlock_condition.rs"
 
 [[example]]
 name = "nft-output-claim"

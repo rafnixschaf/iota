@@ -3495,9 +3495,11 @@ version = "0.1.2"
 dependencies = [
  "anyhow",
  "bcs",
+ "bip32",
  "iota-keys",
  "iota-sdk 0.1.2",
  "move-core-types",
+ "serde_json",
  "shared-crypto",
  "tokio",
 ]
