@@ -704,7 +704,7 @@ impl Signature {
         T: Serialize,
     {
         let mut hasher = DefaultHash::default();
-        hasher.update(&bcs::to_bytes(&value).expect("Message serialization should not fail"));
+        hasher.update(bcs::to_bytes(&value).expect("Message serialization should not fail"));
         Signer::sign(secret, &hasher.finalize().digest)
     }
 }
@@ -967,7 +967,7 @@ impl<S: IotaSignatureInner + Sized> IotaSignature for S {
         T: Serialize,
     {
         let mut hasher = DefaultHash::default();
-        hasher.update(&bcs::to_bytes(&value).expect("Message serialization should not fail"));
+        hasher.update(bcs::to_bytes(&value).expect("Message serialization should not fail"));
         let digest = hasher.finalize().digest;
 
         let (sig, pk) = &self.get_verification_inputs()?;

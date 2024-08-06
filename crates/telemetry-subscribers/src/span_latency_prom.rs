@@ -14,8 +14,8 @@
 //! - tracing-timing does not output to Prometheus, and extracting data from its
 //!   histograms takes extra CPU
 //! - tracing-timing records latencies using HDRHistogram, which is great, but
-//!   uses extra memory when one is already using Prometheus
-//! Thus this is a much smaller and more focused module.
+//!   uses extra memory when one is already using Prometheus. Thus this is a
+//!   much smaller and more focused module.
 //!
 //! ## Making spans visible
 //! This module can only record latencies for spans that get created.  By
