@@ -144,9 +144,6 @@ impl<N> AuthorityNode<N>
 where
     N: NetworkManager<AuthorityService<ChannelCoreThreadDispatcher>>,
 {
-    /// Starts the `ConsensusAuthority` node with the specified configuration
-    /// and components.
-    ///
     /// This function initializes and starts the consensus authority node,
     /// performing the following tasks:
     /// 1. Logs the start information including the authority index, committee
