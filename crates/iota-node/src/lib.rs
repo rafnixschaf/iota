@@ -1545,7 +1545,7 @@ impl IotaNode {
     }
 
     /// This function awaits the completion of checkpoint execution of the
-    /// current epoch, after which it iniitiates reconfiguration of the
+    /// current epoch, after which it initiates reconfiguration of the
     /// entire system. This function also handles role changes for the node when
     /// epoch changes.
     ///
