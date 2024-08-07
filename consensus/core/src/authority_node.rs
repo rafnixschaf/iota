@@ -55,8 +55,8 @@ pub enum NetworkType {
     Tonic,
 }
 
-/// Starts the `ConsensusAuthority` for the specified network type.
 impl ConsensusAuthority {
+    /// Starts the `ConsensusAuthority` for the specified network type.
     pub async fn start(
         network_type: NetworkType,
         own_index: AuthorityIndex,
