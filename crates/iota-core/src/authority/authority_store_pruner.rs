@@ -584,6 +584,31 @@ impl AuthorityStorePruner {
         pruned_checkpoint + delta
     }
 
+    /// Sets up the pruning service for the authority store, configuring
+    /// intervals and conditions for object and checkpoint pruning.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Initializes a one-shot channel for signaling termination of the
+    ///    pruning service.
+    /// 2. Logs the starting configuration for object pruning.
+    /// 3. Determines the tick duration for pruning based on the epoch duration.
+    /// 4. Sets the initial delay for pruning runs, adjusting for simulation
+    ///    mode if applicable.
+    /// 5. Configures interval timers for pruning objects and checkpoints.
+    /// 6. Spawns a task to periodically compact SST files if periodic
+    ///    compaction is configured.
+    /// 7. Updates metrics for the number of epochs to retain for objects and
+    ///    checkpoints.
+    /// 8. Spawns an asynchronous task to handle the periodic pruning of objects
+    ///    and checkpoints:
+    ///    - Executes object pruning at each interval tick if the number of
+    ///      epochs to retain is not set to `u64::MAX`.
+    ///    - Executes checkpoint pruning at each interval tick if the
+    ///      configuration specifies pruning for checkpoints.
+    ///    - Breaks the loop and terminates the task upon receiving a
+    ///      termination signal.
+    /// 9. Returns the sender part of the one-shot channel to allow signaling
+    ///    termination.
     fn setup_pruning(
         config: AuthorityStorePruningConfig,
         epoch_duration_ms: u64,

@@ -94,6 +94,19 @@ pub(crate) struct Synchronizer<C: NetworkClient, V: BlockVerifier, D: CoreThread
 }
 
 impl<C: NetworkClient, V: BlockVerifier, D: CoreThreadDispatcher> Synchronizer<C, V, D> {
+    /// Starts the synchronizer, which is responsible for fetching blocks from
+    /// other authorities and managing block synchronization tasks.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Creates a channel for sending and receiving synchronization commands.
+    /// 2. Initializes a `JoinSet` to manage the spawned tasks for fetching
+    ///    blocks from other authorities.
+    /// 3. Iterates over the authorities in the committee, excluding the own
+    ///    authority, and spawns a task for each to fetch blocks from them.
+    /// 4. Spawns the main synchronization task that listens to synchronization
+    ///    requests and performs periodic synchronization runs.
+    /// 5. Returns a `SynchronizerHandle` wrapped in an `Arc`, containing the
+    ///    command sender and the set of synchronization tasks.
     pub fn start(
         network_client: Arc<C>,
         context: Arc<Context>,

@@ -55,6 +55,7 @@ pub enum NetworkType {
     Tonic,
 }
 
+/// Starts the `ConsensusAuthority` for the specified network type.
 impl ConsensusAuthority {
     pub async fn start(
         network_type: NetworkType,
@@ -143,6 +144,38 @@ impl<N> AuthorityNode<N>
 where
     N: NetworkManager<AuthorityService<ChannelCoreThreadDispatcher>>,
 {
+    /// Starts the `ConsensusAuthority` node with the specified configuration
+    /// and components.
+    ///
+    /// This function initializes and starts the consensus authority node,
+    /// performing the following tasks:
+    /// 1. Logs the start information including the authority index, committee
+    ///    configuration, parameters, and protocol version.
+    /// 2. Asserts the validity of the authority index within the committee.
+    /// 3. Creates a shared context for the authority with the provided
+    ///    configuration and initialized metrics.
+    /// 4. Sets up transaction client and consumer for handling transactions.
+    /// 5. Initializes core signals for communication within the core
+    ///    components.
+    /// 6. Starts the network manager and retrieves the network client.
+    /// 7. Creates a broadcaster to listen for block broadcasts.
+    /// 8. Initializes the storage backend using `RocksDBStore`.
+    /// 9. Sets up the DAG state for managing the directed acyclic graph of
+    ///    blocks.
+    /// 10. Configures the block verifier and block manager for validating and
+    ///     managing blocks.
+    /// 11. Sets up the commit observer to handle committed blocks and updates
+    ///     the DAG state.
+    /// 12. Initializes the core component responsible for consensus operations
+    ///     and starts its dispatcher.
+    /// 13. Starts the leader timeout task to manage leader election timeouts.
+    /// 14. Initializes the synchronizer for synchronizing blocks across the
+    ///     network.
+    /// 15. Installs the network service with the network manager to handle
+    ///     network communications and services.
+    ///
+    /// The function ensures that the authority node is fully initialized and
+    /// ready to participate in the consensus process.
     pub(crate) async fn start(
         own_index: AuthorityIndex,
         committee: Committee,

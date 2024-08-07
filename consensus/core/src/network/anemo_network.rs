@@ -296,6 +296,25 @@ impl<S: NetworkService> NetworkManager<S> for AnemoManager {
         self.client.clone()
     }
 
+    /// Installs and starts the consensus service on the specified network.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Sets up network metrics and initializes a `ConsensusRpcServer` with
+    ///    the provided service.
+    /// 2. Configures the network address based on the environment (local or
+    ///    production).
+    /// 3. Prepares routing and authorization layers, including epoch and peer
+    ///    ID authorization.
+    /// 4. Configures server layers for tracing, metrics, and response headers.
+    /// 5. Sets up an outbound layer for tracing and metrics.
+    /// 6. Configures QUIC settings for the network, including stream and socket
+    ///    buffer sizes, keep-alive intervals, and timeouts.
+    /// 7. Binds the network to the specified address and retries on failure,
+    ///    logging warnings and retrying up to 90 times.
+    /// 8. Registers known peers in the network and initializes connection
+    ///    monitoring.
+    /// 9. Stores the network instance and updates the client with the new
+    ///    network configuration.
     async fn install_service(&mut self, network_keypair: NetworkKeyPair, service: Arc<S>) {
         self.context
             .metrics

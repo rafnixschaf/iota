@@ -81,6 +81,29 @@ impl MysticetiManager {
 }
 
 #[async_trait]
+
+/// Starts the Mysticeti consensus manager for the current epoch.
+///
+/// This function performs the following steps:
+/// 1. Retrieves the system state, committee, epoch, and protocol configuration
+///    from the epoch store.
+/// 2. Determines the network type (either Tonic or Anemo) based on the
+///    environment variable `CONSENSUS_NETWORK`.
+/// 3. Acquires a running lock guard to ensure only one instance is running at a
+///    time.
+/// 4. Sets up the parameters for the consensus authority, including the
+///    database path and other default settings.
+/// 5. Identifies the own authority's protocol key and its index within the
+///    committee.
+/// 6. Initializes a registry for the consensus process.
+/// 7. Sets up commit channels for communication between the consensus handler
+///    and the consumer.
+/// 8. Starts the `ConsensusAuthority` with the configured network type,
+///    committee, protocol, and other parameters.
+/// 9. Registers the authority with the registry service and updates the
+///    authority client to handle transactions.
+/// 10. Spins up the Mysticeti consensus handler to listen for committed
+///     sub-dags and processes them.
 impl ConsensusManagerTrait for MysticetiManager {
     async fn start(
         &self,

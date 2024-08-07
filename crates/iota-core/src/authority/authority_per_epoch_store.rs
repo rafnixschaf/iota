@@ -1786,6 +1786,15 @@ impl AuthorityPerEpochStore {
             .multi_contains_keys(keys)?)
     }
 
+    /// Notifies the epoch store that the specified consensus messages have been
+    /// processed.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Registers the provided keys with the consensus notification reader.
+    /// 2. Checks which of the keys have not yet been processed.
+    /// 3. Filters out the keys that have already been processed.
+    /// 4. Awaits the completion of registrations for the unprocessed keys.
+    /// 5. Returns `Ok(())` if all registrations are successfully awaited.
     pub async fn consensus_messages_processed_notify(
         &self,
         keys: Vec<SequencedConsensusTransactionKey>,

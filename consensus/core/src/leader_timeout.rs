@@ -38,6 +38,17 @@ pub(crate) struct LeaderTimeoutTask<D: CoreThreadDispatcher> {
 }
 
 impl<D: CoreThreadDispatcher> LeaderTimeoutTask<D> {
+    /// Starts the leader timeout task, which monitors and manages the leader
+    /// election timeout mechanism.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Creates a oneshot channel for sending a stop signal to the task.
+    /// 2. Initializes the `LeaderTimeoutTask` with the provided dispatcher,
+    ///    signal receivers, and context parameters.
+    /// 3. Spawns an asynchronous task to run the leader timeout logic, which
+    ///    handles the timing and management of leader election rounds.
+    /// 4. Returns a `LeaderTimeoutTaskHandle` containing the handle of the
+    ///    spawned task and the stop signal sender.
     pub fn start(
         dispatcher: Arc<D>,
         signals_receivers: &CoreSignalsReceivers,
@@ -58,6 +69,26 @@ impl<D: CoreThreadDispatcher> LeaderTimeoutTask<D> {
         }
     }
 
+    /// Runs the leader timeout task, managing the leader election timeout
+    /// mechanism in an asynchronous loop.
+    ///
+    /// This function performs the following tasks:
+    /// 1. Monitors the leader election rounds and the corresponding timeout
+    ///    using the `new_round_receiver`.
+    /// 2. Initializes and starts a timer for the leader timeout period.
+    /// 3. Enters an asynchronous loop that performs the following actions:
+    ///     - If the leader timeout expires and the current round has not timed
+    ///       out before, it triggers the creation of a new block by calling
+    ///       `force_new_block` on the dispatcher.
+    ///     - If a new round is produced, it resets the leader timeout and
+    ///       updates the current leader round.
+    ///     - If a stop signal is received, it gracefully shuts down the task
+    ///       and exits the loop.
+    ///
+    /// This mechanism ensures that if the current leader fails to produce a new
+    /// block within the specified timeout, the task forces the creation of a
+    /// new block, maintaining the continuity and robustness of the leader
+    /// election process.
     async fn run(&mut self) {
         let new_round = &mut self.new_round_receiver;
         let mut leader_round: Round = *new_round.borrow_and_update();
