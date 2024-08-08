@@ -88,9 +88,59 @@ TODO
 </TabItem>
 </Tabs>
 
-### NFT Output
+### Nft Output
 
-#### Claim of a NFT Output
+An address can own `NftOutput` objects that needs to be unlocked. 
+In this case, some off-chain queries can be used to check the unlock conditions of the `NftOutput` and asses if it can be unlocked. 
+Check the example above, as it works the same as the [`Basic Output`](#basic-output).
+    
+#### Claim of a Nft Output
+Once a Nft Output can be unlocked the claim of its assets can start
+
+1. The first step is to fetch the `NftOutput` object needed to be claimed.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/nft-output-claim.rs#L54-L78
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+
+2. Then we check the native tokens that possibily were held by this output. A `Bag` is used for holding these tokens, so in this step we are interested in obtaining the dynamic field keys that are used as bag index. In the case of the native tokens `Bag` the keys are strings representing the `OTW` used for the native token `Coin`. 
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/nft-output-claim.rs#L80-L105
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+3. Finally, a PTB can be created using the `nft_output` as input and the `Bag` keys for iterating the native tokens extracted.
+An Nft Output is different from a Basic Output as it contains the `Nft` object. 
+In fact, the main purpose of claiming is extracting the `Nft` object from the `NftOutput`.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/nft-output-claim.rs#L107-L173
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
 
 #### Conversion of a NFT Output into a custom NFT
 
