@@ -142,7 +142,53 @@ In fact, the main purpose of claiming is extracting the `Nft` object from the `N
 </TabItem>
 </Tabs>
 
-#### Conversion of a NFT Output into a custom NFT
+#### Conversion of a Nft Output into a custom Nft
+This topic outlines the process of converting an stardust Nft into a custom Nft.
+
+You need to have a prepared custom Nft package that you want to convert the Stardust Nft You need to have a prepared custom Nft package that you want to convert the Stardust Nft into. 
+The following is an example of a simple module for representing a `CustomNFT`, minting it, burning it and converting it from a Stardust `Nft`:
+
+<Tabs>
+<TabItem value="move" label="Move">
+
+```move file=<rootDir>/docs/examples/move/custom_nft/sources/custom_nft.move
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+
+1. Publish a custom Nft package, and retrieve its package ID.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/nft-migration.rs#L206-L223
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+2. Create a PTB that extracts the Stardust `Nft` from an `NftOutput` and then calls the `custom_nft::convert` method for converting it into a `CustomNFT` of the collection just published. 
+This conversion method extracts the Stardust `Nft` metadata and uses it for minting a new NFT.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/nft-migration.rs#L83-L137
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
 
 ### Alias Output
 
