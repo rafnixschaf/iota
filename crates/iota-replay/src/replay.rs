@@ -968,12 +968,13 @@ impl LocalExec {
             *execution_lock = executed_epoch;
             drop(execution_lock);
         }
-
         let res = authority_state
             .try_execute_immediately(certificate, None, &epoch_store)
             .await
             .map_err(ReplayEngineError::from)?;
 
+        // TODO: remove print again
+        println!("{res:?}");
         let exec_res = match res.1 {
             Some(q) => Err(q),
             None => Ok(()),
