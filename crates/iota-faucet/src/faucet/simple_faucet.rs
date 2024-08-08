@@ -336,6 +336,7 @@ impl SimpleFaucet {
     /// Check if the gas coin is still valid. A valid gas coin
     /// 1. Exists presently
     /// 2. is a gas coin
+    ///
     /// If the coin is valid, return Ok(Some(GasCoin))
     /// If the coin invalid, return Ok(None)
     /// If the fullnode returns an unexpected error, returns Err(e)

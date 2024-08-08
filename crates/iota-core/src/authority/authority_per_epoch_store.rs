@@ -354,20 +354,18 @@ pub struct AuthorityEpochTables {
     /// The tables below manage shared object locks / versions. There are three
     /// ways they can be updated:
     /// 1. (validators only): Upon receiving a certified transaction from
-    ///    consensus, the authority
-    /// assigns the next version to each shared object of the transaction. The
-    /// next versions of the shared objects are updated as well.
+    ///    consensus, the authority assigns the next version to each shared
+    ///    object of the transaction. The next versions of the shared objects
+    ///    are updated as well.
     /// 2. (validators only): Upon receiving a new consensus commit, the
-    ///    authority assigns the
-    /// next version of the randomness state object to an expected future
-    /// transaction to be generated after the next random value is
-    /// available. The next version of the randomness state object is
-    /// updated as well.
+    ///    authority assigns the next version of the randomness state object to
+    ///    an expected future transaction to be generated after the next random
+    ///    value is available. The next version of the randomness state object
+    ///    is updated as well.
     /// 3. (fullnodes + validators): Upon receiving a certified effect from
-    ///    state sync, or
-    /// transaction orchestrator fast execution path, the node assigns the
-    /// shared object versions from the transaction effect. Next object
-    /// versions are not updated.
+    ///    state sync, or transaction orchestrator fast execution path, the node
+    ///    assigns the shared object versions from the transaction effect. Next
+    ///    object versions are not updated.
     ///
     /// REQUIRED: all authorities must assign the same shared object versions
     /// for each transaction.
