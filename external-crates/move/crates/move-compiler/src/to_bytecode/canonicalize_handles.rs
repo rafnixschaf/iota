@@ -32,7 +32,7 @@ use move_symbol_pool::Symbol;
 ///
 /// - Friend Declarations are sorted in lexical order (by address name and
 ///   module name), followed by unnamed addresses in their original order.
-
+///
 /// Key for ordering module handles, distinguishing the module's self handle,
 /// handles with names, and handles without names.
 #[derive(Eq, PartialEq, Ord, PartialOrd)]

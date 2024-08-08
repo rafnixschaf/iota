@@ -122,6 +122,7 @@ impl DependencyKind {
             // change if referenced relative to some other URI).
             (_, DependencyKind::Git(_) | DependencyKind::Custom(_)) => return Ok(()),
 
+            #[allow(clippy::needless_borrows_for_generic_args)]
             (DependencyKind::Local(parent), DependencyKind::Local(subdir)) => {
                 parent.push(subdir);
                 *parent = normalize_path(&parent, /* allow_cwd_parent */ true)?;
