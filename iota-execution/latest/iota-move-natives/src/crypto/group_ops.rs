@@ -167,13 +167,11 @@ fn binary_op<G: ToFromByteArray<S> + FromTrustedByteArray<S>, const S: usize>(
 // a single transaction, it might be worth caching the affine representation of
 // the group elements and use them to save conversions.
 
-/// ****************************************************************************
-/// ********************* native fun internal_validate
-/// Implementation of the Move native function `internal_validate(type: u8,
-/// bytes: &vector<u8>): bool`   gas cost: group_ops_decode_bls12381_X_cost
-/// where X is the requested type **********************************************
-/// *************************************************
-
+/// native fun internal_validate
+///
+/// Implementation of the Move native function
+/// `internal_validate(type: u8, bytes: &vector<u8>): bool`
+///     gas cost: group_ops_decode_bls12381_X_cost where X is the requested type
 pub fn internal_validate(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -216,13 +214,11 @@ pub fn internal_validate(
     Ok(NativeResult::ok(cost, smallvec![Value::bool(result)]))
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_add
-/// Implementation of the Move native function `internal_add(type: u8, e1:
-/// &vector<u8>, e2: &vector<u8>): vector<u8>`   gas cost:
-/// group_ops_bls12381_X_add_cost where X is the requested type ****************
-/// ****************************************************************************
-/// ***
+/// native fun internal_add
+///
+/// Implementation of the Move native function
+/// `internal_add(type: u8, e1: &vector<u8>, e2: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_add_cost where X is the requested type
 pub fn internal_add(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -276,13 +272,11 @@ pub fn internal_add(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_sub
-/// Implementation of the Move native function `internal_sub(type: u8, e1:
-/// &vector<u8>, e2: &vector<u8>): vector<u8>`   gas cost:
-/// group_ops_bls12381_X_sub_cost where X is the requested type ****************
-/// ****************************************************************************
-/// ***
+/// native fun internal_sub
+///
+/// Implementation of the Move native function
+/// `internal_sub(type: u8, e1: &vector<u8>, e2: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_sub_cost where X is the requested type
 pub fn internal_sub(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -336,13 +330,11 @@ pub fn internal_sub(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_mul
-/// Implementation of the Move native function `internal_mul(type: u8, e1:
-/// &vector<u8>, e2: &vector<u8>): vector<u8>`   gas cost:
-/// group_ops_bls12381_X_mul_cost where X is the requested type ****************
-/// ****************************************************************************
-/// ***
+/// native fun internal_mul
+///
+/// Implementation of the Move native function
+/// `internal_mul(type: u8, e1: &vector<u8>, e2: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_mul_cost where X is the requested type
 pub fn internal_mul(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -411,13 +403,11 @@ pub fn internal_mul(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_div
-/// Implementation of the Move native function `internal_div(type: u8, e1:
-/// &vector<u8>, e2: &vector<u8>): vector<u8>`   gas cost:
-/// group_ops_bls12381_X_div_cost where X is the requested type ****************
-/// ****************************************************************************
-/// ***
+/// native fun internal_div
+///
+/// Implementation of the Move native function
+/// `internal_div(type: u8, e1: &vector<u8>, e2: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_div_cost where X is the requested type
 pub fn internal_div(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -486,13 +476,13 @@ pub fn internal_div(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_hash_to
-/// Implementation of the Move native function `internal_hash_to(type: u8, m:
-/// &vector<u8>): vector<u8>`   gas cost: group_ops_bls12381_X_hash_to_base_cost
-/// + group_ops_bls12381_X_hash_to_cost_per_byte * |input|             where X
-/// is the requested type ******************************************************
-/// *****************************************
+/// native fun internal_hash_to
+///
+/// Implementation of the Move native function
+/// `internal_hash_to(type: u8, m: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_hash_to_base_cost +
+/// group_ops_bls12381_X_hash_to_cost_per_byte * |input|         where X is the
+/// requested type
 pub fn internal_hash_to(
     context: &mut NativeContext,
     ty_args: Vec<Type>,

@@ -412,7 +412,7 @@ mod tests {
     use crate::{
         authority_node::AuthorityService,
         block::{timestamp_utc_ms, BlockRef, Round, TestBlock, VerifiedBlock},
-        block_verifier::NoopBlockVerifier,
+        block_verifier::test::NoopBlockVerifier,
         context::Context,
         core_thread::{CoreError, CoreThreadDispatcher},
         network::NetworkClient,

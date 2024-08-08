@@ -184,7 +184,7 @@ mod test {
     use super::*;
     use crate::{
         block_manager::BlockManager,
-        block_verifier::NoopBlockVerifier,
+        block_verifier::test::NoopBlockVerifier,
         commit_observer::CommitObserver,
         context::Context,
         core::CoreSignals,

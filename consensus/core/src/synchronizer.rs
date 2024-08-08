@@ -541,7 +541,7 @@ mod tests {
 
     use crate::{
         block::{BlockRef, Round, TestBlock, VerifiedBlock},
-        block_verifier::NoopBlockVerifier,
+        block_verifier::test::NoopBlockVerifier,
         context::Context,
         core_thread::{CoreError, CoreThreadDispatcher},
         error::{ConsensusError, ConsensusResult},

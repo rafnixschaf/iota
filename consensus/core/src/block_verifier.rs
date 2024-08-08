@@ -173,24 +173,8 @@ impl BlockVerifier for SignedBlockVerifier {
     }
 }
 
-pub(crate) struct NoopBlockVerifier;
-
-impl BlockVerifier for NoopBlockVerifier {
-    fn verify(&self, _block: &SignedBlock) -> ConsensusResult<()> {
-        Ok(())
-    }
-
-    fn check_ancestors(
-        &self,
-        _block: &VerifiedBlock,
-        _ancestors: &[VerifiedBlock],
-    ) -> ConsensusResult<()> {
-        Ok(())
-    }
-}
-
 #[cfg(test)]
-mod test {
+pub(crate) mod test {
     use consensus_config::AuthorityIndex;
 
     use super::*;
@@ -199,6 +183,22 @@ mod test {
         context::Context,
         transaction::{TransactionVerifier, ValidationError},
     };
+
+    pub(crate) struct NoopBlockVerifier;
+
+    impl BlockVerifier for NoopBlockVerifier {
+        fn verify(&self, _block: &SignedBlock) -> ConsensusResult<()> {
+            Ok(())
+        }
+
+        fn check_ancestors(
+            &self,
+            _block: &VerifiedBlock,
+            _ancestors: &[VerifiedBlock],
+        ) -> ConsensusResult<()> {
+            Ok(())
+        }
+    }
 
     struct TxnSizeVerifier {}
 

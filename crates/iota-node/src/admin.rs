@@ -205,14 +205,17 @@ async fn set_filter(
 
 async fn capabilities(State(state): State<Arc<AppState>>) -> (StatusCode, String) {
     let epoch_store = state.node.state().load_epoch_store_one_call_per_task();
-    let capabilities = epoch_store.get_capabilities();
+    match epoch_store.get_capabilities() {
+        Ok(capabilities) => {
+            let mut output = String::new();
+            for capability in &capabilities {
+                output.push_str(&format!("{:?}\n", capability));
+            }
 
-    let mut output = String::new();
-    for capability in &capabilities {
-        output.push_str(&format!("{:?}\n", capability));
+            (StatusCode::OK, output)
+        }
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()),
     }
-
-    (StatusCode::OK, output)
 }
 
 async fn node_config(State(state): State<Arc<AppState>>) -> (StatusCode, String) {

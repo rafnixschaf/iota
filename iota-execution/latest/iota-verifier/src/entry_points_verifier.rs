@@ -40,7 +40,7 @@ use crate::{verification_failure, INIT_FN_NAME};
 /// - The function must have `is_entry` true
 /// - The function may have a &mut TxContext or &TxContext (see `is_tx_context`)
 ///   parameter
-///   - The transaction context parameter must be the last parameter
+/// - The transaction context parameter must be the last parameter
 /// - The function cannot have any return values
 pub fn verify_module(
     module: &CompiledModule,

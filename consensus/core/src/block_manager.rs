@@ -343,7 +343,7 @@ mod tests {
     use crate::{
         block::{genesis_blocks, BlockAPI, BlockRef, Round, SignedBlock, TestBlock, VerifiedBlock},
         block_manager::BlockManager,
-        block_verifier::{BlockVerifier, NoopBlockVerifier},
+        block_verifier::{test::NoopBlockVerifier, BlockVerifier},
         context::Context,
         dag_state::DagState,
         error::{ConsensusError, ConsensusResult},

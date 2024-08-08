@@ -613,7 +613,7 @@ mod test {
     use super::*;
     use crate::{
         block::{genesis_blocks, TestBlock},
-        block_verifier::NoopBlockVerifier,
+        block_verifier::test::NoopBlockVerifier,
         commit::CommitAPI as _,
         storage::{mem_store::MemStore, Store, WriteBatch},
         transaction::TransactionClient,

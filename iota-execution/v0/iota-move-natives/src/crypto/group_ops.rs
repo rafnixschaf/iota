@@ -411,13 +411,11 @@ pub fn internal_mul(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_div
-/// Implementation of the Move native function `internal_div(type: u8, e1:
-/// &vector<u8>, e2: &vector<u8>): vector<u8>`   gas cost:
-/// group_ops_bls12381_X_div_cost where X is the requested type ****************
-/// ****************************************************************************
-/// ***
+/// native fun internal_div
+///
+/// Implementation of the Move native function
+/// `internal_div(type: u8, e1: &vector<u8>, e2: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_div_cost where X is the requested type
 pub fn internal_div(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -486,13 +484,13 @@ pub fn internal_div(
     }
 }
 
-/// ****************************************************************************
-/// ********************* native fun internal_hash_to
-/// Implementation of the Move native function `internal_hash_to(type: u8, m:
-/// &vector<u8>): vector<u8>`   gas cost: group_ops_bls12381_X_hash_to_base_cost
-/// + group_ops_bls12381_X_hash_to_cost_per_byte * |input|             where X
-/// is the requested type ******************************************************
-/// *****************************************
+/// native fun internal_hash_to
+///
+/// Implementation of the Move native function
+/// `internal_hash_to(type: u8, m: &vector<u8>): vector<u8>`
+///     gas cost: group_ops_bls12381_X_hash_to_base_cost +
+/// group_ops_bls12381_X_hash_to_cost_per_byte * |input|         where X is the
+/// requested type
 pub fn internal_hash_to(
     context: &mut NativeContext,
     ty_args: Vec<Type>,

@@ -12,17 +12,9 @@ pub(crate) trait CommitteeThreshold {
 
 pub(crate) struct QuorumThreshold;
 
-pub(crate) struct ValidityThreshold;
-
 impl CommitteeThreshold for QuorumThreshold {
     fn is_threshold(committee: &Committee, amount: Stake) -> bool {
         committee.reached_quorum(amount)
-    }
-}
-
-impl CommitteeThreshold for ValidityThreshold {
-    fn is_threshold(committee: &Committee, amount: Stake) -> bool {
-        committee.reached_validity(amount)
     }
 }
 
@@ -66,6 +58,14 @@ mod tests {
     use consensus_config::{local_committee_and_keys, AuthorityIndex};
 
     use super::*;
+
+    pub(crate) struct ValidityThreshold;
+
+    impl CommitteeThreshold for ValidityThreshold {
+        fn is_threshold(committee: &Committee, amount: Stake) -> bool {
+            committee.reached_validity(amount)
+        }
+    }
 
     #[test]
     fn test_aggregator_quorum_threshold() {
