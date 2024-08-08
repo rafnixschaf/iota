@@ -179,7 +179,7 @@ thread_local! {
 
 /// Check that we are in a context conducive to making blocking calls.
 /// This is done by either:
-/// - Checking that we are not inside a tokio runtime context or
+/// - Checking that we are not inside a tokio runtime context, or
 /// - If we are inside a tokio runtime context, ensure that the call went
 ///   through `IndexerReader::spawn_blocking` which properly moves the blocking
 ///   call to a blocking thread pool.

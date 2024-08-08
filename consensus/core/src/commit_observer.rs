@@ -24,10 +24,8 @@ use crate::{
 ///   observer gets subdags for each leader via the commit interpreter
 ///   (linearizer)
 /// - The committed subdags are sent as consensus output via an unbounded tokio
-///   channel.
-///
-/// No back pressure mechanism is needed as backpressure is handled as input
-/// into consenus.
+///   channel. No back pressure mechanism is needed as backpressure is handled
+///   as input into consenus.
 /// - Commit metadata including index is persisted in store, before the
 ///   CommittedSubDag is sent to the consumer.
 /// - When CommitObserver is initialized a last processed commit index can be

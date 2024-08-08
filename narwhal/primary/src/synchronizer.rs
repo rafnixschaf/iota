@@ -341,11 +341,11 @@ impl Inner {
 }
 
 /// `Synchronizer` helps this primary and other peers stay in sync with each
-/// other, w.r.t. certificates and the DAG. Specifically, it is responsible for
-/// - Validating and accepting certificates received from peers.
-/// - Triggering fetching for certificates and batches.
-/// - Broadcasting created certificates.
-///
+/// other, w.r.t. certificates and the DAG.
+/// Specifically, it is responsible for
+///     - Validating and accepting certificates received from peers.
+///     - Triggering fetching for certificates and batches.
+///     - Broadcasting created certificates.
 /// `Synchronizer` contains most of the certificate processing logic in Narwhal.
 #[derive(Clone)]
 pub struct Synchronizer {
