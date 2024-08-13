@@ -2,5 +2,78 @@
  title: Claiming Foundry Outputs
 ---
 
+As seen in the [Move Models](../move-models) page, the Foundry Output does not have a direct representation in Move. So claiming a Foundry Output actually means claiming a `CoinManagerTreasuryCap` extracted from the `AliasOutput` originally controlling the Foundry in Stardust. This capability can be used to manage the supply of the `Coin` created during the migration to represent the native token controlled by the Foundry.
+  
 ## Claim of a Foundry Output
 
+1. The first step is to fetch an `AliasOutput` object that needs to be claimed.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/foundry-output-claim.rs#L147-L159
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+
+2. By using the dynamic field function with the "alias" dynamic field key filter, we gather the `Alias` object itself.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/foundry-output-claim.rs#L164-L174
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+3. Some objects are owned by the `Alias` object (check the [Output unlockable by an Alias/Nft Address](address-unlock-condition.mdx) page for more info). In this case we filter them by type using the `CoinManagerTreasuryCap` type tag.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/foundry-output-claim.rs#L178-L216
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+4. Since each native token has its own package, a Foundry's native token as a dedicated `OTW`. Here we need to extract this `OTW` from the `CoinManagerTreasuryCap` object.
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/foundry-output-claim.rs#L220-L227
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
+
+5. Create a PTB that claims the `CoinManagerTreasuryCap` related to the Foundry Output from the `AliasOutput` using the `unlock_alias_address_owned_coinmanager_treasury` function.
+
+
+<Tabs>
+<TabItem value="rs" label="Rust">
+
+```rust file=<rootDir>/docs/examples/rust/stardust/foundry-output-claim.rs#L231-L300
+```
+
+</TabItem>
+<TabItem value="ts" label="TypeScript">
+
+</TabItem>
+</Tabs>
