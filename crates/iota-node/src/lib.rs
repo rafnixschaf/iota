@@ -1998,6 +1998,31 @@ fn build_kv_store(
     )))
 }
 
+/// Builds and starts the HTTP server for the Iota node, exposing JSON-RPC and
+/// REST APIs based on the node's configuration.
+///
+/// This function performs the following tasks:
+/// 1. Checks if the node is a validator by inspecting the consensus
+///    configuration; if so, it returns early as validators do not expose these
+///    APIs.
+/// 2. Creates an Axum router to handle HTTP requests.
+/// 3. Initializes the JSON-RPC server and registers various API modules based
+///    on the node's state and configuration, including:
+///    - Read APIs for accessing blockchain data.
+///    - Coin read APIs for querying coin-related data.
+///    - Transaction builder APIs, if the node is not running in a restricted
+///      range mode.
+///    - Governance read APIs for accessing governance-related data.
+///    - Transaction execution APIs, if a transaction orchestrator is provided.
+///    - Indexer APIs for indexing and querying blockchain data, with optional
+///      name service integration.
+///    - Move utilities for interacting with Move smart contracts.
+/// 4. Optionally, if the REST API is enabled, nests the REST API router under
+///    the `/rest` path.
+/// 5. Binds the server to the specified JSON-RPC address and starts listening
+///    for incoming connections.
+/// 6. Logs the local address where the server is listening and spawns a Tokio
+///    task to run the server asynchronously.
 pub async fn build_http_server(
     state: Arc<AuthorityState>,
     store: RocksDbStore,
