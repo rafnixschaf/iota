@@ -16,11 +16,7 @@ import {
     ImageType,
     CardActionType,
 } from '@iota/apps-ui-kit';
-import {
-    AccountsFormType,
-    useAccountsFormContext,
-} from '../../components/accounts/AccountsFormContext';
-import { ConnectLedgerModal } from '../../components/ledger/ConnectLedgerModal';
+import { AccountsFormType, useAccountsFormContext, ConnectLedgerModal } from '_components';
 import { getLedgerConnectionErrorMessage } from '../../helpers/errorMessages';
 import { useAppSelector } from '../../hooks';
 import { useCreateAccountsMutation } from '../../hooks/useCreateAccountMutation';
