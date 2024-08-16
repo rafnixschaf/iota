@@ -133,7 +133,7 @@ impl IndexStoreMetrics {
     }
 }
 
-/// The IndexStoreCaches struct manages ShardedLruCache instances to facilitate
+/// The `IndexStoreCaches` struct manages `ShardedLruCache` instances to facilitate
 /// balance lookups and ownership queries.
 pub struct IndexStoreCaches {
     per_coin_type_balance: ShardedLruCache<(IotaAddress, TypeTag), IotaResult<TotalBalance>>,
