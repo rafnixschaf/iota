@@ -46,6 +46,4 @@ jobs:
 
       # See '.cargo/config' for list of enabled/disabled clippy lints
       - name: Check Clippy Lints
-        run: |
-          cargo clippy --version
-          cargo ci-clippy
+        run: cargo ci-clippy
