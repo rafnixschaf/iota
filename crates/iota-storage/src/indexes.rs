@@ -150,7 +150,7 @@ pub struct IndexStoreCacheUpdates {
 
 /// The `IndexStoreTables` struct defines a set of `DBMaps` used to index various
 /// aspects of transaction and object data. Each field corresponds to a specific
-/// index, with keys such as IotaAddress, TransactionDigest, etc. Each mapping
+/// index, with keys such as `IotaAddress`, `TransactionDigest`, etc. Each mapping
 /// is configured with custom database options.
 #[derive(DBMapUtils)]
 pub struct IndexStoreTables {
