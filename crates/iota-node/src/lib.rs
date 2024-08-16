@@ -2006,7 +2006,7 @@ fn build_kv_store(
 ///    configuration; if so, it returns early as validators do not expose these
 ///    APIs.
 /// 2. Creates an Axum router to handle HTTP requests.
-/// 3. Initializes the JSON-RPC server and registers various API modules based
+/// 3. Initializes the JSON-RPC server and registers various RPC modules based
 ///    on the node's state and configuration, including:
 ///    - Read APIs for accessing blockchain data.
 ///    - Coin read APIs for querying coin-related data.
