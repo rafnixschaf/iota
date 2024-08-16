@@ -142,7 +142,7 @@ pub type ExecutionLockWriteGuard<'a> = RwLockWriteGuard<'a, EpochId>;
 
 /// The AuthorityStore manages the state and operations of an authority's store.
 /// It includes a `mutex_table` to handle concurrent writes to the database and
-/// references to various tables stored in AuthorityPerpetualTables. The struct
+/// references to various tables stored in `AuthorityPerpetualTables`. The struct
 /// provides mechanisms for initializing and accessing locks, managing objects
 /// and transactions, and performing epoch-specific operations. It also includes
 /// methods for recovering from crashes, checking IOTA conservation, and
