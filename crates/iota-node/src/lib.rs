@@ -2007,16 +2007,9 @@ fn build_kv_store(
 ///    APIs.
 /// 2. Creates an Axum router to handle HTTP requests.
 /// 3. Initializes the JSON-RPC server and registers various RPC modules based
-///    on the node's state and configuration, including:
-///    - Read APIs for accessing blockchain data.
-///    - Coin read APIs for querying coin-related data.
-///    - Transaction builder APIs, if the node is not running in a restricted
-///      range mode.
-///    - Governance read APIs for accessing governance-related data.
-///    - Transaction execution APIs, if a transaction orchestrator is provided.
-///    - Indexer APIs for indexing and querying blockchain data, with optional
-///      name service integration.
-///    - Move utilities for interacting with Move smart contracts.
+///    on the node's state and configuration, including CoinApi,
+///    TransactionBuilderApi, GovernanceApi, TransactionExecutionApi, and
+///    IndexerApi.
 /// 4. Optionally, if the REST API is enabled, nests the REST API router under
 ///    the `/rest` path.
 /// 5. Binds the server to the specified JSON-RPC address and starts listening
