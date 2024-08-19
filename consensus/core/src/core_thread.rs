@@ -102,19 +102,6 @@ pub(crate) struct ChannelCoreThreadDispatcher {
 impl ChannelCoreThreadDispatcher {
     /// Starts the core thread for the consensus authority and returns a
     /// dispatcher and handle for managing the core thread.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Creates a metered channel for communication with the core thread,
-    ///    using metrics from the context to monitor the channel's performance.
-    /// 2. Initializes the `CoreThread` with the provided core component,
-    ///    receiver end of the channel, and context.
-    /// 3. Spawns an asynchronous task to run the core thread, which will panic
-    ///    if a fatal error occurs, except for a shutdown error.
-    /// 4. Creates a `ChannelCoreThreadDispatcher` with a downgraded sender,
-    ///    allowing for shared use while enabling shutdown by dropping the
-    ///    original sender.
-    /// 5. Returns a tuple containing the dispatcher and a `CoreThreadHandle`
-    ///    with the join handle of the spawned task and the original sender.
     pub(crate) fn start(core: Core, context: Arc<Context>) -> (Self, CoreThreadHandle) {
         let (sender, receiver) = metered_channel::channel_with_total(
             CORE_THREAD_COMMANDS_CHANNEL_SIZE,

@@ -258,25 +258,6 @@ impl IotaNode {
 
     /// Starts the JWK (JSON Web Key) updater tasks for the specified node
     /// configuration.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Retrieves the current epoch and supported OAuth providers from the
-    ///    configuration.
-    /// 2. Logs the fetch interval and supported providers.
-    /// 3. Defines a helper function `validate_jwk` to check the validity of
-    ///    JWKs based on the provider, JWK ID, and other criteria.
-    /// 4. Iterates over each supported provider and spawns a monitored task to
-    ///    fetch and validate JWKs:
-    ///    - In a loop, the task fetches JWKs for the provider, logging and
-    ///      incrementing metrics for requests and errors.
-    ///    - Retains valid JWKs that are not already active in the current epoch
-    ///      and are unique.
-    ///    - Limits the number of JWKs to prevent excessive submissions.
-    ///    - Submits valid and unique JWKs to the consensus adapter.
-    ///    - Repeats the fetch operation at the specified interval.
-    /// 5. Ensures that the JWK updater tasks are resilient and restart-safe,
-    ///    handling errors and retrying as necessary.
-    ///
     /// This function ensures continuous fetching, validation, and submission of
     /// JWKs, maintaining up-to-date keys for the specified providers.
     fn start_jwk_updater(
@@ -1084,20 +1065,6 @@ impl IotaNode {
 
     /// Asynchronously constructs and initializes the components necessary for
     /// the validator node.
-    ///
-    /// This function performs the following steps:
-    /// 1. Clones and checks the node configuration, ensuring a consensus
-    ///    configuration is present.
-    /// 2. Selects and constructs the appropriate consensus protocol (Narwhal or
-    ///    Mysticeti) based on the current epoch and environment variables.
-    /// 3. Initializes the consensus adapter and consensus manager for the
-    ///    selected protocol.
-    /// 4. Starts the consensus epoch data remover and the GRPC validator
-    ///    service.
-    /// 5. Optionally starts the overload monitor if load shedding is
-    ///    configured.
-    /// 6. Calls `start_epoch_specific_validator_components` to initialize
-    ///    components specific to the current epoch.
     async fn construct_validator_components(
         config: NodeConfig,
         state: Arc<AuthorityState>,
@@ -1243,19 +1210,6 @@ impl IotaNode {
 
     /// Initializes and starts components specific to the current
     /// epoch for the validator node.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Starts the checkpoint service and initializes its exit handle.
-    /// 2. Sets up the consensus adapter with a map of low-scoring authorities,
-    ///    used to make decisions about transaction submissions to consensus.
-    /// 3. Initializes and configures the randomness manager if randomness state
-    ///    is enabled.
-    /// 4. Sets up the throughput calculator and profiler, and swaps them into
-    ///    the consensus adapter.
-    /// 5. Initializes and starts the consensus handler using the consensus
-    ///    manager, with appropriate metrics and validators.
-    /// 6. Optionally starts the JWK updater if the authenticator state is
-    ///    enabled.
     async fn start_epoch_specific_validator_components(
         config: &NodeConfig,
         state: Arc<AuthorityState>,
@@ -1366,21 +1320,6 @@ impl IotaNode {
 
     /// Starts the checkpoint service for the validator node, initializing
     /// necessary components and settings.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Retrieves the epoch start timestamp and duration from the epoch
-    ///    store.
-    /// 2. Logs the starting information for the checkpoint service.
-    /// 3. Sets up the checkpoint output configuration, including the consensus
-    ///    adapter and signing authority.
-    /// 4. Initializes the certified checkpoint output for state
-    ///    synchronization.
-    /// 5. Configures the checkpoint service with protocol-specific parameters
-    ///    such as the maximum transactions per checkpoint and maximum
-    ///    checkpoint size.
-    /// 6. Spawns the checkpoint service with the provided state, stores, and
-    ///    metrics.
-    ///
     /// The function ensures proper initialization of the checkpoint service,
     /// preparing it to handle checkpoint creation and submission to consensus,
     /// while also setting up the necessary monitoring and synchronization
@@ -1547,32 +1486,6 @@ impl IotaNode {
     /// current epoch, after which it initiates reconfiguration of the
     /// entire system. This function also handles role changes for the node when
     /// epoch changes.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Initializes the `CheckpointExecutor` with necessary components such
-    ///    as state sync handle, checkpoint store, state, accumulator, and
-    ///    configuration.
-    /// 2. Enters a continuous loop to handle the epoch reconfiguration process:
-    ///     - Loads the current epoch store for the task.
-    ///     - If the node is a validator, it advertises its capabilities to the
-    ///       committee by submitting a consensus transaction.
-    ///     - Executes checkpoints for the current epoch using the checkpoint
-    ///       executor and checks for stop conditions.
-    ///     - Reads the latest system state and performs safety checks to ensure
-    ///       the system is not in safe mode.
-    ///     - Sends an end-of-epoch notification if applicable and records the
-    ///       safe mode metric.
-    ///     - Prepares for the next epoch by updating the connection monitor
-    ///       status and sending trusted peer change notifications.
-    ///     - Reconfigures the state for the new epoch, updates metrics, and
-    ///       restarts components as necessary based on the node's role
-    ///       (validator or fullnode).
-    /// 3. Manages the transition of the node between validator and fullnode
-    ///    roles, including the construction of validator components if promoted
-    ///    from fullnode to validator.
-    /// 4. Releases the current epoch store database handles to avoid lingering
-    ///    references.
-    /// 5. Optionally prunes checkpoints for eligible epochs during testing.
     pub async fn monitor_reconfiguration(self: Arc<Self>) -> Result<()> {
         let mut checkpoint_executor = CheckpointExecutor::new(
             self.state_sync_handle.subscribe_to_synced_checkpoints(),
@@ -1808,16 +1721,6 @@ impl IotaNode {
 
     /// Asynchronously reconfigures the state of the authority node for the next
     /// epoch.
-    ///
-    /// This function performs the following steps:
-    /// 1. Retrieves the last checkpoint of the current epoch.
-    /// 2. Constructs the `EpochStartConfiguration` for the next epoch using the
-    ///    `next_epoch_start_system_state` and the retrieved checkpoint digest.
-    /// 3. Reconfigures the authority state with the new epoch's committee,
-    ///    start configuration, checkpoint executor, and other necessary
-    ///    parameters.
-    /// 4. Updates epoch flags metrics to reflect the changes from the current
-    ///    to the new epoch.
     async fn reconfigure_state(
         &self,
         state: &Arc<AuthorityState>,

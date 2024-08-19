@@ -823,23 +823,6 @@ impl CheckpointBuilder {
 
     /// Runs the `CheckpointBuilder` in an asynchronous loop, managing the
     /// creation of checkpoints.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Logs the start of the `CheckpointBuilder`.
-    /// 2. Enters a main loop that continues until an exit signal is received.
-    /// 3. Within the loop, it checks for an exit signal and breaks the loop if
-    ///    received.
-    /// 4. Retrieves the last built checkpoint commit height from the epoch
-    ///    store.
-    /// 5. Iterates over pending checkpoints starting from the last built
-    ///    height, attempting to make each checkpoint.
-    /// 6. If an error occurs while making a checkpoint, it logs the error,
-    ///    increments the checkpoint error metric, and retries after a 1-second
-    ///    delay.
-    /// 7. Waits for more checkpoints from consensus or an exit signal, using
-    ///    `tokio::select` to await either condition.
-    /// 8. Upon receiving an exit signal, logs the shutdown of the
-    ///    `CheckpointBuilder` and exits the loop.
     async fn run(mut self) {
         info!("Starting CheckpointBuilder");
         'main: loop {
@@ -886,22 +869,6 @@ impl CheckpointBuilder {
 
     /// Creates a checkpoint at the specified height using the provided pending
     /// checkpoint data.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Converts the pending checkpoint data to the latest version.
-    /// 2. Increments the checkpoint roots count metric by the number of roots
-    ///    in the pending checkpoint.
-    /// 3. Notifies the epoch store to read executed digests for the checkpoint
-    ///    roots, logging the operation's scope.
-    /// 4. Notifies the effects store to read executed effects for the root
-    ///    digests, logging the operation's scope.
-    /// 5. Enters a monitored scope for the `CheckpointBuilder`.
-    /// 6. Completes the checkpoint effects and sorts them causally.
-    /// 7. Creates new checkpoints with the sorted effects and pending
-    ///    checkpoint details.
-    /// 8. Writes the new checkpoints to the storage at the specified height.
-    /// 9. Returns `Ok(())` if the checkpoint creation is successful, or an
-    ///    error if any step fails.
     #[instrument(level = "debug", skip_all, fields(?height))]
     async fn make_checkpoint(
         &self,
@@ -936,26 +903,6 @@ impl CheckpointBuilder {
     }
 
     /// Writes the new checkpoints to the DB storage and processes them.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Enters a monitored scope for writing checkpoints.
-    /// 2. Creates a batch for checkpoint content insertion.
-    /// 3. Iterates over the new checkpoints, performing the following for each:
-    ///     - Logs the checkpoint commit height, sequence number, and contents
-    ///       digest.
-    ///     - Calls `checkpoint_created` on the output to handle the creation of
-    ///       the checkpoint.
-    ///     - Increments the metrics for transactions included in the checkpoint
-    ///       and updates the last constructed checkpoint metric.
-    ///     - Inserts the checkpoint contents and summary into the respective
-    ///       tables.
-    /// 4. Writes the batch to the storage.
-    /// 5. Checks for checkpoint forks by comparing local and certified
-    ///    checkpoints.
-    /// 6. Notifies the aggregator of the new checkpoints.
-    /// 7. Processes the pending checkpoint in the epoch store using the
-    ///    provided height and new checkpoint data.
-    /// 8. Returns an `IotaResult` indicating success or failure.
     #[instrument(level = "debug", skip_all)]
     async fn write_checkpoints(
         &self,
@@ -1070,25 +1017,6 @@ impl CheckpointBuilder {
 
     /// Creates checkpoints using the provided transaction effects and pending
     /// checkpoint information.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Monitors the scope of checkpoint creation.
-    /// 2. Retrieves the last built checkpoint summary from the epoch store,
-    ///    handling the case where there are no checkpoints in the current epoch
-    ///    by retrieving the last checkpoint from the previous epoch.
-    /// 3. Logs the creation of the next checkpoint sequence and its timestamp.
-    /// 4. Fetches the executed transactions and their sizes based on the
-    ///    effects' transaction digests.
-    /// 5. Processes the transactions, ensuring that non-consensus commit
-    ///    transactions are tracked for consensus message processing.
-    /// 6. Notifies the epoch store of processed consensus messages and
-    ///    retrieves user signatures for the checkpoint.
-    /// 7. Splits the transactions and effects into chunks for checkpoint
-    ///    creation.
-    /// 8. Iterates over the chunks to create checkpoint summaries and contents,
-    ///    updating metrics and handling end-of-epoch data if necessary.
-    /// 9. Returns a vector of created checkpoint summaries and their
-    ///    corresponding contents.
     #[instrument(level = "debug", skip_all)]
     async fn create_checkpoints(
         &self,
@@ -1342,18 +1270,6 @@ impl CheckpointBuilder {
 
     /// Augments the last checkpoint of the epoch by creating and executing an
     /// advance epoch transaction.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Creates and executes an advance epoch transaction using the provided
-    ///    epoch total gas cost, checkpoint sequence number, and epoch start
-    ///    timestamp.
-    /// 2. Retrieves the resulting system state and transaction effects from the
-    ///    execution.
-    /// 3. Appends the transaction effects to the provided `checkpoint_effects`
-    ///    vector.
-    /// 4. Appends an empty vector of signatures to the provided `signatures`
-    ///    vector.
-    /// 5. Returns the updated system state upon successful execution.
     #[instrument(level = "error", skip_all)]
     async fn augment_epoch_last_checkpoint(
         &self,
@@ -1475,19 +1391,6 @@ impl CheckpointAggregator {
 
     /// Runs the `CheckpointAggregator` in an asynchronous loop, managing the
     /// aggregation of checkpoints.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Logs the start of the `CheckpointAggregator`.
-    /// 2. Enters a loop that continues until an exit signal is received.
-    /// 3. Within the loop, it attempts to run the checkpoint aggregation and
-    ///    notify process by calling `run_and_notify`.
-    /// 4. If an error occurs during aggregation, it logs the error, increments
-    ///    the checkpoint error metric, and retries after a 1-second delay.
-    /// 5. Uses `tokio::select` to await either an exit signal or a notification
-    ///    signal with a timeout of 1 second.
-    /// 6. If an exit signal is received, it logs the shutdown of the
-    ///    `CheckpointAggregator` and exits the loop.
-    ///
     /// The function ensures continuous aggregation of checkpoints, handling
     /// errors and retries gracefully, and allowing for proper shutdown on
     /// receiving an exit signal.
@@ -1931,26 +1834,6 @@ pub struct CheckpointService {
 impl CheckpointService {
     /// Spawns the checkpoint service, initializing and starting the checkpoint
     /// builder and aggregator tasks.
-    ///
-    /// This function performs the following tasks:
-    /// 1. Logs the starting information for the checkpoint service, including
-    ///    maximum transactions per checkpoint and maximum checkpoint size.
-    /// 2. Creates notify signals for the builder and aggregator to coordinate
-    ///    checkpoint creation and aggregation.
-    /// 3. Creates a channel for sending and receiving exit signals to
-    ///    gracefully shut down the service.
-    /// 4. Initializes and starts the `CheckpointBuilder` with the provided
-    ///    state, stores, notifier, accumulator, checkpoint output, metrics, and
-    ///    configuration.
-    /// 5. Spawns the `CheckpointBuilder` task to run asynchronously.
-    /// 6. Initializes and starts the `CheckpointAggregator` with the provided
-    ///    checkpoint store, epoch store, notifier, certified checkpoint output,
-    ///    state, and metrics.
-    /// 7. Spawns the `CheckpointAggregator` task to run asynchronously.
-    /// 8. Retrieves the last checkpoint signature index from the epoch store
-    ///    and initializes it in a mutex for thread-safe access.
-    /// 9. Returns an `Arc` pointing to the newly created `CheckpointService`
-    ///    and the sender for the exit channel.
     pub fn spawn(
         state: Arc<AuthorityState>,
         checkpoint_store: Arc<CheckpointStore>,

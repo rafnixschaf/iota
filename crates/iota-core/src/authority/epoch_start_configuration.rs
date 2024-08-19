@@ -50,18 +50,6 @@ pub enum EpochStartConfiguration {
 
 impl EpochStartConfiguration {
     /// Constructs a new `EpochStartConfigurationV5` for the given epoch.
-    ///
-    /// This function initializes the configuration for the start of a new epoch
-    /// by performing the following steps:
-    /// 1. Retrieves the initial shared version of the authenticator state
-    ///    object from the provided object store.
-    /// 2. Retrieves the initial shared version of the randomness state object
-    ///    from the provided object store.
-    /// 3. Retrieves the initial shared version of the coin deny list object
-    ///    from the provided object store.
-    /// 4. Constructs and returns an `EpochStartConfigurationV5` with the
-    ///    provided system state, epoch digest, initial epoch flags (if
-    ///    provided), and the retrieved shared versions.
     pub fn new(
         system_state: EpochStartSystemState,
         epoch_digest: CheckpointDigest,
