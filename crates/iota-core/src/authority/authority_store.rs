@@ -118,6 +118,15 @@ impl AuthorityStoreMetrics {
 /// be used on either authorities or non-authorities. Specifically, when storing
 /// transactions and effects, S allows IotaDataStore to either store the
 /// authority signed version or unsigned version.
+///
+/// The `AuthorityStore` manages the state and operations of an authority's
+/// store. It includes a `mutex_table` to handle concurrent writes to the
+/// database and references to various tables stored in
+/// `AuthorityPerpetualTables`. The struct provides mechanisms for initializing
+/// and accessing locks, managing objects and transactions, and performing
+/// epoch-specific operations. It also includes methods for recovering from
+/// crashes, checking IOTA conservation, and handling object markers and states
+/// during epoch transitions.
 pub struct AuthorityStore {
     /// Internal vector of locks to manage concurrent writes to the database
     mutex_table: MutexTable<ObjectDigest>,
@@ -140,13 +149,6 @@ pub struct AuthorityStore {
 pub type ExecutionLockReadGuard<'a> = RwLockReadGuard<'a, EpochId>;
 pub type ExecutionLockWriteGuard<'a> = RwLockWriteGuard<'a, EpochId>;
 
-/// The `AuthorityStore` manages the state and operations of an authority's store.
-/// It includes a `mutex_table` to handle concurrent writes to the database and
-/// references to various tables stored in `AuthorityPerpetualTables`. The struct
-/// provides mechanisms for initializing and accessing locks, managing objects
-/// and transactions, and performing epoch-specific operations. It also includes
-/// methods for recovering from crashes, checking IOTA conservation, and
-/// handling object markers and states during epoch transitions.
 impl AuthorityStore {
     /// Open an authority store by directory path.
     /// If the store is empty, initialize it using genesis.
