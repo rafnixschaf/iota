@@ -1900,8 +1900,6 @@ fn build_kv_store(
 ///    the `/rest` path.
 /// 5. Binds the server to the specified JSON-RPC address and starts listening
 ///    for incoming connections.
-/// 6. Logs the local address where the server is listening and spawns a Tokio
-///    task to run the server asynchronously.
 pub async fn build_http_server(
     state: Arc<AuthorityState>,
     store: RocksDbStore,
