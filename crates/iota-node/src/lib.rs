@@ -279,7 +279,6 @@ impl IotaNode {
     ///
     /// This function ensures continuous fetching, validation, and submission of
     /// JWKs, maintaining up-to-date keys for the specified providers.
-
     fn start_jwk_updater(
         config: &NodeConfig,
         metrics: Arc<IotaNodeMetrics>,
