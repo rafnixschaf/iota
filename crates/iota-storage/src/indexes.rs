@@ -242,9 +242,9 @@ impl IndexStoreTables {
     }
 }
 
-//// The `IndexStore` enables users to access and manage indexed transaction
-//// data, including ownership and balance information for different objects and
-//// coins.
+/// The `IndexStore` enables users to access and manage indexed transaction
+/// data, including ownership and balance information for different objects and
+/// coins.
 pub struct IndexStore {
     next_sequence_number: AtomicU64,
     tables: IndexStoreTables,
