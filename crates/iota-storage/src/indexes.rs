@@ -241,6 +241,7 @@ impl IndexStoreTables {
         &self.coin_index
     }
 }
+
 //// The `IndexStore` enables users to access and manage indexed transaction data,
 //// including ownership and balance information for different objects and
 //// coins.
