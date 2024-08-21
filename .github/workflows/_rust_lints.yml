@@ -9,7 +9,7 @@ on:
 jobs:
   rustfmt:
     if: always() && inputs.isRust
-    runs-on: [self-hosted]
+    runs-on: github-runner-1-rust-0
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
       - name: Install latest nightly
