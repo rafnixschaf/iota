@@ -25,8 +25,8 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          ssh-key: "test_${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}"
-          ssh-known-hosts: "test_${{ secrets.SSH_GITHUB_KNOWN_HOSTS }}"
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}
+          ssh-known-hosts: ${{ secrets.SSH_GITHUB_KNOWN_HOSTS }}
           use-git-cli: true
 
   clippy:
