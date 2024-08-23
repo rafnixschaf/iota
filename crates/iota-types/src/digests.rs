@@ -249,7 +249,7 @@ impl From<CheckpointDigest> for ChainIdentifier {
     }
 }
 
-/// Representation of a Checkpoint's digest
+/// Representation of a Checkpoint's digest test
 #[derive(
     Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, JsonSchema,
 )]
