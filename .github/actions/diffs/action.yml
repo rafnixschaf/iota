@@ -77,5 +77,3 @@ runs:
             - "crates/iota-json-rpc-types/**"
             - "crates/iota-protocol-config/**"
             - "crates/iota-types/**"
-
-
