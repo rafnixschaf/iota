@@ -258,7 +258,7 @@ impl ToFromBytes for MultiSigLegacy {
     }
 }
 
-/// Deprecated, use [struct MultiSigPublicKey] instead.
+/// Deprecated, use [struct MultiSigPublicKey] instead
 /// The struct that contains the public key used for authenticating a MultiSig.
 #[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 pub struct MultiSigPublicKeyLegacy {

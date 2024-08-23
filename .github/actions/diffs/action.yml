@@ -70,3 +70,12 @@ runs:
             - "narwhal/**"
             - "nre/**"
             - "iota-execution/**"
+          isOpenRpc:
+            - "crates/iota-json/**"
+            - "crates/iota-json-rpc/**"
+            - "crates/iota-json-rpc-api/**"
+            - "crates/iota-json-rpc-types/**"
+            - "crates/iota-protocol-config/**"
+            - "crates/iota-types/**"
+
+

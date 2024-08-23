@@ -20,6 +20,7 @@ jobs:
     runs-on: [self-hosted]
     outputs:
       isRust: ${{ steps.diff.outputs.isRust }}
+      isOpenRpc: ${{ steps.diff.outputs.isOpenRpc }}
       isMove: ${{ steps.diff.outputs.isMove }}
       isDoc: ${{ steps.diff.outputs.isDoc }}
       isReleaseNotesEligible: ${{ steps.diff.outputs.isReleaseNotesEligible }}
@@ -115,6 +116,7 @@ jobs:
     uses: ./.github/workflows/_rust.yml
     with:
       isRust: ${{ needs.diff.outputs.isRust == 'true' }}
+      isOpenRpc: ${{ needs.diff.outputs.isOpenRpc == 'true' }}
 
   e2e:
     needs:

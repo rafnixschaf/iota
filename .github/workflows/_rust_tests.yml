@@ -5,6 +5,8 @@ on:
     inputs:
       isRust:
         type: boolean
+      isOpenRpc:
+        type: boolean
 
 jobs:
   changes:
@@ -198,6 +200,17 @@ jobs:
   #       run: |
   #         ./bin/rosetta-cli --configuration-file rosetta_cli.json check:data
   #       shell: bash
+
+  test-json-rpc-spec:
+    name: Test JSON RPC spec
+    if: always() && inputs.isOpenRpc
+    runs-on: [self-hosted]
+    needs: iota-sdk-changes
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: taiki-e/install-action@nextest
+      - name: cargo test
+        run: cargo nextest run --profile ci test_json_rpc_spec
 
   graphql-rpc:
     name: graphql-rpc
