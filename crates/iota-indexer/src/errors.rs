@@ -130,6 +130,9 @@ pub enum IndexerError {
 
     #[error("Indexer failed to send item to channel with error: `{0}`")]
     MpscChannelError(String),
+
+    #[error("Failed to process checkpoint(s): `{0}`")]
+    CheckpointProcessingError(String),
 }
 
 pub trait Context<T> {
