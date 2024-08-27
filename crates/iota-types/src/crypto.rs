@@ -1674,7 +1674,7 @@ impl SignatureScheme {
     }
 }
 /// Unlike [enum Signature], [enum CompressedSignature] does not contain public
-/// key.
+/// key.TEST
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 pub enum CompressedSignature {
     Ed25519(Ed25519SignatureAsBytes),
