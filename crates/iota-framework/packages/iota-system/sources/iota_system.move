@@ -13,7 +13,7 @@
 ///
 /// To properly upgrade the `IotaSystemStateInnerV1` type, we need to ship a new framework that does the following:
 /// 1. Define a new `IotaSystemStateInner`type (e.g. `IotaSystemStateInnerV2`).
-/// 2. Define a data migration function that migrates the old   to the new one (i.e. IotaSystemStateInnerV1).
+/// 2. Define a data migration function that migrates the old (e.g., `IotaSystemStateInnerV1`) to the new one (e.g. IotaSystemStateInnerV2).
 /// 3. Replace all uses of `IotaSystemStateInnerV1` with `IotaSystemStateInnerV1` in both iota_system.move and iota_system_state_inner.move,
 ///    with the exception of the `iota_system_state_inner::create` function, which should always return the genesis type.
 /// 4. Inside `load_inner_maybe_upgrade` function, check the current version in the wrapper, and if it's not the latest version,
