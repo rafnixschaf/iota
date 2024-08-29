@@ -20,7 +20,7 @@
 ///   call the data migration function to upgrade the inner object. Make sure to also update the version in the wrapper.
 /// A detailed example can be found in iota/tests/framework_upgrades/mock_iota_systems/shallow_upgrade.
 /// Along with the Move change, we also need to update the Rust code to support the new type. This includes:
-/// 1. Define a new `IotaSystemStateInnerV1` struct type that matches the new Move type, and implement the IotaSystemStateTrait.
+/// 1. Define a new IotaSystemStateInner struct type that matches the new Move type, and implement the IotaSystemStateTrait.
 /// 2. Update the `IotaSystemState` struct to include the new version as a new enum variant.
 /// 3. Update the `get_iota_system_state` function to handle the new version.
 /// To test that the upgrade will be successful, we need to modify `iota_system_state_production_upgrade_test` test in
