@@ -132,7 +132,7 @@ pub enum KeyToolCommand {
     /// Output the private key of the given key identity in Iota CLI Keystore as
     /// Bech32 encoded string starting with `iotaprivkey`.
     Export {
-        #[clap(long)]
+        /// An IOTA address or its alias.
         key_identity: KeyIdentity,
     },
     /// List all keys by its Iota address, Base64 encoded public key, key scheme
@@ -628,12 +628,13 @@ impl KeyToolCommand {
             KeyToolCommand::Export { key_identity } => {
                 let address = get_identity_address_from_keystore(key_identity, keystore)?;
                 let ikp = keystore.get_key(&address)?;
-                let key = ExportedKey {
+                let mut key = ExportedKey {
                     exported_private_key: ikp
                         .encode()
                         .map_err(|_| anyhow!("Cannot decode keypair"))?,
                     key: Key::from(ikp),
                 };
+                key.key.alias = keystore.get_alias_by_address(&address).ok();
                 CommandOutput::Export(key)
             }
             KeyToolCommand::List { sort_by_alias } => {
