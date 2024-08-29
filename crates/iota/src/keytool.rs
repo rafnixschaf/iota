@@ -515,8 +515,8 @@ impl KeyToolCommand {
                     })
                 }
 
-                if tx_bytes.is_some() {
-                    let tx_bytes = Base64::decode(&tx_bytes.unwrap())
+                if let Some(tx_bytes) = tx_bytes{
+                    let tx_bytes = Base64::decode(&tx_bytes)
                         .map_err(|e| anyhow!("Invalid base64 tx bytes: {:?}", e))?;
                     let tx_data: TransactionData = bcs::from_bytes(&tx_bytes)?;
                     let s = GenericSignature::MultiSig(multisig);
@@ -853,7 +853,7 @@ impl KeyToolCommand {
                     keypair.encode_base64(),
                     key.flag
                 );
-                fs::write(path, out_str).unwrap();
+                fs::write(path, out_str)?;
                 CommandOutput::Show(key)
             } /* KeyToolCommand::ZkLoginInsecureSignPersonalMessage { data } => {
                *     let msg = PersonalMessage {
