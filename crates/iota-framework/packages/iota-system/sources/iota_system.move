@@ -34,10 +34,10 @@
 /// 4. In validator_wrapper::upgrade_to_latest, check the current version in the wrapper, and if it's not the latest version,
 ///  call the data migration function to upgrade it.
 /// In Rust, we also need to add a new case in `get_validator_from_table`.
-/// Note that it is possible to upgrade IotaSystemStateInnerV1without upgrading Validator, but not the other way around.
+/// Note that it is possible to upgrade IotaSystemStateInnerV1 without upgrading Validator, but not the other way around.
 /// And when we only upgrade IotaSystemStateInnerV1, the version of Validator in the wrapper will not be updated, and hence may become
 /// inconsistent with the version of IotaSystemStateInnerV1 . This is fine as long as we don't use the Validator version to determine
-/// the IotaSystemStateInnerV1version, or vice versa.
+/// the IotaSystemStateInnerV1 version, or vice versa.
 
 module iota_system::iota_system {
     use iota::balance::Balance;
