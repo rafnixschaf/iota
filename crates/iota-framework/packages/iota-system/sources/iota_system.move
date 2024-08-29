@@ -28,9 +28,9 @@
 /// put the new framework in a new directory, and run the test to exercise the upgrade.
 ///
 /// To upgrade Validator type, besides everything above, we also need to:
-/// 1. Define a new Validator type (e.g. ValidatorV1).
-/// 2. Define a data migration function that migrates the old Validator to the new one (i.e. ValidatorV1).
-/// 3. Replace all uses of Validator with ValidatorV1 except the genesis creation function.
+/// 1. Define a new Validator type (e.g. ValidatorV2).
+/// 2. Define a data migration function that migrates the old ValidatorV1 to the new one (i.e. ValidatorV2).
+/// 3. Replace all uses of ValidatorV1 with ValidatorV2 except the genesis creation function.
 /// 4. In validator_wrapper::upgrade_to_latest, check the current version in the wrapper, and if it's not the latest version,
 ///  call the data migration function to upgrade it.
 /// In Rust, we also need to add a new case in `get_validator_from_table`.
