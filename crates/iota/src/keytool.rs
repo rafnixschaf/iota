@@ -2,6 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(test)]
+#[path = "unit_tests/keytool_tests.rs"]
+mod keytool_tests;
+
 use std::{
     fmt::{Debug, Display, Formatter},
     fs,
@@ -53,9 +57,6 @@ use tabled::{
 use tracing::info;
 
 use crate::key_identity::{get_identity_address_from_keystore, KeyIdentity};
-#[cfg(test)]
-#[path = "unit_tests/keytool_tests.rs"]
-mod keytool_tests;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Subcommand)]
@@ -110,7 +111,6 @@ pub enum KeyToolCommand {
         derivation_path: Option<DerivationPath>,
         word_length: Option<String>,
     },
-
     /// Add a new key to Iota CLI Keystore using either the input mnemonic
     /// phrase or a Bech32 encoded 33-byte `flag || privkey` starting with
     /// "iotaprivkey", the key scheme flag {ed25519 | secp256k1 | secp256r1}
@@ -179,7 +179,6 @@ pub enum KeyToolCommand {
         #[clap(long)]
         threshold: ThresholdUnit,
     },
-
     /// Read the content at the provided file path. The accepted format can be
     /// [enum IotaKeyPair] (Base64 encoded of 33-byte `flag || privkey`) or
     /// `type AuthorityKeyPair` (Base64 encoded `privkey`). It prints its
@@ -238,7 +237,6 @@ pub enum KeyToolCommand {
     //     sign_with_sk: bool, /* if true, execute tx with the traditional sig (in the multisig),
     //                          * otherwise with the zklogin sig. */
     // },
-
     // /// A workaround to the above command because sometimes token pasting does
     // /// not work (for Facebook). All the inputs required here are printed from
     // /// the command above.
@@ -260,7 +258,6 @@ pub enum KeyToolCommand {
     //     #[clap(long, default_value = "false")]
     //     sign_with_sk: bool,
     // },
-
     // /// Given a zkLogin signature, parse it if valid. If `bytes` provided,
     // /// parse it as either as TransactionData or PersonalMessage based on
     // /// `intent_scope`. It verifies the zkLogin signature based its latest
@@ -285,7 +282,6 @@ pub enum KeyToolCommand {
     //     #[clap(long, default_value = "devnet")]
     //     network: String,
     // },
-
     // /// TESTING ONLY: Given a string of data, sign with the fixed dev-only
     // /// ephemeral key and output a zkLogin signature with a fixed dev-only
     // /// proof with fixed max epoch 10.
@@ -483,7 +479,6 @@ impl KeyToolCommand {
                 let result = convert_private_key_to_bech32(value)?;
                 CommandOutput::Convert(result)
             }
-
             KeyToolCommand::DecodeMultiSig { multisig, tx_bytes } => {
                 let pks = multisig.get_pk().pubkeys();
                 let sigs = multisig.get_sigs();
@@ -536,7 +531,6 @@ impl KeyToolCommand {
 
                 CommandOutput::DecodeMultiSig(output)
             }
-
             KeyToolCommand::DecodeOrVerifyTx { tx_bytes, sig } => {
                 let tx_bytes = Base64::decode(&tx_bytes)
                     .map_err(|e| anyhow!("Invalid base64 key: {:?}", e))?;
@@ -589,7 +583,6 @@ impl KeyToolCommand {
                     CommandOutput::Generate(key)
                 }
             },
-
             KeyToolCommand::Import {
                 alias,
                 input_string,
@@ -658,7 +651,6 @@ impl KeyToolCommand {
                 }
                 CommandOutput::List(keys)
             }
-
             KeyToolCommand::LoadKeypair { file } => {
                 let output = match read_keypair_from_file(&file) {
                     Ok(keypair) => {
@@ -697,7 +689,6 @@ impl KeyToolCommand {
                 };
                 CommandOutput::LoadKeypair(output)
             }
-
             KeyToolCommand::MultiSigAddress {
                 threshold,
                 pks,
@@ -719,7 +710,6 @@ impl KeyToolCommand {
                 }
                 CommandOutput::MultiSigAddress(output)
             }
-
             KeyToolCommand::MultiSigCombinePartialSig {
                 sigs,
                 pks,
@@ -737,7 +727,6 @@ impl KeyToolCommand {
                     multisig_serialized,
                 })
             }
-
             KeyToolCommand::Show { file } => {
                 let res = read_keypair_from_file(&file);
                 match res {
@@ -765,7 +754,6 @@ impl KeyToolCommand {
                     },
                 }
             }
-
             KeyToolCommand::Sign {
                 address,
                 data,
@@ -794,7 +782,6 @@ impl KeyToolCommand {
                     iota_signature: iota_signature.encode_base64(),
                 })
             }
-
             KeyToolCommand::SignKMS {
                 data,
                 keyid,
@@ -853,7 +840,6 @@ impl KeyToolCommand {
                     serialized_sig_base64: serialized_sig,
                 })
             }
-
             KeyToolCommand::Unpack { keypair } => {
                 let keypair = IotaKeyPair::decode_base64(&keypair)
                     .map_err(|_| anyhow!("Invalid Base64 encode keypair"))?;
@@ -1037,7 +1023,6 @@ impl KeyToolCommand {
                *     .await?;
                *     CommandOutput::ZkLoginSignAndExecuteTx(ZkLoginSignAndExecuteTx { tx_digest
                * }) } */
-
               /* KeyToolCommand::ZkLoginSigVerify {
                *     sig,
                *     bytes,
