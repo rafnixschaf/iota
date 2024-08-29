@@ -51,12 +51,10 @@ pub(crate) fn verify_outputs<'a>(
                 total_value == expected_value,
                 "base token total supply: found {total_value}, expected {expected_value}"
             )
-        } else {
-            if expected_value != total_value {
-                warn!(
-                    "total supply mismatch for {key}: found {total_value}, expected {expected_value}"
-                );
-            }
+        } else if expected_value != total_value {
+            warn!(
+                "total supply mismatch for {key}: found {total_value}, expected {expected_value}"
+            );
         }
     }
     Ok(())
