@@ -131,7 +131,7 @@ impl TestEffectsBuilder {
         let gas_object_id = self.transaction.transaction_data().gas()[0].0;
         let event_digest = None;
         let dependencies = vec![];
-        TransactionEffects::new_from_execution_v2(
+        TransactionEffects::new_from_execution_v1(
             status,
             executed_epoch,
             GasCostSummary::default(),

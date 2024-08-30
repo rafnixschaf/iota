@@ -5,7 +5,6 @@
 use std::collections::BTreeMap;
 
 use effects_v1::TransactionEffectsV1;
-pub use effects_v2::UnchangedSharedKind;
 use enum_dispatch::enum_dispatch;
 use iota_protocol_config::ProtocolConfig;
 pub use object_change::{EffectsObjectChange, ObjectIn, ObjectOut};
@@ -13,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use shared_crypto::intent::IntentScope;
 pub use test_effects_builder::TestEffectsBuilder;
 
-use self::effects_v2::TransactionEffectsV2;
 use crate::{
     base_types::{ExecutionDigests, ObjectID, ObjectRef, SequenceNumber},
     committee::EpochId,
@@ -33,7 +31,6 @@ use crate::{
 };
 
 mod effects_v1;
-mod effects_v2;
 mod object_change;
 mod test_effects_builder;
 
@@ -60,27 +57,24 @@ pub const APPROX_SIZE_OF_OWNER: usize = 48;
 #[allow(clippy::large_enum_variant)]
 pub enum TransactionEffects {
     V1(TransactionEffectsV1),
-    V2(TransactionEffectsV2),
 }
 
 impl VersionedProtocolMessage for TransactionEffects {
     fn message_version(&self) -> Option<u64> {
         Some(match self {
             Self::V1(_) => 1,
-            Self::V2(_) => 2,
         })
     }
 
     fn check_version_supported(&self, protocol_config: &ProtocolConfig) -> IotaResult {
         match self {
-            Self::V1(_) => Ok(()),
-            Self::V2(_) => {
-                if protocol_config.enable_effects_v2() {
+            Self::V1(_) => {
+                if protocol_config.enable_effects_v1() {
                     Ok(())
                 } else {
                     Err(IotaError::WrongMessageVersion {
                         error: format!(
-                            "TransactionEffectsV2 is not supported at protocol {:?}.",
+                            "TransactionEffects is not supported at protocol {:?}.",
                             protocol_config.version
                         ),
                     })
@@ -114,7 +108,7 @@ impl UnauthenticatedMessage for TransactionEffects {}
 // TODO: Get rid of this and use TestEffectsBuilder instead.
 impl Default for TransactionEffects {
     fn default() -> Self {
-        TransactionEffects::V2(Default::default())
+        TransactionEffects::V1(Default::default())
     }
 }
 
@@ -130,44 +124,6 @@ impl TransactionEffects {
         status: ExecutionStatus,
         executed_epoch: EpochId,
         gas_used: GasCostSummary,
-        modified_at_versions: Vec<(ObjectID, SequenceNumber)>,
-        shared_objects: Vec<ObjectRef>,
-        transaction_digest: TransactionDigest,
-        created: Vec<(ObjectRef, Owner)>,
-        mutated: Vec<(ObjectRef, Owner)>,
-        unwrapped: Vec<(ObjectRef, Owner)>,
-        deleted: Vec<ObjectRef>,
-        unwrapped_then_deleted: Vec<ObjectRef>,
-        wrapped: Vec<ObjectRef>,
-        gas_object: (ObjectRef, Owner),
-        events_digest: Option<TransactionEventsDigest>,
-        dependencies: Vec<TransactionDigest>,
-    ) -> Self {
-        Self::V1(TransactionEffectsV1::new(
-            status,
-            executed_epoch,
-            gas_used,
-            modified_at_versions,
-            shared_objects,
-            transaction_digest,
-            created,
-            mutated,
-            unwrapped,
-            deleted,
-            unwrapped_then_deleted,
-            wrapped,
-            gas_object,
-            events_digest,
-            dependencies,
-        ))
-    }
-
-    /// Creates a TransactionEffects message from the results of execution,
-    /// choosing the correct format for the current protocol version.
-    pub fn new_from_execution_v2(
-        status: ExecutionStatus,
-        executed_epoch: EpochId,
-        gas_used: GasCostSummary,
         shared_objects: Vec<SharedInput>,
         transaction_digest: TransactionDigest,
         lamport_version: SequenceNumber,
@@ -176,7 +132,7 @@ impl TransactionEffects {
         events_digest: Option<TransactionEventsDigest>,
         dependencies: Vec<TransactionDigest>,
     ) -> Self {
-        Self::V2(TransactionEffectsV2::new(
+        Self::V1(TransactionEffectsV1::new(
             status,
             executed_epoch,
             gas_used,
@@ -198,30 +154,6 @@ impl TransactionEffects {
     }
 
     pub fn estimate_effects_size_upperbound_v1(
-        num_writes: usize,
-        num_mutables: usize,
-        num_deletes: usize,
-        num_deps: usize,
-    ) -> usize {
-        let fixed_sizes = APPROX_SIZE_OF_EXECUTION_STATUS
-            + APPROX_SIZE_OF_EPOCH_ID
-            + APPROX_SIZE_OF_GAS_COST_SUMMARY
-            + APPROX_SIZE_OF_OPT_TX_EVENTS_DIGEST;
-
-        // Each write or delete contributes at roughly this amount because:
-        // Each write can be a mutation which can show up in `mutated` and
-        // `modified_at_versions` `num_delete` is added for padding
-        let approx_change_entry_size = 1_000
-            + (APPROX_SIZE_OF_OWNER + APPROX_SIZE_OF_OBJECT_REF) * num_writes
-            + (APPROX_SIZE_OF_OBJECT_REF * num_mutables)
-            + (APPROX_SIZE_OF_OBJECT_REF * num_deletes);
-
-        let deps_size = 1_000 + APPROX_SIZE_OF_TX_DIGEST * num_deps;
-
-        fixed_sizes + approx_change_entry_size + deps_size
-    }
-
-    pub fn estimate_effects_size_upperbound_v2(
         num_writes: usize,
         num_modifies: usize,
         num_deps: usize,

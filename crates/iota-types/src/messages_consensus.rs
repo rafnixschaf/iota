@@ -29,17 +29,7 @@ use crate::{
 /// However we include epoch and round to make sure each ConsensusCommitPrologue
 /// has a unique tx digest.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
-pub struct ConsensusCommitPrologue {
-    /// Epoch of the commit prologue transaction
-    pub epoch: u64,
-    /// Consensus round of the commit
-    pub round: u64,
-    /// Unix timestamp from consensus
-    pub commit_timestamp_ms: CheckpointTimestamp,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
-pub struct ConsensusCommitPrologueV2 {
+pub struct ConsensusCommitPrologueV1 {
     /// Epoch of the commit prologue transaction
     pub epoch: u64,
     /// Consensus round of the commit

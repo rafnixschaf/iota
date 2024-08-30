@@ -41,7 +41,7 @@ use crate::{
         AuthenticatedMessage, Envelope, Message, TrustedEnvelope, VerifiedEnvelope,
     },
     messages_checkpoint::CheckpointTimestamp,
-    messages_consensus::{ConsensusCommitPrologue, ConsensusCommitPrologueV2},
+    messages_consensus::ConsensusCommitPrologueV1,
     object::{MoveObject, Object, Owner},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
@@ -279,7 +279,6 @@ pub enum TransactionKind {
     /// is still used by EndOfEpochTransaction below).
     ChangeEpoch(ChangeEpoch),
     Genesis(GenesisTransaction),
-    ConsensusCommitPrologue(ConsensusCommitPrologue),
     AuthenticatorStateUpdate(AuthenticatorStateUpdate),
 
     /// EndOfEpochTransaction replaces ChangeEpoch with a list of transactions
@@ -287,8 +286,8 @@ pub enum TransactionKind {
     EndOfEpochTransaction(Vec<EndOfEpochTransactionKind>),
 
     RandomnessStateUpdate(RandomnessStateUpdate),
-    // V2 ConsensusCommitPrologue also includes the digest of the current consensus output.
-    ConsensusCommitPrologueV2(ConsensusCommitPrologueV2),
+    // V1 ConsensusCommitPrologue also includes the digest of the current consensus output.
+    ConsensusCommitPrologueV1(ConsensusCommitPrologueV1),
     // .. more transaction types go here
 }
 
@@ -408,9 +407,16 @@ impl VersionedProtocolMessage for TransactionKind {
         // When adding new cases, they must be guarded by a feature flag and return
         // UnsupportedFeatureError if the flag is not set.
         match &self {
-            TransactionKind::ChangeEpoch(_)
-            | TransactionKind::Genesis(_)
-            | TransactionKind::ConsensusCommitPrologue(_) => Ok(()),
+            TransactionKind::ChangeEpoch(_) | TransactionKind::Genesis(_) => Ok(()),
+            TransactionKind::ConsensusCommitPrologueV1(_) => {
+                if protocol_config.include_consensus_digest_in_prologue() {
+                    Ok(())
+                } else {
+                    Err(IotaError::UnsupportedFeature {
+                        error: "ConsensusCommitPrologueV1 is not supported".to_string(),
+                    })
+                }
+            }
             TransactionKind::ProgrammableTransaction(pt) => {
                 // NB: we don't use the `receiving_objects` method here since we don't want to
                 // check for any validity requirements such as duplicate
@@ -485,15 +491,6 @@ impl VersionedProtocolMessage for TransactionKind {
                     }
 
                     Ok(())
-                }
-            }
-            TransactionKind::ConsensusCommitPrologueV2(_) => {
-                if protocol_config.include_consensus_digest_in_prologue() {
-                    Ok(())
-                } else {
-                    Err(IotaError::UnsupportedFeature {
-                        error: "ConsensusCommitPrologueV2 is not supported".to_string(),
-                    })
                 }
             }
         }
@@ -1184,8 +1181,7 @@ impl TransactionKind {
         match self {
             TransactionKind::ChangeEpoch(_)
             | TransactionKind::Genesis(_)
-            | TransactionKind::ConsensusCommitPrologue(_)
-            | TransactionKind::ConsensusCommitPrologueV2(_)
+            | TransactionKind::ConsensusCommitPrologueV1(_)
             | TransactionKind::AuthenticatorStateUpdate(_)
             | TransactionKind::RandomnessStateUpdate(_)
             | TransactionKind::EndOfEpochTransaction(_) => true,
@@ -1234,7 +1230,7 @@ impl TransactionKind {
                 Either::Left(Either::Left(iter::once(SharedInputObject::IOTA_SYSTEM_OBJ)))
             }
 
-            Self::ConsensusCommitPrologue(_) | Self::ConsensusCommitPrologueV2(_) => {
+            Self::ConsensusCommitPrologueV1(_) => {
                 Either::Left(Either::Left(iter::once(SharedInputObject {
                     id: IOTA_CLOCK_OBJECT_ID,
                     initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
@@ -1276,8 +1272,7 @@ impl TransactionKind {
         match &self {
             TransactionKind::ChangeEpoch(_)
             | TransactionKind::Genesis(_)
-            | TransactionKind::ConsensusCommitPrologue(_)
-            | TransactionKind::ConsensusCommitPrologueV2(_)
+            | TransactionKind::ConsensusCommitPrologueV1(_)
             | TransactionKind::AuthenticatorStateUpdate(_)
             | TransactionKind::RandomnessStateUpdate(_)
             | TransactionKind::EndOfEpochTransaction(_) => vec![],
@@ -1302,7 +1297,7 @@ impl TransactionKind {
             Self::Genesis(_) => {
                 vec![]
             }
-            Self::ConsensusCommitPrologue(_) | Self::ConsensusCommitPrologueV2(_) => {
+            Self::ConsensusCommitPrologueV1(_) => {
                 vec![InputObjectKind::SharedMoveObject {
                     id: IOTA_CLOCK_OBJECT_ID,
                     initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
@@ -1349,8 +1344,7 @@ impl TransactionKind {
             // and no validity or limit checks are performed.
             TransactionKind::ChangeEpoch(_)
             | TransactionKind::Genesis(_)
-            | TransactionKind::ConsensusCommitPrologue(_)
-            | TransactionKind::ConsensusCommitPrologueV2(_) => (),
+            | TransactionKind::ConsensusCommitPrologueV1(_) => (),
             TransactionKind::EndOfEpochTransaction(txns) => {
                 // The transaction should have been rejected earlier if the feature is not
                 // enabled.
@@ -1402,8 +1396,7 @@ impl TransactionKind {
         match self {
             Self::ChangeEpoch(_) => "ChangeEpoch",
             Self::Genesis(_) => "Genesis",
-            Self::ConsensusCommitPrologue(_) => "ConsensusCommitPrologue",
-            Self::ConsensusCommitPrologueV2(_) => "ConsensusCommitPrologueV2",
+            Self::ConsensusCommitPrologueV1(_) => "ConsensusCommitPrologueV1",
             Self::ProgrammableTransaction(_) => "ProgrammableTransaction",
             Self::AuthenticatorStateUpdate(_) => "AuthenticatorStateUpdate",
             Self::RandomnessStateUpdate(_) => "RandomnessStateUpdate",
@@ -1427,12 +1420,8 @@ impl Display for TransactionKind {
             Self::Genesis(_) => {
                 writeln!(writer, "Transaction Kind : Genesis")?;
             }
-            Self::ConsensusCommitPrologue(p) => {
-                writeln!(writer, "Transaction Kind : Consensus Commit Prologue")?;
-                writeln!(writer, "Timestamp : {}", p.commit_timestamp_ms)?;
-            }
-            Self::ConsensusCommitPrologueV2(p) => {
-                writeln!(writer, "Transaction Kind : Consensus Commit Prologue V2")?;
+            Self::ConsensusCommitPrologueV1(p) => {
+                writeln!(writer, "Transaction Kind : Consensus Commit Prologue V1")?;
                 writeln!(writer, "Timestamp : {}", p.commit_timestamp_ms)?;
                 writeln!(writer, "Consensus Digest: {}", p.consensus_commit_digest)?;
             }
@@ -2557,33 +2546,19 @@ impl VerifiedTransaction {
             .pipe(Self::new_system_transaction)
     }
 
-    pub fn new_consensus_commit_prologue(
-        epoch: u64,
-        round: u64,
-        commit_timestamp_ms: CheckpointTimestamp,
-    ) -> Self {
-        ConsensusCommitPrologue {
-            epoch,
-            round,
-            commit_timestamp_ms,
-        }
-        .pipe(TransactionKind::ConsensusCommitPrologue)
-        .pipe(Self::new_system_transaction)
-    }
-
-    pub fn new_consensus_commit_prologue_v2(
+    pub fn new_consensus_commit_prologue_v1(
         epoch: u64,
         round: u64,
         commit_timestamp_ms: CheckpointTimestamp,
         consensus_commit_digest: ConsensusCommitDigest,
     ) -> Self {
-        ConsensusCommitPrologueV2 {
+        ConsensusCommitPrologueV1 {
             epoch,
             round,
             commit_timestamp_ms,
             consensus_commit_digest,
         }
-        .pipe(TransactionKind::ConsensusCommitPrologueV2)
+        .pipe(TransactionKind::ConsensusCommitPrologueV1)
         .pipe(Self::new_system_transaction)
     }
 

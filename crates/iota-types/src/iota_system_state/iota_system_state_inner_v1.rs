@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     epoch_start_iota_system_state::EpochStartValidatorInfoV1,
-    get_validators_from_table_vec,
     iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
     AdvanceEpochParams, IotaSystemStateTrait,
 };
@@ -24,7 +23,9 @@ use crate::{
     error::IotaError,
     gas_coin::IotaTreasuryCap,
     id::ID,
-    iota_system_state::epoch_start_iota_system_state::EpochStartSystemState,
+    iota_system_state::{
+        epoch_start_iota_system_state::EpochStartSystemState, get_validators_from_table_vec,
+    },
     multiaddr::Multiaddr,
     storage::ObjectStore,
 };
@@ -38,11 +39,14 @@ const E_METADATA_INVALID_P2P_ADDR: u64 = 5;
 const E_METADATA_INVALID_PRIMARY_ADDR: u64 = 6;
 const E_METADATA_INVALID_WORKER_ADDR: u64 = 7;
 
-/// Rust version of the Move iota::iota_system::SystemParameters type
+/// Rust version of the Move iota::iota_system::SystemParametersV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct SystemParametersV1 {
     /// The duration of an epoch, in milliseconds.
     pub epoch_duration_ms: u64,
+
+    /// Minimum number of active validators at any moment.
+    pub min_validator_count: u64,
 
     /// Maximum number of active validators at any moment.
     /// We do not allow the number of validators in any epoch to go above this.
@@ -65,6 +69,400 @@ pub struct SystemParametersV1 {
     /// for this many epochs before being kicked out.
     pub validator_low_stake_grace_period: u64,
 
+    pub extra_fields: Bag,
+}
+
+/// Rust version of the Move iota_system::iota_system::IotaSystemStateInnerV1
+/// type
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct IotaSystemStateInnerV1 {
+    pub epoch: u64,
+    pub protocol_version: u64,
+    pub system_state_version: u64,
+    pub iota_treasury_cap: IotaTreasuryCap,
+    pub validators: ValidatorSetV1,
+    pub storage_fund: StorageFundV1,
+    pub parameters: SystemParametersV1,
+    pub reference_gas_price: u64,
+    pub validator_report_records: VecMap<IotaAddress, VecSet<IotaAddress>>,
+    pub safe_mode: bool,
+    pub safe_mode_storage_charges: Balance,
+    pub safe_mode_computation_rewards: Balance,
+    pub safe_mode_storage_rebates: u64,
+    pub safe_mode_non_refundable_storage_fee: u64,
+    pub epoch_start_timestamp_ms: u64,
+    pub extra_fields: Bag,
+    // TODO: Use getters instead of all pub.
+}
+
+impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
+    fn epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    fn reference_gas_price(&self) -> u64 {
+        self.reference_gas_price
+    }
+
+    fn protocol_version(&self) -> u64 {
+        self.protocol_version
+    }
+
+    fn system_state_version(&self) -> u64 {
+        self.system_state_version
+    }
+
+    fn epoch_start_timestamp_ms(&self) -> u64 {
+        self.epoch_start_timestamp_ms
+    }
+
+    fn epoch_duration_ms(&self) -> u64 {
+        self.parameters.epoch_duration_ms
+    }
+
+    fn safe_mode(&self) -> bool {
+        self.safe_mode
+    }
+
+    fn advance_epoch_safe_mode(&mut self, params: &AdvanceEpochParams) {
+        self.epoch = params.epoch;
+        self.safe_mode = true;
+        self.safe_mode_storage_charges
+            .deposit_for_safe_mode(params.storage_charge);
+        self.safe_mode_storage_rebates += params.storage_rebate;
+        self.safe_mode_computation_rewards
+            .deposit_for_safe_mode(params.computation_charge);
+        self.safe_mode_non_refundable_storage_fee += params.non_refundable_storage_fee;
+        self.epoch_start_timestamp_ms = params.epoch_start_timestamp_ms;
+        self.protocol_version = params.next_protocol_version.as_u64();
+    }
+
+    fn get_current_epoch_committee(&self) -> CommitteeWithNetworkMetadata {
+        let mut voting_rights = BTreeMap::new();
+        let mut network_metadata = BTreeMap::new();
+        for validator in &self.validators.active_validators {
+            let verified_metadata = validator.verified_metadata();
+            let name = verified_metadata.iota_pubkey_bytes();
+            voting_rights.insert(name, validator.voting_power);
+            network_metadata.insert(
+                name,
+                NetworkMetadata {
+                    network_address: verified_metadata.net_address.clone(),
+                    narwhal_primary_address: verified_metadata.primary_address.clone(),
+                },
+            );
+        }
+        CommitteeWithNetworkMetadata {
+            committee: Committee::new(self.epoch, voting_rights),
+            network_metadata,
+        }
+    }
+
+    fn get_pending_active_validators<S: ObjectStore + ?Sized>(
+        &self,
+        object_store: &S,
+    ) -> Result<Vec<IotaValidatorSummary>, IotaError> {
+        let table_id = self.validators.pending_active_validators.contents.id;
+        let table_size = self.validators.pending_active_validators.contents.size;
+        let validators: Vec<ValidatorV1> =
+            get_validators_from_table_vec(&object_store, table_id, table_size)?;
+        Ok(validators
+            .into_iter()
+            .map(|v| v.into_iota_validator_summary())
+            .collect())
+    }
+
+    fn into_epoch_start_state(self) -> EpochStartSystemState {
+        EpochStartSystemState::new_v1(
+            self.epoch,
+            self.protocol_version,
+            self.reference_gas_price,
+            self.safe_mode,
+            self.epoch_start_timestamp_ms,
+            self.parameters.epoch_duration_ms,
+            self.validators
+                .active_validators
+                .iter()
+                .map(|validator| {
+                    let metadata = validator.verified_metadata();
+                    EpochStartValidatorInfoV1 {
+                        iota_address: metadata.iota_address,
+                        protocol_pubkey: metadata.protocol_pubkey.clone(),
+                        narwhal_network_pubkey: metadata.network_pubkey.clone(),
+                        narwhal_worker_pubkey: metadata.worker_pubkey.clone(),
+                        iota_net_address: metadata.net_address.clone(),
+                        p2p_address: metadata.p2p_address.clone(),
+                        narwhal_primary_address: metadata.primary_address.clone(),
+                        narwhal_worker_address: metadata.worker_address.clone(),
+                        voting_power: validator.voting_power,
+                        hostname: metadata.name.clone(),
+                    }
+                })
+                .collect(),
+        )
+    }
+
+    fn into_iota_system_state_summary(self) -> IotaSystemStateSummary {
+        // If you are making any changes to IotaSystemStateV1 or any of its dependent
+        // types before mainnet, please also update IotaSystemStateSummary and
+        // its corresponding TS type. Post-mainnet, we will need to introduce a
+        // new version.
+        let Self {
+            epoch,
+            protocol_version,
+            system_state_version,
+            iota_treasury_cap,
+            validators:
+                ValidatorSetV1 {
+                    total_stake,
+                    active_validators,
+                    pending_active_validators:
+                        TableVec {
+                            contents:
+                                Table {
+                                    id: pending_active_validators_id,
+                                    size: pending_active_validators_size,
+                                },
+                        },
+                    pending_removals,
+                    staking_pool_mappings:
+                        Table {
+                            id: staking_pool_mappings_id,
+                            size: staking_pool_mappings_size,
+                        },
+                    inactive_validators:
+                        Table {
+                            id: inactive_pools_id,
+                            size: inactive_pools_size,
+                        },
+                    validator_candidates:
+                        Table {
+                            id: validator_candidates_id,
+                            size: validator_candidates_size,
+                        },
+                    at_risk_validators:
+                        VecMap {
+                            contents: at_risk_validators,
+                        },
+                    extra_fields: _,
+                },
+            storage_fund,
+            parameters:
+                SystemParametersV1 {
+                    epoch_duration_ms,
+                    min_validator_count: _, // TODO: Add it to RPC layer in the future.
+                    max_validator_count,
+                    min_validator_joining_stake,
+                    validator_low_stake_threshold,
+                    validator_very_low_stake_threshold,
+                    validator_low_stake_grace_period,
+                    extra_fields: _,
+                },
+            reference_gas_price,
+            validator_report_records:
+                VecMap {
+                    contents: validator_report_records,
+                },
+            safe_mode,
+            safe_mode_storage_charges,
+            safe_mode_computation_rewards,
+            safe_mode_storage_rebates,
+            safe_mode_non_refundable_storage_fee,
+            epoch_start_timestamp_ms,
+            extra_fields: _,
+        } = self;
+        IotaSystemStateSummary {
+            epoch,
+            protocol_version,
+            system_state_version,
+            iota_total_supply: iota_treasury_cap.total_supply().value,
+            storage_fund_total_object_storage_rebates: storage_fund
+                .total_object_storage_rebates
+                .value(),
+            storage_fund_non_refundable_balance: storage_fund.non_refundable_balance.value(),
+            reference_gas_price,
+            safe_mode,
+            safe_mode_storage_charges: safe_mode_storage_charges.value(),
+            safe_mode_computation_rewards: safe_mode_computation_rewards.value(),
+            safe_mode_storage_rebates,
+            safe_mode_non_refundable_storage_fee,
+            epoch_start_timestamp_ms,
+            epoch_duration_ms,
+            total_stake,
+            active_validators: active_validators
+                .into_iter()
+                .map(|v| v.into_iota_validator_summary())
+                .collect(),
+            pending_active_validators_id,
+            pending_active_validators_size,
+            pending_removals,
+            staking_pool_mappings_id,
+            staking_pool_mappings_size,
+            inactive_pools_id,
+            inactive_pools_size,
+            validator_candidates_id,
+            validator_candidates_size,
+            at_risk_validators: at_risk_validators
+                .into_iter()
+                .map(|e| (e.key, e.value))
+                .collect(),
+            validator_report_records: validator_report_records
+                .into_iter()
+                .map(|e| (e.key, e.value.contents))
+                .collect(),
+            max_validator_count,
+            min_validator_joining_stake,
+            validator_low_stake_threshold,
+            validator_very_low_stake_threshold,
+            validator_low_stake_grace_period,
+        }
+    }
+}
+
+/// Rust version of the Move iota::validator::Validator type
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct ValidatorV1 {
+    metadata: ValidatorMetadataV1,
+    #[serde(skip)]
+    verified_metadata: OnceCell<VerifiedValidatorMetadataV1>,
+
+    pub voting_power: u64,
+    pub operation_cap_id: ID,
+    pub gas_price: u64,
+    pub staking_pool: StakingPoolV1,
+    pub commission_rate: u64,
+    pub next_epoch_stake: u64,
+    pub next_epoch_gas_price: u64,
+    pub next_epoch_commission_rate: u64,
+    pub extra_fields: Bag,
+}
+
+impl ValidatorV1 {
+    pub fn verified_metadata(&self) -> &VerifiedValidatorMetadataV1 {
+        self.verified_metadata.get_or_init(|| {
+            self.metadata
+                .verify()
+                .expect("Validity of metadata should be verified on-chain")
+        })
+    }
+
+    pub fn into_iota_validator_summary(self) -> IotaValidatorSummary {
+        let Self {
+            metadata:
+                ValidatorMetadataV1 {
+                    iota_address,
+                    protocol_pubkey_bytes,
+                    network_pubkey_bytes,
+                    worker_pubkey_bytes,
+                    proof_of_possession_bytes,
+                    name,
+                    description,
+                    image_url,
+                    project_url,
+                    net_address,
+                    p2p_address,
+                    primary_address,
+                    worker_address,
+                    next_epoch_protocol_pubkey_bytes,
+                    next_epoch_proof_of_possession,
+                    next_epoch_network_pubkey_bytes,
+                    next_epoch_worker_pubkey_bytes,
+                    next_epoch_net_address,
+                    next_epoch_p2p_address,
+                    next_epoch_primary_address,
+                    next_epoch_worker_address,
+                    extra_fields: _,
+                },
+            verified_metadata: _,
+            voting_power,
+            operation_cap_id,
+            gas_price,
+            staking_pool:
+                StakingPoolV1 {
+                    id: staking_pool_id,
+                    activation_epoch: staking_pool_activation_epoch,
+                    deactivation_epoch: staking_pool_deactivation_epoch,
+                    iota_balance: staking_pool_iota_balance,
+                    rewards_pool,
+                    pool_token_balance,
+                    exchange_rates:
+                        Table {
+                            id: exchange_rates_id,
+                            size: exchange_rates_size,
+                        },
+                    pending_stake,
+                    pending_total_iota_withdraw,
+                    pending_pool_token_withdraw,
+                    extra_fields: _,
+                },
+            commission_rate,
+            next_epoch_stake,
+            next_epoch_gas_price,
+            next_epoch_commission_rate,
+            extra_fields: _,
+        } = self;
+        IotaValidatorSummary {
+            iota_address,
+            protocol_pubkey_bytes,
+            network_pubkey_bytes,
+            worker_pubkey_bytes,
+            proof_of_possession_bytes,
+            name,
+            description,
+            image_url,
+            project_url,
+            net_address,
+            p2p_address,
+            primary_address,
+            worker_address,
+            next_epoch_protocol_pubkey_bytes,
+            next_epoch_proof_of_possession,
+            next_epoch_network_pubkey_bytes,
+            next_epoch_worker_pubkey_bytes,
+            next_epoch_net_address,
+            next_epoch_p2p_address,
+            next_epoch_primary_address,
+            next_epoch_worker_address,
+            voting_power,
+            operation_cap_id: operation_cap_id.bytes,
+            gas_price,
+            staking_pool_id,
+            staking_pool_activation_epoch,
+            staking_pool_deactivation_epoch,
+            staking_pool_iota_balance,
+            rewards_pool: rewards_pool.value(),
+            pool_token_balance,
+            exchange_rates_id,
+            exchange_rates_size,
+            pending_stake,
+            pending_total_iota_withdraw,
+            pending_pool_token_withdraw,
+            commission_rate,
+            next_epoch_stake,
+            next_epoch_gas_price,
+            next_epoch_commission_rate,
+        }
+    }
+}
+
+/// Rust version of the Move iota_system::storage_fund::StorageFund type
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct StorageFundV1 {
+    pub total_object_storage_rebates: Balance,
+    pub non_refundable_balance: Balance,
+}
+
+/// Rust version of the Move iota_system::validator_set::ValidatorSet type
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct ValidatorSetV1 {
+    pub total_stake: u64,
+    pub active_validators: Vec<ValidatorV1>,
+    pub pending_active_validators: TableVec,
+    pub pending_removals: Vec<u64>,
+    pub staking_pool_mappings: Table,
+    pub inactive_validators: Table,
+    pub validator_candidates: Table,
+    pub at_risk_validators: VecMap<IotaAddress, u64>,
     pub extra_fields: Bag,
 }
 
@@ -300,132 +698,6 @@ impl ValidatorMetadataV1 {
     }
 }
 
-/// Rust version of the Move iota::validator::Validator type
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct ValidatorV1 {
-    metadata: ValidatorMetadataV1,
-    #[serde(skip)]
-    verified_metadata: OnceCell<VerifiedValidatorMetadataV1>,
-
-    pub voting_power: u64,
-    pub operation_cap_id: ID,
-    pub gas_price: u64,
-    pub staking_pool: StakingPoolV1,
-    pub commission_rate: u64,
-    pub next_epoch_stake: u64,
-    pub next_epoch_gas_price: u64,
-    pub next_epoch_commission_rate: u64,
-    pub extra_fields: Bag,
-}
-
-impl ValidatorV1 {
-    pub fn verified_metadata(&self) -> &VerifiedValidatorMetadataV1 {
-        self.verified_metadata.get_or_init(|| {
-            self.metadata
-                .verify()
-                .expect("Validity of metadata should be verified on-chain")
-        })
-    }
-
-    pub fn into_iota_validator_summary(self) -> IotaValidatorSummary {
-        let Self {
-            metadata:
-                ValidatorMetadataV1 {
-                    iota_address,
-                    protocol_pubkey_bytes,
-                    network_pubkey_bytes,
-                    worker_pubkey_bytes,
-                    proof_of_possession_bytes,
-                    name,
-                    description,
-                    image_url,
-                    project_url,
-                    net_address,
-                    p2p_address,
-                    primary_address,
-                    worker_address,
-                    next_epoch_protocol_pubkey_bytes,
-                    next_epoch_proof_of_possession,
-                    next_epoch_network_pubkey_bytes,
-                    next_epoch_worker_pubkey_bytes,
-                    next_epoch_net_address,
-                    next_epoch_p2p_address,
-                    next_epoch_primary_address,
-                    next_epoch_worker_address,
-                    extra_fields: _,
-                },
-            verified_metadata: _,
-            voting_power,
-            operation_cap_id,
-            gas_price,
-            staking_pool:
-                StakingPoolV1 {
-                    id: staking_pool_id,
-                    activation_epoch: staking_pool_activation_epoch,
-                    deactivation_epoch: staking_pool_deactivation_epoch,
-                    iota_balance: staking_pool_iota_balance,
-                    rewards_pool,
-                    pool_token_balance,
-                    exchange_rates:
-                        Table {
-                            id: exchange_rates_id,
-                            size: exchange_rates_size,
-                        },
-                    pending_stake,
-                    pending_total_iota_withdraw,
-                    pending_pool_token_withdraw,
-                    extra_fields: _,
-                },
-            commission_rate,
-            next_epoch_stake,
-            next_epoch_gas_price,
-            next_epoch_commission_rate,
-            extra_fields: _,
-        } = self;
-        IotaValidatorSummary {
-            iota_address,
-            protocol_pubkey_bytes,
-            network_pubkey_bytes,
-            worker_pubkey_bytes,
-            proof_of_possession_bytes,
-            name,
-            description,
-            image_url,
-            project_url,
-            net_address,
-            p2p_address,
-            primary_address,
-            worker_address,
-            next_epoch_protocol_pubkey_bytes,
-            next_epoch_proof_of_possession,
-            next_epoch_network_pubkey_bytes,
-            next_epoch_worker_pubkey_bytes,
-            next_epoch_net_address,
-            next_epoch_p2p_address,
-            next_epoch_primary_address,
-            next_epoch_worker_address,
-            voting_power,
-            operation_cap_id: operation_cap_id.bytes,
-            gas_price,
-            staking_pool_id,
-            staking_pool_activation_epoch,
-            staking_pool_deactivation_epoch,
-            staking_pool_iota_balance,
-            rewards_pool: rewards_pool.value(),
-            pool_token_balance,
-            exchange_rates_id,
-            exchange_rates_size,
-            pending_stake,
-            pending_total_iota_withdraw,
-            pending_pool_token_withdraw,
-            commission_rate,
-            next_epoch_stake,
-            next_epoch_gas_price,
-            next_epoch_commission_rate,
-        }
-    }
-}
-
 /// Rust version of the Move iota_system::staking_pool::StakingPool type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StakingPoolV1 {
@@ -440,278 +712,4 @@ pub struct StakingPoolV1 {
     pub pending_total_iota_withdraw: u64,
     pub pending_pool_token_withdraw: u64,
     pub extra_fields: Bag,
-}
-
-/// Rust version of the Move iota_system::validator_set::ValidatorSet type
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct ValidatorSetV1 {
-    pub total_stake: u64,
-    pub active_validators: Vec<ValidatorV1>,
-    pub pending_active_validators: TableVec,
-    pub pending_removals: Vec<u64>,
-    pub staking_pool_mappings: Table,
-    pub inactive_validators: Table,
-    pub validator_candidates: Table,
-    pub at_risk_validators: VecMap<IotaAddress, u64>,
-    pub extra_fields: Bag,
-}
-
-/// Rust version of the Move iota_system::storage_fund::StorageFund type
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct StorageFundV1 {
-    pub total_object_storage_rebates: Balance,
-    pub non_refundable_balance: Balance,
-}
-
-/// Rust version of the Move iota_system::iota_system::IotaSystemStateInner type
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct IotaSystemStateInnerV1 {
-    pub epoch: u64,
-    pub protocol_version: u64,
-    pub system_state_version: u64,
-    pub iota_treasury_cap: IotaTreasuryCap,
-    pub validators: ValidatorSetV1,
-    pub storage_fund: StorageFundV1,
-    pub parameters: SystemParametersV1,
-    pub reference_gas_price: u64,
-    pub validator_report_records: VecMap<IotaAddress, VecSet<IotaAddress>>,
-    pub safe_mode: bool,
-    pub safe_mode_storage_charges: Balance,
-    pub safe_mode_computation_rewards: Balance,
-    pub safe_mode_storage_rebates: u64,
-    pub safe_mode_non_refundable_storage_fee: u64,
-    pub epoch_start_timestamp_ms: u64,
-    pub extra_fields: Bag,
-    // TODO: Use getters instead of all pub.
-}
-
-impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
-    fn epoch(&self) -> u64 {
-        self.epoch
-    }
-
-    fn reference_gas_price(&self) -> u64 {
-        self.reference_gas_price
-    }
-
-    fn protocol_version(&self) -> u64 {
-        self.protocol_version
-    }
-
-    fn system_state_version(&self) -> u64 {
-        self.system_state_version
-    }
-
-    fn epoch_start_timestamp_ms(&self) -> u64 {
-        self.epoch_start_timestamp_ms
-    }
-
-    fn epoch_duration_ms(&self) -> u64 {
-        self.parameters.epoch_duration_ms
-    }
-
-    fn safe_mode(&self) -> bool {
-        self.safe_mode
-    }
-
-    fn advance_epoch_safe_mode(&mut self, params: &AdvanceEpochParams) {
-        self.epoch = params.epoch;
-        self.safe_mode = true;
-        self.safe_mode_storage_charges
-            .deposit_for_safe_mode(params.storage_charge);
-        self.safe_mode_storage_rebates += params.storage_rebate;
-        self.safe_mode_computation_rewards
-            .deposit_for_safe_mode(params.computation_charge);
-        self.safe_mode_non_refundable_storage_fee += params.non_refundable_storage_fee;
-        self.epoch_start_timestamp_ms = params.epoch_start_timestamp_ms;
-        self.protocol_version = params.next_protocol_version.as_u64();
-    }
-
-    fn get_current_epoch_committee(&self) -> CommitteeWithNetworkMetadata {
-        let mut voting_rights = BTreeMap::new();
-        let mut network_metadata = BTreeMap::new();
-        for validator in &self.validators.active_validators {
-            let verified_metadata = validator.verified_metadata();
-            let name = verified_metadata.iota_pubkey_bytes();
-            voting_rights.insert(name, validator.voting_power);
-            network_metadata.insert(
-                name,
-                NetworkMetadata {
-                    network_address: verified_metadata.net_address.clone(),
-                    narwhal_primary_address: verified_metadata.primary_address.clone(),
-                },
-            );
-        }
-        CommitteeWithNetworkMetadata {
-            committee: Committee::new(self.epoch, voting_rights),
-            network_metadata,
-        }
-    }
-
-    fn get_pending_active_validators<S: ObjectStore + ?Sized>(
-        &self,
-        object_store: &S,
-    ) -> Result<Vec<IotaValidatorSummary>, IotaError> {
-        let table_id = self.validators.pending_active_validators.contents.id;
-        let table_size = self.validators.pending_active_validators.contents.size;
-        let validators: Vec<ValidatorV1> =
-            get_validators_from_table_vec(object_store, table_id, table_size)?;
-        Ok(validators
-            .into_iter()
-            .map(|v| v.into_iota_validator_summary())
-            .collect())
-    }
-
-    fn into_epoch_start_state(self) -> EpochStartSystemState {
-        EpochStartSystemState::new_v1(
-            self.epoch,
-            self.protocol_version,
-            self.reference_gas_price,
-            self.safe_mode,
-            self.epoch_start_timestamp_ms,
-            self.parameters.epoch_duration_ms,
-            self.validators
-                .active_validators
-                .iter()
-                .map(|validator| {
-                    let metadata = validator.verified_metadata();
-                    EpochStartValidatorInfoV1 {
-                        iota_address: metadata.iota_address,
-                        protocol_pubkey: metadata.protocol_pubkey.clone(),
-                        narwhal_network_pubkey: metadata.network_pubkey.clone(),
-                        narwhal_worker_pubkey: metadata.worker_pubkey.clone(),
-                        iota_net_address: metadata.net_address.clone(),
-                        p2p_address: metadata.p2p_address.clone(),
-                        narwhal_primary_address: metadata.primary_address.clone(),
-                        narwhal_worker_address: metadata.worker_address.clone(),
-                        voting_power: validator.voting_power,
-                        hostname: metadata.name.clone(),
-                    }
-                })
-                .collect(),
-        )
-    }
-
-    fn into_iota_system_state_summary(self) -> IotaSystemStateSummary {
-        // If you are making any changes to IotaSystemStateV1 or any of its dependent
-        // types before mainnet, please also update IotaSystemStateSummary and
-        // its corresponding TS type. Post-mainnet, we will need to introduce a
-        // new version.
-        let Self {
-            epoch,
-            protocol_version,
-            system_state_version,
-            iota_treasury_cap,
-            validators:
-                ValidatorSetV1 {
-                    total_stake,
-                    active_validators,
-                    pending_active_validators:
-                        TableVec {
-                            contents:
-                                Table {
-                                    id: pending_active_validators_id,
-                                    size: pending_active_validators_size,
-                                },
-                        },
-                    pending_removals,
-                    staking_pool_mappings:
-                        Table {
-                            id: staking_pool_mappings_id,
-                            size: staking_pool_mappings_size,
-                        },
-                    inactive_validators:
-                        Table {
-                            id: inactive_pools_id,
-                            size: inactive_pools_size,
-                        },
-                    validator_candidates:
-                        Table {
-                            id: validator_candidates_id,
-                            size: validator_candidates_size,
-                        },
-                    at_risk_validators:
-                        VecMap {
-                            contents: at_risk_validators,
-                        },
-                    extra_fields: _,
-                },
-            storage_fund,
-            parameters:
-                SystemParametersV1 {
-                    epoch_duration_ms,
-                    max_validator_count,
-                    min_validator_joining_stake,
-                    validator_low_stake_threshold,
-                    validator_very_low_stake_threshold,
-                    validator_low_stake_grace_period,
-                    extra_fields: _,
-                },
-            reference_gas_price,
-            validator_report_records:
-                VecMap {
-                    contents: validator_report_records,
-                },
-            safe_mode,
-            safe_mode_storage_charges,
-            safe_mode_computation_rewards,
-            safe_mode_storage_rebates,
-            safe_mode_non_refundable_storage_fee,
-            epoch_start_timestamp_ms,
-            extra_fields: _,
-        } = self;
-        IotaSystemStateSummary {
-            epoch,
-            protocol_version,
-            system_state_version,
-            iota_total_supply: iota_treasury_cap.total_supply().value,
-            storage_fund_total_object_storage_rebates: storage_fund
-                .total_object_storage_rebates
-                .value(),
-            storage_fund_non_refundable_balance: storage_fund.non_refundable_balance.value(),
-            reference_gas_price,
-            safe_mode,
-            safe_mode_storage_charges: safe_mode_storage_charges.value(),
-            safe_mode_computation_rewards: safe_mode_computation_rewards.value(),
-            safe_mode_storage_rebates,
-            safe_mode_non_refundable_storage_fee,
-            epoch_start_timestamp_ms,
-            epoch_duration_ms,
-            total_stake,
-            active_validators: active_validators
-                .into_iter()
-                .map(|v| v.into_iota_validator_summary())
-                .collect(),
-            pending_active_validators_id,
-            pending_active_validators_size,
-            pending_removals,
-            staking_pool_mappings_id,
-            staking_pool_mappings_size,
-            inactive_pools_id,
-            inactive_pools_size,
-            validator_candidates_id,
-            validator_candidates_size,
-            at_risk_validators: at_risk_validators
-                .into_iter()
-                .map(|e| (e.key, e.value))
-                .collect(),
-            validator_report_records: validator_report_records
-                .into_iter()
-                .map(|e| (e.key, e.value.contents))
-                .collect(),
-            max_validator_count,
-            min_validator_joining_stake,
-            validator_low_stake_threshold,
-            validator_very_low_stake_threshold,
-            validator_low_stake_grace_period,
-        }
-    }
-}
-
-/// Rust version of the Move
-/// iota_system::validator_cap::UnverifiedValidatorOperationCap type
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct UnverifiedValidatorOperationCapV1 {
-    pub id: ObjectID,
-    pub authorizer_validator_address: IotaAddress,
 }

@@ -247,7 +247,7 @@ struct FeatureFlags {
     random_beacon: bool,
 
     #[serde(skip_serializing_if = "is_false")]
-    enable_effects_v2: bool,
+    enable_effects_v1: bool,
 
     // If true, then use CertificateV2 in narwhal.
     #[serde(skip_serializing_if = "is_false")]
@@ -1099,8 +1099,8 @@ impl ProtocolConfig {
         self.feature_flags.random_beacon
     }
 
-    pub fn enable_effects_v2(&self) -> bool {
-        self.feature_flags.enable_effects_v2
+    pub fn enable_effects_v1(&self) -> bool {
+        self.feature_flags.enable_effects_v1
     }
 
     pub fn narwhal_certificate_v2(&self) -> bool {
@@ -1648,7 +1648,7 @@ impl ProtocolConfig {
         cfg.feature_flags.end_of_epoch_transaction_supported = true;
         cfg.feature_flags.enable_jwk_consensus_updates = true;
         cfg.feature_flags.receive_objects = true;
-        cfg.feature_flags.enable_effects_v2 = true;
+        cfg.feature_flags.enable_effects_v1 = true;
         cfg.feature_flags.verify_legacy_zklogin_address = true;
         cfg.feature_flags.narwhal_certificate_v2 = true;
         cfg.feature_flags.recompute_has_public_transfer_in_execution = true;
@@ -1788,8 +1788,8 @@ impl ProtocolConfig {
     pub fn set_verify_legacy_zklogin_address(&mut self, val: bool) {
         self.feature_flags.verify_legacy_zklogin_address = val
     }
-    pub fn set_enable_effects_v2(&mut self, val: bool) {
-        self.feature_flags.enable_effects_v2 = val;
+    pub fn set_enable_effects_v1(&mut self, val: bool) {
+        self.feature_flags.enable_effects_v1 = val;
     }
     pub fn set_consensus_max_transaction_size_bytes(&mut self, val: u64) {
         self.consensus_max_transaction_size_bytes = Some(val);
