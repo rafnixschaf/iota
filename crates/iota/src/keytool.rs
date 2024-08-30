@@ -608,16 +608,12 @@ impl KeyToolCommand {
                     }
                     Err(_) => {
                         info!("Importing mnemonics to keystore");
-                        // TODO ideally this method should take an alias
                         let iota_address = keystore.import_from_mnemonic(
                             &input_string,
                             key_scheme,
-                            None,
+                            alias,
                             derivation_path,
                         )?;
-                        if let (Some(_), Some(old_alias)) = (&alias, keystore.get_alias_by_address(&iota_address).ok()) {
-                            keystore.update_alias(&old_alias, alias.as_deref())?;
-                        }
                         let ikp = keystore.get_key(&iota_address)?;
                         let mut key = Key::from(ikp);
                         key.alias = keystore.get_alias_by_address(&iota_address).ok();
