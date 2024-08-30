@@ -612,6 +612,7 @@ impl KeyToolCommand {
                         let iota_address = keystore.import_from_mnemonic(
                             &input_string,
                             key_scheme,
+                            None,
                             derivation_path,
                         )?;
                         if let (Some(_), Some(old_alias)) = (&alias, keystore.get_alias_by_address(&iota_address).ok()) {
