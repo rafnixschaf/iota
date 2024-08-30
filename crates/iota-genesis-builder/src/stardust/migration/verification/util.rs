@@ -35,7 +35,7 @@ pub const BASE_TOKEN_KEY: &str = "base_token";
 
 /// Counter used to count the generated tokens amounts.
 pub(super) struct TokensAmountCounter {
-    // An map of token type -> (real_generated_supply, expected_circulating_supply)
+    // A map of token type -> (real_generated_supply, expected_circulating_supply)
     inner: HashMap<String, (u64, u64)>,
 }
 
