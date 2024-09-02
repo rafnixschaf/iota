@@ -27,8 +27,7 @@ use iota_types::{
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress,
-    annotated_value::{MoveTypeLayout, MoveValue},
-    annotated_visitor as AV,
+    annotated_value::{MoveStruct, MoveTypeLayout, MoveValue},
     effects::Op,
     language_storage::StructTag,
     runtime_value as R,
@@ -201,7 +200,7 @@ impl<'a> ObjectRuntime<'a> {
         // remove from deleted_ids for the case in dynamic fields where the Field object
         // was deleted and then re-added in a single transaction. In that case,
         // we also skip adding it to new_ids.
-        let was_present = self.state.deleted_ids.swap_remove(&id);
+        let was_present = self.state.deleted_ids.shift_remove(&id);
         if !was_present {
             // mark the id as new
             self.state.new_ids.insert(id);
@@ -229,7 +228,7 @@ impl<'a> ObjectRuntime<'a> {
                 ));
         };
 
-        let was_new = self.state.new_ids.swap_remove(&id);
+        let was_new = self.state.new_ids.shift_remove(&id);
         if !was_new {
             self.state.deleted_ids.insert(id);
         }
@@ -637,6 +636,7 @@ fn check_circular_ownership(
     Ok(())
 }
 
+// TODO use a custom DeserializerSeed and improve this performance
 /// WARNING! This function assumes that the bcs bytes have already been
 /// validated, and it will give an invariant violation otherwise.
 /// In short, we are relying on the invariant that the bytes are valid for
@@ -648,35 +648,41 @@ pub fn get_all_uids(
     bcs_bytes: &[u8],
 ) -> Result<BTreeSet<ObjectID>, /* invariant violation */ String> {
     let mut ids = BTreeSet::new();
-    struct UIDTraversalV2<'i>(&'i mut BTreeSet<ObjectID>);
-    struct UIDCollectorV2<'i>(&'i mut BTreeSet<ObjectID>);
-
-    impl<'i> AV::Traversal for UIDTraversalV2<'i> {
-        type Error = AV::Error;
-
-        fn traverse_struct(&mut self, driver: &mut AV::StructDriver) -> Result<(), Self::Error> {
-            if driver.struct_layout().type_ == UID::type_() {
-                while driver.next_field(&mut UIDCollectorV2(self.0))?.is_some() {}
-            } else {
-                while driver.next_field(self)?.is_some() {}
-            }
-            Ok(())
-        }
-    }
-
-    impl<'i> AV::Traversal for UIDCollectorV2<'i> {
-        type Error = AV::Error;
-        fn traverse_address(&mut self, value: AccountAddress) -> Result<(), Self::Error> {
-            self.0.insert(value.into());
-            Ok(())
-        }
-    }
-
-    MoveValue::visit_deserialize(
-        bcs_bytes,
-        fully_annotated_layout,
-        &mut UIDTraversalV2(&mut ids),
-    )
-    .map_err(|e| format!("Failed to deserialize. {e:?}"))?;
+    // TODO (annotated-visitor): Replace with a custom visitor
+    let v = MoveValue::simple_deserialize(bcs_bytes, fully_annotated_layout)
+        .map_err(|e| format!("Failed to deserialize. {e:?}"))?;
+    get_all_uids_in_value(&mut ids, &v)?;
     Ok(ids)
+}
+
+fn get_all_uids_in_value(
+    acc: &mut BTreeSet<ObjectID>,
+    v: &MoveValue,
+) -> Result<(), /* invariant violation */ String> {
+    let mut stack = vec![v];
+    while let Some(cur) = stack.pop() {
+        let s = match cur {
+            MoveValue::Struct(s) => s,
+            MoveValue::Vector(vec) => {
+                stack.extend(vec);
+                continue;
+            }
+            _ => continue,
+        };
+
+        let MoveStruct { type_, fields } = s;
+        if type_ == &UID::type_() {
+            let inner = match &fields[0].1 {
+                MoveValue::Struct(MoveStruct { fields, .. }) => fields,
+                v => return Err(format!("Unexpected UID layout. {v:?}")),
+            };
+            match &inner[0].1 {
+                MoveValue::Address(id) => acc.insert((*id).into()),
+                v => return Err(format!("Unexpected ID layout. {v:?}")),
+            };
+        } else {
+            stack.extend(fields.iter().map(|(_, v)| v));
+        }
+    }
+    Ok(())
 }

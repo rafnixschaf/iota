@@ -2,12 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_types::{
-    error::{ExecutionError, IotaError},
-    execution_status::{ExecutionFailureStatus, MoveLocation, MoveLocationOpt},
-};
 use move_binary_format::{
-    access::ModuleAccess,
     errors::{Location, VMError},
     file_format::FunctionDefinitionIndex,
 };
@@ -16,6 +11,8 @@ use move_core_types::{
     vm_status::{StatusCode, StatusType},
 };
 use move_vm_runtime::move_vm::MoveVM;
+use iota_types::error::{ExecutionError, IotaError};
+use iota_types::execution_status::{ExecutionFailureStatus, MoveLocation, MoveLocationOpt};
 
 pub(crate) fn convert_vm_error<S: MoveResolver<Err = IotaError>>(
     error: VMError,
@@ -31,12 +28,6 @@ pub(crate) fn convert_vm_error<S: MoveResolver<Err = IotaError>>(
         (StatusCode::ABORTED, None, _) => {
             debug_assert!(false, "No abort code");
             // this is a Move VM invariant violation, the code should always be there
-            ExecutionFailureStatus::VMInvariantViolation
-        }
-        (StatusCode::ABORTED, _, Location::Script) => {
-            debug_assert!(false, "Scripts are not used in Iota");
-            // this is a Move VM invariant violation, in the sense that the location
-            // is malformed
             ExecutionFailureStatus::VMInvariantViolation
         }
         (StatusCode::ABORTED, Some(code), Location::Module(id)) => {

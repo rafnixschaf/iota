@@ -22,19 +22,13 @@ mod checked {
         coin::Coin,
         error::{command_argument_error, ExecutionError, ExecutionErrorKind},
         event::Event,
-        execution::{
-            CommandKind, ExecutionResults, ExecutionResultsV2, ExecutionState, InputObjectMetadata,
-            InputValue, ObjectContents, ObjectValue, RawValueType, ResultValue, TryFromValue,
-            UsageKind, Value,
-        },
-        execution_mode::ExecutionMode,
+        execution::{ExecutionResults, ExecutionResultsV2},
         execution_status::CommandArgumentError,
         metrics::LimitsMetrics,
         move_package::MovePackage,
         object::{Data, MoveObject, Object, ObjectInner, Owner},
         storage::{BackingPackageStore, PackageObject},
         transaction::{Argument, CallArg, ObjectArg},
-        type_resolver::TypeTagResolver,
     };
     use move_binary_format::{
         errors::{Location, PartialVMError, PartialVMResult, VMError, VMResult},
@@ -43,7 +37,6 @@ mod checked {
     };
     use move_core_types::{
         account_address::AccountAddress,
-        gas_algebra::NumBytes,
         identifier::IdentStr,
         language_storage::{ModuleId, StructTag, TypeTag},
         resolver::ModuleResolver,
@@ -54,14 +47,20 @@ mod checked {
         native_extensions::NativeContextExtensions,
         session::{LoadedFunctionInstantiation, SerializedReturnValues},
     };
-    use move_vm_types::{
-        data_store::DataStore, loaded_data::runtime_types::Type, values::GlobalValue,
-    };
+    use move_vm_types::{data_store::DataStore, loaded_data::runtime_types::Type};
     use tracing::instrument;
 
     use crate::{
-        adapter::new_native_extensions, error::convert_vm_error, gas_charger::GasCharger,
+        adapter::new_native_extensions,
+        error::convert_vm_error,
+        execution_mode::ExecutionMode,
+        execution_value::{
+            CommandKind, ExecutionState, InputObjectMetadata, InputValue, ObjectContents,
+            ObjectValue, RawValueType, ResultValue, TryFromValue, UsageKind, Value,
+        },
+        gas_charger::GasCharger,
         programmable_transactions::linkage_view::LinkageView,
+        type_resolver::TypeTagResolver,
     };
 
     /// Maintains all runtime state specific to programmable transactions
@@ -553,6 +552,7 @@ mod checked {
             MovePackage::new_initial(
                 modules,
                 self.protocol_config.max_move_package_size(),
+                self.protocol_config.move_binary_format_version(),
                 dependencies,
             )
         }
@@ -1098,7 +1098,7 @@ mod checked {
         }
 
         if type_params.is_empty() {
-            Ok(Type::Struct(idx))
+            Ok(Type::Datatype(idx))
         } else {
             let loaded_type_params = type_params
                 .iter()
@@ -1113,7 +1113,7 @@ mod checked {
                 }
             }
 
-            Ok(Type::StructInstantiation(Box::new((
+            Ok(Type::DatatypeInstantiation(Box::new((
                 idx,
                 loaded_type_params,
             ))))
@@ -1520,18 +1520,6 @@ mod checked {
                     )
                 }
             }
-        }
-
-        // TODO: later we will clean up the interface with the runtime and the functions
-        // below       will likely be exposed via extensions
-        //
-
-        fn load_resource(
-            &mut self,
-            _addr: AccountAddress,
-            _ty: &Type,
-        ) -> PartialVMResult<(&mut GlobalValue, Option<Option<NumBytes>>)> {
-            panic!("load_resource should never be called for LinkageView")
         }
 
         fn publish_module(&mut self, _module_id: &ModuleId, _blob: Vec<u8>) -> VMResult<()> {

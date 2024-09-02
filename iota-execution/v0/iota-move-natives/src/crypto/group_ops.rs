@@ -37,14 +37,6 @@ fn is_supported(context: &NativeContext) -> bool {
         .enable_group_ops_native_functions()
 }
 
-fn is_msm_supported(context: &NativeContext) -> bool {
-    context
-        .extensions()
-        .get::<ObjectRuntime>()
-        .protocol_config
-        .enable_group_ops_native_function_msm()
-}
-
 // Gas related structs and functions.
 
 #[derive(Clone)]
@@ -667,7 +659,7 @@ pub fn internal_multi_scalar_mul(
     debug_assert!(args.len() == 3);
 
     let cost = context.gas_used();
-    if !is_msm_supported(context) {
+    if !is_supported(context) {
         return Ok(NativeResult::err(cost, NOT_SUPPORTED_ERROR));
     }
 

@@ -3,16 +3,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_types::IOTA_FRAMEWORK_ADDRESS;
 use move_binary_format::file_format::*;
 use move_core_types::{account_address::AccountAddress, identifier::Identifier};
-use iota_types::IOTA_FRAMEWORK_ADDRESS;
 
 pub struct ModuleBuilder {
     module: CompiledModule,
 }
 
 pub struct StructInfo {
-    pub handle: StructHandleIndex,
+    pub handle: DatatypeHandleIndex,
     pub def: StructDefinitionIndex,
     pub fields: Vec<FieldHandleIndex>,
 }
@@ -56,8 +56,9 @@ impl ModuleBuilder {
         }
     }
 
-    /// Creates the "object" module in framework address, along with the "Info" struct.
-    /// Both the module and the Info struct information are returned.
+    /// Creates the "object" module in framework address, along with the "Info"
+    /// struct. Both the module and the Info struct information are
+    /// returned.
     pub fn default() -> (Self, StructInfo) {
         let mut module = Self::new(IOTA_FRAMEWORK_ADDRESS, OBJECT_MODULE_NAME);
         let id = module.add_struct(
@@ -162,13 +163,13 @@ impl ModuleBuilder {
         fields: Vec<(&str, SignatureToken)>,
         type_parameters: Vec<StructTypeParameter>,
     ) -> StructInfo {
-        let new_handle = StructHandle {
+        let new_handle = DatatypeHandle {
             module: module_index,
             name: self.add_identifier(name),
             abilities,
             type_parameters,
         };
-        let handle_idx = StructHandleIndex(self.module.struct_handles.len() as u16);
+        let handle_idx = DatatypeHandleIndex(self.module.struct_handles.len() as u16);
         self.module.struct_handles.push(new_handle);
 
         let field_len = fields.len();

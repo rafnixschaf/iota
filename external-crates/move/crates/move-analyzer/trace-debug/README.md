@@ -5,16 +5,23 @@ Provides the ability to visualize Move trace files, which can be generated for a
 # How to Install
 
 When this extension and its companion DAP implementation become more mature, we will make it available in the VSCode Marketplace. At the moment, in order to experiment with it must be built and installed locally (start in the main directory of this extension):
+
 1. Install dependencies for the extension:
+
 ```bash
 npm install
 ```
+
 2. Install dependencies for the DAP implementation:
+
 ```bash
 npm install --prefix ../move-trace-adapter
 ```
+
 3. Package the extension (it will pull relevant files from the DAP implementation)
+
 ```
 vsce package -o move-trace-debug.vsix
 ```
+
 4. Install move-trace-debug.vsix in VSCode using `Install from VSIX...` option

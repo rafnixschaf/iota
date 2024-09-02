@@ -5,27 +5,16 @@
 pub use checked::*;
 #[iota_macros::with_checked_arithmetic]
 mod checked {
-    use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
-
-    use anyhow::Result;
-    use iota_move_natives::{object_runtime, object_runtime::ObjectRuntime, NativesCostTable};
-    use iota_protocol_config::ProtocolConfig;
-    use iota_types::{
-        base_types::*,
-        error::{ExecutionError, ExecutionErrorKind, IotaError},
-        execution_config_utils::to_binary_config,
-        metrics::{BytecodeVerifierMetrics, LimitsMetrics},
-        storage::ChildObjectResolver,
-    };
-    use iota_verifier::{
-        check_for_verifier_timeout, default_verifier_config,
-        verifier::iota_verify_module_metered_check_timeout_only,
-    };
-    use move_binary_format::{access::ModuleAccess, file_format::CompiledModule};
-    use move_bytecode_verifier::{meter::Meter, verify_module_with_config_metered};
-    use move_core_types::account_address::AccountAddress;
     #[cfg(feature = "gas-profiler")]
     use move_vm_config::runtime::VMProfilerConfig;
+    use std::path::PathBuf;
+    use std::{collections::BTreeMap, sync::Arc};
+
+    use anyhow::Result;
+    use move_binary_format::file_format::CompiledModule;
+    use move_bytecode_verifier::verify_module_with_config_metered;
+    use move_bytecode_verifier_meter::Meter;
+    use move_core_types::account_address::AccountAddress;
     use move_vm_config::{
         runtime::{VMConfig, VMRuntimeLimitsConfig},
         verifier::VerifierConfig,
@@ -34,7 +23,22 @@ mod checked {
         move_vm::MoveVM, native_extensions::NativeContextExtensions,
         native_functions::NativeFunctionTable,
     };
+    use iota_move_natives::object_runtime;
+    use iota_types::metrics::BytecodeVerifierMetrics;
+    use iota_verifier::check_for_verifier_timeout;
     use tracing::instrument;
+
+    use iota_move_natives::{object_runtime::ObjectRuntime, NativesCostTable};
+    use iota_protocol_config::ProtocolConfig;
+    use iota_types::{
+        base_types::*,
+        error::ExecutionError,
+        error::{ExecutionErrorKind, IotaError},
+        execution_config_utils::to_binary_config,
+        metrics::LimitsMetrics,
+        storage::ChildObjectResolver,
+    };
+    use iota_verifier::verifier::iota_verify_module_metered_check_timeout_only;
 
     pub fn new_move_vm(
         natives: NativeFunctionTable,
@@ -52,10 +56,7 @@ mod checked {
         MoveVM::new_with_config(
             natives,
             VMConfig {
-                verifier: default_verifier_config(
-                    protocol_config,
-                    false, // we do not enable metering in execution
-                ),
+                verifier: protocol_config.verifier_config(/* signing_limits */ None),
                 max_binary_format_version: protocol_config.move_binary_format_version(),
                 runtime_limits_config: VMRuntimeLimitsConfig {
                     vector_len_max: protocol_config.max_move_vector_len(),
@@ -70,6 +71,8 @@ mod checked {
                 // Don't augment errors with execution state on-chain
                 error_execution_state: false,
                 binary_config: to_binary_config(protocol_config),
+                rethrow_serialization_type_layout_errors: protocol_config
+                    .rethrow_serialization_type_layout_errors(),
             },
         )
         .map_err(|_| IotaError::ExecutionInvariantViolation)
@@ -96,8 +99,8 @@ mod checked {
         extensions
     }
 
-    /// Given a list of `modules` and an `object_id`, mutate each module's self
-    /// ID (which must be 0x0) to be `object_id`.
+    /// Given a list of `modules` and an `object_id`, mutate each module's self ID (which must be
+    /// 0x0) to be `object_id`.
     pub fn substitute_package_id(
         modules: &mut [CompiledModule],
         object_id: ObjectID,
@@ -133,21 +136,21 @@ mod checked {
 
     pub fn missing_unwrapped_msg(id: &ObjectID) -> String {
         format!(
-            "Unable to unwrap object {}. Was unable to retrieve last known version in the parent sync",
-            id
-        )
+        "Unable to unwrap object {}. Was unable to retrieve last known version in the parent sync",
+        id
+    )
     }
 
     /// Run the bytecode verifier with a meter limit
     ///
-    /// This function only fails if the verification does not complete within
-    /// the limit.  If the modules fail to verify but verification completes
-    /// within the meter limit, the function succeeds.
+    /// This function only fails if the verification does not complete within the limit.  If the
+    /// modules fail to verify but verification completes within the meter limit, the function
+    /// succeeds.
     #[instrument(level = "trace", skip_all)]
     pub fn run_metered_move_bytecode_verifier(
         modules: &[CompiledModule],
         verifier_config: &VerifierConfig,
-        meter: &mut impl Meter,
+        meter: &mut (impl Meter + ?Sized),
         metrics: &Arc<BytecodeVerifierMetrics>,
     ) -> Result<(), IotaError> {
         // run the Move verifier

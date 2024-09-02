@@ -4,13 +4,11 @@
 
 // $GENERATED_MESSAGE
 
-use std::path::PathBuf;
-use std::sync::Arc;
-
-use iota_protocol_config::ProtocolConfig;
-use iota_types::{error::IotaResult, metrics::BytecodeVerifierMetrics};
+use std::{path::PathBuf, sync::Arc};
 
 pub use executor::Executor;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{error::IotaResult, metrics::BytecodeVerifierMetrics};
 pub use verifier::Verifier;
 
 pub mod executor;
@@ -36,10 +34,11 @@ pub fn executor(
 
 pub fn verifier<'m>(
     protocol_config: &ProtocolConfig,
-    is_metered: bool,
+    signing_limits: Option<(usize, usize)>,
     metrics: &'m Arc<BytecodeVerifierMetrics>,
 ) -> Box<dyn Verifier + 'm> {
     let version = protocol_config.execution_version_as_option().unwrap_or(0);
+    let config = protocol_config.verifier_config(signing_limits);
     match version {
         // $VERIFIER_CUTS
         v => panic!("Unsupported execution version {v}"),

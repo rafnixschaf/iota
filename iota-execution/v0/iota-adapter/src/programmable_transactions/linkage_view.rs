@@ -11,7 +11,6 @@ use std::{
 use iota_types::{
     base_types::ObjectID,
     error::{ExecutionError, IotaError, IotaResult},
-    execution::IotaResolver,
     move_package::{MovePackage, TypeOrigin, UpgradeInfo},
     storage::{get_module, BackingPackageStore, PackageObject},
 };
@@ -21,6 +20,8 @@ use move_core_types::{
     language_storage::{ModuleId, StructTag},
     resolver::{LinkageResolver, ModuleResolver, ResourceResolver},
 };
+
+use crate::execution_value::IotaResolver;
 
 /// Exposes module and linkage resolution to the Move runtime.  The first by
 /// delegating to `resolver` and the second via linkage information that is
@@ -131,7 +132,7 @@ impl<'state> LinkageView<'state> {
         // packages, but will also speed up other requests.
         for TypeOrigin {
             module_name,
-            struct_name,
+            datatype_name,
             package: defining_id,
         } in context.type_origin_table()
         {
@@ -139,8 +140,8 @@ impl<'state> LinkageView<'state> {
                 invariant_violation!("Module name isn't an identifier: {module_name}");
             };
 
-            let Ok(struct_name) = Identifier::from_str(struct_name) else {
-                invariant_violation!("Struct name isn't an identifier: {struct_name}");
+            let Ok(struct_name) = Identifier::from_str(datatype_name) else {
+                invariant_violation!("Struct name isn't an identifier: {datatype_name}");
             };
 
             let runtime_id = ModuleId::new(runtime_id, module_name);
@@ -254,11 +255,11 @@ impl<'state> LinkageView<'state> {
 
         for TypeOrigin {
             module_name,
-            struct_name,
+            datatype_name,
             package,
         } in package.move_package().type_origin_table()
         {
-            if module_name == runtime_id.name().as_str() && struct_name == struct_.as_str() {
+            if module_name == runtime_id.name().as_str() && datatype_name == struct_.as_str() {
                 self.add_type_origin(runtime_id.clone(), struct_.to_owned(), *package)?;
                 return Ok(ModuleId::new(**package, runtime_id.name().to_owned()));
             }

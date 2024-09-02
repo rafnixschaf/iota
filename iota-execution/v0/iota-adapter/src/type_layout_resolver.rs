@@ -2,20 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_types::{
-    base_types::ObjectID,
-    error::{IotaError, IotaResult},
-    execution::TypeLayoutStore,
-    storage::{BackingPackageStore, PackageObject},
-    type_resolver::LayoutResolver,
-};
-use move_core_types::{
-    account_address::AccountAddress, annotated_value as A, language_storage::StructTag,
-    resolver::ResourceResolver,
-};
+use crate::programmable_transactions::context::load_type_from_struct;
+use crate::programmable_transactions::linkage_view::LinkageView;
+use move_core_types::account_address::AccountAddress;
+use move_core_types::annotated_value as A;
+use move_core_types::language_storage::StructTag;
+use move_core_types::resolver::ResourceResolver;
 use move_vm_runtime::move_vm::MoveVM;
-
-use crate::programmable_transactions::{context::load_type_from_struct, linkage_view::LinkageView};
+use iota_types::base_types::ObjectID;
+use iota_types::error::IotaResult;
+use iota_types::execution::TypeLayoutStore;
+use iota_types::storage::{BackingPackageStore, PackageObject};
+use iota_types::{error::IotaError, layout_resolver::LayoutResolver};
 
 /// Retrieve a `MoveStructLayout` from a `Type`.
 /// Invocation into the `Session` to leverage the `LinkageView` implementation
@@ -25,9 +23,8 @@ pub struct TypeLayoutResolver<'state, 'vm> {
     linkage_view: LinkageView<'state>,
 }
 
-/// Implements IotaResolver traits by providing null implementations for module
-/// and resource resolution and delegating backing package resolution to the
-/// trait object.
+/// Implements IotaResolver traits by providing null implementations for module and resource
+/// resolution and delegating backing package resolution to the trait object.
 struct NullIotaResolver<'state>(Box<dyn TypeLayoutStore + 'state>);
 
 impl<'state, 'vm> TypeLayoutResolver<'state, 'vm> {
@@ -41,7 +38,7 @@ impl<'state, 'vm> LayoutResolver for TypeLayoutResolver<'state, 'vm> {
     fn get_annotated_layout(
         &mut self,
         struct_tag: &StructTag,
-    ) -> Result<A::MoveStructLayout, IotaError> {
+    ) -> Result<A::MoveDatatypeLayout, IotaError> {
         let Ok(ty) = load_type_from_struct(self.vm, &mut self.linkage_view, &[], struct_tag) else {
             return Err(IotaError::FailObjectLayout {
                 st: format!("{}", struct_tag),
@@ -53,7 +50,7 @@ impl<'state, 'vm> LayoutResolver for TypeLayoutResolver<'state, 'vm> {
                 st: format!("{}", struct_tag),
             });
         };
-        Ok(layout)
+        Ok(A::MoveDatatypeLayout::Struct(layout))
     }
 }
 
