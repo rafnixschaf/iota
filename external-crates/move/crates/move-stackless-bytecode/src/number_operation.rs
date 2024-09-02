@@ -1,20 +1,17 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This file defines types, data structures and corresponding functions to
-//! mark the operation (arithmetic or bitwise) that a variable or a field
-//! involves, which will be used later when the correct number type (int or
-//! `bv<N>`) in the boogie program
-
-use std::collections::BTreeMap;
+//! mark the operation (arithmetic or bitwise) that a variable or a field involves,
+//! which will be used later when the correct number type (int or bv<N>) in the boogie program
 
 use move_model::{
     ast::TempIndex,
-    model::{FieldId, FunId, FunctionEnv, ModuleId, NodeId, StructEnv, StructId},
+    model::{DatatypeId, FieldId, FunId, FunctionEnv, ModuleId, NodeId, StructEnv},
     ty::Type,
 };
+use std::collections::BTreeMap;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
 pub enum NumOperation {
@@ -36,7 +33,11 @@ impl NumOperation {
 
     /// Return the operation according to the partial order in NumOperation
     pub fn merge(&self, other: &NumOperation) -> NumOperation {
-        if self.ge(other) { *self } else { *other }
+        if self.ge(other) {
+            *self
+        } else {
+            *other
+        }
     }
 }
 
@@ -47,7 +48,7 @@ pub type OperationVec = Vec<NumOperation>;
 // NumOperation of a field
 pub type StructFieldOperationMap = BTreeMap<FieldId, NumOperation>;
 pub type FuncOperationMap = BTreeMap<(ModuleId, FunId), OperationMap>;
-pub type StructOperationMap = BTreeMap<(ModuleId, StructId), StructFieldOperationMap>;
+pub type StructOperationMap = BTreeMap<(ModuleId, DatatypeId), StructFieldOperationMap>;
 
 #[derive(Default, Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct GlobalNumberOperationState {

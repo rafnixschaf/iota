@@ -1,34 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use std::{borrow::Borrow, collections::BTreeSet, sync::Arc};
-
-use move_binary_format::{
-    access::ModuleAccess,
-    errors::{verification_error, Location, PartialVMError, PartialVMResult, VMResult},
-    file_format::{AbilitySet, LocalIndex},
-    CompiledModule, IndexKind,
-};
-use move_bytecode_verifier::script_signature;
-use move_core_types::{
-    account_address::AccountAddress,
-    annotated_value as A,
-    identifier::{IdentStr, Identifier},
-    language_storage::{ModuleId, TypeTag},
-    resolver::MoveResolver,
-    runtime_value::MoveTypeLayout,
-    vm_status::StatusCode,
-};
-use move_vm_config::runtime::VMConfig;
-use move_vm_types::{
-    data_store::DataStore,
-    gas::GasMeter,
-    loaded_data::runtime_types::{CachedStructIndex, StructType, Type},
-    values::{Locals, Reference, VMValueCast, Value},
-};
-use tracing::warn;
 
 use crate::{
     data_cache::TransactionDataCache,
@@ -38,9 +10,33 @@ use crate::{
     native_functions::{NativeFunction, NativeFunctions},
     session::{LoadedFunctionInstantiation, SerializedReturnValues, Session},
 };
+use move_binary_format::{
+    binary_config::BinaryConfig,
+    errors::{verification_error, Location, PartialVMError, PartialVMResult, VMResult},
+    file_format::LocalIndex,
+    CompiledModule, IndexKind,
+};
+use move_bytecode_verifier::script_signature;
+use move_core_types::{
+    account_address::AccountAddress,
+    identifier::{IdentStr, Identifier},
+    language_storage::ModuleId,
+    resolver::MoveResolver,
+    runtime_value::MoveTypeLayout,
+    vm_status::StatusCode,
+};
+use move_vm_config::runtime::VMConfig;
+use move_vm_types::{
+    data_store::DataStore,
+    gas::GasMeter,
+    loaded_data::runtime_types::Type,
+    values::{Locals, Reference, VMValueCast, Value},
+};
+use std::{borrow::Borrow, collections::BTreeSet, sync::Arc};
+use tracing::warn;
 
 /// An instantiation of the MoveVM.
-pub struct VMRuntime {
+pub(crate) struct VMRuntime {
     loader: Loader,
 }
 
@@ -65,12 +61,12 @@ impl VMRuntime {
     ) -> Session<'r, '_, S> {
         Session {
             runtime: self,
-            data_cache: TransactionDataCache::new(remote, &self.loader),
+            data_cache: TransactionDataCache::new(remote),
             native_extensions,
         }
     }
 
-    pub fn publish_module_bundle(
+    pub(crate) fn publish_module_bundle(
         &self,
         modules: Vec<Vec<u8>>,
         sender: AccountAddress,
@@ -84,7 +80,16 @@ impl VMRuntime {
             .map(|blob| {
                 CompiledModule::deserialize_with_config(
                     blob,
-                    &self.loader.vm_config().binary_config,
+                    &BinaryConfig::legacy(
+                        self.loader.vm_config().max_binary_format_version,
+                        self.loader()
+                            .vm_config()
+                            .binary_config
+                            .min_binary_format_version,
+                        self.loader
+                            .vm_config()
+                            .check_no_extraneous_bytes_during_deserialization,
+                    ),
                 )
             })
             .collect::<PartialVMResult<Vec<_>>>()
@@ -96,10 +101,9 @@ impl VMRuntime {
             }
         };
 
-        // Make sure all modules' self addresses matches the transaction sender. The
-        // self address is where the module will actually be published. If we
-        // did not check this, the sender could publish a module under anyone's
-        // account.
+        // Make sure all modules' self addresses matches the transaction sender. The self address is
+        // where the module will actually be published. If we did not check this, the sender could
+        // publish a module under anyone's account.
         for module in &compiled_modules {
             if module.address() != &sender {
                 return Err(verification_error(
@@ -120,71 +124,62 @@ impl VMRuntime {
             }
         }
 
-        // Perform bytecode and loading verification. Modules must be sorted in
-        // topological order.
+        // Perform bytecode and loading verification. Modules must be sorted in topological order.
         self.loader
             .verify_module_bundle_for_publication(&compiled_modules, data_store)?;
 
-        // NOTE: we want to (informally) argue that all modules pass the linking check
-        // before being published to the data store.
+        // NOTE: we want to (informally) argue that all modules pass the linking check before being
+        // published to the data store.
         //
         // The linking check consists of two checks actually
         // - dependencies::verify_module(module, all_imm_deps)
         // - cyclic_dependencies::verify_module(module, fn_imm_deps, fn_imm_friends)
         //
         // [Claim 1]
-        // We show that the `dependencies::verify_module` check is always satisfied
-        // whenever a module M is published or updated and the `all_imm_deps`
-        // contains the actual modules required by M.
+        // We show that the `dependencies::verify_module` check is always satisfied whenever a
+        // module M is published or updated and the `all_imm_deps` contains the actual modules
+        // required by M.
         //
         // Suppose M depends on D, and we now consider the following scenarios:
         // 1) D does not appear in the bundle together with M
-        // -- In this case, D must be either in the code cache or in the data store
-        // which can be    loaded into the code cache (and pass all checks on
-        // D).
+        // -- In this case, D must be either in the code cache or in the data store which can be
+        //    loaded into the code cache (and pass all checks on D).
         //    - If D is missing, the linking will fail and return an error.
         //    - If D exists, D will be added to the `all_imm_deps` arg when checking M.
         //
         // 2) D appears in the bundle *before* M
-        // -- In this case, regardless of whether D is in code cache or not, D will be
-        // put into the    `bundle_verified` argument and modules in
-        // `bundle_verified` will be prioritized before    returning a module in
-        // code cache.
+        // -- In this case, regardless of whether D is in code cache or not, D will be put into the
+        //    `bundle_verified` argument and modules in `bundle_verified` will be prioritized before
+        //    returning a module in code cache.
         //
         // 3) D appears in the bundle *after* M
-        // -- This technically should be discouraged but this is user input so we cannot
-        // have this    assumption here. But nevertheless, we can still make the
-        // claim 1 even in this case.    When M is verified, flow 1) is
-        // effectively activated, which means:
-        //    - If the code cache or the data store does not contain a D' which has the
-        //      same name with D, then the linking will fail and return an error.
-        //    - If D' exists, and M links against D', then when verifying D in a later
-        //      time point, a compatibility check will be invoked to ensure that D is
-        //      compatible with D', meaning, whichever module that links against D' will
-        //      have to link against D as well.
+        // -- This technically should be discouraged but this is user input so we cannot have this
+        //    assumption here. But nevertheless, we can still make the claim 1 even in this case.
+        //    When M is verified, flow 1) is effectively activated, which means:
+        //    - If the code cache or the data store does not contain a D' which has the same name
+        //      with D, then the linking will fail and return an error.
+        //    - If D' exists, and M links against D', then when verifying D in a later time point,
+        //      a compatibility check will be invoked to ensure that D is compatible with D',
+        //      meaning, whichever module that links against D' will have to link against D as well.
         //
         // [Claim 2]
-        // We show that the `cyclic_dependencies::verify_module` check is always
-        // satisfied whenever a module M is published or updated and the
-        // dep/friend modules returned by the transitive dependency closure
-        // functions are valid.
+        // We show that the `cyclic_dependencies::verify_module` check is always satisfied whenever
+        // a module M is published or updated and the dep/friend modules returned by the transitive
+        // dependency closure functions are valid.
         //
         // Currently, the code is written in a way that, from the view point of the
-        // `cyclic_dependencies::verify_module` check, modules checked prior to module M
-        // in the same bundle looks as if they have already been published and
-        // loaded to the code cache.
+        // `cyclic_dependencies::verify_module` check, modules checked prior to module M in the same
+        // bundle looks as if they have already been published and loaded to the code cache.
         //
-        // Therefore, if M forms a cyclic dependency with module A in the same bundle
-        // that is checked prior to M, such an error will be detected. However,
-        // if M forms a cyclic dependency with a module X that appears in the
-        // same bundle *after* M. The cyclic dependency can only be caught when
-        // X is verified.
+        // Therefore, if M forms a cyclic dependency with module A in the same bundle that is
+        // checked prior to M, such an error will be detected. However, if M forms a cyclic
+        // dependency with a module X that appears in the same bundle *after* M. The cyclic
+        // dependency can only be caught when X is verified.
         //
-        // In summary: the code is written in a way that, certain checks are skipped
-        // while checking each individual module in the bundle in order. But if
-        // every module in the bundle pass all the checks, then the whole bundle
-        // can be published/upgraded together. Otherwise, none of the module can
-        // be published/updated.
+        // In summary: the code is written in a way that, certain checks are skipped while checking
+        // each individual module in the bundle in order. But if every module in the bundle pass
+        // all the checks, then the whole bundle can be published/upgraded together. Otherwise,
+        // none of the module can be published/updated.
         for (module, blob) in compiled_modules.into_iter().zip(modules.into_iter()) {
             let runtime_id = module.self_id();
             let storage_id = data_store
@@ -236,8 +231,8 @@ impl VMRuntime {
             );
         }
 
-        // Create a list of dummy locals. Each value stored will be used be borrowed and
-        // passed by reference to the invoked function
+        // Create a list of dummy locals. Each value stored will be used be borrowed and passed
+        // by reference to the invoked function
         let mut dummy_locals = Locals::new(arg_tys.len());
         // Arguments for the invoked function. These can be owned values or references
         let deserialized_args = arg_tys
@@ -397,9 +392,9 @@ impl VMRuntime {
         extensions: &mut NativeContextExtensions,
         bypass_declared_entry_check: bool,
     ) -> VMResult<SerializedReturnValues> {
-        use move_binary_format::{binary_views::BinaryIndexedView, file_format::SignatureIndex};
+        use move_binary_format::file_format::SignatureIndex;
         fn check_is_entry(
-            _resolver: &BinaryIndexedView,
+            _resolver: &CompiledModule,
             is_entry: bool,
             _parameters_idx: SignatureIndex,
             _return_idx: Option<SignatureIndex>,
@@ -452,99 +447,5 @@ impl VMRuntime {
 
     pub(crate) fn loader(&self) -> &Loader {
         &self.loader
-    }
-
-    pub fn get_type_abilities(&self, ty: &Type) -> VMResult<AbilitySet> {
-        self.loader
-            .abilities(ty)
-            .map_err(|e| e.finish(Location::Undefined))
-    }
-
-    pub fn get_type_tag(&self, ty: &Type) -> VMResult<TypeTag> {
-        self.loader
-            .type_to_type_tag(ty)
-            .map_err(|e| e.finish(Location::Undefined))
-    }
-
-    pub fn get_struct_type(&self, index: CachedStructIndex) -> Option<Arc<StructType>> {
-        self.loader.get_struct_type(index)
-    }
-
-    pub fn type_to_type_layout(&self, ty: &Type) -> VMResult<MoveTypeLayout> {
-        self.loader
-            .type_to_type_layout(ty)
-            .map_err(|e| e.finish(Location::Undefined))
-    }
-
-    pub fn load_struct(
-        &self,
-        module_id: &ModuleId,
-        struct_name: &IdentStr,
-        data_store: &impl DataStore,
-    ) -> VMResult<(CachedStructIndex, Arc<StructType>)> {
-        self.loader
-            .load_struct_by_name(struct_name, module_id, data_store)
-    }
-
-    pub fn execute_function_bypass_visibility(
-        &self,
-        module: &ModuleId,
-        function_name: &IdentStr,
-        ty_args: Vec<Type>,
-        args: Vec<impl Borrow<[u8]>>,
-        data_store: &mut impl DataStore,
-        gas_meter: &mut impl GasMeter,
-        extensions: &mut NativeContextExtensions,
-    ) -> VMResult<SerializedReturnValues> {
-        move_vm_profiler::gas_profiler_feature_enabled! {
-            use move_vm_profiler::GasProfiler;
-            if gas_meter.get_profiler_mut().is_none() {
-                gas_meter.set_profiler(GasProfiler::init_default_cfg(
-                    function_name.to_string(),
-                    gas_meter.remaining_gas().into(),
-                ));
-            }
-        }
-
-        let bypass_declared_entry_check = true;
-        self.execute_function(
-            module,
-            function_name,
-            ty_args,
-            args,
-            data_store,
-            gas_meter,
-            extensions,
-            bypass_declared_entry_check,
-        )
-    }
-
-    pub fn type_to_fully_annotated_layout(&self, ty: &Type) -> VMResult<A::MoveTypeLayout> {
-        self.loader
-            .type_to_fully_annotated_layout(ty)
-            .map_err(|e| e.finish(Location::Undefined))
-    }
-
-    pub fn load_function(
-        &self,
-        module_id: &ModuleId,
-        function_name: &IdentStr,
-        type_arguments: &[Type],
-        data_store: &mut impl DataStore,
-    ) -> VMResult<LoadedFunctionInstantiation> {
-        let (_, _, _, instantiation) =
-            self.loader
-                .load_function(module_id, function_name, type_arguments, data_store)?;
-        Ok(instantiation)
-    }
-
-    pub fn load_module(
-        &self,
-        module_id: &ModuleId,
-        data_store: &impl DataStore,
-    ) -> VMResult<Arc<CompiledModule>> {
-        self.loader
-            .load_module(module_id, data_store)
-            .map(|(compiled, _)| compiled)
     }
 }

@@ -1,6 +1,5 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 extern crate test_generation;
@@ -24,11 +23,9 @@ fn call_graph_simple_recursive_call() {
     assert!(can_call0.len() == 9);
     assert!(can_call1.len() == 8);
     assert!(!can_call0.iter().any(|fh| *fh == FunctionHandleIndex(0)));
-    assert!(
-        !can_call1
-            .iter()
-            .any(|fh| *fh == FunctionHandleIndex(0) || *fh == FunctionHandleIndex(1))
-    );
+    assert!(!can_call1
+        .iter()
+        .any(|fh| *fh == FunctionHandleIndex(0) || *fh == FunctionHandleIndex(1)));
 }
 
 #[test]

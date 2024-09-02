@@ -1,24 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use std::{fs, path::Path};
-
-use anyhow::{anyhow, bail, Result};
-use move_binary_format::file_format::CompiledModule;
-use move_command_line_common::files::try_exists;
-use move_core_types::{
-    account_address::AccountAddress,
-    errmap::ErrorMapping,
-    identifier::IdentStr,
-    language_storage::TypeTag,
-    runtime_value::MoveValue,
-    transaction_argument::{convert_txn_args, TransactionArgument},
-};
-use move_package::compilation::compiled_package::CompiledPackage;
-use move_vm_runtime::move_vm::MoveVM;
-use move_vm_test_utils::gas_schedule::CostTable;
 
 use crate::{
     sandbox::utils::{
@@ -27,11 +9,24 @@ use crate::{
     },
     NativeFunctionRecord,
 };
+use anyhow::{anyhow, bail, Result};
+use move_binary_format::file_format::CompiledModule;
+use move_command_line_common::files::try_exists;
+use move_core_types::{
+    account_address::AccountAddress,
+    identifier::IdentStr,
+    language_storage::TypeTag,
+    runtime_value::MoveValue,
+    transaction_argument::{convert_txn_args, TransactionArgument},
+};
+use move_package::compilation::compiled_package::CompiledPackage;
+use move_vm_runtime::move_vm::MoveVM;
+use move_vm_test_utils::gas_schedule::CostTable;
+use std::{fs, path::Path};
 
 pub fn run(
     natives: impl IntoIterator<Item = NativeFunctionRecord>,
     cost_table: &CostTable,
-    error_descriptions: &ErrorMapping,
     state: &OnDiskStateView,
     _package: &CompiledPackage,
     module_file: &Path,
@@ -59,8 +54,7 @@ pub fn run(
         .iter()
         .map(|s| AccountAddress::from_hex_literal(s))
         .collect::<Result<Vec<AccountAddress>, _>>()?;
-    // TODO: parse Value's directly instead of going through the indirection of
-    // TransactionArgument?
+    // TODO: parse Value's directly instead of going through the indirection of TransactionArgument?
     let vm_args: Vec<Vec<u8>> = convert_txn_args(txn_args);
 
     let vm = MoveVM::new(natives).unwrap();
@@ -112,7 +106,6 @@ pub fn run(
 
     if let Err(err) = res {
         explain_execution_error(
-            error_descriptions,
             err,
             state,
             &script_type_parameters,
@@ -122,7 +115,7 @@ pub fn run(
             txn_args,
         )
     } else {
-        let (_changeset, _events) = session.finish().0?;
+        let _changeset = session.finish().0?;
         Ok(())
     }
 }

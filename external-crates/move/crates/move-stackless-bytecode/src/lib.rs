@@ -1,15 +1,12 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #![forbid(unsafe_code)]
 
-use std::fmt::Write;
-
-use move_model::model::GlobalEnv;
-
 use crate::function_target_pipeline::FunctionTargetsHolder;
+use move_model::model::GlobalEnv;
+use std::fmt::Write;
 
 pub mod access_path;
 pub mod access_path_trie;

@@ -1,23 +1,20 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(dead_code)]
 #![allow(unused_must_use)]
 #![allow(unused_imports)]
 
-use std::time::Instant;
-
 use move_binary_format::{
     errors::VMResult,
     file_format::{
         AbilitySet, AddressIdentifierIndex, Bytecode, Bytecode::*, CodeUnit, CompiledModule,
-        Constant, ConstantPoolIndex, FieldDefinition, FunctionDefinition, FunctionHandle,
-        FunctionHandleIndex, FunctionInstantiation, FunctionInstantiationIndex, IdentifierIndex,
-        ModuleHandle, ModuleHandleIndex, Signature, SignatureIndex, SignatureToken,
-        SignatureToken::*, StructDefInstantiation, StructDefInstantiationIndex, StructDefinition,
-        StructDefinitionIndex, StructFieldInformation, StructHandle, StructHandleIndex,
-        StructTypeParameter, TypeSignature,
+        Constant, ConstantPoolIndex, DatatypeHandle, DatatypeHandleIndex, DatatypeTyParameter,
+        FieldDefinition, FunctionDefinition, FunctionHandle, FunctionHandleIndex,
+        FunctionInstantiation, FunctionInstantiationIndex, IdentifierIndex, ModuleHandle,
+        ModuleHandleIndex, Signature, SignatureIndex, SignatureToken, SignatureToken::*,
+        StructDefInstantiation, StructDefInstantiationIndex, StructDefinition,
+        StructDefinitionIndex, StructFieldInformation, TypeSignature,
     },
 };
 use move_core_types::{
@@ -38,6 +35,7 @@ use move_vm_test_utils::{
 };
 #[cfg(feature = "gas-profiler")]
 use move_vm_types::gas::GasMeter;
+use std::time::Instant;
 
 const MODULE_NAME: &str = "Mod";
 const STRUCT_NAME: &str = "S";
@@ -51,8 +49,8 @@ fn main() {
 }
 
 // Get a `GasStatus` to be used when running code.
-// A `gas_val` of 0 returns an unmetered `GasStatus` which means code in this
-// test will run forever (we always and only generate infinite loops)
+// A `gas_val` of 0 returns an unmetered `GasStatus` which means code in this test will
+// run forever (we always and only generate infinite loops)
 fn get_gas_meter<'a>(gas_val: u64) -> GasStatus<'a> {
     if gas_val == 0 {
         GasStatus::new_unmetered()
@@ -162,7 +160,7 @@ fn test_instantiation_no_instantiation() {
 // Common runner for all tests.
 // Run a control test (load_pop) and an instantiation test which is then
 // compared against the control.
-// Ensure that tests complete with "out of gas" and within a given time range.
+// Ensure that tests complete with "out of gas" and withing a given time range.
 fn test_runner(
     gas_val: u64,
     test_name: &str,
@@ -293,25 +291,23 @@ fn test_instantiation_deep_rec_gen_call() {
     );
 }
 
-// Generate a verifiable module with a snippet of code that can be used to test
-// instantiations. The code is a block (so balanced stack) passed via `snippet`
-// and it's repeated `snippet_rep` times. It is then completed with a
-// `Branch(0)` to form an infinite loop. That can be used with no gas charge to
-// profile the code executed (an executable), or with some gas to determine how
-// long it takes to go OutOfGas. The code has to work on a `void(void)` function
-// (so to speak) that has a number of type parameters defined via
-// `func_type_params_count`. It can define a number of locals through
-// `locals_sig`. The locals are added after the "default" `Signature` provided
-// (look at that for the indexes that can be used). A struct is defined that
-// uses `struct_type_params_count` to define the number of type parameters.
-// A set of `Signature` can be provided for the code snippet to use besides the
-// default and the locals.
+// Generate a verifiable module with a snippet of code that can be used to test instantiations.
+// The code is a block (so balanced stack) passed via `snippet` and it's repeated
+// `snippet_rep` times. It is then completed with a `Branch(0)` to form an infinite
+// loop. That can be used with no gas charge to profile the code executed (an executable),
+// or with some gas to determine how long it takes to go OutOfGas.
+// The code has to work on a `void(void)` function (so to speak) that has
+// a number of type parameters defined via `func_type_params_count`.
+// It can define a number of locals through `locals_sig`. The locals are added
+// after the "default" `Signature` provided (look at that for the indexes that can be used).
+// A struct is defined that uses `struct_type_params_count` to define the number of
+// type parameters.
+// A set of `Signature` can be provided for the code snippet to use besides the default
+// and the locals.
 // `struct_inst_signatures` and `func_inst_signatures` can be used to generate
-// `StructDefInstantiation` and `FunctionInstantiation` that can be used by
-// related bytecodes.
+// `StructDefInstantiation` and `FunctionInstantiation` that can be used by related bytecodes.
 //
-// Notice: this is not a particularly easy function to use. See example below on
-// how to use it.
+// Notice: this is not a particularly easy function to use. See example below on how to use it.
 fn make_module(
     session: &mut Session<&'_ InMemoryStorage>,
     addr: AccountAddress,
@@ -350,7 +346,7 @@ fn make_module(
         func_type_params.clone()
     };
     let struct_type_parameters = vec![
-        StructTypeParameter {
+        DatatypeTyParameter {
             constraints: AbilitySet::EMPTY,
             is_phantom: false,
         };
@@ -395,14 +391,14 @@ fn make_module(
             name: IdentifierIndex(0),
         }],
         // struct definition
-        struct_handles: vec![StructHandle {
+        datatype_handles: vec![DatatypeHandle {
             module: ModuleHandleIndex(0),
             name: IdentifierIndex(1),
             abilities: AbilitySet::ALL,
             type_parameters: struct_type_parameters,
         }],
         struct_defs: vec![StructDefinition {
-            struct_handle: StructHandleIndex(0),
+            struct_handle: DatatypeHandleIndex(0),
             field_information: StructFieldInformation::Declared(vec![FieldDefinition {
                 name: IdentifierIndex(2),
                 signature: TypeSignature(U8),
@@ -440,6 +436,7 @@ fn make_module(
                 acquires_global_resources: vec![],
                 code: Some(CodeUnit {
                     locals: SignatureIndex(locals_idx as u16),
+                    jump_tables: vec![],
                     code,
                 }),
             },
@@ -450,6 +447,7 @@ fn make_module(
                 acquires_global_resources: vec![],
                 code: Some(CodeUnit {
                     locals: SignatureIndex(locals_idx as u16),
+                    jump_tables: vec![],
                     code: vec![
                         CopyLoc(0),
                         LdU64(1),
@@ -472,6 +470,7 @@ fn make_module(
                 acquires_global_resources: vec![],
                 code: Some(CodeUnit {
                     locals: SignatureIndex(locals_idx as u16),
+                    jump_tables: vec![],
                     code: vec![Ret],
                 }),
             },
@@ -509,6 +508,10 @@ fn make_module(
         friend_decls: vec![],
         field_instantiations: vec![],
         metadata: vec![],
+        enum_defs: vec![],
+        enum_def_instantiations: vec![],
+        variant_handles: vec![],
+        variant_instantiation_handles: vec![],
     };
     // uncomment to see the module generated
     // println!("Module: {:#?}", module);
@@ -516,7 +519,7 @@ fn make_module(
 
     let mut mod_bytes = vec![];
     module
-        .serialize(&mut mod_bytes)
+        .serialize_with_version(module.version, &mut mod_bytes)
         .expect("Module must serialize");
     session
         .publish_module(mod_bytes, addr, &mut GasStatus::new_unmetered())
@@ -526,10 +529,9 @@ fn make_module(
 
 // Generic function to run some code. Take the gas to use and a closure
 // that can return an entry point to call.
-// This function creates a VM, invokes the closure, and on return it builds the
-// call for the entry point.
-// Report time spent, if it terminates (no gas it will never end; use for
-// profiling).
+// This function creates a VM, invokes the closure, and on return it builds the call
+// for the entry point.
+// Report time spent, if it terminates (no gas it will never end; use for profiling).
 fn run_with_module(
     gas: &mut GasStatus,
     entry_spec: fn(
@@ -539,6 +541,7 @@ fn run_with_module(
 ) -> (VMResult<SerializedReturnValues>, u128) {
     let addr = AccountAddress::from_hex_literal("0xcafe").unwrap();
 
+    //
     // Start VM
     let vm = MoveVM::new(vec![]).unwrap();
     let storage: InMemoryStorage = InMemoryStorage::new();
@@ -578,6 +581,7 @@ fn load_pop(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 0;
     let locals_sig = None;
@@ -603,6 +607,7 @@ fn load_pop(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![])
 }
@@ -617,6 +622,7 @@ fn vec_pack_instantiated(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 0;
     let locals_sig = None;
@@ -642,6 +648,7 @@ fn vec_pack_instantiated(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![])
 }
@@ -651,6 +658,7 @@ fn vec_pack_gen_simple(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -676,6 +684,7 @@ fn vec_pack_gen_simple(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![TypeTag::U128])
 }
@@ -717,9 +726,10 @@ fn vec_pack_gen_deep_it(
         for _ in 0..STRUCT_TY_PARAMS {
             ty_args.push(big_ty.clone());
         }
-        big_ty = StructInstantiation(Box::new((StructHandleIndex(0), ty_args)));
+        big_ty = DatatypeInstantiation(Box::new((DatatypeHandleIndex(0), ty_args)));
     }
 
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -754,6 +764,7 @@ fn vec_pack_gen_deep_it(
         }));
     }
 
+    //
     // Entry specification
     (self_id, entry_name, vec![ty_arg])
 }
@@ -768,6 +779,7 @@ fn instantiated_gen_call(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 0;
     let locals_sig = None;
@@ -793,6 +805,7 @@ fn instantiated_gen_call(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![])
 }
@@ -802,6 +815,7 @@ fn simple_gen_call(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -827,6 +841,7 @@ fn simple_gen_call(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![TypeTag::U128])
 }
@@ -868,9 +883,10 @@ fn deep_gen_call_it(
         for _ in 0..STRUCT_TY_PARAMS {
             ty_args.push(big_ty.clone());
         }
-        big_ty = StructInstantiation(Box::new((StructHandleIndex(0), ty_args)));
+        big_ty = DatatypeInstantiation(Box::new((DatatypeHandleIndex(0), ty_args)));
     }
 
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -905,6 +921,7 @@ fn deep_gen_call_it(
         }));
     }
 
+    //
     // Entry specification
     (self_id, entry_name, vec![ty_arg])
 }
@@ -919,6 +936,7 @@ fn instantiated_rec_gen_call(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 0;
     let locals_sig = None;
@@ -944,6 +962,7 @@ fn instantiated_rec_gen_call(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![])
 }
@@ -953,6 +972,7 @@ fn simple_rec_gen_call(
     addr: AccountAddress,
     session: &mut Session<&'_ InMemoryStorage>,
 ) -> (ModuleId, Identifier, Vec<TypeTag>) {
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -978,6 +998,7 @@ fn simple_rec_gen_call(
         func_inst_signatures,
     );
 
+    //
     // Entry specification
     (self_id, entry_name, vec![TypeTag::U128])
 }
@@ -997,9 +1018,10 @@ fn deep_rec_gen_call(
         for _ in 0..STRUCT_TY_PARAMS {
             ty_args.push(big_ty.clone());
         }
-        big_ty = StructInstantiation(Box::new((StructHandleIndex(0), ty_args)));
+        big_ty = DatatypeInstantiation(Box::new((DatatypeHandleIndex(0), ty_args)));
     }
 
+    //
     // Module definition and publishing
     let func_type_params_count = 1;
     let locals_sig = None;
@@ -1035,6 +1057,7 @@ fn deep_rec_gen_call(
         }));
     }
 
+    //
     // Entry specification
     (self_id, entry_name, vec![ty_arg])
 }

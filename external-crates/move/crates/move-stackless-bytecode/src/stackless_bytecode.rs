@@ -1,22 +1,19 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::BTreeMap, fmt, fmt::Formatter};
-
+use crate::function_target::FunctionTarget;
 use ethnum::U256;
 use itertools::Itertools;
 use move_binary_format::file_format::CodeOffset;
 use move_core_types::u256;
 use move_model::{
     ast::TempIndex,
-    model::{FunId, GlobalEnv, ModuleId, QualifiedInstId, StructId},
+    model::{DatatypeId, FunId, GlobalEnv, ModuleId, QualifiedInstId, RefType, VariantId},
     ty::{Type, TypeDisplayContext},
 };
 use num::BigUint;
-
-use crate::function_target::FunctionTarget;
+use std::{collections::BTreeMap, fmt, fmt::Formatter};
 
 /// A label for a branch destination.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -46,8 +43,8 @@ impl AttrId {
     }
 }
 
-/// An id for a spec block. A spec block can contain assumes and asserts to be
-/// enforced at a program point.
+/// An id for a spec block. A spec block can contain assumes and asserts to be enforced at a
+/// program point.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct SpecBlockId(u16);
 
@@ -108,8 +105,8 @@ impl From<&u256::U256> for Constant {
     }
 }
 
-/// An operation -- target of a call. This contains user functions, builtin
-/// functions, and operators.
+/// An operation -- target of a call. This contains user functions, builtin functions, and
+/// operators.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operation {
     // User function
@@ -123,22 +120,22 @@ pub enum Operation {
     OpaqueCallEnd(ModuleId, FunId, Vec<Type>),
 
     // Pack/Unpack
-    Pack(ModuleId, StructId, Vec<Type>),
-    Unpack(ModuleId, StructId, Vec<Type>),
+    Pack(ModuleId, DatatypeId, Vec<Type>),
+    Unpack(ModuleId, DatatypeId, Vec<Type>),
 
     // Resources
-    MoveTo(ModuleId, StructId, Vec<Type>),
-    MoveFrom(ModuleId, StructId, Vec<Type>),
-    Exists(ModuleId, StructId, Vec<Type>),
+    MoveTo(ModuleId, DatatypeId, Vec<Type>),
+    MoveFrom(ModuleId, DatatypeId, Vec<Type>),
+    Exists(ModuleId, DatatypeId, Vec<Type>),
 
     // Borrow
     BorrowLoc,
-    BorrowField(ModuleId, StructId, Vec<Type>, usize),
-    BorrowGlobal(ModuleId, StructId, Vec<Type>),
+    BorrowField(ModuleId, DatatypeId, Vec<Type>, usize),
+    BorrowGlobal(ModuleId, DatatypeId, Vec<Type>),
 
     // Get
-    GetField(ModuleId, StructId, Vec<Type>, usize),
-    GetGlobal(ModuleId, StructId, Vec<Type>),
+    GetField(ModuleId, DatatypeId, Vec<Type>, usize),
+    GetGlobal(ModuleId, DatatypeId, Vec<Type>),
 
     // Builtins
     Uninit,
@@ -185,6 +182,10 @@ pub enum Operation {
     Eq,
     Neq,
     CastU256,
+
+    // Variants
+    PackVariant(ModuleId, DatatypeId, VariantId, Vec<Type>),
+    UnpackVariant(ModuleId, DatatypeId, VariantId, Vec<Type>, RefType),
 
     // Debugging
     TraceLocal(TempIndex),
@@ -250,6 +251,8 @@ impl Operation {
             Operation::TraceLocal(..) => false,
             Operation::TraceAbort => false,
             Operation::TraceReturn(..) => false,
+            Operation::PackVariant(_, _, _, _) => false,
+            Operation::UnpackVariant(_, _, _, _, _) => false,
         }
     }
 }
@@ -257,7 +260,7 @@ impl Operation {
 /// A borrow node -- used in memory operations.
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum BorrowNode {
-    GlobalRoot(QualifiedInstId<StructId>),
+    GlobalRoot(QualifiedInstId<DatatypeId>),
     LocalRoot(TempIndex),
     Reference(TempIndex),
     // Used in summaries to represent a returned mutation at return index. This does not
@@ -299,7 +302,7 @@ pub enum BorrowEdge {
     /// Direct borrow.
     Direct,
     /// Field borrow with static offset.
-    Field(QualifiedInstId<StructId>, usize),
+    Field(QualifiedInstId<DatatypeId>, usize),
     /// Vector borrow with dynamic index.
     Index(IndexEdgeKind),
     /// Composed sequence of edges.
@@ -328,8 +331,8 @@ impl BorrowEdge {
 }
 
 /// Information about the action to take on abort. The label represents the
-/// destination to jump to, and the temporary where to store the abort code
-/// before jump.
+/// destination to jump to, and the temporary where to store the abort code before
+/// jump.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AbortAction(pub Label, pub TempIndex);
 
@@ -347,6 +350,8 @@ pub enum Bytecode {
     ),
     Ret(AttrId, Vec<TempIndex>),
 
+    VariantSwitch(AttrId, TempIndex, Vec<Label>),
+
     Load(AttrId, TempIndex, Constant),
     Branch(AttrId, Label, Label, TempIndex),
     Jump(AttrId, Label),
@@ -362,6 +367,7 @@ impl Bytecode {
             Assign(id, ..)
             | Call(id, ..)
             | Ret(id, ..)
+            | VariantSwitch(id, ..)
             | Load(id, ..)
             | Branch(id, ..)
             | Jump(id, ..)
@@ -388,6 +394,7 @@ impl Bytecode {
             Bytecode::Ret(..)
                 | Bytecode::Jump(..)
                 | Bytecode::Abort(..)
+                | Bytecode::VariantSwitch(..)
                 | Bytecode::Call(_, _, Operation::Stop, _, _)
         )
     }
@@ -410,6 +417,7 @@ impl Bytecode {
             Bytecode::Jump(_, label) | Bytecode::Call(_, _, _, _, Some(AbortAction(label, _))) => {
                 vec![*label]
             }
+            Bytecode::VariantSwitch(_, _, dests) => dests.clone(),
             _ => vec![],
         }
     }
@@ -425,8 +433,8 @@ impl Bytecode {
         res
     }
 
-    /// Return the successor offsets of this instruction. In addition to the
-    /// code, a map of label to code offset need to be passed in.
+    /// Return the successor offsets of this instruction. In addition to the code, a map
+    /// of label to code offset need to be passed in.
     pub fn get_successors(
         pc: CodeOffset,
         code: &[Bytecode],
@@ -447,9 +455,7 @@ impl Bytecode {
             }
         }
         // always give successors in ascending order
-        if v.len() > 1 && v[0] > v[1] {
-            v.swap(0, 1);
-        }
+        v.sort();
         v
     }
 
@@ -476,7 +482,11 @@ impl Bytecode {
         F: FnMut(TempIndex) -> TempIndex,
     {
         self.remap_vars_internal(func_target, &mut |is_src, idx| {
-            if is_src { f(idx) } else { idx }
+            if is_src {
+                f(idx)
+            } else {
+                idx
+            }
         })
     }
 
@@ -595,18 +605,14 @@ impl Bytecode {
         }
     }
 
-    /// Return the temporaries this instruction modifies and how the temporaries
-    /// are modified.
+    /// Return the temporaries this instruction modifies and how the temporaries are modified.
     ///
-    /// For a temporary with TempIndex $t, if $t is modified by the instruction
-    /// and
-    /// 1) $t is a value or an immutable reference, it will show up in the first
-    ///    Vec
-    /// 2) $t is a mutable reference and only its value is modified, not the
-    ///    reference itself, it will show up in the second Vec as ($t, false).
-    /// 3) $t is a mutable reference and the reference itself is modified (i.e.,
-    ///    the location and path it is pointing to), it will show up in the
-    ///    second Vec as ($t, true).
+    /// For a temporary with TempIndex $t, if $t is modified by the instruction and
+    /// 1) $t is a value or an immutable reference, it will show up in the first Vec
+    /// 2) $t is a mutable reference and only its value is modified, not the reference itself,
+    ///    it will show up in the second Vec as ($t, false).
+    /// 3) $t is a mutable reference and the reference itself is modified (i.e., the location and
+    ///    path it is pointing to), it will show up in the second Vec as ($t, true).
     pub fn modifies(
         &self,
         func_target: &FunctionTarget<'_>,
@@ -644,8 +650,7 @@ impl Bytecode {
                 (add_abort(vec![], aa), vec![(*dest, false)])
             }
             Call(_, _, Operation::WriteRef, srcs, aa) => {
-                // write-ref only distorts the value of the reference, but not the pointer
-                // itself
+                // write-ref only distorts the value of the reference, but not the pointer itself
                 (add_abort(vec![], aa), vec![(srcs[0], false)])
             }
             Call(_, dests, Function(..), srcs, aa) => {
@@ -769,6 +774,13 @@ impl<'env> fmt::Display for BytecodeDisplay<'env> {
             }
             Nop(_) => {
                 write!(f, "nop")?;
+            }
+            VariantSwitch(_, src, labels) => {
+                write!(f, "switch {} {{", self.lstr(*src))?;
+                for (i, l) in labels.iter().enumerate() {
+                    write!(f, " {} => {}", i, self.label_str(*l))?;
+                }
+                write!(f, "}}")?;
             }
         }
         Ok(())
@@ -1017,6 +1029,43 @@ impl<'env> fmt::Display for OperationDisplay<'env> {
             }
             TraceAbort => write!(f, "trace_abort")?,
             TraceReturn(r) => write!(f, "trace_return[{}]", r)?,
+            PackVariant(mid, did, vid, tys) => {
+                let enum_env = self
+                    .func_target
+                    .global_env()
+                    .get_module(*mid)
+                    .into_enum(*did);
+                write!(
+                    f,
+                    "pack_variant<{}>::{}",
+                    self.struct_str(*mid, *did, tys),
+                    enum_env
+                        .get_variant(*vid)
+                        .get_name()
+                        .display(enum_env.symbol_pool())
+                )?;
+            }
+            UnpackVariant(mid, did, vid, tys, reftype) => {
+                let enum_env = self
+                    .func_target
+                    .global_env()
+                    .get_module(*mid)
+                    .into_enum(*did);
+                write!(
+                    f,
+                    "{}unpack_variant<{}>::{}",
+                    match reftype {
+                        RefType::ByValue => "",
+                        RefType::ByImmRef => "&",
+                        RefType::ByMutRef => "&mut ",
+                    },
+                    self.struct_str(*mid, *did, tys),
+                    enum_env
+                        .get_variant(*vid)
+                        .get_name()
+                        .display(enum_env.symbol_pool())
+                )?;
+            }
         }
         Ok(())
     }
@@ -1041,8 +1090,8 @@ impl<'env> OperationDisplay<'env> {
         Ok(())
     }
 
-    fn struct_str(&self, mid: ModuleId, sid: StructId, targs: &[Type]) -> String {
-        let ty = Type::Struct(mid, sid, targs.to_vec());
+    fn struct_str(&self, mid: ModuleId, sid: DatatypeId, targs: &[Type]) -> String {
+        let ty = Type::Datatype(mid, sid, targs.to_vec());
         let tctx = TypeDisplayContext::WithEnv {
             env: self.func_target.global_env(),
             type_param_names: None,
@@ -1084,8 +1133,7 @@ pub struct BorrowNodeDisplay<'env> {
 }
 
 impl BorrowNode {
-    /// Creates a format object for a borrow node in context of a function
-    /// target.
+    /// Creates a format object for a borrow node in context of a function target.
     pub fn display<'env>(
         &'env self,
         func_target: &'env FunctionTarget<'env>,
@@ -1102,7 +1150,7 @@ impl<'env> fmt::Display for BorrowNodeDisplay<'env> {
         use BorrowNode::*;
         match self.node {
             GlobalRoot(s) => {
-                let ty = Type::Struct(s.module_id, s.id, s.inst.to_owned());
+                let ty = Type::Datatype(s.module_id, s.id, s.inst.to_owned());
                 let tctx = TypeDisplayContext::WithEnv {
                     env: self.func_target.global_env(),
                     type_param_names: None,

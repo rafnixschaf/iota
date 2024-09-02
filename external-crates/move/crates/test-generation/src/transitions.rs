@@ -1,19 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use std::collections::{hash_map::Entry, HashMap};
-
-use move_binary_format::{
-    access::*,
-    file_format::{
-        Ability, AbilitySet, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
-        FunctionInstantiationIndex, Signature, SignatureIndex, SignatureToken,
-        StructDefInstantiationIndex, StructDefinitionIndex, StructFieldInformation, TableIndex,
-    },
-    views::{FunctionHandleView, StructDefinitionView, ViewInternals},
-};
 
 use crate::{
     abilities,
@@ -22,13 +9,21 @@ use crate::{
     error::VMError,
     get_struct_handle_from_reference, get_type_actuals_from_reference, substitute,
 };
+use move_binary_format::file_format::{
+    Ability, AbilitySet, FieldHandleIndex, FieldInstantiationIndex, FunctionHandleIndex,
+    FunctionInstantiationIndex, Signature, SignatureIndex, SignatureToken,
+    StructDefInstantiationIndex, StructDefinitionIndex, StructFieldInformation,
+};
+
+use move_binary_format::file_format::TableIndex;
+use std::collections::{hash_map::Entry, HashMap};
 
 //---------------------------------------------------------------------------
 // Type Instantiations from Unification with the Abstract Stack
 //---------------------------------------------------------------------------
 
-/// A substitution is a mapping from type formal index to the `SignatureToken`
-/// representing the type instantiation for that index.
+/// A substitution is a mapping from type formal index to the `SignatureToken` representing the
+/// type instantiation for that index.
 #[derive(Default)]
 pub struct Subst {
     pub subst: HashMap<usize, SignatureToken>,
@@ -39,11 +34,10 @@ impl Subst {
         Default::default()
     }
 
-    /// NB that the position of arguments here matters. We can build a
-    /// substitution if the `instr_sig` is a type parameter, and the
-    /// `stack_sig` is a concrete type. But, if the instruction signature is a
-    /// concrete type, but the stack signature is a type parameter, they cannot
-    /// unify and no substitution is created.
+    /// NB that the position of arguments here matters. We can build a substitution if the `instr_sig`
+    /// is a type parameter, and the `stack_sig` is a concrete type. But, if the instruction signature is a
+    /// concrete type, but the stack signature is a type parameter, they cannot unify and no
+    /// substitution is created.
     pub fn check_and_add(&mut self, stack_sig: SignatureToken, instr_sig: SignatureToken) -> bool {
         match (stack_sig, instr_sig) {
             (tok, SignatureToken::TypeParameter(idx)) => {
@@ -61,14 +55,14 @@ impl Subst {
             // that case has already been taken care of above. This case is added for explicitness,
             // but it could be rolled into the catch-all at the bottom of this match.
             (SignatureToken::TypeParameter(_), _) => false,
-            (SignatureToken::Struct(sig1), SignatureToken::Struct(sig2)) => sig1 == sig2,
+            (SignatureToken::Datatype(sig1), SignatureToken::Datatype(sig2)) => sig1 == sig2,
             // Build a substitution from recursing into structs
             (
-                SignatureToken::StructInstantiation(struct_inst1),
-                SignatureToken::StructInstantiation(struct_inst2),
+                SignatureToken::DatatypeInstantiation(inst1),
+                SignatureToken::DatatypeInstantiation(inst2),
             ) => {
-                let (sig1, params1) = *struct_inst1;
-                let (sig2, params2) = *struct_inst2;
+                let (sig1, params1) = *inst1;
+                let (sig2, params2) = *inst2;
                 if sig1 != sig2 {
                     return false;
                 }
@@ -96,19 +90,19 @@ impl Subst {
 // Kind Operations
 //---------------------------------------------------------------------------
 
-/// Given a signature token, returns the abilities of this token in the module
-/// context, and instantiation for the function.
+/// Given a signature token, returns the abilities of this token in the module context, and
+/// instantiation for the function.
 pub fn abilities_for_token(
     state: &AbstractState,
     token: &SignatureToken,
-    type_parameters: &[AbilitySet],
+    type_paramters: &[AbilitySet],
 ) -> AbilitySet {
-    abilities(&state.module.module, token, type_parameters)
+    abilities(&state.module.module, token, type_paramters)
 }
 
-/// Given a locals signature index, determine the abilities for each signature
-/// token. Restricted for determining abilities at the top-level only. This is
-/// reflected in the use of `state.instantiation[..]` as the kind context.
+/// Given a locals signature index, determine the abilities for each signature token. Restricted for
+/// determining abilities at the top-level only. This is reflected in the use of
+/// `state.instantiation[..]` as the kind context.
 pub fn abilities_for_instantiation(
     state: &AbstractState,
     instantiation: &[SignatureToken],
@@ -235,8 +229,8 @@ pub fn stack_top_is_castable_to(state: &AbstractState, typ: SignatureToken) -> b
             | SignatureToken::Address
             | SignatureToken::Signer
             | SignatureToken::Vector(_)
-            | SignatureToken::Struct(_)
-            | SignatureToken::StructInstantiation(_)
+            | SignatureToken::Datatype(_)
+            | SignatureToken::DatatypeInstantiation(_)
             | SignatureToken::Reference(_)
             | SignatureToken::MutableReference(_)
             | SignatureToken::TypeParameter(_) => false,
@@ -276,9 +270,8 @@ pub fn local_has_ability(state: &AbstractState, index: u8, ability: Ability) -> 
 // Stack & Local Predicates
 //---------------------------------------------------------------------------
 
-/// Determine whether the stack is at least of size `index`. If the optional
-/// `abstract_value` argument is some `AbstractValue`, check whether the type at
-/// `index` is that abstract_value.
+/// Determine whether the stack is at least of size `index`. If the optional `abstract_value`
+/// argument is some `AbstractValue`, check whether the type at `index` is that abstract_value.
 pub fn stack_has(
     state: &AbstractState,
     index: usize,
@@ -302,8 +295,8 @@ pub fn stack_has_polymorphic_eq(state: &AbstractState, index1: usize, index2: us
     }
 }
 
-/// Determine whether an abstract value on the stack and a abstract value in the
-/// locals have the same type
+/// Determine whether an abstract value on the stack and a abstract value in the locals have the
+/// same type
 pub fn stack_local_polymorphic_eq(state: &AbstractState, index1: usize, index2: usize) -> bool {
     if stack_has(state, index1, None) {
         if let Some((abstract_value, _)) = state.local_get(index2) {
@@ -325,8 +318,8 @@ pub fn local_availability_is(state: &AbstractState, index: u8, availability: Bor
         .unwrap_or(false)
 }
 
-/// Determine whether an abstract value on the stack that is a reference points
-/// to something of the same type as another abstract value on the stack
+/// Determine whether an abstract value on the stack that is a reference points to something of the
+/// same type as another abstract value on the stack
 pub fn stack_ref_polymorphic_eq(state: &AbstractState, index1: usize, index2: usize) -> bool {
     if stack_has(state, index2, None) {
         if let Some(abstract_value) = state.stack_peek(index1) {
@@ -345,8 +338,8 @@ pub fn stack_ref_polymorphic_eq(state: &AbstractState, index1: usize, index2: us
                 | SignatureToken::Address
                 | SignatureToken::Signer
                 | SignatureToken::Vector(_)
-                | SignatureToken::Struct(_)
-                | SignatureToken::StructInstantiation(_)
+                | SignatureToken::Datatype(_)
+                | SignatureToken::DatatypeInstantiation(_)
                 | SignatureToken::TypeParameter(_)
                 | SignatureToken::U16
                 | SignatureToken::U32
@@ -374,8 +367,7 @@ pub enum StackBinOpResult {
     Other(AbstractValue),
 }
 
-/// Perform a binary operation using the top two values on the stack as
-/// operands.
+/// Perform a binary operation using the top two values on the stack as operands.
 pub fn stack_bin_op(
     state: &AbstractState,
     res: StackBinOpResult,
@@ -467,10 +459,10 @@ pub fn stack_satisfies_struct_instantiation(
     }
 }
 
-/// Determine whether the struct at the given index can be constructed from the
-/// values on the stack.
-/// Note that this function is bidirectional; if there is an instantiation, we
-/// check it. Otherwise, we infer the types that are needed.
+/// Determine whether the struct at the given index can be constructed from the values on
+/// the stack.
+/// Note that this function is bidirectional; if there is an instantiation, we check it. Otherwise,
+/// we infer the types that are needed.
 pub fn stack_satisfies_struct_signature(
     state: &AbstractState,
     struct_index: StructDefinitionIndex,
@@ -478,21 +470,24 @@ pub fn stack_satisfies_struct_signature(
 ) -> (bool, Subst) {
     let instantiation = instantiation.map(|index| state.module.instantiantiation_at(index));
     let struct_def = state.module.module.struct_def_at(struct_index);
-    let struct_def = StructDefinitionView::new(&state.module.module, struct_def);
+    let shandle = state
+        .module
+        .module
+        .datatype_handle_at(struct_def.struct_handle);
     // Get the type formals for the struct, and the kinds that they expect.
-    let type_parameters = struct_def.type_parameters();
-    let field_token_views = struct_def
+    let type_parameters = shandle.type_parameters.clone();
+    let field_tokens = struct_def
         .fields()
         .into_iter()
         .flatten()
-        .map(|field| field.type_signature().token());
+        .map(|field| &field.signature.0);
     let mut satisfied = true;
     let mut substitution = Subst::new();
-    for (i, token_view) in field_token_views.rev().enumerate() {
+    for (i, token) in field_tokens.rev().enumerate() {
         let ty = if let Some(subst) = &instantiation {
-            substitute(token_view.as_inner(), subst)
+            substitute(token, subst)
         } else {
-            token_view.as_inner().clone()
+            token.clone()
         };
         let has = if let SignatureToken::TypeParameter(idx) = &ty {
             if stack_has_all_abilities(state, i, type_parameters[*idx as usize].constraints) {
@@ -506,7 +501,7 @@ pub fn stack_satisfies_struct_signature(
                 token: ty,
                 abilities: abilities(
                     &state.module.module,
-                    token_view.as_inner(),
+                    token,
                     &type_parameters
                         .iter()
                         .map(|param| param.constraints)
@@ -541,8 +536,11 @@ pub fn get_struct_instantiation_for_state(
     let struct_index = struct_inst.def;
     let mut partial_instantiation = stack_satisfies_struct_signature(state, struct_index, None).1;
     let struct_def = state.module.module.struct_def_at(struct_index);
-    let struct_def = StructDefinitionView::new(&state.module.module, struct_def);
-    let typs = struct_def.type_parameters();
+    let shandle = state
+        .module
+        .module
+        .datatype_handle_at(struct_def.struct_handle);
+    let typs = &shandle.type_parameters;
     for (index, type_param) in typs.iter().enumerate() {
         if let Entry::Vacant(e) = partial_instantiation.subst.entry(index) {
             if type_param.constraints.has_key() {
@@ -562,11 +560,11 @@ pub fn stack_has_struct(state: &AbstractState, struct_index: StructDefinitionInd
     if state.stack_len() > 0 {
         if let Some(struct_value) = state.stack_peek(0) {
             match struct_value.token {
-                SignatureToken::Struct(struct_handle) => {
+                SignatureToken::Datatype(struct_handle) => {
                     let struct_def = state.module.module.struct_def_at(struct_index);
                     return struct_handle == struct_def.struct_handle;
                 }
-                SignatureToken::StructInstantiation(struct_inst) => {
+                SignatureToken::DatatypeInstantiation(struct_inst) => {
                     let (struct_handle, _) = *struct_inst;
                     let struct_def = state.module.module.struct_def_at(struct_index);
                     return struct_handle == struct_def.struct_handle;
@@ -608,7 +606,7 @@ pub fn struct_abilities(
     let struct_handle = state
         .module
         .module
-        .struct_handle_at(struct_def.struct_handle);
+        .datatype_handle_at(struct_def.struct_handle);
     let declared_phantom_parameters = struct_handle
         .type_parameters
         .iter()
@@ -654,9 +652,8 @@ pub fn stack_struct_has_field(state: &AbstractState, field_index: FieldHandleInd
     false
 }
 
-/// Determine whether the stack has a reference at `index` with the given
-/// mutability. If `mutable` is `Either` then the reference can be either
-/// mutable or immutable
+/// Determine whether the stack has a reference at `index` with the given mutability.
+/// If `mutable` is `Either` then the reference can be either mutable or immutable
 pub fn stack_has_reference(state: &AbstractState, index: usize, mutability: Mutability) -> bool {
     if state.stack_len() > index {
         if let Some(abstract_value) = state.stack_peek(index) {
@@ -678,8 +675,8 @@ pub fn stack_has_reference(state: &AbstractState, index: usize, mutability: Muta
                 | SignatureToken::Address
                 | SignatureToken::Signer
                 | SignatureToken::Vector(_)
-                | SignatureToken::Struct(_)
-                | SignatureToken::StructInstantiation(_)
+                | SignatureToken::Datatype(_)
+                | SignatureToken::DatatypeInstantiation(_)
                 | SignatureToken::TypeParameter(_)
                 | SignatureToken::U16
                 | SignatureToken::U32
@@ -710,8 +707,7 @@ pub fn stack_struct_popn(
     let state_copy = state.clone();
     let mut state = state.clone();
     let struct_def = state_copy.module.module.struct_def_at(struct_index);
-    let struct_def_view = StructDefinitionView::new(&state_copy.module.module, struct_def);
-    for _ in struct_def_view.fields().unwrap() {
+    for _ in struct_def.fields().unwrap() {
         state.stack_pop()?;
     }
     Ok(state)
@@ -737,10 +733,10 @@ pub fn create_struct(
     let struct_def = state_copy.module.module.struct_def_at(struct_index);
     // Get the type, and kind of this struct
     let sig_tok = match instantiation {
-        None => SignatureToken::Struct(struct_def.struct_handle),
+        None => SignatureToken::Datatype(struct_def.struct_handle),
         Some(inst) => {
             let ty_instantiation = state.module.instantiantiation_at(inst);
-            SignatureToken::StructInstantiation(Box::new((
+            SignatureToken::DatatypeInstantiation(Box::new((
                 struct_def.struct_handle,
                 ty_instantiation.clone(),
             )))
@@ -757,8 +753,8 @@ pub fn stack_unpack_struct_instantiation(
 ) -> (StructDefinitionIndex, Vec<SignatureToken>) {
     if let Some(av) = state.stack_peek(0) {
         match av.token {
-            SignatureToken::StructInstantiation(struct_inst) => {
-                let (handle, toks) = *struct_inst;
+            SignatureToken::DatatypeInstantiation(inst) => {
+                let (handle, toks) = *inst;
                 let mut def_filter = state
                     .module
                     .module
@@ -778,7 +774,7 @@ pub fn stack_unpack_struct_instantiation(
             | SignatureToken::Address
             | SignatureToken::Signer
             | SignatureToken::Vector(_)
-            | SignatureToken::Struct(_)
+            | SignatureToken::Datatype(_)
             | SignatureToken::Reference(_)
             | SignatureToken::MutableReference(_)
             | SignatureToken::TypeParameter(_)
@@ -815,16 +811,15 @@ pub fn stack_unpack_struct(
     };
     let abilities = abilities_for_instantiation(&state_copy, &ty_instantiation);
     let struct_def = state_copy.module.module.struct_def_at(struct_index);
-    let struct_def_view = StructDefinitionView::new(&state_copy.module.module, struct_def);
-    let token_views = struct_def_view
+    let tokens = struct_def
         .fields()
         .into_iter()
         .flatten()
-        .map(|field| field.type_signature().token());
-    for token_view in token_views {
+        .map(|field| &field.signature.0);
+    for token in tokens {
         let abstract_value = AbstractValue {
-            token: substitute(token_view.as_inner(), &ty_instantiation),
-            abilities: abilities_for_token(&state, token_view.as_inner(), &abilities),
+            token: substitute(token, &ty_instantiation),
+            abilities: abilities_for_token(&state, token, &abilities),
         };
         state = stack_push(&state, abstract_value)?;
     }
@@ -840,8 +835,7 @@ pub fn struct_ref_instantiation(state: &mut AbstractState) -> Result<Vec<Signatu
     }
 }
 
-/// Push the field at `field_index` of a struct as an `AbstractValue` to the
-/// stack
+/// Push the field at `field_index` of a struct as an `AbstractValue` to the stack
 pub fn stack_struct_borrow_field(
     state: &AbstractState,
     field_index: FieldHandleIndex,
@@ -861,11 +855,10 @@ pub fn stack_struct_borrow_field(
         }
     };
     let reified_field_sig = substitute(field_signature, &typs);
-    // NB: We determine the kind on the non-reified_field_sig; we want any local
-    // references to type parameters to point to (struct) local type parameters.
-    // We could possibly also use the reified_field_sig coupled with the
-    // top-level instantiation, but I need to convince myself of the correctness
-    // of this.
+    // NB: We determine the kind on the non-reified_field_sig; we want any local references to
+    // type parameters to point to (struct) local type parameters. We could possibly also use the
+    // reified_field_sig coupled with the top-level instantiation, but I need to convince myself of
+    // the correctness of this.
     let abstract_value = AbstractValue {
         token: SignatureToken::MutableReference(Box::new(reified_field_sig)),
         abilities: abilities_for_token(&state, field_signature, &abilities),
@@ -882,8 +875,8 @@ pub fn stack_struct_borrow_field_inst(
     stack_struct_borrow_field(state, field_inst.handle)
 }
 
-/// Dereference the value stored in the register. If the value is not a
-/// reference, or the register is empty, return an error.
+/// Dereference the value stored in the register. If the value is not a reference, or
+/// the register is empty, return an error.
 pub fn register_dereference(state: &AbstractState) -> Result<AbstractState, VMError> {
     let mut state = state.clone();
     if let Some(abstract_value) = state.register_move() {
@@ -909,8 +902,8 @@ pub fn register_dereference(state: &AbstractState) -> Result<AbstractState, VMEr
             | SignatureToken::Address
             | SignatureToken::Signer
             | SignatureToken::Vector(_)
-            | SignatureToken::Struct(_)
-            | SignatureToken::StructInstantiation(_)
+            | SignatureToken::Datatype(_)
+            | SignatureToken::DatatypeInstantiation(_)
             | SignatureToken::TypeParameter(_)
             | SignatureToken::U16
             | SignatureToken::U32
@@ -957,8 +950,8 @@ pub fn stack_push_register_borrow(
 // Function Call Predicates and Operations
 //---------------------------------------------------------------------------
 
-/// Determine whether the function at the given index can be constructed from
-/// the values on the stack.
+/// Determine whether the function at the given index can be constructed from the values on
+/// the stack.
 pub fn stack_satisfies_function_signature(
     state: &AbstractState,
     function_index: FunctionHandleIndex,
@@ -1054,8 +1047,7 @@ pub fn get_function_instantiation_for_state(
         .function_instantiation_at(function_index);
     let mut partial_instantiation = stack_satisfies_function_signature(state, func_inst.handle).1;
     let function_handle = state.module.module.function_handle_at(func_inst.handle);
-    let function_handle = FunctionHandleView::new(&state.module.module, function_handle);
-    let typs = function_handle.type_parameters();
+    let typs = &function_handle.type_parameters;
     for (index, abilities) in typs.iter().enumerate() {
         if let Entry::Vacant(e) = partial_instantiation.subst.entry(index) {
             if abilities.has_key() {
@@ -1119,8 +1111,8 @@ pub fn memory_safe(state: &AbstractState, index: Option<usize>) -> bool {
 // Macros
 //---------------------------------------------------------------------------
 
-/// Wrapper for enclosing the arguments of `stack_has` so that only the `state`
-/// needs to be given.
+/// Wrapper for enclosing the arguments of `stack_has` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_has {
     ($e1: expr, $e2: expr) => {
@@ -1128,8 +1120,7 @@ macro_rules! state_stack_has {
     };
 }
 
-/// Determines if the type at the top of the abstract stack is castable to the
-/// given type.
+/// Determines if the type at the top of the abstract stack is castable to the given type.
 #[macro_export]
 macro_rules! state_stack_is_castable {
     ($e1: expr) => {
@@ -1137,8 +1128,8 @@ macro_rules! state_stack_is_castable {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_has_integer` so that only the
-/// `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_has_integer` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_has_integer {
     ($e1: expr) => {
@@ -1146,8 +1137,8 @@ macro_rules! state_stack_has_integer {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_kind_is` so that only the
-/// `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_kind_is` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_has_ability {
     ($e: expr, $a: expr) => {
@@ -1155,8 +1146,8 @@ macro_rules! state_stack_has_ability {
     };
 }
 
-/// Wrapper for for enclosing the arguments of `stack_has_polymorphic_eq` so
-/// that only the `state` needs to be given.
+/// Wrapper for for enclosing the arguments of `stack_has_polymorphic_eq` so that only the `state`
+/// needs to be given.
 #[macro_export]
 macro_rules! state_stack_has_polymorphic_eq {
     ($e1: expr, $e2: expr) => {
@@ -1164,8 +1155,8 @@ macro_rules! state_stack_has_polymorphic_eq {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_pop` so that only the `state`
-/// needs to be given.
+/// Wrapper for enclosing the arguments of `stack_pop` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_pop {
     () => {
@@ -1173,8 +1164,8 @@ macro_rules! state_stack_pop {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_push` so that only the `state`
-/// needs to be given.
+/// Wrapper for enclosing the arguments of `stack_push` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_push {
     ($e: expr) => {
@@ -1182,8 +1173,8 @@ macro_rules! state_stack_push {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_push_register` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_push_register` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_stack_push_register {
     () => {
@@ -1191,8 +1182,8 @@ macro_rules! state_stack_push_register {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_local_polymorphic_eq` so that
-/// only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_local_polymorphic_eq` so that only the `state`
+/// needs to be given.
 #[macro_export]
 macro_rules! state_stack_local_polymorphic_eq {
     ($e1: expr, $e2: expr) => {
@@ -1200,8 +1191,8 @@ macro_rules! state_stack_local_polymorphic_eq {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_exists` so that only the
-/// `state` needs to be given.
+/// Wrapper for enclosing the arguments of `local_exists` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_exists {
     ($e: expr) => {
@@ -1209,8 +1200,8 @@ macro_rules! state_local_exists {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_availability_is` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `local_availability_is` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_availability_is {
     ($e: expr, $a: expr) => {
@@ -1218,8 +1209,8 @@ macro_rules! state_local_availability_is {
     };
 }
 
-/// Wrapper for enclosing the arguments of `state_local_has_ability` so that
-/// only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `state_local_has_ability` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_has_ability {
     ($e: expr, $a: expr) => {
@@ -1227,8 +1218,8 @@ macro_rules! state_local_has_ability {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_set` so that only the `state`
-/// needs to be given.
+/// Wrapper for enclosing the arguments of `local_set` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_set {
     ($e: expr, $a: expr) => {
@@ -1236,8 +1227,8 @@ macro_rules! state_local_set {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_take` so that only the `state`
-/// needs to be given.
+/// Wrapper for enclosing the arguments of `local_take` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_take {
     ($e: expr) => {
@@ -1245,8 +1236,8 @@ macro_rules! state_local_take {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_take_borrow` so that only the
-/// `state` needs to be given.
+/// Wrapper for enclosing the arguments of `local_take_borrow` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_take_borrow {
     ($e: expr, $mutable: expr) => {
@@ -1254,8 +1245,8 @@ macro_rules! state_local_take_borrow {
     };
 }
 
-/// Wrapper for enclosing the arguments of `local_place` so that only the
-/// `state` needs to be given.
+/// Wrapper for enclosing the arguments of `local_palce` so that only the `state` needs
+/// to be given.
 #[macro_export]
 macro_rules! state_local_place {
     ($e: expr) => {
@@ -1263,8 +1254,8 @@ macro_rules! state_local_place {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_ref_polymorphic_eq` so that
-/// only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_ref_polymorphic_eq` so that only the `state`
+/// needs to be given.
 #[macro_export]
 macro_rules! state_stack_ref_polymorphic_eq {
     ($e1: expr, $e2: expr) => {
@@ -1272,8 +1263,8 @@ macro_rules! state_stack_ref_polymorphic_eq {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_satisfies_struct_signature` so
-/// that only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_satisfies_struct_signature` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_satisfies_struct_signature {
     ($e: expr) => {
@@ -1284,8 +1275,8 @@ macro_rules! state_stack_satisfies_struct_signature {
     };
 }
 
-/// Wrapper for enclosing the arguments of `state_stack_struct_inst_popn` so
-/// that only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `state_stack_struct_inst_popn` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_struct_inst_popn {
     ($e: expr) => {
@@ -1334,8 +1325,8 @@ macro_rules! state_stack_has_struct_inst {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_unpack_struct` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_unpack_struct` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_unpack_struct {
     ($e: expr) => {
@@ -1389,8 +1380,8 @@ macro_rules! state_stack_struct_has_field_inst {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_struct_borrow_field` so that
-/// only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_struct_borrow_field` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_struct_borrow_field {
     ($e: expr) => {
@@ -1405,8 +1396,8 @@ macro_rules! state_stack_struct_borrow_field_inst {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_has_reference` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_has_reference` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_has_reference {
     ($e1: expr, $e2: expr) => {
@@ -1414,8 +1405,8 @@ macro_rules! state_stack_has_reference {
     };
 }
 
-/// Wrapper for enclosing the arguments of `register_dereference` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `register_dereference` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_register_dereference {
     () => {
@@ -1423,8 +1414,8 @@ macro_rules! state_register_dereference {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_push_register_borrow` so that
-/// only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_push_register_borrow` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_push_register_borrow {
     ($e: expr) => {
@@ -1432,8 +1423,8 @@ macro_rules! state_stack_push_register_borrow {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_satisfies_function_signature`
-/// so that only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_satisfies_function_signature` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_satisfies_function_signature {
     ($e: expr) => {
@@ -1448,8 +1439,8 @@ macro_rules! state_stack_satisfies_function_inst_signature {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_function_popn` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_function_popn` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_function_popn {
     ($e: expr) => {
@@ -1464,8 +1455,8 @@ macro_rules! state_stack_function_inst_popn {
     };
 }
 
-/// Wrapper for enclosing the arguments of `stack_function_call` so that only
-/// the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `stack_function_call` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_stack_function_call {
     ($e: expr) => {
@@ -1480,8 +1471,7 @@ macro_rules! state_stack_function_inst_call {
     };
 }
 
-/// Determine the proper type instantiation for function call in the current
-/// state.
+/// Determine the proper type instantiation for function call in the current state.
 #[macro_export]
 macro_rules! function_instantiation_for_state {
     ($e: expr) => {
@@ -1489,8 +1479,8 @@ macro_rules! function_instantiation_for_state {
     };
 }
 
-/// Wrapper for enclosing the arguments of `function_can_acquire_resource` so
-/// that only the `state` needs to be given.
+/// Wrapper for enclosing the arguments of `function_can_acquire_resource` so that only the
+/// `state` needs to be given.
 #[macro_export]
 macro_rules! state_function_can_acquire_resource {
     () => {
@@ -1531,8 +1521,7 @@ macro_rules! state_stack_bin_op {
     }
 }
 
-/// Predicate that is false for every state, unless control operations are
-/// allowed.
+/// Predicate that is false for every state, unless control operations are allowed.
 #[macro_export]
 macro_rules! state_control_flow {
     () => {
@@ -1556,9 +1545,8 @@ macro_rules! unpack_instantiation_for_state {
     };
 }
 
-/// A wrapper around type instantiation, that allows specifying an "exact"
-/// instantiation index, or if the instantiation should be inferred from the
-/// current state.
+/// A wrapper around type instantiation, that allows specifying an "exact" instantiation index, or
+/// if the instantiation should be inferred from the current state.
 #[macro_export]
 macro_rules! with_ty_param {
     (($is_exact: expr, $struct_inst_idx: expr) => $s_inst_idx:ident, $body:expr) => {

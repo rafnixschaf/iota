@@ -1,6 +1,5 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! Core types for Move.
@@ -29,6 +28,8 @@ pub mod u256;
 #[cfg(test)]
 mod unit_tests;
 pub mod vm_status;
+
+pub const VARIANT_COUNT_MAX: u64 = 127;
 
 pub(crate) fn fmt_list<T: fmt::Display>(
     f: &mut fmt::Formatter<'_>,

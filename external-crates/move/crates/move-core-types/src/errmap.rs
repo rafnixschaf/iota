@@ -1,8 +1,10 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::language_storage::ModuleId;
+use anyhow::{bail, Result};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs::File,
@@ -10,17 +12,11 @@ use std::{
     path::Path,
 };
 
-use anyhow::{bail, Result};
-use serde::{Deserialize, Serialize};
-
-use crate::language_storage::ModuleId;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorDescription {
     /// The constant name of error e.g., ECANT_PAY_DEPOSIT
     pub code_name: String,
-    /// The code description. This is generated from the doc comments on the
-    /// constant.
+    /// The code description. This is generated from the doc comments on the constant.
     pub code_description: String,
 }
 

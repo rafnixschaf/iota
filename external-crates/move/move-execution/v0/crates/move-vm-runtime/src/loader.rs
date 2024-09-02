@@ -1,24 +1,21 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    collections::{btree_map::Entry, BTreeMap, BTreeSet, HashMap},
-    fmt::Debug,
-    hash::Hash,
-    sync::Arc,
+use crate::{
+    logging::expect_no_verification_errors,
+    native_functions::{NativeFunction, NativeFunctions, UnboxedNativeFunction},
+    session::LoadedFunctionInstantiation,
 };
-
 use move_binary_format::{
-    access::ModuleAccess,
-    binary_views::BinaryIndexedView,
+    binary_config::BinaryConfig,
     errors::{verification_error, Location, PartialVMError, PartialVMResult, VMResult},
     file_format::{
         AbilitySet, Bytecode, CompiledModule, Constant, ConstantPoolIndex, FieldHandleIndex,
         FieldInstantiationIndex, FunctionDefinition, FunctionDefinitionIndex, FunctionHandleIndex,
-        FunctionInstantiationIndex, SignatureIndex, SignatureToken, StructDefInstantiationIndex,
-        StructDefinitionIndex, StructFieldInformation, TableIndex, TypeParameterIndex,
+        FunctionInstantiationIndex, Signature, SignatureIndex, SignatureToken,
+        StructDefInstantiationIndex, StructDefinitionIndex, StructFieldInformation, TableIndex,
+        TypeParameterIndex,
     },
     IndexKind,
 };
@@ -35,16 +32,18 @@ use move_core_types::{
 use move_vm_config::runtime::VMConfig;
 use move_vm_types::{
     data_store::DataStore,
-    loaded_data::runtime_types::{CachedStructIndex, DepthFormula, StructType, Type},
+    loaded_data::runtime_types::{
+        CachedDatatype, CachedTypeIndex, Datatype, DepthFormula, StructType, Type,
+    },
 };
 use parking_lot::RwLock;
-use tracing::error;
-
-use crate::{
-    logging::expect_no_verification_errors,
-    native_functions::{NativeFunction, NativeFunctions, UnboxedNativeFunction},
-    session::LoadedFunctionInstantiation,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    fmt::Debug,
+    hash::Hash,
+    sync::Arc,
 };
+use tracing::error;
 
 // A simple cache that offers both a HashMap and a Vector lookup.
 // Values are forced into a `Arc` so they can be used from multiple thread.
@@ -67,8 +66,8 @@ where
 
     fn insert(&mut self, key: K, binary: V) -> PartialVMResult<&Arc<V>> {
         let idx = self.binaries.len();
-        // Last write wins in the binary cache -- it's up to the callee to not make
-        // conflicting writes.
+        // Last write wins in the binary cache -- it's up to the callee to not make conflicting
+        // writes.
         self.id_map.insert(key, idx);
         self.binaries.push(Arc::new(binary));
         Ok(&self.binaries[idx])
@@ -92,36 +91,31 @@ where
     }
 }
 
-/// The ModuleCache holds all verified modules as well as loaded modules,
-/// structs, and functions. Structs and functions are pushed into a global
-/// structure, handles in compiled modules are replaced with indices into these
-/// global structures in loaded modules.  All access to the ModuleCache via the
-/// Loader is under an RWLock.
+/// The ModuleCache holds all verified modules as well as loaded modules, structs, and functions.
+/// Structs and functions are pushed into a global structure, handles in compiled modules are
+/// replaced with indices into these global structures in loaded modules.  All access to the
+/// ModuleCache via the Loader is under an RWLock.
 pub struct ModuleCache {
-    /// Compiled modules go in this cache once they have been individually
-    /// verified.
+    /// Compiled modules go in this cache once they have been individually verified.
     compiled_modules: BinaryCache<ModuleId, CompiledModule>,
-    /// Modules whose dependencies have been verified already (during publishing
-    /// or loading).
+    /// Modules whose dependencies have been verified already (during publishing or loading).
     verified_dependencies: BTreeSet<(AccountAddress, ModuleId)>,
-    /// Loaded modules go in this cache once their compiled modules have been
-    /// link-checked, and structs and functions have populated `structs` and
-    /// `functions` below.
+    /// Loaded modules go in this cache once their compiled modules have been link-checked, and
+    /// structs and functions have populated `structs` and `functions` below.
     ///
-    /// The `AccountAddress` in the key is the "link context", and the
-    /// `ModuleId` is the ID of the module whose load was requested. A
-    /// mapping `(ctx, id) => module` means that when `id` was requested in
-    /// context `ctx`, `module` was loaded.
+    /// The `AccountAddress` in the key is the "link context", and the `ModuleId` is the ID of the
+    /// module whose load was requested. A mapping `(ctx, id) => module` means that when `id` was
+    /// requested in context `ctx`, `module` was loaded.
     loaded_modules: BinaryCache<(AccountAddress, ModuleId), LoadedModule>,
 
     /// Global cache of loaded structs, shared among all modules.
-    structs: BinaryCache<(ModuleId, Identifier), StructType>,
+    structs: BinaryCache<(ModuleId, Identifier), CachedDatatype>,
     /// Global list of loaded functions, shared among all modules.
     functions: Vec<Arc<Function>>,
 }
 
-/// Tracks the current end point of the `ModuleCache`'s `struct`s and
-/// `function`s, so that we can roll-back to that point in case of error.
+/// Tracks the current end point of the `ModuleCache`'s `struct`s and `function`s, so that we can
+/// roll-back to that point in case of error.
 struct CacheCursor {
     last_struct: usize,
     last_function: usize,
@@ -138,17 +132,18 @@ impl ModuleCache {
         }
     }
 
+    //
     // Common "get" operations
     //
 
-    // Retrieve a module by `ModuleId`. The module may have not been loaded yet in
-    // which case `None` is returned
+    // Retrieve a module by `ModuleId`. The module may have not been loaded yet in which
+    // case `None` is returned
     fn compiled_module_at(&self, id: &ModuleId) -> Option<Arc<CompiledModule>> {
         self.compiled_modules.get(id).map(Arc::clone)
     }
 
-    // Retrieve a module by `ModuleId`. The module may have not been loaded yet in
-    // which case `None` is returned
+    // Retrieve a module by `ModuleId`. The module may have not been loaded yet in which
+    // case `None` is returned
     fn loaded_module_at(
         &self,
         link_context: AccountAddress,
@@ -165,10 +160,11 @@ impl ModuleCache {
     }
 
     // Retrieve a struct by index
-    fn struct_at(&self, idx: CachedStructIndex) -> Arc<StructType> {
+    fn struct_at(&self, idx: CachedTypeIndex) -> Arc<CachedDatatype> {
         Arc::clone(&self.structs.binaries[idx.0])
     }
 
+    //
     // Insertion is under lock and it's a pretty heavy operation.
     // The VM is pretty much stopped waiting for this to finish
     //
@@ -223,12 +219,11 @@ impl ModuleCache {
     ) -> PartialVMResult<&Arc<LoadedModule>> {
         let link_context = data_store.link_context();
         let runtime_id = module.self_id();
-        let module_view = BinaryIndexedView::Module(module);
 
         // Add new structs and collect their field signatures
         let mut field_signatures = vec![];
         for (idx, struct_def) in module.struct_defs().iter().enumerate() {
-            let struct_handle = module.struct_handle_at(struct_def.struct_handle);
+            let struct_handle = module.datatype_handle_at(struct_def.struct_handle);
             let name = module.identifier_at(struct_handle.name);
             let struct_key = (runtime_id.clone(), name.to_owned());
 
@@ -248,16 +243,18 @@ impl ModuleCache {
 
             self.structs.insert(
                 struct_key,
-                StructType {
-                    fields: vec![],
-                    field_names,
+                CachedDatatype {
                     abilities: struct_handle.abilities,
                     type_parameters: struct_handle.type_parameters.clone(),
                     name: name.to_owned(),
                     defining_id,
                     runtime_id: runtime_id.clone(),
-                    struct_def: StructDefinitionIndex(idx as u16),
                     depth: None,
+                    datatype_info: Datatype::Struct(StructType {
+                        fields: vec![],
+                        field_names,
+                        struct_def: StructDefinitionIndex(idx as u16),
+                    }),
                 },
             )?;
 
@@ -269,29 +266,35 @@ impl ModuleCache {
             field_signatures.push(signatures)
         }
 
-        // Convert field signatures into types after adding all structs because field
-        // types might refer to structs in the same module.
+        // Convert field signatures into types after adding all structs because field types might
+        // refer to structs in the same module.
         let mut field_types = vec![];
         for signature in field_signatures {
             let tys: Vec<_> = signature
                 .iter()
-                .map(|tok| self.make_type(module_view, tok))
+                .map(|tok| self.make_type(module, tok))
                 .collect::<PartialVMResult<_>>()?;
             field_types.push(tys);
         }
 
         let field_types_len = field_types.len();
 
-        // Add the field types to the newly added structs, processing them in reverse,
-        // to line them up with the structs we added at the end of the global
-        // cache.
+        // Add the field types to the newly added structs, processing them in reverse, to line them
+        // up with the structs we added at the end of the global cache.
         for (fields, struct_type) in field_types
             .into_iter()
             .rev()
             .zip(self.structs.binaries.iter_mut().rev())
         {
             match Arc::get_mut(struct_type) {
-                Some(struct_type) => struct_type.fields = fields,
+                Some(ref mut x) => match &mut x.datatype_info {
+                    Datatype::Enum(_) => {
+                        unreachable!("enum types cannot be loaded into the cache in v0")
+                    }
+                    Datatype::Struct(ref mut struct_type) => {
+                        struct_type.fields = fields;
+                    }
+                },
                 None => {
                     // we have pending references to the `Arc` which is impossible,
                     // given the code that adds the `Arc` is above and no reference to
@@ -300,8 +303,16 @@ impl ModuleCache {
                     // over and log the issue.
                     error!("Arc<StructType> cannot have any live reference while publishing");
                     let mut struct_copy = (**struct_type).clone();
-                    struct_copy.fields = fields;
-                    *struct_type = Arc::new(struct_copy);
+                    match struct_copy.datatype_info {
+                        Datatype::Enum(_) => {
+                            unreachable!("enum types cannot be loaded into the cache in v0")
+                        }
+                        Datatype::Struct(ref mut s_info) => {
+                            s_info.fields = fields;
+                            struct_copy.datatype_info = Datatype::Struct(s_info.clone());
+                            *struct_type = Arc::new(struct_copy);
+                        }
+                    }
                 }
             }
         }
@@ -329,7 +340,25 @@ impl ModuleCache {
 
         for (idx, func) in module.function_defs().iter().enumerate() {
             let findex = FunctionDefinitionIndex(idx as TableIndex);
-            let function = Function::new(natives, findex, func, module);
+            let mut function = Function::new(natives, findex, func, module);
+            function.return_types = function
+                .return_
+                .0
+                .iter()
+                .map(|tok| self.make_type(module, tok))
+                .collect::<PartialVMResult<Vec<_>>>()?;
+            function.local_types = function
+                .locals
+                .0
+                .iter()
+                .map(|tok| self.make_type(module, tok))
+                .collect::<PartialVMResult<Vec<_>>>()?;
+            function.parameter_types = function
+                .parameters
+                .0
+                .iter()
+                .map(|tok| self.make_type(module, tok))
+                .collect::<PartialVMResult<Vec<_>>>()?;
             self.functions.push(Arc::new(function));
         }
 
@@ -339,7 +368,7 @@ impl ModuleCache {
     }
 
     // `make_type` is the entry point to "translate" a `SignatureToken` to a `Type`
-    fn make_type(&self, module: BinaryIndexedView, tok: &SignatureToken) -> PartialVMResult<Type> {
+    fn make_type(&self, module: &CompiledModule, tok: &SignatureToken) -> PartialVMResult<Type> {
         let res = match tok {
             SignatureToken::Bool => Type::Bool,
             SignatureToken::U8 => Type::U8,
@@ -360,8 +389,8 @@ impl ModuleCache {
             SignatureToken::MutableReference(inner_tok) => {
                 Type::MutableReference(Box::new(self.make_type(module, inner_tok)?))
             }
-            SignatureToken::Struct(sh_idx) => {
-                let struct_handle = module.struct_handle_at(*sh_idx);
+            SignatureToken::Datatype(sh_idx) => {
+                let struct_handle = module.datatype_handle_at(*sh_idx);
                 let struct_name = module.identifier_at(struct_handle.name);
                 let module_handle = module.module_handle_at(struct_handle.module);
                 let runtime_id = ModuleId::new(
@@ -369,15 +398,15 @@ impl ModuleCache {
                     module.identifier_at(module_handle.name).to_owned(),
                 );
                 let def_idx = self.resolve_struct_by_name(struct_name, &runtime_id)?.0;
-                Type::Struct(def_idx)
+                Type::Datatype(def_idx)
             }
-            SignatureToken::StructInstantiation(struct_inst) => {
+            SignatureToken::DatatypeInstantiation(struct_inst) => {
                 let (sh_idx, tys) = &**struct_inst;
                 let type_parameters: Vec<_> = tys
                     .iter()
                     .map(|tok| self.make_type(module, tok))
                     .collect::<PartialVMResult<_>>()?;
-                let struct_handle = module.struct_handle_at(*sh_idx);
+                let struct_handle = module.datatype_handle_at(*sh_idx);
                 let struct_name = module.identifier_at(struct_handle.name);
                 let module_handle = module.module_handle_at(struct_handle.module);
                 let runtime_id = ModuleId::new(
@@ -385,7 +414,7 @@ impl ModuleCache {
                     module.identifier_at(module_handle.name).to_owned(),
                 );
                 let def_idx = self.resolve_struct_by_name(struct_name, &runtime_id)?.0;
-                Type::StructInstantiation(Box::new((def_idx, type_parameters)))
+                Type::DatatypeInstantiation(Box::new((def_idx, type_parameters)))
             }
         };
         Ok(res)
@@ -393,15 +422,14 @@ impl ModuleCache {
 
     fn calculate_depth_of_struct(
         &self,
-        struct_type: &StructType,
-        depth_cache: &mut BTreeMap<CachedStructIndex, DepthFormula>,
+        struct_type: &CachedDatatype,
+        depth_cache: &mut BTreeMap<CachedTypeIndex, DepthFormula>,
     ) -> PartialVMResult<DepthFormula> {
         let def_idx = self
             .resolve_struct_by_name(&struct_type.name, &struct_type.runtime_id)?
             .0;
 
-        // If we've already computed this structs depth, no more work remains to be
-        // done.
+        // If we've already computed this structs depth, no more work remains to be done.
         if let Some(form) = &struct_type.depth {
             return Ok(form.clone());
         }
@@ -409,11 +437,14 @@ impl ModuleCache {
             return Ok(form.clone());
         }
 
-        let formulas = struct_type
-            .fields
-            .iter()
-            .map(|field_type| self.calculate_depth_of_type(field_type, depth_cache))
-            .collect::<PartialVMResult<Vec<_>>>()?;
+        let formulas = match &struct_type.datatype_info {
+            Datatype::Enum(_) => unreachable!("enum types cannot be loaded into the cache in v0"),
+            Datatype::Struct(s_info) => s_info
+                .fields
+                .iter()
+                .map(|field_type| self.calculate_depth_of_type(field_type, depth_cache))
+                .collect::<PartialVMResult<Vec<_>>>()?,
+        };
         let mut formula = DepthFormula::normalize(formulas);
         // add 1 for the struct itself
         formula.add(1);
@@ -430,7 +461,7 @@ impl ModuleCache {
     fn calculate_depth_of_type(
         &self,
         ty: &Type,
-        depth_cache: &mut BTreeMap<CachedStructIndex, DepthFormula>,
+        depth_cache: &mut BTreeMap<CachedTypeIndex, DepthFormula>,
     ) -> PartialVMResult<DepthFormula> {
         Ok(match ty {
             Type::Bool
@@ -450,13 +481,13 @@ impl ModuleCache {
                 inner
             }
             Type::TyParam(ty_idx) => DepthFormula::type_parameter(*ty_idx),
-            Type::Struct(cache_idx) => {
+            Type::Datatype(cache_idx) => {
                 let struct_type = self.struct_at(*cache_idx);
                 let struct_formula = self.calculate_depth_of_struct(&struct_type, depth_cache)?;
                 debug_assert!(struct_formula.terms.is_empty());
                 struct_formula
             }
-            Type::StructInstantiation(struct_inst) => {
+            Type::DatatypeInstantiation(struct_inst) => {
                 let (cache_idx, ty_args) = &**struct_inst;
                 let struct_type = self.struct_at(*cache_idx);
                 let ty_arg_map = ty_args
@@ -468,31 +499,30 @@ impl ModuleCache {
                     })
                     .collect::<PartialVMResult<BTreeMap<_, _>>>()?;
                 let struct_formula = self.calculate_depth_of_struct(&struct_type, depth_cache)?;
-
                 struct_formula.subst(ty_arg_map)?
             }
         })
     }
 
-    // Given a ModuleId::struct_name, retrieve the `StructType` and the index
-    // associated. Return and error if the type has not been loaded
+    // Given a ModuleId::struct_name, retrieve the `StructType` and the index associated.
+    // Return and error if the type has not been loaded
     fn resolve_struct_by_name(
         &self,
         struct_name: &IdentStr,
         runtime_id: &ModuleId,
-    ) -> PartialVMResult<(CachedStructIndex, Arc<StructType>)> {
+    ) -> PartialVMResult<(CachedTypeIndex, Arc<CachedDatatype>)> {
         match self
             .structs
             .get_with_idx(&(runtime_id.clone(), struct_name.to_owned()))
         {
-            Some((idx, struct_)) => Ok((CachedStructIndex(idx), Arc::clone(struct_))),
+            Some((idx, struct_)) => Ok((CachedTypeIndex(idx), Arc::clone(struct_))),
             None => Err(PartialVMError::new(StatusCode::TYPE_RESOLUTION_FAILURE)
                 .with_message(format!("Cannot find {runtime_id}::{struct_name} in cache",))),
         }
     }
 
-    // Given a ModuleId::func_name, retrieve the `Function` and the index
-    // associated. Return and error if the function has not been loaded
+    // Given a ModuleId::func_name, retrieve the `Function` and the index associated.
+    // Return and error if the function has not been loaded
     fn resolve_function_by_name(
         &self,
         func_name: &IdentStr,
@@ -522,8 +552,8 @@ impl ModuleCache {
         }
     }
 
-    /// Rollback the cache's structs and functions to the point at which the
-    /// cache cursor was created.
+    /// Rollback the cache's structs and functions to the point at which the cache cursor was
+    /// created.
     fn reset(
         &mut self,
         CacheCursor {
@@ -531,8 +561,7 @@ impl ModuleCache {
             last_function,
         }: CacheCursor,
     ) {
-        // Remove entries from `structs.id_map` corresponding to the newly added
-        // structs.
+        // Remove entries from `structs.id_map` corresponding to the newly added structs.
         for (idx, struct_) in self.structs.binaries.iter().enumerate().rev() {
             if idx < last_struct {
                 break;
@@ -559,170 +588,14 @@ impl ModuleCache {
     }
 }
 
+//
 // Loader
 //
 
-// Helpers to load/verify modules without recursion
-
-// In order to traverse the transitive dependencies of a module (when verifying
-// the module), we create a stack and iterate over the dependencies to avoid
-// recursion. An entry on the stack is conceptually a pair (module,
-// dependencies) where dependencies is used to visit them and to track when a
-// module is ready for linkage checks Example:
-// A -> B, C
-// B -> F
-// C -> D, E
-// D
-// E
-// F
-// Following are the stack transitions
-// 1. (A, [B, C]) - top module pushed with deps
-// 2. (A, [B]), (C, [D, E]) - first dep (C in A) is removed and pushed as an
-//    entry
-// 3. (A, [B]), (C, [D]), (E, []) - first dep (E in C) is removed and pushed as
-//    an entry
-// 4. (A, [B]), (C, [D]) - E is done, no more deps, verify E linkage
-// 5. (A, [B]), (C, []) (D, []) - second (D in C) dep is removed and pushed as
-//    an entry
-// 6. (A, [B]), (C, []) - D is done, no more deps, verify D linkage
-// 7. (A, [B]) - C is done, no more deps, verify C linkage
-// 8. (A, []), (B, [F]) - second dep (B in A) is removed and pushed as an entry
-// 9. (A, []), (B, []), (F, []) - first dep (F in B) is removed and pushed as an
-//    entry
-// 10. (A, []), (B, []) - F is done, no more deps, verify F linkage
-// 11. (A, []) - B is done, no more deps, verify B linkage
-// 12. <empty> - A is done, no more deps, verify A linkage
-// process is over.
-// During the traversal there are few checks performed to verify correctness and
-// track already verified modules so we do not perform the same operation
-// multiple times
-
-// A wrapper around a `CompiledModule` that carries a flag to indicate whether
-// a cycle check was performed already or not.
-// Essentially when we first push the value we need to check for cycles (visited
-// = false) and never again.
-struct ModuleEntry {
-    // module loaded
-    module: Arc<CompiledModule>,
-    // whether a cycle check was already performed
-    checked_for_cycles: bool,
-}
-
-impl ModuleEntry {
-    fn new(module: Arc<CompiledModule>) -> Self {
-        ModuleEntry {
-            module,
-            checked_for_cycles: false,
-        }
-    }
-}
-
-// A `StackEntry` is a pair of a `ModuleEntry` and its dependencies.
-// The `deps` is used as a temp value to make sure all dependencies are
-// traversed. When a module is first pushed onto the stack all deps are
-// retrieved (as `ModuleId`s) and added in `deps`, then one by one they are
-// removed from `deps` and loaded on the stack on their own.
-// When `deps` is empty it means all depndencies have been traversed and
-// `module` can be verified for linkage.
-struct StackEntry {
-    // the module to verify
-    module: ModuleEntry,
-    // list of dependencies for the module
-    deps: Vec<ModuleId>,
-}
-
-// Holds the stack for traversal and other fields to help with the process.
-struct ModuleLoader<'a> {
-    // stack used for traversal to perform DFS
-    stack: Vec<StackEntry>,
-    // keep track of all modules used during traversal to help with the linkage check
-    verified_modules: BTreeMap<ModuleId, Arc<CompiledModule>>,
-    // set of nodes that are being visited (those on the stack) that is used to check for
-    // cycles. The set is passed in and it may contain more elements that those
-    // on the stack.
-    visiting: &'a mut BTreeSet<ModuleId>,
-}
-
-impl<'a> ModuleLoader<'a> {
-    fn new(visiting: &'a mut BTreeSet<ModuleId>) -> Self {
-        ModuleLoader {
-            stack: vec![],
-            verified_modules: BTreeMap::new(),
-            visiting,
-        }
-    }
-
-    // Push an entry on the stack.
-    // `runtime_id` is used to load and verify the given module
-    fn verify_and_push(
-        &mut self,
-        runtime_id: ModuleId,
-        loader: &Loader,
-        data_store: &impl DataStore,
-        allow_loading_failure: bool,
-    ) -> VMResult<(ModuleId, Arc<CompiledModule>)> {
-        let (storage_id, module) =
-            loader.verify_module(&runtime_id, data_store, allow_loading_failure)?;
-        self.stack.push(StackEntry {
-            module: ModuleEntry::new(module.clone()),
-            deps: module.immediate_dependencies(),
-        });
-        Ok((storage_id, module))
-    }
-
-    // Once all deps of a module are traversed, the module at the top of the stack
-    // can be checked for linkage.
-    // `self.verified_modules` contains all dependencies traversed and so all
-    // dependencies for the entry at the top of the stack when popping
-    fn verify_linkage(&mut self) -> VMResult<()> {
-        match self.stack.last_mut() {
-            None => Ok(()),
-            Some(entry) => {
-                let imm_deps = entry.module.module.immediate_dependencies();
-                let module_deps = imm_deps
-                    .iter()
-                    .map(|module_id| self.verified_modules.get(module_id).unwrap().as_ref());
-                dependencies::verify_module(entry.module.module.as_ref(), module_deps)
-                    .map_err(expect_no_verification_errors)
-            }
-        }
-    }
-
-    // Return the value at the top of the stack, perform a cycle check if not done
-    // yet
-    fn top_mut(&mut self) -> VMResult<Option<&mut StackEntry>> {
-        match self.stack.last_mut() {
-            None => Ok(None),
-            Some(entry) => {
-                if !entry.module.checked_for_cycles {
-                    if !self.visiting.insert(entry.module.module.self_id()) {
-                        return Err(PartialVMError::new(StatusCode::CYCLIC_MODULE_DEPENDENCY)
-                            .finish(Location::Undefined));
-                    }
-                    entry.module.checked_for_cycles = true;
-                }
-                Ok(Some(entry))
-            }
-        }
-    }
-
-    // Remove the entry at the top of the stack, verification was good,
-    // remove from `visiting` and add to `verified_modules`
-    fn pop(&mut self) {
-        if let Some(entry) = self.stack.pop() {
-            let module_id = entry.module.module.self_id();
-            self.visiting.remove(&module_id);
-            self.verified_modules
-                .insert(module_id, entry.module.module.clone());
-        }
-    }
-}
-
-// A Loader is responsible to load modules and holds the cache of all loaded
-// entities. Each cache is protected by a `RwLock`. Operation in the Loader must
-// be thread safe (operating on values on the stack) and when cache needs
-// updating the mutex must be taken. The `pub(crate)` API is what a Loader
-// offers to the runtime.
+// A Loader is responsible to load scripts and modules and holds the cache of all loaded
+// entities. Each cache is protected by a `RwLock`. Operation in the Loader must be thread safe
+// (operating on values on the stack) and when cache needs updating the mutex must be taken.
+// The `pub(crate)` API is what a Loader offers to the runtime.
 pub(crate) struct Loader {
     module_cache: RwLock<ModuleCache>,
     type_cache: RwLock<TypeCache>,
@@ -754,6 +627,7 @@ impl Loader {
             .cloned()
     }
 
+    //
     // Module verification and loading
     //
 
@@ -774,7 +648,6 @@ impl Loader {
     )> {
         let link_context = data_store.link_context();
         let (compiled, loaded) = self.load_module(runtime_id, data_store)?;
-        let compiled_view = BinaryIndexedView::Module(compiled.as_ref());
         let idx = self
             .module_cache
             .read()
@@ -782,19 +655,19 @@ impl Loader {
             .map_err(|err| err.finish(Location::Undefined))?;
         let func = self.module_cache.read().function_at(idx);
 
-        let parameters = compiled
-            .signature_at(func.parameters)
+        let parameters = func
+            .parameters
             .0
             .iter()
-            .map(|tok| self.module_cache.read().make_type(compiled_view, tok))
+            .map(|tok| self.module_cache.read().make_type(&compiled, tok))
             .collect::<PartialVMResult<Vec<_>>>()
             .map_err(|err| err.finish(Location::Undefined))?;
 
-        let return_ = compiled
-            .signature_at(func.return_)
+        let return_ = func
+            .return_
             .0
             .iter()
-            .map(|tok| self.module_cache.read().make_type(compiled_view, tok))
+            .map(|tok| self.module_cache.read().make_type(&compiled, tok))
             .collect::<PartialVMResult<Vec<_>>>()
             .map_err(|err| err.finish(Location::Undefined))?;
 
@@ -811,9 +684,8 @@ impl Loader {
 
     // Entry point for module publishing (`MoveVM::publish_module_bundle`).
     //
-    // All modules in the bundle to be published must be loadable. This function
-    // performs all verification steps to load these modules without actually
-    // loading them into the code cache.
+    // All modules in the bundle to be published must be loadable. This function performs all
+    // verification steps to load these modules without actually loading them into the code cache.
     pub(crate) fn verify_module_bundle_for_publication(
         &self,
         modules: &[CompiledModule],
@@ -826,29 +698,28 @@ impl Loader {
             let module_id = module.self_id();
 
             self.verify_module_for_publication(module, &bundle_verified, data_store)?;
-            bundle_verified.insert(module_id, module);
+            bundle_verified.insert(module_id.clone(), module.clone());
         }
         Ok(())
     }
 
     // A module to be published must be loadable.
     //
-    // This step performs all verification steps to load the module without loading
-    // it. The module is not added to the code cache. It is simply published to
-    // the data cache.
+    // This step performs all verification steps to load the module without loading it.
+    // The module is not added to the code cache. It is simply published to the data cache.
+    // See `verify_script()` for script verification steps.
     //
-    // If a module `M` is published together with a bundle of modules (i.e., a
-    // vector of modules), the `bundle_verified` argument tracks the modules
-    // that have already been verified in the bundle. Basically, this represents
-    // the modules appears before `M` in the bundle vector.
+    // If a module `M` is published together with a bundle of modules (i.e., a vector of modules),
+    // the `bundle_verified` argument tracks the modules that have already been verified in the
+    // bundle. Basically, this represents the modules appears before `M` in the bundle vector.
     fn verify_module_for_publication(
         &self,
         module: &CompiledModule,
-        bundle_verified: &BTreeMap<ModuleId, &CompiledModule>,
+        bundle_verified: &BTreeMap<ModuleId, CompiledModule>,
         data_store: &impl DataStore,
     ) -> VMResult<()> {
-        // Performs all verification steps to load the module without loading it, i.e.,
-        // the new module will NOT show up in `module_cache`.
+        // Performs all verification steps to load the module without loading it, i.e., the new
+        // module will NOT show up in `module_cache`.
         move_bytecode_verifier::verify_module_with_config_unmetered(
             &self.vm_config.verifier,
             module,
@@ -858,17 +729,16 @@ impl Loader {
         let mut visiting = BTreeSet::new();
         visiting.insert(module.self_id());
 
-        // downward exploration of the module's dependency graph. Since we know nothing
-        // about this target module, we don't know what the module may specify
-        // as its dependencies and hence, we allow the loading of dependencies
-        // and the subsequent linking to fail.
+        // downward exploration of the module's dependency graph. Since we know nothing about this
+        // target module, we don't know what the module may specify as its dependencies and hence,
+        // we allow the loading of dependencies and the subsequent linking to fail.
         self.verify_dependencies(
             module,
             bundle_verified,
             data_store,
             &mut visiting,
-            // allow_dependency_loading_failure
-            true,
+            /* allow_dependency_loading_failure */ true,
+            /* dependencies_depth */ 0,
         )?;
 
         // make sure there is no cyclic dependency
@@ -878,13 +748,13 @@ impl Loader {
     fn verify_module_cyclic_relations(
         &self,
         module: &CompiledModule,
-        bundle_verified: &BTreeMap<ModuleId, &CompiledModule>,
+        bundle_verified: &BTreeMap<ModuleId, CompiledModule>,
         data_store: &impl DataStore,
     ) -> VMResult<()> {
         let module_cache = self.module_cache.read();
         cyclic_dependencies::verify_module(module, |runtime_id| {
             let module = if let Some(bundled) = bundle_verified.get(runtime_id) {
-                Some(*bundled)
+                Some(bundled)
             } else {
                 let storage_id = data_store.relocate(runtime_id)?;
                 module_cache
@@ -899,8 +769,8 @@ impl Loader {
         })
     }
 
-    // All native functions must be known to the loader, unless we are compiling
-    // with feature `lazy_natives`.
+    // All native functions must be known to the loader, unless we are compiling with feature
+    // `lazy_natives`.
     fn check_natives(&self, module: &CompiledModule) -> VMResult<()> {
         fn check_natives_impl(loader: &Loader, module: &CompiledModule) -> PartialVMResult<()> {
             if !cfg!(feature = "lazy_natives") {
@@ -928,9 +798,8 @@ impl Loader {
                         })?;
                 }
             }
-            // TODO: fix check and error code if we leave something around for native
-            // structs. For now this generates the only error test cases care
-            // about...
+            // TODO: fix check and error code if we leave something around for native structs.
+            // For now this generates the only error test cases care about...
             for (idx, struct_def) in module.struct_defs().iter().enumerate() {
                 if struct_def.field_information == StructFieldInformation::Native {
                     return Err(verification_error(
@@ -945,6 +814,7 @@ impl Loader {
         check_natives_impl(self, module).map_err(|e| e.finish(Location::Module(module.self_id())))
     }
 
+    //
     // Helpers for loading and verification
     //
 
@@ -953,7 +823,7 @@ impl Loader {
         name: &IdentStr,
         runtime_id: &ModuleId,
         data_store: &impl DataStore,
-    ) -> VMResult<(CachedStructIndex, Arc<StructType>)> {
+    ) -> VMResult<(CachedTypeIndex, Arc<CachedDatatype>)> {
         self.load_module(runtime_id, data_store)?;
         self.module_cache
             .read()
@@ -983,7 +853,7 @@ impl Loader {
                 let (idx, struct_type) =
                     self.load_struct_by_name(&struct_tag.name, &runtime_id, data_store)?;
                 if struct_type.type_parameters.is_empty() && struct_tag.type_params.is_empty() {
-                    Type::Struct(idx)
+                    Type::Datatype(idx)
                 } else {
                     let mut type_params = vec![];
                     for ty_param in &struct_tag.type_params {
@@ -991,15 +861,14 @@ impl Loader {
                     }
                     self.verify_ty_args(struct_type.type_param_constraints(), &type_params)
                         .map_err(|e| e.finish(Location::Undefined))?;
-                    Type::StructInstantiation(Box::new((idx, type_params)))
+                    Type::DatatypeInstantiation(Box::new((idx, type_params)))
                 }
             }
         })
     }
 
-    // The interface for module loading. Aligned with `load_type` and
-    // `load_function`, this function verifies that the module is OK instead of
-    // expect it.
+    // The interface for module loading. Aligned with `load_type` and `load_function`, this function
+    // verifies that the module is OK instead of expect it.
     pub(crate) fn load_module(
         &self,
         runtime_id: &ModuleId,
@@ -1008,12 +877,12 @@ impl Loader {
         self.load_module_internal(runtime_id, &BTreeMap::new(), data_store)
     }
 
-    // Load the transitive closure of the target module first, and then verify that
-    // the modules in the closure do not have cyclic dependencies.
+    // Load the transitive closure of the target module first, and then verify that the modules in
+    // the closure do not have cyclic dependencies.
     fn load_module_internal(
         &self,
         runtime_id: &ModuleId,
-        bundle_verified: &BTreeMap<ModuleId, &CompiledModule>,
+        bundle_verified: &BTreeMap<ModuleId, CompiledModule>,
         data_store: &impl DataStore,
     ) -> VMResult<(Arc<CompiledModule>, Arc<LoadedModule>)> {
         let link_context = data_store.link_context();
@@ -1037,12 +906,14 @@ impl Loader {
         // otherwise, load the transitive closure of the target module
         let mut visiting = BTreeSet::new();
         let allow_module_loading_failure = true;
+        let dependencies_depth = 0;
         let (storage_id, compiled) = self.verify_module_and_dependencies(
             runtime_id,
             bundle_verified,
             data_store,
             &mut visiting,
             allow_module_loading_failure,
+            dependencies_depth,
         )?;
 
         // verify that the transitive closure does not have cycles
@@ -1060,10 +931,9 @@ impl Loader {
         Ok((compiled, loaded))
     }
 
-    /// Read the module that will be referred to at runtime as `runtime_id`, but
-    /// is found in the store at `storage_id`.  Verify it without linking or
-    /// interacting with caches, and return the deserialized module on
-    /// success.
+    /// Read the module that will be referred to at runtime as `runtime_id`, but is found in the
+    /// store at `storage_id`.  Verify it without linking or interacting with caches, and return
+    /// the deserialized module on success.
     fn read_module_from_store(
         &self,
         runtime_id: &ModuleId,
@@ -1084,16 +954,24 @@ impl Loader {
             }
         };
 
-        // for bytes obtained from the data store, they should always deserialize and
-        // verify. It is an invariant violation if they don't.
-        let module = CompiledModule::deserialize_with_config(&bytes, &self.vm_config.binary_config)
-            .map_err(|err| {
-                let msg = format!("Deserialization error: {:?}", err);
-                PartialVMError::new(StatusCode::CODE_DESERIALIZATION_ERROR)
-                    .with_message(msg)
-                    .finish(Location::Module(storage_id.clone()))
-            })
-            .map_err(expect_no_verification_errors)?;
+        // for bytes obtained from the data store, they should always deserialize and verify.
+        // It is an invariant violation if they don't.
+        let module = CompiledModule::deserialize_with_config(
+            &bytes,
+            &BinaryConfig::legacy(
+                self.vm_config.max_binary_format_version,
+                self.vm_config.binary_config.min_binary_format_version,
+                self.vm_config()
+                    .check_no_extraneous_bytes_during_deserialization,
+            ),
+        )
+        .map_err(|err| {
+            let msg = format!("Deserialization error: {:?}", err);
+            PartialVMError::new(StatusCode::CODE_DESERIALIZATION_ERROR)
+                .with_message(msg)
+                .finish(Location::Module(storage_id.clone()))
+        })
+        .map_err(expect_no_verification_errors)?;
 
         fail::fail_point!("verifier-failpoint-2", |_| { Ok(module.clone()) });
 
@@ -1109,9 +987,8 @@ impl Loader {
         Ok(module)
     }
 
-    /// Deserialize and check the module with the bytecode verifier, without
-    /// linking.  Cache the `CompiledModule` on success, and return a
-    /// reference to it.
+    /// Deserialize and check the module with the bytecode verifier, without linking.  Cache the
+    /// `CompiledModule` on success, and return a reference to it.
     fn verify_module(
         &self,
         runtime_id: &ModuleId,
@@ -1143,78 +1020,56 @@ impl Loader {
         Ok((storage_id, cached))
     }
 
-    /// Recursively read the module at ID and its transitive dependencies,
-    /// verify them individually and verify that they link together.
-    /// Returns the `CompiledModule` for `runtime_id`, written to the module
-    /// cache, on success, as well as the `ModuleId` it was read from, in
-    /// storage.
-    // This is a DFS load of dependencies which also checks for cycles and reports
-    // an error if a cycle is found.
-    // As we load modules and walk up the dependency DAG when a node is popped
-    // (traversed) we make sure that linking is correct as well.
+    /// Recursively read the module at ID and its transitive dependencies, verify them individually
+    /// and verify that they link together.  Returns the `CompiledModule` for `runtime_id`, written
+    /// to the module cache, on success, as well as the `ModuleId` it was read from, in storage.
     fn verify_module_and_dependencies(
         &self,
         runtime_id: &ModuleId,
-        bundle_verified: &BTreeMap<ModuleId, &CompiledModule>,
+        bundle_verified: &BTreeMap<ModuleId, CompiledModule>,
         data_store: &impl DataStore,
         visiting: &mut BTreeSet<ModuleId>,
         allow_module_loading_failure: bool,
+        dependencies_depth: usize,
     ) -> VMResult<(ModuleId, Arc<CompiledModule>)> {
-        // make a stack for dependencies traversal (DAG traversal)
-        let mut module_loader = ModuleLoader::new(visiting);
-        // load and verify the module, and push it on the stack for dependencies
-        // traversal
-        let (storage_id, module) = module_loader.verify_and_push(
-            runtime_id.clone(),
-            self,
-            data_store,
-            allow_module_loading_failure,
-        )?;
-
-        loop {
-            // get the entry at the top of the stack
-            let entry = module_loader.top_mut()?;
-            if entry.is_none() {
-                // no more entries on the stack, we are done, break out of the loop
-                break;
-            }
-            let entry = entry.unwrap();
-
-            // check against known modules either in the loader `verified_dependencies`
-            // (previously verified module) or in the package being processed
-            // (`bundle_verified`)
-            let self_id = entry.module.module.self_id();
-            let cache_key = (data_store.link_context(), self_id.clone());
-            if !bundle_verified.contains_key(&self_id)
-                && !self
-                    .module_cache
-                    .read()
-                    .verified_dependencies
-                    .contains(&cache_key)
-            {
-                // if there are still dependencies to traverse, we load the next one on the
-                // stack and continue the loop. Otherwise we are done with dependencies
-                // and we verify linking
-                if !entry.deps.is_empty() {
-                    let dep_id = entry.deps.pop().unwrap();
-                    module_loader.verify_and_push(
-                        dep_id, self, data_store, false, // allow_loading_failure
-                    )?;
-                    // loop with dep at the top of the stack
-                    continue;
-                }
-                // no more deps, check linkage
-                module_loader.verify_linkage()?;
-                // add to the list of verified modules
-                self.module_cache
-                    .write()
-                    .verified_dependencies
-                    .insert(cache_key);
-            }
-            // finished with top element, pop
-            module_loader.pop();
+        // dependency loading does not permit cycles
+        if !visiting.insert(runtime_id.clone()) {
+            return Err(PartialVMError::new(StatusCode::CYCLIC_MODULE_DEPENDENCY)
+                .finish(Location::Undefined));
         }
 
+        // module self-check
+        let (storage_id, module) =
+            self.verify_module(runtime_id, data_store, allow_module_loading_failure)?;
+
+        // If this module is already in the "verified dependencies" cache, then no need to check it
+        // again -- it has already been verified against its dependencies in this link context.
+        let cache_key = (data_store.link_context(), runtime_id.clone());
+        if !self
+            .module_cache
+            .read()
+            .verified_dependencies
+            .contains(&cache_key)
+        {
+            // downward exploration of the module's dependency graph. For a module that is loaded from
+            // the data_store, we should never allow its dependencies to fail to load.
+            let allow_dependency_loading_failure = false;
+            self.verify_dependencies(
+                module.as_ref(),
+                bundle_verified,
+                data_store,
+                visiting,
+                allow_dependency_loading_failure,
+                dependencies_depth,
+            )?;
+
+            self.module_cache
+                .write()
+                .verified_dependencies
+                .insert(cache_key);
+        }
+
+        visiting.remove(runtime_id);
         Ok((storage_id, module))
     }
 
@@ -1222,22 +1077,30 @@ impl Loader {
     fn verify_dependencies(
         &self,
         module: &CompiledModule,
-        bundle_verified: &BTreeMap<ModuleId, &CompiledModule>,
+        bundle_verified: &BTreeMap<ModuleId, CompiledModule>,
         data_store: &impl DataStore,
         visiting: &mut BTreeSet<ModuleId>,
         allow_dependency_loading_failure: bool,
+        dependencies_depth: usize,
     ) -> VMResult<()> {
-        // all immediate dependencies of the module being verified should be in one of
-        // the locations
+        if let Some(max_dependency_depth) = self.vm_config.verifier.max_dependency_depth {
+            if dependencies_depth > max_dependency_depth {
+                return Err(
+                    PartialVMError::new(StatusCode::MAX_DEPENDENCY_DEPTH_REACHED)
+                        .finish(Location::Undefined),
+                );
+            }
+        }
+
+        // all immediate dependencies of the module being verified should be in one of the locations
         // - the verified portion of the bundle (e.g., verified before this module)
-        // - the compiled module cache (i.e., module has been self-checked but not link
-        //   checked)
+        // - the compiled module cache (i.e., module has been self-checked but not link checked)
         // - the data store (i.e., not self-checked yet)
         let mut bundle_deps = vec![];
         let mut cached_deps = vec![];
         for runtime_dep in module.immediate_dependencies() {
             if let Some(cached) = bundle_verified.get(&runtime_dep) {
-                bundle_deps.push(*cached);
+                bundle_deps.push(cached);
                 continue;
             }
 
@@ -1247,6 +1110,7 @@ impl Loader {
                 data_store,
                 visiting,
                 allow_dependency_loading_failure,
+                dependencies_depth + 1,
             )?;
 
             cached_deps.push(loaded);
@@ -1260,8 +1124,7 @@ impl Loader {
             .chain(cached_deps.iter().map(Arc::as_ref));
         let result = dependencies::verify_module(module, deps);
 
-        // if dependencies loading is not allowed to fail, the linking should not fail
-        // as well
+        // if dependencies loading is not allowed to fail, the linking should not fail as well
         if allow_dependency_loading_failure {
             result
         } else {
@@ -1275,12 +1138,11 @@ impl Loader {
     // Stopgap to avoid a recursion that is either taking too long or using too
     // much memory
     fn subst(&self, ty: &Type, ty_args: &[Type]) -> PartialVMResult<Type> {
-        // Before instantiating the type, count the # of nodes of all type arguments
-        // plus existing type instantiation.
-        // If that number is larger than MAX_TYPE_INSTANTIATION_NODES, refuse to
-        // construct this type. This prevents constructing larger and lager
-        // types via struct instantiation.
-        if let Type::StructInstantiation(box_struct_inst) = ty {
+        // Before instantiating the type, count the # of nodes of all type arguments plus
+        // existing type instantiation.
+        // If that number is larger than MAX_TYPE_INSTANTIATION_NODES, refuse to construct this type.
+        // This prevents constructing larger and lager types via struct instantiation.
+        if let Type::DatatypeInstantiation(box_struct_inst) = ty {
             let (_, struct_inst) = &**box_struct_inst;
             let mut sum_nodes = 1u64;
             for ty in ty_args.iter().chain(struct_inst.iter()) {
@@ -1294,8 +1156,8 @@ impl Loader {
     }
 
     // Verify the kind (constraints) of an instantiation.
-    // Function invocations call this function to verify correctness of type
-    // arguments provided
+    // Both function and script invocation use this function to verify correctness
+    // of type arguments provided
     fn verify_ty_args<'a, I>(&self, constraints: I, ty_args: &[Type]) -> PartialVMResult<()>
     where
         I: IntoIterator<Item = &'a AbilitySet>,
@@ -1315,6 +1177,7 @@ impl Loader {
         Ok(())
     }
 
+    //
     // Internal helpers
     //
 
@@ -1337,7 +1200,7 @@ impl Loader {
         (compiled, loaded)
     }
 
-    pub(crate) fn get_struct_type(&self, idx: CachedStructIndex) -> Option<Arc<StructType>> {
+    pub(crate) fn get_struct_type(&self, idx: CachedTypeIndex) -> Option<Arc<CachedDatatype>> {
         self.module_cache
             .read()
             .structs
@@ -1370,8 +1233,8 @@ impl Loader {
                 vec![false],
                 vec![self.abilities(ty)?],
             ),
-            Type::Struct(idx) => Ok(self.module_cache.read().struct_at(*idx).abilities),
-            Type::StructInstantiation(struct_inst) => {
+            Type::Datatype(idx) => Ok(self.module_cache.read().struct_at(*idx).abilities),
+            Type::DatatypeInstantiation(struct_inst) => {
                 let (idx, type_args) = &**struct_inst;
                 let struct_type = self.module_cache.read().struct_at(*idx);
                 let declared_phantom_parameters = struct_type
@@ -1392,18 +1255,21 @@ impl Loader {
     }
 }
 
+//
 // Resolver
 //
 
-// A simple wrapper for a `Module` in the `Resolver`
-struct BinaryType {
-    compiled: Arc<CompiledModule>,
-    loaded: Arc<LoadedModule>,
+// A simple wrapper for a `Module` or a `Script` in the `Resolver`
+enum BinaryType {
+    Module {
+        compiled: Arc<CompiledModule>,
+        loaded: Arc<LoadedModule>,
+    },
 }
 
-// A Resolver is a simple and small structure allocated on the stack and used by
-// the interpreter. It's the only API known to the interpreter and it's tailored
-// to the interpreter needs.
+// A Resolver is a simple and small structure allocated on the stack and used by the
+// interpreter. It's the only API known to the interpreter and it's tailored to the interpreter
+// needs.
 pub(crate) struct Resolver<'a> {
     loader: &'a Loader,
     binary: BinaryType,
@@ -1415,22 +1281,28 @@ impl<'a> Resolver<'a> {
         compiled: Arc<CompiledModule>,
         loaded: Arc<LoadedModule>,
     ) -> Self {
-        let binary = BinaryType { compiled, loaded };
+        let binary = BinaryType::Module { compiled, loaded };
         Self { loader, binary }
     }
 
+    //
     // Constant resolution
     //
 
     pub(crate) fn constant_at(&self, idx: ConstantPoolIndex) -> &Constant {
-        self.binary.compiled.constant_at(idx)
+        match &self.binary {
+            BinaryType::Module { compiled, .. } => compiled.constant_at(idx),
+        }
     }
 
+    //
     // Function resolution
     //
 
     pub(crate) fn function_from_handle(&self, idx: FunctionHandleIndex) -> Arc<Function> {
-        let idx = self.binary.loaded.function_at(idx.0);
+        let idx = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.function_at(idx.0),
+        };
         self.loader.function_at(idx)
     }
 
@@ -1438,7 +1310,9 @@ impl<'a> Resolver<'a> {
         &self,
         idx: FunctionInstantiationIndex,
     ) -> Arc<Function> {
-        let func_inst = self.binary.loaded.function_instantiation_at(idx.0);
+        let func_inst = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.function_instantiation_at(idx.0),
+        };
         self.loader.function_at(func_inst.handle)
     }
 
@@ -1447,14 +1321,13 @@ impl<'a> Resolver<'a> {
         idx: FunctionInstantiationIndex,
         type_params: &[Type],
     ) -> PartialVMResult<Vec<Type>> {
-        let loaded_module = &*self.binary.loaded;
-        let func_inst = loaded_module.function_instantiation_at(idx.0);
-        let instantiation: Vec<_> = loaded_module
-            .instantiation_signature_at(func_inst.instantiation_idx)?
-            .iter()
-            .map(|ty| self.subst(ty, type_params))
-            .collect::<PartialVMResult<_>>()?;
-
+        let func_inst = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.function_instantiation_at(idx.0),
+        };
+        let mut instantiation = vec![];
+        for ty in &func_inst.instantiation {
+            instantiation.push(self.subst(ty, type_params)?);
+        }
         // Check if the function instantiation over all generics is larger
         // than MAX_TYPE_INSTANTIATION_NODES.
         let mut sum_nodes = 1u64;
@@ -1467,12 +1340,23 @@ impl<'a> Resolver<'a> {
         Ok(instantiation)
     }
 
+    #[allow(unused)]
+    pub(crate) fn type_params_count(&self, idx: FunctionInstantiationIndex) -> usize {
+        let func_inst = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.function_instantiation_at(idx.0),
+        };
+        func_inst.instantiation.len()
+    }
+
+    //
     // Type resolution
     //
 
     pub(crate) fn get_struct_type(&self, idx: StructDefinitionIndex) -> Type {
-        let struct_def = self.binary.loaded.struct_at(idx);
-        Type::Struct(struct_def)
+        let struct_def = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.struct_at(idx),
+        };
+        Type::Datatype(struct_def)
     }
 
     pub(crate) fn instantiate_generic_type(
@@ -1480,27 +1364,26 @@ impl<'a> Resolver<'a> {
         idx: StructDefInstantiationIndex,
         ty_args: &[Type],
     ) -> PartialVMResult<Type> {
-        let loaded_module = &*self.binary.loaded;
-        let struct_inst = loaded_module.struct_instantiation_at(idx.0);
-        let instantiation =
-            loaded_module.instantiation_signature_at(struct_inst.instantiation_idx)?;
+        let struct_inst = match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.struct_instantiation_at(idx.0),
+        };
 
-        // Before instantiating the type, count the # of nodes of all type arguments
-        // plus existing type instantiation.
-        // If that number is larger than MAX_TYPE_INSTANTIATION_NODES, refuse to
-        // construct this type. This prevents constructing larger and larger
-        // types via struct instantiation.
+        // Before instantiating the type, count the # of nodes of all type arguments plus
+        // existing type instantiation.
+        // If that number is larger than MAX_TYPE_INSTANTIATION_NODES, refuse to construct this type.
+        // This prevents constructing larger and larger types via struct instantiation.
         let mut sum_nodes = 1u64;
-        for ty in ty_args.iter().chain(instantiation.iter()) {
+        for ty in ty_args.iter().chain(struct_inst.instantiation.iter()) {
             sum_nodes = sum_nodes.saturating_add(self.loader.count_type_nodes(ty));
             if sum_nodes > MAX_TYPE_INSTANTIATION_NODES {
                 return Err(PartialVMError::new(StatusCode::TOO_MANY_TYPE_NODES));
             }
         }
 
-        Ok(Type::StructInstantiation(Box::new((
+        Ok(Type::DatatypeInstantiation(Box::new((
             struct_inst.def,
-            instantiation
+            struct_inst
+                .instantiation
                 .iter()
                 .map(|ty| self.subst(ty, ty_args))
                 .collect::<PartialVMResult<_>>()?,
@@ -1508,7 +1391,9 @@ impl<'a> Resolver<'a> {
     }
 
     fn single_type_at(&self, idx: SignatureIndex) -> &Type {
-        self.binary.loaded.single_type_at(idx)
+        match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.single_type_at(idx),
+        }
     }
 
     pub(crate) fn instantiate_single_type(
@@ -1528,23 +1413,32 @@ impl<'a> Resolver<'a> {
         self.loader.subst(ty, ty_args)
     }
 
+    //
     // Fields resolution
     //
 
     pub(crate) fn field_offset(&self, idx: FieldHandleIndex) -> usize {
-        self.binary.loaded.field_offset(idx)
+        match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.field_offset(idx),
+        }
     }
 
     pub(crate) fn field_instantiation_offset(&self, idx: FieldInstantiationIndex) -> usize {
-        self.binary.loaded.field_instantiation_offset(idx)
+        match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.field_instantiation_offset(idx),
+        }
     }
 
     pub(crate) fn field_count(&self, idx: StructDefinitionIndex) -> u16 {
-        self.binary.loaded.field_count(idx.0)
+        match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.field_count(idx.0),
+        }
     }
 
     pub(crate) fn field_instantiation_count(&self, idx: StructDefInstantiationIndex) -> u16 {
-        self.binary.loaded.field_instantiation_count(idx.0)
+        match &self.binary {
+            BinaryType::Module { loaded, .. } => loaded.field_instantiation_count(idx.0),
+        }
     }
 
     pub(crate) fn type_to_type_layout(&self, ty: &Type) -> PartialVMResult<R::MoveTypeLayout> {
@@ -1564,15 +1458,16 @@ impl<'a> Resolver<'a> {
     }
 }
 
-// A LoadedModule is very similar to a CompiledModule but data is "transformed"
-// to a representation more appropriate to execution.
-// When code executes indexes in instructions are resolved against those runtime
-// structure so that any data needed for execution is immediately available
+// A LoadedModule is very similar to a CompiledModule but data is "transformed" to a representation
+// more appropriate to execution.
+// When code executes indexes in instructions are resolved against those runtime structure
+// so that any data needed for execution is immediately available
 #[derive(Debug)]
 pub(crate) struct LoadedModule {
     #[allow(dead_code)]
     id: ModuleId,
 
+    //
     // types as indexes into the Loader type list
     //
 
@@ -1581,7 +1476,7 @@ pub(crate) struct LoadedModule {
     // the instruction carries an index into this table which contains the index into the
     // glabal table of types. No instantiation of generic types is saved into the global table.
     #[allow(dead_code)]
-    struct_refs: Vec<CachedStructIndex>,
+    struct_refs: Vec<CachedTypeIndex>,
     structs: Vec<StructDef>,
     // materialized instantiations, whether partial or not
     struct_instantiations: Vec<StructInstantiation>,
@@ -1605,13 +1500,10 @@ pub(crate) struct LoadedModule {
     function_map: HashMap<Identifier, usize>,
 
     // a map of single-token signature indices to type.
-    // Single-token signatures are usually indexed by the `SignatureIndex` in bytecode. For
-    // example, `VecMutBorrow(SignatureIndex)`, the `SignatureIndex` maps to a single
-    // `SignatureToken`, and hence, a single type.
+    // Single-token signatures are usually indexed by the `SignatureIndex` in bytecode. For example,
+    // `VecMutBorrow(SignatureIndex)`, the `SignatureIndex` maps to a single `SignatureToken`, and
+    // hence, a single type.
     single_signature_token_map: BTreeMap<SignatureIndex, Type>,
-
-    // a map from signatures in instantiations to the `Vec<Type>` that represent it.
-    instantiation_signatures: BTreeMap<SignatureIndex, Vec<Type>>,
 }
 
 impl LoadedModule {
@@ -1624,27 +1516,6 @@ impl LoadedModule {
     ) -> Result<Self, PartialVMError> {
         let self_id = module.self_id();
 
-        let mut instantiation_signatures: BTreeMap<SignatureIndex, Vec<Type>> = BTreeMap::new();
-        // helper to build the sparse signature vector
-        fn cache_signatures(
-            instantiation_signatures: &mut BTreeMap<SignatureIndex, Vec<Type>>,
-            module: &CompiledModule,
-            instantiation_idx: SignatureIndex,
-            cache: &ModuleCache,
-        ) -> Result<(), PartialVMError> {
-            if let Entry::Vacant(e) = instantiation_signatures.entry(instantiation_idx) {
-                let module_view = BinaryIndexedView::Module(module);
-                let instantiation = module
-                    .signature_at(instantiation_idx)
-                    .0
-                    .iter()
-                    .map(|ty| cache.make_type(module_view, ty))
-                    .collect::<Result<Vec<_>, _>>()?;
-                e.insert(instantiation);
-            }
-            Ok(())
-        }
-
         let mut struct_refs = vec![];
         let mut structs = vec![];
         let mut struct_instantiations = vec![];
@@ -1655,7 +1526,7 @@ impl LoadedModule {
         let mut function_map = HashMap::new();
         let mut single_signature_token_map = BTreeMap::new();
 
-        for struct_handle in module.struct_handles() {
+        for struct_handle in module.datatype_handles() {
             let struct_name = module.identifier_at(struct_handle.name);
             let module_handle = module.module_handle_at(struct_handle.module);
             let runtime_id = module.module_id_for_handle(module_handle);
@@ -1664,7 +1535,11 @@ impl LoadedModule {
 
         for struct_def in module.struct_defs() {
             let idx = struct_refs[struct_def.struct_handle.0 as usize];
-            let field_count = cache.structs.binaries[idx.0].fields.len() as u16;
+            let field_count = cache.structs.binaries[idx.0]
+                .get_struct()
+                .expect("enums cannot exist in v0")
+                .fields
+                .len() as u16;
             structs.push(StructDef { field_count, idx });
         }
 
@@ -1672,18 +1547,14 @@ impl LoadedModule {
             let def = struct_inst.def.0 as usize;
             let struct_def = &structs[def];
             let field_count = struct_def.field_count;
-
-            let instantiation_idx = struct_inst.type_parameters;
-            cache_signatures(
-                &mut instantiation_signatures,
-                module,
-                instantiation_idx,
-                cache,
-            )?;
+            let mut instantiation = vec![];
+            for ty in &module.signature_at(struct_inst.type_parameters).0 {
+                instantiation.push(cache.make_type(module, ty)?);
+            }
             struct_instantiations.push(StructInstantiation {
                 field_count,
                 def: struct_def.idx,
-                instantiation_idx,
+                instantiation,
             });
         }
 
@@ -1715,7 +1586,6 @@ impl LoadedModule {
             }
         }
 
-        let module_view = BinaryIndexedView::Module(module);
         for func_def in module.function_defs() {
             let idx = function_refs[func_def.function.0 as usize];
             let name = module.identifier_at(module.function_handle_at(func_def.function).name);
@@ -1747,7 +1617,7 @@ impl LoadedModule {
                                     Some(sig_token) => sig_token,
                                 };
                                 single_signature_token_map
-                                    .insert(*si, cache.make_type(module_view, ty)?);
+                                    .insert(*si, cache.make_type(module, ty)?);
                             }
                         }
                         _ => {}
@@ -1758,17 +1628,13 @@ impl LoadedModule {
 
         for func_inst in module.function_instantiations() {
             let handle = function_refs[func_inst.handle.0 as usize];
-
-            let instantiation_idx = func_inst.type_parameters;
-            cache_signatures(
-                &mut instantiation_signatures,
-                module,
-                instantiation_idx,
-                cache,
-            )?;
+            let mut instantiation = vec![];
+            for ty in &module.signature_at(func_inst.type_parameters).0 {
+                instantiation.push(cache.make_type(module, ty)?);
+            }
             function_instantiations.push(FunctionInstantiation {
                 handle,
-                instantiation_idx,
+                instantiation,
             });
         }
 
@@ -1783,7 +1649,10 @@ impl LoadedModule {
             let fh_idx = f_inst.handle;
             let owner = field_handles[fh_idx.0 as usize].owner;
             let offset = field_handles[fh_idx.0 as usize].offset;
-
+            let mut instantiation = vec![];
+            for ty in &module.signature_at(f_inst.type_parameters).0 {
+                instantiation.push(cache.make_type(module, ty)?);
+            }
             field_instantiations.push(FieldInstantiation { offset, owner });
         }
 
@@ -1798,11 +1667,10 @@ impl LoadedModule {
             field_instantiations,
             function_map,
             single_signature_token_map,
-            instantiation_signatures,
         })
     }
 
-    fn struct_at(&self, idx: StructDefinitionIndex) -> CachedStructIndex {
+    fn struct_at(&self, idx: StructDefinitionIndex) -> CachedTypeIndex {
         self.structs[idx.0 as usize].idx
     }
 
@@ -1837,16 +1705,6 @@ impl LoadedModule {
     fn single_type_at(&self, idx: SignatureIndex) -> &Type {
         self.single_signature_token_map.get(&idx).unwrap()
     }
-
-    fn instantiation_signature_at(
-        &self,
-        idx: SignatureIndex,
-    ) -> Result<&Vec<Type>, PartialVMError> {
-        self.instantiation_signatures.get(&idx).ok_or_else(|| {
-            PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                .with_message("Instantiation signature not found".to_string())
-        })
-    }
 }
 
 // A runtime function
@@ -1857,16 +1715,17 @@ pub(crate) struct Function {
     file_format_version: u32,
     index: FunctionDefinitionIndex,
     code: Vec<Bytecode>,
-    parameters: SignatureIndex,
-    return_: SignatureIndex,
+    parameters: Signature,
+    return_: Signature,
+    locals: Signature,
     type_parameters: Vec<AbilitySet>,
     native: Option<NativeFunction>,
     def_is_native: bool,
     module: ModuleId,
     name: Identifier,
-    parameters_len: usize,
-    locals_len: usize,
-    return_len: usize,
+    return_types: Vec<Type>,
+    local_types: Vec<Type>,
+    parameter_types: Vec<Type>,
 }
 
 impl Function {
@@ -1891,18 +1750,23 @@ impl Function {
         } else {
             (None, false)
         };
-        let parameters = handle.parameters;
-        let parameters_len = module.signature_at(parameters).0.len();
+        let parameters = module.signature_at(handle.parameters).clone();
         // Native functions do not have a code unit
-        let (code, locals_len) = match &def.code {
+        let (code, locals) = match &def.code {
             Some(code) => (
                 code.code.clone(),
-                parameters_len + module.signature_at(code.locals).0.len(),
+                Signature(
+                    parameters
+                        .0
+                        .iter()
+                        .chain(module.signature_at(code.locals).0.iter())
+                        .cloned()
+                        .collect(),
+                ),
             ),
-            None => (vec![], 0),
+            None => (vec![], Signature(vec![])),
         };
-        let return_ = handle.return_;
-        let return_len = module.signature_at(return_).0.len();
+        let return_ = module.signature_at(handle.return_).clone();
         let type_parameters = handle.type_parameters.clone();
         Self {
             file_format_version: module.version(),
@@ -1910,14 +1774,15 @@ impl Function {
             code,
             parameters,
             return_,
+            locals,
             type_parameters,
             native,
             def_is_native,
             module: module_id,
             name,
-            parameters_len,
-            locals_len,
-            return_len,
+            local_types: vec![],
+            return_types: vec![],
+            parameter_types: vec![],
         }
     }
 
@@ -1939,20 +1804,21 @@ impl Function {
         link_context: AccountAddress,
         loader: &'a Loader,
     ) -> Resolver<'a> {
-        let (compiled, loaded) = loader.get_module(link_context, &self.module);
+        let module_id = &self.module;
+        let (compiled, loaded) = loader.get_module(link_context, module_id);
         Resolver::for_module(loader, compiled, loaded)
     }
 
     pub(crate) fn local_count(&self) -> usize {
-        self.locals_len
+        self.locals.len()
     }
 
     pub(crate) fn arg_count(&self) -> usize {
-        self.parameters_len
+        self.parameters.len()
     }
 
     pub(crate) fn return_type_count(&self) -> usize {
-        self.return_len
+        self.return_.len()
     }
 
     pub(crate) fn name(&self) -> &str {
@@ -1967,22 +1833,26 @@ impl Function {
         &self.type_parameters
     }
 
+    #[allow(unused)]
+    pub(crate) fn local_types(&self) -> &[Type] {
+        &self.local_types
+    }
+
+    #[allow(unused)]
+    pub(crate) fn return_types(&self) -> &[Type] {
+        &self.return_types
+    }
+
+    #[allow(unused)]
+    pub(crate) fn parameter_types(&self) -> &[Type] {
+        &self.parameter_types
+    }
+
     pub(crate) fn pretty_string(&self) -> String {
         let id = &self.module;
         format!(
             "0x{}::{}::{}",
             id.address(),
-            id.name().as_str(),
-            self.name.as_str()
-        )
-    }
-
-    #[cfg(any(debug_assertions, feature = "debugging"))]
-    pub(crate) fn pretty_short_string(&self) -> String {
-        let id = &self.module;
-        format!(
-            "0x{}::{}::{}",
-            id.address().short_str_lossless(),
             id.name().as_str(),
             self.name.as_str()
         )
@@ -2010,12 +1880,12 @@ impl Function {
     }
 }
 
-// Internal structures that are saved at the proper index in the proper tables
-// to access execution information (interpreter).
+//
+// Internal structures that are saved at the proper index in the proper tables to access
+// execution information (interpreter).
 // The following structs are internal to the loader and never exposed out.
-// The `Loader` will create those struct and the proper table when loading a
-// module. The `Resolver` uses those structs to return information to the
-// `Interpreter`.
+// The `Loader` will create those struct and the proper table when loading a module.
+// The `Resolver` uses those structs to return information to the `Interpreter`.
 //
 
 // A function instantiation.
@@ -2023,45 +1893,44 @@ impl Function {
 struct FunctionInstantiation {
     // index to `ModuleCache::functions` global table
     handle: usize,
-    instantiation_idx: SignatureIndex,
+    instantiation: Vec<Type>,
 }
 
 #[derive(Debug)]
 struct StructDef {
     // struct field count
     field_count: u16,
-    // `ModuleCache::structs` global table index
-    idx: CachedStructIndex,
+    // `ModuelCache::structs` global table index
+    idx: CachedTypeIndex,
 }
 
 #[derive(Debug)]
 struct StructInstantiation {
     // struct field count
     field_count: u16,
-    // `ModuleCache::structs` global table index. It is the generic type.
-    def: CachedStructIndex,
-    instantiation_idx: SignatureIndex,
+    // `ModuelCache::structs` global table index. It is the generic type.
+    def: CachedTypeIndex,
+    instantiation: Vec<Type>,
 }
 
-// A field handle. The offset is the only used information when operating on a
-// field
+// A field handle. The offset is the only used information when operating on a field
 #[derive(Debug)]
 struct FieldHandle {
     offset: usize,
-    // `ModuleCache::structs` global table index. It is the generic type.
-    owner: CachedStructIndex,
+    // `ModuelCache::structs` global table index. It is the generic type.
+    owner: CachedTypeIndex,
 }
 
-// A field instantiation. The offset is the only used information when operating
-// on a field
+// A field instantiation. The offset is the only used information when operating on a field
 #[derive(Debug)]
 struct FieldInstantiation {
     offset: usize,
-    // `ModuleCache::structs` global table index. It is the generic type.
+    // `ModuelCache::structs` global table index. It is the generic type.
     #[allow(unused)]
-    owner: CachedStructIndex,
+    owner: CachedTypeIndex,
 }
 
+//
 // Cache for data associated to a Struct, used for de/serialization and more
 //
 
@@ -2094,7 +1963,7 @@ impl StructInfo {
 }
 
 pub(crate) struct TypeCache {
-    structs: HashMap<CachedStructIndex, HashMap<Vec<Type>, StructInfo>>,
+    structs: HashMap<CachedTypeIndex, HashMap<Vec<Type>, StructInfo>>,
 }
 
 impl TypeCache {
@@ -2108,18 +1977,18 @@ impl TypeCache {
 /// Maximal depth of a value in terms of type depth.
 pub const VALUE_DEPTH_MAX: u64 = 128;
 
-/// Maximal nodes which are allowed when converting to layout. This includes the
-/// the types of fields for struct types.
+/// Maximal nodes which are allowed when converting to layout. This includes the types of
+/// fields for struct types.
 const MAX_TYPE_TO_LAYOUT_NODES: u64 = 256;
 
-/// Maximal nodes which are all allowed when instantiating a generic type. This
-/// does not include field types of structs.
+/// Maximal nodes which are all allowed when instantiating a generic type. This does not include
+/// field types of structs.
 const MAX_TYPE_INSTANTIATION_NODES: u64 = 128;
 
 impl Loader {
     fn read_cached_struct_tag(
         &self,
-        gidx: CachedStructIndex,
+        gidx: CachedTypeIndex,
         ty_args: &[Type],
         tag_type: StructTagType,
     ) -> Option<StructTag> {
@@ -2135,7 +2004,7 @@ impl Loader {
 
     fn struct_gidx_to_type_tag(
         &self,
-        gidx: CachedStructIndex,
+        gidx: CachedTypeIndex,
         ty_args: &[Type],
         tag_type: StructTagType,
     ) -> PartialVMResult<StructTag> {
@@ -2202,12 +2071,12 @@ impl Loader {
             Type::Vector(ty) => {
                 TypeTag::Vector(Box::new(self.type_to_type_tag_impl(ty, tag_type)?))
             }
-            Type::Struct(gidx) => TypeTag::Struct(Box::new(self.struct_gidx_to_type_tag(
+            Type::Datatype(gidx) => TypeTag::Struct(Box::new(self.struct_gidx_to_type_tag(
                 *gidx,
                 &[],
                 tag_type,
             )?)),
-            Type::StructInstantiation(struct_inst) => {
+            Type::DatatypeInstantiation(struct_inst) => {
                 let (gidx, ty_args) = &**struct_inst;
                 TypeTag::Struct(Box::new(
                     self.struct_gidx_to_type_tag(*gidx, ty_args, tag_type)?,
@@ -2231,7 +2100,7 @@ impl Loader {
                     result += 1;
                     todo.push(ty);
                 }
-                Type::StructInstantiation(struct_inst) => {
+                Type::DatatypeInstantiation(struct_inst) => {
                     let (_, ty_args) = &**struct_inst;
                     result += 1;
                     todo.extend(ty_args.iter())
@@ -2246,7 +2115,7 @@ impl Loader {
 
     fn struct_gidx_to_type_layout(
         &self,
-        gidx: CachedStructIndex,
+        gidx: CachedTypeIndex,
         ty_args: &[Type],
         count: &mut u64,
         depth: u64,
@@ -2263,7 +2132,8 @@ impl Loader {
         }
 
         let count_before = *count;
-        let struct_type = self.module_cache.read().struct_at(gidx);
+        let binding = self.module_cache.read().struct_at(gidx);
+        let struct_type = binding.get_struct().expect("enums cannot exist at v0");
         let field_tys = struct_type
             .fields
             .iter()
@@ -2316,13 +2186,13 @@ impl Loader {
             Type::Vector(ty) => R::MoveTypeLayout::Vector(Box::new(
                 self.type_to_type_layout_impl(ty, count, depth + 1)?,
             )),
-            Type::Struct(gidx) => R::MoveTypeLayout::Struct(self.struct_gidx_to_type_layout(
+            Type::Datatype(gidx) => R::MoveTypeLayout::Struct(self.struct_gidx_to_type_layout(
                 *gidx,
                 &[],
                 count,
                 depth,
             )?),
-            Type::StructInstantiation(struct_inst) => {
+            Type::DatatypeInstantiation(struct_inst) => {
                 let (gidx, ty_args) = &**struct_inst;
                 R::MoveTypeLayout::Struct(
                     self.struct_gidx_to_type_layout(*gidx, ty_args, count, depth)?,
@@ -2339,7 +2209,7 @@ impl Loader {
 
     fn struct_gidx_to_fully_annotated_layout(
         &self,
-        gidx: CachedStructIndex,
+        gidx: CachedTypeIndex,
         ty_args: &[Type],
         count: &mut u64,
         depth: u64,
@@ -2355,7 +2225,8 @@ impl Loader {
             }
         }
 
-        let struct_type = self.module_cache.read().struct_at(gidx);
+        let binding = self.module_cache.read().struct_at(gidx);
+        let struct_type = binding.get_struct().expect("enums cannot exist at v0");
         if struct_type.fields.len() != struct_type.field_names.len() {
             return Err(
                 PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR).with_message(
@@ -2418,10 +2289,10 @@ impl Loader {
             Type::Vector(ty) => A::MoveTypeLayout::Vector(Box::new(
                 self.type_to_fully_annotated_layout_impl(ty, count, depth + 1)?,
             )),
-            Type::Struct(gidx) => A::MoveTypeLayout::Struct(
+            Type::Datatype(gidx) => A::MoveTypeLayout::Struct(
                 self.struct_gidx_to_fully_annotated_layout(*gidx, &[], count, depth)?,
             ),
-            Type::StructInstantiation(struct_inst) => {
+            Type::DatatypeInstantiation(struct_inst) => {
                 let (gidx, ty_args) = &**struct_inst;
                 A::MoveTypeLayout::Struct(
                     self.struct_gidx_to_fully_annotated_layout(*gidx, ty_args, count, depth)?,

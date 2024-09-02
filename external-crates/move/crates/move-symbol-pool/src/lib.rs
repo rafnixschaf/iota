@@ -1,6 +1,5 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! A global, uniqued cache of strings that is never purged. Inspired by
@@ -25,10 +24,10 @@
 mod pool;
 pub mod symbol;
 
-use std::sync::Mutex;
-
 use once_cell::sync::Lazy;
 use pool::Pool;
+use std::sync::Mutex;
+
 pub use symbol::Symbol;
 
 static_symbols!(
@@ -48,17 +47,18 @@ static_symbols!(
     "_",
     "init",
     "unit_test",
+    "unit_test_poison",
     "legacy",
     "2024",
     "alpha",
-    "iota",
+    "sui",
     "object",
     "new",
     "new_uid_from_hash",
     "test_scenario",
     "new_object",
     "UID",
-    "iota_system",
+    "sui_system",
     "create",
     "clock",
     "option",
@@ -70,11 +70,13 @@ static_symbols!(
     "tx_context",
     "TxContext",
     "ID",
-    "IOTA",
+    "SUI",
     "authenticator_state",
     "AuthenticatorState",
     "random",
     "Random",
+    "bridge",
+    "Bridge",
     "id",
     "transfer",
     "freeze_object",
@@ -99,9 +101,8 @@ pub(crate) static SYMBOL_POOL: Lazy<Mutex<Pool>> = Lazy::new(|| Mutex::new(Pool:
 
 #[cfg(test)]
 mod tests {
-    use std::mem::replace;
-
     use crate::{Pool, Symbol, SYMBOL_POOL};
+    use std::mem::replace;
 
     #[test]
     fn test_serialization() {

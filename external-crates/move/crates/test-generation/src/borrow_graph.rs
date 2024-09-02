@@ -1,17 +1,14 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-
 use crate::abstract_state::Mutability;
+use std::collections::HashMap;
 
 /// Each partition is associated with a (unique) ID
 type PartitionID = u16;
 
-/// A nonce represents a runtime reference. It has a unique identifier and a
-/// mutability
+/// A nonce represents a runtime reference. It has a unique identifier and a mutability
 type Nonce = (u16, Mutability);
 
 /// A set of nonces
@@ -24,18 +21,16 @@ type Path = Vec<u8>;
 /// may be empty, and an `EdgeType`
 type Edge = (PartitionID, PartitionID, Path, EdgeType);
 
-/// The `EdgeType` is either weak or strong. A weak edge represents imprecise
-/// information on the path along which the borrow takes place. A strong edge is
-/// precise.
+/// The `EdgeType` is either weak or strong. A weak edge represents imprecise information
+/// on the path along which the borrow takes place. A strong edge is precise.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EdgeType {
     Weak,
     Strong,
 }
 
-/// The `BorrowGraph` stores information sufficient to determine whether the
-/// instruction of a bytecode instruction that interacts with references is
-/// memory safe.
+/// The `BorrowGraph` stores information sufficient to determine whether the instruction
+/// of a bytecode instruction that interacts with references is memory safe.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BorrowGraph {
     /// All of the partitions that make up the graph
@@ -67,7 +62,7 @@ impl BorrowGraph {
     /// cannot be chosen.
     pub fn fresh_partition(&mut self, n: Nonce) -> Result<(), String> {
         if self.partition_counter.checked_add(1).is_some() {
-            if self.partition_map.contains_key(&self.partition_counter) {
+            if self.partition_map.get(&self.partition_counter).is_some() {
                 return Err("Partition map already contains ID".to_string());
             }
             self.partition_map.insert(self.partition_counter, vec![n]);
@@ -103,11 +98,11 @@ impl BorrowGraph {
         }
     }
 
-    /// Determine whether the given partition is freezable. This operation may
-    /// fail with an error if the given partition ID is not in the graph.
+    /// Determine whether the given partition is freezable. This operation may fail
+    /// with an error if the given partition ID is not in the graph.
     pub fn partition_freezable(&self, partition_id: PartitionID) -> Result<bool, String> {
         let mut freezable = true;
-        if self.partition_map.contains_key(&partition_id) {
+        if self.partition_map.get(&partition_id).is_some() {
             for (p1, p2, _, _) in self.edges.iter() {
                 if *p1 == partition_id && self.partition_mutability(*p2)? == Mutability::Mutable {
                     freezable = false;

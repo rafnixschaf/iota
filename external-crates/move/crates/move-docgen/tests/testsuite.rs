@@ -1,21 +1,20 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    fs::File,
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::path::Path;
 
 use codespan_reporting::term::termcolor::Buffer;
+
+use move_prover::{cli::Options, run_move_prover};
+use move_prover_test_utils::baseline_test::verify_or_update_baseline;
+use std::path::PathBuf;
+use tempfile::TempDir;
+
 use itertools::Itertools;
 #[allow(unused_imports)]
 use log::debug;
-use move_prover::{cli::Options, run_move_prover};
-use move_prover_test_utils::baseline_test::verify_or_update_baseline;
-use tempfile::TempDir;
+use std::{fs::File, io::Read};
 
 const FLAGS: &[&str] = &[
     "--verbose=warn",

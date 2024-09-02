@@ -1,12 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use move_binary_format::file_format::{
-    Ability, Bytecode, FunctionHandleIndex, FunctionInstantiationIndex, SignatureToken,
-    StructDefInstantiationIndex, StructDefinitionIndex,
-};
 
 use crate::{
     abstract_state::{AbstractState, AbstractValue, BorrowState, Mutability},
@@ -28,6 +22,10 @@ use crate::{
     state_stack_unpack_struct, state_stack_unpack_struct_inst, struct_instantiation_for_state,
     transitions::*,
     unpack_instantiation_for_state, with_ty_param,
+};
+use move_binary_format::file_format::{
+    Ability, Bytecode, FunctionHandleIndex, FunctionInstantiationIndex, SignatureToken,
+    StructDefInstantiationIndex, StructDefinitionIndex,
 };
 
 /// A `Precondition` is a boolean predicate on an `AbstractState`.
@@ -227,7 +225,7 @@ pub fn instruction_summary(instruction: Bytecode, exact: bool) -> Summary {
         },
         Bytecode::ImmBorrowLoc(i) => Summary {
             // TODO: Add these back in when the borrow graph is added
-            // preconditions: vec![
+            //preconditions: vec![
             //    state_local_exists!(i),
             //    state_local_availability_is!(i, BorrowState::Available),
             //    state_memory_safe!(None),
@@ -493,5 +491,14 @@ pub fn instruction_summary(instruction: Bytecode, exact: bool) -> Summary {
         | Bytecode::VecPopBack(_)
         | Bytecode::VecUnpack(..)
         | Bytecode::VecSwap(_) => unimplemented!("Vector bytecode not supported yet"),
+        Bytecode::PackVariant(_)
+        | Bytecode::PackVariantGeneric(_)
+        | Bytecode::UnpackVariant(_)
+        | Bytecode::UnpackVariantImmRef(_)
+        | Bytecode::UnpackVariantMutRef(_)
+        | Bytecode::UnpackVariantGeneric(_)
+        | Bytecode::UnpackVariantGenericImmRef(_)
+        | Bytecode::UnpackVariantGenericMutRef(_)
+        | Bytecode::VariantSwitch(_) => unimplemented!("Variant bytecode not supported yet"),
     }
 }

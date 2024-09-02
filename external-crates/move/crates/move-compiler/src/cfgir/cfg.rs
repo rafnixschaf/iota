@@ -1,14 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use std::{
-    cmp::Reverse,
-    collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque},
-    fmt::Debug,
-    ops::Deref,
-};
 
 use crate::{
     cfgir::{
@@ -18,6 +10,12 @@ use crate::{
     diagnostics::Diagnostics,
     hlir::ast::{Command, Command_, Label},
     shared::ast_debug::*,
+};
+use std::{
+    cmp::Reverse,
+    collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque},
+    fmt::Debug,
+    ops::Deref,
 };
 
 //**************************************************************************************************
@@ -101,8 +99,7 @@ impl<Blocks: Deref<Target = BasicBlocks>> ForwardCFG<Blocks> {
             self.start,
             blocks.keys().copied(),
             &self.successor_map,
-            // include_dead_code
-            false,
+            /* include_dead_code */ false,
         );
 
         self.traversal_order = {
@@ -208,8 +205,9 @@ impl<'a> ImmForwardCFG<'a> {
     /// Returns
     /// - A CFG
     /// - A set of infinite loop heads
-    /// This _must_ be called after `BlockMutCFG::new`, as the mutable version
-    /// optimizes the code This will be done for external usage,
+    ///
+    /// This _must_ be called after `BlockMutCFG::new`, as the mutable version optimizes the code
+    /// This will be done for external usage,
     /// since the Mut CFG is used during the building of the cfgir::ast::Program
     pub fn new<'info>(
         start: Label,
@@ -274,8 +272,8 @@ impl<T: Deref<Target = BasicBlocks>> CFG for ForwardCFG<T> {
     }
 }
 
-// Relying on the ordered block info (ordered in the linear ordering of the
-// source code) Determines the infinite loop starts
+// Relying on the ordered block info (ordered in the linear ordering of the source code)
+// Determines the infinite loop starts
 // This cannot be determined in earlier passes due to dead code
 fn determine_infinite_loop_starts<'a, T: Deref<Target = BasicBlocks>>(
     cfg: &ForwardCFG<T>,
@@ -314,8 +312,8 @@ fn determine_infinite_loop_starts<'a, T: Deref<Target = BasicBlocks>>(
     }
 
     // Given the loop info for any block, determine which loops are infinite
-    // Each 'loop' based loop starts in the set, and is removed if it's break is
-    // used, or if a return or abort is used
+    // Each 'loop' based loop starts in the set, and is removed if it's break is used, or if a
+    // return or abort is used
     let mut prev_opt: Option<Label> = None;
     let zipped =
         block_info
@@ -355,12 +353,18 @@ fn maybe_unmark_infinite_loop_starts(
         } if cur_loop_end.equals(*if_true) || cur_loop_end.equals(*if_false) => {
             infinite_loop_starts.remove(&cur_loop_start);
         }
-        C::Return { .. } | C::Abort(_) => {
+        C::VariantSwitch { arms, .. }
+            if arms.iter().any(|(_, target)| cur_loop_end.equals(*target)) =>
+        {
+            infinite_loop_starts.remove(&cur_loop_start);
+        }
+        C::Return { .. } | C::Abort(_, _) => {
             infinite_loop_starts.remove(&cur_loop_start);
         }
 
         C::Jump { .. }
         | C::JumpIf { .. }
+        | C::VariantSwitch { .. }
         | C::Assign(_, _, _)
         | C::Mutate(_, _)
         | C::IgnoreAndPop { .. } => (),
@@ -374,10 +378,8 @@ fn post_order_traversal(
     successor_map: &BTreeMap<Label, BTreeSet<Label>>,
     include_dead_code: bool,
 ) -> (
-    // order
-    Vec<Label>,
-    // back edges
-    Vec<(Label, Label)>,
+    /* order */ Vec<Label>,
+    /* back edges */ Vec<(Label, Label)>,
 ) {
     fn is_back_edge(cur: Label, target: Label) -> bool {
         target.0 <= cur.0
@@ -416,11 +418,9 @@ fn post_order_traversal(
                     .map(|successor| (*successor, /* is_first_visit */ true)),
             );
         } else {
-            debug_assert!(
-                dag[&cur]
-                    .iter()
-                    .all(|successor| finished.contains(successor))
-            );
+            debug_assert!(dag[&cur]
+                .iter()
+                .all(|successor| finished.contains(successor)));
             if finished.insert(cur) {
                 post_order.push(cur)
             }
@@ -511,8 +511,7 @@ impl<'forward, Blocks: Deref<Target = BasicBlocks>> ReverseCFG<'forward, Blocks>
             end_blocks
         };
 
-        // setup fake terminal block that will act as the start node in reverse
-        // traversal
+        // setup fake terminal block that will act as the start node in reverse traversal
         let terminal = Label(blocks.keys().map(|lbl| lbl.0).max().unwrap_or(0) + 1);
         assert!(!blocks.contains_key(&terminal), "{:#?}", blocks);
         for terminal_predecessor in &end_blocks {
@@ -529,8 +528,7 @@ impl<'forward, Blocks: Deref<Target = BasicBlocks>> ReverseCFG<'forward, Blocks>
             forward_cfg.start,
             blocks.keys().copied().chain(std::iter::once(terminal)),
             forward_successors,
-            // include_dead_code
-            false,
+            /* include_dead_code */ false,
         );
         let successor_map = forward_predecessor;
         let predecessor_map = forward_successors;

@@ -1,19 +1,16 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
-use std::fmt;
-
-use move_core_types::{
-    language_storage::ModuleId,
-    vm_status::{StatusCode, StatusType},
-};
 
 use crate::{
     file_format::{CodeOffset, FunctionDefinitionIndex, TableIndex},
     IndexKind,
 };
+use move_core_types::{
+    language_storage::ModuleId,
+    vm_status::{StatusCode, StatusType},
+};
+use std::fmt;
 
 pub type VMResult<T> = ::std::result::Result<T, VMError>;
 pub type BinaryLoaderResult<T> = ::std::result::Result<T, PartialVMError>;
@@ -22,7 +19,6 @@ pub type PartialVMResult<T> = ::std::result::Result<T, PartialVMError>;
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Location {
     Undefined,
-    Script,
     Module(ModuleId),
 }
 
@@ -296,8 +292,8 @@ impl PartialVMError {
         self
     }
 
-    /// Append the message `message` to the message field of the VM status, and
-    /// insert a seperator if the original message is non-empty.
+    /// Append the message `message` to the message field of the VM status, and insert a seperator
+    /// if the original message is non-empty.
     pub fn append_message_with_separator(
         mut self,
         separator: char,
@@ -320,7 +316,6 @@ impl fmt::Display for Location {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Location::Undefined => write!(f, "UNDEFINED"),
-            Location::Script => write!(f, "Script"),
             Location::Module(id) => write!(f, "Module {:?}", id),
         }
     }

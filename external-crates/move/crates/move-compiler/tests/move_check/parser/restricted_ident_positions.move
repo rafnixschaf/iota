@@ -1,4 +1,4 @@
-module `a`::`acquires` {
+module `a`::`acquries` {
     struct `As`<`break`> { `const`: `break`, `move`: u64 }
     const `False`: bool = false;
     fun `invariant`<`break`>(`as`: `As`<`break`>): `break` {

@@ -1,15 +1,12 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{convert::TryFrom, fmt};
-
+use crate::{account_address::AccountAddress, runtime_value::MoveValue, u256};
 use anyhow::{anyhow, Error, Result};
 use move_proc_macros::test_variant_order;
 use serde::{Deserialize, Serialize};
-
-use crate::{account_address::AccountAddress, runtime_value::MoveValue, u256};
+use std::{convert::TryFrom, fmt};
 
 #[derive(Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
 #[test_variant_order(src/unit_tests/staged_enum_variant_order/transaction_argument.yaml)]
@@ -80,8 +77,8 @@ impl TryFrom<MoveValue> for TransactionArgument {
                     })
                     .collect::<Result<Vec<u8>>>()?,
             ),
-            MoveValue::Signer(_) | MoveValue::Struct(_) => {
-                return Err(anyhow!("invalid transaction argument: {:?}", val));
+            MoveValue::Signer(_) | MoveValue::Struct(_) | MoveValue::Variant(_) => {
+                return Err(anyhow!("invalid transaction argument: {:?}", val))
             }
             MoveValue::U16(i) => TransactionArgument::U16(i),
             MoveValue::U32(i) => TransactionArgument::U32(i),
@@ -101,7 +98,7 @@ pub fn convert_txn_args(args: &[TransactionArgument]) -> Vec<Vec<u8>> {
         .collect()
 }
 
-/// Struct for encoding `vector<vector<u8>>` arguments for script functions
+/// Struct for encoding vector<vector<u8>> arguments for script functions
 #[derive(Clone, Hash, Eq, PartialEq, Deserialize)]
 pub struct VecBytes(Vec<serde_bytes::ByteBuf>);
 

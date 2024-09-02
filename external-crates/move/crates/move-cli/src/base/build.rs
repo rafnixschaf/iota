@@ -1,22 +1,18 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::path::PathBuf;
-
+use super::reroot_path;
 use clap::*;
 use move_package::BuildConfig;
+use std::path::Path;
 
-use super::reroot_path;
-
-/// Build the package at `path`. If no path is provided defaults to current
-/// directory.
+/// Build the package at `path`. If no path is provided defaults to current directory.
 #[derive(Parser)]
 #[clap(name = "build")]
 pub struct Build;
 
 impl Build {
-    pub fn execute(self, path: Option<PathBuf>, config: BuildConfig) -> anyhow::Result<()> {
+    pub fn execute(self, path: Option<&Path>, config: BuildConfig) -> anyhow::Result<()> {
         let rerooted_path = reroot_path(path)?;
         if config.fetch_deps_only {
             let mut config = config;

@@ -1,14 +1,11 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{fmt, hash::Hash};
-
+use crate::parser::{parse_address_number, NumberFormat};
 use anyhow::anyhow;
 use move_core_types::account_address::AccountAddress;
 use num_bigint::BigUint;
-
-use crate::parser::{parse_address_number, NumberFormat};
+use std::{fmt, hash::Hash};
 
 // Parsed Address, either a name or a numerical address
 #[derive(Eq, PartialEq, Debug, Clone)]

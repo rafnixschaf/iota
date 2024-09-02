@@ -1,10 +1,8 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, sync::Arc};
 
-use super::ast::Attribute_;
 use crate::{
     diag,
     expansion::ast::{ModuleDefinition, ModuleIdent},
@@ -17,8 +15,10 @@ use crate::{
     FullyCompiledProgram,
 };
 
-/// Gather primitive defines from module declarations, erroring on duplicates
-/// for a given base type or for unknown base types.
+use super::ast::Attribute_;
+
+/// Gather primitive defines from module declarations, erroring on duplicates for a given base
+/// type or for unknown base types.
 pub fn modules(
     env: &mut CompilationEnv,
     pre_compiled_lib_opt: Option<Arc<FullyCompiledProgram>>,
@@ -28,8 +28,7 @@ pub fn modules(
     for (mident, m) in modules.key_cloned_iter() {
         check_prim_definer(
             env,
-            // allow shadowing
-            false,
+            /* allow shadowing */ false,
             &mut definers,
             mident,
             m,
@@ -39,8 +38,7 @@ pub fn modules(
         for (mident, m) in pre_compiled_lib.expansion.modules.key_cloned_iter() {
             check_prim_definer(
                 env,
-                // allow shadowing
-                true,
+                /* allow shadowing */ true,
                 &mut definers,
                 mident,
                 m,

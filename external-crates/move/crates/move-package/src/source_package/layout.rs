@@ -1,6 +1,5 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::{Path, PathBuf};
@@ -45,8 +44,9 @@ impl SourcePackageLayout {
             }
             if !current_path.pop() {
                 bail!(
-                    "Unable to find package manifest in '{}' or in its parents",
-                    starting_path.to_string_lossy()
+                    "Unable to find package manifest at '{}/{}' or in its parents",
+                    starting_path.to_string_lossy(),
+                    Self::Manifest.path().to_string_lossy()
                 )
             }
         }

@@ -1,5 +1,4 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -13,7 +12,8 @@ use once_cell::sync::Lazy;
 
 use crate::compilation::build_plan::BuildPlan;
 
-pub const MIGRATION_MSG: &str = "Package toml does not specify an edition. As of 2024, Move requires all packages to define \
+pub const MIGRATION_MSG: &str =
+    "Package toml does not specify an edition. As of 2024, Move requires all packages to define \
     a language edition.";
 
 pub const EDITION_SELECT_PROMPT: &str = "Please select one of the following editions:";

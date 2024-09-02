@@ -1,11 +1,10 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::path::{Path, PathBuf};
-
 use move_cli::sandbox::commands::test;
+
+use std::path::{Path, PathBuf};
 
 fn run_all(args_path: &Path) -> datatest_stable::Result<()> {
     let cli_exe = env!("CARGO_BIN_EXE_move");
@@ -13,10 +12,8 @@ fn run_all(args_path: &Path) -> datatest_stable::Result<()> {
     test::run_one(
         args_path,
         &PathBuf::from(cli_exe),
-        // use_temp_dir
-        use_temp_dir,
-        // track_cov
-        false,
+        /* use_temp_dir */ use_temp_dir,
+        /* track_cov */ false,
     )?;
     Ok(())
 }

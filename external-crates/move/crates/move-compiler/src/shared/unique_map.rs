@@ -1,11 +1,9 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::BTreeMap, fmt::Debug, iter::IntoIterator};
-
 use super::*;
+use std::{collections::BTreeMap, fmt::Debug, iter::IntoIterator};
 
 //**************************************************************************************************
 // UniqueMap

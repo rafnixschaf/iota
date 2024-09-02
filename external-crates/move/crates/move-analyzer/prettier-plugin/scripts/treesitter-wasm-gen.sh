@@ -1,6 +1,5 @@
 #!/bin/bash
 # Copyright (c) Mysten Labs, Inc.
-# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
 # This scripts regenerates WASM bytecode representing the tree-sitter Move parser by wasm-ifying the

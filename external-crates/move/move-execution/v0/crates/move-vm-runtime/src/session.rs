@@ -1,10 +1,11 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{borrow::Borrow, sync::Arc};
-
+use crate::{
+    data_cache::TransactionDataCache, native_extensions::NativeContextExtensions,
+    runtime::VMRuntime,
+};
 use move_binary_format::{
     errors::*,
     file_format::{AbilitySet, LocalIndex},
@@ -12,26 +13,22 @@ use move_binary_format::{
 use move_core_types::{
     account_address::AccountAddress,
     annotated_value as A,
-    effects::{ChangeSet, Event},
+    effects::ChangeSet,
     identifier::IdentStr,
     language_storage::{ModuleId, TypeTag},
     resolver::MoveResolver,
-    runtime_value::MoveTypeLayout,
+    runtime_value as R,
 };
 use move_vm_types::{
     data_store::DataStore,
     gas::GasMeter,
-    loaded_data::runtime_types::{CachedStructIndex, StructType, Type},
+    loaded_data::runtime_types::{CachedDatatype, CachedTypeIndex, Type},
 };
-
-use crate::{
-    data_cache::TransactionDataCache, native_extensions::NativeContextExtensions,
-    runtime::VMRuntime,
-};
+use std::{borrow::Borrow, sync::Arc};
 
 pub struct Session<'r, 'l, S> {
     pub(crate) runtime: &'l VMRuntime,
-    pub(crate) data_cache: TransactionDataCache<'l, S>,
+    pub(crate) data_cache: TransactionDataCache<S>,
     pub(crate) native_extensions: NativeContextExtensions<'r>,
 }
 
@@ -41,40 +38,37 @@ pub struct Session<'r, 'l, S> {
 pub struct SerializedReturnValues {
     /// The value of any arguments that were mutably borrowed.
     /// Non-mut borrowed values are not included
-    pub mutable_reference_outputs: Vec<(LocalIndex, Vec<u8>, MoveTypeLayout)>,
+    pub mutable_reference_outputs: Vec<(LocalIndex, Vec<u8>, R::MoveTypeLayout)>,
     /// The return values from the function
-    pub return_values: Vec<(Vec<u8>, MoveTypeLayout)>,
+    pub return_values: Vec<(Vec<u8>, R::MoveTypeLayout)>,
 }
 
 impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
-    /// Execute a Move function with the given arguments. This is mainly
-    /// designed for an external environment to invoke system logic written
-    /// in Move.
+    /// Execute a Move function with the given arguments. This is mainly designed for an external
+    /// environment to invoke system logic written in Move.
     ///
-    /// NOTE: There are NO checks on the `args` except that they can deserialize
-    /// into the provided types.
-    /// The ability to deserialize `args` into arbitrary types is *very*
-    /// powerful, e.g. it can used to manufacture `signer`'s or `Coin`'s
-    /// from raw bytes. It is the responsibility of the caller (e.g.
-    /// adapter) to ensure that this power is used responsibly/securely for its
+    /// NOTE: There are NO checks on the `args` except that they can deserialize into the provided
+    /// types.
+    /// The ability to deserialize `args` into arbitrary types is *very* powerful, e.g. it can
+    /// used to manufacture `signer`'s or `Coin`'s from raw bytes. It is the responsibility of the
+    /// caller (e.g. adapter) to ensure that this power is used responsibly/securely for its
     /// use-case.
     ///
     /// The caller MUST ensure
     ///   - All types and modules referred to by the type arguments exist.
     ///   - The signature is valid for the rules of the adapter
     ///
-    /// The Move VM MUST return an invariant violation if the caller fails to
-    /// follow any of the rules above.
+    /// The Move VM MUST return an invariant violation if the caller fails to follow any of the
+    /// rules above.
     ///
     /// The VM will check that the function is marked as an 'entry' function.
     ///
-    /// Currently if any other error occurs during execution, the Move VM will
-    /// simply propagate that error back to the outer environment without
-    /// handling/translating it. This behavior may be revised in the future.
+    /// Currently if any other error occurs during execution, the Move VM will simply propagate that
+    /// error back to the outer environment without handling/translating it. This behavior may be
+    /// revised in the future.
     ///
-    /// In case an invariant violation occurs, the whole Session should be
-    /// considered corrupted and one shall not proceed with effect
-    /// generation.
+    /// In case an invariant violation occurs, the whole Session should be considered corrupted and
+    /// one shall not proceed with effect generation.
     pub fn execute_entry_function(
         &mut self,
         module: &ModuleId,
@@ -105,16 +99,6 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
         args: Vec<impl Borrow<[u8]>>,
         gas_meter: &mut impl GasMeter,
     ) -> VMResult<SerializedReturnValues> {
-        move_vm_profiler::gas_profiler_feature_enabled! {
-            use move_vm_profiler::GasProfiler;
-            if gas_meter.get_profiler_mut().is_none() {
-                gas_meter.set_profiler(GasProfiler::init_default_cfg(
-                    function_name.to_string(),
-                    gas_meter.remaining_gas().into(),
-                ));
-            }
-        }
-
         let bypass_declared_entry_check = true;
         self.runtime.execute_function(
             module,
@@ -130,18 +114,15 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
 
     /// Publish the given module.
     ///
-    /// The Move VM MUST return a user error, i.e., an error that's not an
-    /// invariant violation, if
+    /// The Move VM MUST return a user error, i.e., an error that's not an invariant violation, if
     ///   - The module fails to deserialize or verify.
     ///   - The sender address does not match that of the module.
     ///
     /// The Move VM should not be able to produce other user errors.
-    /// Besides, no user input should cause the Move VM to return an invariant
-    /// violation.
+    /// Besides, no user input should cause the Move VM to return an invariant violation.
     ///
-    /// In case an invariant violation occurs, the whole Session should be
-    /// considered corrupted and one shall not proceed with effect
-    /// generation.
+    /// In case an invariant violation occurs, the whole Session should be considered corrupted and
+    /// one shall not proceed with effect generation.
     pub fn publish_module(
         &mut self,
         module: Vec<u8>,
@@ -153,19 +134,16 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
 
     /// Publish a series of modules.
     ///
-    /// The Move VM MUST return a user error, i.e., an error that's not an
-    /// invariant violation, if any module fails to deserialize or verify
-    /// (see the full list of  failing conditions in the `publish_module`
-    /// API). The publishing of the module series is an all-or-nothing action:
+    /// The Move VM MUST return a user error, i.e., an error that's not an invariant violation, if
+    /// any module fails to deserialize or verify (see the full list of  failing conditions in the
+    /// `publish_module` API). The publishing of the module series is an all-or-nothing action:
     /// either all modules are published to the data store or none is.
     ///
-    /// Similar to the `publish_module` API, the Move VM should not be able to
-    /// produce other user errors. Besides, no user input should cause the
-    /// Move VM to return an invariant violation.
+    /// Similar to the `publish_module` API, the Move VM should not be able to produce other user
+    /// errors. Besides, no user input should cause the Move VM to return an invariant violation.
     ///
-    /// In case an invariant violation occurs, the whole Session should be
-    /// considered corrupted and one shall not proceed with effect
-    /// generation.
+    /// In case an invariant violation occurs, the whole Session should be considered corrupted and
+    /// one shall not proceed with effect generation.
     pub fn publish_module_bundle(
         &mut self,
         modules: Vec<Vec<u8>>,
@@ -176,34 +154,18 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
             .publish_module_bundle(modules, sender, &mut self.data_cache, gas_meter)
     }
 
-    pub fn num_mutated_accounts(&self, sender: &AccountAddress) -> u64 {
-        self.data_cache.num_mutated_accounts(sender)
-    }
-
     /// Finish up the session and produce the side effects.
     ///
-    /// This function should always succeed with no user errors returned,
-    /// barring invariant violations.
+    /// This function should always succeed with no user errors returned, barring invariant violations.
     ///
-    /// This MUST NOT be called if there is a previous invocation that failed
-    /// with an invariant violation.
-    pub fn finish(self) -> (VMResult<(ChangeSet, Vec<Event>)>, S) {
+    /// This MUST NOT be called if there is a previous invocation that failed with an invariant violation.
+    pub fn finish(self) -> (VMResult<ChangeSet>, S) {
         let (res, remote) = self.data_cache.into_effects();
         (res.map_err(|e| e.finish(Location::Undefined)), remote)
     }
 
-    pub fn vm_config(&self) -> &move_vm_config::runtime::VMConfig {
-        self.runtime.loader().vm_config()
-    }
-
-    /// Same like `finish`, but also extracts the native context extensions from
-    /// the session.
-    pub fn finish_with_extensions(
-        self,
-    ) -> (
-        VMResult<(ChangeSet, Vec<Event>, NativeContextExtensions<'r>)>,
-        S,
-    ) {
+    /// Same like `finish`, but also extracts the native context extensions from the session.
+    pub fn finish_with_extensions(self) -> (VMResult<(ChangeSet, NativeContextExtensions<'r>)>, S) {
         let Session {
             data_cache,
             native_extensions,
@@ -211,7 +173,7 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
         } = self;
         let (res, remote) = data_cache.into_effects();
         (
-            res.map(|(change_set, events)| (change_set, events, native_extensions))
+            res.map(|change_set| (change_set, native_extensions))
                 .map_err(|e| e.finish(Location::Undefined)),
             remote,
         )
@@ -233,15 +195,14 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
         Ok(instantiation)
     }
 
-    /// Load a struct by its name to get the global index that it is referenced
-    /// by within the loader, and the loaded struct information.  This
-    /// operation also ensures the defining module is loaded from the data
-    /// store and will fail if the type does not exist in that module.
+    /// Load a struct by its name to get the global index that it is referenced by within the
+    /// loader, and the loaded struct information.  This operation also ensures the defining module
+    /// is loaded from the data store and will fail if the type does not exist in that module.
     pub fn load_struct(
         &self,
         module_id: &ModuleId,
         struct_name: &IdentStr,
-    ) -> VMResult<(CachedStructIndex, Arc<StructType>)> {
+    ) -> VMResult<(CachedTypeIndex, Arc<CachedDatatype>)> {
         self.runtime
             .loader()
             .load_struct_by_name(struct_name, module_id, &self.data_cache)
@@ -251,7 +212,7 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
         self.runtime.loader().load_type(type_tag, &self.data_cache)
     }
 
-    pub fn get_type_layout(&self, type_tag: &TypeTag) -> VMResult<MoveTypeLayout> {
+    pub fn get_type_layout(&self, type_tag: &TypeTag) -> VMResult<R::MoveTypeLayout> {
         self.runtime
             .loader()
             .get_type_layout(type_tag, &self.data_cache)
@@ -266,7 +227,7 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
             .get_fully_annotated_type_layout(type_tag, &self.data_cache)
     }
 
-    pub fn type_to_type_layout(&self, ty: &Type) -> VMResult<MoveTypeLayout> {
+    pub fn type_to_type_layout(&self, ty: &Type) -> VMResult<R::MoveTypeLayout> {
         self.runtime
             .loader()
             .type_to_type_layout(ty)
@@ -289,7 +250,7 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
 
     /// Fetch a struct type from cache, if the index is in bounds
     /// Helpful when paired with load_type, or any other API that returns 'Type'
-    pub fn get_struct_type(&self, index: CachedStructIndex) -> Option<Arc<StructType>> {
+    pub fn get_struct_type(&self, index: CachedTypeIndex) -> Option<Arc<CachedDatatype>> {
         self.runtime.loader().get_struct_type(index)
     }
 

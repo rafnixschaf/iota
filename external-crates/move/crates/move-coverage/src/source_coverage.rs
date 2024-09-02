@@ -1,21 +1,13 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #![forbid(unsafe_code)]
 
-use std::{
-    collections::BTreeMap,
-    fs,
-    io::{self, Write},
-    path::Path,
-};
-
+use crate::coverage_map::CoverageMap;
 use codespan::{Files, Span};
 use colored::*;
 use move_binary_format::{
-    access::ModuleAccess,
     file_format::{CodeOffset, FunctionDefinitionIndex},
     CompiledModule,
 };
@@ -23,8 +15,12 @@ use move_bytecode_source_map::source_map::SourceMap;
 use move_core_types::identifier::Identifier;
 use move_ir_types::location::Loc;
 use serde::Serialize;
-
-use crate::coverage_map::CoverageMap;
+use std::{
+    collections::BTreeMap,
+    fs,
+    io::{self, Write},
+    path::Path,
+};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct FunctionSourceCoverage {
@@ -79,8 +75,7 @@ impl<'a> SourceCoverageBuilder<'a> {
                 let fn_name = module.identifier_at(fn_handle.name).to_owned();
                 let function_def_idx = FunctionDefinitionIndex(function_def_idx as u16);
 
-                // If the function summary doesn't exist then that function hasn't been called
-                // yet.
+                // If the function summary doesn't exist then that function hasn't been called yet.
                 let coverage = match &function_def.code {
                     None => Some(FunctionSourceCoverage {
                         fn_is_native: true,

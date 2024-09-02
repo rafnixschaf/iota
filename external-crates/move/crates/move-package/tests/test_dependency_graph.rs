@@ -1,5 +1,4 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -36,8 +35,7 @@ fn no_dep_graph() {
     let manifest_string = std::fs::read_to_string(pkg.join(SourcePackageLayout::Manifest.path()))
         .expect("Loading manifest");
     let mut dep_graph_builder = DependencyGraphBuilder::new(
-        // skip_fetch_latest_git_deps
-        true,
+        /* skip_fetch_latest_git_deps */ true,
         std::io::sink(),
         tempfile::tempdir().unwrap().path().to_path_buf(),
     );
@@ -46,8 +44,7 @@ fn no_dep_graph() {
             &DependencyKind::default(),
             pkg,
             manifest_string,
-            // lock_string_opt
-            None,
+            /* lock_string_opt */ None,
         )
         .expect("Creating DependencyGraph");
 
@@ -121,10 +118,8 @@ fn lock_file_missing_dependency() {
     let commit = tmp.path().join("Move.lock");
     let lock = LockFile::new(
         pkg.clone(),
-        // manifest_digest
-        "42".to_string(),
-        // deps_digest
-        "7".to_string(),
+        /* manifest_digest */ "42".to_string(),
+        /* deps_digest */ "7".to_string(),
     )
     .expect("Creating new lock file");
 
@@ -156,8 +151,7 @@ fn always_deps() {
     let manifest_string = std::fs::read_to_string(pkg.join(SourcePackageLayout::Manifest.path()))
         .expect("Loading manifest");
     let mut dep_graph_builder = DependencyGraphBuilder::new(
-        // skip_fetch_latest_git_deps
-        true,
+        /* skip_fetch_latest_git_deps */ true,
         std::io::sink(),
         tempfile::tempdir().unwrap().path().to_path_buf(),
     );
@@ -166,8 +160,7 @@ fn always_deps() {
             &DependencyKind::default(),
             pkg,
             manifest_string,
-            // lock_string_opt
-            None,
+            /* lock_string_opt */ None,
         )
         .expect("Creating DependencyGraph");
 
@@ -219,8 +212,8 @@ fn merge_simple() {
     )
     .expect("Reading outer");
 
-    // Test only -- clear always deps because usually `merge` is used while the
-    // graph is being built, not after it has been entirely read.
+    // Test only -- clear always deps because usually `merge` is used while the graph is being
+    // built, not after it has been entirely read.
     outer.always_deps.clear();
 
     let inner = DependencyGraph::read_from_lock(
@@ -246,18 +239,16 @@ fn merge_simple() {
         }),
     )]);
     let orig_names: BTreeMap<Symbol, Symbol> = dependencies.keys().map(|k| (*k, *k)).collect();
-    assert!(
-        outer
-            .merge(
-                dep_graphs,
-                &DependencyKind::default(),
-                dependencies,
-                &BTreeMap::new(),
-                &orig_names,
-                Symbol::from("Root")
-            )
-            .is_ok(),
-    );
+    assert!(outer
+        .merge(
+            dep_graphs,
+            &DependencyKind::default(),
+            dependencies,
+            &BTreeMap::new(),
+            &orig_names,
+            Symbol::from("Root")
+        )
+        .is_ok(),);
     assert_eq!(
         outer.topological_order(),
         vec![Symbol::from("Root"), Symbol::from("A")],
@@ -275,8 +266,8 @@ fn merge_into_root() {
     )
     .expect("Reading outer");
 
-    // Test only -- clear always deps because usually `merge` is used while the
-    // graph is being built, not after it has been entirely read.
+    // Test only -- clear always deps because usually `merge` is used while the graph is being
+    // built, not after it has been entirely read.
     outer.always_deps.clear();
 
     // The `inner` graph describes more dependencies for `outer`'s root package.
@@ -303,18 +294,16 @@ fn merge_into_root() {
         }),
     )]);
     let orig_names: BTreeMap<Symbol, Symbol> = dependencies.keys().map(|k| (*k, *k)).collect();
-    assert!(
-        outer
-            .merge(
-                dep_graphs,
-                &DependencyKind::default(),
-                dependencies,
-                &BTreeMap::new(),
-                &orig_names,
-                Symbol::from("Root")
-            )
-            .is_ok()
-    );
+    assert!(outer
+        .merge(
+            dep_graphs,
+            &DependencyKind::default(),
+            dependencies,
+            &BTreeMap::new(),
+            &orig_names,
+            Symbol::from("Root")
+        )
+        .is_ok());
 
     assert_eq!(
         outer.topological_order(),
@@ -334,8 +323,8 @@ fn merge_detached() {
     )
     .expect("Reading outer");
 
-    // Test only -- clear always deps because usually `merge` is used while the
-    // graph is being built, not after it has been entirely read.
+    // Test only -- clear always deps because usually `merge` is used while the graph is being
+    // built, not after it has been entirely read.
     outer.always_deps.clear();
 
     let inner = DependencyGraph::read_from_lock(
@@ -419,8 +408,8 @@ fn merge_overlapping() {
     )
     .expect("Reading outer");
 
-    // Test only -- clear always deps because usually `merge` is used while the
-    // graph is being built, not after it has been entirely read.
+    // Test only -- clear always deps because usually `merge` is used while the graph is being
+    // built, not after it has been entirely read.
     outer.always_deps.clear();
 
     let inner1 = DependencyGraph::read_from_lock(
@@ -472,18 +461,16 @@ fn merge_overlapping() {
         ),
     ]);
     let orig_names: BTreeMap<Symbol, Symbol> = dependencies.keys().map(|k| (*k, *k)).collect();
-    assert!(
-        outer
-            .merge(
-                dep_graphs,
-                &DependencyKind::default(),
-                dependencies,
-                &BTreeMap::new(),
-                &orig_names,
-                Symbol::from("Root")
-            )
-            .is_ok()
-    );
+    assert!(outer
+        .merge(
+            dep_graphs,
+            &DependencyKind::default(),
+            dependencies,
+            &BTreeMap::new(),
+            &orig_names,
+            Symbol::from("Root")
+        )
+        .is_ok());
 }
 
 #[test]
@@ -499,8 +486,8 @@ fn merge_overlapping_different_deps() {
     )
     .expect("Reading outer");
 
-    // Test only -- clear always deps because usually `merge` is used while the
-    // graph is being built, not after it has been entirely read.
+    // Test only -- clear always deps because usually `merge` is used while the graph is being
+    // built, not after it has been entirely read.
     outer.always_deps.clear();
 
     let inner1 = DependencyGraph::read_from_lock(
@@ -573,8 +560,7 @@ fn immediate_dependencies() {
     let manifest_string = std::fs::read_to_string(pkg.join(SourcePackageLayout::Manifest.path()))
         .expect("Loading manifest");
     let mut dep_graph_builder = DependencyGraphBuilder::new(
-        // skip_fetch_latest_git_deps
-        true,
+        /* skip_fetch_latest_git_deps */ true,
         std::io::sink(),
         tempfile::tempdir().unwrap().path().to_path_buf(),
     );
@@ -583,8 +569,7 @@ fn immediate_dependencies() {
             &DependencyKind::default(),
             pkg,
             manifest_string,
-            // lock_string_opt
-            None,
+            /* lock_string_opt */ None,
         )
         .expect("Creating DependencyGraph");
 

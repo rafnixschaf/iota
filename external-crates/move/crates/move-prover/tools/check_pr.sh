@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright (c) The Diem Core Contributors
 # Copyright (c) The Move Contributors
-# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
 # A script to check whether a local commit related to Move repo is ready for a PR.
@@ -89,7 +88,6 @@ if [ ! -z "$CHECKMORE" ]; then
   CRATES="$CRATES \
     $BASE/language/move-prover/move-abigen\
     $BASE/language/move-prover/move-docgen\
-    $BASE/language/move-prover/errmapgen\
     $BASE/language/move-prover/interpreter\
     $BASE/language/move-prover/interpreter-testsuite\
     $BASE/language/move-prover/lab\

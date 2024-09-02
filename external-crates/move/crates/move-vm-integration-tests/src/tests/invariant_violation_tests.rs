@@ -1,5 +1,4 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use move_binary_format::file_format::{
@@ -44,6 +43,7 @@ fn merge_borrow_states_infinite_loop() {
         acquires_global_resources: vec![],
         code: Some(CodeUnit {
             locals: SignatureIndex(1),
+            jump_tables: vec![],
             code: vec![
                 LdU64(0),
                 StLoc(0), // { 0 => 0 }

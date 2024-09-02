@@ -1,5 +1,4 @@
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use move_core_types::{
@@ -24,9 +23,8 @@ pub trait ValueView {
 
     /// Returns the abstract memory size of the value.
     ///
-    /// This version of abstract memory size is not well-defined and is only
-    /// kept for backward compatibility.  New applications should avoid
-    /// using this.
+    /// This version of abstract memory size is not well-defined and is only kept for backward
+    /// compatibility.  New applications should avoid using this.
     fn legacy_abstract_memory_size(&self) -> AbstractMemorySize {
         use crate::values::{LEGACY_CONST_SIZE, LEGACY_REFERENCE_SIZE, LEGACY_STRUCT_SIZE};
 
@@ -66,6 +64,11 @@ pub trait ValueView {
             }
 
             fn visit_struct(&mut self, _depth: usize, _len: usize) -> bool {
+                self.0 += LEGACY_STRUCT_SIZE;
+                true
+            }
+
+            fn visit_variant(&mut self, _depth: usize, _len: usize) -> bool {
                 self.0 += LEGACY_STRUCT_SIZE;
                 true
             }
@@ -163,6 +166,11 @@ pub trait ValueView {
                 true
             }
 
+            fn visit_variant(&mut self, _depth: usize, _len: usize) -> bool {
+                self.0 += LEGACY_STRUCT_SIZE;
+                true
+            }
+
             fn visit_vec(&mut self, _depth: usize, _len: usize) -> bool {
                 self.0 += LEGACY_STRUCT_SIZE;
                 true
@@ -221,8 +229,7 @@ pub trait ValueView {
     }
 }
 
-/// Trait that defines a visitor that could be used to traverse a value
-/// recursively.
+/// Trait that defines a visitor that could be used to traverse a value recursively.
 pub trait ValueVisitor {
     fn visit_u8(&mut self, depth: usize, val: u8);
     fn visit_u16(&mut self, depth: usize, val: u16);
@@ -234,6 +241,7 @@ pub trait ValueVisitor {
     fn visit_address(&mut self, depth: usize, val: AccountAddress);
 
     fn visit_struct(&mut self, depth: usize, len: usize) -> bool;
+    fn visit_variant(&mut self, depth: usize, len: usize) -> bool;
     fn visit_vec(&mut self, depth: usize, len: usize) -> bool;
 
     fn visit_ref(&mut self, depth: usize, is_global: bool) -> bool;

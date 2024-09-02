@@ -2,7 +2,7 @@
 module a::foo {
     public struct S()
     public fun foo(): S {
-        // TODO fix this, should resolve to a::m::S
+        // TOOD fix this, should resolve to a::m::S
         foo::S()
     }
 }

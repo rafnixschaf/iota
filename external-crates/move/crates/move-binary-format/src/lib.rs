@@ -1,21 +1,17 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #![forbid(unsafe_code)]
 
 use std::fmt;
 
-pub mod access;
 pub mod binary_config;
-pub mod binary_views;
 pub mod check_bounds;
 pub mod compatibility;
 #[macro_use]
 pub mod errors;
 pub mod constant;
-pub mod control_flow_graph;
 pub mod deserializer;
 pub mod file_format;
 pub mod file_format_common;
@@ -24,7 +20,6 @@ pub mod normalized;
 #[cfg(any(test, feature = "fuzzing"))]
 pub mod proptest_types;
 pub mod serializer;
-pub mod views;
 
 #[cfg(test)]
 mod unit_tests;
@@ -35,7 +30,7 @@ pub use file_format::CompiledModule;
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum IndexKind {
     ModuleHandle,
-    StructHandle,
+    DatatypeHandle,
     FunctionHandle,
     FieldHandle,
     FriendDeclaration,
@@ -53,6 +48,12 @@ pub enum IndexKind {
     CodeDefinition,
     TypeParameter,
     MemberCount,
+    EnumDefinition,
+    EnumDefInstantiation,
+    VariantHandle,
+    VariantInstantiationHandle,
+    VariantJumpTable,
+    VariantTag,
 }
 
 impl IndexKind {
@@ -62,7 +63,7 @@ impl IndexKind {
         // XXX ensure this list stays up to date!
         &[
             ModuleHandle,
-            StructHandle,
+            DatatypeHandle,
             FunctionHandle,
             FieldHandle,
             FriendDeclaration,
@@ -79,6 +80,12 @@ impl IndexKind {
             CodeDefinition,
             TypeParameter,
             MemberCount,
+            EnumDefinition,
+            EnumDefInstantiation,
+            VariantHandle,
+            VariantInstantiationHandle,
+            VariantJumpTable,
+            VariantTag,
         ]
     }
 }
@@ -89,7 +96,7 @@ impl fmt::Display for IndexKind {
 
         let desc = match self {
             ModuleHandle => "module handle",
-            StructHandle => "struct handle",
+            DatatypeHandle => "datatype handle",
             FunctionHandle => "function handle",
             FieldHandle => "field handle",
             FriendDeclaration => "friend declaration",
@@ -107,6 +114,12 @@ impl fmt::Display for IndexKind {
             CodeDefinition => "code definition pool",
             TypeParameter => "type parameter",
             MemberCount => "field offset",
+            EnumDefinition => "enum definition",
+            EnumDefInstantiation => "enum instantiation",
+            VariantHandle => "variant handle",
+            VariantInstantiationHandle => "variant instantiation handle",
+            VariantJumpTable => "jump table",
+            VariantTag => "variant tag",
         };
 
         f.write_str(desc)
@@ -139,17 +152,19 @@ impl fmt::Display for SignatureTokenKind {
     }
 }
 
-/// A macro which should be preferred in critical runtime paths for unwrapping
-/// an option if a `PartialVMError` is expected. In debug mode, this will panic.
-/// Otherwise we return an Err.
+/// A macro which should be preferred in critical runtime paths for unwrapping an option
+/// if a `PartialVMError` is expected. In debug mode, this will panic. Otherwise
+/// we return an Err.
 #[macro_export]
 macro_rules! safe_unwrap {
     ($e:expr) => {{
         match $e {
             Some(x) => x,
             None => {
-                let err = PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
-                    .with_message(format!("{}:{} (none)", file!(), line!()));
+                let err = move_binary_format::errors::PartialVMError::new(
+                    move_core_types::vm_status::StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
+                )
+                .with_message(format!("{}:{} (none)", file!(), line!()));
                 if cfg!(debug_assertions) {
                     panic!("{:?}", err);
                 } else {

@@ -1,15 +1,12 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{HashMap, VecDeque};
-
+use crate::abstract_state::{AbstractValue, BorrowState};
 use move_binary_format::file_format::{AbilitySet, Bytecode, Signature, SignatureToken};
 use rand::{rngs::StdRng, Rng};
+use std::collections::{HashMap, VecDeque};
 use tracing::debug;
-
-use crate::abstract_state::{AbstractValue, BorrowState};
 
 /// This type holds basic block identifiers
 type BlockIDSize = u16;
@@ -58,18 +55,17 @@ impl BasicBlock {
 /// A control flow graph
 #[derive(Debug, Clone)]
 pub struct CFG {
-    /// The set of basic blocks that make up the graph, mapped to
-    /// `BlockIDSize`'s used as their identifiers
+    /// The set of basic blocks that make up the graph, mapped to `BlockIDSize`'s used
+    /// as their identifiers
     basic_blocks: HashMap<BlockIDSize, BasicBlock>,
 
-    /// The directed edges of the graph represented by pairs of basic block
-    /// identifiers
+    /// The directed edges of the graph represented by pairs of basic block identifiers
     edges: Vec<(BlockIDSize, BlockIDSize)>,
 }
 
 impl CFG {
-    /// Construct a control flow graph that contains empty basic blocks with set
-    /// incoming and outgoing locals.
+    /// Construct a control flow graph that contains empty basic blocks with set incoming
+    /// and outgoing locals.
     /// Currently the control flow graph is acyclic.
     pub fn new(
         rng: &mut StdRng,
@@ -77,7 +73,7 @@ impl CFG {
         parameters: &Signature,
         target_blocks: BlockIDSize,
     ) -> CFG {
-        assert!(target_blocks > 0, "The CFG must have at least one block");
+        assert!(target_blocks > 0, "The CFG must haave at least one block");
         let mut basic_blocks: HashMap<BlockIDSize, BasicBlock> = HashMap::new();
         // Generate basic blocks
         for i in 0..target_blocks {
@@ -154,8 +150,7 @@ impl CFG {
         &mut self.basic_blocks
     }
 
-    /// Retrieve the block IDs of all children of the given basic block
-    /// `block_id`
+    /// Retrieve the block IDs of all children of the given basic block `block_id`
     pub fn get_children_ids(&self, block_id: BlockIDSize) -> Vec<BlockIDSize> {
         let mut children_ids: Vec<BlockIDSize> = Vec::new();
         for (parent, child) in self.edges.iter() {
@@ -174,8 +169,7 @@ impl CFG {
         self.get_children_ids(block_id).len() as u8
     }
 
-    /// Retrieve the block IDs of all parents of the given basic block
-    /// `block_id`
+    /// Retrieve the block IDs of all parents of the given basic block `block_id`
     pub fn get_parent_ids(&self, block_id: BlockIDSize) -> Vec<BlockIDSize> {
         let mut parent_ids: Vec<BlockIDSize> = Vec::new();
         for (parent, child) in self.edges.iter() {
@@ -243,9 +237,8 @@ impl CFG {
         locals
     }
 
-    /// Add the incoming and outgoing locals for each basic block in the control
-    /// flow graph. Currently the incoming and outgoing locals are the same
-    /// for each block.
+    /// Add the incoming and outgoing locals for each basic block in the control flow graph.
+    /// Currently the incoming and outgoing locals are the same for each block.
     fn add_locals(cfg: &mut CFG, rng: &mut StdRng, locals: &[SignatureToken], args_len: usize) {
         debug_assert!(
             !cfg.basic_blocks.is_empty(),
@@ -321,11 +314,11 @@ impl CFG {
         block_order
     }
 
-    /// Get the serialized code offset of a basic block based on its position in
-    /// the serialized instruction sequence.
+    /// Get the serialized code offset of a basic block based on its position in the serialized
+    /// instruction sequence.
     fn get_block_offset(cfg: &CFG, block_order: &[BlockIDSize], block_id: BlockIDSize) -> u16 {
         assert!(
-            (0..block_id).all(|id| cfg.basic_blocks.contains_key(&id)),
+            (0..block_id).all(|id| cfg.basic_blocks.get(&id).is_some()),
             "Error: Invalid block_id given"
         );
         let mut offset: u16 = 0;
@@ -340,8 +333,8 @@ impl CFG {
         offset
     }
 
-    /// Serialize the control flow graph into a sequence of instructions. Set
-    /// the offsets of branch instructions appropriately.
+    /// Serialize the control flow graph into a sequence of instructions. Set the offsets of branch
+    /// instructions appropriately.
     pub fn serialize(&mut self) -> Vec<Bytecode> {
         assert!(
             !self.basic_blocks.is_empty(),

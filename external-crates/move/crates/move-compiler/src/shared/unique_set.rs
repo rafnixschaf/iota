@@ -1,14 +1,11 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
-// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use super::{unique_map::UniqueMap, *};
 use std::{cmp::Ordering, fmt::Debug, iter::IntoIterator};
 
-use super::{unique_map::UniqueMap, *};
-
-/// Unique set wrapper around `UniqueMap` where the value of the map is not
-/// needed
+/// Unique set wrapper around `UniqueMap` where the value of the map is not needed
 #[derive(Clone)]
 pub struct UniqueSet<T: TName>(UniqueMap<T, ()>);
 
