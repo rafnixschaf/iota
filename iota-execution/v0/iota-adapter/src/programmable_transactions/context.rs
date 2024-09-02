@@ -23,7 +23,7 @@ mod checked {
         error::{command_argument_error, ExecutionError, ExecutionErrorKind},
         event::Event,
         execution::{
-            CommandKind, ExecutionResults, ExecutionResultsV2, ExecutionState, InputObjectMetadata,
+            CommandKind, ExecutionResults, ExecutionResultsV1, ExecutionState, InputObjectMetadata,
             InputValue, ObjectContents, ObjectValue, RawValueType, ResultValue, TryFromValue,
             UsageKind, Value,
         },
@@ -845,7 +845,7 @@ mod checked {
                 })
                 .collect();
 
-            Ok(ExecutionResults::V2(ExecutionResultsV2 {
+            Ok(ExecutionResults::V1(ExecutionResultsV1 {
                 written_objects,
                 modified_objects: loaded_runtime_objects
                     .into_iter()

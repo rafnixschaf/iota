@@ -566,20 +566,7 @@ mod checked {
                 }
                 Ok(Mode::empty_results())
             }
-            TransactionKind::ConsensusCommitPrologue(prologue) => {
-                setup_consensus_commit(
-                    prologue.commit_timestamp_ms,
-                    temporary_store,
-                    tx_ctx,
-                    move_vm,
-                    gas_charger,
-                    protocol_config,
-                    metrics,
-                )
-                .expect("ConsensusCommitPrologue cannot fail");
-                Ok(Mode::empty_results())
-            }
-            TransactionKind::ConsensusCommitPrologueV2(prologue) => {
+            TransactionKind::ConsensusCommitPrologueV1(prologue) => {
                 setup_consensus_commit(
                     prologue.commit_timestamp_ms,
                     temporary_store,
