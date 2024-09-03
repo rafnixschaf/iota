@@ -14,7 +14,7 @@ use iota_protocol_config::ProtocolConfig;
 use move_binary_format::CompiledModule;
 use move_bytecode_utils::{layout::TypeLayoutBuilder, module_cache::GetModule};
 use move_core_types::{
-    annotated_value::{MoveStruct, MoveStructLayout, MoveTypeLayout},
+    annotated_value::{MoveStruct, MoveStructLayout, MoveTypeLayout, MoveValue},
     language_storage::{StructTag, TypeTag},
 };
 use schemars::JsonSchema;
@@ -23,7 +23,6 @@ use serde_with::{serde_as, Bytes};
 
 use self::{balance_traversal::BalanceTraversal, bounded_visitor::BoundedVisitor};
 use crate::{
-    balance::Balance,
     base_types::{
         IotaAddress, MoveObjectType, ObjectDigest, ObjectID, ObjectIDParseError, ObjectRef,
         SequenceNumber, TransactionDigest,
@@ -35,9 +34,8 @@ use crate::{
     },
     gas_coin::{GasCoin, GAS},
     is_system_package,
+    layout_resolver::LayoutResolver,
     move_package::MovePackage,
-    timelock::timelock::TimeLock,
-    type_resolver::LayoutResolver,
 };
 
 mod balance_traversal;
@@ -310,16 +308,16 @@ impl MoveObject {
     /// and the (transitive) dependencies of `self.type_` in order for this
     /// to succeed. Failure will result in an `ObjectSerializationError`
     pub fn get_layout(&self, resolver: &impl GetModule) -> Result<MoveStructLayout, IotaError> {
-        Self::get_layout_from_struct_tag(self.type_().clone().into(), resolver)
+        Self::get_struct_layout_from_struct_tag(self.type_().clone().into(), resolver)
     }
 
-    pub fn get_layout_from_struct_tag(
+    pub fn get_struct_layout_from_struct_tag(
         struct_tag: StructTag,
         resolver: &impl GetModule,
     ) -> Result<MoveStructLayout, IotaError> {
         let type_ = TypeTag::Struct(Box::new(struct_tag));
         let layout = TypeLayoutBuilder::build_with_types(&type_, resolver).map_err(|e| {
-            IotaError::ObjectSerialization {
+            IotaError::ObjectSerializationError {
                 error: e.to_string(),
             }
         })?;
@@ -334,7 +332,7 @@ impl MoveObject {
     /// Convert `self` to the JSON representation dictated by `layout`.
     pub fn to_move_struct(&self, layout: &MoveStructLayout) -> Result<MoveStruct, IotaError> {
         BoundedVisitor::deserialize_struct(&self.contents, layout).map_err(|e| {
-            IotaError::ObjectSerialization {
+            IotaError::ObjectSerializationError {
                 error: e.to_string(),
             }
         })
@@ -394,11 +392,10 @@ impl MoveObject {
             let layout = layout_resolver.get_annotated_layout(&self.type_().clone().into())?;
 
             let mut traversal = BalanceTraversal::default();
-            MoveStruct::visit_deserialize(&self.contents, &layout, &mut traversal).map_err(
-                |e| IotaError::ObjectSerialization {
+            MoveValue::visit_deserialize(&self.contents, &layout.into_layout(), &mut traversal)
+                .map_err(|e| IotaError::ObjectSerializationError {
                     error: e.to_string(),
-                },
-            )?;
+                })?;
 
             Ok(traversal.finish())
         }
@@ -569,8 +566,10 @@ impl Display for Owner {
             Self::Immutable => {
                 write!(f, "Immutable")
             }
-            Self::Shared { .. } => {
-                write!(f, "Shared")
+            Self::Shared {
+                initial_shared_version,
+            } => {
+                write!(f, "Shared( {} )", initial_shared_version.value())
             }
         }
     }
@@ -610,6 +609,10 @@ impl Object {
 
     pub fn as_inner(&self) -> &ObjectInner {
         &self.0
+    }
+
+    pub fn owner(&self) -> &Owner {
+        &self.0.owner
     }
 
     pub fn new_from_genesis(
@@ -656,12 +659,14 @@ impl Object {
         modules: &[CompiledModule],
         previous_transaction: TransactionDigest,
         max_move_package_size: u64,
+        move_binary_format_version: u32,
         dependencies: impl IntoIterator<Item = &'p MovePackage>,
     ) -> Result<Self, ExecutionError> {
         Ok(Self::new_package_from_data(
             Data::Package(MovePackage::new_initial(
                 modules,
                 max_move_package_size,
+                move_binary_format_version,
                 dependencies,
             )?),
             previous_transaction,
@@ -693,10 +698,12 @@ impl Object {
         dependencies: impl IntoIterator<Item = MovePackage>,
     ) -> Result<Self, ExecutionError> {
         let dependencies: Vec<_> = dependencies.into_iter().collect();
+        let config = ProtocolConfig::get_for_max_version_UNSAFE();
         Self::new_package(
             modules,
             previous_transaction,
-            ProtocolConfig::get_for_max_version_UNSAFE().max_move_package_size(),
+            config.max_move_package_size(),
+            config.move_binary_format_version(),
             &dependencies,
         )
     }
@@ -833,14 +840,6 @@ impl ObjectInner {
         }
     }
 
-    pub fn as_timelock_balance_maybe(&self) -> Option<TimeLock<Balance>> {
-        if let Some(move_object) = self.data.try_as_move() {
-            Some(TimeLock::from_bcs_bytes(move_object.contents()).ok()?)
-        } else {
-            None
-        }
-    }
-
     pub fn coin_type_maybe(&self) -> Option<TypeTag> {
         if let Some(move_object) = self.data.try_as_move() {
             move_object.type_().coin_type_maybe()
@@ -893,12 +892,12 @@ impl ObjectInner {
     /// like this: `S<T>`.
     /// Returns the inner parameter type `T`.
     pub fn get_move_template_type(&self) -> IotaResult<TypeTag> {
-        let move_struct = self.data.struct_tag().ok_or_else(|| IotaError::Type {
+        let move_struct = self.data.struct_tag().ok_or_else(|| IotaError::TypeError {
             error: "Object must be a Move object".to_owned(),
         })?;
         fp_ensure!(
             move_struct.type_params.len() == 1,
-            IotaError::Type {
+            IotaError::TypeError {
                 error: "Move object struct must have one type parameter".to_owned()
             }
         );
@@ -951,14 +950,10 @@ impl Object {
         Self::immutable_with_id_for_testing(IMMUTABLE_OBJECT_ID.with(|id| *id))
     }
 
-    /// make a test shared object.
+    /// Make a new random test shared object.
     pub fn shared_for_testing() -> Object {
-        thread_local! {
-            static SHARED_OBJECT_ID: ObjectID = ObjectID::random();
-        }
-
-        let obj =
-            MoveObject::new_gas_coin(OBJECT_START_VERSION, SHARED_OBJECT_ID.with(|id| *id), 10);
+        let id = ObjectID::random();
+        let obj = MoveObject::new_gas_coin(OBJECT_START_VERSION, id, 10);
         let owner = Owner::Shared {
             initial_shared_version: obj.version(),
         };

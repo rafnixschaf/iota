@@ -82,6 +82,21 @@ impl EpochStartSystemState {
     pub fn new_for_testing_with_epoch(epoch: EpochId) -> Self {
         Self::V1(EpochStartSystemStateV1::new_for_testing_with_epoch(epoch))
     }
+
+    pub fn new_at_next_epoch_for_testing(&self) -> Self {
+        // Only need to support the latest version for testing.
+        match self {
+            Self::V1(state) => Self::V1(EpochStartSystemStateV1 {
+                epoch: state.epoch + 1,
+                protocol_version: state.protocol_version,
+                reference_gas_price: state.reference_gas_price,
+                safe_mode: state.safe_mode,
+                epoch_start_timestamp_ms: state.epoch_start_timestamp_ms,
+                epoch_duration_ms: state.epoch_duration_ms,
+                active_validators: state.active_validators.clone(),
+            }),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -146,14 +161,14 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
     }
 
     fn get_iota_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata {
-        let (voting_rights, network_metadata) = self
+        let validators = self
             .active_validators
             .iter()
             .map(|validator| {
                 (
-                    (validator.authority_name(), validator.voting_power),
+                    validator.authority_name(),
                     (
-                        validator.authority_name(),
+                        validator.voting_power,
                         NetworkMetadata {
                             network_address: validator.iota_net_address.clone(),
                             narwhal_primary_address: validator.narwhal_primary_address.clone(),
@@ -161,12 +176,9 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
                     ),
                 )
             })
-            .unzip();
+            .collect();
 
-        CommitteeWithNetworkMetadata {
-            committee: Committee::new(self.epoch, voting_rights),
-            network_metadata,
-        }
+        CommitteeWithNetworkMetadata::new(self.epoch, validators)
     }
 
     fn get_iota_committee(&self) -> Committee {
@@ -210,7 +222,8 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
         }
 
         // Sort the authorities by their protocol (public) key in ascending order, same
-        // as the order in the Iota committee returned from get_iota_committee().
+        // as the order in the Iota committee returned from
+        // get_iota_committee().
         authorities.sort_by(|a1, a2| a1.authority_key.cmp(&a2.authority_key));
 
         for ((i, mysticeti_authority), iota_authority_name) in authorities
@@ -307,7 +320,7 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct EpochStartValidatorInfoV1 {
     pub iota_address: IotaAddress,
     pub protocol_pubkey: narwhal_crypto::PublicKey,
@@ -330,8 +343,8 @@ impl EpochStartValidatorInfoV1 {
 #[cfg(test)]
 mod test {
     use fastcrypto::traits::KeyPair;
-    use iota_network_stack::Multiaddr;
     use iota_protocol_config::ProtocolVersion;
+    use mysten_network::Multiaddr;
     use narwhal_crypto::NetworkKeyPair;
     use rand::thread_rng;
 
