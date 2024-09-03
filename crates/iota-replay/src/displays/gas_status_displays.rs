@@ -16,7 +16,7 @@ impl<'a> Display for Pretty<'a, IotaGasStatus> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let Pretty(iota_gas_status) = self;
         match iota_gas_status {
-            IotaGasStatus::V2(s) => {
+            IotaGasStatus::V1(s) => {
                 display_info(f, s)?;
                 per_object_storage_table(f, s)?;
             }

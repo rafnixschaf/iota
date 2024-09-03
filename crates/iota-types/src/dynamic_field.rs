@@ -327,6 +327,6 @@ where
         ))
     })?;
     Ok(bcs::from_bytes::<Field<K, V>>(move_object.contents())
-        .map_err(|err| IotaError::DynamicFieldRead(err.to_string()))?
+        .map_err(|err| { println!("{err:?}"); IotaError::DynamicFieldRead(err.to_string()) })?
         .value)
 }

@@ -463,14 +463,7 @@ impl IotaTransactionBlockKind {
             TransactionKind::Genesis(g) => Self::Genesis(IotaGenesisTransaction {
                 objects: g.objects.iter().map(GenesisObject::id).collect(),
             }),
-            TransactionKind::ConsensusCommitPrologue(p) => {
-                Self::ConsensusCommitPrologue(IotaConsensusCommitPrologue {
-                    epoch: p.epoch,
-                    round: p.round,
-                    commit_timestamp_ms: p.commit_timestamp_ms,
-                })
-            }
-            TransactionKind::ConsensusCommitPrologueV2(p) => {
+            TransactionKind::ConsensusCommitPrologueV1(p) => {
                 Self::ConsensusCommitPrologueV2(IotaConsensusCommitPrologueV2 {
                     epoch: p.epoch,
                     round: p.round,

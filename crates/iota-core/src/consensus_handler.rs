@@ -277,18 +277,11 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
             timestamp
         };
 
-        let prologue_transaction = match self
-            .epoch_store
-            .protocol_config()
-            .include_consensus_digest_in_prologue()
-        {
-            true => self.consensus_commit_prologue_v2_transaction(
-                round,
-                timestamp,
-                consensus_output.consensus_digest(),
-            ),
-            false => self.consensus_commit_prologue_transaction(round, timestamp),
-        };
+        let prologue_transaction = self.consensus_commit_prologue_v1_transaction(
+            round,
+            timestamp,
+            consensus_output.consensus_digest(),
+        );
 
         info!(
             %consensus_output,
@@ -554,26 +547,13 @@ impl Drop for MysticetiConsensusHandler {
 }
 
 impl<C> ConsensusHandler<C> {
-    fn consensus_commit_prologue_transaction(
-        &self,
-        round: u64,
-        commit_timestamp_ms: u64,
-    ) -> VerifiedExecutableTransaction {
-        let transaction = VerifiedTransaction::new_consensus_commit_prologue(
-            self.epoch(),
-            round,
-            commit_timestamp_ms,
-        );
-        VerifiedExecutableTransaction::new_system(transaction, self.epoch())
-    }
-
-    fn consensus_commit_prologue_v2_transaction(
+    fn consensus_commit_prologue_v1_transaction(
         &self,
         round: u64,
         commit_timestamp_ms: u64,
         consensus_digest: ConsensusCommitDigest,
     ) -> VerifiedExecutableTransaction {
-        let transaction = VerifiedTransaction::new_consensus_commit_prologue_v2(
+        let transaction = VerifiedTransaction::new_consensus_commit_prologue_v1(
             self.epoch(),
             round,
             commit_timestamp_ms,

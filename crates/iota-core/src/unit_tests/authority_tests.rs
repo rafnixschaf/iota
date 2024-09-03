@@ -25,7 +25,7 @@ use iota_types::{
     execution_status::{ExecutionFailureStatus, ExecutionStatus},
     gas_coin::GasCoin,
     iota_system_state::IotaSystemStateWrapper,
-    messages_consensus::{ConsensusCommitPrologue, ConsensusCommitPrologueV2},
+    messages_consensus::ConsensusCommitPrologueV1,
     object::{Data, Owner, GAS_VALUE_FOR_TESTING, OBJECT_START_VERSION},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     randomness_state::get_randomness_state_obj_initial_shared_version,
@@ -3009,7 +3009,7 @@ async fn test_idempotent_reversed_confirmation() {
 }
 
 #[tokio::test]
-async fn test_refusal_to_sign_consensus_commit_prologue() {
+async fn test_refusal_to_sign_consensus_commit_prologue_v1() {
     // The system should refuse to handle sender-signed system transactions
     let (sender, sender_key): (_, AccountKeyPair) = get_key_pair();
     let gas_object_id = ObjectID::random();
@@ -3020,43 +3020,7 @@ async fn test_refusal_to_sign_consensus_commit_prologue() {
 
     let gas_ref = gas_object.compute_object_reference();
     let tx_data = TransactionData::new(
-        TransactionKind::ConsensusCommitPrologue(ConsensusCommitPrologue {
-            epoch: 0,
-            round: 0,
-            commit_timestamp_ms: 42,
-        }),
-        sender,
-        gas_ref,
-        TEST_ONLY_GAS_UNIT_FOR_GENERIC * rgp,
-        rgp,
-    );
-
-    // Sender is able to sign it.
-    let transaction = to_sender_signed_transaction(tx_data, &sender_key);
-    let transaction = epoch_store.verify_transaction(transaction).unwrap();
-
-    // But the authority should refuse to handle it.
-    assert!(matches!(
-        authority_state
-            .handle_transaction(&epoch_store, transaction)
-            .await,
-        Err(IotaError::InvalidSystemTransaction),
-    ));
-}
-
-#[tokio::test]
-async fn test_refusal_to_sign_consensus_commit_prologue_v2() {
-    // The system should refuse to handle sender-signed system transactions
-    let (sender, sender_key): (_, AccountKeyPair) = get_key_pair();
-    let gas_object_id = ObjectID::random();
-    let gas_object = Object::with_id_owner_for_testing(gas_object_id, sender);
-    let authority_state = init_state_with_objects(vec![gas_object.clone()]).await;
-    let rgp = authority_state.reference_gas_price_for_testing().unwrap();
-    let epoch_store = authority_state.load_epoch_store_one_call_per_task();
-
-    let gas_ref = gas_object.compute_object_reference();
-    let tx_data = TransactionData::new(
-        TransactionKind::ConsensusCommitPrologueV2(ConsensusCommitPrologueV2 {
+        TransactionKind::ConsensusCommitPrologueV1(ConsensusCommitPrologueV1 {
             epoch: 0,
             round: 0,
             commit_timestamp_ms: 42,

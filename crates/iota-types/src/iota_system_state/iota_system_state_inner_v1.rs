@@ -713,3 +713,11 @@ pub struct StakingPoolV1 {
     pub pending_pool_token_withdraw: u64,
     pub extra_fields: Bag,
 }
+
+/// Rust version of the Move
+/// iota_system::validator_cap::UnverifiedValidatorOperationCap type
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct UnverifiedValidatorOperationCapV1 {
+    pub id: ObjectID,
+    pub authorizer_validator_address: IotaAddress,
+}

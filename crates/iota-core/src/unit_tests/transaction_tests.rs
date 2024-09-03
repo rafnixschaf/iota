@@ -9,19 +9,10 @@ use fastcrypto_zkp::bn254::zk_login::{parse_jwks, OIDCProvider, ZkLoginInputs};
 use iota_macros::sim_test;
 use iota_network_stack::Multiaddr;
 use iota_types::{
-    authenticator_state::ActiveJwk,
-    base_types::dbg_addr,
-    crypto::{get_key_pair, AccountKeyPair, IotaKeyPair, Signature},
-    error::{IotaError, UserInputError},
-    multisig::{MultiSig, MultiSigPublicKey},
-    signature::GenericSignature,
-    transaction::{
+    authenticator_state::ActiveJwk, base_types::dbg_addr, crypto::{get_key_pair, AccountKeyPair, IotaKeyPair, Signature}, digests::ConsensusCommitDigest, error::{IotaError, UserInputError}, multisig::{MultiSig, MultiSigPublicKey}, signature::GenericSignature, transaction::{
         AuthenticatorStateUpdate, GenesisTransaction, TransactionDataAPI, TransactionExpiration,
         TransactionKind,
-    },
-    utils::{load_test_vectors, to_sender_signed_transaction},
-    zk_login_authenticator::ZkLoginAuthenticator,
-    zk_login_util::DEFAULT_JWK_BYTES,
+    }, utils::{load_test_vectors, to_sender_signed_transaction}, zk_login_authenticator::ZkLoginAuthenticator, zk_login_util::DEFAULT_JWK_BYTES
 };
 use rand::{rngs::StdRng, SeedableRng};
 use shared_crypto::intent::{Intent, IntentMessage};
@@ -1204,7 +1195,7 @@ async fn test_handle_certificate_errors() {
         } if message == "SenderSignedData must contain exactly one transaction"
     );
 
-    let tx = VerifiedTransaction::new_consensus_commit_prologue(0, 0, 42);
+    let tx = VerifiedTransaction::new_consensus_commit_prologue_v1(0, 0, 42, ConsensusCommitDigest::default());
     let ct = CertifiedTransaction::new(
         tx.data().clone(),
         vec![signed_transaction.auth_sig().clone()],

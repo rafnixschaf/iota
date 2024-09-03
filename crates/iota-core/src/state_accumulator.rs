@@ -135,7 +135,7 @@ where
     S: std::ops::Deref<Target = T>,
     T: AccumulatorStore + ?Sized,
 {
-    if protocol_config.enable_effects_v2() {
+    if protocol_config.enable_effects_v1() {
         accumulate_effects_v3(effects)
     } else if protocol_config.simplified_unwrap_then_delete() {
         accumulate_effects_v2(store, effects)

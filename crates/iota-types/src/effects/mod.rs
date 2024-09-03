@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use effects_v1::TransactionEffectsV1;
 use enum_dispatch::enum_dispatch;
+pub use effects_v1::UnchangedSharedKind;
 use iota_protocol_config::ProtocolConfig;
 pub use object_change::{EffectsObjectChange, ObjectIn, ObjectOut};
 use serde::{Deserialize, Serialize};

@@ -1080,8 +1080,7 @@ impl CheckpointBuilder {
                 // processed before we reach here
                 if !matches!(
                     transaction.inner().transaction_data().kind(),
-                    TransactionKind::ConsensusCommitPrologue(_)
-                        | TransactionKind::ConsensusCommitPrologueV2(_)
+                    TransactionKind::ConsensusCommitPrologueV1(_)
                         | TransactionKind::AuthenticatorStateUpdate(_)
                         | TransactionKind::RandomnessStateUpdate(_)
                 ) {

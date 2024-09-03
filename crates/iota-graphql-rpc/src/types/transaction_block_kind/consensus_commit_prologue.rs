@@ -8,8 +8,7 @@ use iota_types::{
     digests::ConsensusCommitDigest,
     messages_checkpoint::CheckpointTimestamp,
     messages_consensus::{
-        ConsensusCommitPrologue as NativeConsensusCommitPrologueTransactionV1,
-        ConsensusCommitPrologueV2 as NativeConsensusCommitPrologueTransactionV2,
+        ConsensusCommitPrologueV1 as NativeConsensusCommitPrologueTransactionV1,
     },
 };
 
@@ -64,19 +63,6 @@ impl ConsensusCommitPrologueTransaction {
 impl ConsensusCommitPrologueTransaction {
     pub(crate) fn from_v1(
         ccp: NativeConsensusCommitPrologueTransactionV1,
-        checkpoint_viewed_at: u64,
-    ) -> Self {
-        Self {
-            epoch: ccp.epoch,
-            round: ccp.round,
-            commit_timestamp_ms: ccp.commit_timestamp_ms,
-            consensus_commit_digest: None,
-            checkpoint_viewed_at,
-        }
-    }
-
-    pub(crate) fn from_v2(
-        ccp: NativeConsensusCommitPrologueTransactionV2,
         checkpoint_viewed_at: u64,
     ) -> Self {
         Self {
