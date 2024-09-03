@@ -6,7 +6,7 @@ Objects in IOTA can have different types of ownership, with two broad categories
 
 ## Create immutable object
 
-To convert an object into an immutable object, call the `public_freeze_object` function from the [transfer module](https://github.com/iotaledger/iota/blob/main/crates/iota-framework/packages/iota-framework/sources/transfer.move):
+To convert an object into an immutable object, call the `public_freeze_object` function from the [transfer module](https://github.com/iotaledger/iota/blob/develop/crates/iota-framework/packages/iota-framework/sources/transfer.move):
 
 ```move
 public native fun public_freeze_object<T: key>(obj: T);
@@ -67,7 +67,7 @@ To see it work in action:
 
 ```move
 let sender1 = @0x1;
-let scenario_val = test_scenario::begin(sender1);
+let mut scenario_val = test_scenario::begin(sender1);
 let scenario = &mut scenario_val;
 {
     let ctx = test_scenario::ctx(scenario);

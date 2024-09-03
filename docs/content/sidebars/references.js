@@ -65,16 +65,6 @@ const references = [
             id: 'references/iota-sdks',
         },
         items: [
-            {
-                type: 'link',
-                label: 'IOTA Go SDK',
-                href: 'https://github.com/block-vision/iota-go-sdk',
-            },
-            {
-                type: 'link',
-                label: 'IOTA Python SDK',
-                href: 'https://github.com/FrankC01/pyiota',
-            },
             'references/rust-sdk',
             {
                 type: 'category',
@@ -301,6 +291,30 @@ const references = [
                 type: 'doc',
                 label: 'WasmLib Data Types',
                 id: 'references/iota-evm/wasm-lib-data-types',
+            },
+        ],
+    },
+    {
+        type: 'category',
+        label: 'IOTA Identity',
+        link: {
+            type: 'doc',
+            id: 'references/iota-identity/overview',
+        },
+        items: [
+            'references/iota-identity/overview',
+            'references/iota-identity/iota-did-method-spec',
+            'references/iota-identity/revocation-bitmap-2022',
+            'references/iota-identity/revocation-timeframe-2024',
+            {
+                type: 'doc',
+                id: 'references/iota-identity/wasm',
+                label: 'Wasm',
+            },
+            {
+                type: 'link',
+                label: 'Rust',
+                href: 'https://docs.rs/identity_iota/latest/identity_iota/index.html',
             },
         ],
     },

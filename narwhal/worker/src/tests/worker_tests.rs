@@ -2,6 +2,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -102,7 +103,7 @@ async fn reject_invalid_clients_transactions() {
         .worker(&public_key, &worker_id)
         .unwrap()
         .transactions;
-    let config = mysten_network::config::Config::new();
+    let config = iota_network_stack::config::Config::new();
     let channel = config.connect_lazy(&address).unwrap();
     let mut client = TransactionsClient::new(channel);
     let tx = transaction();
@@ -231,7 +232,7 @@ async fn handle_remote_clients_transactions() {
         .worker(&authority_public_key, &worker_id)
         .unwrap()
         .transactions;
-    let config = mysten_network::config::Config::new();
+    let config = iota_network_stack::config::Config::new();
     let channel = config.connect_lazy(&address).unwrap();
     let client = TransactionsClient::new(channel);
 

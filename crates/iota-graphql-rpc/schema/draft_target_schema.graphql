@@ -116,8 +116,6 @@ type Query {
     filter: ObjectFilter,
   ): ObjectConnection!
 
-  resolveIotansAddress(name: String!): Address
-
   # NB. Will be moved into a private, explorer-specific extension.
   networkMetrics: NetworkMetrics
   moveCallMetrics: MoveCallMetrics
@@ -433,7 +431,6 @@ enum Feature {
   ANALYTICS
   COINS
   DYNAMIC_FIELDS
-  NAME_SERVICE
   SUBSCRIPTIONS
   SYSTEM_STATE
 }
@@ -484,14 +481,6 @@ interface IOwner {
     # Enhancement (post-MVP) to filter dynamic fields by type.
     filter: DynamicFieldFilter,
   ): DynamicFieldConnection!
-
-  defaultIotansName: String
-  iotansRegistrations(
-    first: Int,
-    after: String,
-    last: Int,
-    before: String,
-  ): IotansRegistrationConnection!
 }
 
 union ObjectOwner = Immutable | Shared | Parent | AddressOwner
@@ -592,7 +581,6 @@ type Epoch {
   totalCheckpoints: BigInt
   totalGasFees: BigInt
   totalStakeRewards: BigInt
-  totalStakeSubsidies: BigInt
   fundSize: BigInt
   netInflow: BigInt
   fundInflow: BigInt
@@ -603,7 +591,6 @@ type Epoch {
   safeMode: SafeMode
   systemStateVersion: BigInt
   systemParameters: SystemParameters
-  systemStakeSubsidy: StakeSubsidy
 
   checkpoints(
     first: Int,
@@ -642,7 +629,6 @@ type ProtocolConfigFeatureFlag {
 
 type SystemParameters {
   durationMs: BigInt
-  stakeSubsidyStartEpoch: Int
 
   minValidatorCount: Int
   maxValidatorCount: Int
@@ -651,14 +637,6 @@ type SystemParameters {
   validatorLowStakeThreshold: BigInt
   validatorVeryLowStakeThreshold: BigInt
   validatorLowStakeGracePeriod: Int
-}
-
-type StakeSubsidy {
-  balance: BigInt
-  distributionCounter: Int
-  currentDistributionAmount: BigInt
-  periodLength: Int
-  decreaseRate: Int
 }
 
 type ValidatorSet {
@@ -1121,7 +1099,6 @@ type MoveObject implements IOwner & IObject & IMoveObject {
   asCoin: Coin
   asStakedIota: StakedIota
   asCoinMetadata: CoinMetadata
-  asIotansRegistration: IotansRegistration
 }
 
 type MovePackage implements IOwner & IObject {
@@ -1526,29 +1503,6 @@ type MoveModuleConnection {
 type MoveModuleEdge {
   cursor: String
   node: MoveModule!
-}
-
-# IotansRegistrationConnection
-type IotansRegistrationConnection {
-  edges: [IotansRegistrationEdge!]!
-  nodes: [IotansRegistration!]!
-  pageInfo: PageInfo!
-}
-
-type IotansRegistrationEdge {
-  cursor: String
-  node: IotansRegistration
-}
-
-type IotansRegistration {
-	"""
-	Domain name of the IotansRegistration object
-	"""
-	domain: String!
-	"""
-	Convert the IotansRegistration object into a Move object
-	"""
-	asMoveObject: MoveObject!
 }
 
 # AddressMetricsConnection

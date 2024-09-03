@@ -79,7 +79,7 @@ to left, byte-by-byte comparison means that (for example)
 Keep this in mind when using this function to compare addresses.
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="compare.md#0x1_compare_cmp_bcs_bytes">cmp_bcs_bytes</a>(v1: &<a href="">vector</a>&lt;u8&gt;, v2: &<a href="">vector</a>&lt;u8&gt;): u8
+<pre><code><b>public</b> <b>fun</b> <a href="compare.md#0x1_compare_cmp_bcs_bytes">cmp_bcs_bytes</a>(v1: &<a href="dependencies/move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, v2: &<a href="dependencies/move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): u8
 </code></pre>
 
 
@@ -88,9 +88,9 @@ Keep this in mind when using this function to compare addresses.
 <summary>Implementation</summary>
 
 
-<pre><code><b>public</b> <b>fun</b> <a href="compare.md#0x1_compare_cmp_bcs_bytes">cmp_bcs_bytes</a>(v1: &<a href="">vector</a>&lt;u8&gt;, v2: &<a href="">vector</a>&lt;u8&gt;): u8 {
-    <b>let</b> i1 = <a href="_length">vector::length</a>(v1);
-    <b>let</b> i2 = <a href="_length">vector::length</a>(v2);
+<pre><code><b>public</b> <b>fun</b> <a href="compare.md#0x1_compare_cmp_bcs_bytes">cmp_bcs_bytes</a>(v1: &<a href="dependencies/move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;, v2: &<a href="dependencies/move-stdlib/vector.md#0x1_vector">vector</a>&lt;u8&gt;): u8 {
+    <b>let</b> i1 = <a href="dependencies/move-stdlib/vector.md#0x1_vector_length">vector::length</a>(v1);
+    <b>let</b> i2 = <a href="dependencies/move-stdlib/vector.md#0x1_vector_length">vector::length</a>(v2);
     <b>let</b> len_cmp = <a href="compare.md#0x1_compare_cmp_u64">cmp_u64</a>(i1, i2);
 
     // BCS uses little endian encoding for all integer types, so we <b>choose</b> <b>to</b> <a href="compare.md#0x1_compare">compare</a> from left
@@ -99,7 +99,7 @@ Keep this in mind when using this function to compare addresses.
     <b>while</b> (i1 &gt; 0 && i2 &gt; 0) {
         i1 = i1 - 1;
         i2 = i2 - 1;
-        <b>let</b> elem_cmp = <a href="compare.md#0x1_compare_cmp_u8">cmp_u8</a>(*<a href="_borrow">vector::borrow</a>(v1, i1), *<a href="_borrow">vector::borrow</a>(v2, i2));
+        <b>let</b> elem_cmp = <a href="compare.md#0x1_compare_cmp_u8">cmp_u8</a>(*<a href="dependencies/move-stdlib/vector.md#0x1_vector_borrow">vector::borrow</a>(v1, i1), *<a href="dependencies/move-stdlib/vector.md#0x1_vector_borrow">vector::borrow</a>(v2, i2));
         <b>if</b> (elem_cmp != 0) <b>return</b> elem_cmp
         // <b>else</b>, <a href="compare.md#0x1_compare">compare</a> next element
     };

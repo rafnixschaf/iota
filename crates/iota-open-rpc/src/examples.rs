@@ -25,7 +25,7 @@ use iota_json_rpc_types::{
     IotaTransactionBlockResponseQuery, IotaTypeTag, MoveCallParams, MoveFunctionArgType,
     ObjectChange,
     ObjectValueKind::{ByImmutableReference, ByMutableReference, ByValue},
-    ObjectsPage, OwnedObjectRef, Page, ProtocolConfigResponse, RPCTransactionRequestParams, Stake,
+    ObjectsPage, OwnedObjectRef, ProtocolConfigResponse, RPCTransactionRequestParams, Stake,
     StakeStatus, TransactionBlockBytes, TransactionBlocksPage, TransactionFilter,
     TransferObjectParams, ValidatorApy, ValidatorApys,
 };
@@ -133,8 +133,6 @@ impl RpcExampleProvider {
             self.iota_get_chain_identifier(),
             self.iotax_get_stakes(),
             self.iotax_get_stakes_by_ids(),
-            self.iotax_resolve_name_service_address(),
-            self.iotax_resolve_name_service_names(),
             self.iota_try_multi_get_past_objects(),
         ]
         .into_iter()
@@ -1198,7 +1196,8 @@ impl RpcExampleProvider {
         Examples::new(
             "iotax_getDynamicFields",
             vec![ExamplePairing::new(
-                "Gets dynamic fields for the object the request provides in a paginated list of `limit` dynamic field results per page. The default limit is 50.",
+                "Gets dynamic fields for the object the request provides in a paginated list of `limit` \
+                dynamic field results per page. The default limit is 50.",
                 vec![
                     ("parent_object_id", json!(object_id)),
                     ("cursor", json!(ObjectID::new(self.rng.gen()))),
@@ -1310,7 +1309,10 @@ impl RpcExampleProvider {
         Examples::new(
             "iotax_getOwnedObjects",
             vec![ExamplePairing::new(
-                "Returns all the objects the address provided in the request owns and that match the filter. By default, only the digest value is returned, but the request returns additional information by setting the relevant keys to true. A cursor value is also provided, so the list of results begin after that value.",
+                "Returns all the objects the address provided in the request owns and that match the filter. \
+                By default, only the digest value is returned, but the request returns additional information \
+                by setting the relevant keys to true. A cursor value is also provided, so the list of results \
+                begin after that value.",
                 vec![
                     ("address", json!(owner)),
                     ("query", json!(query)),
@@ -1475,40 +1477,6 @@ impl RpcExampleProvider {
             vec![ExamplePairing::new(
                 "Returns the staking information for the address the request provides.",
                 vec![("staked_iota_ids", json!(vec![stake1, stake2]))],
-                json!(result),
-            )],
-        )
-    }
-
-    fn iotax_resolve_name_service_address(&mut self) -> Examples {
-        let result = ObjectID::new(self.rng.gen());
-        Examples::new(
-            "iotax_resolveNameServiceAddress",
-            vec![ExamplePairing::new(
-                "Returns the resolved address for the name the request provides.",
-                vec![("name", json!("example.iota".to_string()))],
-                json!(result),
-            )],
-        )
-    }
-
-    fn iotax_resolve_name_service_names(&mut self) -> Examples {
-        let next_cursor = Some(ObjectID::new(self.rng.gen()));
-        let object_id = ObjectID::new(self.rng.gen());
-        let result = Page {
-            data: vec!["example.iota".to_string()],
-            next_cursor,
-            has_next_page: false,
-        };
-        Examples::new(
-            "iotax_resolveNameServiceNames",
-            vec![ExamplePairing::new(
-                "Returns the IotaNS name for the address the request provides. Currently, the API returns only the first name in cases where there are multiple. Future support will use the cursor ID and limit values in the request to control pagination of the response for addresses with multiple names.",
-                vec![
-                    ("address", json!(object_id)),
-                    ("cursor", json!(next_cursor)),
-                    ("limit", json!(3)),
-                ],
                 json!(result),
             )],
         )

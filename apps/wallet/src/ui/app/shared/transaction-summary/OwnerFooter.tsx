@@ -2,8 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import ExplorerLink from '_src/ui/app/components/explorer-link';
-import { ExplorerLinkType } from '_src/ui/app/components/explorer-link/ExplorerLinkType';
+import { ExplorerLink, ExplorerLinkType } from '_components';
 import { useActiveAddress } from '_src/ui/app/hooks';
 import { getOwnerDisplay } from '@iota/core';
 
@@ -29,7 +28,7 @@ export function OwnerFooter({ owner, ownerType }: { owner?: string; ownerType?: 
                         type={ExplorerLinkType.Address}
                         title={owner}
                         address={owner}
-                        className="font-mono text-body font-medium text-hero-dark no-underline"
+                        className="text-hero-dark font-mono text-body font-medium no-underline"
                     >
                         {ownerDisplay}
                     </ExplorerLink>

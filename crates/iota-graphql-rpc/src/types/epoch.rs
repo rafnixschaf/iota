@@ -132,21 +132,16 @@ impl Epoch {
         Ok(self.stored.epoch_total_transactions.map(|v| v as u64))
     }
 
-    /// The total amount of gas fees (in MICROS) that were paid in this epoch.
+    /// The total amount of gas fees (in NANOS) that were paid in this epoch.
     async fn total_gas_fees(&self) -> Option<BigInt> {
         self.stored.total_gas_fees.map(BigInt::from)
     }
 
-    /// The total MICROS rewarded as stake.
+    /// The total NANOS rewarded as stake.
     async fn total_stake_rewards(&self) -> Option<BigInt> {
         self.stored
             .total_stake_rewards_distributed
             .map(BigInt::from)
-    }
-
-    /// The amount added to total gas fees to make up the total stake rewards.
-    async fn total_stake_subsidies(&self) -> Option<BigInt> {
-        self.stored.stake_subsidy_amount.map(BigInt::from)
     }
 
     /// The storage fund available in this epoch.

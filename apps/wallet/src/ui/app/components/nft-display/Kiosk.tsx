@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 import { getKioskIdFromOwnerCap, hasDisplayData, useGetKioskContents } from '@iota/core';
-import { type IotaObjectResponse } from '@iota/iota.js/client';
+import { type IotaObjectResponse } from '@iota/iota-sdk/client';
 import cl from 'clsx';
 
 import { useActiveAddress } from '../../hooks';
@@ -53,7 +53,7 @@ export function Kiosk({ object, orientation, ...nftImageProps }: KioskProps) {
         <div className="group relative h-36 w-36 transform-gpu overflow-visible rounded-xl hover:bg-transparent">
             <div className="absolute z-0">
                 {itemsWithDisplay.length === 0 ? (
-                    <NftImage animateHover src={null} name="Kiosk" {...nftImageProps} />
+                    <NftImage isHoverable src={null} title="Kiosk" {...nftImageProps} />
                 ) : (
                     items.map((item, idx) => {
                         const display = item.data?.display?.data;
@@ -74,8 +74,8 @@ export function Kiosk({ object, orientation, ...nftImageProps }: KioskProps) {
                                     <NftImage
                                         {...nftImageProps}
                                         src={display?.image_url ?? null}
-                                        animateHover={items.length <= 1}
-                                        name="Kiosk"
+                                        isHoverable={items.length <= 1}
+                                        title="Kiosk"
                                     />
                                 </div>
                             </div>

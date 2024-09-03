@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{sync::Arc, time::Duration};
 
 use tokio::{
@@ -37,6 +38,8 @@ pub(crate) struct LeaderTimeoutTask<D: CoreThreadDispatcher> {
 }
 
 impl<D: CoreThreadDispatcher> LeaderTimeoutTask<D> {
+    /// Starts the leader timeout task, which monitors and manages the leader
+    /// election timeout mechanism.
     pub fn start(
         dispatcher: Arc<D>,
         signals_receivers: &CoreSignalsReceivers,
@@ -57,6 +60,12 @@ impl<D: CoreThreadDispatcher> LeaderTimeoutTask<D> {
         }
     }
 
+    /// Runs the leader timeout task, managing the leader election timeout
+    /// mechanism in an asynchronous loop.
+    /// This mechanism ensures that if the current leader fails to produce a new
+    /// block within the specified timeout, the task forces the creation of a
+    /// new block, maintaining the continuity and robustness of the leader
+    /// election process.
     async fn run(&mut self) {
         let new_round = &mut self.new_round_receiver;
         let mut leader_round: Round = *new_round.borrow_and_update();

@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::time::Duration;
 
 use bytes::Bytes;
@@ -44,7 +45,7 @@ async fn test_response_error_after_shutdown_internal_consensus() {
     };
     assert!(
         e.message()
-            .contains("error trying to connect: tcp connect error:"),
+            .contains("tcp connect error: Connection refused"),
         "Actual: {}",
         e
     );

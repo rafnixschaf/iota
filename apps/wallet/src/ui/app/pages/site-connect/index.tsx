@@ -2,9 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { AccountItemApproveConnection } from '_components/accounts/AccountItemApproveConnection';
-import Loading from '_components/loading';
-import { UserApproveContainer } from '_components/user-approve-container';
+import {
+    AccountItemApproveConnection,
+    Loading,
+    UserApproveContainer,
+    AccountMultiSelectWithControls,
+    Alert,
+    SectionHeader,
+} from '_components';
 import { useAppDispatch, useAppSelector } from '_hooks';
 import type { RootState } from '_redux/RootReducer';
 import { permissionsSelectors, respondToPermissionRequest } from '_redux/slices/permissions';
@@ -12,14 +17,11 @@ import { type SerializedUIAccount } from '_src/background/accounts/Account';
 import { ampli } from '_src/shared/analytics/ampli';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
-import { AccountMultiSelectWithControls } from '../../components/accounts/AccountMultiSelect';
-import Alert from '../../components/alert';
-import { SectionHeader } from '../../components/SectionHeader';
 import { useAccountGroups } from '../../hooks/useAccountGroups';
 import { useActiveAccount } from '../../hooks/useActiveAccount';
 import { PageMainLayoutTitle } from '../../shared/page-main-layout/PageMainLayoutTitle';
-import st from './SiteConnectPage.module.scss';
+import { InfoBox, InfoBoxStyle, InfoBoxType } from '@iota/apps-ui-kit';
+import { Warning } from '@iota/ui-icons';
 
 function SiteConnectPage() {
     const { requestID } = useParams();
@@ -105,16 +107,24 @@ function SiteConnectPage() {
                         blended
                     >
                         <PageMainLayoutTitle title="Insecure Website" />
-                        <div className={st.warningWrapper}>
-                            <h1 className={st.warningTitle}>Your Connection is Not Secure</h1>
-                        </div>
-
-                        <div className={st.warningMessage}>
-                            If you connect your wallet to this site your data could be exposed to
-                            attackers. Click **Reject** if you don't trust this site.
-                            <br />
-                            <br />
-                            Continue at your own risk.
+                        <div className="flex flex-col gap-lg">
+                            <InfoBox
+                                title="Your connection is insecure"
+                                supportingText="Proceed at your own risk."
+                                type={InfoBoxType.Default}
+                                style={InfoBoxStyle.Elevated}
+                                icon={<Warning />}
+                            />
+                            <div className="flex flex-col gap-xs">
+                                <span className="text-label-lg text-neutral-60">
+                                    Connecting your wallet to this site could expose your data to
+                                    attackers.
+                                </span>
+                                <span className="text-label-lg text-neutral-60">
+                                    If you don't have confidence in this site, reject the
+                                    connection.
+                                </span>
+                            </div>
                         </div>
                     </UserApproveContainer>
                 ) : (

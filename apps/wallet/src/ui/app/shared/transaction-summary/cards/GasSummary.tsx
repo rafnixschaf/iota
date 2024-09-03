@@ -1,11 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import ExplorerLink from '_src/ui/app/components/explorer-link';
-import { ExplorerLinkType } from '_src/ui/app/components/explorer-link/ExplorerLinkType';
+import { ExplorerLink, ExplorerLinkType } from '_components';
 import { useActiveAddress } from '_src/ui/app/hooks';
 import { useFormatCoin, type GasSummaryType } from '@iota/core';
-import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota.js/utils';
+import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
 import { Text } from '../../text';
 
@@ -21,7 +20,7 @@ export function GasSummary({ gasSummary }: GasSummaryProps) {
 
     return (
         <div className="relative flex flex-col rounded-2xl bg-white shadow-card-soft">
-            <div className="rounded-t-2xl bg-gray-40 px-4 py-2.5">
+            <div className="bg-gray-40 rounded-t-2xl px-4 py-2.5">
                 <Text color="steel-darker" variant="captionSmall" weight="semibold">
                     Gas Fees
                 </Text>

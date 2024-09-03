@@ -1,8 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import ExplorerLink from '_src/ui/app/components/explorer-link';
-import { ExplorerLinkType } from '_src/ui/app/components/explorer-link/ExplorerLinkType';
+import { ExplorerLink, ExplorerLinkType } from '_components';
 import { Text } from '_src/ui/app/shared/text';
 import { Disclosure } from '@headlessui/react';
 import {
@@ -13,7 +12,7 @@ import {
     type IotaObjectChangeWithDisplay,
 } from '@iota/core';
 import { ChevronDown12, ChevronRight12 } from '@iota/icons';
-import { formatAddress } from '@iota/iota.js/utils';
+import { formatAddress } from '@iota/iota-sdk/utils';
 import cx from 'clsx';
 
 import { ExpandableList } from '../../ExpandableList';
@@ -51,7 +50,7 @@ export function ObjectDetail({ change, display }: ObjectDetailProps) {
             {({ open }) => (
                 <div className="flex flex-col gap-1">
                     <div className="grid cursor-pointer grid-cols-2 overflow-auto">
-                        <Disclosure.Button className="ouline-none flex cursor-pointer select-none items-center gap-1 border-none bg-transparent p-0 text-steel-dark hover:text-steel-darker">
+                        <Disclosure.Button className="ouline-none text-steel-dark hover:text-steel-darker flex cursor-pointer select-none items-center gap-1 border-none bg-transparent p-0">
                             <Text variant="pBody" weight="medium">
                                 Object
                             </Text>
@@ -85,7 +84,7 @@ export function ObjectDetail({ change, display }: ObjectDetailProps) {
                                     <ExplorerLink
                                         type={ExplorerLinkType.Object}
                                         objectID={packageId}
-                                        className="justify-self-end overflow-auto text-captionSmall text-hero-dark no-underline"
+                                        className="text-hero-dark justify-self-end overflow-auto text-captionSmall no-underline"
                                     >
                                         <Text variant="pBody" weight="medium" truncate mono>
                                             {packageId}
@@ -102,7 +101,7 @@ export function ObjectDetail({ change, display }: ObjectDetailProps) {
                                         type={ExplorerLinkType.Object}
                                         objectID={packageId}
                                         moduleName={moduleName}
-                                        className="justify-self-end overflow-auto text-hero-dark no-underline"
+                                        className="text-hero-dark justify-self-end overflow-auto no-underline"
                                     >
                                         <Text variant="pBody" weight="medium" truncate mono>
                                             {moduleName}
@@ -119,7 +118,7 @@ export function ObjectDetail({ change, display }: ObjectDetailProps) {
                                         type={ExplorerLinkType.Object}
                                         objectID={packageId}
                                         moduleName={moduleName}
-                                        className="justify-self-end overflow-auto text-hero-dark no-underline"
+                                        className="text-hero-dark justify-self-end overflow-auto no-underline"
                                     >
                                         <Text variant="pBody" weight="medium" truncate mono>
                                             {typeName}
@@ -169,7 +168,7 @@ export function ObjectChangeEntry({ changes, type }: ObjectChangeEntryProps) {
                                             >
                                                 {getObjectChangeLabel(type)}
                                             </Text>
-                                            <div className="h-px w-full bg-gray-40" />
+                                            <div className="bg-gray-40 h-px w-full" />
                                             <ChevronDown expanded={open} />
                                         </div>
                                     </Disclosure.Button>

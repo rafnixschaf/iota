@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{fs::File, io::Write};
 
 use clap::Parser;
@@ -10,8 +11,8 @@ use fastcrypto::{
     hash::Hash,
     traits::{KeyPair as _, Signer},
 };
+use iota_network_stack::Multiaddr;
 use move_bytecode_utils::layout::YamlRegistry;
-use mysten_network::Multiaddr;
 use rand::{prelude::StdRng, SeedableRng};
 use serde_reflection::{Result, Samples, Tracer, TracerConfig};
 use types::{

@@ -41,7 +41,7 @@
 //! the Iota devnet, and the Iota testnet is shown below.
 //! To successfully run this program, make sure to spin up a local
 //! network with a local validator, a fullnode, and a faucet server
-//! (see [here](https://github.com/stefan-mysten/iota/tree/rust_sdk_api_examples/crates/iota-sdk/examples#preqrequisites) for more information).
+//! (see [here](https://github.com/iotaledger/iota/tree/develop/crates/iota-sdk/README.md#prerequisites) for more information).
 //!
 //! ```rust,no_run
 //! use iota_sdk::IotaClientBuilder;
@@ -99,6 +99,7 @@ use jsonrpsee::{
     ws_client::{PingConfig, WsClient, WsClientBuilder},
 };
 use move_core_types::language_storage::StructTag;
+use rustls::crypto::{ring, CryptoProvider};
 use serde_json::Value;
 
 use crate::{
@@ -203,6 +204,10 @@ impl IotaClientBuilder {
     /// }
     /// ```
     pub async fn build(self, http: impl AsRef<str>) -> IotaRpcResult<IotaClient> {
+        if CryptoProvider::get_default().is_none() {
+            ring::default_provider().install_default().ok();
+        }
+
         let client_version = env!("CARGO_PKG_VERSION");
         let mut headers = HeaderMap::new();
         headers.insert(

@@ -2,13 +2,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{str::FromStr, sync::Arc, time::SystemTime};
 
 use bytes::Bytes;
 use clap::*;
 use eyre::Context;
 use futures::future::join_all;
-use mysten_network::Multiaddr;
+use iota_network_stack::Multiaddr;
 use narwhal_node::metrics::NarwhalBenchMetrics;
 use prometheus::Registry;
 use rand::{
@@ -29,7 +30,7 @@ use worker::LazyNarwhalClient;
 ///
 /// To run the benchmark client following are required:
 /// * the size of the transactions via the --size property
-/// * the worker address <ADDR> to send the transactions to. A url format is expected ex http://127.0.0.1:7000
+/// * the worker address `<ADDR>` to send the transactions to. A url format is expected ex http://127.0.0.1:7000
 /// * the rate of sending transactions via the --rate parameter
 /// Optionally the --nodes parameter can be passed where a list of worker
 /// addresses should be passed. The benchmarking client will first try to
@@ -42,7 +43,7 @@ struct App {
     /// The network address of the node where to send txs. A url format is expected ex 'http://127.0.0.1:7000'
     #[clap(long, value_parser = parse_url, global = true)]
     addr: Url,
-    /// The size of each transaciton in bytes
+    /// The size of each transaction in bytes
     #[clap(long, default_value = "512", global = true)]
     size: usize,
     /// The rate (txs/s) at which to send the transactions
@@ -105,13 +106,13 @@ async fn main() -> Result<(), eyre::Report> {
 
     set_global_default(subscriber).expect("Failed to set subscriber");
 
-    let registry_service = mysten_metrics::start_prometheus_server(
+    let registry_service = iota_metrics::start_prometheus_server(
         format!("{}:{}", app.client_metric_host, app.client_metric_port)
             .parse()
             .unwrap(),
     );
     let registry: Registry = registry_service.default_registry();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
     let metrics = NarwhalBenchMetrics::new(&registry);
 
     let target = app.addr;

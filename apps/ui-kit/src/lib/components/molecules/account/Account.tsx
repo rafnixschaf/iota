@@ -4,8 +4,9 @@
 import React from 'react';
 import cx from 'classnames';
 import { Button, ButtonSize, ButtonType } from '../../atoms/button';
-import { Address, Badge, BadgeType } from '../../atoms';
+import { Badge, BadgeType } from '../../atoms';
 import { LockLocked, LockUnlocked, MoreHoriz } from '@iota/ui-icons';
+import { Address } from '../address';
 
 interface AccountProps {
     /**
@@ -23,15 +24,15 @@ interface AccountProps {
     /**
      * Handler for more options click.
      */
-    onOptionsClick: () => void;
+    onOptionsClick?: () => void;
     /**
      * Handler for the lock account icon click.
      */
-    onLockAccountClick: () => void;
+    onLockAccountClick?: () => void;
     /**
      * Handle for the unlock account icon click.
      */
-    onUnlockAccountClick: () => void;
+    onUnlockAccountClick?: () => void;
     /**
      * Function to render avatar content.
      */
@@ -39,11 +40,11 @@ interface AccountProps {
     /**
      * The onCopy event of the Address  (optional).
      */
-    onCopy?: (e: React.MouseEvent<SVGElement>) => void;
+    onCopy?: (e: React.MouseEvent<HTMLButtonElement>) => void;
     /**
      * The onOpen event of the Address  (optional).
      */
-    onOpen?: (e: React.MouseEvent<SVGElement>) => void;
+    onOpen?: (e: React.MouseEvent<HTMLButtonElement>) => void;
     /**
      * Has copy icon (optional).
      */
@@ -92,7 +93,7 @@ export function Account({
                     </div>
                     <Address
                         text={subtitle}
-                        onCopy={onCopy}
+                        onCopySuccess={onCopy}
                         onOpen={onOpen}
                         isCopyable={isCopyable}
                         isExternal={isExternal}
@@ -105,27 +106,31 @@ export function Account({
                     isLocked && '[&_button:last-child]:flex',
                 )}
             >
-                <Button
-                    size={ButtonSize.Small}
-                    type={ButtonType.Ghost}
-                    onClick={onOptionsClick}
-                    icon={<MoreHoriz />}
-                />
-                {isLocked ? (
+                {onOptionsClick && (
                     <Button
                         size={ButtonSize.Small}
                         type={ButtonType.Ghost}
-                        onClick={onUnlockAccountClick}
-                        icon={<LockLocked />}
-                    />
-                ) : (
-                    <Button
-                        size={ButtonSize.Small}
-                        type={ButtonType.Ghost}
-                        onClick={onLockAccountClick}
-                        icon={<LockUnlocked />}
+                        onClick={onOptionsClick}
+                        icon={<MoreHoriz />}
                     />
                 )}
+                {onLockAccountClick &&
+                    onUnlockAccountClick &&
+                    (isLocked ? (
+                        <Button
+                            size={ButtonSize.Small}
+                            type={ButtonType.Ghost}
+                            onClick={onUnlockAccountClick}
+                            icon={<LockLocked />}
+                        />
+                    ) : (
+                        <Button
+                            size={ButtonSize.Small}
+                            type={ButtonType.Ghost}
+                            onClick={onLockAccountClick}
+                            icon={<LockUnlocked />}
+                        />
+                    ))}
             </div>
         </div>
     );

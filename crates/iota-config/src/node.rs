@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::SocketAddr,
@@ -14,7 +15,7 @@ use anyhow::Result;
 use iota_keys::keypair_file::{read_authority_keypair_from_file, read_keypair_from_file};
 use iota_protocol_config::{Chain, SupportedProtocolVersions};
 use iota_types::{
-    base_types::{IotaAddress, ObjectID},
+    base_types::IotaAddress,
     committee::EpochId,
     crypto::{
         get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes,
@@ -39,7 +40,7 @@ use crate::{
 // Default max number of concurrent requests served
 pub const DEFAULT_GRPC_CONCURRENCY_LIMIT: usize = 20000000000;
 
-/// Default gas price of 100 Micros
+/// Default gas price of 1000 Nanos
 pub const DEFAULT_VALIDATOR_GAS_PRICE: u64 = iota_types::transaction::DEFAULT_VALIDATOR_GAS_PRICE;
 
 /// Default commission rate of 2%
@@ -125,15 +126,6 @@ pub struct NodeConfig {
 
     #[serde(default)]
     pub expensive_safety_check_config: ExpensiveSafetyCheckConfig,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name_service_package_address: Option<IotaAddress>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name_service_registry_id: Option<ObjectID>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name_service_reverse_registry_id: Option<ObjectID>,
 
     #[serde(default)]
     pub transaction_deny_config: TransactionDenyConfig,
@@ -1016,7 +1008,7 @@ mod tests {
         let g = Genesis::new_from_file("path/to/file");
 
         let s = serde_yaml::to_string(&g).unwrap();
-        assert_eq!("---\ngenesis-file-location: path/to/file\n", s);
+        assert_eq!("genesis-file-location: path/to/file\n", s);
         let loaded_genesis: Genesis = serde_yaml::from_str(&s).unwrap();
         assert_eq!(g, loaded_genesis);
     }

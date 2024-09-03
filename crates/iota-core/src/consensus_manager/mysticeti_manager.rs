@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{path::PathBuf, sync::Arc};
 
 use arc_swap::ArcSwapOption;
@@ -9,11 +10,11 @@ use consensus_config::{Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
 use consensus_core::{CommitConsumer, CommitIndex, ConsensusAuthority, NetworkType, Round};
 use fastcrypto::ed25519;
 use iota_config::NodeConfig;
+use iota_metrics::{RegistryID, RegistryService};
 use iota_types::{
     committee::EpochId,
     iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
 };
-use mysten_metrics::{RegistryID, RegistryService};
 use narwhal_executor::ExecutionState;
 use prometheus::Registry;
 use tokio::sync::{mpsc::unbounded_channel, Mutex};
@@ -80,7 +81,9 @@ impl MysticetiManager {
 }
 
 #[async_trait]
+
 impl ConsensusManagerTrait for MysticetiManager {
+    /// Starts the Mysticeti consensus manager for the current epoch.
     async fn start(
         &self,
         _config: &NodeConfig,

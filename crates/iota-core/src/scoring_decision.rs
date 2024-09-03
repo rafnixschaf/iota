@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
 use std::{collections::HashMap, sync::Arc};
 
 use arc_swap::ArcSwap;
@@ -94,7 +95,7 @@ mod tests {
 
     use arc_swap::ArcSwap;
     use fastcrypto::traits::{InsecureDefault, KeyPair as _};
-    use mysten_network::Multiaddr;
+    use iota_network_stack::Multiaddr;
     use narwhal_config::{Committee, CommitteeBuilder};
     use narwhal_crypto::{KeyPair, NetworkPublicKey};
     use narwhal_types::ReputationScores;

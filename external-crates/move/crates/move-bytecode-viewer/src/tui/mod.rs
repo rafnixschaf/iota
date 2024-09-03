@@ -8,12 +8,11 @@
 pub mod text_builder;
 pub mod tui_interface;
 
-use std::{error::Error, io::Write};
+use std::error::Error;
 
 use crossterm::event::{self, Event, KeyCode as Key, KeyEvent};
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+use ratatui::{
+    layout::{Constraint, Direction, Layout, Position},
     style::Style,
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -36,12 +35,12 @@ impl<Interface: TUIInterface> TUI<Interface> {
         }
     }
 
-    pub fn redraw<W: Write>(&mut self, f: &mut Frame<CrosstermBackend<W>>) {
+    pub fn redraw(&mut self, f: &mut Frame) {
         // Create a split window, each pane using 50% of the screen
         let window = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-            .split(f.size());
+            .split(f.area());
 
         // Get the bottom offset of the window that the cursor will be displayed
         let window_size = window[0].bottom();
@@ -76,14 +75,14 @@ impl<Interface: TUIInterface> TUI<Interface> {
         // the screen border is at position 0 in both x and y coordinates. If we
         // scrolled the text, we need to subtract that from the line number so
         // that the cursor is over the correct line.
-        f.set_cursor(
+        f.set_cursor_position(Position::new(
             self.current_column.checked_add(1).unwrap(),
             self.current_line_number
                 .checked_add(1)
                 .unwrap()
                 .checked_sub(scroll)
                 .unwrap(),
-        );
+        ));
         f.render_widget(input, window[0]);
 
         // Right window logic

@@ -2,13 +2,15 @@ name: Split Cluster Check
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
       - main
 
 jobs:
   validate-mainnet:
-    runs-on: self-hosted-rust
+    if: github.event.pull_request.draft == false
+    runs-on: self-hosted
     steps:
       - name: checkout code repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
@@ -32,7 +34,8 @@ jobs:
         run: exit 1
 
   validate-testnet:
-    runs-on: self-hosted-rust
+    if: github.event.pull_request.draft == false
+    runs-on: self-hosted
     steps:
       - name: checkout code repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1

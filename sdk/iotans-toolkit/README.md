@@ -20,7 +20,7 @@ You can also use yarn or pnpm.
 Create an instance of IotansClient:
 
 ```typescript
-import { IotaClient } from '@iota/iota.js/client';
+import { IotaClient } from '@iota/iota-sdk/client';
 import { IotansClient } from '@iota/iotans-toolkit';
 
 const client = new IotaClient();
@@ -78,4 +78,4 @@ const nameObject = await iotansClient.getNameObject('iotans.iota', {
 
 ## License
 
-[Apache-2.0](https://github.com/SuiNSdapp/toolkit/blob/main/LICENSE)
+[Apache-2.0](https://github.com/IotaNSdapp/toolkit/blob/main/LICENSE)

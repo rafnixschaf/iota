@@ -4,7 +4,7 @@
 import { type TransactionSummary as TransactionSummaryType } from '@iota/core';
 import clsx from 'clsx';
 
-import LoadingIndicator from '../../components/loading/LoadingIndicator';
+import { LoadingIndicator } from '_components';
 import { Heading } from '../heading';
 import { BalanceChanges } from './cards/BalanceChanges';
 import { ExplorerLinkCard } from './cards/ExplorerLink';
@@ -27,7 +27,7 @@ export function TransactionSummary({
 }) {
     if (isError) return null;
     return (
-        <section className="-mx-6 min-h-full bg-iota/10">
+        <section className="bg-iota/10 -mx-6 min-h-full">
             {isLoading ? (
                 <div className="flex items-center justify-center p-10">
                     <LoadingIndicator />
