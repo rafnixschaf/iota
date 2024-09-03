@@ -15,14 +15,15 @@ use move_core_types::language_storage::StructTag;
 use super::governance_api::GovernanceReadApi;
 use crate::indexer_reader::IndexerReader;
 
+#[derive(Clone, Debug)]
 pub(crate) struct TransactionBuilderApi {
     inner: IndexerReader,
 }
 
 impl TransactionBuilderApi {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(inner: IndexerReader) -> IotaTransactionBuilderApi {
-        IotaTransactionBuilderApi::new_with_data_reader(std::sync::Arc::new(Self { inner }))
+    pub fn new(inner: IndexerReader) -> IotaTransactionBuilderApi<TransactionBuilderApi> {
+        IotaTransactionBuilderApi::new_with_data_reader(Self { inner })
     }
 }
 

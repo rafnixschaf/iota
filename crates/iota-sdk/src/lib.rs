@@ -73,11 +73,7 @@
 //! For detailed examples, please check the APIs docs and the examples folder
 //! in the [main repository](https://github.com/iotaledger/iota/tree/main/crates/iota-sdk/examples).
 
-use std::{
-    fmt::{Debug, Formatter},
-    sync::Arc,
-    time::Duration,
-};
+use std::{fmt::Debug, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 pub use iota_json as json;
@@ -232,7 +228,7 @@ impl IotaClientBuilder {
                 builder = builder.enable_ws_ping(PingConfig::new().ping_interval(duration))
             }
 
-            Some(builder.build(url).await?)
+            Some(Arc::new(builder.build(url).await?))
         } else {
             None
         };
@@ -243,11 +239,10 @@ impl IotaClientBuilder {
             .request_timeout(self.request_timeout)
             .build(http)?;
 
-        let info = Self::get_server_info(&http, &ws).await?;
+        let info = Self::get_server_info(&http, ws.as_deref()).await?;
 
-        let rpc = RpcClient { http, ws, info };
-        let api = Arc::new(rpc);
-        let read_api = Arc::new(ReadApi::new(api.clone()));
+        let api = RpcClient { http, ws, info };
+        let read_api = ReadApi::new(api.clone());
         let quorum_driver_api = QuorumDriverApi::new(api.clone());
         let event_api = EventApi::new(api.clone());
         let transaction_builder = TransactionBuilder::new(read_api.clone());
@@ -337,7 +332,7 @@ impl IotaClientBuilder {
     /// Fails with an error if it cannot call the RPC discover.
     async fn get_server_info(
         http: &HttpClient,
-        ws: &Option<WsClient>,
+        ws: Option<&WsClient>,
     ) -> Result<ServerInfo, Error> {
         let rpc_spec: Value = http.request("rpc.discover", rpc_params![]).await?;
         let version = rpc_spec
@@ -412,35 +407,27 @@ impl IotaClientBuilder {
 ///     Ok(())
 /// }
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IotaClient {
-    api: Arc<RpcClient>,
-    transaction_builder: TransactionBuilder,
-    read_api: Arc<ReadApi>,
+    api: RpcClient,
+    transaction_builder: TransactionBuilder<ReadApi>,
+    read_api: ReadApi,
     coin_read_api: CoinReadApi,
     event_api: EventApi,
     quorum_driver_api: QuorumDriverApi,
     governance_api: GovernanceApi,
 }
 
+#[derive(Clone, Debug)]
 pub(crate) struct RpcClient {
     http: HttpClient,
-    ws: Option<WsClient>,
+    ws: Option<Arc<WsClient>>,
     info: ServerInfo,
-}
-
-impl Debug for RpcClient {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "RPC client. Http: {:?}, Websocket: {:?}",
-            self.http, self.ws
-        )
-    }
 }
 
 /// ServerInfo contains all the useful information regarding the API version,
 /// the available RPC calls, and subscriptions.
+#[derive(Clone, Debug)]
 struct ServerInfo {
     rpc_methods: Vec<String>,
     subscriptions: Vec<String>,
@@ -509,7 +496,7 @@ impl IotaClient {
     }
 
     /// Returns a reference to the transaction builder API.
-    pub fn transaction_builder(&self) -> &TransactionBuilder {
+    pub fn transaction_builder(&self) -> &TransactionBuilder<ReadApi> {
         &self.transaction_builder
     }
 
@@ -520,7 +507,7 @@ impl IotaClient {
 
     /// Returns a reference to the underlying WebSocket client, if any.
     pub fn ws(&self) -> Option<&WsClient> {
-        self.api.ws.as_ref()
+        self.api.ws.as_deref()
     }
 }
 

@@ -794,6 +794,23 @@ pub struct AuthorityState {
     pub overload_info: AuthorityOverloadInfo,
 }
 
+impl core::fmt::Debug for AuthorityState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AuthorityState")
+            .field("name", &self.name)
+            .field("db_checkpoint_config", &self.db_checkpoint_config)
+            .field(
+                "expensive_safety_check_config",
+                &self.expensive_safety_check_config,
+            )
+            .field("transaction_deny_config", &self.transaction_deny_config)
+            .field("certificate_deny_config", &self.certificate_deny_config)
+            .field("debug_dump_config", &self.debug_dump_config)
+            .field("authority_overload_config", &self.authority_overload_config)
+            .finish()
+    }
+}
+
 /// The authority state encapsulates all state, drives execution, and ensures
 /// safety.
 ///

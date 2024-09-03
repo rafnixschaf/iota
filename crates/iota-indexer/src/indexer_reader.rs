@@ -58,7 +58,7 @@ pub const TX_SEQUENCE_NUMBER_STR: &str = "tx_sequence_number";
 pub const TRANSACTION_DIGEST_STR: &str = "transaction_digest";
 pub const EVENT_SEQUENCE_NUMBER_STR: &str = "event_sequence_number";
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct IndexerReader {
     pool: crate::db::PgConnectionPool,
     package_cache: PackageCache,
@@ -1619,7 +1619,7 @@ impl IndexerReader {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Default)]
 struct PackageCache {
     inner: Arc<RwLock<BTreeMap<ObjectID, MovePackage>>>,
 }

@@ -9,9 +9,12 @@ use clap::{Parser, ValueEnum};
 // use iota_json_rpc::api::ExtendedApiOpenRpc;
 use iota_json_rpc::coin_api::CoinReadApi;
 use iota_json_rpc::{
-    governance_api::GovernanceReadApi, iota_rpc_doc, read_api::ReadApi,
-    transaction_builder_api::TransactionBuilderApi,
-    transaction_execution_api::TransactionExecutionApi, IotaRpcModule,
+    governance_api::GovernanceReadApi,
+    iota_rpc_doc,
+    read_api::ReadApi,
+    transaction_builder_api::{AuthorityStateDataReader, TransactionBuilderApi},
+    transaction_execution_api::TransactionExecutionApi,
+    IotaRpcModule,
 };
 use iota_json_rpc_api::{IndexerApiOpenRpc, MoveUtilsOpenRpc};
 use pretty_assertions::assert_str_eq;
@@ -51,7 +54,7 @@ async fn main() {
     open_rpc.add_module(CoinReadApi::rpc_doc_module());
     open_rpc.add_module(IndexerApiOpenRpc::module_doc());
     open_rpc.add_module(TransactionExecutionApi::rpc_doc_module());
-    open_rpc.add_module(TransactionBuilderApi::rpc_doc_module());
+    open_rpc.add_module(TransactionBuilderApi::<AuthorityStateDataReader>::rpc_doc_module());
     open_rpc.add_module(GovernanceReadApi::rpc_doc_module());
     // temporarily remove api ref content for indexer methods
     // open_rpc.add_module(ExtendedApiOpenRpc::module_doc());
