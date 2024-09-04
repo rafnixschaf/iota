@@ -23,7 +23,7 @@ use iota_types::{
 use jsonrpsee::{core::RpcResult, RpcModule};
 use move_core_types::language_storage::StructTag;
 
-use crate::IotaRpcModule;
+use crate::{authority_state::StateRead, IotaRpcModule};
 
 #[derive(Clone, Debug)]
 pub struct TransactionBuilderApi<R>(TransactionBuilder<R>);
@@ -58,15 +58,12 @@ impl DataReader for AuthorityStateDataReader {
         address: IotaAddress,
         object_type: StructTag,
     ) -> Result<Vec<ObjectInfo>, anyhow::Error> {
-        Ok(self
-            .0
-            // DataReader is used internally, don't need a limit
-            .get_owner_objects_iterator(
-                address,
-                None,
-                Some(IotaObjectDataFilter::StructType(object_type)),
-            )?
-            .collect())
+        Ok(StateRead::get_owner_objects(
+            self.0.as_ref(),
+            address,
+            None,
+            Some(IotaObjectDataFilter::StructType(object_type)),
+        )?)
     }
 
     async fn get_object_with_options(

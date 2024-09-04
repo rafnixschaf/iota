@@ -407,7 +407,7 @@ impl IotaClientBuilder {
 ///     Ok(())
 /// }
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct IotaClient {
     api: RpcClient,
     transaction_builder: TransactionBuilder<ReadApi>,
@@ -416,6 +416,14 @@ pub struct IotaClient {
     event_api: EventApi,
     quorum_driver_api: QuorumDriverApi,
     governance_api: GovernanceApi,
+}
+
+impl core::fmt::Debug for IotaClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IotaClient")
+            .field("api", &self.api)
+            .finish()
+    }
 }
 
 #[derive(Clone, Debug)]
