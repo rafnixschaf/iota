@@ -973,8 +973,6 @@ impl LocalExec {
             .await
             .map_err(ReplayEngineError::from)?;
 
-        // TODO: remove print again
-        println!("{res:?}");
         let exec_res = match res.1 {
             Some(q) => Err(q),
             None => Ok(()),
@@ -1463,9 +1461,10 @@ impl LocalExec {
         &self,
         epoch_id: u64,
     ) -> Result<(u64, u64), ReplayEngineError> {
-        if epoch_id == 0 {
-            return Err(ReplayEngineError::EpochNotSupported { epoch: epoch_id });
-        }
+        // TODO: uncomment when testnet/mainnet will be ready
+        // if epoch_id == 0 {
+        //     return Err(ReplayEngineError::EpochNotSupported { epoch: epoch_id });
+        // }
         self.fetcher
             .get_epoch_start_timestamp_and_rgp(epoch_id)
             .await
