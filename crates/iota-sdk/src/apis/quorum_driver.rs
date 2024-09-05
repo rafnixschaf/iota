@@ -10,7 +10,7 @@ use iota_types::{quorum_driver_types::ExecuteTransactionRequestType, transaction
 
 use crate::{
     error::{Error, IotaRpcResult},
-    RpcClient,
+    SharedRpcClient,
 };
 
 const WAIT_FOR_LOCAL_EXECUTION_RETRY_COUNT: u8 = 3;
@@ -19,11 +19,11 @@ const WAIT_FOR_LOCAL_EXECUTION_RETRY_COUNT: u8 = 3;
 /// submit it to the fullnode(s).
 #[derive(Clone, Debug)]
 pub struct QuorumDriverApi {
-    api: RpcClient,
+    api: SharedRpcClient,
 }
 
 impl QuorumDriverApi {
-    pub(crate) fn new(api: RpcClient) -> Self {
+    pub(crate) fn new(api: SharedRpcClient) -> Self {
         Self { api }
     }
 

@@ -15,18 +15,18 @@ use iota_types::{
 
 use crate::{
     error::{Error, IotaRpcResult},
-    RpcClient,
+    SharedRpcClient,
 };
 
 /// Coin Read API provides the functionality needed to get information from the
 /// Iota network regarding the coins owned by an address.
 #[derive(Debug, Clone)]
 pub struct CoinReadApi {
-    api: RpcClient,
+    api: SharedRpcClient,
 }
 
 impl CoinReadApi {
-    pub(crate) fn new(api: RpcClient) -> Self {
+    pub(crate) fn new(api: SharedRpcClient) -> Self {
         Self { api }
     }
 

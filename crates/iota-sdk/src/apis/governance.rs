@@ -9,16 +9,16 @@ use iota_types::{
     iota_system_state::iota_system_state_summary::IotaSystemStateSummary,
 };
 
-use crate::{error::IotaRpcResult, RpcClient};
+use crate::{error::IotaRpcResult, SharedRpcClient};
 
 /// Governance API provides the staking functionality.
 #[derive(Debug, Clone)]
 pub struct GovernanceApi {
-    api: RpcClient,
+    api: SharedRpcClient,
 }
 
 impl GovernanceApi {
-    pub(crate) fn new(api: RpcClient) -> Self {
+    pub(crate) fn new(api: SharedRpcClient) -> Self {
         Self { api }
     }
 

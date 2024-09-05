@@ -11,18 +11,18 @@ use jsonrpsee::core::client::Subscription;
 
 use crate::{
     error::{Error, IotaRpcResult},
-    RpcClient,
+    SharedRpcClient,
 };
 
 /// Event API provides the functionality to fetch, query, or subscribe to events
 /// on the Iota network.
 #[derive(Clone, Debug)]
 pub struct EventApi {
-    api: RpcClient,
+    api: SharedRpcClient,
 }
 
 impl EventApi {
-    pub(crate) fn new(api: RpcClient) -> Self {
+    pub(crate) fn new(api: SharedRpcClient) -> Self {
         Self { api }
     }
 

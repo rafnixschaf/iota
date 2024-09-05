@@ -30,18 +30,18 @@ use jsonrpsee::core::client::Subscription;
 
 use crate::{
     error::{Error, IotaRpcResult},
-    RpcClient,
+    SharedRpcClient,
 };
 
 /// The main read API structure with functions for retrieving data about
 /// different objects and transactions
 #[derive(Clone, Debug)]
 pub struct ReadApi {
-    api: RpcClient,
+    api: SharedRpcClient,
 }
 
 impl ReadApi {
-    pub(crate) fn new(api: RpcClient) -> Self {
+    pub(crate) fn new(api: SharedRpcClient) -> Self {
         Self { api }
     }
 
