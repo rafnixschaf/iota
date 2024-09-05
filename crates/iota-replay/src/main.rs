@@ -25,20 +25,19 @@ use iota_sdk::{
 use shared_crypto::intent::Intent;
 /// Got from iota-genesis-builder/src/stardust/test_outputs/stardust_mix.rs
 const MAIN_ADDRESS_MNEMONIC: &str = "okay pottery arch air egg very cave cash poem gown sorry mind poem crack dawn wet car pink extra crane hen bar boring salt";
-const PACKAGE_PATH: &str = "../../move/tx_instance";
-const SNAPSHOTS_FOLDER: &str = "../../../tests/sandbox_snapshots";
+const PACKAGE_PATH: &str = "./move/tx_instance";
 const LOCALNET_ADDR: &str = "http://127.0.0.1:9000";
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("tests/sandbox_snapshots");
     // Build an iota client for a local network
     let iota_client = IotaClientBuilder::default().build_localnet().await?;
     // Localnet address, iota_client doesn't have such getter
     let localnet_addr = String::from_str(LOCALNET_ADDR).unwrap();
 
     let mut keystore = setup_keystore()?;
-
-    let snapshot_path = PathBuf::from(SNAPSHOTS_FOLDER);
 
     // Derive the address of the first account and set it as default
     let sender = keystore.import_from_mnemonic(MAIN_ADDRESS_MNEMONIC, ED25519, None)?;
@@ -50,7 +49,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let cmd = ReplayToolCommand::PersistSandbox {
         tx_digest,
-        base_path: snapshot_path.into(),
+        base_path: path.into(),
     };
 
     execute_replay_command(Some(localnet_addr), true, true, None, cmd).await?;
@@ -135,7 +134,7 @@ async fn publish_package(
             Some(ExecuteTransactionRequestType::WaitForLocalExecution),
         )
         .await?;
-    
+
     let tx_digest = transaction_response.digest;
     println!("Package publishing transaction digest: {}", tx_digest);
 

@@ -6642,6 +6642,8 @@ dependencies = [
  "iota-json-rpc",
  "iota-json-rpc-api",
  "iota-json-rpc-types",
+ "iota-keys",
+ "iota-move-build",
  "iota-protocol-config",
  "iota-sdk 0.1.4",
  "iota-storage",

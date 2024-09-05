@@ -29,6 +29,8 @@ tempfile.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
+iota-keys.workspace = true
+iota-move-build.workspace = true
 move-binary-format.workspace = true
 move-bytecode-utils.workspace = true
 move-core-types.workspace = true
