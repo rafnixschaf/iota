@@ -82,8 +82,8 @@ pub struct DynamicFieldHashTypeAndKeyCostParams {
 ///                of operating on the type `K`
 ///              + dynamic_field_hash_type_and_key_value_cost_per_byte * size_of(k)  | covers cost
 ///                of operating on the value `k`
-///              + dynamic_field_hash_type_and_key_type_tag_cost_per_byte * size_of(type_tag(k))
-///                | covers cost of operating on the type tag of `K`
+///              + dynamic_field_hash_type_and_key_type_tag_cost_per_byte * size_of(type_tag(k)) |
+///                covers cost of operating on the type tag of `K`
 /// ****************************************************************************
 /// *******************
 #[instrument(level = "trace", skip_all, err)]
@@ -465,8 +465,8 @@ pub struct DynamicFieldHasChildObjectWithTyCostParams {
 /// key>(parent: address, id: address): bool`   gas cost:
 /// dynamic_field_has_child_object_with_ty_cost_base               | covers
 /// various fixed costs in the oper
-///              + dynamic_field_has_child_object_with_ty_type_cost_per_byte * size_of(Child)
-///                | covers cost of operating on type `Child`
+///              + dynamic_field_has_child_object_with_ty_type_cost_per_byte * size_of(Child) |
+///                covers cost of operating on type `Child`
 ///              + dynamic_field_has_child_object_with_ty_type_tag_cost_per_byte
 ///                * size_of(Child)    | covers cost of fetching and returning
 ///                value of type tag for `Child`
