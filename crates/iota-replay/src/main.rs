@@ -1,10 +1,6 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Example demonstrating the conversion of a stardust NFT into a custom user's
-//! NFT. In order to work, it requires a network with test objects
-//! generated from iota-genesis-builder/src/stardust/test_outputs.
-
 use std::{fs, path::PathBuf, str::FromStr};
 
 use anyhow::{anyhow, Result};
