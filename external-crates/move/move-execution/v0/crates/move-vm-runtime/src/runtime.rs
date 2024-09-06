@@ -156,12 +156,11 @@ impl VMRuntime {
         // have this    assumption here. But nevertheless, we can still make the
         // claim 1 even in this case.    When M is verified, flow 1) is
         // effectively activated, which means:
-        //    - If the code cache or the data store does not contain a D' which has the
-        //      same name with D, then the linking will fail and return an error.
-        //    - If D' exists, and M links against D', then when verifying D in a later
-        //      time point, a compatibility check will be invoked to ensure that D is
-        //      compatible with D', meaning, whichever module that links against D' will
-        //      have to link against D as well.
+        //    - If the code cache or the data store does not contain a D' which has the same name
+        //      with D, then the linking will fail and return an error.
+        //    - If D' exists, and M links against D', then when verifying D in a later time point, a
+        //      compatibility check will be invoked to ensure that D is compatible with D', meaning,
+        //      whichever module that links against D' will have to link against D as well.
         //
         // [Claim 2]
         // We show that the `cyclic_dependencies::verify_module` check is always

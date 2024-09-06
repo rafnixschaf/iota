@@ -23,8 +23,8 @@ where
 /// This function performs a depth-first traversal in the module graph, starting
 /// at `module` and recursively exploring immediate dependencies.  During the
 /// DFS,
-/// - If `module.self_id()` is encountered (again), a dependency cycle is
-///   detected and an error is returned.
+/// - If `module.self_id()` is encountered (again), a dependency cycle is detected and an error is
+///   returned.
 /// - Otherwise terminates without an error.
 fn verify_module_impl<D>(module: &CompiledModule, imm_deps: D) -> PartialVMResult<()>
 where

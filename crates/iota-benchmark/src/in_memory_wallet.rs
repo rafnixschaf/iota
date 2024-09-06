@@ -99,8 +99,8 @@ impl InMemoryWallet {
             for obj in effects.deleted() {
                 // by construction, every deleted object either
                 // 1. belongs to the tx sender directly (e.g., sender owned the object)
-                // 2. belongs to the sender indirectly (e.g., deleted object was a dynamic field
-                //    of a object the sender owned)
+                // 2. belongs to the sender indirectly (e.g., deleted object was a dynamic field of
+                //    a object the sender owned)
                 // 3. is shared (though we do not yet support deletion of shared objects)
                 // so, we just try to delete everything from the sender's account here, though
                 // it's worth noting that (2) and (3) are possible.

@@ -442,13 +442,11 @@ impl Query {
     /// errors. If the signature is invalid, the function returns
     /// a `ZkLoginVerifyResult` with success as false with a list of errors.
     ///
-    /// - `bytes` is either the personal message in raw bytes or transaction
-    ///   data bytes in BCS-encoded and then Base64-encoded.
+    /// - `bytes` is either the personal message in raw bytes or transaction data bytes in
+    ///   BCS-encoded and then Base64-encoded.
     /// - `signature` is a serialized zkLogin signature that is Base64-encoded.
-    /// - `intentScope` is an enum that specifies the intent scope to be used to
-    ///   parse bytes.
-    /// - `author` is the address of the signer of the transaction or personal
-    ///   msg.
+    /// - `intentScope` is an enum that specifies the intent scope to be used to parse bytes.
+    /// - `author` is the address of the signer of the transaction or personal msg.
     async fn verify_zklogin_signature(
         &self,
         ctx: &Context<'_>,

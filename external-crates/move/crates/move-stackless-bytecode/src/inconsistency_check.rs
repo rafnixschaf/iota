@@ -12,8 +12,7 @@
 //! proved vacuously. The `InconsistencyCheckInstrumentationProcessor` adds
 //! an `assert false` before
 //! - every `return` and
-//! - every `abort` (if the `unconditional-abort-as-inconsistency` option is
-//!   set).
+//! - every `abort` (if the `unconditional-abort-as-inconsistency` option is set).
 //! In this way, if the instrumented `assert false` can be proved, it means we
 //! have an inconsistency in the specifications.
 //!

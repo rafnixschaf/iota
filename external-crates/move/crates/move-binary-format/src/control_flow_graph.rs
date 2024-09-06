@@ -144,15 +144,14 @@ impl VMControlFlowGraph {
         // justified by considering the point at which the first node in that
         // loop, `F` is added to the `exploration` map:
         //
-        // - By definition `F` is part of a loop, meaning there is a block `L` such
-        //   that:
+        // - By definition `F` is part of a loop, meaning there is a block `L` such that:
         //
         //     F - ... -> L -> F
         //
-        // - `F` will not transition to `Done` until all the nodes reachable from it
-        //   (including `L`) have been visited.
-        // - Because `F` is the first node seen in the loop, all the other nodes in the
-        //   loop (including `L`) will be visited while `F` is `InProgress`.
+        // - `F` will not transition to `Done` until all the nodes reachable from it (including `L`)
+        //   have been visited.
+        // - Because `F` is the first node seen in the loop, all the other nodes in the loop
+        //   (including `L`) will be visited while `F` is `InProgress`.
         // - Therefore, we will process the `L -> F` edge while `F` is `InProgress`.
         // - Therefore, we will record a back edge to it.
         let mut loop_heads: Map<BlockId, Set<BlockId>> = Map::new();

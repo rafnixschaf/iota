@@ -687,11 +687,10 @@ pub enum Command {
     /// Upgrades a Move package
     /// Takes (in order):
     /// 1. A vector of serialized modules for the package.
-    /// 2. A vector of object ids for the transitive dependencies of the new
-    ///    package.
+    /// 2. A vector of object ids for the transitive dependencies of the new package.
     /// 3. The object ID of the package being upgraded.
-    /// 4. An argument holding the `UpgradeTicket` that must have been produced
-    ///    from an earlier command in the same programmable transaction.
+    /// 4. An argument holding the `UpgradeTicket` that must have been produced from an earlier
+    ///    command in the same programmable transaction.
     Upgrade(Vec<Vec<u8>>, Vec<ObjectID>, ObjectID, Argument),
 }
 

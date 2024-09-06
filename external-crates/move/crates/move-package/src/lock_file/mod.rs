@@ -21,8 +21,8 @@ use crate::compilation::package_layout::CompiledPackageLayout;
 ///
 ///  - It is only updated by tooling, during the build.
 ///  - It will be re-generated on each build.
-///  - Its content is stable (running the same build multiple times should
-///    result in a lock file with the same content).
+///  - Its content is stable (running the same build multiple times should result in a lock file
+///    with the same content).
 ///  - It will only be updated if the operation touching it succeeds.
 ///
 /// To support this model, the contents of the lock file is stored in a

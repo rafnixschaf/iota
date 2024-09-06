@@ -2705,8 +2705,8 @@ fn borrow_exp_dotted(context: &mut Context, mut_: bool, ed: ExpDotted) -> Box<T:
 //   Ownership is more-precarious, as we only call into it when a few things are
 // true:
 //   1) The expression has some number of accessors
-//   2) The usage is `use` or `copy` (not `borrow`, which only calls borrow
-//      above, or `move`, which will not work with dotted paths).
+//   2) The usage is `use` or `copy` (not `borrow`, which only calls borrow above, or `move`, which
+//      will not work with dotted paths).
 //
 //   We double-check that these things are the case with compiler panics if they
 // are not, and then   we proceed by rewriting the E as:
@@ -3541,10 +3541,9 @@ fn expand_macro(
 /// substituted in. So we need to track metadata about the scope where these
 /// expressions were originally written. The Block lets us track two pieces of
 /// metadata
-/// 1) We can track the use_fun_scope, which is used for resolving method calls
-///    correctly
-/// 2) After substitution, we can mark the Block as coming from a macro
-///    expansion which is used for tracking recursive macro calls
+/// 1) We can track the use_fun_scope, which is used for resolving method calls correctly
+/// 2) After substitution, we can mark the Block as coming from a macro expansion which is used for
+///    tracking recursive macro calls
 fn convert_macro_arg_to_block(context: &Context, sp!(loc, ne_): N::Exp) -> N::Exp {
     let ne_ = match ne_ {
         N::Exp_::Block(_) | N::Exp_::Lambda(_) | N::Exp_::UnresolvedError => ne_,

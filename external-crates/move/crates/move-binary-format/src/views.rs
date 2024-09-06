@@ -8,12 +8,11 @@
 //!
 //! Some general notes:
 //!
-//! * These views are not meant to be set in stone. Feel free to change the
-//!   views exposed as the format and our understanding evolves.
-//! * The typical use for these views would be to materialize all the lazily
-//!   evaluated data immediately -- the views are a convenience to make that
-//!   simpler. They've been written as lazy iterators to aid understanding of
-//!   the file format and to make it easy to generate views.
+//! * These views are not meant to be set in stone. Feel free to change the views exposed as the
+//!   format and our understanding evolves.
+//! * The typical use for these views would be to materialize all the lazily evaluated data
+//!   immediately -- the views are a convenience to make that simpler. They've been written as lazy
+//!   iterators to aid understanding of the file format and to make it easy to generate views.
 
 use std::{
     collections::{BTreeMap, BTreeSet},

@@ -14,8 +14,7 @@
 //! time to check evolutions.*)
 //!
 //! Overall the binary format is structured in a number of sections:
-//! - **Header**: this must start at offset 0 in the binary. It contains a blob
-//!   that starts every
+//! - **Header**: this must start at offset 0 in the binary. It contains a blob that starts every
 //! Diem binary, followed by the version of the VM used to compile the code, and
 //! last is the number of tables present in this binary.
 //! - **Table Specification**: it's a number of tuple of the form
@@ -24,8 +23,7 @@
 //! entry per table type. The `starting offset` is from the beginning of the
 //! binary. Tables must cover the entire size of the binary blob and cannot
 //! overlap.
-//! - **Table Content**: the serialized form of the specific entries in the
-//!   table. Those roughly
+//! - **Table Content**: the serialized form of the specific entries in the table. Those roughly
 //! map to the structs defined in this module. Entries in each table must be
 //! unique.
 //!
@@ -403,10 +401,8 @@ pub struct StructDefinition {
     /// the abilities for the type.
     pub struct_handle: StructHandleIndex,
     /// Contains either
-    /// - Information indicating the struct is native and has no accessible
-    ///   fields
-    /// - Information indicating the number of fields and the start
-    ///   `FieldDefinition`s
+    /// - Information indicating the struct is native and has no accessible fields
+    /// - Information indicating the number of fields and the start `FieldDefinition`s
     pub field_information: StructFieldInformation,
 }
 
@@ -443,8 +439,7 @@ pub struct FieldDefinition {
 }
 
 /// `Visibility` restricts the accessibility of the associated entity.
-/// - For function visibility, it restricts who may call into the associated
-///   function.
+/// - For function visibility, it restricts who may call into the associated function.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(any(test, feature = "fuzzing"), derive(proptest_derive::Arbitrary))]
 #[cfg_attr(any(test, feature = "fuzzing"), proptest(no_params))]

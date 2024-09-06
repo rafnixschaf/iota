@@ -9,10 +9,10 @@
 //! A valid identifier consists of an ASCII string which satisfies any of the
 //! conditions:
 //!
-//! * The first character is a letter and the remaining characters are letters,
-//!   digits or underscores.
-//! * The first character is an underscore, and there is at least one further
-//!   letter, digit or underscore.
+//! * The first character is a letter and the remaining characters are letters, digits or
+//!   underscores.
+//! * The first character is an underscore, and there is at least one further letter, digit or
+//!   underscore.
 //!
 //! The spec for allowed identifiers is similar to Rust's spec
 //! ([as of version 1.38](https://doc.rust-lang.org/1.38.0/reference/identifiers.html)).

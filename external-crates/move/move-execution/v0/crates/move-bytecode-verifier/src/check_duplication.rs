@@ -8,10 +8,8 @@
 //! that an index in vector can be used to uniquely name the entry at that
 //! index. Additionally, the checker also verifies the following:
 //! - struct and field definitions are consistent
-//! - the handles in struct and function definitions point to the self module
-//!   index
-//! - all struct and function handles pointing to the self module index have a
-//!   definition
+//! - the handles in struct and function definitions point to the self module index
+//! - all struct and function handles pointing to the self module index have a definition
 use std::{collections::HashSet, hash::Hash};
 
 use move_binary_format::{

@@ -69,17 +69,15 @@ impl<'env, 'translator> ModuleBuilder<'env, 'translator> {
     ///
     /// Translation happens in three phases:
     ///
-    /// 1. In the *declaration analysis*, we collect all information about
-    ///    structs, functions, spec functions, spec vars, and schemas in a
-    ///    module. We do not yet analyze function bodies, conditions, and
-    ///    invariants, which we can only analyze after we know all global
-    ///    declarations (declaration of globals is order independent, and they
-    ///    can have cyclic references).
-    /// 2. In the *definition analysis*, we visit the definitions we have
-    ///    skipped in step (1), specifically analyzing and type checking
-    ///    expressions and schema inclusions.
-    /// 3. In the *population phase*, we populate the global environment with
-    ///    the information from this module.
+    /// 1. In the *declaration analysis*, we collect all information about structs, functions, spec
+    ///    functions, spec vars, and schemas in a module. We do not yet analyze function bodies,
+    ///    conditions, and invariants, which we can only analyze after we know all global
+    ///    declarations (declaration of globals is order independent, and they can have cyclic
+    ///    references).
+    /// 2. In the *definition analysis*, we visit the definitions we have skipped in step (1),
+    ///    specifically analyzing and type checking expressions and schema inclusions.
+    /// 3. In the *population phase*, we populate the global environment with the information from
+    ///    this module.
     pub fn translate(
         &mut self,
         loc: Loc,

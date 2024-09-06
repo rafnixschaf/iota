@@ -1412,12 +1412,11 @@ fn load_function_def(cursor: &mut VersionedCursor) -> BinaryLoaderResult<Functio
     })?;
 
     // NOTE: changes compared with VERSION_1
-    // - in VERSION_1: the flags is a byte compositing both the visibility info and
-    //   whether the function is a native function
-    // - in VERSION_2 onwards: the flags only represent the visibility info and we
-    //   need to advance the cursor to read up the next byte as flags
-    // - in VERSION_5 onwards: script visibility has been deprecated for an entry
-    //   function flag
+    // - in VERSION_1: the flags is a byte compositing both the visibility info and whether the
+    //   function is a native function
+    // - in VERSION_2 onwards: the flags only represent the visibility info and we need to advance
+    //   the cursor to read up the next byte as flags
+    // - in VERSION_5 onwards: script visibility has been deprecated for an entry function flag
     let (visibility, is_entry, mut extra_flags) = if cursor.version() == VERSION_1 {
         let vis = if (flags & FunctionDefinition::DEPRECATED_PUBLIC_BIT) != 0 {
             flags ^= FunctionDefinition::DEPRECATED_PUBLIC_BIT;

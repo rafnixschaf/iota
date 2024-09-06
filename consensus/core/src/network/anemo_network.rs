@@ -265,8 +265,7 @@ impl<S: NetworkService> ConsensusRpc for AnemoServiceProxy<S> {
 /// 2. Take `AnemoClient` from `AnemoManager::client()`.
 /// 3. Create consensus components.
 /// 4. Create `AnemoService` for consensus RPC handler.
-/// 5. Install `AnemoService` to `AnemoManager` with
-///    `AnemoManager::install_service()`.
+/// 5. Install `AnemoService` to `AnemoManager` with `AnemoManager::install_service()`.
 pub(crate) struct AnemoManager {
     context: Arc<Context>,
     client: Arc<AnemoClient>,

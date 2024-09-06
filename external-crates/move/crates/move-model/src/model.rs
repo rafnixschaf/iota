@@ -11,13 +11,11 @@
 //!
 //! The environment is nested into a hierarchy:
 //!
-//! - A `GlobalEnv` which gives access to all modules plus other information on
-//!   global level, and is the owner of all related data.
-//! - A `ModuleEnv` which is a reference to the data of some module in the
-//!   environment.
+//! - A `GlobalEnv` which gives access to all modules plus other information on global level, and is
+//!   the owner of all related data.
+//! - A `ModuleEnv` which is a reference to the data of some module in the environment.
 //! - A `StructEnv` which is a reference to the data of some struct in a module.
-//! - A `FunctionEnv` which is a reference to the data of some function in a
-//!   module.
+//! - A `FunctionEnv` which is a reference to the data of some function in a module.
 
 use std::{
     any::{Any, TypeId},

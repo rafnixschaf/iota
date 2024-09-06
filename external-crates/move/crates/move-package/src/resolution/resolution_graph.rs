@@ -42,10 +42,10 @@ use crate::{
 /// value.
 ///
 /// Named addresses can be assigned values in a couple different ways:
-/// 1. They can be assigned a value in the declaring package. In this case the
-///    value of that named address will always be that value.
-/// 2. Can be left unassigned in the declaring package. In this case it can
-///    receive its value through unification across the package graph.
+/// 1. They can be assigned a value in the declaring package. In this case the value of that named
+///    address will always be that value.
+/// 2. Can be left unassigned in the declaring package. In this case it can receive its value
+///    through unification across the package graph.
 ///
 /// Named addresses can also be renamed in a package and will be re-exported
 /// under these new names in this case.

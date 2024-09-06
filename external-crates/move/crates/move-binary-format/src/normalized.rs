@@ -119,15 +119,13 @@ pub struct FieldRef {
 // Functions can reference external modules. We don't track the exact type
 // parameters and the like since we know they can't change, or don't matter
 // since:
-// * Either we allow compatible upgrades in which case the changing of the call
-//   parameters/types doesn't matter since this will align with the callee
-//   signature, and that callee must go through the compatibility checker for
-//   any upgrades.
+// * Either we allow compatible upgrades in which case the changing of the call parameters/types
+//   doesn't matter since this will align with the callee signature, and that callee must go through
+//   the compatibility checker for any upgrades.
 // * We are in an inclusion scenario. In which case either:
-//   - The callee is in the same package as this call, in which case the callee
-//     couldn't have changed; or
-//   - The callee was in a different package and therefore public, and therefore
-//     the API of that
+//   - The callee is in the same package as this call, in which case the callee couldn't have
+//     changed; or
+//   - The callee was in a different package and therefore public, and therefore the API of that
 //   function must not have changed by compatibility rules.
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FunctionRef {

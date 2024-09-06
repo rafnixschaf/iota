@@ -161,11 +161,10 @@ fn exp(state: &mut LivenessState, parent_e: &Exp) {
 //**************************************************************************************************
 
 /// This pass:
-/// - Switches the last inferred `copy` to a `move`. It will error if the `copy`
-///   was specified by the user
-/// - Reports an error if an assignment/let was not used Switches it to an
-///   `Ignore` if it has the drop ability (helps with error messages for
-///   borrows)
+/// - Switches the last inferred `copy` to a `move`. It will error if the `copy` was specified by
+///   the user
+/// - Reports an error if an assignment/let was not used Switches it to an `Ignore` if it has the
+///   drop ability (helps with error messages for borrows)
 
 pub fn last_usage(
     compilation_env: &mut CompilationEnv,

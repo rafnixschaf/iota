@@ -56,10 +56,9 @@ impl CompiledModule {
 /// A `CompiledModule` can be looked at as a graph, with several kinds of nodes,
 /// and a nest of pointers among those nodes. This graph has some properties:
 ///
-/// 1. The graph has cycles. Generating DAGs is often simpler, but is not an
-///    option in this case.
-/// 2. The actual structure of the graph is well-defined in terms of the kinds
-///    of nodes and pointers that exist.
+/// 1. The graph has cycles. Generating DAGs is often simpler, but is not an option in this case.
+/// 2. The actual structure of the graph is well-defined in terms of the kinds of nodes and pointers
+///    that exist.
 ///
 /// TODO: the graph also has pointers *out* of it, via address references to
 /// other modules. This doesn't need to be handled when viewing modules in

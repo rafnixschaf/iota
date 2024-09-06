@@ -187,8 +187,7 @@ fn extract_generics_names(generics: &Generics) -> Vec<Ident> {
 /// TypedStore (currently internally structs of DBMaps) It operates on a struct
 /// where all the members are of Store<K, V> or DBMap<K, V> `TypedStoreDebug`
 /// traits are then derived The main features are:
-/// 1. Flexible configuration of each table (column family) via defaults and
-///    overrides
+/// 1. Flexible configuration of each table (column family) via defaults and overrides
 /// 2. Auto-generated `open` routine
 /// 3. Auto-generated `read_only_mode` handle
 /// 4. Auto-generated memory stats method

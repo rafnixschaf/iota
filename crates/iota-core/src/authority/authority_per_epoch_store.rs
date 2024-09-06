@@ -361,18 +361,15 @@ pub struct AuthorityEpochTables {
 
     /// The tables below manage shared object locks / versions. There are three
     /// ways they can be updated:
-    /// 1. (validators only): Upon receiving a certified transaction from
-    ///    consensus, the authority
+    /// 1. (validators only): Upon receiving a certified transaction from consensus, the authority
     /// assigns the next version to each shared object of the transaction. The
     /// next versions of the shared objects are updated as well.
-    /// 2. (validators only): Upon receiving a new consensus commit, the
-    ///    authority assigns the
+    /// 2. (validators only): Upon receiving a new consensus commit, the authority assigns the
     /// next version of the randomness state object to an expected future
     /// transaction to be generated after the next random value is
     /// available. The next version of the randomness state object is
     /// updated as well.
-    /// 3. (fullnodes + validators): Upon receiving a certified effect from
-    ///    state sync, or
+    /// 3. (fullnodes + validators): Upon receiving a certified effect from state sync, or
     /// transaction orchestrator fast execution path, the node assigns the
     /// shared object versions from the transaction effect. Next object
     /// versions are not updated.
@@ -2723,8 +2720,8 @@ impl AuthorityPerEpochStore {
 
     /// Depending on the type of the VerifiedSequencedConsensusTransaction
     /// wrappers,
-    /// - Verify and initialize the state to execute the certificates. Return
-    ///   VerifiedCertificates for each executable certificate
+    /// - Verify and initialize the state to execute the certificates. Return VerifiedCertificates
+    ///   for each executable certificate
     /// - Or update the state for checkpoint or epoch change protocol.
     #[instrument(level = "debug", skip_all)]
     #[allow(clippy::type_complexity)]

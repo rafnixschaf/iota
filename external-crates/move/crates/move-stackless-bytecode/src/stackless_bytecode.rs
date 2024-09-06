@@ -600,13 +600,11 @@ impl Bytecode {
     ///
     /// For a temporary with TempIndex $t, if $t is modified by the instruction
     /// and
-    /// 1) $t is a value or an immutable reference, it will show up in the first
-    ///    Vec
-    /// 2) $t is a mutable reference and only its value is modified, not the
-    ///    reference itself, it will show up in the second Vec as ($t, false).
-    /// 3) $t is a mutable reference and the reference itself is modified (i.e.,
-    ///    the location and path it is pointing to), it will show up in the
-    ///    second Vec as ($t, true).
+    /// 1) $t is a value or an immutable reference, it will show up in the first Vec
+    /// 2) $t is a mutable reference and only its value is modified, not the reference itself, it
+    ///    will show up in the second Vec as ($t, false).
+    /// 3) $t is a mutable reference and the reference itself is modified (i.e., the location and
+    ///    path it is pointing to), it will show up in the second Vec as ($t, true).
     pub fn modifies(
         &self,
         func_target: &FunctionTarget<'_>,

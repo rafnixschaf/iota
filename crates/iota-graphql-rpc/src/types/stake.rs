@@ -326,8 +326,7 @@ impl StakedIota {
     ///
     /// Or 0, if this value is negative, where:
     ///
-    /// - `initial_stake_rate` is the stake rate at the epoch this stake was
-    ///   activated at.
+    /// - `initial_stake_rate` is the stake rate at the epoch this stake was activated at.
     /// - `current_stake_rate` is the stake rate in the current epoch.
     ///
     /// This value is only available if the stake is active.

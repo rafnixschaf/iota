@@ -685,8 +685,8 @@ macro_rules! implement_storage_traits {
 
                 // Check for:
                 // * Invalid access -- treat as the object does not exist. Or;
-                // * If we've already received the object at the version -- then treat it as
-                //   though it doesn't exist.
+                // * If we've already received the object at the version -- then treat it as though
+                //   it doesn't exist.
                 // These two cases must remain indisguishable to the caller otherwise we risk
                 // forks in transaction replay due to possible reordering of
                 // transactions during replay.

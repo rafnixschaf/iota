@@ -146,10 +146,10 @@ impl Compatibility {
         // The modules are considered as compatible function-wise when all the
         // conditions are met:
         //
-        // - old module's public functions are a subset of the new module's public
-        //   functions (i.e. we cannot remove or change public functions)
-        // - old module's script functions are a subset of the new module's script
-        //   functions (i.e. we cannot remove or change script functions)
+        // - old module's public functions are a subset of the new module's public functions (i.e.
+        //   we cannot remove or change public functions)
+        // - old module's script functions are a subset of the new module's script functions (i.e.
+        //   we cannot remove or change script functions)
         // - for any friend function that is removed or changed in the old module
         //   - if the function visibility is upgraded to public, it is OK
         //   - otherwise, it is considered as incompatible.

@@ -87,18 +87,17 @@ impl LoopAnalysisProcessor {
     /// The general procedure works as following (assuming the loop invariant
     /// expression is L):
     ///
-    /// - At the beginning of the loop header (identified by the label
-    ///   bytecode), insert the following statements:
+    /// - At the beginning of the loop header (identified by the label bytecode), insert the
+    ///   following statements:
     ///     - assert L;
     ///     - havoc T;
     ///     - assume L;
-    /// - Create a new dummy block (say, block X) with only the following
-    ///   statements
+    /// - Create a new dummy block (say, block X) with only the following statements
     ///     - assert L;
     ///     - stop;
     /// - For each backedge in this loop:
-    ///     - In the source block of the back edge, replace the last statement
-    ///       (must be a jump or branch) with the new label of X.
+    ///     - In the source block of the back edge, replace the last statement (must be a jump or
+    ///       branch) with the new label of X.
     fn transform(
         func_env: &FunctionEnv<'_>,
         data: FunctionData,

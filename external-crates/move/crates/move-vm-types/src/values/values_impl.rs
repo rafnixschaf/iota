@@ -471,8 +471,7 @@ impl Value {
 ///   It is intended to NOT use or even implement the standard library traits Eq
 /// and   Partial Eq due to:
 ///     1. They do not allow errors to be returned.
-///     2. They can be invoked without the user being noticed thanks to operator
-///        overloading.
+///     2. They can be invoked without the user being noticed thanks to operator overloading.
 ///
 ///   Eq and Partial Eq must also NOT be derived for the reasons above plus that
 /// the   derived implementation differs from the semantics we want.
@@ -2972,13 +2971,12 @@ pub mod debug {
 ///   BCS implementation for VM values. Note although values are represented as
 /// Rust   enums that carry type info in the tags, we should NOT rely on them
 /// for   serialization:
-///     1) Depending on the specific internal representation, it may be
-///        impossible to reconstruct the layout from a value. For example, one
-///        cannot tell if a general container is a struct or a value.
-///     2) Even if 1) is not a problem at a certain time, we may change to a
-///        different internal representation that breaks the 1-1 mapping.
-///        Extremely speaking, if we switch to untagged unions one day, none of
-///        the type info will be carried by the value.
+///     1) Depending on the specific internal representation, it may be impossible to
+///        reconstruct the layout from a value. For example, one cannot tell if a general
+///        container is a struct or a value.
+///     2) Even if 1) is not a problem at a certain time, we may change to a different internal
+///        representation that breaks the 1-1 mapping. Extremely speaking, if we switch to
+///        untagged unions one day, none of the type info will be carried by the value.
 ///
 ///   Therefore the appropriate & robust way to implement serialization &
 /// deserialization   is to involve an explicit representation of the type

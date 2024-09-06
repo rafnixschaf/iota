@@ -39,8 +39,7 @@ pub type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// Configuration for different logging/tracing options
 /// ===
 /// - json_log_output: Output JSON logs to stdout only.
-/// - log_file: If defined, write output to a file starting with this name, ex
-///   app.log
+/// - log_file: If defined, write output to a file starting with this name, ex app.log
 /// - log_level: error/warn/info/debug/trace, defaults to info
 #[derive(Default, Clone, Debug)]
 pub struct TelemetryConfig {

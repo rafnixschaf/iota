@@ -434,8 +434,7 @@ fn serialize_module_handle(binary: &mut BinaryData, module_handle: &ModuleHandle
 /// A `StructHandle` gets serialized as follows:
 /// - `StructHandle.module` as a ULEB128 (index into the `ModuleHandle` table)
 /// - `StructHandle.name` as a ULEB128 (index into the `IdentifierPool`)
-/// - `StructHandle.is_nominal_resource` as a 1 byte boolean (0 for false, 1 for
-///   true)
+/// - `StructHandle.is_nominal_resource` as a 1 byte boolean (0 for false, 1 for true)
 fn serialize_struct_handle(binary: &mut BinaryData, struct_handle: &StructHandle) -> Result<()> {
     serialize_module_handle_index(binary, &struct_handle.module)?;
     serialize_identifier_index(binary, &struct_handle.name)?;
@@ -548,12 +547,9 @@ fn serialize_byte_blob(
 /// Serializes a `StructDefinition`.
 ///
 /// A `StructDefinition` gets serialized as follows:
-/// - `StructDefinition.handle` as a ULEB128 (index into the `ModuleHandle`
-///   table)
-/// - `StructDefinition.field_count` as a ULEB128 (number of fields defined in
-///   the type)
-/// - `StructDefinition.fields` as a ULEB128 (index into the `FieldDefinition`
-///   table)
+/// - `StructDefinition.handle` as a ULEB128 (index into the `ModuleHandle` table)
+/// - `StructDefinition.field_count` as a ULEB128 (number of fields defined in the type)
+/// - `StructDefinition.fields` as a ULEB128 (index into the `FieldDefinition` table)
 fn serialize_struct_definition(
     binary: &mut BinaryData,
     struct_definition: &StructDefinition,
@@ -589,10 +585,8 @@ fn serialize_field_definitions(binary: &mut BinaryData, fields: &[FieldDefinitio
 /// Serializes a `FieldDefinition`.
 ///
 /// A `FieldDefinition` gets serialized as follows:
-/// - `FieldDefinition.struct_` as a ULEB128 (index into the `StructHandle`
-///   table)
-/// - `StructDefinition.name` as a ULEB128 (index into the `IdentifierPool`
-///   table)
+/// - `FieldDefinition.struct_` as a ULEB128 (index into the `StructHandle` table)
+/// - `StructDefinition.name` as a ULEB128 (index into the `IdentifierPool` table)
 /// - `StructDefinition.signature` a serialized `TypeSignatureToekn`)
 fn serialize_field_definition(
     binary: &mut BinaryData,
@@ -1410,14 +1404,11 @@ impl ModuleSerializer {
     /// Serializes a `FunctionDefinition`.
     ///
     /// A `FunctionDefinition` gets serialized as follows:
-    /// - `FunctionDefinition.function` as a ULEB128 (index into the
-    ///   `FunctionHandle` table)
-    /// - `FunctionDefinition.visibility` 1 byte for the visibility modifier of
-    ///   the function
-    /// - `FunctionDefinition.flags` 1 byte for the flags of the function The
-    ///   flags now has only one bit used:
-    ///   - bit 0x2: native indicator, indicates whether the function is a
-    ///     native function.
+    /// - `FunctionDefinition.function` as a ULEB128 (index into the `FunctionHandle` table)
+    /// - `FunctionDefinition.visibility` 1 byte for the visibility modifier of the function
+    /// - `FunctionDefinition.flags` 1 byte for the flags of the function The flags now has only one
+    ///   bit used:
+    ///   - bit 0x2: native indicator, indicates whether the function is a native function.
     /// - `FunctionDefinition.code` a variable size stream for the `CodeUnit`
     fn serialize_function_definition(
         &mut self,

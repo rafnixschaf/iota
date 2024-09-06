@@ -14,11 +14,9 @@
 //! validator:
 //!
 //! - it has only one ability: drop
-//! - it has only one arbitrarily named field of type boolean (since Move
-//!   structs cannot be empty)
+//! - it has only one arbitrarily named field of type boolean (since Move structs cannot be empty)
 //! - its definition does not involve type parameters
-//! - its only instance in existence is passed as an argument to the module
-//!   initializer
+//! - its only instance in existence is passed as an argument to the module initializer
 //! - it is never instantiated anywhere in its defining module
 use iota_types::{
     base_types::{TX_CONTEXT_MODULE_NAME, TX_CONTEXT_STRUCT_NAME},

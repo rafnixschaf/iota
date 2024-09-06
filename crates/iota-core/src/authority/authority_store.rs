@@ -811,8 +811,8 @@ impl AuthorityStore {
         //   - transaction execution branches to reference count increment
         //   - pruner decrements ref count to 0
         //   - compaction job compresses existing merge values to an empty vector
-        //   - tx executor commits ref count increment instead of the full value making
-        //     object inaccessible
+        //   - tx executor commits ref count increment instead of the full value making object
+        //     inaccessible
         // read locks are sufficient because ref count increments are safe,
         // concurrent transaction executions produce independent ref count increments
         // and don't corrupt the state
@@ -937,16 +937,13 @@ impl AuthorityStore {
 
         // NOTE: We just check here that locks exist, not that they are locked to a
         // specific TX. Why?
-        // 1. Lock existence prevents re-execution of old certs when objects have been
-        //    upgraded
-        // 2. Not all validators lock, just 2f+1, so transaction should proceed
-        //    regardless (But the lock should exist which means previous transactions
-        //    finished)
-        // 3. Equivocation possible (different TX) but as long as 2f+1 approves current
-        //    TX its fine
-        // 4. Locks may have existed when we started processing this tx, but could have
-        //    since been deleted by a concurrent tx that finished first. In that case,
-        //    check if the tx effects exist.
+        // 1. Lock existence prevents re-execution of old certs when objects have been upgraded
+        // 2. Not all validators lock, just 2f+1, so transaction should proceed regardless (But the
+        //    lock should exist which means previous transactions finished)
+        // 3. Equivocation possible (different TX) but as long as 2f+1 approves current TX its fine
+        // 4. Locks may have existed when we started processing this tx, but could have since been
+        //    deleted by a concurrent tx that finished first. In that case, check if the tx effects
+        //    exist.
         self.check_owned_object_locks_exist(locks_to_delete)?;
 
         self.initialize_live_object_markers_impl(&mut write_batch, new_locks_to_init, false)?;

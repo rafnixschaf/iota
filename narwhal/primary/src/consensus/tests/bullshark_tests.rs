@@ -1270,11 +1270,10 @@ async fn restart_with_new_committee() {
 }
 
 /// The test ensures the following things:
-/// * garbage collection is removing the certificates from lower rounds
-///   according to gc depth only
+/// * garbage collection is removing the certificates from lower rounds according to gc depth only
 /// * no certificate will ever get committed past the gc round
-/// * existing uncommitted certificates in DAG (ex from slow nodes where no-one
-///   references them) they
+/// * existing uncommitted certificates in DAG (ex from slow nodes where no-one references them)
+///   they
 /// get cleaned up.
 #[tokio::test]
 async fn garbage_collection_basic() {
@@ -1372,8 +1371,7 @@ async fn garbage_collection_basic() {
 }
 
 // This test ensures that:
-// * a slow node will never commit anything until its certificates get linked by
-//   others
+// * a slow node will never commit anything until its certificates get linked by others
 // * certificates arriving bellow the gc round will never get committed
 #[tokio::test]
 async fn slow_node() {

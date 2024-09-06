@@ -311,8 +311,7 @@ impl ReadApi {
     /// [IotaObjectDataOptions], or an error upon failure.
     ///
     /// The [IotaObjectResponse] contains two fields:
-    /// 1) `data` for the object's data (see
-    ///    [IotaObjectData](iota_json_rpc_types::IotaObjectData)),
+    /// 1) `data` for the object's data (see [IotaObjectData](iota_json_rpc_types::IotaObjectData)),
     /// 2) `error` for the error (if any) (see
     ///    [IotaObjectResponseError](iota_types::error::IotaObjectResponseError)).
     ///
@@ -684,15 +683,12 @@ impl ReadApi {
     /// dev inspect will not validate whether the transaction block
     /// would succeed or fail under normal circumstances, e.g.:
     ///
-    /// - Transaction inputs are not checked for ownership (i.e. you can
-    ///   construct calls involving objects you do not own).
-    /// - Calls are not checked for visibility (you can call private functions
-    ///   on modules)
-    /// - Inputs of any type can be constructed and passed in, (including Coins
-    ///   and other objects that would usually need to be constructed with a
-    ///   move call).
-    /// - Function returns do not need to be used, even if they do not have
-    ///   `drop`.
+    /// - Transaction inputs are not checked for ownership (i.e. you can construct calls involving
+    ///   objects you do not own).
+    /// - Calls are not checked for visibility (you can call private functions on modules)
+    /// - Inputs of any type can be constructed and passed in, (including Coins and other objects
+    ///   that would usually need to be constructed with a move call).
+    /// - Function returns do not need to be used, even if they do not have `drop`.
     ///
     /// Dev inspect's output includes a breakdown of results returned by every
     /// transaction in the block, as well as the transaction's effects.

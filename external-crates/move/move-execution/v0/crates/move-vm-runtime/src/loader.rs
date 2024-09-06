@@ -577,18 +577,14 @@ impl ModuleCache {
 // F
 // Following are the stack transitions
 // 1. (A, [B, C]) - top module pushed with deps
-// 2. (A, [B]), (C, [D, E]) - first dep (C in A) is removed and pushed as an
-//    entry
-// 3. (A, [B]), (C, [D]), (E, []) - first dep (E in C) is removed and pushed as
-//    an entry
+// 2. (A, [B]), (C, [D, E]) - first dep (C in A) is removed and pushed as an entry
+// 3. (A, [B]), (C, [D]), (E, []) - first dep (E in C) is removed and pushed as an entry
 // 4. (A, [B]), (C, [D]) - E is done, no more deps, verify E linkage
-// 5. (A, [B]), (C, []) (D, []) - second (D in C) dep is removed and pushed as
-//    an entry
+// 5. (A, [B]), (C, []) (D, []) - second (D in C) dep is removed and pushed as an entry
 // 6. (A, [B]), (C, []) - D is done, no more deps, verify D linkage
 // 7. (A, [B]) - C is done, no more deps, verify C linkage
 // 8. (A, []), (B, [F]) - second dep (B in A) is removed and pushed as an entry
-// 9. (A, []), (B, []), (F, []) - first dep (F in B) is removed and pushed as an
-//    entry
+// 9. (A, []), (B, []), (F, []) - first dep (F in B) is removed and pushed as an entry
 // 10. (A, []), (B, []) - F is done, no more deps, verify F linkage
 // 11. (A, []) - B is done, no more deps, verify B linkage
 // 12. <empty> - A is done, no more deps, verify A linkage
@@ -1230,8 +1226,7 @@ impl Loader {
         // all immediate dependencies of the module being verified should be in one of
         // the locations
         // - the verified portion of the bundle (e.g., verified before this module)
-        // - the compiled module cache (i.e., module has been self-checked but not link
-        //   checked)
+        // - the compiled module cache (i.e., module has been self-checked but not link checked)
         // - the data store (i.e., not self-checked yet)
         let mut bundle_deps = vec![];
         let mut cached_deps = vec![];

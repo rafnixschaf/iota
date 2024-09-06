@@ -153,11 +153,9 @@ fn update_primary_network_info_test() {
 // If one or both of the parameters_xx_matches() tests are broken by a change,
 // the following additional places are highly likely needed to be updated as
 // well:
-// 1. Docker/validators/parameters.json for starting Narwhal cluster with Docker
-//    Compose.
+// 1. Docker/validators/parameters.json for starting Narwhal cluster with Docker Compose.
 // 2. benchmark/fabfile.py for benchmarking a Narwhal cluster locally.
-// 3. Iota configurations & snapshot tests when upgrading Narwhal in Iota to
-//    include the change.
+// 3. Iota configurations & snapshot tests when upgrading Narwhal in Iota to include the change.
 
 #[test]
 fn parameters_snapshot_matches() {

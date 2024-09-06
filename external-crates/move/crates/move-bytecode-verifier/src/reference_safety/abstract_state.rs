@@ -209,8 +209,7 @@ impl AbstractState {
 
     /// Checks if `id` is borrowed
     /// - All full/epsilon borrows are considered
-    /// - Only field borrows the specified label (or all if one isn't specified)
-    ///   are considered
+    /// - Only field borrows the specified label (or all if one isn't specified) are considered
     fn has_consistent_borrows(&self, id: RefID, label_opt: Option<Label>) -> bool {
         let (full_borrows, field_borrows) = self.borrow_graph.borrowed_by(id);
         !full_borrows.is_empty() || {
@@ -226,8 +225,8 @@ impl AbstractState {
 
     /// Checks if `id` is mutable borrowed
     /// - All full/epsilon mutable borrows are considered
-    /// - Only field mutable borrows the specified label (or all if one isn't
-    ///   specified) are considered
+    /// - Only field mutable borrows the specified label (or all if one isn't specified) are
+    ///   considered
     fn has_consistent_mutable_borrows(&self, id: RefID, label_opt: Option<Label>) -> bool {
         let (full_borrows, field_borrows) = self.borrow_graph.borrowed_by(id);
         !self.all_immutable(&full_borrows) || {
@@ -252,8 +251,7 @@ impl AbstractState {
     }
 
     /// checks if `id` is freezable
-    /// - Mutable references are freezable if there are no consistent mutable
-    ///   borrows
+    /// - Mutable references are freezable if there are no consistent mutable borrows
     /// - Immutable references are not freezable by the typing rules
     fn is_freezable(&self, id: RefID, at_field_opt: Option<FieldHandleIndex>) -> bool {
         assert!(self.borrow_graph.is_mutable(id));

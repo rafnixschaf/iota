@@ -214,8 +214,8 @@ impl Executor {
     /// Process the foundry outputs as follows:
     ///
     /// * Publish the generated packages using a tailored unmetered executor.
-    /// * For each native token, map the [`TokenId`] to the [`ObjectID`] of the
-    ///   coin that holds its total supply.
+    /// * For each native token, map the [`TokenId`] to the [`ObjectID`] of the coin that holds its
+    ///   total supply.
     /// * Update the inner store with the created objects.
     pub(super) fn create_foundries<'a>(
         &mut self,

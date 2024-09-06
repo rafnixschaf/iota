@@ -304,14 +304,12 @@ impl Nft {
     /// Converts the immutable metadata of the NFT into an [`Irc27Metadata`].
     ///
     /// - If the metadata does not exist returns the default `Irc27Metadata`.
-    /// - If the metadata can be parsed into [`StardustIrc27`] returns that
-    ///   converted into `Irc27Metadata`.
-    /// - If the metadata can be parsed into a JSON object returns the default
-    ///   `Irc27Metadata` with `non_standard_fields` set to the fields of the
-    ///   object.
-    /// - Otherwise, returns the default `Irc27Metadata` with
-    ///   `non_standard_fields` containing a `data` key with the hex-encoded
-    ///   metadata (without `0x` prefix).
+    /// - If the metadata can be parsed into [`StardustIrc27`] returns that converted into
+    ///   `Irc27Metadata`.
+    /// - If the metadata can be parsed into a JSON object returns the default `Irc27Metadata` with
+    ///   `non_standard_fields` set to the fields of the object.
+    /// - Otherwise, returns the default `Irc27Metadata` with `non_standard_fields` containing a
+    ///   `data` key with the hex-encoded metadata (without `0x` prefix).
     ///
     /// Note that the metadata feature of the NFT cannot be present _and_ empty
     /// per the protocol rules: <https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#additional-syntactic-transaction-validation-rules-2>.

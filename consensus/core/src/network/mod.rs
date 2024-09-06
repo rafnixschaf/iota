@@ -34,8 +34,7 @@ pub(crate) mod tonic_network;
 ///
 /// NOTE: the timeout parameters help saving resources at client and potentially
 /// server. But it is up to the server implementation if the timeout is honored.
-/// - To bound server resources, server should implement own timeout for
-///   incoming requests.
+/// - To bound server resources, server should implement own timeout for incoming requests.
 #[async_trait]
 pub(crate) trait NetworkClient: Send + Sync + 'static {
     /// Sends a serialized SignedBlock to a peer.

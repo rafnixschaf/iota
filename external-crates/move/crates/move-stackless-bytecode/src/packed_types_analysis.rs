@@ -25,9 +25,8 @@ use crate::{
 /// transaction scripts. This makes some simplifying assumptions that are not
 /// correct in general, but hold for the current Diem Framework:
 /// - Transaction scripts have at most 1 type argument
-/// - The only values that can be bound to a transaction script type argument
-///   are XUS and XDX. Passing any other values will lead to an aborted
-///   transaction.
+/// - The only values that can be bound to a transaction script type argument are XUS and XDX.
+///   Passing any other values will lead to an aborted transaction.
 /// The first assumption is checked and will trigger an assert failure if
 /// violated. The second is unchecked, but would be a nice property for the
 /// prover.

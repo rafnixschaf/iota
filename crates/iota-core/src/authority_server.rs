@@ -508,8 +508,7 @@ impl ValidatorService {
             return Ok(None);
         }
 
-        // 4) Execute the certificate if it contains only owned object transactions, or
-        //    wait for
+        // 4) Execute the certificate if it contains only owned object transactions, or wait for
         // the execution results if it contains shared objects.
         let effects = self
             .state

@@ -27,28 +27,24 @@ use crate::{
 //
 // For simplicity, it aims to satisfy the following requirements:
 //
-//     1. For each block, if we discover a divergent instruction either at the
-//        top level or embedded in a value position (e.g., the RHS of a let, or
-//        tail-value position), we report that user to the error as possible
-//        dead code, under the following guidelines:. a) If the divergent code
-//        is nested within a value, we report it as a value error. b) If the
-//        divergent code is in a statement position and the block has a trailing
-//        unit as its last expression, report it as a trailing semicolon error.
-//        c) If the divergent code is in any other statement position, report it
-//        as such. d) If both arms of an if diverge in the same way in value or
+//     1. For each block, if we discover a divergent instruction either at the top level or embedded
+//        in a value position (e.g., the RHS of a let, or tail-value position), we report that user
+//        to the error as possible dead code, under the following guidelines:. a) If the divergent
+//        code is nested within a value, we report it as a value error. b) If the divergent code is
+//        in a statement position and the block has a trailing unit as its last expression, report
+//        it as a trailing semicolon error. c) If the divergent code is in any other statement
+//        position, report it as such. d) If both arms of an if diverge in the same way in value or
 //        tail position, report the entire if together.
 //
-//     2. We only report the first such error we find, as described above,
-//        per-block. For example, this will only yield one error, pointing at
-//        the first line: { 1 + loop {}; 1 + loop {}; }
+//     2. We only report the first such error we find, as described above, per-block. For example,
+//        this will only yield one error, pointing at the first line: { 1 + loop {}; 1 + loop {}; }
 //
-//     3. If we discover a malformed sub-expression, we do not return a further
-//        error. For example, we would report a trailing semicolon error for
-//        this: { if (true) { return 0 } else { return 1 }; } However, we will
-//        not for this `if`, only its inner arms, as they are malformed: { if
-//        (true) { return 0; } else { return 1; }; } This is because the former
-//        case has two well-formed sub-blocks, but the latter case is already
-//        going to raise warnings for each of the sub-block cases.
+//     3. If we discover a malformed sub-expression, we do not return a further error. For example,
+//        we would report a trailing semicolon error for this: { if (true) { return 0 } else {
+//        return 1 }; } However, we will not for this `if`, only its inner arms, as they are
+//        malformed: { if (true) { return 0; } else { return 1; }; } This is because the former case
+//        has two well-formed sub-blocks, but the latter case is already going to raise warnings for
+//        each of the sub-block cases.
 //
 //  The implementation proceeds as a context-based walk, considering `tail` (or
 // `return`) position,  `value` position, and `statement` position. Errors are

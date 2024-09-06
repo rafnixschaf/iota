@@ -34,8 +34,8 @@ pub type EventPage = Page<IotaEvent, EventID>;
 pub struct IotaEvent {
     /// Sequential event ID, ie (transaction seq number, event seq number).
     /// 1) Serves as a unique event ID for each fullnode
-    /// 2) Also serves to sequence events for the purposes of pagination and
-    ///    querying. A higher id is an event seen later by that fullnode.
+    /// 2) Also serves to sequence events for the purposes of pagination and querying. A higher id
+    ///    is an event seen later by that fullnode.
     /// This ID is the "cursor" for event querying.
     pub id: EventID,
     /// Move package where this event was emitted.

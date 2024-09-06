@@ -94,10 +94,8 @@ pub fn end_transaction(
     // cleanup inventories
     // we will remove all changed objects
     // - deleted objects need to be removed to mark deletions
-    // - written objects are removed and later replaced to mark new values and new
-    //   owners
-    // - child objects will not be reflected in transfers, but need to be no longer
-    //   retrievable
+    // - written objects are removed and later replaced to mark new values and new owners
+    // - child objects will not be reflected in transfers, but need to be no longer retrievable
     for id in deleted_object_ids
         .iter()
         .chain(writes.keys())

@@ -232,10 +232,9 @@ impl<'a> InstantiationLoopChecker<'a> {
 
     /// Builds a graph G such that
     ///   - Each type formal of a generic function is a node in G.
-    ///   - There is an edge from type formal f_T to g_T if f_T is used to
-    ///     instantiate g_T in a call.
-    ///     - Each edge is labeled either `Identity` or `TyConApp`. See `Edge`
-    ///       for details.
+    ///   - There is an edge from type formal f_T to g_T if f_T is used to instantiate g_T in a
+    ///     call.
+    ///     - Each edge is labeled either `Identity` or `TyConApp`. See `Edge` for details.
     fn build_graph(&mut self) {
         for (def_idx, func_def) in self
             .module

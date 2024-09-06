@@ -22,16 +22,16 @@ use move_symbol_pool::Symbol;
 ///
 /// - Identifiers are sorted in lexicographic order.
 ///
-/// - Module Handles are sorted so the self-module comes first, followed by
-///   modules with named addresses in lexical order (by address name and module
-///   name), followed by unnamed addresses in their original order.
+/// - Module Handles are sorted so the self-module comes first, followed by modules with named
+///   addresses in lexical order (by address name and module name), followed by unnamed addresses in
+///   their original order.
 ///
-/// - Struct and Function Handles are sorted so that definitions in the module
-///   come first, in definition order, and remaining handles follow, in
-///   lexicographical order by fully-qualified name.
+/// - Struct and Function Handles are sorted so that definitions in the module come first, in
+///   definition order, and remaining handles follow, in lexicographical order by fully-qualified
+///   name.
 ///
-/// - Friend Declarations are sorted in lexical order (by address name and
-///   module name), followed by unnamed addresses in their original order.
+/// - Friend Declarations are sorted in lexical order (by address name and module name), followed by
+///   unnamed addresses in their original order.
 
 /// Key for ordering module handles, distinguishing the module's self handle,
 /// handles with names, and handles without names.
@@ -213,8 +213,7 @@ pub fn in_module(
     // 4 (c). Update ordering for function handles.
     apply_permutation(&mut module.function_handles, functions);
 
-    // 5. Update ordering for friend decls, (it has no internal references pointing
-    //    to it).
+    // 5. Update ordering for friend decls, (it has no internal references pointing to it).
     module.friend_decls.sort_by_key(|handle| {
         // Preserve order between modules without a named address, pushing them to the
         // end of the pool.

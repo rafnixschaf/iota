@@ -91,8 +91,8 @@ pub fn run_cli(
     // TODO: right now, the gas metering story for move-cli (as a library) is a bit
     // of a mess.
     //         1. It's still using the old CostTable.
-    //         2. The CostTable only affects sandbox runs, but not unit tests, which
-    //            use a unit cost table.
+    //         2. The CostTable only affects sandbox runs, but not unit tests, which use a unit cost
+    //            table.
     match cmd {
         Command::Build(c) => c.execute(move_args.package_path, move_args.build_config),
         Command::Coverage(c) => c.execute(move_args.package_path, move_args.build_config),

@@ -323,10 +323,10 @@ where
         // Every WaitForLocalExecution request will be attempted to execute twice,
         // one from the subscriber queue, one from the proactive execution before
         // returning results to clients. This is not insanely bad because:
-        // 1. it's possible that one attempt finishes before the other, so there's zero
-        //    extra work except DB checks
-        // 2. an up-to-date fullnode should have minimal overhead to sync parents (for
-        //    one extra time)
+        // 1. it's possible that one attempt finishes before the other, so there's zero extra work
+        //    except DB checks
+        // 2. an up-to-date fullnode should have minimal overhead to sync parents (for one extra
+        //    time)
         // 3. at the end of day, the tx will be executed at most once per lock guard.
         let tx_digest = transaction.digest();
         if validator_state.is_tx_already_executed(tx_digest)? {

@@ -357,8 +357,7 @@ fn compatible_struct_abilities(
 }
 
 // - The number of type parameters must be the same
-// - Each pair of parameters must satisfy
-//   [`compatible_type_parameter_constraints`]
+// - Each pair of parameters must satisfy [`compatible_type_parameter_constraints`]
 fn compatible_fun_type_parameters(
     local_type_parameters_declaration: &[AbilitySet],
     defined_type_parameters: &[AbilitySet],
@@ -381,8 +380,7 @@ fn compatible_fun_type_parameters(
 }
 
 // - The number of type parameters must be the same
-// - Each pair of parameters must satisfy
-//   [`compatible_type_parameter_constraints`] and
+// - Each pair of parameters must satisfy [`compatible_type_parameter_constraints`] and
 //   [`compatible_type_parameter_phantom_decl`]
 fn compatible_struct_type_parameters(
     local_type_parameters_declaration: &[StructTypeParameter],

@@ -1273,15 +1273,14 @@ impl Synchronizer {
             // It is important to verify that we received the batch
             // from the correct worker id to prevent the following attack:
             //      1. A Bad node sends a batch X to 2f good nodes through their worker #0.
-            //      2. The bad node proposes a malformed block containing the batch X and
-            //         claiming it comes from worker #1.
-            //      3. The 2f good nodes do not need to sync and thus don't notice that the
-            //         header is malformed. The bad node together with the 2f good nodes
-            //         thus certify a block containing the batch X.
-            //      4. The last good node will never be able to sync as it will keep sending
-            //         its sync requests to workers #1 (rather than workers #0). Also,
-            //         clients will never be able to retrieve batch X as they will be
-            //         querying worker #1.
+            //      2. The bad node proposes a malformed block containing the batch X and claiming
+            //         it comes from worker #1.
+            //      3. The 2f good nodes do not need to sync and thus don't notice that the header
+            //         is malformed. The bad node together with the 2f good nodes thus certify a
+            //         block containing the batch X.
+            //      4. The last good node will never be able to sync as it will keep sending its
+            //         sync requests to workers #1 (rather than workers #0). Also, clients will
+            //         never be able to retrieve batch X as they will be querying worker #1.
             if !inner.payload_store.contains(*digest, *worker_id)? {
                 missing
                     .entry(*worker_id)
@@ -1449,8 +1448,7 @@ impl Drop for SuspendedCertificate {
 /// map, i.e.
 /// 1. If a certificate exists in `missing`, remove its entry.
 /// 2. Find children of the certificate, update their missing parents.
-/// 3. If a child certificate no longer has missing parent, traverse from it
-///    with step 1.
+/// 3. If a child certificate no longer has missing parent, traverse from it with step 1.
 ///
 /// Synchronizer should access this struct via its methods, to avoid making
 /// inconsistent changes.

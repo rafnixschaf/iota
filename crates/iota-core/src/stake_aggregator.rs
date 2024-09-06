@@ -390,15 +390,15 @@ fn test_votes_per_authority() {
     let mut agg: GenericMultiStakeAggregator<&str, true> =
         GenericMultiStakeAggregator::new(Arc::new(committee));
 
-    // 1. Inserting an `authority` and a `key`, and then checking the number of
-    //    votes for that `authority`.
+    // 1. Inserting an `authority` and a `key`, and then checking the number of votes for that
+    //    `authority`.
     let key1: &str = "key1";
     let authority1 = authorities[0];
     agg.insert(authority1, key1);
     assert_eq!(agg.votes_for_authority(authority1), 1);
 
-    // 2. Inserting the same `authority` and `key` pair multiple times to ensure
-    //    votes aren't incremented incorrectly.
+    // 2. Inserting the same `authority` and `key` pair multiple times to ensure votes aren't
+    //    incremented incorrectly.
     agg.insert(authority1, key1);
     agg.insert(authority1, key1);
     assert_eq!(agg.votes_for_authority(authority1), 1);
@@ -413,8 +413,7 @@ fn test_votes_per_authority() {
     assert_eq!(agg.votes_for_authority(authority2), 1);
     assert_eq!(agg.votes_for_authority(authority1), 1);
 
-    // 5. Verifying that inserting different keys for the same authority increments
-    //    the vote count.
+    // 5. Verifying that inserting different keys for the same authority increments the vote count.
     let key3: &str = "key3";
     agg.insert(authority1, key3);
     assert_eq!(agg.votes_for_authority(authority1), 2);

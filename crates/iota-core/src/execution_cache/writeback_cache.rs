@@ -30,12 +30,10 @@
 //! cached queues are the most recent versions of the object, i.e. there can be
 //! no "gaps". This allows for the following:
 //!
-//!   - Negative cache hits: If the queried version is not in memory, but is
-//!     higher than the smallest version in the cached queue, it does not exist
-//!     in the db either.
-//!   - Bounded reads: When reading the most recent version that is <= some
-//!     version bound, we can correctly satisfy this query from the cache, or
-//!     determine that we must go to the db.
+//!   - Negative cache hits: If the queried version is not in memory, but is higher than the
+//!     smallest version in the cached queue, it does not exist in the db either.
+//!   - Bounded reads: When reading the most recent version that is <= some version bound, we can
+//!     correctly satisfy this query from the cache, or determine that we must go to the db.
 //!
 //! Note that at any time, either or both the dirty or the cached queue may be
 //! non-existent. There may be no dirty versions of the objects, in which case

@@ -1905,18 +1905,15 @@ fn build_kv_store(
 /// REST APIs based on the node's configuration.
 ///
 /// This function performs the following tasks:
-/// 1. Checks if the node is a validator by inspecting the consensus
-///    configuration; if so, it returns early as validators do not expose these
-///    APIs.
+/// 1. Checks if the node is a validator by inspecting the consensus configuration; if so, it
+///    returns early as validators do not expose these APIs.
 /// 2. Creates an Axum router to handle HTTP requests.
-/// 3. Initializes the JSON-RPC server and registers various RPC modules based
-///    on the node's state and configuration, including CoinApi,
-///    TransactionBuilderApi, GovernanceApi, TransactionExecutionApi, and
-///    IndexerApi.
-/// 4. Optionally, if the REST API is enabled, nests the REST API router under
-///    the `/rest` path.
-/// 5. Binds the server to the specified JSON-RPC address and starts listening
-///    for incoming connections.
+/// 3. Initializes the JSON-RPC server and registers various RPC modules based on the node's state
+///    and configuration, including CoinApi, TransactionBuilderApi, GovernanceApi,
+///    TransactionExecutionApi, and IndexerApi.
+/// 4. Optionally, if the REST API is enabled, nests the REST API router under the `/rest` path.
+/// 5. Binds the server to the specified JSON-RPC address and starts listening for incoming
+///    connections.
 pub async fn build_http_server(
     state: Arc<AuthorityState>,
     store: RocksDbStore,

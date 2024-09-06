@@ -38,8 +38,7 @@ use crate::{
 ///
 /// - is directed, acyclic and `BuildConfig` agnostic,
 /// - mentions each package at most once (i.e. no duplicate packages), and
-/// - contains information about the source of every package (excluding the root
-///   package).
+/// - contains information about the source of every package (excluding the root package).
 ///
 /// It can be built by recursively exploring a package's dependencies, fetching
 /// their sources if necessary, or by reading its serialized contents from a

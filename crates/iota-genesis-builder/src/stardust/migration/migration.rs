@@ -59,8 +59,7 @@ pub type ExpirationTimestamp = u64;
 ///
 /// * That foundry UTXOs are sorted by `(milestone_timestamp, output_id)`.
 /// * That the foundry packages and total supplies are created first
-/// * That all other outputs are created in a second iteration over the original
-///   UTXOs.
+/// * That all other outputs are created in a second iteration over the original UTXOs.
 /// * That the resulting ledger state is valid.
 ///
 /// The migration process results in the generation of a snapshot file with the

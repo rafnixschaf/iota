@@ -245,11 +245,11 @@ impl<'a> ObjectRuntime<'a> {
         let id: ObjectID = get_object_id(obj.copy_value()?)?
             .value_as::<AccountAddress>()?
             .into();
-        // - An object is new if it is contained in the new ids or if it is one of the
-        //   objects created during genesis (the system state object or clock).
+        // - An object is new if it is contained in the new ids or if it is one of the objects
+        //   created during genesis (the system state object or clock).
         // - Otherwise, check the input objects for the previous owner
-        // - If it was not in the input objects, it must have been wrapped or must have
-        //   been a child object
+        // - If it was not in the input objects, it must have been wrapped or must have been a child
+        //   object
         let is_framework_obj = [
             IOTA_SYSTEM_STATE_OBJECT_ID,
             IOTA_CLOCK_OBJECT_ID,
@@ -474,12 +474,11 @@ pub fn max_event_error(max_events: u64) -> PartialVMError {
 impl ObjectRuntimeState {
     /// Update `state_view` with the effects of successfully executing a
     /// transaction:
-    /// - Given the effects `Op<Value>` of child objects, processes the changes
-    ///   in terms of object writes/deletes
-    /// - Process `transfers` and `input_objects` to determine whether the type
-    ///   of change (WriteKind) to the object
-    /// - Process `deleted_ids` with previously determined information to
-    ///   determine the DeleteKind
+    /// - Given the effects `Op<Value>` of child objects, processes the changes in terms of object
+    ///   writes/deletes
+    /// - Process `transfers` and `input_objects` to determine whether the type of change
+    ///   (WriteKind) to the object
+    /// - Process `deleted_ids` with previously determined information to determine the DeleteKind
     /// - Passes through user events
     pub(crate) fn finish(
         mut self,

@@ -508,8 +508,7 @@ fn legacy_toolchain() -> ToolchainVersion {
 /// Ensures `compiled_units` are compiled with the right compiler version, based
 /// on Move.lock contents. This works by detecting if a compiled unit requires a
 /// prior compiler version:
-/// - If so, download the compiler, recompile the unit, and return that unit in
-///   the result.
+/// - If so, download the compiler, recompile the unit, and return that unit in the result.
 /// - If not, simply keep the current compiled unit.
 fn units_for_toolchain(
     compiled_units: &Vec<(PackageName, CompiledUnitWithSource)>,

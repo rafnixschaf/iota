@@ -650,8 +650,8 @@ async fn execute_checkpoint(
 
     // this function must guarantee that all transactions in the checkpoint are
     // executed before it returns. This invariant is enforced in two phases:
-    // - First, we filter out any already executed transactions from the checkpoint
-    //   in get_unexecuted_transactions()
+    // - First, we filter out any already executed transactions from the checkpoint in
+    //   get_unexecuted_transactions()
     // - Second, we execute all remaining transactions.
 
     let (execution_digests, all_tx_digests, executable_txns, randomness_round) =

@@ -163,15 +163,14 @@ pub fn legacy_test_cost() -> InternalGas {
 /// Check whether the framework defined by `modules` is compatible with the
 /// framework that is already on-chain (i.e. stored in `object_store`) at `id`.
 ///
-/// - Returns `None` if the current package at `id` cannot be loaded, or the
-///   compatibility check fails (This is grounds not to upgrade).
-/// - Panics if the object at `id` can be loaded but is not a package -- this is
-///   an invariant violation.
-/// - Returns the digest of the current framework (and version) if it is
-///   equivalent to the new framework (indicates support for a protocol upgrade
-///   without a framework upgrade).
-/// - Returns the digest of the new framework (and version) if it is compatible
-///   (indicates support for a protocol upgrade with a framework upgrade).
+/// - Returns `None` if the current package at `id` cannot be loaded, or the compatibility check
+///   fails (This is grounds not to upgrade).
+/// - Panics if the object at `id` can be loaded but is not a package -- this is an invariant
+///   violation.
+/// - Returns the digest of the current framework (and version) if it is equivalent to the new
+///   framework (indicates support for a protocol upgrade without a framework upgrade).
+/// - Returns the digest of the new framework (and version) if it is compatible (indicates support
+///   for a protocol upgrade with a framework upgrade).
 pub async fn compare_system_package<S: ObjectStore>(
     object_store: &S,
     id: &ObjectID,

@@ -681,8 +681,7 @@ pub enum PublishedAtError {
 /// - The ID that the package itself is published at (if it is published)
 /// - The IDs of dependencies that have been published
 /// - The names of packages that have not been published on chain.
-/// - The names of packages that have a `published-at` field that isn't filled
-///   with a valid address.
+/// - The names of packages that have a `published-at` field that isn't filled with a valid address.
 pub fn gather_published_ids(
     resolution_graph: &ResolvedGraph,
 ) -> (Result<ObjectID, PublishedAtError>, PackageDependencies) {

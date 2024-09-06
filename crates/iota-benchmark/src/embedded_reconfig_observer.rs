@@ -18,12 +18,11 @@ use tracing::{error, info, trace};
 /// A ReconfigObserver that polls validators periodically
 /// to get new epoch information.
 /// Caveat:
-/// 1. it does not guarantee to insert every committee into committee store.
-///    This is fine in scenarios such as stress, but may not be suitable in some
-///    other cases.
-/// 2. because of 1, if it misses intermediate committee(s) and we happen to
-///    have a big committee rotation, it may fail to get quorum on the latest
-///    committee info from demissioned validators and then stop working.
+/// 1. it does not guarantee to insert every committee into committee store. This is fine in
+///    scenarios such as stress, but may not be suitable in some other cases.
+/// 2. because of 1, if it misses intermediate committee(s) and we happen to have a big committee
+///    rotation, it may fail to get quorum on the latest committee info from demissioned validators
+///    and then stop working.
 /// Background: this is a temporary solution for stress before
 /// we see fullnode reconfiguration stabilizes.
 #[derive(Clone, Default)]

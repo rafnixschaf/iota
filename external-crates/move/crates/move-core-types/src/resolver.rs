@@ -51,9 +51,8 @@ pub trait LinkageResolver {
 ///   - Ok(Some(..)) if the data exists
 ///   - Ok(None)     if the data does not exist
 ///   - Err(..)      only when something really wrong happens, for example
-///                    - invariants are broken and observable from the storage
-///                      side (this is not currently possible as ModuleId and
-///                      StructTag are always structurally valid)
+///                    - invariants are broken and observable from the storage side (this is not
+///                      currently possible as ModuleId and StructTag are always structurally valid)
 ///                    - storage encounters internal error
 pub trait ModuleResolver {
     type Error: Debug;
@@ -66,9 +65,8 @@ pub trait ModuleResolver {
 ///   - Ok(Some(..)) if the data exists
 ///   - Ok(None)     if the data does not exist
 ///   - Err(..)      only when something really wrong happens, for example
-///                    - invariants are broken and observable from the storage
-///                      side (this is not currently possible as ModuleId and
-///                      StructTag are always structurally valid)
+///                    - invariants are broken and observable from the storage side (this is not
+///                      currently possible as ModuleId and StructTag are always structurally valid)
 ///                    - storage encounters internal error
 pub trait ResourceResolver {
     type Error: Debug;

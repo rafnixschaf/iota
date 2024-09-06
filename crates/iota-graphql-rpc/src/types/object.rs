@@ -114,8 +114,7 @@ pub(crate) struct ObjectRef {
 ///
 /// - Type matches the `type` filter,
 /// - AND, whose owner matches the `owner` filter,
-/// - AND, whose ID is in `objectIds` OR whose ID and version is in
-///   `objectKeys`.
+/// - AND, whose ID is in `objectIds` OR whose ID and version is in `objectKeys`.
 #[derive(InputObject, Default, Debug, Clone, Eq, PartialEq)]
 pub(crate) struct ObjectFilter {
     /// This field is used to specify the type of objects that should be

@@ -18,12 +18,10 @@ type NodeMap<T> = Vec<T>;
 ///
 /// - Distinguish edges in the CFG as:
 ///   - tree edges (in the spanning tree)
-///   - back edges (going backward from descendant to ancestor in the spanning
-///     tree)
+///   - back edges (going backward from descendant to ancestor in the spanning tree)
 ///   - ... everything else.
 /// - Calculate which node is descendant of which in the DFST
-/// - Mapping nodes in the summary back to the blocks they originate from in the
-///   CFG.
+/// - Mapping nodes in the summary back to the blocks they originate from in the CFG.
 ///
 /// This is used to implement Tarjan's Loop Reducibility algorithm (Tarjan
 /// 1974).

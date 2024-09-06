@@ -80,11 +80,10 @@ impl Checkpointed for JsonCursor<ConsistentNamedCursor> {
 /// table contains the latest versions of objects up to a checkpoint sequence
 /// number, and `objects_history` captures changes after that, so a query to
 /// both tables is necessary to handle these object states:
-/// 1) In snapshot, not in history - occurs when an object gets snapshotted and
-///    then has not been modified since
+/// 1) In snapshot, not in history - occurs when an object gets snapshotted and then has not been
+///    modified since
 /// 2) In history, not in snapshot - occurs when a new object is created
-/// 3) In snapshot and in history - occurs when an object is snapshotted and
-///    further modified
+/// 3) In snapshot and in history - occurs when an object is snapshotted and further modified
 ///
 /// Additionally, even among objects that satisfy the filtering criteria, it is
 /// possible that there is a yet more recent version of the object within the

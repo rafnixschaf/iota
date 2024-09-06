@@ -287,8 +287,7 @@ async fn test_multisig_with_zklogin_scenerios() {
             .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str())
     );
 
-    // 5. a multisig with a mismatch ephermeal sig and zklogin inputs fails to
-    //    execute.
+    // 5. a multisig with a mismatch ephermeal sig and zklogin inputs fails to execute.
     let eph_sig = Signature::new_secure(&intent_msg, eph_kp_1);
     let zklogin_sig_mismatch = GenericSignature::ZkLoginAuthenticator(ZkLoginAuthenticator::new(
         zklogin_inputs.clone(),
@@ -306,8 +305,7 @@ async fn test_multisig_with_zklogin_scenerios() {
             .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str())
     );
 
-    // 6. a multisig with an inconsistent max_epoch with zk proof itself fails to
-    //    execute.
+    // 6. a multisig with an inconsistent max_epoch with zk proof itself fails to execute.
     let eph_sig = Signature::new_secure(&intent_msg, eph_kp);
     let zklogin_sig_wrong_zklogin_inputs = GenericSignature::ZkLoginAuthenticator(
         ZkLoginAuthenticator::new(zklogin_inputs.clone(), 1, eph_sig), /* max_epoch set to 1
@@ -356,8 +354,7 @@ async fn test_multisig_with_zklogin_scenerios() {
             .contains("Required Signature from")
     );
 
-    // 8. a multisig with zklogin sig of invalid compact signature bytes fails to
-    //    execute.
+    // 8. a multisig with zklogin sig of invalid compact signature bytes fails to execute.
     let multisig = GenericSignature::MultiSig(MultiSig::insecure_new(
         vec![CompressedSignature::ZkLogin(ZkLoginAuthenticatorAsBytes(
             vec![0],
@@ -479,8 +476,7 @@ async fn test_multisig_with_zklogin_scenerios() {
             .contains("Invalid ed25519 pk bytes")
     );
 
-    // 10. invalid bitmap b10000 when the max bitmap for 4 pks is b1111, fails to
-    //     execute.
+    // 10. invalid bitmap b10000 when the max bitmap for 4 pks is b1111, fails to execute.
     let multisig = GenericSignature::MultiSig(MultiSig::insecure_new(
         vec![sig.clone().to_compressed().unwrap()],
         1 << 4,

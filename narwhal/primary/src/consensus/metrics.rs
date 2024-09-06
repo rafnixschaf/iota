@@ -41,8 +41,7 @@ pub struct ConsensusMetrics {
     /// * committed: the leader has been found and its subdag will get committed
     ///   - no matter if the leader
     /// is committed on its time or not (part of recursion)
-    /// * not_found: the leader has not been found on the commit path and
-    ///   doesn't get committed
+    /// * not_found: the leader has not been found on the commit path and doesn't get committed
     /// * no_path: the leader exists but there is no path that leads to it
     pub leader_election: IntCounterVec,
     /// Under normal circumstances every odd round should trigger leader

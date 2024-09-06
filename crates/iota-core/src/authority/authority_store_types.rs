@@ -30,16 +30,14 @@ pub type ObjectContentDigest = ObjectDigest;
 // To change the format of the object table value types (StoreObject and
 // StoreMoveObject), use the following process:
 // - Add a new variant to the enum to store the new version type.
-// - Extend the `migrate` functions to migrate from the previous version to the
-//   new version.
-// - Change `From<Object> for StoreObjectPair` to create the newest version
-//   only.
+// - Extend the `migrate` functions to migrate from the previous version to the new version.
+// - Change `From<Object> for StoreObjectPair` to create the newest version only.
 //
 // Additionally, the first time we version these formats, we will need to:
-// - Add a check in the `TryFrom<StoreObjectPair> for Object` to see if the
-//   object that was just read is the latest version.
-// - If it is not, use the migration function (as explained above) to migrate it
-//   to the next version.
+// - Add a check in the `TryFrom<StoreObjectPair> for Object` to see if the object that was just
+//   read is the latest version.
+// - If it is not, use the migration function (as explained above) to migrate it to the next
+//   version.
 // - Repeat until we have arrive at the current version.
 
 /// Enum wrapper for versioning

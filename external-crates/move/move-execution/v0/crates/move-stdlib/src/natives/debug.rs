@@ -254,8 +254,7 @@ mod testing {
     ///
     /// Examples:
     ///  - 'Hello' returns "Hello"
-    ///  - '"Hello?" What are you saying?' returns "\"Hello?\" What are you
-    ///    saying?"
+    ///  - '"Hello?" What are you saying?' returns "\"Hello?\" What are you saying?"
     ///  - '\ and " are escaped' returns "\\ and \" are escaped"
     fn move_value_as_escaped_string(val: A::MoveValue) -> PartialVMResult<String> {
         match val {

@@ -6,12 +6,10 @@
 //! This module implements a checker for verifying that a script or entry
 //! function a valid signature, which entails
 //! - (DEPRECATED) All signer arguments are occur before non-signer arguments
-//! - (DEPRECATED) All types non-signer arguments have a type that is valid for
-//!   constants
+//! - (DEPRECATED) All types non-signer arguments have a type that is valid for constants
 //! - (DEPRECATED) Has an empty return type
 //! - All return types are not references
-//! - Satisfies the additional checks provided as an argument via
-//!   `check_signature`
+//! - Satisfies the additional checks provided as an argument via `check_signature`
 //! `check_signature` should be used by adapters to quickly and easily verify
 //! custom signature rules for entrypoints
 

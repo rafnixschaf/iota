@@ -438,8 +438,8 @@ impl FunctionTargetPipeline {
 
             // At this point, one of two things is true:
             // 1. callees is empty (common case)
-            // 2. callees is nonempty and call_id is part of a recursive or mutually
-            //    recursive function group
+            // 2. callees is nonempty and call_id is part of a recursive or mutually recursive
+            //    function group
 
             match sccs.get(&call_id).unwrap().as_ref() {
                 None => {
