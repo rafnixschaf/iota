@@ -29,8 +29,6 @@ tempfile.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
-iota-keys.workspace = true
-iota-move-build.workspace = true
 move-binary-format.workspace = true
 move-bytecode-utils.workspace = true
 move-core-types.workspace = true
@@ -50,3 +48,7 @@ iota-sdk.workspace = true
 iota-storage.workspace = true
 iota-types.workspace = true
 shared-crypto.workspace = true
+
+[[example]]
+name = "make_sandbox_snapshot"
+path = "examples/make_sandbox_snapshot.rs"

@@ -1461,10 +1461,9 @@ impl LocalExec {
         &self,
         epoch_id: u64,
     ) -> Result<(u64, u64), ReplayEngineError> {
-        // TODO: uncomment when testnet/mainnet will be ready
-        // if epoch_id == 0 {
-        //     return Err(ReplayEngineError::EpochNotSupported { epoch: epoch_id });
-        // }
+        if epoch_id == 0 {
+            return Err(ReplayEngineError::EpochNotSupported { epoch: epoch_id });
+        }
         self.fetcher
             .get_epoch_start_timestamp_and_rgp(epoch_id)
             .await
