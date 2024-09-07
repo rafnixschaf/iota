@@ -7,7 +7,7 @@ module tx_instance::tx_instance {
         published: bool
     }
 
-    public entry fun published(ctx: &mut TxContext) {
+    fun init(ctx: &mut TxContext) {
         event::emit(TxInstance {
             user: tx_context::sender(ctx),
             published: true
