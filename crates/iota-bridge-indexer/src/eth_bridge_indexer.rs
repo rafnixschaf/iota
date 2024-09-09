@@ -2,33 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{HashMap, HashSet};
-use std::str::FromStr;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+    sync::Arc,
+    time::Duration,
+};
 
 use anyhow::Error;
 use async_trait::async_trait;
-use ethers::prelude::Transaction;
-use ethers::providers::{Http, Middleware, Provider, StreamExt, Ws};
-use ethers::types::{Address as EthAddress, Block, Filter, H256};
-use iota_bridge::error::BridgeError;
-use iota_bridge::eth_client::EthClient;
-use iota_bridge::metered_eth_provider::MeteredEthHttpProvier;
-use iota_bridge::retry_with_max_elapsed_time;
+use ethers::{
+    prelude::Transaction,
+    providers::{Http, Middleware, Provider, StreamExt, Ws},
+    types::{Address as EthAddress, Block, Filter, H256},
+};
+use iota_bridge::{
+    abi::{EthBridgeEvent, EthIotaBridgeEvents},
+    error::BridgeError,
+    eth_client::EthClient,
+    metered_eth_provider::MeteredEthHttpProvier,
+    metrics::BridgeMetrics,
+    retry_with_max_elapsed_time,
+    types::{EthEvent, RawEthLog},
+};
+use iota_indexer_builder::indexer_builder::{DataMapper, DataSender, Datasource};
+use iota_metrics::spawn_monitored_task;
 use tokio::task::JoinHandle;
 use tracing::info;
 
-use iota_metrics::spawn_monitored_task;
-use iota_bridge::abi::{EthBridgeEvent, EthIotaBridgeEvents};
-
-use crate::metrics::BridgeIndexerMetrics;
-use iota_bridge::metrics::BridgeMetrics;
-use iota_bridge::types::{EthEvent, RawEthLog};
-use iota_indexer_builder::indexer_builder::{DataMapper, DataSender, Datasource};
-
 use crate::{
-    BridgeDataSource, ProcessedTxnData, TokenTransfer, TokenTransferData, TokenTransferStatus,
+    metrics::BridgeIndexerMetrics, BridgeDataSource, ProcessedTxnData, TokenTransfer,
+    TokenTransferData, TokenTransferStatus,
 };
 
 type RawEthData = (RawEthLog, Block<H256>, Transaction);

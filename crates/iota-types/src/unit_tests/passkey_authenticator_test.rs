@@ -4,22 +4,12 @@
 
 use std::{str::FromStr, sync::Arc};
 
-use super::to_signing_message;
-use crate::crypto::DefaultHash;
-use crate::passkey_authenticator::{PasskeyAuthenticator, RawPasskeyAuthenticator};
-use crate::{
-    base_types::{dbg_addr, ObjectID, IotaAddress},
-    crypto::{PublicKey, Signature, SignatureScheme},
-    error::IotaError,
-    object::Object,
-    signature::GenericSignature,
-    signature_verification::VerifiedDigestCache,
-    transaction::{TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
+use fastcrypto::{
+    encoding::{Base64, Encoding, Hex},
+    hash::HashFunction,
+    rsa::{Base64UrlUnpadded, Encoding as _},
+    traits::ToFromBytes,
 };
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::hash::HashFunction;
-use fastcrypto::rsa::{Base64UrlUnpadded, Encoding as _};
-use fastcrypto::{encoding::Base64, traits::ToFromBytes};
 use p256::pkcs8::DecodePublicKey;
 use passkey_authenticator::{Authenticator, UserValidationMethod};
 use passkey_client::Client;
@@ -36,6 +26,18 @@ use passkey_types::{
 };
 use shared_crypto::intent::{Intent, IntentMessage, INTENT_PREFIX_LENGTH};
 use url::Url;
+
+use super::to_signing_message;
+use crate::{
+    base_types::{dbg_addr, IotaAddress, ObjectID},
+    crypto::{DefaultHash, PublicKey, Signature, SignatureScheme},
+    error::IotaError,
+    object::Object,
+    passkey_authenticator::{PasskeyAuthenticator, RawPasskeyAuthenticator},
+    signature::GenericSignature,
+    signature_verification::VerifiedDigestCache,
+    transaction::{TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
+};
 
 /// Helper struct to initialize passkey client.
 pub struct MyUserValidationMethod {}
@@ -117,7 +119,8 @@ async fn create_credential_and_sign_test_tx(
     );
     let intent_msg = IntentMessage::new(Intent::iota_transaction(), tx_data);
 
-    // Compute the challenge as blake2b_hash(intent_msg(tx)). This is the challenge for the passkey to sign.
+    // Compute the challenge as blake2b_hash(intent_msg(tx)). This is the challenge
+    // for the passkey to sign.
     let passkey_digest = to_signing_message(&intent_msg);
 
     // Send the challenge to the passkey to sign with the rp_id.
@@ -140,7 +143,8 @@ async fn create_credential_and_sign_test_tx(
         .await
         .unwrap();
 
-    // Parse the response, gets the signature from der format and normalize it to lower s.
+    // Parse the response, gets the signature from der format and normalize it to
+    // lower s.
     let sig_bytes_der = authenticated_cred.response.signature.as_slice();
     let sig = p256::ecdsa::Signature::from_der(sig_bytes_der).unwrap();
     let sig_bytes = sig.normalize_s().unwrap_or(sig).to_bytes();

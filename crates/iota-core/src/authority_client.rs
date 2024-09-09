@@ -3,34 +3,35 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::BTreeMap, net::SocketAddr, time::Duration};
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use iota_network_stack::config::Config;
-use std::collections::BTreeMap;
-use std::net::SocketAddr;
-use std::time::Duration;
-use iota_network::{api::ValidatorClient, tonic};
-use iota_types::base_types::AuthorityName;
-use iota_types::committee::CommitteeWithNetworkMetadata;
-use iota_types::messages_checkpoint::{
-    CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
+use iota_network::{
+    api::ValidatorClient,
+    tonic,
+    tonic::{metadata::KeyAndValueRef, transport::Channel},
 };
-use iota_types::multiaddr::Multiaddr;
-use iota_types::iota_system_state::IotaSystemState;
+use iota_network_stack::config::Config;
 use iota_types::{
+    base_types::AuthorityName,
+    committee::CommitteeWithNetworkMetadata,
     error::{IotaError, IotaResult},
+    iota_system_state::IotaSystemState,
+    messages_checkpoint::{
+        CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
+    },
+    messages_grpc::{
+        HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
+        HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
+        HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse, SystemStateRequest,
+        TransactionInfoRequest, TransactionInfoResponse,
+    },
+    multiaddr::Multiaddr,
     transaction::*,
 };
 
 use crate::authority_client::tonic::IntoRequest;
-use iota_network::tonic::metadata::KeyAndValueRef;
-use iota_network::tonic::transport::Channel;
-use iota_types::messages_grpc::{
-    HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
-    HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
-    HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse, SystemStateRequest,
-    TransactionInfoRequest, TransactionInfoResponse,
-};
 
 #[async_trait]
 pub trait AuthorityAPI {

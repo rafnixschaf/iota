@@ -2,31 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::ConnectionConfig;
-use crate::config::ServerConfig;
-use crate::config::ServiceConfig;
-use crate::config::Version;
-use crate::server::graphiql_server::start_graphiql_server;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+
 use iota_graphql_rpc_client::simple_client::SimpleClient;
-use iota_indexer::errors::IndexerError;
 pub use iota_indexer::handlers::objects_snapshot_processor::SnapshotLagConfig;
-use iota_indexer::store::indexer_store::IndexerStore;
-use iota_indexer::store::PgIndexerStore;
-use iota_indexer::test_utils::force_delete_database;
-use iota_indexer::test_utils::start_test_indexer_impl;
-use iota_indexer::test_utils::ReaderWriterConfig;
+use iota_indexer::{
+    errors::IndexerError,
+    store::{indexer_store::IndexerStore, PgIndexerStore},
+    test_utils::{force_delete_database, start_test_indexer_impl, ReaderWriterConfig},
+};
 use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
 use iota_types::storage::RestStateReader;
-use test_cluster::TestCluster;
-use test_cluster::TestClusterBuilder;
-use tokio::join;
-use tokio::task::JoinHandle;
+use test_cluster::{TestCluster, TestClusterBuilder};
+use tokio::{join, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
+
+use crate::{
+    config::{ConnectionConfig, ServerConfig, ServiceConfig, Version},
+    server::graphiql_server::start_graphiql_server,
+};
 
 const VALIDATOR_COUNT: usize = 7;
 const EPOCH_DURATION_MS: u64 = 15000;
@@ -74,7 +69,8 @@ pub async fn start_cluster(
         Some(db_url),
         val_fn.rpc_url().to_string(),
         ReaderWriterConfig::writer_mode(None),
-        /* reset_database */ true,
+        // reset_database
+        true,
         Some(data_ingestion_path),
         cancellation_token.clone(),
     )
@@ -108,8 +104,9 @@ pub async fn start_cluster(
     }
 }
 
-/// Takes in a simulated instantiation of a Iota blockchain and builds a cluster around it. This
-/// cluster is typically used in e2e tests to emulate and test behaviors.
+/// Takes in a simulated instantiation of a Iota blockchain and builds a cluster
+/// around it. This cluster is typically used in e2e tests to emulate and test
+/// behaviors.
 pub async fn serve_executor(
     graphql_connection_config: ConnectionConfig,
     internal_data_source_rpc_port: u16,
@@ -118,8 +115,8 @@ pub async fn serve_executor(
     data_ingestion_path: PathBuf,
 ) -> ExecutorCluster {
     let db_url = graphql_connection_config.db_url.clone();
-    // Creates a cancellation token and adds this to the ExecutorCluster, so that we can send a
-    // cancellation token on cleanup
+    // Creates a cancellation token and adds this to the ExecutorCluster, so that we
+    // can send a cancellation token on cleanup
     let cancellation_token = CancellationToken::new();
 
     let executor_server_url: SocketAddr = format!("127.0.0.1:{}", internal_data_source_rpc_port)
@@ -136,7 +133,8 @@ pub async fn serve_executor(
         Some(db_url),
         format!("http://{}", executor_server_url),
         ReaderWriterConfig::writer_mode(snapshot_config.clone()),
-        /* reset_database */ true,
+        // reset_database
+        true,
         Some(data_ingestion_path),
         cancellation_token.clone(),
     )
@@ -235,8 +233,8 @@ async fn wait_for_graphql_server(client: &SimpleClient) {
     .expect("Timeout waiting for graphql server to start");
 }
 
-/// Ping the GraphQL server until its background task has updated the checkpoint watermark to the
-/// desired checkpoint.
+/// Ping the GraphQL server until its background task has updated the checkpoint
+/// watermark to the desired checkpoint.
 async fn wait_for_graphql_checkpoint_catchup(
     client: &SimpleClient,
     checkpoint: u64,
@@ -288,14 +286,15 @@ async fn wait_for_graphql_checkpoint_catchup(
 }
 
 impl Cluster {
-    /// Waits for the indexer to index up to the given checkpoint, then waits for the graphql
-    /// service's background task to update the checkpoint watermark to the given checkpoint.
+    /// Waits for the indexer to index up to the given checkpoint, then waits
+    /// for the graphql service's background task to update the checkpoint
+    /// watermark to the given checkpoint.
     pub async fn wait_for_checkpoint_catchup(&self, checkpoint: u64, base_timeout: Duration) {
         wait_for_graphql_checkpoint_catchup(&self.graphql_client, checkpoint, base_timeout).await
     }
 
-    /// Sends a cancellation signal to the graphql and indexer services and waits for them to
-    /// shutdown.
+    /// Sends a cancellation signal to the graphql and indexer services and
+    /// waits for them to shutdown.
     pub async fn cleanup_resources(self) {
         self.cancellation_token.cancel();
         let _ = join!(self.graphql_server_join_handle, self.indexer_join_handle);
@@ -303,15 +302,17 @@ impl Cluster {
 }
 
 impl ExecutorCluster {
-    /// Waits for the indexer to index up to the given checkpoint, then waits for the graphql
-    /// service's background task to update the checkpoint watermark to the given checkpoint.
+    /// Waits for the indexer to index up to the given checkpoint, then waits
+    /// for the graphql service's background task to update the checkpoint
+    /// watermark to the given checkpoint.
     pub async fn wait_for_checkpoint_catchup(&self, checkpoint: u64, base_timeout: Duration) {
         wait_for_graphql_checkpoint_catchup(&self.graphql_client, checkpoint, base_timeout).await
     }
 
-    /// The ObjectsSnapshotProcessor is a long-running task that periodically takes a snapshot of
-    /// the objects table. This leads to flakiness in tests, so we wait until the objects_snapshot
-    /// has reached the expected state.
+    /// The ObjectsSnapshotProcessor is a long-running task that periodically
+    /// takes a snapshot of the objects table. This leads to flakiness in
+    /// tests, so we wait until the objects_snapshot has reached the
+    /// expected state.
     pub async fn wait_for_objects_snapshot_catchup(&self, base_timeout: Duration) {
         let mut latest_snapshot_cp = 0;
 
@@ -338,8 +339,9 @@ impl ExecutorCluster {
         latest_cp, latest_snapshot_cp));
     }
 
-    /// Sends a cancellation signal to the graphql and indexer services, waits for them to complete,
-    /// and then deletes the database created for the test.
+    /// Sends a cancellation signal to the graphql and indexer services, waits
+    /// for them to complete, and then deletes the database created for the
+    /// test.
     pub async fn cleanup_resources(self) {
         self.cancellation_token.cancel();
         let _ = join!(self.graphql_server_join_handle, self.indexer_join_handle);

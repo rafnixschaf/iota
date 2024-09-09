@@ -2,26 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 //! This module implements the [Rosetta Account API](https://www.rosetta-api.org/docs/AccountApi.html)
-use axum::extract::State;
-use axum::{Extension, Json};
+use std::time::Duration;
+
+use axum::{extract::State, Extension, Json};
 use axum_extra::extract::WithRejection;
 use futures::StreamExt;
-
-use iota_sdk::rpc_types::StakeStatus;
-use iota_sdk::{IotaClient, IOTA_COIN_TYPE};
+use iota_sdk::{rpc_types::StakeStatus, IotaClient, IOTA_COIN_TYPE};
 use iota_types::base_types::IotaAddress;
 use tracing::info;
 
-use crate::errors::Error;
-use crate::types::{
-    AccountBalanceRequest, AccountBalanceResponse, AccountCoinsRequest, AccountCoinsResponse,
-    Amount, Coin, SubAccount, SubAccountType, SubBalance,
+use crate::{
+    errors::Error,
+    types::{
+        AccountBalanceRequest, AccountBalanceResponse, AccountCoinsRequest, AccountCoinsResponse,
+        Amount, Coin, SubAccount, SubAccountType, SubBalance,
+    },
+    IotaEnv, OnlineServerContext,
 };
-use crate::{OnlineServerContext, IotaEnv};
-use std::time::Duration;
 
-/// Get an array of all AccountBalances for an AccountIdentifier and the BlockIdentifier
-/// at which the balance lookup was performed.
+/// Get an array of all AccountBalances for an AccountIdentifier and the
+/// BlockIdentifier at which the balance lookup was performed.
 /// [Rosetta API Spec](https://www.rosetta-api.org/docs/AccountApi.html#accountbalance)
 pub async fn balance(
     State(ctx): State<OnlineServerContext>,
@@ -109,7 +109,8 @@ pub async fn balance(
                 .await?
                 .total_balance as i128;
 
-            // if those two live balances are equal then that is the current balance for checkpoint2
+            // if those two live balances are equal then that is the current balance for
+            // checkpoint2
             if balances_first.eq(&balances_second) {
                 info!(
                     "same balance for account {} at checkpoint {}",
@@ -194,8 +195,8 @@ async fn get_sub_account_balances(
     })
 }
 
-/// Get an array of all unspent coins for an AccountIdentifier and the BlockIdentifier at which the lookup was performed. .
-/// [Rosetta API Spec](https://www.rosetta-api.org/docs/AccountApi.html#accountcoins)
+/// Get an array of all unspent coins for an AccountIdentifier and the
+/// BlockIdentifier at which the lookup was performed. . [Rosetta API Spec](https://www.rosetta-api.org/docs/AccountApi.html#accountcoins)
 pub async fn coins(
     State(context): State<OnlineServerContext>,
     Extension(env): Extension<IotaEnv>,

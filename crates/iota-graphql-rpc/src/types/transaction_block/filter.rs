@@ -2,18 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::TransactionBlockKindInput;
-use crate::types::{digest::Digest, iota_address::IotaAddress, type_filter::FqNameFilter};
-use crate::types::{intersect, uint53::UInt53};
-use async_graphql::InputObject;
 use std::collections::BTreeSet;
+
+use async_graphql::InputObject;
 use iota_types::base_types::IotaAddress as NativeIotaAddress;
+
+use super::TransactionBlockKindInput;
+use crate::types::{
+    digest::Digest, intersect, iota_address::IotaAddress, type_filter::FqNameFilter, uint53::UInt53,
+};
 
 #[derive(InputObject, Debug, Default, Clone)]
 pub(crate) struct TransactionBlockFilter {
     pub function: Option<FqNameFilter>,
 
-    /// An input filter selecting for either system or programmable transactions.
+    /// An input filter selecting for either system or programmable
+    /// transactions.
     pub kind: Option<TransactionBlockKindInput>,
     pub after_checkpoint: Option<UInt53>,
     pub at_checkpoint: Option<UInt53>,
@@ -29,9 +33,10 @@ pub(crate) struct TransactionBlockFilter {
 }
 
 impl TransactionBlockFilter {
-    /// Try to create a filter whose results are the intersection of transaction blocks in `self`'s
-    /// results and transaction blocks in `other`'s results. This may not be possible if the
-    /// resulting filter is inconsistent in some way (e.g. a filter that requires one field to be
+    /// Try to create a filter whose results are the intersection of transaction
+    /// blocks in `self`'s results and transaction blocks in `other`'s
+    /// results. This may not be possible if the resulting filter is
+    /// inconsistent in some way (e.g. a filter that requires one field to be
     /// two different values simultaneously).
     pub(crate) fn intersect(self, other: Self) -> Option<Self> {
         macro_rules! intersect {
@@ -61,9 +66,10 @@ impl TransactionBlockFilter {
         })
     }
 
-    /// Most filter conditions require a scan limit if used in tandem with other filters. The
-    /// exception to this is sender and checkpoint, since sender is denormalized on all tables, and
-    /// the corresponding tx range can be determined for a checkpoint.
+    /// Most filter conditions require a scan limit if used in tandem with other
+    /// filters. The exception to this is sender and checkpoint, since
+    /// sender is denormalized on all tables, and the corresponding tx range
+    /// can be determined for a checkpoint.
     pub(crate) fn requires_scan_limit(&self) -> bool {
         [
             self.function.is_some(),
@@ -79,8 +85,8 @@ impl TransactionBlockFilter {
             > 1
     }
 
-    /// If we don't query a lookup table that has a denormalized sender column, we need to
-    /// explicitly sp
+    /// If we don't query a lookup table that has a denormalized sender column,
+    /// we need to explicitly sp
     pub(crate) fn explicit_sender(&self) -> Option<IotaAddress> {
         if self.function.is_none()
             && self.kind.is_none()
@@ -94,8 +100,8 @@ impl TransactionBlockFilter {
         }
     }
 
-    /// A TransactionBlockFilter is considered not to have any filters if no filters are specified,
-    /// or if the only filters are on `checkpoint`.
+    /// A TransactionBlockFilter is considered not to have any filters if no
+    /// filters are specified, or if the only filters are on `checkpoint`.
     pub(crate) fn has_filters(&self) -> bool {
         self.function.is_some()
             || self.kind.is_some()

@@ -2,12 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use tracing::trace;
-
 use prometheus::{
     register_int_counter_vec_with_registry, register_int_gauge_with_registry, IntCounterVec,
     IntGauge, Registry,
 };
+use tracing::trace;
 
 pub struct ExecutionCacheMetrics {
     pub(crate) pending_notify_read: IntGauge,

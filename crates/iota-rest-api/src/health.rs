@@ -2,19 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
-    reader::StateReader,
-    RestService, Result,
-};
+use std::time::{Duration, SystemTime};
+
 use axum::{
     extract::{Query, State},
     http::StatusCode,
     response::IntoResponse,
 };
-use std::time::{Duration, SystemTime};
 use iota_types::storage::ReadStore;
 use tap::Pipe;
+
+use crate::{
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    reader::StateReader,
+    RestService, Result,
+};
 
 pub struct HealthCheck;
 

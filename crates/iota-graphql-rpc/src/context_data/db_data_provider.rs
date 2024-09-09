@@ -2,18 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    error::Error,
-    types::{address::Address, iota_address::IotaAddress, validator::Validator},
-};
-use diesel::PgConnection;
 use std::{collections::BTreeMap, time::Duration};
-use iota_indexer::db::ConnectionPoolConfig;
-use iota_indexer::{apis::GovernanceReadApi, indexer_reader::IndexerReader};
+
+use diesel::PgConnection;
+use iota_indexer::{
+    apis::GovernanceReadApi, db::ConnectionPoolConfig, indexer_reader::IndexerReader,
+};
 use iota_json_rpc_types::Stake as RpcStakedIota;
 use iota_types::{
     governance::StakedIota as NativeStakedIota,
     iota_system_state::iota_system_state_summary::IotaSystemStateSummary as NativeIotaSystemStateSummary,
+};
+
+use crate::{
+    error::Error,
+    types::{address::Address, iota_address::IotaAddress, validator::Validator},
 };
 
 pub(crate) struct PgManager {
@@ -25,7 +28,8 @@ impl PgManager {
         Self { inner }
     }
 
-    /// Create a new underlying reader, which is used by this type as well as other data providers.
+    /// Create a new underlying reader, which is used by this type as well as
+    /// other data providers.
     pub(crate) fn reader_with_config(
         db_url: impl Into<String>,
         pool_size: u32,
@@ -66,8 +70,9 @@ impl PgManager {
         }
     }
 
-    /// Make a request to the RPC for its representations of the staked iota we parsed out of the
-    /// object.  Used to implement fields that are implemented in JSON-RPC but not GraphQL (yet).
+    /// Make a request to the RPC for its representations of the staked iota we
+    /// parsed out of the object.  Used to implement fields that are
+    /// implemented in JSON-RPC but not GraphQL (yet).
     pub(crate) async fn fetch_rpc_staked_iota(
         &self,
         stake: NativeStakedIota,
@@ -95,9 +100,10 @@ impl PgManager {
     }
 }
 
-/// `checkpoint_viewed_at` represents the checkpoint sequence number at which the set of
-/// `IotaValidatorSummary` was queried for. Each `Validator` will inherit this checkpoint, so that
-/// when viewing the `Validator`'s state, it will be as if it was read at the same checkpoint.
+/// `checkpoint_viewed_at` represents the checkpoint sequence number at which
+/// the set of `IotaValidatorSummary` was queried for. Each `Validator` will
+/// inherit this checkpoint, so that when viewing the `Validator`'s state, it
+/// will be as if it was read at the same checkpoint.
 pub(crate) fn convert_to_validators(
     system_state_at_requested_epoch: NativeIotaSystemStateSummary,
     checkpoint_viewed_at: u64,

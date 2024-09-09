@@ -2,41 +2,48 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    ops::Deref,
+};
+
 use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
 use fastcrypto_zkp::bn254::zk_login::{parse_jwks, OIDCProvider, ZkLoginInputs};
-use move_core_types::ident_str;
-use rand::{rngs::StdRng, SeedableRng};
-use shared_crypto::intent::{Intent, IntentMessage};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::ops::Deref;
-use iota_types::crypto::{PublicKey, IotaSignature, ToFromBytes, ZkLoginPublicIdentifier};
-use iota_types::messages_grpc::HandleSoftBundleCertificatesRequestV3;
-use iota_types::utils::get_one_zklogin_inputs;
+use iota_macros::sim_test;
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use iota_types::{
     authenticator_state::ActiveJwk,
     base_types::dbg_addr,
-    crypto::{get_key_pair, AccountKeyPair, Signature, IotaKeyPair},
+    crypto::{
+        get_key_pair, AccountKeyPair, IotaKeyPair, IotaSignature, PublicKey, Signature,
+        ToFromBytes, ZkLoginPublicIdentifier,
+    },
     error::{IotaError, UserInputError},
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
     messages_consensus::ConsensusDeterminedVersionAssignments,
+    messages_grpc::HandleSoftBundleCertificatesRequestV3,
     multisig::{MultiSig, MultiSigPublicKey},
     signature::GenericSignature,
     transaction::{
         AuthenticatorStateUpdate, GenesisTransaction, TransactionDataAPI, TransactionKind,
     },
-    utils::{load_test_vectors, to_sender_signed_transaction},
+    utils::{get_one_zklogin_inputs, load_test_vectors, to_sender_signed_transaction},
     zk_login_authenticator::ZkLoginAuthenticator,
     zk_login_util::DEFAULT_JWK_BYTES,
+    IOTA_SYSTEM_PACKAGE_ID,
 };
+use move_core_types::ident_str;
+use rand::{rngs::StdRng, SeedableRng};
+use shared_crypto::intent::{Intent, IntentMessage};
 
-use crate::authority::authority_test_utils::send_batch_consensus_no_execution;
-use crate::authority::authority_tests::{call_move_, create_gas_objects, publish_object_basics};
-use crate::consensus_adapter::consensus_tests::make_consensus_adapter_for_test;
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::IOTA_SYSTEM_PACKAGE_ID;
-
-use iota_macros::sim_test;
+use crate::{
+    authority::{
+        authority_test_utils::send_batch_consensus_no_execution,
+        authority_tests::{call_move_, create_gas_objects, publish_object_basics},
+        test_authority_builder::TestAuthorityBuilder,
+    },
+    consensus_adapter::consensus_tests::make_consensus_adapter_for_test,
+};
 macro_rules! assert_matches {
     ($expression:expr, $pattern:pat $(if $guard: expr)?) => {
         match $expression {
@@ -51,21 +58,22 @@ macro_rules! assert_matches {
     };
 }
 
+use fastcrypto::traits::AggregateAuthenticator;
+use iota_types::{
+    digests::ConsensusCommitDigest,
+    messages_consensus::{
+        ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
+    },
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+};
+
+use super::*;
+pub use crate::authority::authority_test_utils::init_state_with_ids;
 use crate::{
     authority_client::{AuthorityAPI, NetworkAuthorityClient},
     authority_server::{AuthorityServer, AuthorityServerHandle},
     stake_aggregator::{InsertResult, StakeAggregator},
 };
-
-use super::*;
-use fastcrypto::traits::AggregateAuthenticator;
-use iota_types::digests::ConsensusCommitDigest;
-use iota_types::messages_consensus::{
-    ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
-};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-
-pub use crate::authority::authority_test_utils::init_state_with_ids;
 
 #[sim_test]
 async fn test_handle_transfer_transaction_bad_signature() {
@@ -460,7 +468,8 @@ async fn do_transaction_test_impl(
 
     check_locks(authority_state.clone(), vec![object_id]).await;
 
-    // now verify that the same transactions are rejected if false certificates are somehow formed and sent
+    // now verify that the same transactions are rejected if false certificates are
+    // somehow formed and sent
     if check_forged_cert {
         let epoch_store = authority_state.epoch_store_for_testing();
         for transaction in transactions {
@@ -494,7 +503,8 @@ async fn do_transaction_test_impl(
                 .unwrap_err();
             err_check(&err);
 
-            // Additionally, if the tx contains access to shared objects, check if Soft Bundle handler returns the same error.
+            // Additionally, if the tx contains access to shared objects, check if Soft
+            // Bundle handler returns the same error.
             if ct.contains_shared_object() {
                 epoch_store.clear_signature_cache();
                 let err = client
@@ -573,10 +583,12 @@ async fn test_zklogin_transfer_with_large_address_seed() {
     )
     .await;
 
-    assert!(client
-        .handle_transaction(tx, Some(make_socket_addr()))
-        .await
-        .is_err());
+    assert!(
+        client
+            .handle_transaction(tx, Some(make_socket_addr()))
+            .await
+            .is_err()
+    );
 }
 
 #[sim_test]
@@ -596,7 +608,8 @@ async fn zklogin_test_caching_scenarios() {
     ) = setup_zklogin_network(|_| {}).await;
     let socket_addr = make_socket_addr();
 
-    // case 1: a valid zklogin txn verifies ok, cache misses bc its a fresh zklogin inputs.
+    // case 1: a valid zklogin txn verifies ok, cache misses bc its a fresh zklogin
+    // inputs.
     let res = client
         .handle_transaction(transfer_transaction, Some(socket_addr))
         .await;
@@ -620,8 +633,8 @@ async fn zklogin_test_caching_scenarios() {
     let sender = senders[0];
     let recipient = dbg_addr(2);
 
-    // case 2: use a different ephemeral key for a valid ephemeral pk + sig, but pk does
-    // not match the zklogin inputs, cache misses and txn fails.
+    // case 2: use a different ephemeral key for a valid ephemeral pk + sig, but pk
+    // does not match the zklogin inputs, cache misses and txn fails.
     let mut txn = init_zklogin_transfer(
         &authority_state,
         object_ids[2],
@@ -685,10 +698,12 @@ async fn zklogin_test_caching_scenarios() {
     )
     .await;
 
-    assert!(client
-        .handle_transaction(txn3, Some(socket_addr))
-        .await
-        .is_ok());
+    assert!(
+        client
+            .handle_transaction(txn3, Some(socket_addr))
+            .await
+            .is_ok()
+    );
 
     assert_eq!(
         epoch_store
@@ -699,8 +714,9 @@ async fn zklogin_test_caching_scenarios() {
         1
     );
 
-    // case 4: create a multisig txn where the zklogin signature inside is already cached
-    // from the first call for the single zklogin txn. cache hits and txn verifies.
+    // case 4: create a multisig txn where the zklogin signature inside is already
+    // cached from the first call for the single zklogin txn. cache hits and txn
+    // verifies.
     let sender_2 = senders[1];
     let multisig_txn = sign_with_zklogin_inside_multisig(
         &authority_state,
@@ -715,10 +731,12 @@ async fn zklogin_test_caching_scenarios() {
         multisig_pk.clone(),
     )
     .await;
-    assert!(client
-        .handle_transaction(multisig_txn, Some(socket_addr))
-        .await
-        .is_ok());
+    assert!(
+        client
+            .handle_transaction(multisig_txn, Some(socket_addr))
+            .await
+            .is_ok()
+    );
 
     assert_eq!(
         epoch_store
@@ -728,8 +746,9 @@ async fn zklogin_test_caching_scenarios() {
             .get(),
         2
     );
-    // case 5: use the same proof and modify ephemeral sig bytes but keep the ephemeral pk and flag as same,
-    // it fails earlier at the ephemeral sig verify check, txn fails, did not miss or hit cache.
+    // case 5: use the same proof and modify ephemeral sig bytes but keep the
+    // ephemeral pk and flag as same, it fails earlier at the ephemeral sig
+    // verify check, txn fails, did not miss or hit cache.
     let intent_message = txn.data().intent_message().clone();
     match &mut txn.data_mut_for_testing().tx_signatures_mut_for_testing()[0] {
         GenericSignature::ZkLoginAuthenticator(zklogin) => {
@@ -737,7 +756,8 @@ async fn zklogin_test_caching_scenarios() {
             let correct_sig = Signature::new_secure(&intent_message, ephemeral_key);
             let unknown_sig = Signature::new_secure(&intent_message, &unknown_key);
 
-            // create a mutated sig with the correct flag and pk bytes, but wrong signature bytes
+            // create a mutated sig with the correct flag and pk bytes, but wrong signature
+            // bytes
             let mut mutated_bytes = vec![correct_sig.scheme().flag()];
             mutated_bytes.extend_from_slice(unknown_sig.signature_bytes());
             mutated_bytes.extend_from_slice(correct_sig.public_key_bytes());
@@ -815,8 +835,8 @@ async fn zklogin_test_caching_scenarios() {
         3
     );
 
-    // case 7: create a multisig txn with zklogin inside where the max epoch is changed,
-    // cache misses and txn fails.
+    // case 7: create a multisig txn with zklogin inside where the max epoch is
+    // changed, cache misses and txn fails.
     let multisig_txn = sign_with_zklogin_inside_multisig(
         &authority_state,
         object_ids[11],
@@ -847,8 +867,9 @@ async fn zklogin_test_caching_scenarios() {
         4
     );
 
-    // case 8: use the same proof and modify zklogin_inputs.address_seed, cache misses and txn fails.
-    // use test_vectors[1] but with modified address_seed to create a bad zklogin inputs, and derive sender.
+    // case 8: use the same proof and modify zklogin_inputs.address_seed, cache
+    // misses and txn fails. use test_vectors[1] but with modified address_seed
+    // to create a bad zklogin inputs, and derive sender.
     let zklogin_json_string =
         &get_one_zklogin_inputs("../iota-types/src/unit_tests/zklogin_test_vectors.json");
     let bad_zklogin_inputs = ZkLoginInputs::from_json(zklogin_json_string, "111").unwrap();
@@ -911,10 +932,12 @@ async fn do_zklogin_transaction_test(
 
     post_sign_mutations(&mut transfer_transaction);
 
-    assert!(client
-        .handle_transaction(transfer_transaction, Some(make_socket_addr()))
-        .await
-        .is_err());
+    assert!(
+        client
+            .handle_transaction(transfer_transaction, Some(make_socket_addr()))
+            .await
+            .is_err()
+    );
 
     assert_eq!(
         epoch_store
@@ -937,14 +960,16 @@ async fn check_locks(authority_state: Arc<AuthorityState>, object_ids: Vec<Objec
             .await
             .unwrap()
             .unwrap();
-        assert!(authority_state
-            .get_transaction_lock(
-                &object.compute_object_reference(),
-                &authority_state.epoch_store_for_testing()
-            )
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            authority_state
+                .get_transaction_lock(
+                    &object.compute_object_reference(),
+                    &authority_state.epoch_store_for_testing()
+                )
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }
 
@@ -1193,7 +1218,8 @@ async fn zklogin_txn_fail_if_missing_jwk() {
         authenticator_obj_initial_shared_version: 1.into(),
     });
 
-    // Case 1: Submit a transaction with zklogin signature derived from a Twitch JWT should fail.
+    // Case 1: Submit a transaction with zklogin signature derived from a Twitch JWT
+    // should fail.
     let txn1 = init_zklogin_transfer(
         &authority_state,
         object_ids[2],
@@ -1224,7 +1250,8 @@ async fn zklogin_txn_fail_if_missing_jwk() {
         authenticator_obj_initial_shared_version: 1.into(),
     });
 
-    // Case 2: Submit a transaction with zklogin signature derived from a Twitch JWT with kid "1" should fail.
+    // Case 2: Submit a transaction with zklogin signature derived from a Twitch JWT
+    // with kid "1" should fail.
     execute_transaction_assert_err(authority_state, txn1, object_ids).await;
 }
 
@@ -1387,11 +1414,12 @@ async fn test_oversized_txn() {
         .handle_transaction(txn, Some(make_socket_addr()))
         .await;
     // The txn should be rejected due to its size.
-    assert!(res
-        .err()
-        .unwrap()
-        .to_string()
-        .contains("serialized transaction size exceeded maximum"));
+    assert!(
+        res.err()
+            .unwrap()
+            .to_string()
+            .contains("serialized transaction size exceeded maximum")
+    );
 }
 
 #[tokio::test]
@@ -1447,7 +1475,8 @@ async fn test_very_large_certificate() {
         .map(|a| (a.authority, a.signature))
         .collect();
 
-    // Insert a lot into the bitmap so the cert is very large, while the txn inside is reasonably sized.
+    // Insert a lot into the bitmap so the cert is very large, while the txn inside
+    // is reasonably sized.
     let mut signers_map = roaring::bitmap::RoaringBitmap::new();
     signers_map.insert_range(0..52108864);
     let sigs: Vec<AuthoritySignature> = signatures.into_values().collect();
@@ -1667,7 +1696,7 @@ async fn test_handle_soft_bundle_certificates() {
         .await
         .unwrap();
         effects.status().unwrap();
-        let shared_object_id = effects.created()[0].0 .0;
+        let shared_object_id = effects.created()[0].0.0;
         authority
             .get_object(&shared_object_id)
             .await
@@ -1723,9 +1752,10 @@ async fn test_handle_soft_bundle_certificates() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -1760,14 +1790,18 @@ async fn test_handle_soft_bundle_certificates() {
         .responses;
 
     // Verify if transactions have been executed in the correct order.
-    // This is done by checking if each tx's input object version matches the previous tx's output object version.
+    // This is done by checking if each tx's input object version matches the
+    // previous tx's output object version.
     assert_eq!(responses.len(), 4);
     let mut expected_object_version = initial_shared_version;
     for response in responses {
         let input_objects = response.input_objects.unwrap();
-        assert!(input_objects
-            .iter()
-            .any(|obj| obj.id() == shared_object.id() && obj.version() == expected_object_version));
+        assert!(
+            input_objects
+                .iter()
+                .any(|obj| obj.id() == shared_object.id()
+                    && obj.version() == expected_object_version)
+        );
 
         let output_objects = response.output_objects.unwrap();
         let output_object = output_objects
@@ -1823,7 +1857,7 @@ async fn test_handle_soft_bundle_certificates_errors() {
         .await
         .unwrap();
         effects.status().unwrap();
-        let shared_object_id = effects.created()[0].0 .0;
+        let shared_object_id = effects.created()[0].0.0;
         authority
             .get_object(&shared_object_id)
             .await
@@ -1998,9 +2032,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2028,9 +2063,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2068,8 +2104,8 @@ async fn test_handle_soft_bundle_certificates_errors() {
         );
     }
 
-    // Case 4: submit a soft bundle with txs whose consensus message has been processed.
-    // The bundle should be rejected.
+    // Case 4: submit a soft bundle with txs whose consensus message has been
+    // processed. The bundle should be rejected.
     {
         let cert0 = {
             let gas_object_ref = authority
@@ -2083,9 +2119,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2113,9 +2150,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),

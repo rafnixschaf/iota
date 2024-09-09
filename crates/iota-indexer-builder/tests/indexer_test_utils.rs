@@ -2,21 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
-use tokio::sync::Mutex;
-use tokio::task::JoinHandle;
-
-use iota_metrics::spawn_monitored_task;
-
-use iota_indexer_builder::indexer_builder::{
-    DataMapper, DataSender, Datasource, IndexerProgressStore, Persistent,
+use iota_indexer_builder::{
+    indexer_builder::{DataMapper, DataSender, Datasource, IndexerProgressStore, Persistent},
+    Task,
 };
-use iota_indexer_builder::Task;
+use iota_metrics::spawn_monitored_task;
+use tokio::{sync::Mutex, task::JoinHandle};
 
 pub struct TestDatasource<T> {
     pub data: Vec<T>,

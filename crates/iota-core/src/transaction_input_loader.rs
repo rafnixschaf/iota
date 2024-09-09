@@ -2,11 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::execution_cache::ObjectCacheRead;
-use itertools::izip;
-use once_cell::unsync::OnceCell;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
+
 use iota_types::{
     base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber, TransactionDigest},
     error::{IotaError, IotaResult, UserInputError},
@@ -16,7 +13,11 @@ use iota_types::{
         ReceivingObjectReadResult, ReceivingObjectReadResultKind, ReceivingObjects, TransactionKey,
     },
 };
+use itertools::izip;
+use once_cell::unsync::OnceCell;
 use tracing::instrument;
+
+use crate::execution_cache::ObjectCacheRead;
 
 pub(crate) struct TransactionInputLoader {
     cache: Arc<dyn ObjectCacheRead>,
@@ -31,9 +32,10 @@ impl TransactionInputLoader {
 impl TransactionInputLoader {
     /// Read the inputs for a transaction that the validator was asked to sign.
     ///
-    /// tx_digest is provided so that the inputs can be cached with the tx_digest and returned with
-    /// a single hash map lookup when notify_read_objects_for_execution is called later.
-    /// TODO: implement this caching
+    /// tx_digest is provided so that the inputs can be cached with the
+    /// tx_digest and returned with a single hash map lookup when
+    /// notify_read_objects_for_execution is called later. TODO: implement
+    /// this caching
     #[instrument(level = "trace", skip_all)]
     pub fn read_objects_for_signing(
         &self,
@@ -42,7 +44,8 @@ impl TransactionInputLoader {
         receiving_objects: &[ObjectRef],
         epoch_id: EpochId,
     ) -> IotaResult<(InputObjects, ReceivingObjects)> {
-        // Length of input_object_kinds have been checked via validity_check() for ProgrammableTransaction.
+        // Length of input_object_kinds have been checked via validity_check() for
+        // ProgrammableTransaction.
         let mut input_results = vec![None; input_object_kinds.len()];
         let mut object_refs = Vec::with_capacity(input_object_kinds.len());
         let mut fetch_indices = Vec::with_capacity(input_object_kinds.len());
@@ -110,17 +113,21 @@ impl TransactionInputLoader {
 
     /// Read the inputs for a transaction that is ready to be executed.
     ///
-    /// shared_lock_store is used to resolve the versions of any shared input objects.
+    /// shared_lock_store is used to resolve the versions of any shared input
+    /// objects.
     ///
-    /// This function panics if any inputs are not available, as TransactionManager should already
-    /// have verified that the transaction is ready to be executed.
+    /// This function panics if any inputs are not available, as
+    /// TransactionManager should already have verified that the transaction
+    /// is ready to be executed.
     ///
-    /// The tx_digest is provided here to support the following optimization (not yet implemented):
-    /// All the owned input objects will likely have been loaded during transaction signing, and
-    /// can be stored as a group with the transaction_digest as the key, allowing the lookup to
-    /// proceed with only a single hash map lookup. (additional lookups may be necessary for shared
-    /// inputs, since the versions are not known at signing time). Receiving objects could be
-    /// cached, but only with appropriate invalidation logic for when an object is received by a
+    /// The tx_digest is provided here to support the following optimization
+    /// (not yet implemented): All the owned input objects will likely have
+    /// been loaded during transaction signing, and can be stored as a group
+    /// with the transaction_digest as the key, allowing the lookup to
+    /// proceed with only a single hash map lookup. (additional lookups may be
+    /// necessary for shared inputs, since the versions are not known at
+    /// signing time). Receiving objects could be cached, but only with
+    /// appropriate invalidation logic for when an object is received by a
     /// different tx first.
     #[instrument(level = "trace", skip_all)]
     pub fn read_objects_for_execution(
@@ -202,16 +209,24 @@ impl TransactionInputLoader {
                     assert!(key.1.is_valid());
                     // Check if the object was deleted by a concurrently certified tx
                     let version = key.1;
-                    if let Some(dependency) = self.cache.get_deleted_shared_object_previous_tx_digest(id, version, epoch_id)? {
+                    if let Some(dependency) = self
+                        .cache
+                        .get_deleted_shared_object_previous_tx_digest(id, version, epoch_id)?
+                    {
                         ObjectReadResult {
                             input_object_kind: *input,
                             object: ObjectReadResultKind::DeletedSharedObject(version, dependency),
                         }
                     } else {
-                        panic!("All dependencies of tx {tx_key:?} should have been executed now, but Shared Object id: {}, version: {version} is absent in epoch {epoch_id}", *id);
+                        panic!(
+                            "All dependencies of tx {tx_key:?} should have been executed now, but Shared Object id: {}, version: {version} is absent in epoch {epoch_id}",
+                            *id
+                        );
                     }
-                },
-                _ => panic!("All dependencies of tx {tx_key:?} should have been executed now, but obj {key:?} is absent"),
+                }
+                _ => panic!(
+                    "All dependencies of tx {tx_key:?} should have been executed now, but obj {key:?} is absent"
+                ),
             });
         }
 

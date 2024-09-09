@@ -4,19 +4,11 @@
 
 use std::iter::Peekable;
 
+use iota_types::{base_types::ObjectID, Identifier};
 use move_command_line_common::{
     address::{NumericalAddress, ParsedAddress},
     parser::{parse_u128, parse_u16, parse_u256, parse_u32, parse_u64, parse_u8},
     types::{ParsedFqName, ParsedModuleId, ParsedStructType, ParsedType},
-};
-use iota_types::{base_types::ObjectID, Identifier};
-
-use crate::{
-    client_ptb::{
-        ast::{all_keywords, COMMANDS},
-        builder::{display_did_you_mean, find_did_you_means},
-    },
-    err, error, sp,
 };
 
 use super::{
@@ -24,6 +16,13 @@ use super::{
     error::{PTBError, PTBResult, Span, Spanned},
     lexer::Lexer,
     token::{Lexeme, Token},
+};
+use crate::{
+    client_ptb::{
+        ast::{all_keywords, COMMANDS},
+        builder::{display_did_you_mean, find_did_you_means},
+    },
+    err, error, sp,
 };
 
 /// Parse a program
@@ -70,9 +69,10 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         })
     }
 
-    /// Parse the sequence of strings into a PTB program. We continue to parse even if an error is
-    /// raised, and return the errors at the end. If no errors are raised, we return the parsed PTB
-    /// program along with the metadata that we have parsed (e.g., json output, summary).
+    /// Parse the sequence of strings into a PTB program. We continue to parse
+    /// even if an error is raised, and return the errors at the end. If no
+    /// errors are raised, we return the parsed PTB program along with the
+    /// metadata that we have parsed (e.g., json output, summary).
     pub fn parse(mut self) -> Result<ParsedProgram, Vec<PTBError>> {
         use Lexeme as L;
         use Token as T;
@@ -219,8 +219,9 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
 
 /// Iterator convenience methods over tokens
 impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
-    /// Advance the iterator and return the next lexeme. If the next lexeme's token is not the
-    /// expected one, return an error, and don't advance the token stream.
+    /// Advance the iterator and return the next lexeme. If the next lexeme's
+    /// token is not the expected one, return an error, and don't advance
+    /// the token stream.
     fn expect(&mut self, expected: Token) -> PTBResult<Spanned<Lexeme<'a>>> {
         let result @ sp!(sp, lexeme@Lexeme(token, _)) = self.peek();
         Ok(if token == expected {
@@ -239,8 +240,9 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
             .expect("Lexer returns an infinite stream")
     }
 
-    /// Unconditionally advance the next token. It is always safe to do this, because the underlying
-    /// token stream is "infinite" (the lexer will repeatedly return its terminal token).
+    /// Unconditionally advance the next token. It is always safe to do this,
+    /// because the underlying token stream is "infinite" (the lexer will
+    /// repeatedly return its terminal token).
     fn bump(&mut self) {
         self.tokens.next();
     }
@@ -329,7 +331,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
     }
 
     /// Parse a move-call command
-    /// The expected format is: `--move-call <address>::<module>::<name> (<<type>, ...>)? <arg> ...`
+    /// The expected format is: `--move-call <address>::<module>::<name>
+    /// (<<type>, ...>)? <arg> ...`
     fn parse_move_call(&mut self) -> PTBResult<Spanned<ParsedPTBCommand>> {
         use Lexeme as L;
         use Token as T;
@@ -518,7 +521,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         })
     }
 
-    /// Parse a fully-qualified name, corresponding to accessing a function or type from a module.
+    /// Parse a fully-qualified name, corresponding to accessing a function or
+    /// type from a module.
     fn parse_module_access(&mut self) -> PTBResult<Spanned<ModuleAccess>> {
         use Lexeme as L;
         use Token as T;
@@ -543,7 +547,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         }))
     }
 
-    /// Parse a list of type arguments, surrounded by angle brackets, and separated by commas.
+    /// Parse a list of type arguments, surrounded by angle brackets, and
+    /// separated by commas.
     fn parse_type_args(&mut self) -> PTBResult<Spanned<Vec<ParsedType>>> {
         use Lexeme as L;
         use Token as T;
@@ -569,7 +574,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         Ok(start_sp.widen(end_sp).wrap(type_args))
     }
 
-    /// Parse a variable access (a non-empty chain of identifiers, separated by '.')
+    /// Parse a variable access (a non-empty chain of identifiers, separated by
+    /// '.')
     fn parse_variable(&mut self) -> PTBResult<Spanned<Argument>> {
         use Lexeme as L;
         use Token as T;
@@ -605,7 +611,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         Ok(sp.wrap(Argument::VariableAccess(ident, fields)))
     }
 
-    /// Parse a decimal or hexadecimal number, optionally followed by a type suffix.
+    /// Parse a decimal or hexadecimal number, optionally followed by a type
+    /// suffix.
     fn parse_number(&mut self, contents: Spanned<&str>) -> PTBResult<Spanned<Argument>> {
         use Argument as V;
         use Lexeme as L;
@@ -696,7 +703,8 @@ impl<'a, I: Iterator<Item = &'a str>> ProgramParser<'a, I> {
         })
     }
 
-    // Parse an array of arguments. Each element of the array is separated by a comma.
+    // Parse an array of arguments. Each element of the array is separated by a
+    // comma.
     fn parse_array(&mut self) -> PTBResult<Spanned<Vec<Spanned<Argument>>>> {
         use Lexeme as L;
         use Token as T;

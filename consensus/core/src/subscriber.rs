@@ -20,11 +20,11 @@ use crate::{
     Round,
 };
 
-/// Subscriber manages the block stream subscriptions to other peers, taking care of retrying
-/// when subscription streams break. Blocks returned from the peer are sent to the authority
-/// service for processing.
-/// Currently subscription management for individual peer is not exposed, but it could become
-/// useful in future.
+/// Subscriber manages the block stream subscriptions to other peers, taking
+/// care of retrying when subscription streams break. Blocks returned from the
+/// peer are sent to the authority service for processing.
+/// Currently subscription management for individual peer is not exposed, but it
+/// could become useful in future.
 pub(crate) struct Subscriber<C: NetworkClient, S: NetworkService> {
     context: Arc<Context>,
     network_client: Arc<C>,
@@ -89,8 +89,9 @@ impl<C: NetworkClient, S: NetworkService> Subscriber<C, S> {
         if let Some(subscription) = subscription.take() {
             subscription.abort();
         }
-        // There is a race between shutting down the subscription task and clearing the metric here.
-        // TODO: fix the race when unsubscribe_locked() gets called outside of stop().
+        // There is a race between shutting down the subscription task and clearing the
+        // metric here. TODO: fix the race when unsubscribe_locked() gets called
+        // outside of stop().
         self.context
             .metrics
             .node_metrics
@@ -323,8 +324,8 @@ mod test {
             }
         }
 
-        // Even if the stream ends after 10 blocks, the subscriber should retry and get enough
-        // blocks eventually.
+        // Even if the stream ends after 10 blocks, the subscriber should retry and get
+        // enough blocks eventually.
         let service = authority_service.lock();
         assert!(service.handle_send_block.len() >= 100);
         for (p, block) in service.handle_send_block.iter() {

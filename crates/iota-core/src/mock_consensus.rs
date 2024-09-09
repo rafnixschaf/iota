@@ -2,19 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::{AuthorityMetrics, AuthorityState};
-use crate::checkpoints::CheckpointServiceNoop;
-use crate::consensus_adapter::SubmitToConsensus;
-use crate::consensus_handler::SequencedConsensusTransaction;
-use prometheus::Registry;
 use std::sync::{Arc, Weak};
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKind};
-use iota_types::transaction::VerifiedCertificate;
-use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
+
+use iota_types::{
+    error::{IotaError, IotaResult},
+    messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
+    transaction::VerifiedCertificate,
+};
+use prometheus::Registry;
+use tokio::{sync::mpsc, task::JoinHandle};
 use tracing::debug;
+
+use crate::{
+    authority::{
+        authority_per_epoch_store::AuthorityPerEpochStore, AuthorityMetrics, AuthorityState,
+    },
+    checkpoints::CheckpointServiceNoop,
+    consensus_adapter::SubmitToConsensus,
+    consensus_handler::SequencedConsensusTransaction,
+};
 
 pub struct MockConsensusClient {
     tx_sender: mpsc::Sender<ConsensusTransaction>,

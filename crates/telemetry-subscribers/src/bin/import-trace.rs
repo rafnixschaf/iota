@@ -2,6 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::io::{self, Cursor, Read};
+
 use bytes::Buf;
 use bytes_varint::VarIntSupport;
 use clap::*;
@@ -10,7 +12,6 @@ use opentelemetry_proto::tonic::{
     common::v1::{any_value, AnyValue},
 };
 use prost::Message;
-use std::io::{self, Cursor, Read};
 use tonic::Request;
 
 #[derive(Parser, Debug)]

@@ -12,23 +12,23 @@ use std::{
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use consensus_core::CommitConsumerMonitor;
-use lru::LruCache;
-use iota_metrics::{monitored_mpsc::UnboundedReceiver, monitored_scope, spawn_monitored_task};
-use narwhal_config::Committee;
-use narwhal_executor::{ExecutionIndices, ExecutionState};
-use narwhal_types::ConsensusOutput;
-use serde::{Deserialize, Serialize};
 use iota_macros::{fail_point_async, fail_point_if};
+use iota_metrics::{monitored_mpsc::UnboundedReceiver, monitored_scope, spawn_monitored_task};
 use iota_protocol_config::ProtocolConfig;
 use iota_types::{
     authenticator_state::ActiveJwk,
     base_types::{AuthorityName, EpochId, ObjectID, SequenceNumber, TransactionDigest},
     digests::ConsensusCommitDigest,
     executable_transaction::{TrustedExecutableTransaction, VerifiedExecutableTransaction},
-    messages_consensus::{ConsensusTransaction, ConsensusTransactionKey, ConsensusTransactionKind},
     iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    messages_consensus::{ConsensusTransaction, ConsensusTransactionKey, ConsensusTransactionKind},
     transaction::{SenderSignedData, VerifiedTransaction},
 };
+use lru::LruCache;
+use narwhal_config::Committee;
+use narwhal_executor::{ExecutionIndices, ExecutionState};
+use narwhal_types::ConsensusOutput;
+use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, instrument, trace_span, warn};
 
 use crate::{
@@ -107,19 +107,24 @@ impl ConsensusHandlerInitializer {
 }
 
 pub struct ConsensusHandler<C> {
-    /// A store created for each epoch. ConsensusHandler is recreated each epoch, with the
-    /// corresponding store. This store is also used to get the current epoch ID.
+    /// A store created for each epoch. ConsensusHandler is recreated each
+    /// epoch, with the corresponding store. This store is also used to get
+    /// the current epoch ID.
     epoch_store: Arc<AuthorityPerEpochStore>,
     /// Holds the indices, hash and stats after the last consensus commit
     /// It is used for avoiding replaying already processed transactions,
-    /// checking chain consistency, and accumulating per-epoch consensus output stats.
+    /// checking chain consistency, and accumulating per-epoch consensus output
+    /// stats.
     last_consensus_stats: ExecutionIndicesWithStats,
     checkpoint_service: Arc<C>,
-    /// cache reader is needed when determining the next version to assign for shared objects.
+    /// cache reader is needed when determining the next version to assign for
+    /// shared objects.
     cache_reader: Arc<dyn ObjectCacheRead>,
-    /// Reputation scores used by consensus adapter that we update, forwarded from consensus
+    /// Reputation scores used by consensus adapter that we update, forwarded
+    /// from consensus
     low_scoring_authorities: Arc<ArcSwap<HashMap<AuthorityName, u64>>>,
-    /// The narwhal committee used to do stake computations for deciding set of low scoring authorities
+    /// The narwhal committee used to do stake computations for deciding set of
+    /// low scoring authorities
     committee: Committee,
     // TODO: ConsensusHandler doesn't really share metrics with AuthorityState. We could define
     // a new metrics type here if we want to.
@@ -127,7 +132,8 @@ pub struct ConsensusHandler<C> {
     /// Lru cache to quickly discard transactions processed by consensus
     processed_cache: LruCache<SequencedConsensusTransactionKey, ()>,
     transaction_scheduler: AsyncTransactionScheduler,
-    /// Using the throughput calculator to record the current consensus throughput
+    /// Using the throughput calculator to record the current consensus
+    /// throughput
     throughput_calculator: Arc<ConsensusThroughputCalculator>,
 }
 
@@ -179,8 +185,9 @@ fn update_index_and_hash(
     index: ExecutionIndices,
     v: &[u8],
 ) {
-    // The entry point of handle_consensus_output_internal() has filtered out any already processed
-    // consensus output. So we can safely assume that the index is always increasing.
+    // The entry point of handle_consensus_output_internal() has filtered out any
+    // already processed consensus output. So we can safely assume that the
+    // index is always increasing.
     assert!(last_consensus_stats.index < index);
 
     let previous_hash = last_consensus_stats.hash;
@@ -226,22 +233,25 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
         consensus_output: impl ConsensusOutputAPI,
     ) {
         // This code no longer supports old protocol versions.
-        assert!(self
-            .epoch_store
-            .protocol_config()
-            .consensus_order_end_of_epoch_last());
+        assert!(
+            self.epoch_store
+                .protocol_config()
+                .consensus_order_end_of_epoch_last()
+        );
 
         let last_committed_round = self.last_consensus_stats.index.last_committed_round;
 
         let round = consensus_output.leader_round();
 
-        // TODO: Remove this once narwhal is deprecated. For now mysticeti will not return
-        // more than one leader per round so we are not in danger of ignoring any commits.
+        // TODO: Remove this once narwhal is deprecated. For now mysticeti will not
+        // return more than one leader per round so we are not in danger of
+        // ignoring any commits.
         assert!(round >= last_committed_round);
         if last_committed_round == round {
             // we can receive the same commit twice after restart
-            // It is critical that the writes done by this function are atomic - otherwise we can
-            // lose the later parts of a commit if we restart midway through processing it.
+            // It is critical that the writes done by this function are atomic - otherwise
+            // we can lose the later parts of a commit if we restart midway
+            // through processing it.
             warn!(
                 "Ignoring consensus output for round {} as it is already committed. NOTE: This is only expected if Narwhal is running.",
                 round
@@ -249,7 +259,7 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
             return;
         }
 
-        /* (serialized, transaction, output_cert) */
+        // (serialized, transaction, output_cert)
         let mut transactions = vec![];
         let timestamp = consensus_output.commit_timestamp_ms();
         let leader_author = consensus_output.leader_author_index();
@@ -275,8 +285,9 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
         );
 
         // TODO: testing empty commit explicitly.
-        // Note that consensus commit batch may contain no transactions, but we still need to record the current
-        // round and subdag index in the last_consensus_stats, so that it won't be re-executed in the future.
+        // Note that consensus commit batch may contain no transactions, but we still
+        // need to record the current round and subdag index in the
+        // last_consensus_stats, so that it won't be re-executed in the future.
         let empty_bytes = vec![];
         self.update_index_and_hash(
             ExecutionIndices {
@@ -287,13 +298,15 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
             &empty_bytes,
         );
 
-        // Load all jwks that became active in the previous round, and commit them in this round.
-        // We want to delay one round because none of the transactions in the previous round could
-        // have been authenticated with the jwks that became active in that round.
+        // Load all jwks that became active in the previous round, and commit them in
+        // this round. We want to delay one round because none of the
+        // transactions in the previous round could have been authenticated with
+        // the jwks that became active in that round.
         //
-        // Because of this delay, jwks that become active in the last round of the epoch will
-        // never be committed. That is ok, because in the new epoch, the validators should
-        // immediately re-submit these jwks, and they can become active then.
+        // Because of this delay, jwks that become active in the last round of the epoch
+        // will never be committed. That is ok, because in the new epoch, the
+        // validators should immediately re-submit these jwks, and they can
+        // become active then.
         let new_jwks = self
             .epoch_store
             .get_new_jwks(last_committed_round)
@@ -359,8 +372,11 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
                     if let ConsensusTransactionKind::RandomnessStateUpdate(randomness_round, _) =
                         &transaction.kind
                     {
-                        // These are deprecated and we should never see them. Log an error and eat the tx if one appears.
-                        error!("BUG: saw deprecated RandomnessStateUpdate tx for commit round {round:?}, randomness round {randomness_round:?}")
+                        // These are deprecated and we should never see them. Log an error and eat
+                        // the tx if one appears.
+                        error!(
+                            "BUG: saw deprecated RandomnessStateUpdate tx for commit round {round:?}, randomness round {randomness_round:?}"
+                        )
                     } else {
                         let transaction = SequencedConsensusTransactionKind::External(transaction);
                         transactions.push((serialized_transaction, transaction, authority_index));
@@ -386,16 +402,18 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
 
         let mut all_transactions = Vec::new();
         {
-            // We need a set here as well, since the processed_cache is a LRU cache and can drop
-            // entries while we're iterating over the sequenced transactions.
+            // We need a set here as well, since the processed_cache is a LRU cache and can
+            // drop entries while we're iterating over the sequenced
+            // transactions.
             let mut processed_set = HashSet::new();
 
             for (seq, (serialized, transaction, cert_origin)) in
                 transactions.into_iter().enumerate()
             {
-                // In process_consensus_transactions_and_commit_boundary(), we will add a system consensus commit
-                // prologue transaction, which will be the first transaction in this consensus commit batch.
-                // Therefore, the transaction sequence number starts from 1 here.
+                // In process_consensus_transactions_and_commit_boundary(), we will add a system
+                // consensus commit prologue transaction, which will be the
+                // first transaction in this consensus commit batch. Therefore,
+                // the transaction sequence number starts from 1 here.
                 let current_tx_index = ExecutionIndices {
                     last_committed_round: round,
                     sub_dag_index: commit_sub_dag_index,
@@ -494,10 +512,10 @@ impl AsyncTransactionScheduler {
     }
 }
 
-/// Consensus handler used by Mysticeti. Since Mysticeti repo is not yet integrated, we use a
-/// channel to receive the consensus output from Mysticeti.
-/// During initialization, the sender is passed into Mysticeti which can send consensus output
-/// to the channel.
+/// Consensus handler used by Mysticeti. Since Mysticeti repo is not yet
+/// integrated, we use a channel to receive the consensus output from Mysticeti.
+/// During initialization, the sender is passed into Mysticeti which can send
+/// consensus output to the channel.
 pub struct MysticetiConsensusHandler {
     handle: Option<tokio::task::JoinHandle<()>>,
 }
@@ -509,7 +527,8 @@ impl MysticetiConsensusHandler {
         commit_consumer_monitor: Arc<CommitConsumerMonitor>,
     ) -> Self {
         let handle = spawn_monitored_task!(async move {
-            // TODO: pause when execution is overloaded, so consensus can detect the backpressure.
+            // TODO: pause when execution is overloaded, so consensus can detect the
+            // backpressure.
             while let Some(consensus_output) = receiver.recv().await {
                 let commit_index = consensus_output.commit_ref.index;
                 consensus_handler
@@ -615,9 +634,9 @@ impl<'de> Deserialize<'de> for SequencedConsensusTransactionKind {
     }
 }
 
-// We can't serialize SequencedConsensusTransactionKind directly because it contains a
-// VerifiedExecutableTransaction, which is not serializable (by design). This wrapper allows us to
-// convert to a serializable format easily.
+// We can't serialize SequencedConsensusTransactionKind directly because it
+// contains a VerifiedExecutableTransaction, which is not serializable (by
+// design). This wrapper allows us to convert to a serializable format easily.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum SerializableSequencedConsensusTransactionKind {
     External(ConsensusTransaction),
@@ -731,8 +750,9 @@ impl SequencedConsensusTransaction {
 
     pub fn is_user_tx_with_randomness(&self, randomness_state_enabled: bool) -> bool {
         if !randomness_state_enabled {
-            // If randomness is disabled, these should be processed same as a tx without randomness,
-            // which will eventually fail when the randomness state object is not found.
+            // If randomness is disabled, these should be processed same as a tx without
+            // randomness, which will eventually fail when the randomness state
+            // object is not found.
             return false;
         }
         let SequencedConsensusTransactionKind::External(ConsensusTransaction {
@@ -875,24 +895,24 @@ impl ConsensusCommitInfo {
 mod tests {
     use std::collections::BTreeSet;
 
-    use narwhal_config::AuthorityIdentifier;
-    use narwhal_test_utils::latest_protocol_version;
-    use narwhal_types::{Batch, Certificate, CommittedSubDag, HeaderV1Builder, ReputationScores};
-    use prometheus::Registry;
     use iota_protocol_config::ConsensusTransactionOrdering;
     use iota_types::{
         base_types::{random_object_ref, AuthorityName, IotaAddress},
         committee::Committee,
+        iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
         messages_consensus::{
             AuthorityCapabilitiesV1, ConsensusTransaction, ConsensusTransactionKind,
         },
         object::Object,
-        iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
         supported_protocol_versions::SupportedProtocolVersions,
         transaction::{
             CertifiedTransaction, SenderSignedData, TransactionData, TransactionDataAPI,
         },
     };
+    use narwhal_config::AuthorityIdentifier;
+    use narwhal_test_utils::latest_protocol_version;
+    use narwhal_types::{Batch, Certificate, CommittedSubDag, HeaderV1Builder, ReputationScores};
+    use prometheus::Registry;
 
     use super::*;
     use crate::{

@@ -8,11 +8,13 @@ use diesel::r2d2::R2D2Connection;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
-use crate::errors::IndexerError;
-use crate::store::pg_partition_manager::PgPartitionManager;
-use crate::{metrics::IndexerMetrics, store::IndexerStore, types::IndexerResult};
-
 use super::checkpoint_handler::CheckpointHandler;
+use crate::{
+    errors::IndexerError,
+    metrics::IndexerMetrics,
+    store::{pg_partition_manager::PgPartitionManager, IndexerStore},
+    types::IndexerResult,
+};
 
 pub struct Pruner<S, T: R2D2Connection + 'static> {
     pub store: S,
@@ -67,8 +69,9 @@ where
                         table_name, max_epoch, max_partition
                     );
                 }
-                // drop partitions if pruning is enabled afterwards, where all epochs before min_epoch
-                // would have been pruned already if the pruner was running.
+                // drop partitions if pruning is enabled afterwards, where all epochs before
+                // min_epoch would have been pruned already if the pruner was
+                // running.
                 for epoch in min_partition..min_epoch {
                     self.partition_manager
                         .drop_table_partition(table_name.clone(), epoch)?;

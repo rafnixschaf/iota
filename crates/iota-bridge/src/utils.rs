@@ -2,48 +2,47 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::{
-    EthBridgeCommittee, EthBridgeConfig, EthBridgeLimiter, EthBridgeVault, EthIotaBridge,
-};
-use crate::config::BridgeNodeConfig;
-use crate::config::EthConfig;
-use crate::config::IotaConfig;
-use crate::crypto::BridgeAuthorityKeyPair;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::server::APPLICATION_JSON;
-use crate::types::{AddTokensOnIotaAction, BridgeAction};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
+
 use anyhow::anyhow;
-use ethers::core::k256::ecdsa::SigningKey;
-use ethers::middleware::SignerMiddleware;
-use ethers::prelude::*;
-use ethers::providers::{Http, Provider};
-use ethers::signers::Wallet;
-use ethers::types::Address as EthAddress;
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::secp256k1::Secp256k1KeyPair;
-use fastcrypto::traits::EncodeDecodeBase64;
-use fastcrypto::traits::KeyPair;
+use ethers::{
+    core::k256::ecdsa::SigningKey,
+    middleware::SignerMiddleware,
+    prelude::*,
+    providers::{Http, Provider},
+    signers::Wallet,
+    types::Address as EthAddress,
+};
+use fastcrypto::{
+    ed25519::Ed25519KeyPair,
+    encoding::{Encoding, Hex},
+    secp256k1::Secp256k1KeyPair,
+    traits::{EncodeDecodeBase64, KeyPair},
+};
 use futures::future::join_all;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
 use iota_config::Config;
-use iota_json_rpc_types::IotaExecutionStatus;
-use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
+use iota_json_rpc_types::{
+    IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponseOptions,
+};
 use iota_keys::keypair_file::read_key;
 use iota_sdk::wallet_context::WalletContext;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::IotaAddress;
-use iota_types::bridge::BridgeChainId;
-use iota_types::bridge::{BRIDGE_MODULE_NAME, BRIDGE_REGISTER_FOREIGN_TOKEN_FUNCTION_NAME};
-use iota_types::crypto::get_key_pair;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::crypto::ToFromBytes;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{ObjectArg, TransactionData};
-use iota_types::BRIDGE_PACKAGE_ID;
+use iota_types::{
+    base_types::IotaAddress,
+    bridge::{BridgeChainId, BRIDGE_MODULE_NAME, BRIDGE_REGISTER_FOREIGN_TOKEN_FUNCTION_NAME},
+    crypto::{get_key_pair, IotaKeyPair, ToFromBytes},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{ObjectArg, TransactionData},
+    BRIDGE_PACKAGE_ID,
+};
+
+use crate::{
+    abi::{EthBridgeCommittee, EthBridgeConfig, EthBridgeLimiter, EthBridgeVault, EthIotaBridge},
+    config::{BridgeNodeConfig, EthConfig, IotaConfig},
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKeyBytes},
+    server::APPLICATION_JSON,
+    types::{AddTokensOnIotaAction, BridgeAction},
+};
 
 pub type EthSigner = SignerMiddleware<Provider<Http>, Wallet<SigningKey>>;
 
@@ -55,7 +54,8 @@ pub struct EthBridgeContracts<P> {
     pub config: EthBridgeConfig<Provider<P>>,
 }
 
-/// Generate Bridge Authority key (Secp256k1KeyPair) and write to a file as base64 encoded `privkey`.
+/// Generate Bridge Authority key (Secp256k1KeyPair) and write to a file as
+/// base64 encoded `privkey`.
 pub fn generate_bridge_authority_key_and_write_to_file(
     path: &PathBuf,
 ) -> Result<(), anyhow::Error> {
@@ -75,7 +75,8 @@ pub fn generate_bridge_authority_key_and_write_to_file(
         .map_err(|err| anyhow!("Failed to write encoded key to path: {:?}", err))
 }
 
-/// Generate Bridge Client key (Secp256k1KeyPair or Ed25519KeyPair) and write to a file as base64 encoded `flag || privkey`.
+/// Generate Bridge Client key (Secp256k1KeyPair or Ed25519KeyPair) and write to
+/// a file as base64 encoded `flag || privkey`.
 pub fn generate_bridge_client_key_and_write_to_file(
     path: &PathBuf,
     use_ecdsa: bool,
@@ -100,7 +101,8 @@ pub fn generate_bridge_client_key_and_write_to_file(
         .map_err(|err| anyhow!("Failed to write encoded key to path: {:?}", err))
 }
 
-/// Given the address of IotaBridge Proxy, return the addresses of the committee, limiter, vault, and config.
+/// Given the address of IotaBridge Proxy, return the addresses of the
+/// committee, limiter, vault, and config.
 pub async fn get_eth_contract_addresses<P: ethers::providers::JsonRpcClient + 'static>(
     bridge_proxy_address: EthAddress,
     provider: &Arc<Provider<P>>,
@@ -120,7 +122,8 @@ pub async fn get_eth_contract_addresses<P: ethers::providers::JsonRpcClient + 's
     ))
 }
 
-/// Given the address of IotaBridge Proxy, return the contracts of the committee, limiter, vault, and config.
+/// Given the address of IotaBridge Proxy, return the contracts of the
+/// committee, limiter, vault, and config.
 pub async fn get_eth_contracts<P: ethers::providers::JsonRpcClient + 'static>(
     bridge_proxy_address: EthAddress,
     provider: &Arc<Provider<P>>,
@@ -280,7 +283,8 @@ pub async fn publish_and_register_coins_return_add_coins_on_iota_action(
         let mut uc = None;
         let mut metadata = None;
         for object_change in &object_changes {
-            if let o @ iota_json_rpc_types::ObjectChange::Created { object_type, .. } = object_change
+            if let o @ iota_json_rpc_types::ObjectChange::Created { object_type, .. } =
+                object_change
             {
                 if object_type.name.as_str().starts_with("TreasuryCap") {
                     assert!(tc.is_none() && type_.is_none());

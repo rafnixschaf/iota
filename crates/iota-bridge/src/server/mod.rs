@@ -3,7 +3,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(clippy::inconsistent_digit_grouping)]
-use crate::with_metrics;
+use std::{net::SocketAddr, str::FromStr, sync::Arc};
+
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    routing::get,
+    Json, Router,
+};
+use ethers::types::Address as EthAddress;
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    traits::ToFromBytes,
+};
+use iota_types::{bridge::BridgeChainId, TypeTag};
+use tracing::{info, instrument};
+
 use crate::{
     crypto::BridgeAuthorityPublicKeyBytes,
     error::BridgeError,
@@ -14,21 +29,8 @@ use crate::{
         BlocklistCommitteeAction, BlocklistType, BridgeAction, EmergencyAction,
         EmergencyActionType, EvmContractUpgradeAction, LimitUpdateAction, SignedBridgeAction,
     },
+    with_metrics,
 };
-use axum::{
-    extract::{Path, State},
-    Json,
-};
-use axum::{http::StatusCode, routing::get, Router};
-use ethers::types::Address as EthAddress;
-use fastcrypto::{
-    encoding::{Encoding, Hex},
-    traits::ToFromBytes,
-};
-use std::sync::Arc;
-use std::{net::SocketAddr, str::FromStr};
-use iota_types::{bridge::BridgeChainId, TypeTag};
-use tracing::{info, instrument};
 
 pub mod governance_verifier;
 pub mod handler;
@@ -40,7 +42,8 @@ pub const APPLICATION_JSON: &str = "application/json";
 
 pub const PING_PATH: &str = "/ping";
 
-// Important: for BridgeActions, the paths need to match the ones in bridge_client.rs
+// Important: for BridgeActions, the paths need to match the ones in
+// bridge_client.rs
 pub const ETH_TO_IOTA_TX_PATH: &str = "/sign/bridge_tx/eth/iota/:tx_hash/:event_index";
 pub const IOTA_TO_ETH_TX_PATH: &str = "/sign/bridge_tx/iota/eth/:tx_digest/:event_index";
 pub const COMMITTEE_BLOCKLIST_UPDATE_PATH: &str =
@@ -56,8 +59,7 @@ pub const EVM_CONTRACT_UPGRADE_PATH: &str =
     "/sign/upgrade_evm_contract/:chain_id/:nonce/:proxy_address/:new_impl_address";
 pub const ADD_TOKENS_ON_IOTA_PATH: &str =
     "/sign/add_tokens_on_iota/:chain_id/:nonce/:native/:token_ids/:token_type_names/:token_prices";
-pub const ADD_TOKENS_ON_EVM_PATH: &str =
-    "/sign/add_tokens_on_evm/:chain_id/:nonce/:native/:token_ids/:token_addresses/:token_iota_decimals/:token_prices";
+pub const ADD_TOKENS_ON_EVM_PATH: &str = "/sign/add_tokens_on_evm/:chain_id/:nonce/:native/:token_ids/:token_addresses/:token_iota_decimals/:token_prices";
 
 /// BridgeNode's public metadata that is acceesible via the `/ping` endpoint.
 // Be careful with what to put here, as it is public.
@@ -433,7 +435,7 @@ async fn handle_add_tokens_on_iota(
                 return Err(BridgeError::InvalidBridgeClientRequest(format!(
                     "Invalid native flag: {}",
                     native
-                )))
+                )));
             }
         };
         let token_ids = token_ids
@@ -514,7 +516,7 @@ async fn handle_add_tokens_on_evm(
                 return Err(BridgeError::InvalidBridgeClientRequest(format!(
                     "Invalid native flag: {}",
                     native
-                )))
+                )));
             }
         };
         let token_ids = token_ids
@@ -614,10 +616,10 @@ mod tests {
     use iota_types::bridge::TOKEN_ID_BTC;
 
     use super::*;
-    use crate::client::bridge_client::BridgeClient;
-    use crate::server::mock_handler::BridgeRequestMockHandler;
-    use crate::test_utils::get_test_authorities_and_run_mock_bridge_server;
-    use crate::types::BridgeCommittee;
+    use crate::{
+        client::bridge_client::BridgeClient, server::mock_handler::BridgeRequestMockHandler,
+        test_utils::get_test_authorities_and_run_mock_bridge_server, types::BridgeCommittee,
+    };
 
     #[tokio::test]
     async fn test_bridge_server_handle_blocklist_update_action_path() {

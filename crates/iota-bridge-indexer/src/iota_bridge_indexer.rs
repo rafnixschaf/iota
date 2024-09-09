@@ -4,30 +4,36 @@
 
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
-use diesel::dsl::now;
-use diesel::{Connection, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper};
-use diesel::{ExpressionMethods, TextExpressionMethods};
-use tracing::info;
-
+use diesel::{
+    dsl::now, Connection, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl,
+    SelectableHelper, TextExpressionMethods,
+};
 use iota_bridge::events::{
     MoveTokenDepositedEvent, MoveTokenTransferApproved, MoveTokenTransferClaimed,
 };
-use iota_indexer_builder::indexer_builder::{DataMapper, IndexerProgressStore, Persistent};
-use iota_indexer_builder::iota_datasource::CheckpointTxnData;
-use iota_indexer_builder::Task;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::event::Event;
-use iota_types::execution_status::ExecutionStatus;
-use iota_types::full_checkpoint_content::CheckpointTransaction;
-use iota_types::{BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID};
+use iota_indexer_builder::{
+    indexer_builder::{DataMapper, IndexerProgressStore, Persistent},
+    iota_datasource::CheckpointTxnData,
+    Task,
+};
+use iota_types::{
+    effects::TransactionEffectsAPI, event::Event, execution_status::ExecutionStatus,
+    full_checkpoint_content::CheckpointTransaction, BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID,
+};
+use tracing::info;
 
-use crate::metrics::BridgeIndexerMetrics;
-use crate::postgres_manager::PgPool;
-use crate::schema::progress_store::{columns, dsl};
-use crate::schema::{iota_error_transactions, token_transfer, token_transfer_data};
 use crate::{
-    models, schema, BridgeDataSource, ProcessedTxnData, IotaTxnError, TokenTransfer,
-    TokenTransferData, TokenTransferStatus,
+    metrics::BridgeIndexerMetrics,
+    models,
+    postgres_manager::PgPool,
+    schema,
+    schema::{
+        iota_error_transactions,
+        progress_store::{columns, dsl},
+        token_transfer, token_transfer_data,
+    },
+    BridgeDataSource, IotaTxnError, ProcessedTxnData, TokenTransfer, TokenTransferData,
+    TokenTransferStatus,
 };
 
 /// Persistent layer impl
@@ -122,7 +128,8 @@ impl IndexerProgressStore for PgBridgePersistent {
         let mut conn = self.pool.get()?;
         // get all unfinished tasks
         let cp: Vec<models::ProgressStore> = dsl::progress_store
-            // TODO: using like could be error prone, change the progress store schema to stare the task name properly.
+            // TODO: using like could be error prone, change the progress store schema to stare the
+            // task name properly.
             .filter(columns::task_name.like(format!("{prefix} - %")))
             .filter(columns::checkpoint.lt(columns::target_checkpoint))
             .order_by(columns::target_checkpoint.desc())

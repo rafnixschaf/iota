@@ -8,14 +8,14 @@ use consensus_core::{TransactionVerifier, ValidationError};
 use eyre::WrapErr;
 use fastcrypto_tbls::dkg;
 use iota_metrics::monitored_scope;
-use narwhal_types::{validate_batch_version, BatchAPI};
-use narwhal_worker::TransactionValidator;
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
 use iota_protocol_config::ProtocolConfig;
 use iota_types::{
     error::IotaError,
     messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
 };
+use narwhal_types::{validate_batch_version, BatchAPI};
+use narwhal_worker::TransactionValidator;
+use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
 use tap::TapFallible;
 use tracing::{info, warn};
 
@@ -65,9 +65,11 @@ impl IotaTxValidator {
                     cert_batch.push(*certificate);
 
                     // if !certificate.contains_shared_object() {
-                    //     // new_unchecked safety: we do not use the certs in this list until all
-                    //     // have had their signatures verified.
-                    //     owned_tx_certs.push(VerifiedCertificate::new_unchecked(*certificate));
+                    //     // new_unchecked safety: we do not use the certs in
+                    // this list until all     // have had
+                    // their signatures verified.
+                    //     owned_tx_certs.
+                    // push(VerifiedCertificate::new_unchecked(*certificate));
                     // }
                 }
                 ConsensusTransactionKind::CheckpointSignature(signature) => {
@@ -106,7 +108,8 @@ impl IotaTxValidator {
             .tap_err(|e| warn!("batch verification error: {}", e))
             .wrap_err("Malformed batch (failed to verify)")?;
 
-        // All checkpoint sigs have been verified, forward them to the checkpoint service
+        // All checkpoint sigs have been verified, forward them to the checkpoint
+        // service
         for ckpt in ckpt_messages {
             self.checkpoint_service
                 .notify_checkpoint_signature(&self.epoch_store, &ckpt)?;
@@ -120,11 +123,12 @@ impl IotaTxValidator {
             .inc_by(ckpt_count as u64);
         Ok(())
 
-        // todo - we should un-comment line below once we have a way to revert those transactions at the end of epoch
-        // all certificates had valid signatures, schedule them for execution prior to sequencing
+        // todo - we should un-comment line below once we have a way to revert
+        // those transactions at the end of epoch all certificates had
+        // valid signatures, schedule them for execution prior to sequencing
         // which is unnecessary for owned object transactions.
-        // It is unnecessary to write to pending_certificates table because the certs will be written
-        // via consensus output.
+        // It is unnecessary to write to pending_certificates table because the
+        // certs will be written via consensus output.
         // self.transaction_manager
         //     .enqueue_certificates(owned_tx_certs, &self.epoch_store)
         //     .wrap_err("Failed to schedule certificates for execution")
@@ -140,7 +144,8 @@ impl TransactionValidator for IotaTxValidator {
     type Error = eyre::Report;
 
     fn validate(&self, _tx: &[u8]) -> Result<(), Self::Error> {
-        // We only accept transactions from local iota instance so no need to re-verify it
+        // We only accept transactions from local iota instance so no need to re-verify
+        // it
         Ok(())
     }
 
@@ -215,14 +220,14 @@ impl IotaTxValidatorMetrics {
 mod tests {
     use std::sync::Arc;
 
-    use narwhal_test_utils::latest_protocol_version;
-    use narwhal_types::{Batch, BatchV1};
-    use narwhal_worker::TransactionValidator;
     use iota_macros::sim_test;
     use iota_types::{
         crypto::Ed25519IotaSignature, messages_consensus::ConsensusTransaction, object::Object,
         signature::GenericSignature,
     };
+    use narwhal_test_utils::latest_protocol_version;
+    use narwhal_types::{Batch, BatchV1};
+    use narwhal_worker::TransactionValidator;
 
     use crate::{
         authority::test_authority_builder::TestAuthorityBuilder,
@@ -285,10 +290,11 @@ mod tests {
             .into_iter()
             .map(|mut cert| {
                 // set it to an all-zero user signature
-                cert.tx_signatures_mut_for_testing()[0] =
-                    GenericSignature::Signature(iota_types::crypto::Signature::Ed25519IotaSignature(
+                cert.tx_signatures_mut_for_testing()[0] = GenericSignature::Signature(
+                    iota_types::crypto::Signature::Ed25519IotaSignature(
                         Ed25519IotaSignature::default(),
-                    ));
+                    ),
+                );
                 bcs::to_bytes(&ConsensusTransaction::new_certificate_message(&name1, cert)).unwrap()
             })
             .collect();
@@ -300,7 +306,8 @@ mod tests {
         // TODO: Remove once we have removed BatchV1 from the codebase.
         let batch_v1 = Batch::V1(BatchV1::new(vec![]));
 
-        // Case #1: Receive BatchV1 but network has upgraded past v11 so we fail because we expect BatchV2
+        // Case #1: Receive BatchV1 but network has upgraded past v11 so we fail because
+        // we expect BatchV2
         let res_batch = validator.validate_batch(&batch_v1, latest_protocol_config);
         assert!(res_batch.is_err());
 

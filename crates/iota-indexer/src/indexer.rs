@@ -2,34 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::env;
+use std::{collections::HashMap, env};
 
 use anyhow::Result;
+use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
+use iota_data_ingestion_core::{
+    DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, WorkerPool,
+};
+use iota_metrics::spawn_monitored_task;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use prometheus::Registry;
 use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
-use async_trait::async_trait;
-use iota_metrics::spawn_monitored_task;
-use iota_data_ingestion_core::{
-    DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, WorkerPool,
+use crate::{
+    build_json_rpc_server,
+    errors::IndexerError,
+    handlers::{
+        checkpoint_handler::new_handlers,
+        objects_snapshot_processor::{start_objects_snapshot_processor, SnapshotLagConfig},
+        pruner::Pruner,
+    },
+    indexer_reader::IndexerReader,
+    metrics::IndexerMetrics,
+    store::IndexerStore,
+    IndexerConfig,
 };
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-
-use crate::build_json_rpc_server;
-use crate::errors::IndexerError;
-use crate::handlers::checkpoint_handler::new_handlers;
-use crate::handlers::objects_snapshot_processor::{
-    start_objects_snapshot_processor, SnapshotLagConfig,
-};
-use crate::handlers::pruner::Pruner;
-use crate::indexer_reader::IndexerReader;
-use crate::metrics::IndexerMetrics;
-use crate::store::IndexerStore;
-use crate::IndexerConfig;
 
 pub(crate) const DOWNLOAD_QUEUE_SIZE: usize = 200;
 const INGESTION_READER_TIMEOUT_SECS: u64 = 20;
@@ -100,7 +100,8 @@ impl Indexer {
             ..Default::default()
         };
 
-        // Start objects snapshot processor, which is a separate pipeline with its ingestion pipeline.
+        // Start objects snapshot processor, which is a separate pipeline with its
+        // ingestion pipeline.
         let (object_snapshot_worker, object_snapshot_watermark) =
             start_objects_snapshot_processor::<S, T>(
                 store.clone(),
@@ -123,10 +124,10 @@ impl Indexer {
             spawn_monitored_task!(pruner.start(CancellationToken::new()));
         }
 
-        // If we already have chain identifier indexed (i.e. the first checkpoint has been indexed),
-        // then we persist protocol configs for protocol versions not yet in the db.
-        // Otherwise, we would do the persisting in `commit_checkpoint` while the first cp is
-        // being indexed.
+        // If we already have chain identifier indexed (i.e. the first checkpoint has
+        // been indexed), then we persist protocol configs for protocol versions
+        // not yet in the db. Otherwise, we would do the persisting in
+        // `commit_checkpoint` while the first cp is being indexed.
         if let Some(chain_id) = store.get_chain_identifier().await? {
             store.persist_protocol_configs_and_feature_flags(chain_id)?;
         }

@@ -19,9 +19,9 @@ use crate::{
     consensus_adapter::SubmitToConsensus, consensus_handler::SequencedConsensusTransactionKey,
 };
 
-/// Gets a client to submit transactions to Mysticeti, or waits for one to be available.
-/// This hides the complexities of async consensus initialization and submitting to different
-/// instances of consensus across epochs.
+/// Gets a client to submit transactions to Mysticeti, or waits for one to be
+/// available. This hides the complexities of async consensus initialization and
+/// submitting to different instances of consensus across epochs.
 #[derive(Default, Clone)]
 pub struct LazyMysticetiClient {
     client: Arc<ArcSwapOption<TransactionClient>>,
@@ -40,9 +40,9 @@ impl LazyMysticetiClient {
             return client;
         }
 
-        // Consensus client is initialized after validators or epoch starts, and cleared after an epoch ends.
-        // But calls to get() can happen during validator startup or epoch change, before consensus finished
-        // initializations.
+        // Consensus client is initialized after validators or epoch starts, and cleared
+        // after an epoch ends. But calls to get() can happen during validator
+        // startup or epoch change, before consensus finished initializations.
         // TODO: maybe listen to updates from consensus manager instead of polling.
         let mut count = 0;
         let start = Instant::now();
@@ -81,8 +81,8 @@ impl SubmitToConsensus for LazyMysticetiClient {
         _epoch_store: &Arc<AuthorityPerEpochStore>,
     ) -> IotaResult {
         // TODO(mysticeti): confirm comment is still true
-        // The retrieved TransactionClient can be from the past epoch. Submit would fail after
-        // Mysticeti shuts down, so there should be no correctness issue.
+        // The retrieved TransactionClient can be from the past epoch. Submit would fail
+        // after Mysticeti shuts down, so there should be no correctness issue.
         let client = self.get().await;
         let transactions_bytes = transactions
             .iter()

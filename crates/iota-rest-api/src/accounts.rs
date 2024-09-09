@@ -2,16 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler};
-use crate::reader::StateReader;
-use crate::{response::ResponseContent, Result};
-use crate::{Page, RestService};
-use axum::extract::Query;
-use axum::extract::{Path, State};
-use openapiv3::v3_1::Operation;
+use axum::extract::{Path, Query, State};
 use iota_sdk2::types::{Address, ObjectId, StructTag, Version};
 use iota_types::iota_sdk2_conversions::struct_tag_core_to_sdk;
+use openapiv3::v3_1::Operation;
 use tap::Pipe;
+
+use crate::{
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    reader::StateReader,
+    response::ResponseContent,
+    Page, RestService, Result,
+};
 
 pub struct ListAccountObjects;
 
@@ -66,8 +68,8 @@ async fn list_account_objects(
         .collect::<Vec<_>>();
 
     let cursor = if object_info.len() > limit {
-        // SAFETY: We've already verified that object_info is greater than limit, which is
-        // gaurenteed to be >= 1.
+        // SAFETY: We've already verified that object_info is greater than limit, which
+        // is gaurenteed to be >= 1.
         object_info.pop().unwrap().object_id.pipe(Some)
     } else {
         None

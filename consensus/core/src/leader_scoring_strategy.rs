@@ -21,10 +21,10 @@ pub(crate) trait ScoringStrategy: Send + Sync {
     fn leader_scoring_round_range(&self, min_round: u32, max_round: u32) -> Range<u32>;
 }
 
-/// This scoring strategy is like `CertifiedVoteScoringStrategyV1` but instead of
-/// only giving one point for each vote that is included in 2f+1 certificates. We
-/// give a score equal to the amount of stake of all certificates that included
-/// the vote.
+/// This scoring strategy is like `CertifiedVoteScoringStrategyV1` but instead
+/// of only giving one point for each vote that is included in 2f+1
+/// certificates. We give a score equal to the amount of stake of all
+/// certificates that included the vote.
 pub(crate) struct CertifiedVoteScoringStrategyV2 {}
 
 impl ScoringStrategy for CertifiedVoteScoringStrategyV2 {
@@ -37,7 +37,10 @@ impl ScoringStrategy for CertifiedVoteScoringStrategyV2 {
         let leader_blocks = subdag.get_blocks_at_slot(leader_slot);
 
         if leader_blocks.is_empty() {
-            tracing::trace!("[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring", subdag.context.own_index);
+            tracing::trace!(
+                "[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring",
+                subdag.context.own_index
+            );
             return scores_per_authority;
         }
 
@@ -98,8 +101,8 @@ impl ScoringStrategy for CertifiedVoteScoringStrategyV2 {
     }
 }
 
-/// This scoring strategy gives one point for each authority vote that is included
-/// in 2f+1 certificates. We are calling this a certified vote.
+/// This scoring strategy gives one point for each authority vote that is
+/// included in 2f+1 certificates. We are calling this a certified vote.
 pub(crate) struct CertifiedVoteScoringStrategyV1 {}
 
 impl ScoringStrategy for CertifiedVoteScoringStrategyV1 {
@@ -112,7 +115,10 @@ impl ScoringStrategy for CertifiedVoteScoringStrategyV1 {
         let leader_blocks = subdag.get_blocks_at_slot(leader_slot);
 
         if leader_blocks.is_empty() {
-            tracing::trace!("[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring", subdag.context.own_index);
+            tracing::trace!(
+                "[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring",
+                subdag.context.own_index
+            );
             return scores_per_authority;
         }
 
@@ -183,7 +189,10 @@ impl ScoringStrategy for VoteScoringStrategy {
         let leader_blocks = subdag.get_blocks_at_slot(leader_slot);
 
         if leader_blocks.is_empty() {
-            tracing::trace!("[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring", subdag.context.own_index);
+            tracing::trace!(
+                "[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring",
+                subdag.context.own_index
+            );
             return scores_per_authority;
         }
 
@@ -196,8 +205,9 @@ impl ScoringStrategy for VoteScoringStrategy {
         let voting_round = leader_slot.round + 1;
         let voting_blocks = subdag.get_blocks_at_round(voting_round);
         for potential_vote in voting_blocks {
-            // TODO: use the decided leader as input instead of leader slot. If the leader was skipped,
-            // votes to skip should be included in the score as well.
+            // TODO: use the decided leader as input instead of leader slot. If the leader
+            // was skipped, votes to skip should be included in the score as
+            // well.
             if subdag.is_vote(&potential_vote, leader_block) {
                 let authority = potential_vote.author();
                 tracing::trace!(
@@ -236,7 +246,10 @@ impl ScoringStrategy for CertificateScoringStrategy {
         let leader_blocks = subdag.get_blocks_at_slot(leader_slot);
 
         if leader_blocks.is_empty() {
-            tracing::trace!("[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring", subdag.context.own_index);
+            tracing::trace!(
+                "[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring",
+                subdag.context.own_index
+            );
             return scores_per_authority;
         }
 

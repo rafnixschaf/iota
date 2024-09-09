@@ -2,25 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use diesel::connection::SimpleConnection;
+use std::{env, net::SocketAddr, path::PathBuf};
+
+use diesel::{connection::SimpleConnection, r2d2::R2D2Connection};
+use iota_json_rpc_types::IotaTransactionBlockResponse;
 use iota_metrics::init_metrics;
 use secrecy::ExposeSecret;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-
-use diesel::r2d2::R2D2Connection;
-use std::env;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use iota_json_rpc_types::IotaTransactionBlockResponse;
 use tracing::info;
 
-use crate::db::{new_connection_pool_with_config, ConnectionPoolConfig};
-use crate::errors::IndexerError;
-use crate::handlers::objects_snapshot_processor::SnapshotLagConfig;
-use crate::indexer::Indexer;
-use crate::store::PgIndexerStore;
-use crate::{IndexerConfig, IndexerMetrics};
+use crate::{
+    db::{new_connection_pool_with_config, ConnectionPoolConfig},
+    errors::IndexerError,
+    handlers::objects_snapshot_processor::SnapshotLagConfig,
+    indexer::Indexer,
+    store::PgIndexerStore,
+    IndexerConfig, IndexerMetrics,
+};
 
 pub enum ReaderWriterConfig {
     Reader { reader_mode_rpc_url: String },
@@ -51,16 +50,17 @@ pub async fn start_test_indexer<T: R2D2Connection + Send + 'static>(
         db_url,
         rpc_url,
         reader_writer_config,
-        /* reset_database */ false,
+        // reset_database
+        false,
         Some(data_ingestion_path),
         CancellationToken::new(),
     )
     .await
 }
 
-/// Starts an indexer reader or writer for testing depending on the `reader_writer_config`. If
-/// `reset_database` is true, the database instance named in `db_url` will be dropped and
-/// reinstantiated.
+/// Starts an indexer reader or writer for testing depending on the
+/// `reader_writer_config`. If `reset_database` is true, the database instance
+/// named in `db_url` will be dropped and reinstantiated.
 pub async fn start_test_indexer_impl<T: R2D2Connection + 'static>(
     db_url: Option<String>,
     rpc_url: String,
@@ -180,9 +180,10 @@ fn replace_db_name(db_url: &str, new_db_name: &str) -> (String, String) {
 }
 
 pub async fn force_delete_database<T: R2D2Connection + 'static>(db_url: String) {
-    // Replace the database name with the default `postgres`, which should be the last string after `/`
-    // This is necessary because you can't drop a database while being connected to it.
-    // Hence switch to the default `postgres` database to drop the active database.
+    // Replace the database name with the default `postgres`, which should be the
+    // last string after `/` This is necessary because you can't drop a database
+    // while being connected to it. Hence switch to the default `postgres`
+    // database to drop the active database.
     let (default_db_url, db_name) = replace_db_name(&db_url, "postgres");
     let pool_config = ConnectionPoolConfig::default();
 

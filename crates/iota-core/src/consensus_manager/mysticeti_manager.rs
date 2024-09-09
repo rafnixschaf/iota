@@ -8,14 +8,15 @@ use async_trait::async_trait;
 use consensus_config::{Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
 use consensus_core::{CommitConsumer, CommitIndex, ConsensusAuthority};
 use fastcrypto::ed25519;
-use iota_metrics::{monitored_mpsc::unbounded_channel, RegistryID, RegistryService};
-use narwhal_executor::ExecutionState;
-use prometheus::Registry;
 use iota_config::NodeConfig;
+use iota_metrics::{monitored_mpsc::unbounded_channel, RegistryID, RegistryService};
 use iota_protocol_config::ConsensusNetwork;
 use iota_types::{
-    committee::EpochId, iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    committee::EpochId,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
 };
+use narwhal_executor::ExecutionState;
+use prometheus::Registry;
 use tokio::sync::Mutex;
 use tracing::info;
 
@@ -52,7 +53,8 @@ pub struct MysticetiManager {
 
 impl MysticetiManager {
     /// NOTE: Mysticeti protocol key uses Ed25519 instead of BLS.
-    /// But for security, the protocol keypair must be different from the network keypair.
+    /// But for security, the protocol keypair must be different from the
+    /// network keypair.
     pub fn new(
         protocol_keypair: ed25519::Ed25519KeyPair,
         network_keypair: ed25519::Ed25519KeyPair,
@@ -202,7 +204,8 @@ impl ConsensusManagerTrait for MysticetiManager {
         // Stop consensus submissions.
         self.client.clear();
 
-        // swap with empty to ensure there is no other reference to authority and we can safely do Arc unwrap
+        // swap with empty to ensure there is no other reference to authority and we can
+        // safely do Arc unwrap
         let r = self.authority.swap(None).unwrap();
         let Ok((authority, registry_id)) = Arc::try_unwrap(r) else {
             panic!("Failed to retrieve the mysticeti authority");

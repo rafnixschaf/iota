@@ -9,8 +9,9 @@ use insta::assert_yaml_snapshot;
 use iota_network_stack::Multiaddr;
 use rand::{rngs::StdRng, SeedableRng as _};
 
-// Committee is not sent over network or stored on disk itself, but some of its fields are.
-// So this test can still be useful to detect accidental format changes.
+// Committee is not sent over network or stored on disk itself, but some of its
+// fields are. So this test can still be useful to detect accidental format
+// changes.
 #[test]
 fn committee_snapshot_matches() {
     let epoch = 100;

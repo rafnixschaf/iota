@@ -2,33 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fmt::Debug;
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 
-use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{
+    response::{IntoResponse, Response},
+    Json,
+};
 use fastcrypto::encoding::Hex;
-use serde::de::Error as DeError;
-use serde::{Deserialize, Serializer};
-use serde::{Deserializer, Serialize};
-use serde_json::Value;
-use strum_macros::EnumIter;
-use strum_macros::EnumString;
-
 use iota_sdk::rpc_types::{IotaExecutionStatus, IotaTransactionBlockKind};
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest};
-use iota_types::crypto::PublicKey as IotaPublicKey;
-use iota_types::crypto::SignatureScheme;
-use iota_types::governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME};
-use iota_types::messages_checkpoint::CheckpointDigest;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::transaction::{Argument, CallArg, Command, ObjectArg, TransactionData};
-use iota_types::IOTA_SYSTEM_PACKAGE_ID;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest},
+    crypto::{PublicKey as IotaPublicKey, SignatureScheme},
+    governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME},
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+    messages_checkpoint::CheckpointDigest,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{Argument, CallArg, Command, ObjectArg, TransactionData},
+    IOTA_SYSTEM_PACKAGE_ID,
+};
+use serde::{de::Error as DeError, Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
+use strum_macros::{EnumIter, EnumString};
 
-use crate::errors::{Error, ErrorType};
-use crate::operations::Operations;
-use crate::IOTA;
+use crate::{
+    errors::{Error, ErrorType},
+    operations::Operations,
+    IOTA,
+};
 
 pub type BlockHeight = u64;
 
@@ -174,8 +174,7 @@ impl Amount {
 mod str_format {
     use std::str::FromStr;
 
-    use serde::de::Error;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S>(value: &i128, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -905,8 +904,9 @@ impl InternalOperation {
             } => {
                 let mut builder = ProgrammableTransactionBuilder::new();
 
-                // [WORKAROUND] - this is a hack to work out if the staking ops is for a selected amount or None amount (whole wallet).
-                // if amount is none, validator input will be created after the system object input
+                // [WORKAROUND] - this is a hack to work out if the staking ops is for a
+                // selected amount or None amount (whole wallet). if amount is
+                // none, validator input will be created after the system object input
                 let (validator, system_state, amount) = if let Some(amount) = amount {
                     let amount = builder.pure(amount)?;
                     let validator = builder.input(CallArg::Pure(bcs::to_bytes(&validator)?))?;
@@ -935,8 +935,10 @@ impl InternalOperation {
                 let mut builder = ProgrammableTransactionBuilder::new();
 
                 for stake_id in metadata.objects {
-                    // [WORKAROUND] - this is a hack to work out if the withdraw stake ops is for selected stake_ids or None (all stakes) using the index of the call args.
-                    // if stake_ids is not empty, id input will be created after the system object input
+                    // [WORKAROUND] - this is a hack to work out if the withdraw stake ops is for
+                    // selected stake_ids or None (all stakes) using the index of the call args.
+                    // if stake_ids is not empty, id input will be created after the system object
+                    // input
                     let (system_state, id) = if !stake_ids.is_empty() {
                         let system_state = builder.input(CallArg::IOTA_SYSTEM_MUT)?;
                         let id = builder.obj(ObjectArg::ImmOrOwnedObject(stake_id))?;

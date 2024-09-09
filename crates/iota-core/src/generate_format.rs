@@ -2,53 +2,46 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+use std::{fs::File, io::Write, str::FromStr};
+
 use clap::*;
-use fastcrypto_zkp::bn254::zk_login::OIDCProvider;
-use fastcrypto_zkp::zk_login_utils::Bn254FrElement;
-use move_core_types::language_storage::{StructTag, TypeTag};
-use pretty_assertions::assert_str_eq;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
-use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
-use std::str::FromStr;
-use std::{fs::File, io::Write};
-use iota_types::execution_status::{
-    CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
-    TypeArgumentError,
-};
-use iota_types::messages_grpc::ObjectInfoRequestKind;
-use iota_types::move_package::TypeOrigin;
+use fastcrypto_zkp::{bn254::zk_login::OIDCProvider, zk_login_utils::Bn254FrElement};
 use iota_types::{
-    base_types::MoveObjectType_,
-    crypto::Signer,
+    base_types::{
+        self, MoveObjectType, MoveObjectType_, ObjectDigest, ObjectID, TransactionDigest,
+        TransactionEffectsDigest,
+    },
+    crypto::{
+        get_key_pair, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
+        AuthorityPublicKeyBytes, AuthoritySignature, IotaKeyPair, KeypairTraits, PublicKey,
+        Signature, Signer, ZkLoginPublicIdentifier,
+    },
+    effects::{IDOperation, ObjectIn, ObjectOut, TransactionEffects, UnchangedSharedKind},
+    execution_status::{
+        CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
+        TypeArgumentError,
+    },
     messages_checkpoint::{
         CheckpointContents, CheckpointContentsDigest, CheckpointDigest, CheckpointSummary,
         FullCheckpointContents,
     },
-    transaction::TransactionExpiration,
-};
-use iota_types::{
-    base_types::{
-        self, MoveObjectType, ObjectDigest, ObjectID, TransactionDigest, TransactionEffectsDigest,
-    },
-    crypto::{
-        get_key_pair, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-        AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, Signature, IotaKeyPair,
-    },
+    messages_grpc::ObjectInfoRequestKind,
+    move_package::TypeOrigin,
     multisig::{MultiSig, MultiSigPublicKey},
     object::{Data, Owner},
     signature::GenericSignature,
     storage::DeleteKind,
     transaction::{
-        Argument, CallArg, Command, EndOfEpochTransactionKind, ObjectArg, TransactionKind,
+        Argument, CallArg, Command, EndOfEpochTransactionKind, ObjectArg, TransactionExpiration,
+        TransactionKind,
     },
-};
-use iota_types::{
-    crypto::{PublicKey, ZkLoginPublicIdentifier},
-    effects::{IDOperation, ObjectIn, ObjectOut, TransactionEffects, UnchangedSharedKind},
     utils::DEFAULT_ADDRESS_SEED,
 };
+use move_core_types::language_storage::{StructTag, TypeTag};
+use pretty_assertions::assert_str_eq;
+use rand::{rngs::StdRng, SeedableRng};
+use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
+use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
 use typed_store::TypedStoreError;
 fn get_registry() -> Result<Registry> {
     let config = TracerConfig::default()
@@ -59,8 +52,8 @@ fn get_registry() -> Result<Registry> {
     // 1. Record samples for types with custom deserializers.
     // We want to call
     // tracer.trace_value(&mut samples, ...)?;
-    // with all the base types contained in messages, especially the ones with custom serializers;
-    // or involving generics (see [serde_reflection documentation](https://novifinancial.github.io/serde-reflection/serde_reflection/index.html)).
+    // with all the base types contained in messages, especially the ones with
+    // custom serializers; or involving generics (see [serde_reflection documentation](https://novifinancial.github.io/serde-reflection/serde_reflection/index.html)).
     let (addr, kp): (_, AuthorityKeyPair) = get_key_pair();
     let (s_addr, s_kp): (_, AccountKeyPair) = get_key_pair();
     let pk: AuthorityPublicKeyBytes = kp.public().into();
@@ -71,7 +64,8 @@ fn get_registry() -> Result<Registry> {
     tracer.trace_value(&mut samples, &s_addr)?;
     tracer.trace_value(&mut samples, &s_kp)?;
 
-    // We have two signature types: one for Authority Signatures, which don't include the PubKey ...
+    // We have two signature types: one for Authority Signatures, which don't
+    // include the PubKey ...
     let sig: AuthoritySignature = Signer::sign(&kp, b"hello world");
     tracer.trace_value(&mut samples, &sig)?;
     // ... and the user signature which does
@@ -132,7 +126,8 @@ fn get_registry() -> Result<Registry> {
     let oid: ObjectID = addr.into();
     tracer.trace_value(&mut samples, &oid)?;
 
-    // ObjectDigest and Transaction digest use the `serde_as`speedup for ser/de => trace them
+    // ObjectDigest and Transaction digest use the `serde_as`speedup for ser/de =>
+    // trace them
     let od = ObjectDigest::random();
     let td = TransactionDigest::random();
     tracer.trace_value(&mut samples, &od)?;

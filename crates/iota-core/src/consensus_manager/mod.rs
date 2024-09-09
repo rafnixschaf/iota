@@ -1,32 +1,39 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::consensus_adapter::SubmitToConsensus;
-use crate::consensus_handler::ConsensusHandlerInitializer;
-use crate::consensus_manager::mysticeti_manager::MysticetiManager;
-use crate::consensus_manager::narwhal_manager::{NarwhalConfiguration, NarwhalManager};
-use crate::consensus_validator::IotaTxValidator;
-use crate::mysticeti_adapter::LazyMysticetiClient;
+use std::{
+    path::PathBuf,
+    sync::Arc,
+    time::{Duration, Instant},
+};
+
 use arc_swap::ArcSwapOption;
 use async_trait::async_trait;
 use enum_dispatch::enum_dispatch;
 use fastcrypto::traits::KeyPair as _;
+use iota_config::{node::ConsensusProtocol, ConsensusConfig, NodeConfig};
 use iota_metrics::RegistryService;
+use iota_protocol_config::{ConsensusChoice, ProtocolVersion};
+use iota_types::{committee::EpochId, error::IotaResult, messages_consensus::ConsensusTransaction};
 use narwhal_worker::LazyNarwhalClient;
 use prometheus::{register_int_gauge_with_registry, IntGauge, Registry};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use iota_config::node::ConsensusProtocol;
-use iota_config::{ConsensusConfig, NodeConfig};
-use iota_protocol_config::{ConsensusChoice, ProtocolVersion};
-use iota_types::committee::EpochId;
-use iota_types::error::IotaResult;
-use iota_types::messages_consensus::ConsensusTransaction;
-use tokio::sync::{Mutex, MutexGuard};
-use tokio::time::{sleep, timeout};
+use tokio::{
+    sync::{Mutex, MutexGuard},
+    time::{sleep, timeout},
+};
 use tracing::{debug, info};
+
+use crate::{
+    authority::authority_per_epoch_store::AuthorityPerEpochStore,
+    consensus_adapter::SubmitToConsensus,
+    consensus_handler::ConsensusHandlerInitializer,
+    consensus_manager::{
+        mysticeti_manager::MysticetiManager,
+        narwhal_manager::{NarwhalConfiguration, NarwhalManager},
+    },
+    consensus_validator::IotaTxValidator,
+    mysticeti_adapter::LazyMysticetiClient,
+};
 
 pub mod mysticeti_manager;
 pub mod narwhal_manager;
@@ -171,7 +178,10 @@ impl ConsensusManager {
                         return protocol;
                     }
                     _ => {
-                        debug!("Invalid consensus choice {} in env var. Continue to pick consensus with protocol config", consensus_choice);
+                        debug!(
+                            "Invalid consensus choice {} in env var. Continue to pick consensus with protocol config",
+                            consensus_choice
+                        );
                     }
                 };
             }
@@ -412,7 +422,10 @@ impl Drop for RunningLockGuard<'_> {
         match *self.state_guard {
             // consensus was running and now will have to be marked as shutdown
             Running::True(epoch, version) => {
-                tracing::info!("Consensus shutdown for epoch {epoch:?} & protocol version {version:?} is complete - took {} seconds", self.start.elapsed().as_secs_f64());
+                tracing::info!(
+                    "Consensus shutdown for epoch {epoch:?} & protocol version {version:?} is complete - took {} seconds",
+                    self.start.elapsed().as_secs_f64()
+                );
 
                 self.metrics
                     .shutdown_latency
@@ -423,10 +436,11 @@ impl Drop for RunningLockGuard<'_> {
             // consensus was not running and now will be marked as started
             Running::False => {
                 tracing::info!(
-                "Starting up consensus for epoch {} & protocol version {:?} is complete - took {} seconds",
-                self.epoch.unwrap(),
-                self.protocol_version.unwrap(),
-                self.start.elapsed().as_secs_f64());
+                    "Starting up consensus for epoch {} & protocol version {:?} is complete - took {} seconds",
+                    self.epoch.unwrap(),
+                    self.protocol_version.unwrap(),
+                    self.start.elapsed().as_secs_f64()
+                );
 
                 self.metrics
                     .start_latency

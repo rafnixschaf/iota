@@ -13,8 +13,8 @@ static THREAD_STALL_MONITOR: Once = Once::new();
 const MONITOR_INTERVAL: std::time::Duration = std::time::Duration::from_millis(500);
 
 /// Monitors temporary stalls in tokio scheduling every MONITOR_INTERVAL.
-/// Logs an error and increments a metric if more than 2 * MONITOR_INTERVAL has elapsed,
-/// which means the stall lasted longer than MONITOR_INTERVAL.
+/// Logs an error and increments a metric if more than 2 * MONITOR_INTERVAL has
+/// elapsed, which means the stall lasted longer than MONITOR_INTERVAL.
 pub fn start_thread_stall_monitor() {
     let mut called = true;
     THREAD_STALL_MONITOR.call_once(|| {

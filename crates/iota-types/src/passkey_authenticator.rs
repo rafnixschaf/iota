@@ -1,37 +1,42 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::crypto::PublicKey;
-use crate::crypto::Secp256r1IotaSignature;
-use crate::crypto::IotaSignatureInner;
-use crate::signature_verification::VerifiedDigestCache;
-use crate::{
-    base_types::{EpochId, IotaAddress},
-    crypto::{DefaultHash, Signature, SignatureScheme, IotaSignature},
-    digests::ZKLoginInputsDigest,
-    error::{IotaError, IotaResult},
-    signature::{AuthenticatorTrait, VerifyParams},
+use std::{
+    hash::{Hash, Hasher},
+    sync::Arc,
 };
-use fastcrypto::hash::{HashFunction, Sha256};
-use fastcrypto::rsa::{Base64UrlUnpadded, Encoding};
-use fastcrypto::secp256r1::{Secp256r1PublicKey, Secp256r1Signature};
-use fastcrypto::traits::VerifyingKey;
-use fastcrypto::{error::FastCryptoError, traits::ToFromBytes};
+
+use fastcrypto::{
+    error::FastCryptoError,
+    hash::{HashFunction, Sha256},
+    rsa::{Base64UrlUnpadded, Encoding},
+    secp256r1::{Secp256r1PublicKey, Secp256r1Signature},
+    traits::{ToFromBytes, VerifyingKey},
+};
 use once_cell::sync::OnceCell;
 use passkey_types::webauthn::{ClientDataType, CollectedClientData};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
-use shared_crypto::intent::Intent;
-use shared_crypto::intent::{IntentMessage, INTENT_PREFIX_LENGTH};
-use std::hash::Hash;
-use std::hash::Hasher;
-use std::sync::Arc;
+use shared_crypto::intent::{Intent, IntentMessage, INTENT_PREFIX_LENGTH};
+
+use crate::{
+    base_types::{EpochId, IotaAddress},
+    crypto::{
+        DefaultHash, IotaSignature, IotaSignatureInner, PublicKey, Secp256r1IotaSignature,
+        Signature, SignatureScheme,
+    },
+    digests::ZKLoginInputsDigest,
+    error::{IotaError, IotaResult},
+    signature::{AuthenticatorTrait, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/passkey_authenticator_test.rs"]
 mod passkey_authenticator_test;
 
-/// An passkey authenticator with parsed fields. See field definition below. Can be initialized from [struct RawPasskeyAuthenticator].
+/// An passkey authenticator with parsed fields. See field definition below. Can
+/// be initialized from [struct RawPasskeyAuthenticator].
 #[derive(Debug, Clone, JsonSchema)]
 pub struct PasskeyAuthenticator {
     /// `authenticatorData` is a bytearray that encodes
@@ -56,11 +61,13 @@ pub struct PasskeyAuthenticator {
     #[serde(skip)]
     pk: Secp256r1PublicKey,
 
-    /// Valid intent parsed from the first 3 bytes of `client_data_json.challenge`.
+    /// Valid intent parsed from the first 3 bytes of
+    /// `client_data_json.challenge`.
     #[serde(skip)]
     intent: Intent,
 
-    /// Valid digest parsed from the last 32 bytes of `client_data_json.challenge`.
+    /// Valid digest parsed from the last 32 bytes of
+    /// `client_data_json.challenge`.
     #[serde(skip)]
     digest: [u8; DefaultHash::OUTPUT_SIZE],
 
@@ -69,7 +76,8 @@ pub struct PasskeyAuthenticator {
     bytes: OnceCell<Vec<u8>>,
 }
 
-/// An raw passkey authenticator struct used during deserialization. Can be converted to [struct PasskeyAuthenticator].
+/// An raw passkey authenticator struct used during deserialization. Can be
+/// converted to [struct PasskeyAuthenticator].
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawPasskeyAuthenticator {
     pub authenticator_data: Vec<u8>,
@@ -77,7 +85,8 @@ pub struct RawPasskeyAuthenticator {
     pub user_signature: Signature,
 }
 
-/// Convert [struct RawPasskeyAuthenticator] to [struct PasskeyAuthenticator] with validations.
+/// Convert [struct RawPasskeyAuthenticator] to [struct PasskeyAuthenticator]
+/// with validations.
 impl TryFrom<RawPasskeyAuthenticator> for PasskeyAuthenticator {
     type Error = IotaError;
 
@@ -235,7 +244,8 @@ impl AuthenticatorTrait for PasskeyAuthenticator {
     where
         T: Serialize,
     {
-        // Check the intent and signing is consisted from what's parsed from client_data_json.challenge
+        // Check the intent and signing is consisted from what's parsed from
+        // client_data_json.challenge
         if intent_msg.intent != self.intent || to_signing_digest(intent_msg) != self.digest {
             return Err(IotaError::InvalidSignature {
                 error: "Invalid challenge".to_string(),
@@ -290,8 +300,8 @@ impl AsRef<[u8]> for PasskeyAuthenticator {
             .expect("OnceCell invariant violated")
     }
 }
-/// Compute the digest that the signature committed over as `intent || hash(tx_data)`, total
-/// of 3 + 32 = 35 bytes.
+/// Compute the digest that the signature committed over as `intent ||
+/// hash(tx_data)`, total of 3 + 32 = 35 bytes.
 pub fn to_signing_message<T: Serialize>(
     intent_msg: &IntentMessage<T>,
 ) -> [u8; INTENT_PREFIX_LENGTH + DefaultHash::OUTPUT_SIZE] {
@@ -301,10 +311,11 @@ pub fn to_signing_message<T: Serialize>(
     extended
 }
 
-/// Compute the BCS hash of the value in intent message. In the case of transaction data,
-/// this is the BCS hash of `struct TransactionData`, different from the transaction digest
-/// itself that computes the BCS hash of the Rust type prefix and `struct TransactionData`.
-/// (See `fn digest` in `impl Message for SenderSignedData`).
+/// Compute the BCS hash of the value in intent message. In the case of
+/// transaction data, this is the BCS hash of `struct TransactionData`,
+/// different from the transaction digest itself that computes the BCS hash of
+/// the Rust type prefix and `struct TransactionData`. (See `fn digest` in `impl
+/// Message for SenderSignedData`).
 pub fn to_signing_digest<T: Serialize>(
     intent_msg: &IntentMessage<T>,
 ) -> [u8; DefaultHash::OUTPUT_SIZE] {

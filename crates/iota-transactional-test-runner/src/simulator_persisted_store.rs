@@ -2,21 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::BTreeMap, num::NonZeroUsize, path::PathBuf, sync::Arc, time::Duration};
 
-use move_binary_format::CompiledModule;
-use move_bytecode_utils::module_cache::GetModule;
-use move_core_types::language_storage::StructTag;
-use move_core_types::{language_storage::ModuleId, resolver::ModuleResolver};
-use simulacrum::Simulacrum;
-use std::num::NonZeroUsize;
 use iota_config::genesis;
 use iota_protocol_config::ProtocolVersion;
-use iota_swarm_config::genesis_config::AccountConfig;
-use iota_swarm_config::network_config_builder::ConfigBuilder;
-use iota_types::storage::{ReadStore, RestStateReader};
+use iota_swarm_config::{genesis_config::AccountConfig, network_config_builder::ConfigBuilder};
 use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress, VersionNumber},
+    base_types::{IotaAddress, ObjectID, SequenceNumber, VersionNumber},
     committee::{Committee, EpochId},
     crypto::AccountKeyPair,
     digests::{ObjectDigest, TransactionDigest, TransactionEventsDigest},
@@ -29,18 +21,23 @@ use iota_types::{
     object::{Object, Owner},
     storage::{
         load_package_object_from_object_store, BackingPackageStore, ChildObjectResolver,
-        ObjectStore, PackageObject, ParentSync,
+        ObjectStore, PackageObject, ParentSync, ReadStore, RestStateReader,
     },
     transaction::VerifiedTransaction,
 };
+use move_binary_format::CompiledModule;
+use move_bytecode_utils::module_cache::GetModule;
+use move_core_types::{
+    language_storage::{ModuleId, StructTag},
+    resolver::ModuleResolver,
+};
+use simulacrum::Simulacrum;
 use tempfile::tempdir;
-use typed_store::traits::TableSummary;
-use typed_store::traits::TypedStoreDebug;
-use typed_store::DBMapUtils;
-use typed_store::Map;
 use typed_store::{
     metrics::SamplingInterval,
     rocks::{DBMap, MetricConf},
+    traits::{TableSummary, TypedStoreDebug},
+    DBMapUtils, Map,
 };
 
 use super::SimulatorStore;
@@ -58,7 +55,8 @@ pub struct PersistedStoreInnerReadOnlyWrapper {
 #[derive(Debug, DBMapUtils)]
 pub struct PersistedStoreInner {
     // Checkpoint data
-    checkpoints: DBMap<CheckpointSequenceNumber, iota_types::messages_checkpoint::TrustedCheckpoint>,
+    checkpoints:
+        DBMap<CheckpointSequenceNumber, iota_types::messages_checkpoint::TrustedCheckpoint>,
     checkpoint_digest_to_sequence_number: DBMap<CheckpointDigest, CheckpointSequenceNumber>,
     checkpoint_contents: DBMap<CheckpointContentsDigest, CheckpointContents>,
 
@@ -784,8 +782,9 @@ impl Clone for PersistedStoreInnerReadOnlyWrapper {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rand::{rngs::StdRng, SeedableRng};
+
+    use super::*;
 
     #[tokio::test]
     async fn deterministic_genesis() {

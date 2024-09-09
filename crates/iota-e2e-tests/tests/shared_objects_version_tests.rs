@@ -3,15 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::PathBuf;
+
 use iota_macros::*;
 use iota_test_transaction_builder::publish_package;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber};
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use iota_types::object::{Owner, OBJECT_START_VERSION};
-use iota_types::transaction::{CallArg, ObjectArg};
-use iota_types::IOTA_FRAMEWORK_ADDRESS;
+use iota_types::{
+    base_types::{ObjectID, ObjectRef, SequenceNumber},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
+    object::{Owner, OBJECT_START_VERSION},
+    transaction::{CallArg, ObjectArg},
+    IOTA_FRAMEWORK_ADDRESS,
+};
 use test_cluster::{TestCluster, TestClusterBuilder};
 
 #[sim_test]
@@ -91,10 +93,11 @@ async fn shared_object_not_found() {
     let env = TestEnvironment::new().await;
     let nonexistent_id = ObjectID::random();
     let initial_shared_seq = SequenceNumber::from_u64(42);
-    assert!(env
-        .increment_shared_counter(nonexistent_id, initial_shared_seq)
-        .await
-        .is_err());
+    assert!(
+        env.increment_shared_counter(nonexistent_id, initial_shared_seq)
+            .await
+            .is_err()
+    );
 }
 
 fn is_shared_at(owner: &Owner, version: SequenceNumber) -> bool {

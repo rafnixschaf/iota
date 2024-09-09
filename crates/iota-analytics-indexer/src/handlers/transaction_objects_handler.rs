@@ -4,16 +4,17 @@
 
 use anyhow::Result;
 use iota_data_ingestion_core::Worker;
+use iota_rest_api::{CheckpointData, CheckpointTransaction};
+use iota_types::{
+    base_types::ObjectID, effects::TransactionEffects, transaction::TransactionDataAPI,
+};
 use tokio::sync::Mutex;
 
-use iota_rest_api::{CheckpointData, CheckpointTransaction};
-use iota_types::base_types::ObjectID;
-use iota_types::effects::TransactionEffects;
-use iota_types::transaction::TransactionDataAPI;
-
-use crate::handlers::{AnalyticsHandler, InputObjectTracker, ObjectStatusTracker};
-use crate::tables::TransactionObjectEntry;
-use crate::FileType;
+use crate::{
+    handlers::{AnalyticsHandler, InputObjectTracker, ObjectStatusTracker},
+    tables::TransactionObjectEntry,
+    FileType,
+};
 
 pub struct TransactionObjectsHandler {
     state: Mutex<State>,

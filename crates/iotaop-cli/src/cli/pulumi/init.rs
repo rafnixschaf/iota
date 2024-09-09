@@ -82,12 +82,7 @@ impl ProjectType {
             match self {
                 Self::App | Self::Service => {
                     info!("creating k8s containerized application/service");
-                    create_iota_k8s_project(
-                        &project_name,
-                        &project_dir,
-                        Self::App,
-                        &project_opts,
-                    )?;
+                    create_iota_k8s_project(&project_name, &project_dir, Self::App, &project_opts)?;
                 }
                 Self::Basic => {
                     info!("creating basic pulumi project");

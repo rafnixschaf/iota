@@ -2,57 +2,62 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{BTreeMap, HashMap};
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::{Arc, Mutex},
+};
 
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
+use iota_data_ingestion_core::Worker;
+use iota_json_rpc_types::IotaMoveValue;
+use iota_metrics::{get_metrics, spawn_monitored_task};
+use iota_package_resolver::{PackageStore, PackageStoreWithLruCache, Resolver};
+use iota_rest_api::{CheckpointData, CheckpointTransaction};
+use iota_types::{
+    base_types::ObjectID,
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType},
+    effects::TransactionEffectsAPI,
+    event::SystemEpochInfoEvent,
+    iota_system_state::{
+        get_iota_system_state, iota_system_state_summary::IotaSystemStateSummary,
+        IotaSystemStateTrait,
+    },
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
+    },
+    object::{Object, Owner},
+    transaction::TransactionDataAPI,
+};
 use itertools::Itertools;
+use move_core_types::{
+    annotated_value::{MoveStructLayout, MoveTypeLayout},
+    language_storage::{StructTag, TypeTag},
+};
 use tap::tap::TapFallible;
 use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
-use move_core_types::annotated_value::{MoveStructLayout, MoveTypeLayout};
-use move_core_types::language_storage::{StructTag, TypeTag};
-use iota_metrics::{get_metrics, spawn_monitored_task};
-use iota_data_ingestion_core::Worker;
-use iota_json_rpc_types::IotaMoveValue;
-use iota_package_resolver::{PackageStore, PackageStoreWithLruCache, Resolver};
-use iota_rest_api::{CheckpointData, CheckpointTransaction};
-use iota_types::base_types::ObjectID;
-use iota_types::dynamic_field::DynamicFieldInfo;
-use iota_types::dynamic_field::DynamicFieldName;
-use iota_types::dynamic_field::DynamicFieldType;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::event::SystemEpochInfoEvent;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
+use super::{
+    tx_processor::{EpochEndIndexingObjectStore, TxChangesProcessor},
+    CheckpointDataToCommit, EpochToCommit, TransactionObjectChangesToCommit,
 };
-use iota_types::object::Object;
-use iota_types::object::Owner;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
-use iota_types::iota_system_state::{get_iota_system_state, IotaSystemStateTrait};
-use iota_types::transaction::TransactionDataAPI;
-
-use crate::db::ConnectionPool;
-use crate::errors::IndexerError;
-use crate::handlers::committer::start_tx_checkpoint_commit_task;
-use crate::handlers::tx_processor::IndexingPackageBuffer;
-use crate::metrics::IndexerMetrics;
-use crate::models::display::StoredDisplay;
-use crate::store::package_resolver::{IndexerStorePackageResolver, InterimPackageResolver};
-use crate::store::{IndexerStore, PgIndexerStore};
-use crate::types::{
-    EventIndex, IndexedCheckpoint, IndexedDeletedObject, IndexedEpochInfo, IndexedEvent,
-    IndexedObject, IndexedPackage, IndexedTransaction, IndexerResult, TransactionKind, TxIndex,
+use crate::{
+    db::ConnectionPool,
+    errors::IndexerError,
+    handlers::{committer::start_tx_checkpoint_commit_task, tx_processor::IndexingPackageBuffer},
+    metrics::IndexerMetrics,
+    models::display::StoredDisplay,
+    store::{
+        package_resolver::{IndexerStorePackageResolver, InterimPackageResolver},
+        IndexerStore, PgIndexerStore,
+    },
+    types::{
+        EventIndex, IndexedCheckpoint, IndexedDeletedObject, IndexedEpochInfo, IndexedEvent,
+        IndexedObject, IndexedPackage, IndexedTransaction, IndexerResult, TransactionKind, TxIndex,
+    },
 };
-
-use super::tx_processor::EpochEndIndexingObjectStore;
-use super::tx_processor::TxChangesProcessor;
-use super::CheckpointDataToCommit;
-use super::EpochToCommit;
-use super::TransactionObjectChangesToCommit;
 
 const CHECKPOINT_QUEUE_SIZE: usize = 100;
 
@@ -207,7 +212,7 @@ where
                 last_epoch: None,
                 new_epoch: IndexedEpochInfo::from_new_system_state_summary(
                     system_state,
-                    0, //first_checkpoint_id
+                    0, // first_checkpoint_id
                     None,
                 ),
                 network_total_transactions: 0,
@@ -237,10 +242,11 @@ where
         let event = bcs::from_bytes::<SystemEpochInfoEvent>(&epoch_event.contents)?;
 
         // Now we just entered epoch X, we want to calculate the diff between
-        // TotalTransactionsByEndOfEpoch(X-1) and TotalTransactionsByEndOfEpoch(X-2). Note that on
-        // the indexer's chain-reading side, this is not guaranteed to have the latest data. Rather
-        // than impose a wait on the reading side, however, we overwrite this on the persisting
-        // side, where we can guarantee that the previous epoch's checkpoints have been written to
+        // TotalTransactionsByEndOfEpoch(X-1) and TotalTransactionsByEndOfEpoch(X-2).
+        // Note that on the indexer's chain-reading side, this is not guaranteed
+        // to have the latest data. Rather than impose a wait on the reading
+        // side, however, we overwrite this on the persisting side, where we can
+        // guarantee that the previous epoch's checkpoints have been written to
         // db.
 
         let network_tx_count_prev_epoch = match system_state.epoch {
@@ -394,7 +400,9 @@ where
             if tx_digest != *sender_signed_data.digest() {
                 return Err(IndexerError::FullNodeReadingError(format!(
                     "Transactions has different ordering from CheckpointContents, for checkpoint {}, Mismatch found at {} v.s. {}",
-                    checkpoint_seq, tx_digest, sender_signed_data.digest()
+                    checkpoint_seq,
+                    tx_digest,
+                    sender_signed_data.digest()
                 )));
             }
 

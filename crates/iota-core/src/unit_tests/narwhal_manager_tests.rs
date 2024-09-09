@@ -2,31 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
-use crate::authority::AuthorityState;
-use crate::checkpoints::{CheckpointMetrics, CheckpointService, CheckpointServiceNoop};
-use crate::consensus_handler::ConsensusHandlerInitializer;
-use crate::consensus_manager::narwhal_manager::{NarwhalConfiguration, NarwhalManager};
-use crate::consensus_manager::{ConsensusManagerMetrics, ConsensusManagerTrait};
-use crate::consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics};
-use crate::state_accumulator::StateAccumulator;
+use std::{sync::Arc, time::Duration};
+
 use bytes::Bytes;
-use fastcrypto::bls12381;
-use fastcrypto::traits::KeyPair;
+use fastcrypto::{bls12381, traits::KeyPair};
 use iota_metrics::RegistryService;
+use iota_swarm_config::network_config_builder::ConfigBuilder;
+use iota_types::{
+    iota_system_state::{
+        epoch_start_iota_system_state::EpochStartSystemStateTrait, IotaSystemStateTrait,
+    },
+    messages_checkpoint::{CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary},
+};
 use narwhal_config::{Epoch, WorkerCache};
 use narwhal_types::{TransactionProto, TransactionsClient};
 use prometheus::Registry;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_swarm_config::network_config_builder::ConfigBuilder;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
+use tokio::{
+    sync::{broadcast, mpsc},
+    time::{interval, sleep},
 };
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use tokio::sync::{broadcast, mpsc};
-use tokio::time::{interval, sleep};
+
+use crate::{
+    authority::{test_authority_builder::TestAuthorityBuilder, AuthorityState},
+    checkpoints::{CheckpointMetrics, CheckpointService, CheckpointServiceNoop},
+    consensus_handler::ConsensusHandlerInitializer,
+    consensus_manager::{
+        narwhal_manager::{NarwhalConfiguration, NarwhalManager},
+        ConsensusManagerMetrics, ConsensusManagerTrait,
+    },
+    consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics},
+    state_accumulator::StateAccumulator,
+};
 
 async fn send_transactions(
     name: &bls12381::min_sig::BLS12381PublicKey,
@@ -194,11 +200,13 @@ async fn test_narwhal_manager() {
         // ensure that no primary or worker node is running
         assert!(!narwhal_manager.is_running().await);
         assert!(!narwhal_manager.primary_node.is_running().await);
-        assert!(narwhal_manager
-            .worker_nodes
-            .workers_running()
-            .await
-            .is_empty());
+        assert!(
+            narwhal_manager
+                .worker_nodes
+                .workers_running()
+                .await
+                .is_empty()
+        );
 
         let system_state = state
             .get_iota_system_state_object_for_testing()

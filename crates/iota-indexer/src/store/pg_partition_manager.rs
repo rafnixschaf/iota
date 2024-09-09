@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use diesel::r2d2::R2D2Connection;
-use diesel::sql_types::{BigInt, VarChar};
-use diesel::{QueryableByName, RunQueryDsl};
-use std::collections::{BTreeMap, HashMap};
-use std::time::Duration;
+use std::{
+    collections::{BTreeMap, HashMap},
+    time::Duration,
+};
+
+use diesel::{
+    r2d2::R2D2Connection,
+    sql_types::{BigInt, VarChar},
+    QueryableByName, RunQueryDsl,
+};
+use downcast::Any;
 use tracing::{error, info};
 
-use crate::db::ConnectionPool;
-use crate::errors::IndexerError;
-use crate::handlers::EpochToCommit;
-use crate::models::epoch::StoredEpochInfo;
-use crate::store::diesel_macro::*;
-use downcast::Any;
+use crate::{
+    db::ConnectionPool, errors::IndexerError, handlers::EpochToCommit,
+    models::epoch::StoredEpochInfo, store::diesel_macro::*,
+};
 
 const GET_PARTITION_SQL: &str = if cfg!(feature = "postgres-feature") {
     r"
@@ -90,9 +94,9 @@ impl EpochPartitionData {
         let next_epoch = epoch.new_epoch.epoch;
         let next_epoch_start_cp = epoch.new_epoch.first_checkpoint_id;
 
-        // Determining the tx_sequence_number range for the epoch partition differs from the
-        // checkpoint_sequence_number range, because the former is a sum of total transactions -
-        // this sum already addresses the off-by-one.
+        // Determining the tx_sequence_number range for the epoch partition differs from
+        // the checkpoint_sequence_number range, because the former is a sum of
+        // total transactions - this sum already addresses the off-by-one.
         let next_epoch_start_tx = epoch.network_total_transactions;
         let last_epoch_start_tx =
             next_epoch_start_tx - last_db_epoch.epoch_total_transactions.unwrap() as u64;
@@ -154,9 +158,9 @@ impl<T: R2D2Connection> PgPartitionManager<T> {
         )
     }
 
-    /// Tries to fetch the partitioning strategy for the given partitioned table. Defaults to
-    /// `CheckpointSequenceNumber` as the majority of our tables are partitioned on an epoch's
-    /// checkpoints today.
+    /// Tries to fetch the partitioning strategy for the given partitioned
+    /// table. Defaults to `CheckpointSequenceNumber` as the majority of our
+    /// tables are partitioned on an epoch's checkpoints today.
     pub fn get_strategy(&self, table_name: &str) -> PgPartitionStrategy {
         self.partition_strategies
             .get(table_name)
@@ -215,7 +219,16 @@ impl<T: R2D2Connection> PgPartitionManager<T> {
             transactional_blocking_with_retry!(
                 &self.cp,
                 |conn| {
-                    RunQueryDsl::execute(diesel::sql_query(format!("ALTER TABLE {table_name} REORGANIZE PARTITION {table_name}_partition_{last_epoch} INTO (PARTITION {table_name}_partition_{last_epoch} VALUES LESS THAN ({next_epoch_start}), PARTITION {table_name}_partition_{next_epoch} VALUES LESS THAN MAXVALUE)", table_name = table.clone(), last_epoch = data.last_epoch as i64, next_epoch_start = partition_range.1 as i64, next_epoch = data.next_epoch as i64)), conn)
+                    RunQueryDsl::execute(
+                        diesel::sql_query(format!(
+                            "ALTER TABLE {table_name} REORGANIZE PARTITION {table_name}_partition_{last_epoch} INTO (PARTITION {table_name}_partition_{last_epoch} VALUES LESS THAN ({next_epoch_start}), PARTITION {table_name}_partition_{next_epoch} VALUES LESS THAN MAXVALUE)",
+                            table_name = table.clone(),
+                            last_epoch = data.last_epoch as i64,
+                            next_epoch_start = partition_range.1 as i64,
+                            next_epoch = data.next_epoch as i64
+                        )),
+                        conn,
+                    )
                 },
                 Duration::from_secs(10)
             )?;
@@ -225,8 +238,8 @@ impl<T: R2D2Connection> PgPartitionManager<T> {
                 table, last_partition, data.next_epoch, partition_range.0
             );
         } else if last_partition != data.next_epoch {
-            // skip when the partition is already advanced once, which is possible when indexer
-            // crashes and restarts; error otherwise.
+            // skip when the partition is already advanced once, which is possible when
+            // indexer crashes and restarts; error otherwise.
             error!(
                 "Epoch partition for table {} is not in sync with the last epoch {}.",
                 table, data.last_epoch

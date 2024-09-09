@@ -2,16 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler};
-use crate::RestError;
-use crate::RestService;
-use crate::{reader::StateReader, Result};
-use axum::extract::{Path, State};
-use axum::Json;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use axum::{
+    extract::{Path, State},
+    Json,
+};
 use iota_sdk2::types::{ObjectId, StructTag};
 use iota_types::iota_sdk2_conversions::struct_tag_sdk_to_core;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    reader::StateReader,
+    RestError, RestService, Result,
+};
 
 pub struct GetCoinInfo;
 

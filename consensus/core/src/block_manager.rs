@@ -9,8 +9,8 @@ use std::{
     time::Instant,
 };
 
-use itertools::Itertools as _;
 use iota_metrics::monitored_scope;
+use itertools::Itertools as _;
 use parking_lot::RwLock;
 use tracing::{debug, trace, warn};
 
@@ -38,29 +38,35 @@ impl SuspendedBlock {
     }
 }
 
-/// Block manager suspends incoming blocks until they are connected to the existing graph,
-/// returning newly connected blocks.
-/// TODO: As it is possible to have Byzantine validators who produce Blocks without valid causal
-/// history we need to make sure that BlockManager takes care of that and avoid OOM (Out Of Memory)
-/// situations.
+/// Block manager suspends incoming blocks until they are connected to the
+/// existing graph, returning newly connected blocks.
+/// TODO: As it is possible to have Byzantine validators who produce Blocks
+/// without valid causal history we need to make sure that BlockManager takes
+/// care of that and avoid OOM (Out Of Memory) situations.
 pub(crate) struct BlockManager {
     context: Arc<Context>,
     dag_state: Arc<RwLock<DagState>>,
     block_verifier: Arc<dyn BlockVerifier>,
 
-    /// Keeps all the suspended blocks. A suspended block is a block that is missing part of its causal history and thus
-    /// can't be immediately processed. A block will remain in this map until all its causal history has been successfully
-    /// processed.
+    /// Keeps all the suspended blocks. A suspended block is a block that is
+    /// missing part of its causal history and thus can't be immediately
+    /// processed. A block will remain in this map until all its causal history
+    /// has been successfully processed.
     suspended_blocks: BTreeMap<BlockRef, SuspendedBlock>,
-    /// A map that keeps all the blocks that we are missing (keys) and the corresponding blocks that reference the missing blocks
-    /// as ancestors and need them to get unsuspended. It is possible for a missing dependency (key) to be a suspended block, so
-    /// the block has been already fetched but it self is still missing some of its ancestors to be processed.
+    /// A map that keeps all the blocks that we are missing (keys) and the
+    /// corresponding blocks that reference the missing blocks as ancestors
+    /// and need them to get unsuspended. It is possible for a missing
+    /// dependency (key) to be a suspended block, so the block has been
+    /// already fetched but it self is still missing some of its ancestors to be
+    /// processed.
     missing_ancestors: BTreeMap<BlockRef, BTreeSet<BlockRef>>,
-    /// Keeps all the blocks that we actually miss and haven't fetched them yet. That set will basically contain all the
-    /// keys from the `missing_ancestors` minus any keys that exist in `suspended_blocks`.
+    /// Keeps all the blocks that we actually miss and haven't fetched them yet.
+    /// That set will basically contain all the keys from the
+    /// `missing_ancestors` minus any keys that exist in `suspended_blocks`.
     missing_blocks: BTreeSet<BlockRef>,
-    /// A vector that holds a tuple of (lowest_round, highest_round) of received blocks per authority.
-    /// This is used for metrics reporting purposes and resets during restarts.
+    /// A vector that holds a tuple of (lowest_round, highest_round) of received
+    /// blocks per authority. This is used for metrics reporting purposes
+    /// and resets during restarts.
     received_block_rounds: Vec<Option<(Round, Round)>>,
 }
 
@@ -82,9 +88,11 @@ impl BlockManager {
         }
     }
 
-    /// Tries to accept the provided blocks assuming that all their causal history exists. The method
-    /// returns all the blocks that have been successfully processed in round ascending order, that includes also previously
-    /// suspended blocks that have now been able to get accepted. Method also returns a set with the missing ancestor blocks.
+    /// Tries to accept the provided blocks assuming that all their causal
+    /// history exists. The method returns all the blocks that have been
+    /// successfully processed in round ascending order, that includes also
+    /// previously suspended blocks that have now been able to get accepted.
+    /// Method also returns a set with the missing ancestor blocks.
     pub(crate) fn try_accept_blocks(
         &mut self,
         mut blocks: Vec<VerifiedBlock>,
@@ -149,7 +157,10 @@ impl BlockManager {
                             blocks_to_reject.insert(b.reference(), b);
                             continue 'block;
                         }
-                        panic!("Unsuspended block {:?} has a missing ancestor! Ancestor not found in DagState: {:?}", b, ancestor_ref);
+                        panic!(
+                            "Unsuspended block {:?} has a missing ancestor! Ancestor not found in DagState: {:?}",
+                            b, ancestor_ref
+                        );
                     }
                     if let Err(e) = self.block_verifier.check_ancestors(&b, &ancestor_blocks) {
                         warn!("Block {:?} failed to verify ancestors: {}", b, e);
@@ -199,16 +210,18 @@ impl BlockManager {
         (accepted_blocks, missing_blocks)
     }
 
-    /// Tries to accept the provided block. To accept a block its ancestors must have been already successfully accepted. If
-    /// block is accepted then Some result is returned. None is returned when either the block is suspended or the block
-    /// has been already accepted before.
+    /// Tries to accept the provided block. To accept a block its ancestors must
+    /// have been already successfully accepted. If block is accepted then
+    /// Some result is returned. None is returned when either the block is
+    /// suspended or the block has been already accepted before.
     fn try_accept_one_block(&mut self, block: VerifiedBlock) -> TryAcceptResult {
         let block_ref = block.reference();
         let mut missing_ancestors = BTreeSet::new();
         let mut ancestors_to_fetch = BTreeSet::new();
         let dag_state = self.dag_state.read();
 
-        // If block has been already received and suspended, or already processed and stored, or is a genesis block, then skip it.
+        // If block has been already received and suspended, or already processed and
+        // stored, or is a genesis block, then skip it.
         if self.suspended_blocks.contains_key(&block_ref) || dag_state.contains_block(&block_ref) {
             return TryAcceptResult::Processed;
         }
@@ -230,8 +243,9 @@ impl BlockManager {
                     .or_default()
                     .insert(block_ref);
 
-                // Add the ancestor to the missing blocks set only if it doesn't already exist in the suspended blocks - meaning
-                // that we already have its payload.
+                // Add the ancestor to the missing blocks set only if it doesn't already exist
+                // in the suspended blocks - meaning that we already have its
+                // payload.
                 if !self.suspended_blocks.contains_key(ancestor) {
                     self.missing_blocks.insert(*ancestor);
                     ancestors_to_fetch.insert(*ancestor);
@@ -239,8 +253,9 @@ impl BlockManager {
             }
         }
 
-        // Remove the block ref from the `missing_blocks` - if exists - since we now have received the block. The block
-        // might still get suspended, but we won't report it as missing in order to not re-fetch.
+        // Remove the block ref from the `missing_blocks` - if exists - since we now
+        // have received the block. The block might still get suspended, but we
+        // won't report it as missing in order to not re-fetch.
         self.missing_blocks.remove(&block.reference());
 
         if !missing_ancestors.is_empty() {
@@ -264,8 +279,9 @@ impl BlockManager {
         TryAcceptResult::Accepted(block)
     }
 
-    /// Given an accepted block `accepted_block` it attempts to accept all the suspended children blocks assuming such exist.
-    /// All the unsuspended / accepted blocks are returned as a vector in causal order.
+    /// Given an accepted block `accepted_block` it attempts to accept all the
+    /// suspended children blocks assuming such exist. All the unsuspended /
+    /// accepted blocks are returned as a vector in causal order.
     fn try_unsuspend_children_blocks(
         &mut self,
         accepted_block: &VerifiedBlock,
@@ -279,8 +295,9 @@ impl BlockManager {
                 self.missing_ancestors.remove(&block.reference())
             {
                 for r in block_refs_with_missing_deps {
-                    // For each dependency try to unsuspend it. If that's successful then we add it to the queue so
-                    // we can recursively try to unsuspend its children.
+                    // For each dependency try to unsuspend it. If that's successful then we add it
+                    // to the queue so we can recursively try to unsuspend its
+                    // children.
                     if let Some(block) = self.try_unsuspend_block(&r, &block.reference()) {
                         to_process_blocks.push(block.block.clone());
                         unsuspended_blocks.push(block);
@@ -319,8 +336,10 @@ impl BlockManager {
             .collect()
     }
 
-    /// Attempts to unsuspend a block by checking its ancestors and removing the `accepted_dependency` by its local set.
-    /// If there is no missing dependency then this block can be unsuspended immediately and is removed from the `suspended_blocks` map.
+    /// Attempts to unsuspend a block by checking its ancestors and removing the
+    /// `accepted_dependency` by its local set. If there is no missing
+    /// dependency then this block can be unsuspended immediately and is removed
+    /// from the `suspended_blocks` map.
     fn try_unsuspend_block(
         &mut self,
         block_ref: &BlockRef,
@@ -345,8 +364,8 @@ impl BlockManager {
         None
     }
 
-    /// Returns all the blocks that are currently missing and needed in order to accept suspended
-    /// blocks.
+    /// Returns all the blocks that are currently missing and needed in order to
+    /// accept suspended blocks.
     pub(crate) fn missing_blocks(&self) -> BTreeSet<BlockRef> {
         self.missing_blocks.clone()
     }
@@ -383,7 +402,8 @@ impl BlockManager {
             && self.missing_blocks.is_empty()
     }
 
-    /// Returns all the suspended blocks whose causal history we miss hence we can't accept them yet.
+    /// Returns all the suspended blocks whose causal history we miss hence we
+    /// can't accept them yet.
     #[cfg(test)]
     fn suspended_blocks(&self) -> Vec<BlockRef> {
         self.suspended_blocks.keys().cloned().collect()
@@ -396,8 +416,9 @@ enum TryAcceptResult {
     Accepted(VerifiedBlock),
     // The block is suspended. Wraps ancestors to be fetched.
     Suspended(BTreeSet<BlockRef>),
-    // The block has been processed before and already exists in BlockManager (and is suspended) or
-    // in DagState (so has been already accepted). No further processing has been done at this point.
+    // The block has been processed before and already exists in BlockManager (and is suspended)
+    // or in DagState (so has been already accepted). No further processing has been done at
+    // this point.
     Processed,
 }
 
@@ -455,13 +476,15 @@ mod tests {
         // THEN
         assert!(accepted_blocks.is_empty());
 
-        // AND the returned missing ancestors should be the same as the provided block ancestors
+        // AND the returned missing ancestors should be the same as the provided block
+        // ancestors
         let missing_block_refs = round_2_blocks.first().unwrap().ancestors();
         let missing_block_refs = missing_block_refs.iter().cloned().collect::<BTreeSet<_>>();
         assert_eq!(missing, missing_block_refs);
 
-        // AND the missing blocks are the parents of the round 2 blocks. Since this is a fully connected DAG taking the
-        // ancestors of the first element suffices.
+        // AND the missing blocks are the parents of the round 2 blocks. Since this is a
+        // fully connected DAG taking the ancestors of the first element
+        // suffices.
         assert_eq!(block_manager.missing_blocks(), missing_block_refs);
 
         // AND suspended blocks should return the round_2_blocks
@@ -495,8 +518,8 @@ mod tests {
             .equivocate(3) // Use 3 equivocations blocks per authority
             .build();
 
-        // Take the blocks from round 4 up to 2 (included). Only the first block of each round should return missing
-        // ancestors when try to accept
+        // Take the blocks from round 4 up to 2 (included). Only the first block of each
+        // round should return missing ancestors when try to accept
         for (_, block) in dag_builder
             .blocks
             .into_iter()
@@ -547,7 +570,8 @@ mod tests {
         assert!(missing.is_empty());
         assert!(block_manager.is_empty());
 
-        // WHEN trying to accept same blocks again, then none will be returned as those have been already accepted
+        // WHEN trying to accept same blocks again, then none will be returned as those
+        // have been already accepted
         let (accepted_blocks, _) = block_manager.try_accept_blocks(all_blocks);
         assert!(accepted_blocks.is_empty());
     }
@@ -564,8 +588,9 @@ mod tests {
 
         let mut all_blocks = dag_builder.blocks.values().cloned().collect::<Vec<_>>();
 
-        // Now randomize the sequence of sending the blocks to block manager. In the end all the blocks should be uniquely
-        // suspended and no missing blocks should exist.
+        // Now randomize the sequence of sending the blocks to block manager. In the end
+        // all the blocks should be uniquely suspended and no missing blocks
+        // should exist.
         for seed in 0..100u8 {
             all_blocks.shuffle(&mut StdRng::from_seed([seed; 32]));
 
@@ -653,7 +678,8 @@ mod tests {
         let mut block_manager =
             BlockManager::new(context.clone(), dag_state, Arc::new(test_verifier));
 
-        // Try to accept blocks from round 2 ~ 5 into block manager. All of them should be suspended.
+        // Try to accept blocks from round 2 ~ 5 into block manager. All of them should
+        // be suspended.
         let (accepted_blocks, missing_refs) = block_manager.try_accept_blocks(
             all_blocks
                 .iter()
@@ -685,7 +711,8 @@ mod tests {
         });
         assert!(missing_refs.is_empty());
 
-        // Other blocks should be rejected and there should be no remaining suspended block.
+        // Other blocks should be rejected and there should be no remaining suspended
+        // block.
         assert!(block_manager.suspended_blocks().is_empty());
     }
 }

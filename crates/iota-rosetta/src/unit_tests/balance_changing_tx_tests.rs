@@ -2,42 +2,50 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::operations::Operations;
-use crate::types::{ConstructionMetadata, OperationStatus, OperationType};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    str::FromStr,
+};
+
 use anyhow::anyhow;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::StructTag;
+use iota_json_rpc_types::{
+    IotaObjectDataOptions, IotaObjectRef, IotaObjectResponseQuery,
+    IotaTransactionBlockResponseOptions, ObjectChange,
+};
+use iota_keys::keystore::{AccountKeystore, Keystore};
+use iota_move_build::BuildConfig;
+use iota_sdk::{
+    rpc_types::{
+        IotaData, IotaExecutionStatus, IotaTransactionBlockEffectsAPI,
+        IotaTransactionBlockResponse, OwnedObjectRef,
+    },
+    IotaClient,
+};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    gas_coin::GasCoin,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    quorum_driver_types::ExecuteTransactionRequestType,
+    transaction::{
+        CallArg, InputObjectKind, ObjectArg, ProgrammableTransaction, Transaction, TransactionData,
+        TransactionDataAPI, TransactionKind, TEST_ONLY_GAS_UNIT_FOR_GENERIC,
+        TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE, TEST_ONLY_GAS_UNIT_FOR_SPLIT_COIN,
+        TEST_ONLY_GAS_UNIT_FOR_STAKING, TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
+    },
+    TypeTag,
+};
+use move_core_types::{identifier::Identifier, language_storage::StructTag};
 use rand::seq::{IteratorRandom, SliceRandom};
 use serde_json::json;
 use shared_crypto::intent::Intent;
 use signature::rand_core::OsRng;
-use std::collections::{BTreeMap, HashMap};
-use std::path::PathBuf;
-use std::str::FromStr;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
-use iota_json_rpc_types::{
-    ObjectChange, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponseQuery,
-};
-use iota_keys::keystore::AccountKeystore;
-use iota_keys::keystore::Keystore;
-use iota_move_build::BuildConfig;
-use iota_sdk::rpc_types::{
-    OwnedObjectRef, IotaData, IotaExecutionStatus, IotaTransactionBlockEffectsAPI,
-    IotaTransactionBlockResponse,
-};
-use iota_sdk::IotaClient;
-use iota_types::base_types::{ObjectID, ObjectRef, IotaAddress};
-use iota_types::gas_coin::GasCoin;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
-use iota_types::transaction::{
-    CallArg, InputObjectKind, ObjectArg, ProgrammableTransaction, Transaction, TransactionData,
-    TransactionDataAPI, TransactionKind, TEST_ONLY_GAS_UNIT_FOR_GENERIC,
-    TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE, TEST_ONLY_GAS_UNIT_FOR_SPLIT_COIN,
-    TEST_ONLY_GAS_UNIT_FOR_STAKING, TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
-};
-use iota_types::TypeTag;
 use test_cluster::TestClusterBuilder;
+
+use crate::{
+    operations::Operations,
+    types::{ConstructionMetadata, OperationStatus, OperationType},
+};
 
 #[tokio::test]
 async fn test_transfer_iota() {
@@ -673,7 +681,8 @@ fn find_module_object(
 }
 
 // Record current Iota balance of an address then execute the transaction,
-// and compare the balance change reported by the event against the actual balance change.
+// and compare the balance change reported by the event against the actual
+// balance change.
 async fn test_transaction(
     client: &IotaClient,
     keystore: &Keystore,
@@ -805,8 +814,10 @@ async fn get_random_iota(
                     .with_owner()
                     .with_previous_transaction(),
             )),
-            /* cursor */ None,
-            /* limit */ None,
+            // cursor
+            None,
+            // limit
+            None,
         )
         .await
         .unwrap()
@@ -844,8 +855,10 @@ async fn get_balance(client: &IotaClient, address: IotaAddress) -> u64 {
                     .with_owner()
                     .with_previous_transaction(),
             )),
-            /* cursor */ None,
-            /* limit */ None,
+            // cursor
+            None,
+            // limit
+            None,
         )
         .await
         .unwrap()

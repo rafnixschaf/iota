@@ -6,18 +6,16 @@ use std::str::FromStr;
 
 use async_graphql::{connection::Connection, *};
 use fastcrypto::encoding::{Base64, Encoding};
-use move_core_types::account_address::AccountAddress;
-use serde::de::DeserializeOwned;
 use iota_json_rpc_types::DevInspectArgs;
 use iota_sdk::IotaClient;
-use iota_types::transaction::{TransactionData, TransactionKind};
-use iota_types::{gas_coin::GAS, transaction::TransactionDataAPI, TypeTag};
-
-use super::move_package::{
-    self, MovePackage, MovePackageCheckpointFilter, MovePackageVersionFilter,
+use iota_types::{
+    gas_coin::GAS,
+    transaction::{TransactionData, TransactionDataAPI, TransactionKind},
+    TypeTag,
 };
-use super::iotans_registration::NameService;
-use super::uint53::UInt53;
+use move_core_types::account_address::AccountAddress;
+use serde::de::DeserializeOwned;
+
 use super::{
     address::Address,
     available_range::AvailableRange,
@@ -30,31 +28,39 @@ use super::{
     dry_run_result::DryRunResult,
     epoch::Epoch,
     event::{self, Event, EventFilter},
+    iota_address::IotaAddress,
+    iotans_registration::{Domain, NameService},
+    move_package::{self, MovePackage, MovePackageCheckpointFilter, MovePackageVersionFilter},
     move_type::MoveType,
     object::{self, Object, ObjectFilter},
     owner::Owner,
     protocol_config::ProtocolConfigs,
-    iota_address::IotaAddress,
-    iotans_registration::Domain,
     transaction_block::{self, TransactionBlock, TransactionBlockFilter},
     transaction_metadata::TransactionMetadata,
     type_filter::ExactTypeFilter,
+    uint53::UInt53,
 };
-use crate::connection::ScanConnection;
-use crate::server::watermark_task::Watermark;
-use crate::types::base64::Base64 as GraphQLBase64;
-use crate::types::zklogin_verify_signature::verify_zklogin_signature;
-use crate::types::zklogin_verify_signature::ZkLoginIntentScope;
-use crate::types::zklogin_verify_signature::ZkLoginVerifyResult;
-use crate::{config::ServiceConfig, error::Error, mutation::Mutation};
+use crate::{
+    config::ServiceConfig,
+    connection::ScanConnection,
+    error::Error,
+    mutation::Mutation,
+    server::watermark_task::Watermark,
+    types::{
+        base64::Base64 as GraphQLBase64,
+        zklogin_verify_signature::{
+            verify_zklogin_signature, ZkLoginIntentScope, ZkLoginVerifyResult,
+        },
+    },
+};
 
 pub(crate) struct Query;
 pub(crate) type IotaGraphQLSchema = async_graphql::Schema<Query, Mutation, EmptySubscription>;
 
 #[Object]
 impl Query {
-    /// First four bytes of the network's genesis checkpoint digest (uniquely identifies the
-    /// network).
+    /// First four bytes of the network's genesis checkpoint digest (uniquely
+    /// identifies the network).
     async fn chain_identifier(&self, ctx: &Context<'_>) -> Result<String> {
         Ok(ChainIdentifier::query(ctx.data_unchecked())
             .await
@@ -183,19 +189,23 @@ impl Query {
 
     /// Look up an Owner by its IotaAddress.
     ///
-    /// `rootVersion` represents the version of the root object in some nested chain of dynamic
-    /// fields. It allows consistent historical queries for the case of wrapped objects, which don't
-    /// have a version. For example, if querying the dynamic field of a table wrapped in a parent
-    /// object, passing the parent object's version here will ensure we get the dynamic field's
-    /// state at the moment that parent's version was created.
+    /// `rootVersion` represents the version of the root object in some nested
+    /// chain of dynamic fields. It allows consistent historical queries for
+    /// the case of wrapped objects, which don't have a version. For
+    /// example, if querying the dynamic field of a table wrapped in a parent
+    /// object, passing the parent object's version here will ensure we get the
+    /// dynamic field's state at the moment that parent's version was
+    /// created.
     ///
-    /// Also, if this Owner is an object itself, `rootVersion` will be used to bound its version
-    /// from above when querying `Owner.asObject`. This can be used, for example, to get the
-    /// contents of a dynamic object field when its parent was at `rootVersion`.
+    /// Also, if this Owner is an object itself, `rootVersion` will be used to
+    /// bound its version from above when querying `Owner.asObject`. This
+    /// can be used, for example, to get the contents of a dynamic object
+    /// field when its parent was at `rootVersion`.
     ///
-    /// If `rootVersion` is omitted, dynamic fields will be from a consistent snapshot of the Iota
-    /// state at the latest checkpoint known to the GraphQL RPC. Similarly, `Owner.asObject` will
-    /// return the object's version at the latest checkpoint.
+    /// If `rootVersion` is omitted, dynamic fields will be from a consistent
+    /// snapshot of the Iota state at the latest checkpoint known to the
+    /// GraphQL RPC. Similarly, `Owner.asObject` will return the object's
+    /// version at the latest checkpoint.
     async fn owner(
         &self,
         ctx: &Context<'_>,
@@ -210,8 +220,8 @@ impl Query {
         }))
     }
 
-    /// The object corresponding to the given address at the (optionally) given version.
-    /// When no version is given, the latest version is returned.
+    /// The object corresponding to the given address at the (optionally) given
+    /// version. When no version is given, the latest version is returned.
     async fn object(
         &self,
         ctx: &Context<'_>,
@@ -227,16 +237,20 @@ impl Query {
         Object::query(ctx, address, key).await.extend()
     }
 
-    /// The package corresponding to the given address (at the optionally given version).
+    /// The package corresponding to the given address (at the optionally given
+    /// version).
     ///
-    /// When no version is given, the package is loaded directly from the address given. Otherwise,
-    /// the address is translated before loading to point to the package whose original ID matches
-    /// the package at `address`, but whose version is `version`. For non-system packages, this
-    /// might result in a different address than `address` because different versions of a package,
-    /// introduced by upgrades, exist at distinct addresses.
+    /// When no version is given, the package is loaded directly from the
+    /// address given. Otherwise, the address is translated before loading
+    /// to point to the package whose original ID matches the package at
+    /// `address`, but whose version is `version`. For non-system packages, this
+    /// might result in a different address than `address` because different
+    /// versions of a package, introduced by upgrades, exist at distinct
+    /// addresses.
     ///
-    /// Note that this interpretation of `version` is different from a historical object read (the
-    /// interpretation of `version` for the `object` query).
+    /// Note that this interpretation of `version` is different from a
+    /// historical object read (the interpretation of `version` for the
+    /// `object` query).
     async fn package(
         &self,
         ctx: &Context<'_>,
@@ -254,8 +268,8 @@ impl Query {
 
     /// The latest version of the package at `address`.
     ///
-    /// This corresponds to the package with the highest `version` that shares its original ID with
-    /// the package at `address`.
+    /// This corresponds to the package with the highest `version` that shares
+    /// its original ID with the package at `address`.
     async fn latest_package(
         &self,
         ctx: &Context<'_>,
@@ -277,8 +291,8 @@ impl Query {
         }))
     }
 
-    /// Fetch a structured representation of a concrete type, including its layout information.
-    /// Fails if the type is malformed.
+    /// Fetch a structured representation of a concrete type, including its
+    /// layout information. Fails if the type is malformed.
     async fn type_(&self, type_: String) -> Result<MoveType> {
         Ok(MoveType::new(
             TypeTag::from_str(&type_)
@@ -295,8 +309,8 @@ impl Query {
             .extend()
     }
 
-    /// Fetch checkpoint information by sequence number or digest (defaults to the latest available
-    /// checkpoint).
+    /// Fetch checkpoint information by sequence number or digest (defaults to
+    /// the latest available checkpoint).
     async fn checkpoint(
         &self,
         ctx: &Context<'_>,
@@ -322,8 +336,9 @@ impl Query {
 
     /// The coin objects that exist in the network.
     ///
-    /// The type field is a string of the inner type of the coin by which to filter (e.g.
-    /// `0x2::iota::IOTA`). If no type is provided, it will default to `0x2::iota::IOTA`.
+    /// The type field is a string of the inner type of the coin by which to
+    /// filter (e.g. `0x2::iota::IOTA`). If no type is provided, it will
+    /// default to `0x2::iota::IOTA`.
     async fn coins(
         &self,
         ctx: &Context<'_>,
@@ -341,7 +356,8 @@ impl Query {
             ctx.data_unchecked(),
             page,
             coin,
-            /* owner */ None,
+            // owner
+            None,
             checkpoint,
         )
         .await
@@ -363,7 +379,8 @@ impl Query {
         Checkpoint::paginate(
             ctx.data_unchecked(),
             page,
-            /* epoch */ None,
+            // epoch
+            None,
             checkpoint,
         )
         .await
@@ -372,24 +389,29 @@ impl Query {
 
     /// The transaction blocks that exist in the network.
     ///
-    /// `scanLimit` restricts the number of candidate transactions scanned when gathering a page of
-    /// results. It is required for queries that apply more than two complex filters (on function,
-    /// kind, sender, recipient, input object, changed object, or ids), and can be at most
+    /// `scanLimit` restricts the number of candidate transactions scanned when
+    /// gathering a page of results. It is required for queries that apply
+    /// more than two complex filters (on function, kind, sender, recipient,
+    /// input object, changed object, or ids), and can be at most
     /// `serviceConfig.maxScanLimit`.
     ///
-    /// When the scan limit is reached the page will be returned even if it has fewer than `first`
-    /// results when paginating forward (`last` when paginating backwards). If there are more
-    /// transactions to scan, `pageInfo.hasNextPage` (or `pageInfo.hasPreviousPage`) will be set to
-    /// `true`, and `PageInfo.endCursor` (or `PageInfo.startCursor`) will be set to the last
-    /// transaction that was scanned as opposed to the last (or first) transaction in the page.
+    /// When the scan limit is reached the page will be returned even if it has
+    /// fewer than `first` results when paginating forward (`last` when
+    /// paginating backwards). If there are more transactions to scan,
+    /// `pageInfo.hasNextPage` (or `pageInfo.hasPreviousPage`) will be set to
+    /// `true`, and `PageInfo.endCursor` (or `PageInfo.startCursor`) will be set
+    /// to the last transaction that was scanned as opposed to the last (or
+    /// first) transaction in the page.
     ///
-    /// Requesting the next (or previous) page after this cursor will resume the search, scanning
-    /// the next `scanLimit` many transactions in the direction of pagination, and so on until all
-    /// transactions in the scanning range have been visited.
+    /// Requesting the next (or previous) page after this cursor will resume the
+    /// search, scanning the next `scanLimit` many transactions in the
+    /// direction of pagination, and so on until all transactions in the
+    /// scanning range have been visited.
     ///
-    /// By default, the scanning range includes all transactions known to GraphQL, but it can be
-    /// restricted by the `after` and `before` cursors, and the `beforeCheckpoint`,
-    /// `afterCheckpoint` and `atCheckpoint` filters.
+    /// By default, the scanning range includes all transactions known to
+    /// GraphQL, but it can be restricted by the `after` and `before`
+    /// cursors, and the `beforeCheckpoint`, `afterCheckpoint` and
+    /// `atCheckpoint` filters.
     async fn transaction_blocks(
         &self,
         ctx: &Context<'_>,
@@ -417,7 +439,8 @@ impl Query {
 
     /// Query events that are emitted in the network.
     /// We currently do not support filtering by emitting module and event type
-    /// at the same time so if both are provided in one filter, the query will error.
+    /// at the same time so if both are provided in one filter, the query will
+    /// error.
     async fn events(
         &self,
         ctx: &Context<'_>,
@@ -463,11 +486,13 @@ impl Query {
         .extend()
     }
 
-    /// The Move packages that exist in the network, optionally filtered to be strictly before
-    /// `beforeCheckpoint` and/or strictly after `afterCheckpoint`.
+    /// The Move packages that exist in the network, optionally filtered to be
+    /// strictly before `beforeCheckpoint` and/or strictly after
+    /// `afterCheckpoint`.
     ///
-    /// This query returns all versions of a given user package that appear between the specified
-    /// checkpoints, but only records the latest versions of system packages.
+    /// This query returns all versions of a given user package that appear
+    /// between the specified checkpoints, but only records the latest
+    /// versions of system packages.
     async fn packages(
         &self,
         ctx: &Context<'_>,
@@ -485,9 +510,9 @@ impl Query {
             .extend()
     }
 
-    /// Fetch all versions of package at `address` (packages that share this package's original ID),
-    /// optionally bounding the versions exclusively from below with `afterVersion`, or from above
-    /// with `beforeVersion`.
+    /// Fetch all versions of package at `address` (packages that share this
+    /// package's original ID), optionally bounding the versions exclusively
+    /// from below with `afterVersion`, or from above with `beforeVersion`.
     async fn package_versions(
         &self,
         ctx: &Context<'_>,
@@ -506,8 +531,8 @@ impl Query {
             .extend()
     }
 
-    /// Fetch the protocol config by protocol version (defaults to the latest protocol
-    /// version known to the GraphQL service).
+    /// Fetch the protocol config by protocol version (defaults to the latest
+    /// protocol version known to the GraphQL service).
     async fn protocol_config(
         &self,
         ctx: &Context<'_>,
@@ -547,17 +572,20 @@ impl Query {
             .extend()
     }
 
-    /// Verify a zkLogin signature based on the provided transaction or personal message
-    /// based on current epoch, chain id, and latest JWKs fetched on-chain. If the
-    /// signature is valid, the function returns a `ZkLoginVerifyResult` with success as
-    /// true and an empty list of errors. If the signature is invalid, the function returns
+    /// Verify a zkLogin signature based on the provided transaction or personal
+    /// message based on current epoch, chain id, and latest JWKs fetched
+    /// on-chain. If the signature is valid, the function returns a
+    /// `ZkLoginVerifyResult` with success as true and an empty list of
+    /// errors. If the signature is invalid, the function returns
     /// a `ZkLoginVerifyResult` with success as false with a list of errors.
     ///
-    /// - `bytes` is either the personal message in raw bytes or transaction data bytes in
-    ///    BCS-encoded and then Base64-encoded.
+    /// - `bytes` is either the personal message in raw bytes or transaction
+    ///   data bytes in BCS-encoded and then Base64-encoded.
     /// - `signature` is a serialized zkLogin signature that is Base64-encoded.
-    /// - `intentScope` is an enum that specifies the intent scope to be used to parse bytes.
-    /// - `author` is the address of the signer of the transaction or personal msg.
+    /// - `intentScope` is an enum that specifies the intent scope to be used to
+    ///   parse bytes.
+    /// - `author` is the address of the signer of the transaction or personal
+    ///   msg.
     async fn verify_zklogin_signature(
         &self,
         ctx: &Context<'_>,

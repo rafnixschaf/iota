@@ -2,6 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fmt::Write;
+
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use iota_indexer::schema::checkpoints;
+
 use super::{Cursor, TransactionBlockFilter};
 use crate::{
     data::{pg::bytea_literal, Conn, DbConnection},
@@ -15,52 +20,53 @@ use crate::{
         type_filter::{FqNameFilter, ModuleFilter},
     },
 };
-use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
-use std::fmt::Write;
-use iota_indexer::schema::checkpoints;
 
-/// Bounds on transaction sequence number, imposed by filters, cursors, and the scan limit. The
-/// outermost bounds are determined by the checkpoint filters. These get translated into bounds in
-/// terms of transaction sequence numbers:
+/// Bounds on transaction sequence number, imposed by filters, cursors, and the
+/// scan limit. The outermost bounds are determined by the checkpoint filters.
+/// These get translated into bounds in terms of transaction sequence numbers:
 ///
 /// ```ignore
 ///     tx_lo                                                             tx_hi
 ///     [-----------------------------------------------------------------)
 /// ```
 ///
-/// If cursors are provided, they further restrict the range of transactions to scan. Cursors are
-/// exclusive, but when issuing database queries, we treat them inclusively so that we can detect
-/// previous and next pages based on the existence of cursors in the results:
+/// If cursors are provided, they further restrict the range of transactions to
+/// scan. Cursors are exclusive, but when issuing database queries, we treat
+/// them inclusively so that we can detect previous and next pages based on the
+/// existence of cursors in the results:
 ///
 /// ```ignore
 ///             cursor_lo                                  cursor_hi_inclusive
 ///             [------------------------------------------]
 /// ```
 ///
-/// Finally, the scan limit restricts the number of transactions to scan. The scan limit can be
-/// applied to either the front (forward pagination) or the back (backward pagination):
+/// Finally, the scan limit restricts the number of transactions to scan. The
+/// scan limit can be applied to either the front (forward pagination) or the
+/// back (backward pagination):
 ///
 /// ```ignore
 ///             [-----scan-limit-----)---------------------|  end = Front
 ///             |---------------------[-----scan-limit------) end = Back
 /// ```
 ///
-/// This data structure can be used to compute the interval of transactions to look in for
-/// candidates to include in a page of results. It can also determine whether the scanning has been
-/// cut short on either side, implying that there is a previous or next page of values to scan.
+/// This data structure can be used to compute the interval of transactions to
+/// look in for candidates to include in a page of results. It can also
+/// determine whether the scanning has been cut short on either side, implying
+/// that there is a previous or next page of values to scan.
 ///
-/// NOTE: for consistency, assume that lowerbounds are inclusive and upperbounds are exclusive.
-/// Bounds that do not follow this convention will be annotated explicitly (e.g. `lo_exclusive` or
-/// `hi_inclusive`).
+/// NOTE: for consistency, assume that lowerbounds are inclusive and upperbounds
+/// are exclusive. Bounds that do not follow this convention will be annotated
+/// explicitly (e.g. `lo_exclusive` or `hi_inclusive`).
 #[derive(Clone, Debug, Copy)]
 pub(crate) struct TxBounds {
-    /// The inclusive lower bound tx_sequence_number derived from checkpoint bounds. If checkpoint
-    /// bounds are not provided, this will default to `0`.
+    /// The inclusive lower bound tx_sequence_number derived from checkpoint
+    /// bounds. If checkpoint bounds are not provided, this will default to
+    /// `0`.
     tx_lo: u64,
 
-    /// The exclusive upper bound tx_sequence_number derived from checkpoint bounds. If checkpoint
-    /// bounds are not provided, this will default to the total transaction count at the checkpoint
-    /// viewed.
+    /// The exclusive upper bound tx_sequence_number derived from checkpoint
+    /// bounds. If checkpoint bounds are not provided, this will default to
+    /// the total transaction count at the checkpoint viewed.
     tx_hi: u64,
 
     /// The starting cursor (aka `after`).
@@ -69,8 +75,8 @@ pub(crate) struct TxBounds {
     // The ending cursor (aka `before`).
     cursor_hi: Option<u64>,
 
-    /// The number of transactions to treat as candidates, defaults to all the transactions in the
-    /// range defined by the bounds above.
+    /// The number of transactions to treat as candidates, defaults to all the
+    /// transactions in the range defined by the bounds above.
     scan_limit: Option<u64>,
 
     /// Which end of the range candidates will be scanned from.
@@ -78,11 +84,13 @@ pub(crate) struct TxBounds {
 }
 
 impl TxBounds {
-    /// Determines the `tx_sequence_number` range from the checkpoint bounds for a transaction block
-    /// query. If no checkpoint range is specified, the default is between 0 and the
-    /// `checkpoint_viewed_at`. The corresponding `tx_sequence_number` range is fetched from db, and
-    /// further adjusted by cursors and scan limit. If there are any inconsistencies or invalid
-    /// combinations, i.e. `after` cursor is greater than the upper bound, return None.
+    /// Determines the `tx_sequence_number` range from the checkpoint bounds for
+    /// a transaction block query. If no checkpoint range is specified, the
+    /// default is between 0 and the `checkpoint_viewed_at`. The
+    /// corresponding `tx_sequence_number` range is fetched from db, and
+    /// further adjusted by cursors and scan limit. If there are any
+    /// inconsistencies or invalid combinations, i.e. `after` cursor is
+    /// greater than the upper bound, return None.
     pub(crate) fn query(
         conn: &mut Conn,
         cp_after: Option<u64>,
@@ -92,8 +100,9 @@ impl TxBounds {
         scan_limit: Option<u64>,
         page: &Page<Cursor>,
     ) -> Result<Option<Self>, diesel::result::Error> {
-        // Lowerbound in terms of checkpoint sequence number. We want to get the total transaction
-        // count of the checkpoint before this one, or 0 if there is no previous checkpoint.
+        // Lowerbound in terms of checkpoint sequence number. We want to get the total
+        // transaction count of the checkpoint before this one, or 0 if there is
+        // no previous checkpoint.
         let cp_lo = max_option([cp_after.map(|x| x.saturating_add(1)), cp_at]).unwrap_or(0);
 
         let cp_before_inclusive = match cp_before {
@@ -103,9 +112,9 @@ impl TxBounds {
             None => None,
         };
 
-        // Upperbound in terms of checkpoint sequence number. We want to get the total transaction
-        // count at the end of this checkpoint. If no upperbound is given, use
-        // `checkpoint_viewed_at`.
+        // Upperbound in terms of checkpoint sequence number. We want to get the total
+        // transaction count at the end of this checkpoint. If no upperbound is
+        // given, use `checkpoint_viewed_at`.
         //
         // SAFETY: we can unwrap because of the `Some(checkpoint_viewed_at)
         let cp_hi = min_option([cp_before_inclusive, cp_at, Some(checkpoint_viewed_at)]).unwrap();
@@ -119,9 +128,9 @@ impl TxBounds {
                     .order_by(dsl::network_total_transactions.asc())
             })?;
 
-            // If there are not two distinct results, it means that the transaction bounds are
-            // empty (lo and hi are the same), or it means that the one or other of the checkpoints
-            // doesn't exist, so we can return early.
+            // If there are not two distinct results, it means that the transaction bounds
+            // are empty (lo and hi are the same), or it means that the one or
+            // other of the checkpoints doesn't exist, so we can return early.
             let &[lo, hi] = res.as_slice() else {
                 return Ok(None);
             };
@@ -136,8 +145,8 @@ impl TxBounds {
                 })
                 .optional()?;
 
-            // If there is no result, it means that the checkpoint doesn't exist, so we can return
-            // early.
+            // If there is no result, it means that the checkpoint doesn't exist, so we can
+            // return early.
             let Some(hi) = res else {
                 return Ok(None);
             };
@@ -164,16 +173,18 @@ impl TxBounds {
         }))
     }
 
-    /// Inclusive lowerbound for range of transactions to scan, accounting for the bounds from
-    /// filters and the cursor, but not scan limits. For the purposes of scanning records in the
-    /// DB, cursors are treated inclusively, even though they are exclusive bounds.
+    /// Inclusive lowerbound for range of transactions to scan, accounting for
+    /// the bounds from filters and the cursor, but not scan limits. For the
+    /// purposes of scanning records in the DB, cursors are treated
+    /// inclusively, even though they are exclusive bounds.
     fn db_lo(&self) -> u64 {
         max_option([self.cursor_lo_exclusive, Some(self.tx_lo)]).unwrap()
     }
 
-    /// Exclusive upperbound for range of transactions to scan, accounting for the bounds from
-    /// filters and the cursor, but not scan limits. For the purposes of scanning records in the
-    /// DB, cursors are treated inclusively, even though they are exclusive bounds.
+    /// Exclusive upperbound for range of transactions to scan, accounting for
+    /// the bounds from filters and the cursor, but not scan limits. For the
+    /// purposes of scanning records in the DB, cursors are treated
+    /// inclusively, even though they are exclusive bounds.
     fn db_hi(&self) -> u64 {
         min_option([
             self.cursor_hi.map(|h| h.saturating_add(1)),
@@ -218,13 +229,15 @@ impl TxBounds {
         }
     }
 
-    /// The first transaction scanned, ignoring transactions pointed at by cursors.
+    /// The first transaction scanned, ignoring transactions pointed at by
+    /// cursors.
     pub(crate) fn scan_start_cursor(&self) -> u64 {
         let skip_cursor_lo = self.end == End::Front && self.has_cursor_prev_page();
         self.scan_lo().saturating_add(skip_cursor_lo as u64)
     }
 
-    /// The last transaction scanned, ignoring transactions pointed at by cursors.
+    /// The last transaction scanned, ignoring transactions pointed at by
+    /// cursors.
     pub(crate) fn scan_end_cursor(&self) -> u64 {
         let skip_cursor_hi = self.end == End::Back && self.has_cursor_next_page();
         self.scan_hi().saturating_sub(skip_cursor_hi as u64 + 1)
@@ -251,8 +264,9 @@ fn min_option<T: Ord>(xs: impl IntoIterator<Item = Option<T>>) -> Option<T> {
     xs.into_iter().flatten().min()
 }
 
-/// Constructs a `RawQuery` as a join over all relevant side tables, filtered on their own filter
-/// condition, plus optionally a sender, plus optionally tx/cp bounds.
+/// Constructs a `RawQuery` as a join over all relevant side tables, filtered on
+/// their own filter condition, plus optionally a sender, plus optionally tx/cp
+/// bounds.
 pub(crate) fn subqueries(filter: &TransactionBlockFilter, tx_bounds: TxBounds) -> Option<RawQuery> {
     let sender = filter.sign_address;
 
@@ -367,12 +381,13 @@ fn select_fun(
     )
 }
 
-/// Returns a RawQuery that selects transactions of a specific kind. If SystemTX is specified, we
-/// ignore the `sender`. If ProgrammableTX is specified, we filter against the `tx_kinds` table if
-/// no `sender` is provided; otherwise, we just query the `tx_senders` table. Other combinations, in
-/// particular when kind is SystemTx and sender is specified and not 0x0, are inconsistent and will
-/// not produce any results. These inconsistent cases are expected to be checked for before this is
-/// called.
+/// Returns a RawQuery that selects transactions of a specific kind. If SystemTX
+/// is specified, we ignore the `sender`. If ProgrammableTX is specified, we
+/// filter against the `tx_kinds` table if no `sender` is provided; otherwise,
+/// we just query the `tx_senders` table. Other combinations, in particular when
+/// kind is SystemTx and sender is specified and not 0x0, are inconsistent and
+/// will not produce any results. These inconsistent cases are expected to be
+/// checked for before this is called.
 fn select_kind(
     kind: TransactionBlockKindInput,
     sender: Option<IotaAddress>,

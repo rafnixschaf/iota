@@ -13,8 +13,11 @@ use crate::{id::UID, IOTA_FRAMEWORK_ADDRESS};
 
 pub const CLOCK_MODULE_NAME: &IdentStr = ident_str!("clock");
 pub const CLOCK_STRUCT_NAME: &IdentStr = ident_str!("Clock");
-pub const RESOLVED_IOTA_CLOCK: (&AccountAddress, &IdentStr, &IdentStr) =
-    (&IOTA_FRAMEWORK_ADDRESS, CLOCK_MODULE_NAME, CLOCK_STRUCT_NAME);
+pub const RESOLVED_IOTA_CLOCK: (&AccountAddress, &IdentStr, &IdentStr) = (
+    &IOTA_FRAMEWORK_ADDRESS,
+    CLOCK_MODULE_NAME,
+    CLOCK_STRUCT_NAME,
+);
 pub const CONSENSUS_COMMIT_PROLOGUE_FUNCTION_NAME: &IdentStr =
     ident_str!("consensus_commit_prologue");
 
@@ -38,7 +41,8 @@ impl Clock {
         }
     }
 
-    /// Detects a `&mut iota::clock::Clock` or `iota::clock::Clock` in the signature.
+    /// Detects a `&mut iota::clock::Clock` or `iota::clock::Clock` in the
+    /// signature.
     pub fn is_mutable(view: &CompiledModule, s: &SignatureToken) -> bool {
         use SignatureToken as S;
         match s {

@@ -2,13 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures::stream::BoxStream;
-use object_store::path::Path;
-use object_store::{DynObjectStore, ObjectMeta};
-use std::sync::Arc;
+use object_store::{path::Path, DynObjectStore, ObjectMeta};
 
 pub mod http;
 pub mod util;

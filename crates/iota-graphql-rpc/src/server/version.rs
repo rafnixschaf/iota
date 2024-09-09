@@ -37,9 +37,9 @@ impl headers::Header for IotaRpcVersion {
             return Err(headers::Error::invalid());
         };
 
-        // Extract the header values as bytes.  Distinguish the first value as we expect there to be
-        // just one under normal operation.  Do not attempt to parse the value, as a header parsing
-        // failure produces a generic error.
+        // Extract the header values as bytes.  Distinguish the first value as we expect
+        // there to be just one under normal operation.  Do not attempt to parse
+        // the value, as a header parsing failure produces a generic error.
         Ok(IotaRpcVersion(value, values.collect()))
     }
 
@@ -48,9 +48,10 @@ impl headers::Header for IotaRpcVersion {
     }
 }
 
-/// Middleware to check for the existence of a version constraint in the request header, and confirm
-/// that this instance of the RPC matches that version constraint.  Each RPC instance only supports
-/// one version of the RPC software, and it is the responsibility of the load balancer to make sure
+/// Middleware to check for the existence of a version constraint in the request
+/// header, and confirm that this instance of the RPC matches that version
+/// constraint.  Each RPC instance only supports one version of the RPC
+/// software, and it is the responsibility of the load balancer to make sure
 /// version constraints are met.
 pub(crate) async fn check_version_middleware(
     version: Option<Path<String>>,
@@ -92,8 +93,8 @@ pub(crate) async fn check_version_middleware(
     next.run(request).await
 }
 
-/// Mark every outgoing response with a header indicating the precise version of the RPC that was
-/// used (including the patch version and sha).
+/// Mark every outgoing response with a header indicating the precise version of
+/// the RPC that was used (including the patch version and sha).
 pub(crate) async fn set_version_middleware(
     State(version): State<Version>,
     request: Request<Body>,
@@ -110,8 +111,8 @@ pub(crate) async fn set_version_middleware(
 
 /// Split a `version` string into two parts (year and month) separated by a ".".
 ///
-/// Confirms that the version specifier contains exactly two components, and that both
-/// components are entirely comprised of digits.
+/// Confirms that the version specifier contains exactly two components, and
+/// that both components are entirely comprised of digits.
 fn parse_version(version: &str) -> Option<(&str, &str)> {
     let mut parts = version.split('.');
     let year = parts.next()?;
@@ -131,17 +132,18 @@ fn parse_version(version: &str) -> Option<(&str, &str)> {
 mod tests {
     use std::net::SocketAddr;
 
+    use axum::{body::Body, middleware, routing::get, Router};
+    use expect_test::expect;
+    use iota_metrics;
+    use tokio_util::sync::CancellationToken;
+    use tower::ServiceExt;
+
     use super::*;
     use crate::{
         config::{ConnectionConfig, ServiceConfig, Version},
         metrics::Metrics,
         server::builder::AppState,
     };
-    use axum::{body::Body, middleware, routing::get, Router};
-    use expect_test::expect;
-    use iota_metrics;
-    use tokio_util::sync::CancellationToken;
-    use tower::ServiceExt;
 
     fn metrics() -> Metrics {
         let binding_address: SocketAddr = "0.0.0.0:9185".parse().unwrap();

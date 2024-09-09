@@ -2,28 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::config::{ClusterTestOpt, Env};
+use std::{net::SocketAddr, path::Path};
+
 use async_trait::async_trait;
-use std::net::SocketAddr;
-use std::path::Path;
-use iota_config::Config;
-use iota_config::{PersistedConfig, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG};
-use iota_graphql_rpc::config::ConnectionConfig;
-use iota_graphql_rpc::test_infra::cluster::start_graphql_server_with_fn_rpc;
+use iota_config::{Config, PersistedConfig, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG};
+use iota_graphql_rpc::{
+    config::ConnectionConfig, test_infra::cluster::start_graphql_server_with_fn_rpc,
+};
 use iota_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
-use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
-use iota_sdk::wallet_context::WalletContext;
+use iota_sdk::{
+    iota_client_config::{IotaClientConfig, IotaEnv},
+    wallet_context::WalletContext,
+};
 use iota_swarm::memory::Swarm;
-use iota_swarm_config::genesis_config::GenesisConfig;
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::KeypairTraits;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::crypto::{get_key_pair, AccountKeyPair};
+use iota_swarm_config::{genesis_config::GenesisConfig, network_config::NetworkConfig};
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{get_key_pair, AccountKeyPair, IotaKeyPair, KeypairTraits},
+};
 use tempfile::tempdir;
 use test_cluster::{TestCluster, TestClusterBuilder};
 use tracing::info;
+
+use super::config::{ClusterTestOpt, Env};
 
 const DEVNET_FAUCET_ADDR: &str = "https://faucet.devnet.iota.io:443";
 const STAGING_FAUCET_ADDR: &str = "https://faucet.staging.iota.io:443";
@@ -260,7 +262,8 @@ impl Cluster for LocalNewCluster {
             start_graphql_server_with_fn_rpc(
                 graphql_connection_config.clone(),
                 Some(fullnode_url.clone()),
-                /* cancellation_token */ None,
+                // cancellation_token
+                None,
             )
             .await;
         }

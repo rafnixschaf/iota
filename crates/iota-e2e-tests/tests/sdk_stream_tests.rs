@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::StreamExt;
 use std::future;
+
+use futures::StreamExt;
 use iota_sdk::{IotaClientBuilder, IOTA_COIN_TYPE};
 use iota_swarm_config::genesis_config::{DEFAULT_GAS_AMOUNT, DEFAULT_NUMBER_OF_OBJECT_PER_ACCOUNT};
 use test_cluster::TestClusterBuilder;

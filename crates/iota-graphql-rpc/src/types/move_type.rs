@@ -7,10 +7,8 @@ use move_binary_format::file_format::AbilitySet;
 use move_core_types::{annotated_value as A, language_storage::TypeTag};
 use serde::{Deserialize, Serialize};
 
-use crate::data::package_resolver::PackageResolver;
-use crate::error::Error;
-
 use super::open_move_type::MoveAbility;
+use crate::{data::package_resolver::PackageResolver, error::Error};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct MoveType {
@@ -137,7 +135,8 @@ impl MoveType {
 
     /// Structured representation of the type signature.
     async fn signature(&self) -> Result<MoveTypeSignature> {
-        // Factor out into its own non-GraphQL, non-async function for better testability
+        // Factor out into its own non-GraphQL, non-async function for better
+        // testability
         self.signature_impl().extend()
     }
 
@@ -315,7 +314,8 @@ impl TryFrom<A::MoveFieldLayout> for MoveFieldLayout {
     }
 }
 
-/// Error from seeing a `signer` value or type, which shouldn't be possible in Iota Move.
+/// Error from seeing a `signer` value or type, which shouldn't be possible in
+/// Iota Move.
 pub(crate) fn unexpected_signer_error() -> Error {
     Error::Internal("Unexpected value of type: signer.".to_string())
 }
@@ -324,9 +324,9 @@ pub(crate) fn unexpected_signer_error() -> Error {
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
-
     use expect_test::expect;
+
+    use super::*;
 
     fn signature(repr: impl Into<String>) -> Result<MoveTypeSignature, Error> {
         let tag = TypeTag::from_str(repr.into().as_str()).unwrap();

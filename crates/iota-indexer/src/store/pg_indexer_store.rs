@@ -2,69 +2,68 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::any::Any as StdAny;
-use std::collections::hash_map::Entry;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::time::Duration;
-use std::time::Instant;
+use core::result::Result::Ok;
+use std::{
+    any::Any as StdAny,
+    collections::{hash_map::Entry, BTreeMap, HashMap},
+    time::{Duration, Instant},
+};
 
 use async_trait::async_trait;
-use core::result::Result::Ok;
-use diesel::dsl::{max, min};
-use diesel::r2d2::R2D2Connection;
-use diesel::ExpressionMethods;
-use diesel::OptionalExtension;
-use diesel::{QueryDsl, RunQueryDsl};
+#[cfg(feature = "postgres-feature")]
+use diesel::upsert::excluded;
+use diesel::{
+    dsl::{max, min},
+    r2d2::R2D2Connection,
+    ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl,
+};
 use downcast::Any;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    base_types::ObjectID,
+    digests::{ChainIdentifier, CheckpointDigest},
+};
 use itertools::Itertools;
 use tap::TapFallible;
 use tracing::info;
 
-use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::ObjectID;
-
-use crate::db::ConnectionPool;
-use crate::errors::{Context, IndexerError};
-use crate::handlers::EpochToCommit;
-use crate::handlers::TransactionObjectChangesToCommit;
-use crate::metrics::IndexerMetrics;
-use crate::models::checkpoints::StoredChainIdentifier;
-use crate::models::checkpoints::StoredCheckpoint;
-use crate::models::checkpoints::StoredCpTx;
-use crate::models::display::StoredDisplay;
-use crate::models::epoch::StoredEpochInfo;
-use crate::models::epoch::{StoredFeatureFlag, StoredProtocolConfig};
-use crate::models::events::StoredEvent;
-use crate::models::obj_indices::StoredObjectVersion;
-use crate::models::objects::{
-    StoredDeletedHistoryObject, StoredDeletedObject, StoredHistoryObject, StoredObject,
-    StoredObjectSnapshot,
+use super::{
+    pg_partition_manager::{EpochPartitionData, PgPartitionManager},
+    IndexerStore, ObjectChangeToCommit,
 };
-use crate::models::packages::StoredPackage;
-use crate::models::transactions::StoredTransaction;
-use crate::schema::{
-    chain_identifier, checkpoints, display, epochs, event_emit_module, event_emit_package,
-    event_senders, event_struct_instantiation, event_struct_module, event_struct_name,
-    event_struct_package, events, feature_flags, objects, objects_history, objects_snapshot,
-    objects_version, packages, protocol_configs, pruner_cp_watermark, transactions, tx_calls_fun,
-    tx_calls_mod, tx_calls_pkg, tx_changed_objects, tx_digests, tx_input_objects, tx_kinds,
-    tx_recipients, tx_senders,
-};
-use crate::types::EventIndex;
-use crate::types::{IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex};
 use crate::{
-    insert_or_ignore_into, on_conflict_do_update, persist_chunk_into_table, read_only_blocking,
+    db::ConnectionPool,
+    errors::{Context, IndexerError},
+    handlers::{EpochToCommit, TransactionObjectChangesToCommit},
+    insert_or_ignore_into,
+    metrics::IndexerMetrics,
+    models::{
+        checkpoints::{StoredChainIdentifier, StoredCheckpoint, StoredCpTx},
+        display::StoredDisplay,
+        epoch::{StoredEpochInfo, StoredFeatureFlag, StoredProtocolConfig},
+        events::StoredEvent,
+        obj_indices::StoredObjectVersion,
+        objects::{
+            StoredDeletedHistoryObject, StoredDeletedObject, StoredHistoryObject, StoredObject,
+            StoredObjectSnapshot,
+        },
+        packages::StoredPackage,
+        transactions::StoredTransaction,
+    },
+    on_conflict_do_update, persist_chunk_into_table, read_only_blocking,
+    schema::{
+        chain_identifier, checkpoints, display, epochs, event_emit_module, event_emit_package,
+        event_senders, event_struct_instantiation, event_struct_module, event_struct_name,
+        event_struct_package, events, feature_flags, objects, objects_history, objects_snapshot,
+        objects_version, packages, protocol_configs, pruner_cp_watermark, transactions,
+        tx_calls_fun, tx_calls_mod, tx_calls_pkg, tx_changed_objects, tx_digests, tx_input_objects,
+        tx_kinds, tx_recipients, tx_senders,
+    },
     transactional_blocking_with_retry,
+    types::{
+        EventIndex, IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex,
+    },
 };
-
-use super::pg_partition_manager::{EpochPartitionData, PgPartitionManager};
-use super::IndexerStore;
-use super::ObjectChangeToCommit;
-
-#[cfg(feature = "postgres-feature")]
-use diesel::upsert::excluded;
-use iota_types::digests::{ChainIdentifier, CheckpointDigest};
 
 #[macro_export]
 macro_rules! chunk {
@@ -203,7 +202,8 @@ impl<T: R2D2Connection + 'static> PgIndexerStore<T> {
 
     /// Get the range of the protocol versions that need to be indexed.
     pub fn get_protocol_version_index_range(&self) -> Result<(i64, i64), IndexerError> {
-        // We start indexing from the next protocol version after the latest one stored in the db.
+        // We start indexing from the next protocol version after the latest one stored
+        // in the db.
         let start = read_only_blocking!(&self.blocking_cp, |conn| {
             protocol_configs::dsl::protocol_configs
                 .select(max(protocol_configs::protocol_version))
@@ -662,8 +662,8 @@ impl<T: R2D2Connection + 'static> PgIndexerStore<T> {
             return Ok(());
         };
 
-        // If the first checkpoint has sequence number 0, we need to persist the digest as
-        // chain identifier.
+        // If the first checkpoint has sequence number 0, we need to persist the digest
+        // as chain identifier.
         if first_checkpoint.sequence_number == 0 {
             let checkpoint_digest = first_checkpoint.checkpoint_digest.into_inner().to_vec();
             self.persist_protocol_configs_and_feature_flags(checkpoint_digest.clone())?;
@@ -1313,7 +1313,8 @@ impl<T: R2D2Connection + 'static> PgIndexerStore<T> {
                         epochs::epoch,
                         (
                             // Note: Exclude epoch beginning info except system_state below.
-                            // This is to ensure that epoch beginning info columns are not overridden with default values,
+                            // This is to ensure that epoch beginning info columns are not
+                            // overridden with default values,
                             // because these columns are default values in `last_epoch`.
                             epochs::system_state.eq(excluded(epochs::system_state)),
                             epochs::epoch_total_transactions
@@ -2100,20 +2101,24 @@ impl<T: R2D2Connection> IndexerStore for PgIndexerStore<T> {
             ))),
         }?;
 
-        // NOTE: for disaster recovery, min_cp is the min cp of the current epoch, which is likely
-        // partially pruned already. min_prunable_cp is the min cp to be pruned.
-        // By std::cmp::max, we will resume the pruning process from the next checkpoint, instead of
-        // the first cp of the current epoch.
+        // NOTE: for disaster recovery, min_cp is the min cp of the current epoch, which
+        // is likely partially pruned already. min_prunable_cp is the min cp to
+        // be pruned. By std::cmp::max, we will resume the pruning process from
+        // the next checkpoint, instead of the first cp of the current epoch.
         let min_prunable_cp = self.get_min_prunable_checkpoint()?;
         min_cp = std::cmp::max(min_cp, min_prunable_cp);
         for cp in min_cp..=max_cp {
             // NOTE: the order of pruning tables is crucial:
-            // 1. prune checkpoints table, checkpoints table is the source table of available range,
-            // we prune it first to make sure that we always have full data for checkpoints within the available range;
+            // 1. prune checkpoints table, checkpoints table is the source table of
+            //    available range,
+            // we prune it first to make sure that we always have full data for checkpoints
+            // within the available range;
             // 2. then prune tx_* tables;
-            // 3. then prune pruner_cp_watermark table, which is the checkpoint pruning watermark table and also tx seq source
+            // 3. then prune pruner_cp_watermark table, which is the checkpoint pruning
+            //    watermark table and also tx seq source
             // of a checkpoint to prune tx_* tables;
-            // 4. lastly we prune epochs table when all checkpoints of the epoch have been pruned.
+            // 4. lastly we prune epochs table when all checkpoints of the epoch have been
+            //    pruned.
             info!(
                 "Pruning checkpoint {} of epoch {} (min_prunable_cp: {})",
                 cp, epoch, min_prunable_cp
@@ -2166,7 +2171,8 @@ impl<T: R2D2Connection> IndexerStore for PgIndexerStore<T> {
             self.metrics.last_pruned_checkpoint.set(cp as i64);
         }
 
-        // NOTE: prune epochs table last, otherwise get_checkpoint_range_for_epoch would fail.
+        // NOTE: prune epochs table last, otherwise get_checkpoint_range_for_epoch would
+        // fail.
         self.execute_in_blocking_worker(move |this| this.prune_epochs_table(epoch))
             .await
             .unwrap_or_else(|e| {
@@ -2189,8 +2195,8 @@ impl<T: R2D2Connection> IndexerStore for PgIndexerStore<T> {
         self
     }
 
-    /// Persist protocol configs and feature flags until the protocol version for the latest epoch
-    /// we have stored in the db, inclusive.
+    /// Persist protocol configs and feature flags until the protocol version
+    /// for the latest epoch we have stored in the db, inclusive.
     fn persist_protocol_configs_and_feature_flags(
         &self,
         chain_id: Vec<u8>,
@@ -2208,7 +2214,8 @@ impl<T: R2D2Connection> IndexerStore for PgIndexerStore<T> {
             start_version, end_version
         );
 
-        // Gather all protocol configs and feature flags for all versions between start and end.
+        // Gather all protocol configs and feature flags for all versions between start
+        // and end.
         for version in start_version..=end_version {
             let protocol_configs = ProtocolConfig::get_for_version_if_supported(
                 (version as u64).into(),
@@ -2243,7 +2250,8 @@ impl<T: R2D2Connection> IndexerStore for PgIndexerStore<T> {
         }
 
         // Now insert all of them into the db.
-        // TODO: right now the size of these updates is manageable but later we may consider batching.
+        // TODO: right now the size of these updates is manageable but later we may
+        // consider batching.
         transactional_blocking_with_retry!(
             &self.blocking_cp,
             |conn| {

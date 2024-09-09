@@ -5,9 +5,9 @@
 use std::{sync::Arc, time::Instant};
 
 use consensus_config::{AuthorityIndex, Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
+use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
 use parking_lot::RwLock;
 use prometheus::Registry;
-use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
 use tracing::{info, warn};
 
 use crate::{
@@ -37,7 +37,8 @@ use crate::{
 };
 
 /// ConsensusAuthority is used by Iota to manage the lifetime of AuthorityNode.
-/// It hides the details of the implementation from the caller, MysticetiManager.
+/// It hides the details of the implementation from the caller,
+/// MysticetiManager.
 #[allow(private_interfaces)]
 pub enum ConsensusAuthority {
     WithAnemo(AuthorityNode<AnemoManager>),
@@ -56,10 +57,11 @@ impl ConsensusAuthority {
         transaction_verifier: Arc<dyn TransactionVerifier>,
         commit_consumer: CommitConsumer,
         registry: Registry,
-        // A counter that keeps track of how many times the authority node has been booted while the binary
-        // or the component that is calling the `ConsensusAuthority` has been running. It's mostly useful to
-        // make decisions on whether amnesia recovery should run or not. When `boot_counter` is 0, then `ConsensusAuthority`
-        // will initiate the process of amnesia recovery if that's enabled in the parameters.
+        // A counter that keeps track of how many times the authority node has been booted while
+        // the binary or the component that is calling the `ConsensusAuthority` has been
+        // running. It's mostly useful to make decisions on whether amnesia recovery should
+        // run or not. When `boot_counter` is 0, then `ConsensusAuthority` will initiate
+        // the process of amnesia recovery if that's enabled in the parameters.
         boot_counter: u64,
     ) -> Self {
         match network_type {
@@ -384,21 +386,27 @@ where
 mod tests {
     #![allow(non_snake_case)]
 
-    use std::collections::BTreeMap;
-    use std::{collections::BTreeSet, sync::Arc, time::Duration};
+    use std::{
+        collections::{BTreeMap, BTreeSet},
+        sync::Arc,
+        time::Duration,
+    };
 
     use consensus_config::{local_committee_and_keys, Parameters};
     use iota_metrics::monitored_mpsc::{unbounded_channel, UnboundedReceiver};
+    use iota_protocol_config::ProtocolConfig;
     use prometheus::Registry;
     use rstest::rstest;
-    use iota_protocol_config::ProtocolConfig;
     use tempfile::TempDir;
     use tokio::time::{sleep, timeout};
     use typed_store::DBMetrics;
 
     use super::*;
-    use crate::block::GENESIS_ROUND;
-    use crate::{block::BlockAPI as _, transaction::NoopTransactionVerifier, CommittedSubDag};
+    use crate::{
+        block::{BlockAPI as _, GENESIS_ROUND},
+        transaction::NoopTransactionVerifier,
+        CommittedSubDag,
+    };
 
     #[rstest]
     #[tokio::test]
@@ -567,16 +575,21 @@ mod tests {
                 boot_counters[index],
             )
             .await;
-            assert!(authority.sync_last_known_own_block_enabled(), "Expected syncing of last known own block to be enabled as all authorities are of empty db and boot for first time.");
+            assert!(
+                authority.sync_last_known_own_block_enabled(),
+                "Expected syncing of last known own block to be enabled as all authorities are of empty db and boot for first time."
+            );
             boot_counters[index] += 1;
             output_receivers.push(receiver);
             authorities.insert(index, authority);
             temp_dirs.insert(index, dir);
         }
 
-        // Now we take the receiver of authority 1 and we wait until we see at least one block committed from this authority
-        // We wait until we see at least one committed block authored from this authority. That way we'll be 100% sure that
-        // at least one block has been proposed and successfully received by a quorum of nodes.
+        // Now we take the receiver of authority 1 and we wait until we see at least one
+        // block committed from this authority We wait until we see at least one
+        // committed block authored from this authority. That way we'll be 100% sure
+        // that at least one block has been proposed and successfully received
+        // by a quorum of nodes.
         let index_1 = committee.to_authority_index(1).unwrap();
         'outer: while let Some(result) =
             timeout(Duration::from_secs(10), output_receivers[index_1].recv())
@@ -591,17 +604,21 @@ mod tests {
         }
 
         // Stop authority 1 & 2.
-        // * Authority 1 will be used to wipe out their DB and practically "force" the amnesia recovery.
-        // * Authority 2 is stopped in order to simulate less than f+1 availability which will
-        // make authority 1 retry during amnesia recovery until it has finally managed to successfully get back f+1 responses.
-        // once authority 2 is up and running again.
+        // * Authority 1 will be used to wipe out their DB and practically "force" the
+        //   amnesia recovery.
+        // * Authority 2 is stopped in order to simulate less than f+1 availability
+        //   which will
+        // make authority 1 retry during amnesia recovery until it has finally managed
+        // to successfully get back f+1 responses. once authority 2 is up and
+        // running again.
         authorities.remove(&index_1).unwrap().stop().await;
         let index_2 = committee.to_authority_index(2).unwrap();
         authorities.remove(&index_2).unwrap().stop().await;
         sleep(Duration::from_secs(5)).await;
 
-        // Authority 1: create a new directory to simulate amnesia. The node will start having participated previously
-        // to consensus but now will attempt to synchronize the last own block and recover from there. It won't be able
+        // Authority 1: create a new directory to simulate amnesia. The node will start
+        // having participated previously to consensus but now will attempt to
+        // synchronize the last own block and recover from there. It won't be able
         // to do that successfully as authority 2 is still down.
         let dir = TempDir::new().unwrap();
         // We do reset the boot counter for this one to simulate a "binary" restart
@@ -624,8 +641,9 @@ mod tests {
         temp_dirs.insert(index_1, dir);
         sleep(Duration::from_secs(5)).await;
 
-        // Now spin up authority 2 using its earlier directly - so no amnesia recovery should be forced here.
-        // Authority 1 should be able to recover from amnesia successfully.
+        // Now spin up authority 2 using its earlier directly - so no amnesia recovery
+        // should be forced here. Authority 1 should be able to recover from
+        // amnesia successfully.
         let (authority, _receiver) = make_authority(
             index_2,
             &temp_dirs[&index_2],
@@ -643,7 +661,8 @@ mod tests {
         authorities.insert(index_2, authority);
         sleep(Duration::from_secs(5)).await;
 
-        // We wait until we see at least one committed block authored from this authority
+        // We wait until we see at least one committed block authored from this
+        // authority
         'outer: while let Some(result) = receiver.recv().await {
             for block in result.blocks {
                 if block.round() > GENESIS_ROUND && block.author() == index_1 {

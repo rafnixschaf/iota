@@ -2,12 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use iota_metrics::histogram::Histogram;
 use prometheus::{
     register_int_counter_with_registry, register_int_gauge_with_registry, IntCounter, IntGauge,
     Registry,
 };
-use std::sync::Arc;
 
 pub struct CheckpointExecutorMetrics {
     pub checkpoint_exec_sync_tps: IntGauge,
@@ -85,7 +86,7 @@ impl CheckpointExecutorMetrics {
             last_executed_checkpoint_age_ms: Histogram::new_in_registry(
                 "last_executed_checkpoint_age_ms",
                 "Age of the last executed checkpoint",
-                registry
+                registry,
             ),
         };
         Arc::new(this)

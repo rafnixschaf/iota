@@ -2,13 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::NodeStorage;
 use config::AuthorityIdentifier;
-use store::reopen;
-use store::rocks::{open_cf, MetricConf, ReadWriteOptions};
-use store::{rocks::DBMap, Map, TypedStoreError};
 use iota_macros::fail_point;
+use store::{
+    reopen,
+    rocks::{open_cf, DBMap, MetricConf, ReadWriteOptions},
+    Map, TypedStoreError,
+};
 use types::{Vote, VoteAPI, VoteInfo};
+
+use crate::NodeStorage;
 
 /// The storage for the last votes digests per authority
 #[derive(Clone)]

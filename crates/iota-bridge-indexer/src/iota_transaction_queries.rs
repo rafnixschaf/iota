@@ -2,16 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::Arc;
-use std::time::Duration;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
-use iota_json_rpc_types::IotaTransactionBlockResponseQuery;
-use iota_json_rpc_types::TransactionFilter;
-use iota_sdk::IotaClient;
-use iota_types::digests::TransactionDigest;
-use iota_types::IOTA_BRIDGE_OBJECT_ID;
+use std::{sync::Arc, time::Duration};
 
 use iota_bridge::{metrics::BridgeMetrics, retry_with_max_elapsed_time};
+use iota_json_rpc_types::{
+    IotaTransactionBlockResponseOptions, IotaTransactionBlockResponseQuery, TransactionFilter,
+};
+use iota_sdk::IotaClient;
+use iota_types::{digests::TransactionDigest, IOTA_BRIDGE_OBJECT_ID};
 use tracing::{error, info};
 
 use crate::types::RetrievedTransaction;
@@ -54,8 +52,8 @@ pub async fn start_iota_tx_polling_task(
         {
             Ok(data) => data,
             Err(e) => {
-                // TODO: Sometimes fullnode does not return checkpoint strangely. We retry instead of
-                // panicking.
+                // TODO: Sometimes fullnode does not return checkpoint strangely. We retry
+                // instead of panicking.
                 error!(
                     "Failed to convert retrieved transactions to sanitized format: {}",
                     e
@@ -65,7 +63,8 @@ pub async fn start_iota_tx_polling_task(
             }
         };
         if txes.is_empty() {
-            // When there is no more new data, we are caught up, no need to stress the fullnode
+            // When there is no more new data, we are caught up, no need to stress the
+            // fullnode
             tokio::time::sleep(QUERY_DURATION).await;
             continue;
         }

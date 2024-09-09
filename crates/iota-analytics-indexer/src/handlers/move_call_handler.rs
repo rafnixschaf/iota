@@ -3,17 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
-use move_core_types::identifier::IdentStr;
 use iota_data_ingestion_core::Worker;
+use iota_rest_api::CheckpointData;
+use iota_types::{base_types::ObjectID, transaction::TransactionDataAPI};
+use move_core_types::identifier::IdentStr;
 use tokio::sync::Mutex;
 
-use iota_rest_api::CheckpointData;
-use iota_types::base_types::ObjectID;
-use iota_types::transaction::TransactionDataAPI;
-
-use crate::handlers::AnalyticsHandler;
-use crate::tables::MoveCallEntry;
-use crate::FileType;
+use crate::{handlers::AnalyticsHandler, tables::MoveCallEntry, FileType};
 
 pub struct MoveCallHandler {
     state: Mutex<State>,

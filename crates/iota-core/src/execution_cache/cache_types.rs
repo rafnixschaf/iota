@@ -2,19 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::cmp::Ordering;
-use std::collections::VecDeque;
+use std::{cmp::Ordering, collections::VecDeque};
 
 use iota_types::base_types::SequenceNumber;
 
-/// CachedVersionMap is a map from version to value, with the additional contraints:
-/// - The key (SequenceNumber) must be monotonically increasing for each insert. If
-///   a key is inserted that is less than the previous key, it results in an assertion
-///   failure.
+/// CachedVersionMap is a map from version to value, with the additional
+/// contraints:
+/// - The key (SequenceNumber) must be monotonically increasing for each insert.
+///   If a key is inserted that is less than the previous key, it results in an
+///   assertion failure.
 /// - Similarly, only the item with the least key can be removed.
-/// - The intent of these constraints is to ensure that there are never gaps in the collection,
-///   so that membership in the map can be tested by comparing to both the highest and lowest
-///   (first and last) entries.
+/// - The intent of these constraints is to ensure that there are never gaps in
+///   the collection, so that membership in the map can be tested by comparing
+///   to both the highest and lowest (first and last) entries.
 #[derive(Debug)]
 pub struct CachedVersionMap<V> {
     values: VecDeque<(SequenceNumber, V)>,
@@ -102,7 +102,8 @@ impl<V> CachedVersionMap<V> {
     }
 }
 
-// an iterator adapter that asserts that the wrapped iterator yields elements in order
+// an iterator adapter that asserts that the wrapped iterator yields elements in
+// order
 pub(super) struct AssertOrdered<I: Iterator> {
     iter: I,
     last: Option<I::Item>,
@@ -140,8 +141,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use iota_types::base_types::SequenceNumber;
+
+    use super::*;
 
     // Helper function to create a SequenceNumber for simplicity
     fn seq(num: u64) -> SequenceNumber {

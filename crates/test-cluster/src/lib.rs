@@ -2,82 +2,95 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::Future;
-use futures::{future::join_all, StreamExt};
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
-use rand::{distributions::*, rngs::OsRng, seq::SliceRandom};
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::num::NonZeroUsize;
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use iota_bridge::crypto::{BridgeAuthorityKeyPair, BridgeAuthoritySignInfo};
-use iota_bridge::iota_transaction_builder::build_add_tokens_on_iota_transaction;
-use iota_bridge::iota_transaction_builder::build_committee_register_transaction;
-use iota_bridge::types::BridgeCommitteeValiditySignInfo;
-use iota_bridge::types::CertifiedBridgeAction;
-use iota_bridge::types::VerifiedCertifiedBridgeAction;
-use iota_bridge::utils::publish_and_register_coins_return_add_coins_on_iota_action;
-use iota_bridge::utils::wait_for_server_to_be_up;
-use iota_config::genesis::Genesis;
-use iota_config::local_ip_utils::get_available_port;
-use iota_config::node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange};
-use iota_config::{Config, IOTA_CLIENT_CONFIG, IOTA_NETWORK_CONFIG};
-use iota_config::{NodeConfig, PersistedConfig, IOTA_KEYSTORE_FILENAME};
-use iota_core::authority_aggregator::AuthorityAggregator;
-use iota_core::authority_client::NetworkAuthorityClient;
+use std::{
+    collections::{BTreeMap, HashMap},
+    net::SocketAddr,
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+use futures::{future::join_all, Future, StreamExt};
+use iota_bridge::{
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthoritySignInfo},
+    iota_transaction_builder::{
+        build_add_tokens_on_iota_transaction, build_committee_register_transaction,
+    },
+    types::{
+        BridgeCommitteeValiditySignInfo, CertifiedBridgeAction, VerifiedCertifiedBridgeAction,
+    },
+    utils::{publish_and_register_coins_return_add_coins_on_iota_action, wait_for_server_to_be_up},
+};
+use iota_config::{
+    genesis::Genesis,
+    local_ip_utils::get_available_port,
+    node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange},
+    Config, NodeConfig, PersistedConfig, IOTA_CLIENT_CONFIG, IOTA_KEYSTORE_FILENAME,
+    IOTA_NETWORK_CONFIG,
+};
+use iota_core::{
+    authority_aggregator::AuthorityAggregator, authority_client::NetworkAuthorityClient,
+};
 use iota_json_rpc_api::BridgeReadApiClient;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
 use iota_json_rpc_types::{
     IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
-    TransactionFilter,
+    IotaTransactionBlockResponseOptions, TransactionFilter,
 };
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
 use iota_node::IotaNodeHandle;
 use iota_protocol_config::ProtocolVersion;
-use iota_sdk::apis::QuorumDriverApi;
-use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
-use iota_sdk::wallet_context::WalletContext;
-use iota_sdk::{IotaClient, IotaClientBuilder};
+use iota_sdk::{
+    apis::QuorumDriverApi,
+    iota_client_config::{IotaClientConfig, IotaEnv},
+    wallet_context::WalletContext,
+    IotaClient, IotaClientBuilder,
+};
 use iota_swarm::memory::{Swarm, SwarmBuilder};
-use iota_swarm_config::genesis_config::{
-    AccountConfig, GenesisConfig, ValidatorGenesisConfig, DEFAULT_GAS_AMOUNT,
+use iota_swarm_config::{
+    genesis_config::{AccountConfig, GenesisConfig, ValidatorGenesisConfig, DEFAULT_GAS_AMOUNT},
+    network_config::NetworkConfig,
+    network_config_builder::{
+        ProtocolVersionsConfig, StateAccumulatorV2EnabledCallback, StateAccumulatorV2EnabledConfig,
+        SupportedProtocolVersionsCallback,
+    },
+    node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder},
 };
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_swarm_config::network_config_builder::{
-    ProtocolVersionsConfig, StateAccumulatorV2EnabledCallback, StateAccumulatorV2EnabledConfig,
-    SupportedProtocolVersionsCallback,
-};
-use iota_swarm_config::node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder};
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::ConciseableName;
-use iota_types::base_types::{AuthorityName, ObjectID, ObjectRef, IotaAddress};
-use iota_types::bridge::{get_bridge, TOKEN_ID_BTC, TOKEN_ID_ETH, TOKEN_ID_USDC, TOKEN_ID_USDT};
-use iota_types::bridge::{get_bridge_obj_initial_shared_version, BridgeSummary, BridgeTrait};
-use iota_types::committee::CommitteeTrait;
-use iota_types::committee::{Committee, EpochId};
-use iota_types::crypto::IotaKeyPair;
-use iota_types::crypto::{KeypairTraits, ToFromBytes};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::IotaResult;
-use iota_types::governance::MIN_VALIDATOR_JOINING_STAKE_NANOS;
-use iota_types::message_envelope::Message;
-use iota_types::object::Object;
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use iota_types::iota_system_state::IotaSystemState;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
-use iota_types::transaction::{
-    CertifiedTransaction, ObjectArg, Transaction, TransactionData, TransactionDataAPI,
-    TransactionKind,
+use iota_types::{
+    base_types::{AuthorityName, ConciseableName, IotaAddress, ObjectID, ObjectRef},
+    bridge::{
+        get_bridge, get_bridge_obj_initial_shared_version, BridgeSummary, BridgeTrait,
+        TOKEN_ID_BTC, TOKEN_ID_ETH, TOKEN_ID_USDC, TOKEN_ID_USDT,
+    },
+    committee::{Committee, CommitteeTrait, EpochId},
+    crypto::{IotaKeyPair, KeypairTraits, ToFromBytes},
+    effects::{TransactionEffects, TransactionEvents},
+    error::IotaResult,
+    governance::MIN_VALIDATOR_JOINING_STAKE_NANOS,
+    iota_system_state::{
+        epoch_start_iota_system_state::EpochStartSystemStateTrait, IotaSystemState,
+        IotaSystemStateTrait,
+    },
+    message_envelope::Message,
+    object::Object,
+    supported_protocol_versions::SupportedProtocolVersions,
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+    transaction::{
+        CertifiedTransaction, ObjectArg, Transaction, TransactionData, TransactionDataAPI,
+        TransactionKind,
+    },
+    IOTA_BRIDGE_OBJECT_ID,
 };
-use iota_types::IOTA_BRIDGE_OBJECT_ID;
-use tokio::time::{timeout, Instant};
-use tokio::{task::JoinHandle, time::sleep};
+use jsonrpsee::{
+    core::RpcResult,
+    http_client::{HttpClient, HttpClientBuilder},
+};
+use rand::{distributions::*, rngs::OsRng, seq::SliceRandom};
+use tokio::{
+    task::JoinHandle,
+    time::{sleep, timeout, Instant},
+};
 use tracing::{error, info};
 
 const NUM_VALIDATOR: usize = 4;
@@ -347,8 +360,9 @@ impl TestCluster {
         .expect("Timed out waiting for cluster to target protocol version")
     }
 
-    /// Ask 2f+1 validators to close epoch actively, and wait for the entire network to reach the next
-    /// epoch. This requires waiting for both the fullnode and all validators to reach the next epoch.
+    /// Ask 2f+1 validators to close epoch actively, and wait for the entire
+    /// network to reach the next epoch. This requires waiting for both the
+    /// fullnode and all validators to reach the next epoch.
     pub async fn trigger_reconfiguration(&self) {
         info!("Starting reconfiguration");
         let start = Instant::now();
@@ -379,12 +393,13 @@ impl TestCluster {
         info!("reconfiguration complete after {:?}", start.elapsed());
     }
 
-    /// To detect whether the network has reached such state, we use the fullnode as the
-    /// source of truth, since a fullnode only does epoch transition when the network has
-    /// done so.
+    /// To detect whether the network has reached such state, we use the
+    /// fullnode as the source of truth, since a fullnode only does epoch
+    /// transition when the network has done so.
     /// If target_epoch is specified, wait until the cluster reaches that epoch.
     /// If target_epoch is None, wait until the cluster reaches the next epoch.
-    /// Note that this function does not guarantee that every node is at the target epoch.
+    /// Note that this function does not guarantee that every node is at the
+    /// target epoch.
     pub async fn wait_for_epoch(&self, target_epoch: Option<EpochId>) -> IotaSystemState {
         self.wait_for_epoch_with_timeout(target_epoch, Duration::from_secs(60))
             .await
@@ -477,10 +492,10 @@ impl TestCluster {
             .expect("timed out waiting for reconfiguration to complete");
     }
 
-    /// Upgrade the network protocol version, by restarting every validator with a new
-    /// supported versions.
-    /// Note that we don't restart the fullnode here, and it is assumed that the fulnode supports
-    /// the entire version range.
+    /// Upgrade the network protocol version, by restarting every validator with
+    /// a new supported versions.
+    /// Note that we don't restart the fullnode here, and it is assumed that the
+    /// fulnode supports the entire version range.
     pub async fn update_validator_supported_versions(
         &self,
         new_supported_versions: SupportedProtocolVersions,
@@ -568,26 +583,30 @@ impl TestCluster {
     pub async fn wait_for_authenticator_state_update(&self) {
         timeout(
             Duration::from_secs(60),
-            self.fullnode_handle.iota_node.with_async(|node| async move {
-                let mut txns = node.state().subscription_handler.subscribe_transactions(
-                    TransactionFilter::ChangedObject(ObjectID::from_hex_literal("0x7").unwrap()),
-                );
-                let state = node.state();
+            self.fullnode_handle
+                .iota_node
+                .with_async(|node| async move {
+                    let mut txns = node.state().subscription_handler.subscribe_transactions(
+                        TransactionFilter::ChangedObject(
+                            ObjectID::from_hex_literal("0x7").unwrap(),
+                        ),
+                    );
+                    let state = node.state();
 
-                while let Some(tx) = txns.next().await {
-                    let digest = *tx.transaction_digest();
-                    let tx = state
-                        .get_transaction_cache_reader()
-                        .get_transaction_block(&digest)
-                        .unwrap()
-                        .unwrap();
-                    match &tx.data().intent_message().value.kind() {
-                        TransactionKind::EndOfEpochTransaction(_) => (),
-                        TransactionKind::AuthenticatorStateUpdate(_) => break,
-                        _ => panic!("{:?}", tx),
+                    while let Some(tx) = txns.next().await {
+                        let digest = *tx.transaction_digest();
+                        let tx = state
+                            .get_transaction_cache_reader()
+                            .get_transaction_block(&digest)
+                            .unwrap()
+                            .unwrap();
+                        match &tx.data().intent_message().value.kind() {
+                            TransactionKind::EndOfEpochTransaction(_) => (),
+                            TransactionKind::AuthenticatorStateUpdate(_) => break,
+                            _ => panic!("{:?}", tx),
+                        }
                     }
-                }
-            }),
+                }),
         )
         .await
         .expect("Timed out waiting for authenticator state update");
@@ -650,22 +669,24 @@ impl TestCluster {
         self.execute_transaction(tx).await
     }
 
-    /// Execute a transaction on the network and wait for it to be executed on the rpc fullnode.
-    /// Also expects the effects status to be ExecutionStatus::Success.
-    /// This function is recommended for transaction execution since it most resembles the
-    /// production path.
+    /// Execute a transaction on the network and wait for it to be executed on
+    /// the rpc fullnode. Also expects the effects status to be
+    /// ExecutionStatus::Success. This function is recommended for
+    /// transaction execution since it most resembles the production path.
     pub async fn execute_transaction(&self, tx: Transaction) -> IotaTransactionBlockResponse {
         self.wallet.execute_transaction_must_succeed(tx).await
     }
 
-    /// Different from `execute_transaction` which returns RPC effects types, this function
-    /// returns raw effects, events and extra objects returned by the validators,
-    /// aggregated manually (without authority aggregator).
-    /// It also does not check whether the transaction is executed successfully.
-    /// In order to keep the fullnode up-to-date so that latter queries can read consistent
-    /// results, it calls execute_transaction_may_fail again which goes through fullnode.
-    /// This is less efficient and verbose, but can be used if more details are needed
-    /// from the execution results, and if the transaction is expected to fail.
+    /// Different from `execute_transaction` which returns RPC effects types,
+    /// this function returns raw effects, events and extra objects returned
+    /// by the validators, aggregated manually (without authority
+    /// aggregator). It also does not check whether the transaction is
+    /// executed successfully. In order to keep the fullnode up-to-date so
+    /// that latter queries can read consistent results, it calls
+    /// execute_transaction_may_fail again which goes through fullnode. This
+    /// is less efficient and verbose, but can be used if more details are
+    /// needed from the execution results, and if the transaction is
+    /// expected to fail.
     pub async fn execute_transaction_return_raw_effects(
         &self,
         tx: Transaction,
@@ -695,11 +716,12 @@ impl TestCluster {
             .into_cert_for_testing())
     }
 
-    /// Execute a transaction on specified list of validators, and bypassing authority aggregator.
-    /// This allows us to obtain the return value directly from validators, so that we can access more
-    /// information directly such as the original effects, events and extra objects returned.
-    /// This also allows us to control which validator to send certificates to, which is useful in
-    /// some tests.
+    /// Execute a transaction on specified list of validators, and bypassing
+    /// authority aggregator. This allows us to obtain the return value
+    /// directly from validators, so that we can access more information
+    /// directly such as the original effects, events and extra objects
+    /// returned. This also allows us to control which validator to send
+    /// certificates to, which is useful in some tests.
     pub async fn submit_transaction_to_validators(
         &self,
         tx: Transaction,
@@ -1126,8 +1148,8 @@ impl TestClusterBuilder {
 
     pub async fn build(mut self) -> TestCluster {
         // All test clusters receive a continuous stream of random JWKs.
-        // If we later use zklogin authenticated transactions in tests we will need to supply
-        // valid JWKs as well.
+        // If we later use zklogin authenticated transactions in tests we will need to
+        // supply valid JWKs as well.
         #[cfg(msim)]
         if !self.default_jwks {
             iota_node::set_jwk_injector(Arc::new(|_authority, provider| {
@@ -1341,9 +1363,10 @@ impl TestClusterBuilder {
                 impl Future<Output = Result<IotaTransactionBlockResponse, iota_sdk::error::Error>>,
             >,
         ) {
-            // The tx may fail if a member tries to register when the committee is already finalized.
-            // In that case, we just need to check the committee members is not empty since once
-            // the committee is finalized, it should not be empty.
+            // The tx may fail if a member tries to register when the committee is already
+            // finalized. In that case, we just need to check the committee
+            // members is not empty since once the committee is finalized, it
+            // should not be empty.
             let responses = join_all(tasks).await;
             let mut has_failure = false;
             for response in responses {

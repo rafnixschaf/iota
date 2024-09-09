@@ -4,7 +4,6 @@
 
 mod utils;
 use anyhow::anyhow;
-use shared_crypto::intent::Intent;
 use iota_config::{iota_config_dir, IOTA_KEYSTORE_FILENAME};
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore};
 use iota_sdk::{
@@ -19,11 +18,12 @@ use iota_sdk::{
         Identifier,
     },
 };
+use shared_crypto::intent::Intent;
 use utils::setup_for_write;
 
 // This example shows how to use programmable transactions to chain multiple
-// commands into one transaction, and specifically how to call a function from a move package
-// These are the following steps:
+// commands into one transaction, and specifically how to call a function from a
+// move package These are the following steps:
 // 1) finds a coin from the active address that has Iota,
 // 2) creates a PTB and adds an input to it,
 // 3) adds a move call to the PTB,

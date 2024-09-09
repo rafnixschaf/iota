@@ -2,19 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{str::FromStr, sync::Arc};
+
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures::stream::{self, StreamExt};
-use reqwest::header::{HeaderValue, CONTENT_LENGTH};
-use reqwest::Client;
-use reqwest::Url;
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
-use std::sync::Arc;
-use iota_types::base_types::{ObjectID, SequenceNumber, VersionNumber};
-use iota_types::object::Object;
-use iota_types::storage::ObjectKey;
 use iota_types::{
+    base_types::{ObjectID, SequenceNumber, VersionNumber},
     digests::{
         CheckpointContentsDigest, CheckpointDigest, TransactionDigest, TransactionEventsDigest,
     },
@@ -23,13 +17,22 @@ use iota_types::{
     messages_checkpoint::{
         CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
     },
+    object::Object,
+    storage::ObjectKey,
     transaction::Transaction,
 };
+use reqwest::{
+    header::{HeaderValue, CONTENT_LENGTH},
+    Client, Url,
+};
+use serde::{Deserialize, Serialize};
 use tap::TapFallible;
 use tracing::{error, info, instrument, trace, warn};
 
-use crate::key_value_store::{TransactionKeyValueStore, TransactionKeyValueStoreTrait};
-use crate::key_value_store_metrics::KeyValueStoreMetrics;
+use crate::{
+    key_value_store::{TransactionKeyValueStore, TransactionKeyValueStoreTrait},
+    key_value_store_metrics::KeyValueStoreMetrics,
+};
 
 pub struct HttpKVStore {
     base_url: Url,

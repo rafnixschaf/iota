@@ -3,38 +3,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashSet, env, path::PathBuf, str::FromStr};
+
+use iota_move_build::{BuildConfig, IotaPackageHooks};
+use iota_types::{
+    base_types::{RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR},
+    crypto::{get_key_pair, AccountKeyPair},
+    error::{ExecutionErrorKind, IotaError},
+    execution_status::{CommandArgumentError, ExecutionFailureStatus, ExecutionStatus},
+    move_package::UpgradeCap,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    utils::to_sender_signed_transaction,
+    IOTA_FRAMEWORK_PACKAGE_ID,
+};
+use move_core_types::{
+    account_address::AccountAddress,
+    identifier::{IdentStr, Identifier},
+    language_storage::{StructTag, TypeTag},
+    u256::U256,
+};
+
 use super::*;
 use crate::authority::authority_tests::{
     call_move, call_move_, execute_programmable_transaction, init_state_with_ids,
     send_and_confirm_transaction, TestCallArg,
 };
-use move_core_types::{
-    account_address::AccountAddress,
-    identifier::{IdentStr, Identifier},
-    language_storage::StructTag,
-    u256::U256,
-};
-
-use iota_types::{
-    base_types::{RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR},
-    error::ExecutionErrorKind,
-    programmable_transaction_builder::ProgrammableTransactionBuilder,
-    utils::to_sender_signed_transaction,
-    IOTA_FRAMEWORK_PACKAGE_ID,
-};
-
-use move_core_types::language_storage::TypeTag;
-
-use iota_move_build::{BuildConfig, IotaPackageHooks};
-use iota_types::{
-    crypto::{get_key_pair, AccountKeyPair},
-    error::IotaError,
-};
-
-use std::{collections::HashSet, path::PathBuf};
-use std::{env, str::FromStr};
-use iota_types::execution_status::{CommandArgumentError, ExecutionFailureStatus, ExecutionStatus};
-use iota_types::move_package::UpgradeCap;
 
 #[tokio::test]
 #[cfg_attr(msim, ignore)]
@@ -50,7 +43,8 @@ async fn test_object_wrapping_unwrapping() {
         &sender_key,
         &gas,
         "object_wrapping",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -80,7 +74,7 @@ async fn test_object_wrapping_unwrapping() {
     assert_eq!(child_object_ref.1, create_child_version);
 
     let wrapped_version =
-        SequenceNumber::lamport_increment([child_object_ref.1, effects.gas_object().0 .1]);
+        SequenceNumber::lamport_increment([child_object_ref.1, effects.gas_object().0.1]);
 
     // Create a Parent object, by wrapping the child object.
     let effects = call_move(
@@ -125,7 +119,7 @@ async fn test_object_wrapping_unwrapping() {
     assert_eq!(parent_object_ref.1, wrapped_version);
 
     let unwrapped_version =
-        SequenceNumber::lamport_increment([parent_object_ref.1, effects.gas_object().0 .1]);
+        SequenceNumber::lamport_increment([parent_object_ref.1, effects.gas_object().0.1]);
 
     // Extract the child out of the parent.
     let effects = call_move(
@@ -157,14 +151,14 @@ async fn test_object_wrapping_unwrapping() {
         (2, 0, 1)
     );
     // Make sure that version increments again when unwrapped.
-    assert_eq!(effects.unwrapped()[0].0 .1, unwrapped_version);
+    assert_eq!(effects.unwrapped()[0].0.1, unwrapped_version);
     check_latest_object_ref(&authority, &effects.unwrapped()[0].0, false).await;
     let child_object_ref = effects.unwrapped()[0].0;
 
     let rewrap_version = SequenceNumber::lamport_increment([
         parent_object_ref.1,
         child_object_ref.1,
-        effects.gas_object().0 .1,
+        effects.gas_object().0.1,
     ]);
 
     // Wrap the child to the parent again.
@@ -203,7 +197,7 @@ async fn test_object_wrapping_unwrapping() {
     let parent_object_ref = effects.mutated_excluding_gas().first().unwrap().0;
 
     let deleted_version =
-        SequenceNumber::lamport_increment([parent_object_ref.1, effects.gas_object().0 .1]);
+        SequenceNumber::lamport_increment([parent_object_ref.1, effects.gas_object().0.1]);
 
     // Now delete the parent object, which will in turn delete the child object.
     let effects = call_move(
@@ -232,9 +226,11 @@ async fn test_object_wrapping_unwrapping() {
         deleted_version,
         ObjectDigest::OBJECT_DIGEST_DELETED,
     );
-    assert!(effects
-        .unwrapped_then_deleted()
-        .contains(&expected_child_object_ref));
+    assert!(
+        effects
+            .unwrapped_then_deleted()
+            .contains(&expected_child_object_ref)
+    );
     check_latest_object_ref(&authority, &expected_child_object_ref, true).await;
     let expected_parent_object_ref = (
         parent_object_ref.0,
@@ -258,7 +254,8 @@ async fn test_object_owning_another_object() {
         &sender_key,
         &gas,
         "object_owner",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -341,7 +338,8 @@ async fn test_object_owning_another_object() {
     let field_object = authority.get_object(&field_id).await.unwrap().unwrap();
     assert_eq!(field_object.owner, parent.0);
 
-    // Mutate the child directly will now fail because we need the parent to authenticate.
+    // Mutate the child directly will now fail because we need the parent to
+    // authenticate.
     let result = call_move(
         &authority,
         &gas,
@@ -410,7 +408,8 @@ async fn test_object_owning_another_object() {
 
     assert!(effects.status().is_ok());
 
-    // Delete the child. This should fail as the child cannot be used as a transaction argument
+    // Delete the child. This should fail as the child cannot be used as a
+    // transaction argument
     let effects = call_move(
         &authority,
         &gas,
@@ -439,7 +438,8 @@ async fn test_create_then_delete_parent_child() {
         &sender_key,
         &gas,
         "object_owner",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -500,7 +500,8 @@ async fn test_create_then_delete_parent_child_wrap() {
         &sender_key,
         &gas,
         "object_owner",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -560,10 +561,11 @@ async fn test_create_then_delete_parent_child_wrap() {
 
     assert!(effects.status().is_ok());
 
-    // The parent and field are considered deleted, the child doesn't count because it wasn't
-    // considered created in the first place.
+    // The parent and field are considered deleted, the child doesn't count because
+    // it wasn't considered created in the first place.
     assert_eq!(effects.deleted().len(), 2);
-    // The child is considered as unwrapped and deleted, even though it was wrapped since creation.
+    // The child is considered as unwrapped and deleted, even though it was wrapped
+    // since creation.
     assert_eq!(effects.unwrapped_then_deleted().len(), 1);
 
     assert_eq!(
@@ -579,8 +581,9 @@ async fn test_create_then_delete_parent_child_wrap() {
     );
 }
 
-/// We are explicitly testing the case where a parent and child object are created together - where
-/// no prior child version exists - and then we remove the child successfully.
+/// We are explicitly testing the case where a parent and child object are
+/// created together - where no prior child version exists - and then we remove
+/// the child successfully.
 #[tokio::test]
 #[cfg_attr(msim, ignore)]
 async fn test_remove_child_when_no_prior_version_exists() {
@@ -594,7 +597,8 @@ async fn test_remove_child_when_no_prior_version_exists() {
         &sender_key,
         &gas,
         "object_owner",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -686,7 +690,8 @@ async fn test_create_then_delete_parent_child_wrap_separate() {
         &sender_key,
         &gas,
         "object_owner",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -781,7 +786,8 @@ async fn test_entry_point_vector_empty() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -920,11 +926,13 @@ async fn test_entry_point_vector_primitive() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
-    // just a test call with vector of 2 primitive values and check its length in the entry function
+    // just a test call with vector of 2 primitive values and check its length in
+    // the entry function
     let effects = call_move(
         &authority,
         &gas,
@@ -960,7 +968,8 @@ async fn test_entry_point_vector() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1004,8 +1013,8 @@ async fn test_entry_point_vector() {
         effects.status()
     );
 
-    // mint a parent object and a child object and make sure that parent stored in the vector
-    // authenticates the child passed by-value
+    // mint a parent object and a child object and make sure that parent stored in
+    // the vector authenticates the child passed by-value
     let effects = call_move(
         &authority,
         &gas,
@@ -1047,8 +1056,8 @@ async fn test_entry_point_vector() {
         effects.status()
     );
     let (child_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // a reference argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as a reference argument
     let effects = call_move(
         &authority,
         &gas,
@@ -1081,7 +1090,8 @@ async fn test_entry_point_vector_error() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1179,7 +1189,8 @@ async fn test_entry_point_vector_error() {
     )
     .await
     .unwrap();
-    // should fail as we passed object of the wrong type as the first element of the vector
+    // should fail as we passed object of the wrong type as the first element of the
+    // vector
     assert!(
         matches!(effects.status(), ExecutionStatus::Failure { .. }),
         "{:?}",
@@ -1249,8 +1260,8 @@ async fn test_entry_point_vector_error() {
         effects.status()
     );
     let (obj_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as argument
     let result = call_move(
         &authority,
         &gas,
@@ -1266,7 +1277,8 @@ async fn test_entry_point_vector_error() {
         ],
     )
     .await;
-    // should fail as we have the same object passed in vector and as a separate by-value argument
+    // should fail as we have the same object passed in vector and as a separate
+    // by-value argument
     assert_eq!(
         result.unwrap().status(),
         &ExecutionStatus::Failure {
@@ -1298,8 +1310,8 @@ async fn test_entry_point_vector_error() {
         effects.status()
     );
     let (obj_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // a reference argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as a reference argument
     let result = call_move(
         &authority,
         &gas,
@@ -1315,7 +1327,8 @@ async fn test_entry_point_vector_error() {
         ],
     )
     .await;
-    // should fail as we have the same object passed in vector and as a separate by-reference argument
+    // should fail as we have the same object passed in vector and as a separate
+    // by-reference argument
     assert_eq!(
         result.unwrap().status(),
         &ExecutionStatus::Failure {
@@ -1341,7 +1354,8 @@ async fn test_entry_point_vector_any() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1388,8 +1402,8 @@ async fn test_entry_point_vector_any() {
         effects.status()
     );
 
-    // mint a parent object and a child object and make sure that parent stored in the vector
-    // authenticates the child passed by-value
+    // mint a parent object and a child object and make sure that parent stored in
+    // the vector authenticates the child passed by-value
     let effects = call_move(
         &authority,
         &gas,
@@ -1431,8 +1445,8 @@ async fn test_entry_point_vector_any() {
         effects.status()
     );
     let (child_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // a reference argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as a reference argument
     let effects = call_move(
         &authority,
         &gas,
@@ -1465,7 +1479,8 @@ async fn test_entry_point_vector_any_error() {
         &sender_key,
         &gas,
         "entry_point_vector",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1566,7 +1581,8 @@ async fn test_entry_point_vector_any_error() {
     )
     .await
     .unwrap();
-    // should fail as we passed object of the wrong type as the first element of the vector
+    // should fail as we passed object of the wrong type as the first element of the
+    // vector
     assert!(
         matches!(effects.status(), ExecutionStatus::Failure { .. }),
         "{:?}",
@@ -1636,8 +1652,8 @@ async fn test_entry_point_vector_any_error() {
         effects.status()
     );
     let (obj_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as argument
     let result = call_move(
         &authority,
         &gas,
@@ -1653,7 +1669,8 @@ async fn test_entry_point_vector_any_error() {
         ],
     )
     .await;
-    // should fail as we have the same object passed in vector and as a separate by-value argument
+    // should fail as we have the same object passed in vector and as a separate
+    // by-value argument
     assert_eq!(
         result.unwrap().status(),
         &ExecutionStatus::Failure {
@@ -1685,8 +1702,8 @@ async fn test_entry_point_vector_any_error() {
         effects.status()
     );
     let (obj_id, _, _) = effects.created()[0].0;
-    // call a function with a vector containing the same owned object as another one passed as
-    // a reference argument
+    // call a function with a vector containing the same owned object as another one
+    // passed as a reference argument
     let result = call_move(
         &authority,
         &gas,
@@ -1727,7 +1744,8 @@ async fn test_entry_point_string() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1811,7 +1829,8 @@ async fn test_nested_string() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1955,7 +1974,8 @@ async fn test_entry_point_string_vec() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -1996,7 +2016,8 @@ async fn test_entry_point_string_error() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -2115,7 +2136,8 @@ async fn test_entry_point_string_vec_error() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -2170,7 +2192,8 @@ async fn test_entry_point_string_option_error() {
         &sender_key,
         &gas,
         "entry_point_types",
-        /* with_unpublished_deps */ false,
+        // with_unpublished_deps
+        false,
     )
     .await;
 
@@ -2436,7 +2459,8 @@ macro_rules! make_vec_tests_for_type {
                 &sender_key,
                 &gas,
                 "entry_point_types",
-                /* with_unpublished_deps */ false,
+                // with_unpublished_deps
+                false,
             )
             .await;
             let package_id = package.0;
@@ -2777,9 +2801,10 @@ async fn test_object_no_id_error() {
     let mut build_config = BuildConfig::new_for_testing();
     build_config.config.test_mode = true;
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    // in this package object struct (NotObject) is defined incorrectly and publishing should
-    // fail (it's defined in test-only code hence cannot be checked by transactional testing
-    // framework which goes through "normal" publishing path which excludes tests).
+    // in this package object struct (NotObject) is defined incorrectly and
+    // publishing should fail (it's defined in test-only code hence cannot be
+    // checked by transactional testing framework which goes through "normal"
+    // publishing path which excludes tests).
     path.extend(["src", "unit_tests", "data", "object_no_id"]);
     let res = build_config.build(&path);
 

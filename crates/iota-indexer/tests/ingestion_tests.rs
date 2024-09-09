@@ -4,24 +4,22 @@
 
 #[cfg(feature = "pg_integration")]
 mod ingestion_tests {
-    use diesel::ExpressionMethods;
-    use diesel::{QueryDsl, RunQueryDsl};
+    use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+
+    use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+    use iota_indexer::{
+        db::get_pool_connection,
+        errors::{Context, IndexerError},
+        models::{objects::StoredObject, transactions::StoredTransaction},
+        schema::{objects, transactions},
+        store::{indexer_store::IndexerStore, PgIndexerStore},
+        test_utils::{start_test_indexer, ReaderWriterConfig},
+    };
+    use iota_types::{
+        base_types::IotaAddress, effects::TransactionEffectsAPI, gas_coin::GasCoin,
+        IOTA_FRAMEWORK_PACKAGE_ID,
+    };
     use simulacrum::Simulacrum;
-    use std::net::SocketAddr;
-    use std::path::PathBuf;
-    use std::sync::Arc;
-    use std::time::Duration;
-    use iota_indexer::db::get_pool_connection;
-    use iota_indexer::errors::Context;
-    use iota_indexer::errors::IndexerError;
-    use iota_indexer::models::{objects::StoredObject, transactions::StoredTransaction};
-    use iota_indexer::schema::{objects, transactions};
-    use iota_indexer::store::{indexer_store::IndexerStore, PgIndexerStore};
-    use iota_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
-    use iota_types::base_types::IotaAddress;
-    use iota_types::effects::TransactionEffectsAPI;
-    use iota_types::gas_coin::GasCoin;
-    use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
     use tempfile::tempdir;
     use tokio::task::JoinHandle;
 
@@ -39,7 +37,8 @@ mod ingestion_tests {
     const DEFAULT_SERVER_PORT: u16 = 3000;
     const DEFAULT_DB_URL: &str = "postgres://postgres:postgrespw@localhost:5432/iota_indexer";
 
-    /// Set up a test indexer fetching from a REST endpoint served by the given Simulacrum.
+    /// Set up a test indexer fetching from a REST endpoint served by the given
+    /// Simulacrum.
     async fn set_up(
         sim: Arc<Simulacrum>,
         data_ingestion_path: PathBuf,
@@ -68,7 +67,8 @@ mod ingestion_tests {
         (server_handle, pg_store, pg_handle)
     }
 
-    /// Wait for the indexer to catch up to the given checkpoint sequence number.
+    /// Wait for the indexer to catch up to the given checkpoint sequence
+    /// number.
     async fn wait_for_checkpoint(
         pg_store: &PgIndexerStore<diesel::PgConnection>,
         checkpoint_sequence_number: u64,

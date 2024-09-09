@@ -50,9 +50,8 @@ impl From<anyhow::Error> for RestError {
 
 impl From<iota_types::quorum_driver_types::QuorumDriverError> for RestError {
     fn from(error: iota_types::quorum_driver_types::QuorumDriverError) -> Self {
+        use iota_types::{error::IotaError, quorum_driver_types::QuorumDriverError::*};
         use itertools::Itertools;
-        use iota_types::error::IotaError;
-        use iota_types::quorum_driver_types::QuorumDriverError::*;
 
         match error {
             InvalidUserSignature(err) => {
@@ -85,11 +84,9 @@ impl From<iota_types::quorum_driver_types::QuorumDriverError> for RestError {
                     .collect::<std::collections::BTreeMap<_, Vec<_>>>();
 
                 let message = format!(
-                        "Failed to sign transaction by a quorum of validators because of locked objects. Retried a conflicting transaction {:?}, success: {:?}. Conflicting Transactions:\n{:#?}",
-                        retried_tx,
-                        retried_tx_success,
-                        new_map,
-                    );
+                    "Failed to sign transaction by a quorum of validators because of locked objects. Retried a conflicting transaction {:?}, success: {:?}. Conflicting Transactions:\n{:#?}",
+                    retried_tx, retried_tx_success, new_map,
+                );
 
                 RestError::new(StatusCode::CONFLICT, message)
             }
@@ -135,7 +132,10 @@ impl From<iota_types::quorum_driver_types::QuorumDriverError> for RestError {
                 );
 
                 let error_list = new_errors.join(", ");
-                let error_msg = format!("Transaction execution failed due to issues with transaction inputs, please review the errors and try again: {}.", error_list);
+                let error_msg = format!(
+                    "Transaction execution failed due to issues with transaction inputs, please review the errors and try again: {}.",
+                    error_list
+                );
 
                 RestError::new(StatusCode::BAD_REQUEST, error_msg)
             }

@@ -74,8 +74,8 @@ pub fn run(args: Args) -> crate::Result<()> {
             // TODO spend the time to de-dup these direct dependencies
             "serde_yaml".to_owned(),
             "syn".to_owned(),
-            // Our opentelemetry integration requires that we use the same version of these packages
-            // as the opentelemetry crates.
+            // Our opentelemetry integration requires that we use the same version of these
+            // packages as the opentelemetry crates.
             "prost".to_owned(),
             "tonic".to_owned(),
         ],
@@ -126,12 +126,14 @@ pub fn run(args: Args) -> crate::Result<()> {
     handle_lint_results_exclude_external_crate_checks(results)
 }
 
-/// Define custom handler so we can skip certain lints on certain files. This is a temporary till we upstream this logic
+/// Define custom handler so we can skip certain lints on certain files. This is
+/// a temporary till we upstream this logic
 pub fn handle_lint_results_exclude_external_crate_checks(
     results: LintResults,
 ) -> crate::Result<()> {
-    // ignore_funcs is a slice of funcs to execute against lint sources and their path
-    // if a func returns true, it means it will be ignored and not throw a lint error
+    // ignore_funcs is a slice of funcs to execute against lint sources and their
+    // path if a func returns true, it means it will be ignored and not throw a
+    // lint error
     let ignore_funcs = [
         // legacy ignore checks
         |source: &LintSource, path: &Utf8Path| -> bool {

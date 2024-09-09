@@ -45,8 +45,8 @@ impl RocksDBStore {
 
     /// Creates a new instance of RocksDB storage.
     pub(crate) fn new(path: &str) -> Self {
-        // Consensus data has high write throughput (all transactions) and is rarely read
-        // (only during recovery and when helping peers catch up).
+        // Consensus data has high write throughput (all transactions) and is rarely
+        // read (only during recovery and when helping peers catch up).
         let db_options = default_db_options().optimize_db_for_write_throughput(2);
         let mut metrics_conf = MetricConf::new("consensus");
         metrics_conf.read_sample_interval = SamplingInterval::new(Duration::from_secs(60), 0);
@@ -214,9 +214,10 @@ impl Store for RocksDBStore {
         Ok(blocks)
     }
 
-    // The method returns the last `num_of_rounds` rounds blocks by author in round ascending order.
-    // When a `before_round` is defined then the blocks of round `<=before_round` are returned. If not
-    // then the max value for round will be used as cut off.
+    // The method returns the last `num_of_rounds` rounds blocks by author in round
+    // ascending order. When a `before_round` is defined then the blocks of
+    // round `<=before_round` are returned. If not then the max value for round
+    // will be used as cut off.
     fn scan_last_blocks_by_author(
         &self,
         author: AuthorityIndex,

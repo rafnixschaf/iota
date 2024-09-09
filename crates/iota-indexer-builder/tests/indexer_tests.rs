@@ -2,12 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_test_utils::{InMemoryPersistent, NoopDataMapper, TestDatasource};
-use prometheus::Registry;
-use iota_indexer_builder::indexer_builder::{
-    BackfillStrategy, IndexerBuilder, IndexerProgressStore,
+use iota_indexer_builder::{
+    indexer_builder::{BackfillStrategy, IndexerBuilder, IndexerProgressStore},
+    Task,
 };
-use iota_indexer_builder::Task;
+use prometheus::Registry;
+
+use crate::indexer_test_utils::{InMemoryPersistent, NoopDataMapper, TestDatasource};
 
 mod indexer_test_utils;
 
@@ -28,7 +29,8 @@ async fn indexer_simple_backfill_task_test() {
 
     indexer.start().await.unwrap();
 
-    // it should have 2 task created for the indexer - a live task and a backfill task
+    // it should have 2 task created for the indexer - a live task and a backfill
+    // task
     let tasks = persistent.tasks("test_indexer").await.unwrap();
     assert_eq!(2, tasks.len());
     // the tasks should be ordered by checkpoint number,
@@ -58,7 +60,8 @@ async fn indexer_partitioned_backfill_task_test() {
         .build(35, 0, persistent.clone());
     indexer.start().await.unwrap();
 
-    // it should have 5 task created for the indexer - a live task and 4 backfill task
+    // it should have 5 task created for the indexer - a live task and 4 backfill
+    // task
     let tasks = persistent.tasks("test_indexer").await.unwrap();
     assert_eq!(5, tasks.len());
     // the tasks should be ordered by checkpoint number,
@@ -103,7 +106,8 @@ async fn indexer_partitioned_task_with_data_already_in_db_test() {
         .build(25, 0, persistent.clone());
     indexer.start().await.unwrap();
 
-    // it should have 2 task created for the indexer, one existing task and one live task
+    // it should have 2 task created for the indexer, one existing task and one live
+    // task
     let tasks = persistent.tasks("test_indexer").await.unwrap();
     assert_eq!(2, tasks.len());
     // the first one will be the live task
@@ -139,7 +143,8 @@ async fn indexer_partitioned_task_with_data_already_in_db_test2() {
         .build(35, 0, persistent.clone());
     indexer.start().await.unwrap();
 
-    // it should have 3 task created for the indexer, existing task, a backfill task from cp 31 to cp 34, and a live task
+    // it should have 3 task created for the indexer, existing task, a backfill task
+    // from cp 31 to cp 34, and a live task
     let tasks = persistent.tasks("test_indexer").await.unwrap();
     assert_eq!(3, tasks.len());
     // the tasks should be ordered by checkpoint number,
@@ -179,7 +184,8 @@ async fn resume_test() {
         .build(30, 0, persistent.clone());
     indexer.start().await.unwrap();
 
-    // it should have 2 task created for the indexer, one existing task and one live task
+    // it should have 2 task created for the indexer, one existing task and one live
+    // task
     let tasks = persistent.tasks("test_indexer").await.unwrap();
     assert_eq!(2, tasks.len());
     // the first one will be the live task

@@ -2,8 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use anyhow::{anyhow, ensure, Error};
+use clap::{arg, Args, ValueHint};
+use iota_json_rpc_types::{IotaExecutionStatus, IotaTransactionBlockEffectsAPI};
+use iota_keys::keystore::AccountKeystore;
+use iota_sdk::{wallet_context::WalletContext, IotaClient};
+use iota_types::{
+    digests::TransactionDigest,
+    gas::GasCostSummary,
+    transaction::{ProgrammableTransaction, TransactionKind},
+};
+use move_core_types::account_address::AccountAddress;
+use serde::Serialize;
+
+use super::{ast::ProgramMetadata, lexer::Lexer, parser::ProgramParser};
 use crate::{
-    client_commands::{dry_run_or_execute_or_serialize, Opts, OptsWithGas, IotaClientCommandResult},
+    client_commands::{
+        dry_run_or_execute_or_serialize, IotaClientCommandResult, Opts, OptsWithGas,
+    },
     client_ptb::{
         ast::{ParsedProgram, Program},
         builder::PTBBuilder,
@@ -12,20 +28,6 @@ use crate::{
     },
     displays::Pretty,
     sp,
-};
-
-use super::{ast::ProgramMetadata, lexer::Lexer, parser::ProgramParser};
-use anyhow::{anyhow, ensure, Error};
-use clap::{arg, Args, ValueHint};
-use move_core_types::account_address::AccountAddress;
-use serde::Serialize;
-use iota_json_rpc_types::{IotaExecutionStatus, IotaTransactionBlockEffectsAPI};
-use iota_keys::keystore::AccountKeystore;
-use iota_sdk::{wallet_context::WalletContext, IotaClient};
-use iota_types::{
-    digests::TransactionDigest,
-    gas::GasCostSummary,
-    transaction::{ProgrammableTransaction, TransactionKind},
 };
 
 #[derive(Clone, Debug, Args)]
@@ -48,7 +50,8 @@ pub struct Summary {
 }
 
 impl PTB {
-    /// Parses and executes the PTB with the sender as the current active address
+    /// Parses and executes the PTB with the sender as the current active
+    /// address
     pub async fn execute(self, context: &mut WalletContext) -> Result<(), Error> {
         if self.args.is_empty() {
             ptb_description().print_help().unwrap();
@@ -243,10 +246,10 @@ impl PTB {
     }
 }
 
-/// Convert a vector of shell tokens into a single string, with each shell token separated by a
-/// space with each command starting on a new line.
-/// NB: we add a space to the end of the source string to ensure that for unexpected EOF
-/// errors we have a location to point to.
+/// Convert a vector of shell tokens into a single string, with each shell token
+/// separated by a space with each command starting on a new line.
+/// NB: we add a space to the end of the source string to ensure that for
+/// unexpected EOF errors we have a location to point to.
 pub fn to_source_string(strings: Vec<String>) -> String {
     let mut strings = strings.into_iter();
     let mut string = String::new();

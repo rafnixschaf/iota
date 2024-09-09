@@ -4,12 +4,12 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use iota_core::authority::authority_store_tables::LiveObject;
 use iota_types::{
-    base_types::{ObjectRef, IotaAddress},
+    base_types::{IotaAddress, ObjectRef},
     object::Owner,
 };
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use test_cluster::TestCluster;
 use tokio::sync::{watch, RwLock};
 

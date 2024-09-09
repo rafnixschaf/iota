@@ -1,39 +1,42 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::certificate_deny_config::CertificateDenyConfig;
-use crate::genesis;
-use crate::object_storage_config::ObjectStoreConfig;
-use crate::p2p::P2pConfig;
-use crate::transaction_deny_config::TransactionDenyConfig;
-use crate::Config;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    net::SocketAddr,
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
+
 use anyhow::Result;
 use consensus_config::Parameters as ConsensusParameters;
+use iota_keys::keypair_file::{read_authority_keypair_from_file, read_keypair_from_file};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    committee::EpochId,
+    crypto::{
+        get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes,
+        IotaKeyPair, KeypairTraits, NetworkKeyPair,
+    },
+    messages_checkpoint::CheckpointSequenceNumber,
+    multiaddr::Multiaddr,
+    supported_protocol_versions::{Chain, SupportedProtocolVersions},
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+};
 use narwhal_config::Parameters as NarwhalParameters;
 use once_cell::sync::OnceCell;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
-use std::net::SocketAddr;
-use std::num::NonZeroUsize;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Duration;
-use iota_keys::keypair_file::{read_authority_keypair_from_file, read_keypair_from_file};
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::committee::EpochId;
-use iota_types::crypto::AuthorityPublicKeyBytes;
-use iota_types::crypto::KeypairTraits;
-use iota_types::crypto::NetworkKeyPair;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::supported_protocol_versions::{Chain, SupportedProtocolVersions};
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
-
-use iota_types::crypto::{get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair};
-use iota_types::multiaddr::Multiaddr;
 use tracing::info;
+
+use crate::{
+    certificate_deny_config::CertificateDenyConfig, genesis,
+    object_storage_config::ObjectStoreConfig, p2p::P2pConfig,
+    transaction_deny_config::TransactionDenyConfig, Config,
+};
 
 // Default max number of concurrent requests served
 pub const DEFAULT_GRPC_CONCURRENCY_LIMIT: usize = 20000000000;
@@ -101,7 +104,8 @@ pub struct NodeConfig {
     #[serde(default = "default_authority_store_pruning_config")]
     pub authority_store_pruning_config: AuthorityStorePruningConfig,
 
-    /// Size of the broadcast channel used for notifying other systems of end of epoch.
+    /// Size of the broadcast channel used for notifying other systems of end of
+    /// epoch.
     ///
     /// If unspecified, this will default to `128`.
     #[serde(default = "default_end_of_epoch_broadcast_channel_capacity")]
@@ -113,8 +117,9 @@ pub struct NodeConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metrics: Option<MetricsConfig>,
 
-    /// In a `iota-node` binary, this is set to SupportedProtocolVersions::SYSTEM_DEFAULT
-    /// in iota-node/src/main.rs. It is present in the config so that it can be changed by tests in
+    /// In a `iota-node` binary, this is set to
+    /// SupportedProtocolVersions::SYSTEM_DEFAULT in iota-node/src/main.rs.
+    /// It is present in the config so that it can be changed by tests in
     /// order to test protocol upgrades.
     #[serde(skip)]
     pub supported_protocol_versions: Option<SupportedProtocolVersions>,
@@ -241,8 +246,8 @@ pub fn default_zklogin_oauth_providers() -> BTreeMap<Chain, BTreeSet<String>> {
         "Microsoft".to_string(),
         "KarrierOne".to_string(),
         "Credenza3".to_string(),
-        "AwsTenant-region:us-east-1-tenant_id:us-east-1_LPSLCkC3A".to_string(), // test tenant in iota aws
-        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), // ambrus, external partner
+        "AwsTenant-region:us-east-1-tenant_id:us-east-1_LPSLCkC3A".to_string(), /* test tenant in iota aws */
+        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), /* ambrus, external partner */
     ]);
 
     // providers that are available for mainnet and testnet.
@@ -419,26 +424,29 @@ pub struct ConsensusConfig {
     // Base consensus DB path for all epochs.
     pub db_path: PathBuf,
 
-    // The number of epochs for which to retain the consensus DBs. Setting it to 0 will make a consensus DB getting
-    // dropped as soon as system is switched to a new epoch.
+    // The number of epochs for which to retain the consensus DBs. Setting it to 0 will make a
+    // consensus DB getting dropped as soon as system is switched to a new epoch.
     pub db_retention_epochs: Option<u64>,
 
-    // Pruner will run on every epoch change but it will also check periodically on every `db_pruner_period_secs`
-    // seconds to see if there are any epoch DBs to remove.
+    // Pruner will run on every epoch change but it will also check periodically on every
+    // `db_pruner_period_secs` seconds to see if there are any epoch DBs to remove.
     pub db_pruner_period_secs: Option<u64>,
 
-    /// Maximum number of pending transactions to submit to consensus, including those
-    /// in submission wait.
-    /// Default to 20_000 inflight limit, assuming 20_000 txn tps * 1 sec consensus latency.
+    /// Maximum number of pending transactions to submit to consensus, including
+    /// those in submission wait.
+    /// Default to 20_000 inflight limit, assuming 20_000 txn tps * 1 sec
+    /// consensus latency.
     pub max_pending_transactions: Option<usize>,
 
-    /// When defined caps the calculated submission position to the max_submit_position. Even if the
-    /// is elected to submit from a higher position than this, it will "reset" to the max_submit_position.
+    /// When defined caps the calculated submission position to the
+    /// max_submit_position. Even if the is elected to submit from a higher
+    /// position than this, it will "reset" to the max_submit_position.
     pub max_submit_position: Option<usize>,
 
-    /// The submit delay step to consensus defined in milliseconds. When provided it will
-    /// override the current back off logic otherwise the default backoff logic will be applied based
-    /// on consensus latency estimates.
+    /// The submit delay step to consensus defined in milliseconds. When
+    /// provided it will override the current back off logic otherwise the
+    /// default backoff logic will be applied based on consensus latency
+    /// estimates.
     pub submit_delay_step_override_millis: Option<u64>,
 
     // Deprecated: Narwhal specific configs.
@@ -485,7 +493,8 @@ impl ConsensusConfig {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CheckpointExecutorConfig {
-    /// Upper bound on the number of checkpoints that can be concurrently executed
+    /// Upper bound on the number of checkpoints that can be concurrently
+    /// executed
     ///
     /// If unspecified, this will default to `200`
     #[serde(default = "default_checkpoint_execution_max_concurrency")]
@@ -500,7 +509,8 @@ pub struct CheckpointExecutorConfig {
     pub local_execution_timeout_sec: u64,
 
     /// Optional directory used for data ingestion pipeline
-    /// When specified, each executed checkpoint will be saved in a local directory for post processing
+    /// When specified, each executed checkpoint will be saved in a local
+    /// directory for post processing
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub data_ingestion_dir: Option<PathBuf>,
 }
@@ -510,18 +520,19 @@ pub struct CheckpointExecutorConfig {
 pub struct ExpensiveSafetyCheckConfig {
     /// If enabled, at epoch boundary, we will check that the storage
     /// fund balance is always identical to the sum of the storage
-    /// rebate of all live objects, and that the total IOTA in the network remains
-    /// the same.
+    /// rebate of all live objects, and that the total IOTA in the network
+    /// remains the same.
     #[serde(default)]
     enable_epoch_iota_conservation_check: bool,
 
-    /// If enabled, we will check that the total IOTA in all input objects of a tx
-    /// (both the Move part and the storage rebate) matches the total IOTA in all
-    /// output objects of the tx + gas fees
+    /// If enabled, we will check that the total IOTA in all input objects of a
+    /// tx (both the Move part and the storage rebate) matches the total
+    /// IOTA in all output objects of the tx + gas fees
     #[serde(default)]
     enable_deep_per_tx_iota_conservation_check: bool,
 
-    /// Disable epoch IOTA conservation check even when we are running in debug mode.
+    /// Disable epoch IOTA conservation check even when we are running in debug
+    /// mode.
     #[serde(default)]
     force_disable_epoch_iota_conservation_check: bool,
 
@@ -613,7 +624,8 @@ pub struct AuthorityStorePruningConfig {
     /// number of the latest epoch dbs to retain
     #[serde(default = "default_num_latest_epoch_dbs_to_retain")]
     pub num_latest_epoch_dbs_to_retain: usize,
-    /// time interval used by the pruner to determine whether there are any epoch DBs to remove
+    /// time interval used by the pruner to determine whether there are any
+    /// epoch DBs to remove
     #[serde(default = "default_epoch_db_pruning_period_secs")]
     pub epoch_db_pruning_period_secs: u64,
     /// number of epochs to keep the latest version of objects for.
@@ -625,21 +637,25 @@ pub struct AuthorityStorePruningConfig {
     /// pruner's runtime interval used for aggressive mode
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pruning_run_delay_seconds: Option<u64>,
-    /// maximum number of checkpoints in the pruning batch. Can be adjusted to increase performance
+    /// maximum number of checkpoints in the pruning batch. Can be adjusted to
+    /// increase performance
     #[serde(default = "default_max_checkpoints_in_batch")]
     pub max_checkpoints_in_batch: usize,
     /// maximum number of transaction in the pruning batch
     #[serde(default = "default_max_transactions_in_batch")]
     pub max_transactions_in_batch: usize,
-    /// enables periodic background compaction for old SST files whose last modified time is
-    /// older than `periodic_compaction_threshold_days` days.
-    /// That ensures that all sst files eventually go through the compaction process
+    /// enables periodic background compaction for old SST files whose last
+    /// modified time is older than `periodic_compaction_threshold_days`
+    /// days. That ensures that all sst files eventually go through the
+    /// compaction process
     #[serde(skip_serializing_if = "Option::is_none")]
     pub periodic_compaction_threshold_days: Option<usize>,
-    /// number of epochs to keep the latest version of transactions and effects for
+    /// number of epochs to keep the latest version of transactions and effects
+    /// for
     #[serde(skip_serializing_if = "Option::is_none")]
     pub num_epochs_to_retain_for_checkpoints: Option<u64>,
-    /// disables object tombstone pruning. We don't serialize it if it is the default value, false.
+    /// disables object tombstone pruning. We don't serialize it if it is the
+    /// default value, false.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub killswitch_tombstone_pruning: bool,
     #[serde(default = "default_smoothing", skip_serializing_if = "is_true")]
@@ -936,7 +952,8 @@ enum GenesisLocation {
     },
 }
 
-/// Wrapper struct for IotaKeyPair that can be deserialized from a file path. Used by network, worker, and account keypair.
+/// Wrapper struct for IotaKeyPair that can be deserialized from a file path.
+/// Used by network, worker, and account keypair.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct KeyPairWithPath {
     #[serde(flatten)]
@@ -964,7 +981,8 @@ impl KeyPairWithPath {
     pub fn new(kp: IotaKeyPair) -> Self {
         let cell: OnceCell<Arc<IotaKeyPair>> = OnceCell::new();
         let arc_kp = Arc::new(kp);
-        // OK to unwrap panic because authority should not start without all keypairs loaded.
+        // OK to unwrap panic because authority should not start without all keypairs
+        // loaded.
         cell.set(arc_kp.clone()).expect("Failed to set keypair");
         Self {
             location: KeyPairLocation::InPlace { value: arc_kp },
@@ -974,7 +992,8 @@ impl KeyPairWithPath {
 
     pub fn new_from_path(path: PathBuf) -> Self {
         let cell: OnceCell<Arc<IotaKeyPair>> = OnceCell::new();
-        // OK to unwrap panic because authority should not start without all keypairs loaded.
+        // OK to unwrap panic because authority should not start without all keypairs
+        // loaded.
         cell.set(Arc::new(read_keypair_from_file(&path).unwrap_or_else(
             |e| panic!("Invalid keypair file at path {:?}: {e}", &path),
         )))
@@ -990,7 +1009,8 @@ impl KeyPairWithPath {
             .get_or_init(|| match &self.location {
                 KeyPairLocation::InPlace { value } => value.clone(),
                 KeyPairLocation::File { path } => {
-                    // OK to unwrap panic because authority should not start without all keypairs loaded.
+                    // OK to unwrap panic because authority should not start without all keypairs
+                    // loaded.
                     Arc::new(
                         read_keypair_from_file(path).unwrap_or_else(|e| {
                             panic!("Invalid keypair file at path {:?}: {e}", path)
@@ -1002,7 +1022,8 @@ impl KeyPairWithPath {
     }
 }
 
-/// Wrapper struct for AuthorityKeyPair that can be deserialized from a file path.
+/// Wrapper struct for AuthorityKeyPair that can be deserialized from a file
+/// path.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AuthorityKeyPairWithPath {
     #[serde(flatten)]
@@ -1024,7 +1045,8 @@ impl AuthorityKeyPairWithPath {
     pub fn new(kp: AuthorityKeyPair) -> Self {
         let cell: OnceCell<Arc<AuthorityKeyPair>> = OnceCell::new();
         let arc_kp = Arc::new(kp);
-        // OK to unwrap panic because authority should not start without all keypairs loaded.
+        // OK to unwrap panic because authority should not start without all keypairs
+        // loaded.
         cell.set(arc_kp.clone())
             .expect("Failed to set authority keypair");
         Self {
@@ -1035,7 +1057,8 @@ impl AuthorityKeyPairWithPath {
 
     pub fn new_from_path(path: PathBuf) -> Self {
         let cell: OnceCell<Arc<AuthorityKeyPair>> = OnceCell::new();
-        // OK to unwrap panic because authority should not start without all keypairs loaded.
+        // OK to unwrap panic because authority should not start without all keypairs
+        // loaded.
         cell.set(Arc::new(
             read_authority_keypair_from_file(&path)
                 .unwrap_or_else(|_| panic!("Invalid authority keypair file at path {:?}", &path)),
@@ -1052,7 +1075,8 @@ impl AuthorityKeyPairWithPath {
             .get_or_init(|| match &self.location {
                 AuthorityKeyPairLocation::InPlace { value } => value.clone(),
                 AuthorityKeyPairLocation::File { path } => {
-                    // OK to unwrap panic because authority should not start without all keypairs loaded.
+                    // OK to unwrap panic because authority should not start without all keypairs
+                    // loaded.
                     Arc::new(
                         read_authority_keypair_from_file(path).unwrap_or_else(|_| {
                             panic!("Invalid authority keypair file {:?}", &path)
@@ -1078,9 +1102,11 @@ mod tests {
     use std::path::PathBuf;
 
     use fastcrypto::traits::KeyPair;
-    use rand::{rngs::StdRng, SeedableRng};
     use iota_keys::keypair_file::{write_authority_keypair_to_file, write_keypair_to_file};
-    use iota_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair, NetworkKeyPair, IotaKeyPair};
+    use iota_types::crypto::{
+        get_key_pair_from_rng, AuthorityKeyPair, IotaKeyPair, NetworkKeyPair,
+    };
+    use rand::{rngs::StdRng, SeedableRng};
 
     use super::Genesis;
     use crate::NodeConfig;
@@ -1141,7 +1167,8 @@ mod tests {
 }
 
 // RunWithRange is used to specify the ending epoch/checkpoint to process.
-// this is intended for use with disaster recovery debugging and verification workflows, never in normal operations
+// this is intended for use with disaster recovery debugging and verification
+// workflows, never in normal operations
 #[derive(Clone, Copy, PartialEq, Debug, Serialize, Deserialize)]
 pub enum RunWithRange {
     Epoch(EpochId),

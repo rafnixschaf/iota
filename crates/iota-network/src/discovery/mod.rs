@@ -2,22 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anemo::types::PeerInfo;
-use anemo::{types::PeerEvent, Network, Peer, PeerId, Request, Response};
-use futures::StreamExt;
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
     time::Duration,
 };
+
+use anemo::{
+    types::{PeerEvent, PeerInfo},
+    Network, Peer, PeerId, Request, Response,
+};
+use futures::StreamExt;
 use iota_config::p2p::{AccessType, DiscoveryConfig, P2pConfig, SeedPeer};
 use iota_types::multiaddr::Multiaddr;
+use serde::{Deserialize, Serialize};
 use tap::{Pipe, TapFallible};
-use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::watch;
 use tokio::{
-    sync::oneshot,
+    sync::{broadcast::error::RecvError, oneshot, watch},
     task::{AbortHandle, JoinSet},
 };
 use tracing::{debug, info, trace};
@@ -43,7 +44,8 @@ pub use server::GetKnownPeersResponse;
 
 use self::metrics::Metrics;
 
-/// The internal discovery state shared between the main event loop and the request handler
+/// The internal discovery state shared between the main event loop and the
+/// request handler
 struct State {
     our_info: Option<NodeInfo>,
     connected_peers: HashMap<PeerId, ()>,
@@ -52,8 +54,8 @@ struct State {
 
 /// The information necessary to dial another peer.
 ///
-/// `NodeInfo` contains all the information that is shared with other nodes via the discovery
-/// service to advertise how a node can be reached.
+/// `NodeInfo` contains all the information that is shared with other nodes via
+/// the discovery service to advertise how a node can be reached.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct NodeInfo {
     pub peer_id: PeerId,
@@ -61,7 +63,8 @@ pub struct NodeInfo {
 
     /// Creation time.
     ///
-    /// This is used to determine which of two NodeInfo's from the same PeerId should be retained.
+    /// This is used to determine which of two NodeInfo's from the same PeerId
+    /// should be retained.
     pub timestamp_ms: u64,
 
     /// See docstring for `AccessType`.
@@ -181,8 +184,8 @@ impl DiscoveryEventLoop {
                 None
             };
 
-            // TODO: once we have `PeerAffinity::Allowlisted` we should update allowlisted peers'
-            // affinity.
+            // TODO: once we have `PeerAffinity::Allowlisted` we should update allowlisted
+            // peers' affinity.
             let peer_info = anemo::types::PeerInfo {
                 peer_id,
                 affinity: anemo::types::PeerAffinity::High,
@@ -199,8 +202,8 @@ impl DiscoveryEventLoop {
         }
     }
 
-    // TODO: we don't boot out old committee member yets, however we may want to do this
-    // in the future along with other network management work.
+    // TODO: we don't boot out old committee member yets, however we may want to do
+    // this in the future along with other network management work.
     fn handle_trusted_peer_change_event(
         &mut self,
         trusted_peer_change_event: TrustedPeerChangeEvent,
@@ -307,8 +310,8 @@ impl DiscoveryEventLoop {
             self.pending_dials.insert(*peer_id, abort_handle);
         }
 
-        // If we aren't connected to anything and we aren't presently trying to connect to anyone
-        // we need to try the seed peers
+        // If we aren't connected to anything and we aren't presently trying to connect
+        // to anyone we need to try the seed peers
         if self.dial_seed_peers_task.is_none()
             && state.connected_peers.is_empty()
             && self.pending_dials.is_empty()

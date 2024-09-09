@@ -2,26 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::transaction_deferral::DeferralKey;
-use narwhal_types::Round;
 use std::collections::HashMap;
-use iota_protocol_config::PerObjectCongestionControlMode;
-use iota_types::base_types::{ObjectID, TransactionDigest};
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::transaction::SharedInputObject;
 
-// SharedObjectCongestionTracker stores the accumulated cost of executing transactions on an object, for
-// all transactions in a consensus commit.
+use iota_protocol_config::PerObjectCongestionControlMode;
+use iota_types::{
+    base_types::{ObjectID, TransactionDigest},
+    executable_transaction::VerifiedExecutableTransaction,
+    transaction::SharedInputObject,
+};
+use narwhal_types::Round;
+
+use crate::authority::transaction_deferral::DeferralKey;
+
+// SharedObjectCongestionTracker stores the accumulated cost of executing
+// transactions on an object, for all transactions in a consensus commit.
 //
-// Cost is an indication of transaction execution latency. When transactions are scheduled by
-// the consensus handler, each scheduled transaction adds cost (execution latency) to all the objects it
-// reads or writes.
+// Cost is an indication of transaction execution latency. When transactions are
+// scheduled by the consensus handler, each scheduled transaction adds cost
+// (execution latency) to all the objects it reads or writes.
 //
-// The goal of this data structure is to capture the critical path of transaction execution latency on each
-// objects.
+// The goal of this data structure is to capture the critical path of
+// transaction execution latency on each objects.
 //
-// The mode field determines how the cost is calculated. The cost can be calculated based on the total gas
-// budget, or total number of transaction count.
+// The mode field determines how the cost is calculated. The cost can be
+// calculated based on the total gas budget, or total number of transaction
+// count.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct SharedObjectCongestionTracker {
     object_execution_cost: HashMap<ObjectID, u64>,
@@ -50,11 +55,11 @@ impl SharedObjectCongestionTracker {
         }
     }
 
-    // Given a list of shared input objects, returns the starting cost of a transaction that operates on
-    // these objects.
+    // Given a list of shared input objects, returns the starting cost of a
+    // transaction that operates on these objects.
     //
-    // Starting cost is a proxy for the starting time of the transaction. It is determined by all the input
-    // shared objects' last write.
+    // Starting cost is a proxy for the starting time of the transaction. It is
+    // determined by all the input shared objects' last write.
     pub fn compute_tx_start_at_cost(&self, shared_input_objects: &[SharedInputObject]) -> u64 {
         shared_input_objects
             .iter()
@@ -71,7 +76,8 @@ impl SharedObjectCongestionTracker {
         }
     }
 
-    // Given a transaction, returns the deferral key and the congested objects if the transaction should be deferred.
+    // Given a transaction, returns the deferral key and the congested objects if
+    // the transaction should be deferred.
     pub fn should_defer_due_to_object_congestion(
         &self,
         cert: &VerifiedExecutableTransaction,
@@ -94,18 +100,23 @@ impl SharedObjectCongestionTracker {
 
         // Finds out the congested objects.
         //
-        // Note that the congested objects here may be caused by transaction dependency of other congested objects.
-        // Consider in a consensus commit, there are many transactions touching object A, and later in processing the
-        // consensus commit, there is a transaction touching both object A and B. Although there are fewer transactions
-        // touching object B, because it's starting execution is delayed due to dependency to other transactions on
+        // Note that the congested objects here may be caused by transaction dependency
+        // of other congested objects. Consider in a consensus commit, there are
+        // many transactions touching object A, and later in processing the
+        // consensus commit, there is a transaction touching both object A and B.
+        // Although there are fewer transactions touching object B, because it's
+        // starting execution is delayed due to dependency to other transactions on
         // object A, it may be shown up as congested objects.
         let mut congested_objects = vec![];
         for obj in shared_input_objects {
-            // TODO: right now, we only return objects that are on the execution critical path in this consensus commit.
-            // However, for objects that are no on the critical path, they may potentially also be congested (e.g., an
-            // object has start cost == start_cost - 1, and adding the gas budget will exceed the limit). We don't
-            // return them for now because it's unclear how they can be used to return suggested gas price for the
-            // user. We need to revisit this later once we have a clear idea of how to determine the suggested gas price.
+            // TODO: right now, we only return objects that are on the execution critical
+            // path in this consensus commit. However, for objects that are no
+            // on the critical path, they may potentially also be congested (e.g., an
+            // object has start cost == start_cost - 1, and adding the gas budget will
+            // exceed the limit). We don't return them for now because it's
+            // unclear how they can be used to return suggested gas price for the
+            // user. We need to revisit this later once we have a clear idea of how to
+            // determine the suggested gas price.
             if &start_cost == self.object_execution_cost.get(&obj.id).unwrap_or(&0) {
                 congested_objects.push(obj.id);
             }
@@ -115,7 +126,8 @@ impl SharedObjectCongestionTracker {
 
         let deferral_key =
             if let Some(previous_key) = previously_deferred_tx_digests.get(cert.digest()) {
-                // This transaction has been deferred in previous consensus commit. Use its previous deferred_from_round.
+                // This transaction has been deferred in previous consensus commit. Use its
+                // previous deferred_from_round.
                 DeferralKey::new_for_consensus_round(
                     commit_round + 1,
                     previous_key.deferred_from_round(),
@@ -128,8 +140,8 @@ impl SharedObjectCongestionTracker {
         Some((deferral_key, congested_objects))
     }
 
-    // Update shared objects' execution cost used in `cert` using `cert`'s execution cost.
-    // This is called when `cert` is scheduled for execution.
+    // Update shared objects' execution cost used in `cert` using `cert`'s execution
+    // cost. This is called when `cert` is scheduled for execution.
     pub fn bump_object_execution_cost(&mut self, cert: &VerifiedExecutableTransaction) {
         let Some(tx_cost) = self.get_tx_cost(cert) else {
             return;
@@ -159,13 +171,15 @@ impl SharedObjectCongestionTracker {
 
 #[cfg(test)]
 mod object_cost_tests {
-    use super::*;
-
-    use rstest::rstest;
     use iota_test_transaction_builder::TestTransactionBuilder;
-    use iota_types::base_types::{random_object_ref, SequenceNumber};
-    use iota_types::crypto::{get_key_pair, AccountKeyPair};
-    use iota_types::transaction::{CallArg, ObjectArg, VerifiedTransaction};
+    use iota_types::{
+        base_types::{random_object_ref, SequenceNumber},
+        crypto::{get_key_pair, AccountKeyPair},
+        transaction::{CallArg, ObjectArg, VerifiedTransaction},
+    };
+    use rstest::rstest;
+
+    use super::*;
 
     fn construct_shared_input_objects(objects: &[(ObjectID, bool)]) -> Vec<SharedInputObject> {
         objects
@@ -224,8 +238,9 @@ mod object_cost_tests {
         );
     }
 
-    // Builds a certificate with a list of shared objects and their mutability. The certificate is only used to
-    // test the SharedObjectCongestionTracker functions, therefore the content other than shared inputs and gas budget
+    // Builds a certificate with a list of shared objects and their mutability. The
+    // certificate is only used to test the SharedObjectCongestionTracker
+    // functions, therefore the content other than shared inputs and gas budget
     // are not important.
     fn build_transaction(
         objects: &[(ObjectID, bool)],
@@ -266,13 +281,15 @@ mod object_cost_tests {
         )]
         mode: PerObjectCongestionControlMode,
     ) {
-        // Creates two shared objects and three transactions that operate on these objects.
+        // Creates two shared objects and three transactions that operate on these
+        // objects.
         let shared_obj_0 = ObjectID::random();
         let shared_obj_1 = ObjectID::random();
 
         let tx_gas_budget = 100;
 
-        // Set max_accumulated_txn_cost_per_object_in_commit to only allow 1 transaction to go through.
+        // Set max_accumulated_txn_cost_per_object_in_commit to only allow 1 transaction
+        // to go through.
         let max_accumulated_txn_cost_per_object_in_commit = match mode {
             PerObjectCongestionControlMode::None => unreachable!(),
             PerObjectCongestionControlMode::TotalGasBudget => tx_gas_budget + 1,
@@ -324,17 +341,20 @@ mod object_cost_tests {
         // Read/write to object 1 should go through.
         for mutable in [true, false].iter() {
             let tx = build_transaction(&[(shared_obj_1, *mutable)], tx_gas_budget);
-            assert!(shared_object_congestion_tracker
-                .should_defer_due_to_object_congestion(
-                    &tx,
-                    max_accumulated_txn_cost_per_object_in_commit,
-                    &HashMap::new(),
-                    0,
-                )
-                .is_none());
+            assert!(
+                shared_object_congestion_tracker
+                    .should_defer_due_to_object_congestion(
+                        &tx,
+                        max_accumulated_txn_cost_per_object_in_commit,
+                        &HashMap::new(),
+                        0,
+                    )
+                    .is_none()
+            );
         }
 
-        // Transactions touching both objects should be deferred, with object 0 as the congested object.
+        // Transactions touching both objects should be deferred, with object 0 as the
+        // congested object.
         for mutable_0 in [true, false].iter() {
             for mutable_1 in [true, false].iter() {
                 let tx = build_transaction(
@@ -409,7 +429,8 @@ mod object_cost_tests {
             },
         );
 
-        // New deferral key should have deferred_from_round equal to the deferred randomness round.
+        // New deferral key should have deferred_from_round equal to the deferred
+        // randomness round.
         if let Some((
             DeferralKey::ConsensusRound {
                 future_round,
@@ -437,7 +458,8 @@ mod object_cost_tests {
             },
         );
 
-        // New deferral key should have deferred_from_round equal to the one in the old deferral key.
+        // New deferral key should have deferred_from_round equal to the one in the old
+        // deferral key.
         if let Some((
             DeferralKey::ConsensusRound {
                 future_round,
@@ -488,7 +510,8 @@ mod object_cost_tests {
         );
         assert_eq!(shared_object_congestion_tracker.max_cost(), 10);
 
-        // Write to object 0 should only bump object 0's execution cost. The start cost should be object 1's cost.
+        // Write to object 0 should only bump object 0's execution cost. The start cost
+        // should be object 1's cost.
         let cert = build_transaction(&[(object_id_0, true), (object_id_1, false)], 10);
         shared_object_congestion_tracker.bump_object_execution_cost(&cert);
         let expected_object_0_cost = match mode {
@@ -508,7 +531,8 @@ mod object_cost_tests {
             expected_object_0_cost
         );
 
-        // Write to all objects should bump all objects' execution cost, including objects that are seen for the first time.
+        // Write to all objects should bump all objects' execution cost, including
+        // objects that are seen for the first time.
         let cert = build_transaction(
             &[
                 (object_id_0, true),

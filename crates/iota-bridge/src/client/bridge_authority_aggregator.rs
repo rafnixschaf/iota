@@ -4,26 +4,28 @@
 
 //! BridgeAuthorityAggregator aggregates signatures from BridgeCommittee.
 
-use crate::client::bridge_client::BridgeClient;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::crypto::BridgeAuthoritySignInfo;
-use crate::error::{BridgeError, BridgeResult};
-use crate::types::BridgeCommitteeValiditySignInfo;
-use crate::types::{
-    BridgeAction, BridgeCommittee, CertifiedBridgeAction, VerifiedCertifiedBridgeAction,
-    VerifiedSignedBridgeAction,
+use std::{
+    collections::{btree_map::Entry, BTreeMap, BTreeSet},
+    sync::Arc,
+    time::Duration,
 };
-use std::collections::btree_map::Entry;
-use std::collections::BTreeMap;
-use std::collections::BTreeSet;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_authority_aggregation::quorum_map_then_reduce_with_timeout_and_prefs;
-use iota_authority_aggregation::ReduceOutput;
-use iota_types::base_types::ConciseableName;
-use iota_types::committee::StakeUnit;
-use iota_types::committee::TOTAL_VOTING_POWER;
+
+use iota_authority_aggregation::{quorum_map_then_reduce_with_timeout_and_prefs, ReduceOutput};
+use iota_types::{
+    base_types::ConciseableName,
+    committee::{StakeUnit, TOTAL_VOTING_POWER},
+};
 use tracing::{error, info, warn};
+
+use crate::{
+    client::bridge_client::BridgeClient,
+    crypto::{BridgeAuthorityPublicKeyBytes, BridgeAuthoritySignInfo},
+    error::{BridgeError, BridgeResult},
+    types::{
+        BridgeAction, BridgeCommittee, BridgeCommitteeValiditySignInfo, CertifiedBridgeAction,
+        VerifiedCertifiedBridgeAction, VerifiedSignedBridgeAction,
+    },
+};
 
 pub struct BridgeAuthorityAggregator {
     pub committee: Arc<BridgeCommittee>,
@@ -169,12 +171,15 @@ async fn request_sign_bridge_action_into_certification(
     clients: Arc<BTreeMap<BridgeAuthorityPublicKeyBytes, Arc<BridgeClient>>>,
     state: GetSigsState,
 ) -> BridgeResult<VerifiedCertifiedBridgeAction> {
-    // `preferences` is used as a trick here to influence the order of validators to be requested.
-    // * if `Some(_)`, then we will request validators in the order of the voting power.
-    // * if `None`, we still refer to voting power, but they are shuffled by randomness.
-    // Because ethereum gas price is not negligible, when the signatures are to be verified on ethereum,
-    // we pass in `Some` to make sure the validators with higher voting power are requested first
-    // to save gas cost.
+    // `preferences` is used as a trick here to influence the order of validators to
+    // be requested.
+    // * if `Some(_)`, then we will request validators in the order of the voting
+    //   power.
+    // * if `None`, we still refer to voting power, but they are shuffled by
+    //   randomness.
+    // Because ethereum gas price is not negligible, when the signatures are to be
+    // verified on ethereum, we pass in `Some` to make sure the validators with
+    // higher voting power are requested first to save gas cost.
     let preference = match action {
         BridgeAction::IotaToEthBridgeAction(_) => Some(BTreeSet::new()),
         BridgeAction::EthToIotaBridgeAction(_) => None,
@@ -263,18 +268,18 @@ mod tests {
     use std::collections::BTreeSet;
 
     use fastcrypto::traits::ToFromBytes;
-    use iota_types::committee::VALIDITY_THRESHOLD;
-    use iota_types::digests::TransactionDigest;
-
-    use crate::crypto::BridgeAuthorityPublicKey;
-    use crate::server::mock_handler::BridgeRequestMockHandler;
+    use iota_types::{committee::VALIDITY_THRESHOLD, digests::TransactionDigest};
 
     use super::*;
-    use crate::test_utils::{
-        get_test_authorities_and_run_mock_bridge_server, get_test_authority_and_key,
-        get_test_iota_to_eth_bridge_action, sign_action_with_key,
+    use crate::{
+        crypto::BridgeAuthorityPublicKey,
+        server::mock_handler::BridgeRequestMockHandler,
+        test_utils::{
+            get_test_authorities_and_run_mock_bridge_server, get_test_authority_and_key,
+            get_test_iota_to_eth_bridge_action, sign_action_with_key,
+        },
+        types::BridgeCommittee,
     };
-    use crate::types::BridgeCommittee;
 
     #[tokio::test]
     async fn test_bridge_auth_agg_construction() {
@@ -455,8 +460,9 @@ mod tests {
             None,
         );
 
-        // Only mock authority 2 and 3 to return signatures, such that if BridgeAuthorityAggregator
-        // requests to authority 0 and 1 (which should not happen) it will panic.
+        // Only mock authority 2 and 3 to return signatures, such that if
+        // BridgeAuthorityAggregator requests to authority 0 and 1 (which should
+        // not happen) it will panic.
         mock2.add_iota_event_response(
             iota_tx_digest,
             iota_tx_event_index,
@@ -500,7 +506,8 @@ mod tests {
             BridgeError::AuthoritySignatureAggregationTooManyError(_)
         ));
 
-        // if mock 3 returns duplicated signature (by authority 2), `BridgeClient` will catch this
+        // if mock 3 returns duplicated signature (by authority 2), `BridgeClient` will
+        // catch this
         mock3.add_iota_event_response(
             iota_tx_digest,
             iota_tx_event_index,
@@ -592,14 +599,16 @@ mod tests {
 
         let sig_0 = sign_action_with_key(&action, &secrets[0]);
         // returns Ok(None)
-        assert!(state
-            .handle_verified_signed_action(
-                authorities[0].pubkey_bytes().clone(),
-                authorities[0].voting_power,
-                VerifiedSignedBridgeAction::new_from_verified(sig_0.clone())
-            )
-            .unwrap()
-            .is_none());
+        assert!(
+            state
+                .handle_verified_signed_action(
+                    authorities[0].pubkey_bytes().clone(),
+                    authorities[0].voting_power,
+                    VerifiedSignedBridgeAction::new_from_verified(sig_0.clone())
+                )
+                .unwrap()
+                .is_none()
+        );
         assert_eq!(state.total_ok_stake, 2500);
 
         // Handling a sig from an already signed authority would fail
@@ -645,14 +654,16 @@ mod tests {
         // Collect signtuare from authority 1 (voting power = 1)
         let sig_1 = sign_action_with_key(&action, &secrets[1]);
         // returns Ok(None)
-        assert!(state
-            .handle_verified_signed_action(
-                authorities[1].pubkey_bytes().clone(),
-                authorities[1].voting_power,
-                VerifiedSignedBridgeAction::new_from_verified(sig_1.clone())
-            )
-            .unwrap()
-            .is_none());
+        assert!(
+            state
+                .handle_verified_signed_action(
+                    authorities[1].pubkey_bytes().clone(),
+                    authorities[1].voting_power,
+                    VerifiedSignedBridgeAction::new_from_verified(sig_1.clone())
+                )
+                .unwrap()
+                .is_none()
+        );
         assert_eq!(state.total_ok_stake, 2501);
 
         // Collect signature from authority 2 - reach validity threshold

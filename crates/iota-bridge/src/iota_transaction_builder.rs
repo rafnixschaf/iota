@@ -2,21 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use fastcrypto::traits::ToFromBytes;
-use move_core_types::ident_str;
 use std::{collections::HashMap, str::FromStr};
-use iota_types::bridge::{
-    BRIDGE_CREATE_ADD_TOKEN_ON_IOTA_MESSAGE_FUNCTION_NAME,
-    BRIDGE_EXECUTE_SYSTEM_MESSAGE_FUNCTION_NAME, BRIDGE_MESSAGE_MODULE_NAME, BRIDGE_MODULE_NAME,
-};
-use iota_types::transaction::CallArg;
+
+use fastcrypto::traits::ToFromBytes;
 use iota_types::{
-    base_types::{ObjectRef, IotaAddress},
+    base_types::{IotaAddress, ObjectRef},
+    bridge::{
+        BRIDGE_CREATE_ADD_TOKEN_ON_IOTA_MESSAGE_FUNCTION_NAME,
+        BRIDGE_EXECUTE_SYSTEM_MESSAGE_FUNCTION_NAME, BRIDGE_MESSAGE_MODULE_NAME,
+        BRIDGE_MODULE_NAME,
+    },
     programmable_transaction_builder::ProgrammableTransactionBuilder,
-    transaction::{ObjectArg, TransactionData},
-    TypeTag,
+    transaction::{CallArg, ObjectArg, TransactionData},
+    Identifier, TypeTag, BRIDGE_PACKAGE_ID,
 };
-use iota_types::{Identifier, BRIDGE_PACKAGE_ID};
+use move_core_types::ident_str;
 
 use crate::{
     error::{BridgeError, BridgeResult},
@@ -200,10 +200,12 @@ fn build_token_bridge_approve_transaction(
             BRIDGE_PACKAGE_ID,
             iota_types::bridge::BRIDGE_MODULE_NAME.to_owned(),
             ident_str!("claim_and_transfer_token").to_owned(),
-            vec![iota_token_type_tags
-                .get(&token_type)
-                .ok_or(BridgeError::UnknownTokenId(token_type))?
-                .clone()],
+            vec![
+                iota_token_type_tags
+                    .get(&token_type)
+                    .ok_or(BridgeError::UnknownTokenId(token_type))?
+                    .clone(),
+            ],
             vec![arg_bridge, arg_clock, source_chain, seq_num],
         );
     }
@@ -617,26 +619,25 @@ pub fn build_committee_update_url_transaction(
 
 #[cfg(test)]
 mod tests {
-    use crate::crypto::BridgeAuthorityKeyPair;
-    use crate::iota_client::IotaClient;
-    use crate::types::BridgeAction;
-    use crate::types::EmergencyAction;
-    use crate::types::EmergencyActionType;
-    use crate::types::*;
+    use std::collections::HashMap;
+
+    use ethers::types::Address as EthAddress;
+    use iota_types::{
+        bridge::{BridgeChainId, TOKEN_ID_BTC, TOKEN_ID_USDC},
+        crypto::{get_key_pair, ToFromBytes},
+    };
+    use test_cluster::TestClusterBuilder;
+
     use crate::{
-        crypto::BridgeAuthorityPublicKeyBytes,
+        crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKeyBytes},
+        iota_client::IotaClient,
         test_utils::{
-            approve_action_with_validator_secrets, bridge_token, get_test_eth_to_iota_bridge_action,
-            get_test_iota_to_eth_bridge_action,
+            approve_action_with_validator_secrets, bridge_token,
+            get_test_eth_to_iota_bridge_action, get_test_iota_to_eth_bridge_action,
         },
+        types::{BridgeAction, EmergencyAction, EmergencyActionType, *},
         BRIDGE_ENABLE_PROTOCOL_VERSION,
     };
-    use ethers::types::Address as EthAddress;
-    use std::collections::HashMap;
-    use iota_types::bridge::{BridgeChainId, TOKEN_ID_BTC, TOKEN_ID_USDC};
-    use iota_types::crypto::get_key_pair;
-    use iota_types::crypto::ToFromBytes;
-    use test_cluster::TestClusterBuilder;
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
     async fn test_build_iota_transaction_for_token_transfer() {
@@ -656,8 +657,9 @@ mod tests {
             .unwrap();
         let bridge_authority_keys = test_cluster.bridge_authority_keys.take().unwrap();
 
-        // Note: We don't call `iota_client.get_bridge_committee` here because it will err if the committee
-        // is not initialized during the construction of `BridgeCommittee`.
+        // Note: We don't call `iota_client.get_bridge_committee` here because it will
+        // err if the committee is not initialized during the construction of
+        // `BridgeCommittee`.
         test_cluster
             .trigger_reconfiguration_if_not_yet_and_assert_bridge_committee_initialized()
             .await;
@@ -670,7 +672,8 @@ mod tests {
         let id_token_map = iota_client.get_token_id_map().await.unwrap();
 
         // 1. Test Eth -> Iota Transfer approval
-        let action = get_test_eth_to_iota_bridge_action(None, Some(usdc_amount), Some(sender), None);
+        let action =
+            get_test_eth_to_iota_bridge_action(None, Some(usdc_amount), Some(sender), None);
         // `approve_action_with_validator_secrets` covers transaction building
         let usdc_object_ref = approve_action_with_validator_secrets(
             context,
@@ -821,10 +824,9 @@ mod tests {
             nonce: 0,
             chain_id: BridgeChainId::IotaCustom,
             blocklist_type: BlocklistType::Blocklist,
-            members_to_update: vec![BridgeAuthorityPublicKeyBytes::from_bytes(
-                &victim.bridge_pubkey_bytes,
-            )
-            .unwrap()],
+            members_to_update: vec![
+                BridgeAuthorityPublicKeyBytes::from_bytes(&victim.bridge_pubkey_bytes).unwrap(),
+            ],
         });
         // `approve_action_with_validator_secrets` covers transaction building
         approve_action_with_validator_secrets(
@@ -850,10 +852,9 @@ mod tests {
             nonce: 1,
             chain_id: BridgeChainId::IotaCustom,
             blocklist_type: BlocklistType::Unblocklist,
-            members_to_update: vec![BridgeAuthorityPublicKeyBytes::from_bytes(
-                &victim.bridge_pubkey_bytes,
-            )
-            .unwrap()],
+            members_to_update: vec![
+                BridgeAuthorityPublicKeyBytes::from_bytes(&victim.bridge_pubkey_bytes).unwrap(),
+            ],
         });
         // `approve_action_with_validator_secrets` covers transaction building
         approve_action_with_validator_secrets(
@@ -957,8 +958,9 @@ mod tests {
             .unwrap();
         let bridge_authority_keys = test_cluster.bridge_authority_keys.take().unwrap();
 
-        // Note: We don't call `iota_client.get_bridge_committee` here because it will err if the committee
-        // is not initialized during the construction of `BridgeCommittee`.
+        // Note: We don't call `iota_client.get_bridge_committee` here because it will
+        // err if the committee is not initialized during the construction of
+        // `BridgeCommittee`.
         test_cluster
             .trigger_reconfiguration_if_not_yet_and_assert_bridge_committee_initialized()
             .await;

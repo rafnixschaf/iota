@@ -2,19 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::net::SocketAddr;
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
-use axum::routing::post;
-use axum::{Extension, Router};
+use axum::{routing::post, Extension, Router};
+use iota_sdk::IotaClient;
 use once_cell::sync::Lazy;
 use tracing::info;
 
-use iota_sdk::IotaClient;
-
-use crate::errors::Error;
-use crate::state::{CheckpointBlockProvider, OnlineServerContext};
-use crate::types::{Currency, IotaEnv};
+use crate::{
+    errors::Error,
+    state::{CheckpointBlockProvider, OnlineServerContext},
+    types::{Currency, IotaEnv},
+};
 
 /// This lib implements the Rosetta online and offline server defined by the [Rosetta API Spec](https://www.rosetta-api.org/docs/Reference.html)
 mod account;

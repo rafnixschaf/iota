@@ -2,29 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use fastcrypto::traits::EncodeDecodeBase64;
-use shared_crypto::intent::{Intent, IntentMessage};
 use std::net::SocketAddr;
+
+use fastcrypto::traits::EncodeDecodeBase64;
 use iota_core::authority_client::AuthorityAPI;
 use iota_macros::sim_test;
 use iota_protocol_config::ProtocolConfig;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::error::UserInputError;
-use iota_types::multisig_legacy::MultiSigLegacy;
 use iota_types::{
     base_types::IotaAddress,
     crypto::{
-        get_key_pair, CompressedSignature, PublicKey, Signature, IotaKeyPair,
+        get_key_pair, CompressedSignature, IotaKeyPair, PublicKey, Signature,
         ZkLoginAuthenticatorAsBytes, ZkLoginPublicIdentifier,
     },
-    error::{IotaError, IotaResult},
+    error::{IotaError, IotaResult, UserInputError},
     multisig::{MultiSig, MultiSigPublicKey},
-    multisig_legacy::MultiSigPublicKeyLegacy,
+    multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy},
     signature::GenericSignature,
     transaction::Transaction,
     utils::{keys, load_test_vectors, make_upgraded_multisig_tx},
     zk_login_authenticator::ZkLoginAuthenticator,
 };
+use shared_crypto::intent::{Intent, IntentMessage};
 use test_cluster::{TestCluster, TestClusterBuilder};
 
 async fn do_upgraded_multisig_test() -> IotaResult {
@@ -69,8 +68,8 @@ async fn test_upgraded_multisig_feature_allow() {
 
     let res = do_upgraded_multisig_test().await;
 
-    // we didn't make a real transaction with a valid object, but we verify that we pass the
-    // feature gate.
+    // we didn't make a real transaction with a valid object, but we verify that we
+    // pass the feature gate.
     assert!(matches!(res.unwrap_err(), IotaError::UserInputError { .. }));
 }
 
@@ -121,40 +120,44 @@ async fn test_multisig_e2e() {
         .transfer_iota(None, IotaAddress::ZERO)
         .build_and_sign_multisig(multisig_pk.clone(), &[&keys[2], &keys[1]], 0b110);
     let res = context.execute_transaction_may_fail(tx3).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid sig for pk=AQIOF81ZOeRrGWZBlozXWZELold+J/pz/eOHbbm+xbzrKw=="));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid sig for pk=AQIOF81ZOeRrGWZBlozXWZELold+J/pz/eOHbbm+xbzrKw==")
+    );
 
     // 4. sign with key 0 only is below threshold, fails to execute.
     let tx4 = TestTransactionBuilder::new(multisig_addr, gas, rgp)
         .transfer_iota(None, IotaAddress::ZERO)
         .build_and_sign_multisig(multisig_pk.clone(), &[&keys[0]], 0b001);
     let res = context.execute_transaction_may_fail(tx4).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Insufficient weight=1 threshold=2"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Insufficient weight=1 threshold=2")
+    );
 
     // 5. multisig with no single sig fails to execute.
     let tx5 = TestTransactionBuilder::new(multisig_addr, gas, rgp)
         .transfer_iota(None, IotaAddress::ZERO)
         .build_and_sign_multisig(multisig_pk.clone(), &[], 0b001);
     let res = context.execute_transaction_may_fail(tx5).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 6. multisig two dup sigs fails to execute.
     let tx6 = TestTransactionBuilder::new(multisig_addr, gas, rgp)
         .transfer_iota(None, IotaAddress::ZERO)
         .build_and_sign_multisig(multisig_pk.clone(), &[&keys[0], &keys[0]], 0b011);
     let res = context.execute_transaction_may_fail(tx6).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid ed25519 pk bytes"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid ed25519 pk bytes")
+    );
 
     // 7. mismatch pks in sig with multisig address fails to execute.
     let kp3: IotaKeyPair = IotaKeyPair::Secp256r1(get_key_pair().1);
@@ -173,10 +176,11 @@ async fn test_multisig_e2e() {
         .transfer_iota(None, IotaAddress::ZERO)
         .build_and_sign_multisig(wrong_multisig_pk.clone(), &[&keys[0], &keys[2]], 0b101);
     let res = context.execute_transaction_may_fail(tx7).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str())
+    );
 }
 
 #[sim_test]
@@ -197,7 +201,8 @@ async fn test_multisig_with_zklogin_scenerios() {
     let pk1 = keys[1].public(); // secp256k1
     let pk2 = keys[2].public(); // secp256r1
 
-    // construct a multisig address with 4 pks (ed25519, secp256k1, secp256r1, zklogin) with threshold = 1.
+    // construct a multisig address with 4 pks (ed25519, secp256k1, secp256r1,
+    // zklogin) with threshold = 1.
     let (eph_kp, _eph_pk, zklogin_inputs) =
         &load_test_vectors("../iota-types/src/unit_tests/zklogin_test_vectors.json")[1];
     let (eph_kp_1, _, _) =
@@ -231,10 +236,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     );
     let tx_1 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_1).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk0.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk0.encode_base64()).as_str())
+    );
 
     // 2. a multisig with a bad secp256k1 sig fails to execute.
     let wrong_sig_2: GenericSignature = Signature::new_secure(&wrong_intent_msg, &keys[1]).into();
@@ -243,10 +249,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     );
     let tx_2 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_2).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk1.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk1.encode_base64()).as_str())
+    );
 
     // 3. a multisig with a bad secp256r1 sig fails to execute.
     let wrong_sig_3: GenericSignature = Signature::new_secure(&wrong_intent_msg, &keys[2]).into();
@@ -255,10 +262,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     );
     let tx_3 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_3).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk2.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk2.encode_base64()).as_str())
+    );
 
     // 4. a multisig with a bad ephemeral sig inside zklogin sig fails to execute.
     let wrong_eph_sig = Signature::new_secure(&wrong_intent_msg, eph_kp);
@@ -276,12 +284,14 @@ async fn test_multisig_with_zklogin_scenerios() {
         ZkLoginPublicIdentifier::new(zklogin_inputs.get_iss(), zklogin_inputs.get_address_seed())
             .unwrap(),
     );
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str())
+    );
 
-    // 5. a multisig with a mismatch ephermeal sig and zklogin inputs fails to execute.
+    // 5. a multisig with a mismatch ephermeal sig and zklogin inputs fails to
+    //    execute.
     let eph_sig = Signature::new_secure(&intent_msg, eph_kp_1);
     let zklogin_sig_mismatch = GenericSignature::ZkLoginAuthenticator(ZkLoginAuthenticator::new(
         zklogin_inputs.clone(),
@@ -293,25 +303,29 @@ async fn test_multisig_with_zklogin_scenerios() {
     );
     let tx_5 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_5).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str()));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains(format!("Invalid sig for pk={}", pk3.encode_base64()).as_str())
+    );
 
-    // 6. a multisig with an inconsistent max_epoch with zk proof itself fails to execute.
+    // 6. a multisig with an inconsistent max_epoch with zk proof itself fails to
+    //    execute.
     let eph_sig = Signature::new_secure(&intent_msg, eph_kp);
     let zklogin_sig_wrong_zklogin_inputs = GenericSignature::ZkLoginAuthenticator(
-        ZkLoginAuthenticator::new(zklogin_inputs.clone(), 1, eph_sig), // max_epoch set to 1 instead of 2
+        ZkLoginAuthenticator::new(zklogin_inputs.clone(), 1, eph_sig), /* max_epoch set to 1
+                                                                        * instead of 2 */
     );
     let multisig = GenericSignature::MultiSig(
         MultiSig::combine(vec![zklogin_sig_wrong_zklogin_inputs], multisig_pk.clone()).unwrap(),
     );
     let tx_7 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_7).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Groth16 proof verify failed"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Groth16 proof verify failed")
+    );
 
     // 7. a multisig with the wrong sender fails to execute.
     let wrong_multisig_addr = IotaAddress::from(
@@ -339,12 +353,14 @@ async fn test_multisig_with_zklogin_scenerios() {
         GenericSignature::MultiSig(MultiSig::combine(vec![sig_4], multisig_pk.clone()).unwrap());
     let tx_8 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_8).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Required Signature from"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Required Signature from")
+    );
 
-    // 8. a multisig with zklogin sig of invalid compact signature bytes fails to execute.
+    // 8. a multisig with zklogin sig of invalid compact signature bytes fails to
+    //    execute.
     let multisig = GenericSignature::MultiSig(MultiSig::insecure_new(
         vec![CompressedSignature::ZkLogin(ZkLoginAuthenticatorAsBytes(
             vec![0],
@@ -359,10 +375,11 @@ async fn test_multisig_with_zklogin_scenerios() {
 
     let tx_7 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_7).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid zklogin authenticator bytes"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid zklogin authenticator bytes")
+    );
 
     // assert positive case for all 4 participanting parties.
     // 1a. good ed25519 sig used in multisig executes successfully.
@@ -426,7 +443,8 @@ async fn test_multisig_with_zklogin_scenerios() {
     let tx_10 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let _ = context.execute_transaction_must_succeed(tx_10).await;
 
-    // 4c. good zklogin sig AND good ed25519 combined used in multisig executes successfully.
+    // 4c. good zklogin sig AND good ed25519 combined used in multisig executes
+    // successfully.
     let gas = test_cluster
         .fund_address_and_return_gas(rgp, Some(20000000000), multisig_addr)
         .await;
@@ -463,12 +481,14 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_11 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_11).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid ed25519 pk bytes"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid ed25519 pk bytes")
+    );
 
-    // 10. invalid bitmap b10000 when the max bitmap for 4 pks is b1111, fails to execute.
+    // 10. invalid bitmap b10000 when the max bitmap for 4 pks is b1111, fails to
+    //     execute.
     let multisig = GenericSignature::MultiSig(MultiSig::insecure_new(
         vec![sig.clone().to_compressed().unwrap()],
         1 << 4,
@@ -476,10 +496,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_10 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_10).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid public keys index"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid public keys index")
+    );
 
     // 11. malformed multisig pk where threshold = 0, fails to execute.
     let bad_multisig_pk = MultiSigPublicKey::insecure_new(
@@ -502,10 +523,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_11 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_11).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 12. malformed multisig a pk has weight = 0, fails to execute.
     let bad_multisig_pk_2 = MultiSigPublicKey::insecure_new(
@@ -527,10 +549,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_14 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_14).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 13. pass in 2 sigs when only 1 pk in multisig_pk, fails to execute.
     let small_multisig_pk = MultiSigPublicKey::insecure_new(vec![(pk0.clone(), 1)], 1);
@@ -550,10 +573,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_13 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_13).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 14. pass a multisig where there is dup pk in multisig_pk, fails to execute.
     let multisig_pk_with_dup =
@@ -574,10 +598,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_14 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_14).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 15. a sig with 11 pks fails to execute.
     let multisig_pk_11 = MultiSigPublicKey::insecure_new(vec![(pk0.clone(), 1); 11], 1);
@@ -597,10 +622,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_15 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_15).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 16. total weight of all pks < threshold fails to execute.
     let multisig_pk_12 =
@@ -621,10 +647,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_16 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_16).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 
     // 17. multisig with empty pk map fails to execute.
     let bad_multisig_empty_pk = MultiSigPublicKey::insecure_new(vec![], 1);
@@ -644,10 +671,11 @@ async fn test_multisig_with_zklogin_scenerios() {
     ));
     let tx_17 = Transaction::from_generic_sig_data(tx_data.clone(), vec![multisig]);
     let res = context.execute_transaction_may_fail(tx_17).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid value was given to the function"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Invalid value was given to the function")
+    );
 }
 
 #[sim_test]
@@ -663,10 +691,11 @@ async fn test_expired_epoch_zklogin_in_multisig() {
 
     // latest multisig fails for expired epoch.
     let res = test_cluster.wallet.execute_transaction_may_fail(tx).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("ZKLogin expired at epoch 2"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("ZKLogin expired at epoch 2")
+    );
 
     // legacy multisig also faiils for expired epoch.
     let res = test_cluster
@@ -695,10 +724,11 @@ async fn test_max_epoch_too_large_fail_zklogin_in_multisig() {
 
     // max epoch at 2 is larger than current epoch (0) + upper bound (1), tx fails.
     let res = test_cluster.wallet.execute_transaction_may_fail(tx).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("ZKLogin max epoch too large"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("ZKLogin max epoch too large")
+    );
 
     // legacy tx fails for the same reason
     let res = test_cluster
@@ -748,10 +778,11 @@ async fn test_random_zklogin_in_multisig() {
     );
     let bad_tx = Transaction::from_generic_sig_data(tx_data.clone(), vec![short_multisig]);
     let res = context.execute_transaction_may_fail(bad_tx).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("Insufficient weight=9 threshold=10"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Insufficient weight=9 threshold=10")
+    );
 
     let multisig = GenericSignature::MultiSig(
         MultiSig::combine(zklogin_sigs.clone(), multisig_pk.clone()).unwrap(),
@@ -811,10 +842,11 @@ async fn test_zklogin_inside_multisig_feature_deny() {
     let (tx, legacy_tx) = construct_simple_zklogin_multisig_tx(&test_cluster).await;
     // feature flag disabled fails latest multisig tx.
     let res = test_cluster.wallet.execute_transaction_may_fail(tx).await;
-    assert!(res
-        .unwrap_err()
-        .to_string()
-        .contains("zkLogin sig not supported inside multisig"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("zkLogin sig not supported inside multisig")
+    );
 
     // legacy multisig fails for the same reason.
     let res = test_cluster

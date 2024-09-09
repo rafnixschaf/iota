@@ -5,22 +5,15 @@
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
-use diesel::r2d2::R2D2Connection;
-use diesel::ExpressionMethods;
-use diesel::OptionalExtension;
-use diesel::{QueryDsl, RunQueryDsl};
-
-use move_core_types::account_address::AccountAddress;
+use diesel::{r2d2::R2D2Connection, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl};
 use iota_package_resolver::{error::Error as PackageResolverError, Package, PackageStore};
-use iota_types::base_types::ObjectID;
-use iota_types::object::Object;
+use iota_types::{base_types::ObjectID, object::Object};
+use move_core_types::account_address::AccountAddress;
 
-use crate::db::ConnectionPool;
-use crate::errors::IndexerError;
-use crate::handlers::tx_processor::IndexingPackageBuffer;
-use crate::metrics::IndexerMetrics;
-use crate::schema::objects;
-use crate::store::diesel_macro::*;
+use crate::{
+    db::ConnectionPool, errors::IndexerError, handlers::tx_processor::IndexingPackageBuffer,
+    metrics::IndexerMetrics, schema::objects, store::diesel_macro::*,
+};
 
 /// A package resolver that reads packages from the database.
 pub struct IndexerStorePackageResolver<T: R2D2Connection + 'static> {

@@ -2,13 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use axum::{response::Redirect, routing::get, Router};
 use iota_network_stack::callback::CallbackLayer;
+use iota_types::{storage::RestStateReader, transaction_executor::TransactionExecutor};
 use openapi::ApiEndpoint;
 use reader::StateReader;
-use std::sync::Arc;
-use iota_types::storage::RestStateReader;
-use iota_types::transaction_executor::TransactionExecutor;
 use tap::Pipe;
 
 pub mod accept;
@@ -32,8 +32,8 @@ pub mod types;
 
 pub use client::Client;
 pub use error::{RestError, Result};
-pub use metrics::RestMetrics;
 pub use iota_types::full_checkpoint_content::{CheckpointData, CheckpointTransaction};
+pub use metrics::RestMetrics;
 pub use transactions::ExecuteTransactionQueryParameters;
 
 pub const TEXT_PLAIN_UTF_8: &str = "text/plain; charset=utf-8";
@@ -178,8 +178,7 @@ impl RestService {
 }
 
 fn info() -> openapiv3::v3_1::Info {
-    use openapiv3::v3_1::Contact;
-    use openapiv3::v3_1::License;
+    use openapiv3::v3_1::{Contact, License};
 
     openapiv3::v3_1::Info {
         title: "Iota Node Api".to_owned(),
@@ -204,10 +203,10 @@ async fn redirect(axum::extract::Path(path): axum::extract::Path<String>) -> Red
 }
 
 mod _schemars {
-    use schemars::schema::InstanceType;
-    use schemars::schema::Metadata;
-    use schemars::schema::SchemaObject;
-    use schemars::JsonSchema;
+    use schemars::{
+        schema::{InstanceType, Metadata, SchemaObject},
+        JsonSchema,
+    };
 
     pub(crate) struct U64;
 

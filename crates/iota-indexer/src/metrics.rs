@@ -2,19 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
 
 use axum::{extract::Extension, http::StatusCode, routing::get, Router};
+use iota_metrics::RegistryService;
 use prometheus::{
     register_histogram_with_registry, register_int_counter_with_registry,
-    register_int_gauge_with_registry, Histogram, IntCounter, IntGauge,
+    register_int_gauge_with_registry, Histogram, IntCounter, IntGauge, Registry, TextEncoder,
 };
-use prometheus::{Registry, TextEncoder};
 use regex::Regex;
 use tracing::{info, warn};
-
-use iota_metrics::RegistryService;
 
 const METRICS_ROUTE: &str = "/metrics";
 
@@ -66,19 +63,21 @@ fn convert_url(url_str: &str) -> Option<String> {
     captures.get(1).map(|m| m.as_str().to_string())
 }
 
-/// NOTE: for various data ingestion steps, which are expected to be within [0.001, 100] seconds,
-/// and high double digits usually means something is broken.
+/// NOTE: for various data ingestion steps, which are expected to be within
+/// [0.001, 100] seconds, and high double digits usually means something is
+/// broken.
 const DATA_INGESTION_LATENCY_SEC_BUCKETS: &[f64] = &[
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0,
 ];
-/// NOTE: for objects_snapshot update and advance_epoch, which are expected to be within [0.1, 100] seconds,
-/// and can go up to high hundreds of seconds when things go wrong.
+/// NOTE: for objects_snapshot update and advance_epoch, which are expected to
+/// be within [0.1, 100] seconds, and can go up to high hundreds of seconds when
+/// things go wrong.
 const DB_UPDATE_QUERY_LATENCY_SEC_BUCKETS: &[f64] = &[
     0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0,
     10000.0,
 ];
-/// NOTE: for json_rpc calls, which are expected to be within [0.01, 100] seconds,
-/// high hundreds of seconds usually means something is broken.
+/// NOTE: for json_rpc calls, which are expected to be within [0.01, 100]
+/// seconds, high hundreds of seconds usually means something is broken.
 const JSON_RPC_LATENCY_SEC_BUCKETS: &[f64] = &[
     0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0,
 ];
@@ -110,7 +109,8 @@ pub struct IndexerMetrics {
     pub index_lag_ms: IntGauge,
     pub db_commit_lag_ms: IntGauge,
     // latencies of various steps of data ingestion.
-    // checkpoint E2E latency is: fullnode_download_latency + checkpoint_index_latency + db_commit_latency
+    // checkpoint E2E latency is: fullnode_download_latency + checkpoint_index_latency +
+    // db_commit_latency
     pub checkpoint_download_bytes_size: IntGauge,
     pub tokio_blocking_task_wait_latency: Histogram,
     pub fullnode_checkpoint_data_download_latency: Histogram,

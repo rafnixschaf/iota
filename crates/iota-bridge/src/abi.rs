@@ -2,30 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::encoding::{
-    BridgeMessageEncoding, ADD_TOKENS_ON_EVM_MESSAGE_VERSION, ASSET_PRICE_UPDATE_MESSAGE_VERSION,
-    EVM_CONTRACT_UPGRADE_MESSAGE_VERSION, LIMIT_UPDATE_MESSAGE_VERSION,
-};
-use crate::encoding::{
-    COMMITTEE_BLOCKLIST_MESSAGE_VERSION, EMERGENCY_BUTTON_MESSAGE_VERSION,
-    TOKEN_TRANSFER_MESSAGE_VERSION,
-};
-use crate::error::{BridgeError, BridgeResult};
-use crate::types::ParsedTokenTransferMessage;
-use crate::types::{
-    AddTokensOnEvmAction, AssetPriceUpdateAction, BlocklistCommitteeAction, BridgeAction,
-    BridgeActionType, EmergencyAction, EthLog, EthToIotaBridgeAction, EvmContractUpgradeAction,
-    LimitUpdateAction, IotaToEthBridgeAction,
-};
-use ethers::types::Log;
 use ethers::{
     abi::RawLog,
     contract::{abigen, EthLogDecode},
-    types::Address as EthAddress,
+    types::{Address as EthAddress, Log},
 };
+use iota_types::{base_types::IotaAddress, bridge::BridgeChainId};
 use serde::{Deserialize, Serialize};
-use iota_types::base_types::IotaAddress;
-use iota_types::bridge::BridgeChainId;
+
+use crate::{
+    encoding::{
+        BridgeMessageEncoding, ADD_TOKENS_ON_EVM_MESSAGE_VERSION,
+        ASSET_PRICE_UPDATE_MESSAGE_VERSION, COMMITTEE_BLOCKLIST_MESSAGE_VERSION,
+        EMERGENCY_BUTTON_MESSAGE_VERSION, EVM_CONTRACT_UPGRADE_MESSAGE_VERSION,
+        LIMIT_UPDATE_MESSAGE_VERSION, TOKEN_TRANSFER_MESSAGE_VERSION,
+    },
+    error::{BridgeError, BridgeResult},
+    types::{
+        AddTokensOnEvmAction, AssetPriceUpdateAction, BlocklistCommitteeAction, BridgeAction,
+        BridgeActionType, EmergencyAction, EthLog, EthToIotaBridgeAction, EvmContractUpgradeAction,
+        IotaToEthBridgeAction, LimitUpdateAction, ParsedTokenTransferMessage,
+    },
+};
 
 macro_rules! gen_eth_events {
     ($($contract:ident, $contract_event:ident, $abi_path:literal),* $(,)?) => {
@@ -116,11 +114,14 @@ impl EthBridgeEvent {
                                 bridge_event
                             }
                             // This only happens when solidity code does not align with rust code.
-                            // When this happens in production, there is a risk of stuck bridge transfers.
-                            // We log error here.
+                            // When this happens in production, there is a risk of stuck bridge
+                            // transfers. We log error here.
                             // TODO: add metrics and alert
                             Err(e) => {
-                                return Err(BridgeError::Generic(format!("Manual intervention is required. Failed to convert TokensDepositedFilter log to EthToIotaTokenBridgeV1. This indicates incorrect parameters or a bug in the code: {:?}. Err: {:?}", event, e)));
+                                return Err(BridgeError::Generic(format!(
+                                    "Manual intervention is required. Failed to convert TokensDepositedFilter log to EthToIotaTokenBridgeV1. This indicates incorrect parameters or a bug in the code: {:?}. Err: {:?}",
+                                    event, e
+                                )));
                             }
                         };
 
@@ -293,16 +294,18 @@ impl From<EvmContractUpgradeAction> for eth_committee_upgradeable_contract::Mess
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use ethers::types::TxHash;
+    use fastcrypto::encoding::{Encoding, Hex};
+    use hex_literal::hex;
+    use iota_types::{bridge::TOKEN_ID_ETH, crypto::ToFromBytes};
+
     use super::*;
     use crate::{
         crypto::BridgeAuthorityPublicKeyBytes,
         types::{BlocklistType, EmergencyActionType},
     };
-    use ethers::types::TxHash;
-    use fastcrypto::encoding::{Encoding, Hex};
-    use hex_literal::hex;
-    use std::str::FromStr;
-    use iota_types::{bridge::TOKEN_ID_ETH, crypto::ToFromBytes};
 
     #[test]
     fn test_eth_message_conversion_emergency_action_regression() -> anyhow::Result<()> {
@@ -526,10 +529,11 @@ mod tests {
                 ),
             },
         ));
-        assert!(e
-            .try_into_bridge_action(TxHash::random(), 0)
-            .unwrap()
-            .is_some());
+        assert!(
+            e.try_into_bridge_action(TxHash::random(), 0)
+                .unwrap()
+                .is_some()
+        );
 
         let e = EthBridgeEvent::EthIotaBridgeEvents(EthIotaBridgeEvents::TokensDepositedFilter(
             TokensDepositedFilter {

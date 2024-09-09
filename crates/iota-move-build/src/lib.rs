@@ -12,6 +12,17 @@ use std::{
 };
 
 use fastcrypto::encoding::Base64;
+use iota_package_management::{resolve_published_id, PublishedAtError};
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+use iota_types::{
+    base_types::ObjectID,
+    error::{IotaError, IotaResult},
+    is_system_package,
+    move_package::{FnInfo, FnInfoKey, FnInfoMap, MovePackage},
+    BRIDGE_ADDRESS, DEEPBOOK_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    MOVE_STDLIB_ADDRESS,
+};
+use iota_verifier::verifier as iota_bytecode_verifier;
 use move_binary_format::{
     normalized::{self, Type},
     CompiledModule,
@@ -33,32 +44,19 @@ use move_package::{
         build_plan::BuildPlan, compiled_package::CompiledPackage as MoveCompiledPackage,
     },
     package_hooks::{PackageHooks, PackageIdentifier},
-    resolution::resolution_graph::ResolvedGraph,
+    resolution::resolution_graph::{Package, ResolvedGraph},
+    source_package::parsed_manifest::{CustomDepInfo, SourceManifest},
     BuildConfig as MoveBuildConfig,
-};
-use move_package::{
-    resolution::resolution_graph::Package, source_package::parsed_manifest::CustomDepInfo,
-    source_package::parsed_manifest::SourceManifest,
 };
 use move_symbol_pool::Symbol;
 use serde_reflection::Registry;
-use iota_package_management::{resolve_published_id, PublishedAtError};
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::{
-    base_types::ObjectID,
-    error::{IotaError, IotaResult},
-    is_system_package,
-    move_package::{FnInfo, FnInfoKey, FnInfoMap, MovePackage},
-    BRIDGE_ADDRESS, DEEPBOOK_ADDRESS, MOVE_STDLIB_ADDRESS, IOTA_FRAMEWORK_ADDRESS,
-    IOTA_SYSTEM_ADDRESS,
-};
-use iota_verifier::verifier as iota_bytecode_verifier;
 
 #[cfg(test)]
 #[path = "unit_tests/build_tests.rs"]
 mod build_tests;
 
-/// Wrapper around the core Move `CompiledPackage` with some Iota-specific traits and info
+/// Wrapper around the core Move `CompiledPackage` with some Iota-specific
+/// traits and info
 #[derive(Debug, Clone)]
 pub struct CompiledPackage {
     pub package: MoveCompiledPackage,
@@ -72,12 +70,13 @@ pub struct CompiledPackage {
 #[derive(Clone)]
 pub struct BuildConfig {
     pub config: MoveBuildConfig,
-    /// If true, run the Move bytecode verifier on the bytecode from a successful build
+    /// If true, run the Move bytecode verifier on the bytecode from a
+    /// successful build
     pub run_bytecode_verifier: bool,
     /// If true, print build diagnostics to stderr--no printing if false
     pub print_diags_to_stderr: bool,
-    /// The chain ID that compilation is with respect to (e.g., required to resolve
-    /// published dependency IDs from the `Move.lock`).
+    /// The chain ID that compilation is with respect to (e.g., required to
+    /// resolve published dependency IDs from the `Move.lock`).
     pub chain_id: Option<String>,
 }
 
@@ -157,8 +156,9 @@ impl BuildConfig {
         Ok((compiled_pkg, fn_info.unwrap()))
     }
 
-    /// Given a `path` and a `build_config`, build the package in that path, including its dependencies.
-    /// If we are building the Iota framework, we skip the check that the addresses should be 0
+    /// Given a `path` and a `build_config`, build the package in that path,
+    /// including its dependencies. If we are building the Iota framework,
+    /// we skip the check that the addresses should be 0
     pub fn build(self, path: &Path) -> IotaResult<CompiledPackage> {
         let print_diags_to_stderr = self.print_diags_to_stderr;
         let run_bytecode_verifier = self.run_bytecode_verifier;
@@ -194,8 +194,9 @@ impl BuildConfig {
     }
 }
 
-/// There may be additional information that needs to be displayed after diagnostics are reported
-/// (optionally report diagnostics themselves if files argument is provided).
+/// There may be additional information that needs to be displayed after
+/// diagnostics are reported (optionally report diagnostics themselves if files
+/// argument is provided).
 pub fn decorate_warnings(warning_diags: Diagnostics, files: Option<&MappedFiles>) {
     let any_linter_warnings = warning_diags.any_with_prefix(LINT_WARNING_PREFIX);
     let (filtered_diags_num, unique) =
@@ -207,12 +208,14 @@ pub fn decorate_warnings(warning_diags: Diagnostics, files: Option<&MappedFiles>
         eprintln!("Please report feedback on the linter warnings at https://forums.iota.io\n");
     }
     if filtered_diags_num > 0 {
-        eprintln!("Total number of linter warnings suppressed: {filtered_diags_num} (unique lints: {unique})");
+        eprintln!(
+            "Total number of linter warnings suppressed: {filtered_diags_num} (unique lints: {unique})"
+        );
     }
 }
 
-/// Sets build config's default flavor to `Flavor::Iota`. Returns error message if the flavor was
-/// previously set to something else than `Flavor::Iota`.
+/// Sets build config's default flavor to `Flavor::Iota`. Returns error message
+/// if the flavor was previously set to something else than `Flavor::Iota`.
 pub fn set_iota_flavor(build_config: &mut MoveBuildConfig) -> Option<String> {
     use move_compiler::editions::Flavor;
 
@@ -240,13 +243,13 @@ pub fn build_from_resolution_graph(
     } else {
         BuildConfig::compile_package(resolution_graph, &mut std::io::sink())
     };
-    // write build failure diagnostics to stderr, convert `error` to `String` using `Debug`
-    // format to include anyhow's error context chain.
+    // write build failure diagnostics to stderr, convert `error` to `String` using
+    // `Debug` format to include anyhow's error context chain.
     let (package, fn_info) = match result {
         Err(error) => {
             return Err(IotaError::ModuleBuildFailure {
                 error: format!("{:?}", error),
-            })
+            });
         }
         Ok((package, fn_info)) => (package, fn_info),
     };
@@ -273,16 +276,18 @@ pub fn build_from_resolution_graph(
 }
 
 impl CompiledPackage {
-    /// Return all of the bytecode modules in this package (not including direct or transitive deps)
-    /// Note: these are not topologically sorted by dependency--use `get_dependency_sorted_modules` to produce a list of modules suitable
-    /// for publishing or static analysis
+    /// Return all of the bytecode modules in this package (not including direct
+    /// or transitive deps) Note: these are not topologically sorted by
+    /// dependency--use `get_dependency_sorted_modules` to produce a list of
+    /// modules suitable for publishing or static analysis
     pub fn get_modules(&self) -> impl Iterator<Item = &CompiledModule> {
         self.package.root_modules().map(|m| &m.unit.module)
     }
 
-    /// Return all of the bytecode modules in this package (not including direct or transitive deps)
-    /// Note: these are not topologically sorted by dependency--use `get_dependency_sorted_modules` to produce a list of modules suitable
-    /// for publishing or static analysis
+    /// Return all of the bytecode modules in this package (not including direct
+    /// or transitive deps) Note: these are not topologically sorted by
+    /// dependency--use `get_dependency_sorted_modules` to produce a list of
+    /// modules suitable for publishing or static analysis
     pub fn into_modules(self) -> Vec<CompiledModule> {
         self.package
             .root_compiled_units
@@ -291,8 +296,9 @@ impl CompiledPackage {
             .collect()
     }
 
-    /// Return all of the bytecode modules that this package depends on (both directly and transitively)
-    /// Note: these are not topologically sorted by dependency.
+    /// Return all of the bytecode modules that this package depends on (both
+    /// directly and transitively) Note: these are not topologically sorted
+    /// by dependency.
     pub fn get_dependent_modules(&self) -> impl Iterator<Item = &CompiledModule> {
         self.package
             .deps_compiled_units
@@ -300,15 +306,17 @@ impl CompiledPackage {
             .map(|(_, m)| &m.unit.module)
     }
 
-    /// Return all of the bytecode modules in this package and the modules of its direct and transitive dependencies.
-    /// Note: these are not topologically sorted by dependency.
+    /// Return all of the bytecode modules in this package and the modules of
+    /// its direct and transitive dependencies. Note: these are not
+    /// topologically sorted by dependency.
     pub fn get_modules_and_deps(&self) -> impl Iterator<Item = &CompiledModule> {
         self.package.all_modules().map(|m| &m.unit.module)
     }
 
-    /// Return the bytecode modules in this package, topologically sorted in dependency order.
-    /// Optionally include dependencies that have not been published (are at address 0x0), if
-    /// `with_unpublished_deps` is true. This is the function to call if you would like to publish
+    /// Return the bytecode modules in this package, topologically sorted in
+    /// dependency order. Optionally include dependencies that have not been
+    /// published (are at address 0x0), if `with_unpublished_deps` is true.
+    /// This is the function to call if you would like to publish
     /// or statically analyze the modules.
     pub fn get_dependency_sorted_modules(
         &self,
@@ -321,17 +329,18 @@ impl CompiledPackage {
         let modules = graph.compute_topological_order().unwrap();
 
         if with_unpublished_deps {
-            // For each transitive dependent module, if they are not to be published, they must have
-            // a non-zero address (meaning they are already published on-chain).
+            // For each transitive dependent module, if they are not to be published, they
+            // must have a non-zero address (meaning they are already published
+            // on-chain).
             modules
                 .filter(|module| module.address() == &AccountAddress::ZERO)
                 .cloned()
                 .collect()
         } else {
-            // Collect all module IDs from the current package to be published (module names are not
-            // sufficient as we may have modules with the same names in user code and in Iota
-            // framework which would result in the latter being pulled into a set of modules to be
-            // published).
+            // Collect all module IDs from the current package to be published (module names
+            // are not sufficient as we may have modules with the same names in
+            // user code and in Iota framework which would result in the latter
+            // being pulled into a set of modules to be published).
             let self_modules: HashSet<_> = self
                 .package
                 .root_modules_map()
@@ -347,8 +356,9 @@ impl CompiledPackage {
         }
     }
 
-    /// Return the set of Object IDs corresponding to this package's transitive dependencies'
-    /// storage package IDs (where to load those packages on-chain).
+    /// Return the set of Object IDs corresponding to this package's transitive
+    /// dependencies' storage package IDs (where to load those packages
+    /// on-chain).
     pub fn get_dependency_storage_package_ids(&self) -> Vec<ObjectID> {
         self.dependency_ids.published.values().cloned().collect()
     }
@@ -362,7 +372,8 @@ impl CompiledPackage {
         )
     }
 
-    /// Return a serialized representation of the bytecode modules in this package, topologically sorted in dependency order
+    /// Return a serialized representation of the bytecode modules in this
+    /// package, topologically sorted in dependency order
     pub fn get_package_bytes(&self, with_unpublished_deps: bool) -> Vec<Vec<u8>> {
         self.get_dependency_sorted_modules(with_unpublished_deps)
             .iter()
@@ -374,7 +385,8 @@ impl CompiledPackage {
             .collect()
     }
 
-    /// Return the base64-encoded representation of the bytecode modules in this package, topologically sorted in dependency order
+    /// Return the base64-encoded representation of the bytecode modules in this
+    /// package, topologically sorted in dependency order
     pub fn get_package_base64(&self, with_unpublished_deps: bool) -> Vec<Base64> {
         self.get_package_bytes(with_unpublished_deps)
             .iter()
@@ -400,7 +412,8 @@ impl CompiledPackage {
             .filter(|m| *m.self_id().address() == IOTA_SYSTEM_ADDRESS)
     }
 
-    /// Get bytecode modules from the Iota Framework that are used by this package
+    /// Get bytecode modules from the Iota Framework that are used by this
+    /// package
     pub fn get_iota_framework_modules(&self) -> impl Iterator<Item = &CompiledModule> {
         self.get_modules_and_deps()
             .filter(|m| *m.self_id().address() == IOTA_FRAMEWORK_ADDRESS)
@@ -412,11 +425,12 @@ impl CompiledPackage {
             .filter(|m| *m.self_id().address() == MOVE_STDLIB_ADDRESS)
     }
 
-    /// Generate layout schemas for all types declared by this package, as well as
-    /// all struct types passed into `entry` functions declared by modules in this package
-    /// (either directly or by reference).
-    /// These layout schemas can be consumed by clients (e.g., the TypeScript SDK) to enable
-    /// BCS serialization/deserialization of the package's objects, tx arguments, and events.
+    /// Generate layout schemas for all types declared by this package, as well
+    /// as all struct types passed into `entry` functions declared by
+    /// modules in this package (either directly or by reference).
+    /// These layout schemas can be consumed by clients (e.g., the TypeScript
+    /// SDK) to enable BCS serialization/deserialization of the package's
+    /// objects, tx arguments, and events.
     pub fn generate_struct_layouts(&self) -> Registry {
         let mut package_types = BTreeSet::new();
         for m in self.get_modules() {
@@ -427,8 +441,10 @@ impl CompiledPackage {
                 for t in &s.type_parameters {
                     if t.is_phantom {
                         // if all of t's type parameters are phantom, we can generate a type layout
-                        // we make this happen by creating a StructTag with dummy `type_params`, since the layout generator won't look at them.
-                        // we need to do this because SerdeLayoutBuilder will refuse to generate a layout for any open StructTag, but phantom types
+                        // we make this happen by creating a StructTag with dummy `type_params`,
+                        // since the layout generator won't look at them. we
+                        // need to do this because SerdeLayoutBuilder will refuse to generate a
+                        // layout for any open StructTag, but phantom types
                         // cannot affect the layout of a struct, so we just use dummy values
                         dummy_type_parameters.push(TypeTag::Signer)
                     } else {
@@ -488,8 +504,8 @@ impl CompiledPackage {
         is_system_package(published_at)
     }
 
-    /// Checks for root modules with non-zero package addresses.  Returns an arbitrary one, if one
-    /// can can be found, otherwise returns `None`.
+    /// Checks for root modules with non-zero package addresses.  Returns an
+    /// arbitrary one, if one can can be found, otherwise returns `None`.
     pub fn published_root_module(&self) -> Option<&CompiledModule> {
         self.package.root_compiled_units.iter().find_map(|unit| {
             if unit.unit.module.self_id().address() != &AccountAddress::ZERO {
@@ -570,7 +586,8 @@ impl Default for BuildConfig {
 
 impl GetModule for CompiledPackage {
     type Error = anyhow::Error;
-    // TODO: return ref here for better efficiency? Borrow checker + all_modules_map() make it hard to do this
+    // TODO: return ref here for better efficiency? Borrow checker +
+    // all_modules_map() make it hard to do this
     type Item = CompiledModule;
 
     fn get_module_by_id(&self, id: &ModuleId) -> Result<Option<Self::Item>, Self::Error> {
@@ -626,8 +643,9 @@ pub struct PackageDependencies {
     pub unpublished: BTreeSet<Symbol>,
     /// Set of dependencies with invalid `published-at` addresses.
     pub invalid: BTreeMap<Symbol, String>,
-    /// Set of dependencies that have conflicting `published-at` addresses. The key refers to
-    /// the package, and the tuple refers to the address in the (Move.lock, Move.toml) respectively.
+    /// Set of dependencies that have conflicting `published-at` addresses. The
+    /// key refers to the package, and the tuple refers to the address in
+    /// the (Move.lock, Move.toml) respectively.
     pub conflicting: BTreeMap<Symbol, (ObjectID, ObjectID)>,
 }
 
@@ -635,7 +653,8 @@ pub struct PackageDependencies {
 /// - The ID that the package itself is published at (if it is published)
 /// - The IDs of dependencies that have been published
 /// - The names of packages that have not been published on chain.
-/// - The names of packages that have a `published-at` field that isn't filled with a valid address.
+/// - The names of packages that have a `published-at` field that isn't filled
+///   with a valid address.
 pub fn gather_published_ids(
     resolution_graph: &ResolvedGraph,
     chain_id: Option<String>,

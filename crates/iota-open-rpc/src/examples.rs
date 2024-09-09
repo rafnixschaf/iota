@@ -2,68 +2,65 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::ops::Range;
-use std::str::FromStr;
+use std::{
+    collections::{BTreeMap, HashMap},
+    ops::Range,
+    str::FromStr,
+};
 
 use fastcrypto::traits::EncodeDecodeBase64;
-use move_core_types::annotated_value::MoveStructLayout;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::ModuleId;
-use move_core_types::language_storage::{StructTag, TypeTag};
-use move_core_types::resolver::ModuleResolver;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
-use serde_json::json;
-
 use iota_json::IotaJsonValue;
 use iota_json_rpc::error::Error;
-use iota_json_rpc_types::DevInspectArgs;
 use iota_json_rpc_types::{
     Balance, Checkpoint, CheckpointId, CheckpointPage, Coin, CoinPage, DelegatedStake,
-    DevInspectResults, DynamicFieldPage, EventFilter, EventPage, MoveCallParams,
-    MoveFunctionArgType, ObjectChange, ObjectValueKind::ByImmutableReference,
-    ObjectValueKind::ByMutableReference, ObjectValueKind::ByValue, ObjectsPage, OwnedObjectRef,
-    Page, ProtocolConfigResponse, RPCTransactionRequestParams, Stake, StakeStatus, IotaCoinMetadata,
-    IotaCommittee, IotaData, IotaEvent, IotaExecutionStatus, IotaGetPastObjectRequest, IotaMoveAbility,
-    IotaMoveAbilitySet, IotaMoveNormalizedFunction, IotaMoveNormalizedModule, IotaMoveNormalizedStruct,
-    IotaMoveNormalizedType, IotaMoveVisibility, IotaObjectData, IotaObjectDataFilter,
-    IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse, IotaObjectResponseQuery, IotaParsedData,
-    IotaPastObjectResponse, IotaTransactionBlock, IotaTransactionBlockData,
-    IotaTransactionBlockEffects, IotaTransactionBlockEffectsV1, IotaTransactionBlockEvents,
-    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
-    IotaTransactionBlockResponseQuery, TransactionBlockBytes, TransactionBlocksPage,
-    TransactionFilter, TransferObjectParams,
+    DevInspectArgs, DevInspectResults, DynamicFieldPage, EventFilter, EventPage, IotaCoinMetadata,
+    IotaCommittee, IotaData, IotaEvent, IotaExecutionStatus, IotaGetPastObjectRequest,
+    IotaMoveAbility, IotaMoveAbilitySet, IotaMoveNormalizedFunction, IotaMoveNormalizedModule,
+    IotaMoveNormalizedStruct, IotaMoveNormalizedType, IotaMoveVisibility, IotaObjectData,
+    IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse,
+    IotaObjectResponseQuery, IotaParsedData, IotaPastObjectResponse, IotaTransactionBlock,
+    IotaTransactionBlockData, IotaTransactionBlockEffects, IotaTransactionBlockEffectsV1,
+    IotaTransactionBlockEvents, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockResponseQuery, IotaTypeTag, MoveCallParams, MoveFunctionArgType,
+    ObjectChange,
+    ObjectValueKind::{ByImmutableReference, ByMutableReference, ByValue},
+    ObjectsPage, OwnedObjectRef, Page, ProtocolConfigResponse, RPCTransactionRequestParams, Stake,
+    StakeStatus, TransactionBlockBytes, TransactionBlocksPage, TransactionFilter,
+    TransferObjectParams, ValidatorApy, ValidatorApys,
 };
-use iota_json_rpc_types::{IotaTypeTag, ValidatorApy, ValidatorApys};
 use iota_open_rpc::ExamplePairing;
-use iota_protocol_config::Chain;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::balance::Supply;
-use iota_types::base_types::random_object_ref;
-use iota_types::base_types::{
-    MoveObjectType, ObjectDigest, ObjectID, ObjectType, SequenceNumber, IotaAddress,
-    TransactionDigest,
+use iota_protocol_config::{Chain, ProtocolConfig};
+use iota_types::{
+    balance::Supply,
+    base_types::{
+        random_object_ref, IotaAddress, MoveObjectType, ObjectDigest, ObjectID, ObjectType,
+        SequenceNumber, TransactionDigest,
+    },
+    committee::Committee,
+    crypto::{get_key_pair_from_rng, AccountKeyPair, AggregateAuthoritySignature},
+    digests::TransactionEventsDigest,
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType},
+    event::EventID,
+    gas::GasCostSummary,
+    gas_coin::GasCoin,
+    messages_checkpoint::CheckpointDigest,
+    object::{MoveObject, Owner},
+    parse_iota_struct_tag,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    quorum_driver_types::ExecuteTransactionRequestType,
+    signature::GenericSignature,
+    transaction::{CallArg, ObjectArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
+    utils::to_sender_signed_transaction,
+    IOTA_FRAMEWORK_PACKAGE_ID,
 };
-use iota_types::committee::Committee;
-use iota_types::crypto::{get_key_pair_from_rng, AccountKeyPair, AggregateAuthoritySignature};
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType};
-use iota_types::event::EventID;
-use iota_types::gas::GasCostSummary;
-use iota_types::gas_coin::GasCoin;
-use iota_types::messages_checkpoint::CheckpointDigest;
-use iota_types::object::MoveObject;
-use iota_types::object::Owner;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
-use iota_types::signature::GenericSignature;
-use iota_types::transaction::ObjectArg;
-use iota_types::transaction::TEST_ONLY_GAS_UNIT_FOR_TRANSFER;
-use iota_types::transaction::{CallArg, TransactionData};
-use iota_types::utils::to_sender_signed_transaction;
-use iota_types::{parse_iota_struct_tag, IOTA_FRAMEWORK_PACKAGE_ID};
+use move_core_types::{
+    annotated_value::MoveStructLayout,
+    identifier::Identifier,
+    language_storage::{ModuleId, StructTag, TypeTag},
+    resolver::ModuleResolver,
+};
+use rand::{rngs::StdRng, Rng, SeedableRng};
+use serde_json::json;
 
 struct Examples {
     function_name: String,
@@ -237,10 +234,12 @@ impl RpcExampleProvider {
                     ("tx_bytes", json!(tx_bytes.tx_bytes)),
                     (
                         "signatures",
-                        json!(signatures
-                            .into_iter()
-                            .map(|sig| sig.encode_base64())
-                            .collect::<Vec<_>>()),
+                        json!(
+                            signatures
+                                .into_iter()
+                                .map(|sig| sig.encode_base64())
+                                .collect::<Vec<_>>()
+                        ),
                     ),
                     (
                         "options",
@@ -264,9 +263,7 @@ impl RpcExampleProvider {
             "iota_dryRunTransactionBlock",
             vec![ExamplePairing::new(
                 "Dry runs a transaction block to get back estimated gas fees and other potential effects.",
-                vec![
-                    ("tx_bytes", json!(tx_bytes.tx_bytes)),
-                ],
+                vec![("tx_bytes", json!(tx_bytes.tx_bytes))],
                 json!(result),
             )],
         )
@@ -290,7 +287,10 @@ impl RpcExampleProvider {
             vec![ExamplePairing::new(
                 "Runs the transaction in dev-inspect mode. Which allows for nearly any transaction (or Move call) with any arguments. Detailed results are provided, including both the transaction effects and any return values.",
                 vec![
-                    ("sender_address", json!(IotaAddress::from(ObjectID::new(self.rng.gen())))),
+                    (
+                        "sender_address",
+                        json!(IotaAddress::from(ObjectID::new(self.rng.gen()))),
+                    ),
                     ("tx_bytes", json!(tx_bytes.tx_bytes)),
                     ("gas_price", json!(1000)),
                     ("epoch", json!(8888)),
@@ -460,16 +460,10 @@ impl RpcExampleProvider {
             "iota_getCheckpoints",
             vec![ExamplePairing::new(
                 "Gets a paginated list in descending order of all checkpoints starting at the provided cursor. Each page of results has a maximum number of checkpoints set by the provided limit.",
-                vec![(
-                         "cursor", json!(seq.to_string()),
-                     ),
-                     (
-                         "limit", json!(limit),
-                     ),
-                     (
-                         "descending_order",
-                         json!(descending_order),
-                     ),
+                vec![
+                    ("cursor", json!(seq.to_string())),
+                    ("limit", json!(limit)),
+                    ("descending_order", json!(descending_order)),
                 ],
                 json!(result),
             )],
@@ -543,10 +537,12 @@ impl RpcExampleProvider {
                     ("digest", json!(result.digest)),
                     (
                         "options",
-                        json!(IotaTransactionBlockResponseOptions::new()
-                            .with_input()
-                            .with_effects()
-                            .with_events()),
+                        json!(
+                            IotaTransactionBlockResponseOptions::new()
+                                .with_input()
+                                .with_effects()
+                                .with_events()
+                        ),
                     ),
                 ],
                 json!(result),
@@ -605,10 +601,12 @@ impl RpcExampleProvider {
                     ("digests", json!(digests)),
                     (
                         "options",
-                        json!(IotaTransactionBlockResponseOptions::new()
-                            .with_input()
-                            .with_effects()
-                            .with_events()),
+                        json!(
+                            IotaTransactionBlockResponseOptions::new()
+                                .with_input()
+                                .with_effects()
+                                .with_events()
+                        ),
                     ),
                 ],
                 json!(data),
@@ -639,9 +637,7 @@ impl RpcExampleProvider {
             "iota_getProtocolConfig",
             vec![ExamplePairing::new(
                 "Returns the protocol config for the given protocol version. If none is specified, the node uses the version of the latest epoch it has processed",
-                vec![
-                    ("version", json!(version)),
-                ],
+                vec![("version", json!(version))],
                 json!(Self::get_protocol_config_impl(version)),
             )],
         )
@@ -862,7 +858,7 @@ impl RpcExampleProvider {
                 version: SequenceNumber::from_u64(103626),
                 digest: ObjectDigest::new(self.rng.gen()),
                 balance: 200000000,
-                //locked_until_epoch: None,
+                // locked_until_epoch: None,
                 previous_transaction: TransactionDigest::new(self.rng.gen()),
             })
             .collect::<Vec<_>>();
@@ -951,7 +947,7 @@ impl RpcExampleProvider {
                 version: SequenceNumber::from_u64(103626),
                 digest: ObjectDigest::new(self.rng.gen()),
                 balance: 200000000,
-                //locked_until_epoch: None,
+                // locked_until_epoch: None,
                 previous_transaction: TransactionDigest::new(self.rng.gen()),
             })
             .collect::<Vec<_>>();
@@ -1084,9 +1080,7 @@ impl RpcExampleProvider {
             "iota_getNormalizedMoveModulesByPackage",
             vec![ExamplePairing::new(
                 "Gets structured representations of all the modules for the package in the request.",
-                vec![
-                    ("package", json!(ObjectID::new(self.rng.gen()))),
-                ],
+                vec![("package", json!(ObjectID::new(self.rng.gen())))],
                 json!(result),
             )],
         )
@@ -1172,16 +1166,18 @@ impl RpcExampleProvider {
             has_next_page: true,
         };
 
-        Examples::new("iotax_getDynamicFields",
-        vec![ExamplePairing::new(
-            "Gets dynamic fields for the object the request provides in a paginated list of `limit` dynamic field results per page. The default limit is 50.",
-            vec![
-                ("parent_object_id", json!(object_id)),
-                ("cursor", json!(ObjectID::new(self.rng.gen()))),
-                ("limit", json!(3)),
-            ],
-            json!(page),
-        )],)
+        Examples::new(
+            "iotax_getDynamicFields",
+            vec![ExamplePairing::new(
+                "Gets dynamic fields for the object the request provides in a paginated list of `limit` dynamic field results per page. The default limit is 50.",
+                vec![
+                    ("parent_object_id", json!(object_id)),
+                    ("cursor", json!(ObjectID::new(self.rng.gen()))),
+                    ("limit", json!(3)),
+                ],
+                json!(page),
+            )],
+        )
     }
 
     fn iotax_get_dynamic_field_object(&mut self) -> Examples {
@@ -1290,7 +1286,7 @@ impl RpcExampleProvider {
                     ("address", json!(owner)),
                     ("query", json!(query)),
                     ("cursor", json!(object_id)),
-                    ("limit", json!(3))
+                    ("limit", json!(3)),
                 ],
                 json!(result),
             )],

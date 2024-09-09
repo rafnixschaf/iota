@@ -2,9 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    AppState, BatchFaucetResponse, BatchStatusFaucetResponse, FaucetConfig, FaucetError,
-    FaucetRequest, FaucetResponse, RequestMetricsLayer,
+use std::{
+    borrow::Cow,
+    net::{IpAddr, SocketAddr},
+    path::PathBuf,
+    sync::Arc,
+    time::Duration,
 };
 
 use axum::{
@@ -16,23 +19,19 @@ use axum::{
     BoxError, Extension, Json, Router,
 };
 use http::Method;
-use iota_metrics::spawn_monitored_task;
-use prometheus::Registry;
-use std::{
-    borrow::Cow,
-    net::{IpAddr, SocketAddr},
-    path::PathBuf,
-    sync::Arc,
-    time::Duration,
-};
 use iota_config::IOTA_CLIENT_CONFIG;
+use iota_metrics::spawn_monitored_task;
 use iota_sdk::wallet_context::WalletContext;
+use prometheus::Registry;
 use tower::{limit::RateLimitLayer, ServiceBuilder};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, warn};
 use uuid::Uuid;
 
-use crate::faucet::Faucet;
+use crate::{
+    faucet::Faucet, AppState, BatchFaucetResponse, BatchStatusFaucetResponse, FaucetConfig,
+    FaucetError, FaucetRequest, FaucetResponse, RequestMetricsLayer,
+};
 
 pub async fn start_faucet(
     app_state: Arc<AppState>,
@@ -78,7 +77,8 @@ pub async fn start_faucet(
     spawn_monitored_task!(async move {
         info!("Starting task to clear WAL.");
         loop {
-            // Every config.wal_retry_interval (Default: 300 seconds) we try to clear the wal coins
+            // Every config.wal_retry_interval (Default: 300 seconds) we try to clear the
+            // wal coins
             tokio::time::sleep(Duration::from_secs(wal_retry_interval)).await;
             app_state.faucet.retry_wal_coins().await.unwrap();
         }
@@ -142,7 +142,8 @@ async fn batch_request_gas(
             }
         }
     } else {
-        // TODO (jian): remove this feature gate when batch has proven to be baked long enough
+        // TODO (jian): remove this feature gate when batch has proven to be baked long
+        // enough
         info!(uuid = ?id, "Falling back to v1 implementation");
         let result = spawn_monitored_task!(async move {
             state
@@ -232,7 +233,7 @@ async fn request_gas(
                 Json(FaucetResponse::from(FaucetError::Internal(
                     "Input Error.".to_string(),
                 ))),
-            )
+            );
         }
     };
     match result {

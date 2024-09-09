@@ -5,49 +5,49 @@
 // TODO remove the dead_code attribute after integration is done
 #![allow(dead_code)]
 
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
 use async_trait::async_trait;
-use iota_metrics::monitored_scope;
-use iota_metrics::spawn_monitored_task;
+use iota_json_rpc::{get_balance_changes_from_effect, get_object_changes, ObjectProvider};
+use iota_metrics::{monitored_scope, spawn_monitored_task};
 use iota_rest_api::CheckpointData;
-use tokio::sync::watch;
-
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use iota_types::object::Object;
-use tokio::time::Duration;
-use tokio::time::Instant;
-
-use iota_json_rpc::get_balance_changes_from_effect;
-use iota_json_rpc::get_object_changes;
-use iota_json_rpc::ObjectProvider;
-use iota_types::base_types::SequenceNumber;
-use iota_types::digests::TransactionDigest;
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::transaction::{TransactionData, TransactionDataAPI};
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber},
+    digests::TransactionDigest,
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    messages_checkpoint::CheckpointSequenceNumber,
+    object::Object,
+    transaction::{TransactionData, TransactionDataAPI},
+};
+use tokio::{
+    sync::watch,
+    time::{Duration, Instant},
+};
 use tracing::info;
 
-use iota_types::base_types::ObjectID;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-
-use crate::errors::IndexerError;
-use crate::metrics::IndexerMetrics;
-use crate::types::IndexedPackage;
-use crate::types::{IndexedObjectChange, IndexerResult};
+use crate::{
+    errors::IndexerError,
+    metrics::IndexerMetrics,
+    types::{IndexedObjectChange, IndexedPackage, IndexerResult},
+};
 
 // GC the buffer every 300 checkpoints, or 5 minutes
 pub const BUFFER_GC_INTERVAL: Duration = Duration::from_secs(300);
 /// An in-mem buffer for modules during writer path indexing.
 /// It has static lifetime. Since we batch process checkpoints,
-/// it's possible that when a package is looked up (e.g. to create dynamic field),
-/// it has not been persisted in the database yet. So it works as an in-mem
-/// store for package resolution. To avoid bloating memory, we GC modules
+/// it's possible that when a package is looked up (e.g. to create dynamic
+/// field), it has not been persisted in the database yet. So it works as an
+/// in-mem store for package resolution. To avoid bloating memory, we GC modules
 /// that are older than the committed checkpoints.
 pub struct IndexingPackageBuffer {
     packages: HashMap<
         ObjectID,
         (
             Arc<Object>,
-            u64, /* package version */
+            u64, // package version
             CheckpointSequenceNumber,
         ),
     >,
@@ -277,12 +277,15 @@ impl ObjectProvider for TxChangesProcessor {
             }
         }
 
-        panic!("Object {} is not found in TxChangesProcessor as an ObjectProvider (fn find_object_lt_or_eq_version)", id);
+        panic!(
+            "Object {} is not found in TxChangesProcessor as an ObjectProvider (fn find_object_lt_or_eq_version)",
+            id
+        );
     }
 }
 
-// This is a struct that is used to extract IotaSystemState and its dynamic children
-// for end-of-epoch indexing.
+// This is a struct that is used to extract IotaSystemState and its dynamic
+// children for end-of-epoch indexing.
 pub(crate) struct EpochEndIndexingObjectStore<'a> {
     objects: Vec<&'a Object>,
 }

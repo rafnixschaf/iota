@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Utility for generating programmable transactions, either by specifying a command or for
-//! migrating legacy transactions
+//! Utility for generating programmable transactions, either by specifying a
+//! command or for migrating legacy transactions
 
 use anyhow::Context;
 use indexmap::IndexMap;
@@ -11,7 +11,7 @@ use move_core_types::{ident_str, identifier::Identifier, language_storage::TypeT
 use serde::Serialize;
 
 use crate::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
+    base_types::{IotaAddress, ObjectID, ObjectRef},
     move_package::PACKAGE_MODULE_NAME,
     transaction::{
         Argument, CallArg, Command, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction,
@@ -56,7 +56,8 @@ impl ProgrammableTransactionBuilder {
     pub fn pure<T: Serialize>(&mut self, value: T) -> anyhow::Result<Argument> {
         Ok(self.pure_bytes(
             bcs::to_bytes(&value).context("Serializing pure argument.")?,
-            /* force separate */ false,
+            // force separate
+            false,
         ))
     }
 
@@ -64,7 +65,8 @@ impl ProgrammableTransactionBuilder {
     pub fn force_separate_pure<T: Serialize>(&mut self, value: T) -> anyhow::Result<Argument> {
         Ok(self.pure_bytes(
             bcs::to_bytes(&value).context("Serializing pure argument.")?,
-            /* force separate */ true,
+            // force separate
+            true,
         ))
     }
 
@@ -252,7 +254,8 @@ impl ProgrammableTransactionBuilder {
         self.command(Command::TransferObjects(vec![Argument::GasCoin], rec_arg));
     }
 
-    /// Will fail to generate if recipients and amounts do not have the same lengths
+    /// Will fail to generate if recipients and amounts do not have the same
+    /// lengths
     pub fn pay_iota(
         &mut self,
         recipients: Vec<IotaAddress>,
@@ -261,8 +264,8 @@ impl ProgrammableTransactionBuilder {
         self.pay_impl(recipients, amounts, Argument::GasCoin)
     }
 
-    /// Will fail to generate if recipients and amounts do not have the same lengths.
-    /// Or if coins is empty
+    /// Will fail to generate if recipients and amounts do not have the same
+    /// lengths. Or if coins is empty
     pub fn pay(
         &mut self,
         coins: Vec<ObjectRef>,

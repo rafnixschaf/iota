@@ -3,18 +3,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::metrics::WorkerMetrics;
+#[cfg(feature = "benchmark")]
+use std::convert::TryInto;
+use std::sync::Arc;
+
+#[cfg(feature = "trace_transaction")]
+use byteorder::{BigEndian, ReadBytesExt};
 use config::WorkerId;
 use fastcrypto::hash::Hash;
-use futures::future::BoxFuture;
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
-use iota_metrics::metered_channel::{Receiver, Sender};
-use iota_metrics::{monitored_scope, spawn_logged_monitored_task};
-use network::{client::NetworkClient, WorkerToPrimaryClient};
-use std::sync::Arc;
-use store::{rocks::DBMap, Map};
+use futures::{future::BoxFuture, stream::FuturesUnordered, StreamExt};
+use iota_metrics::{
+    metered_channel::{Receiver, Sender},
+    monitored_scope, spawn_logged_monitored_task,
+};
 use iota_protocol_config::ProtocolConfig;
+use network::{client::NetworkClient, WorkerToPrimaryClient};
+use store::{rocks::DBMap, Map};
 use tokio::{
     task::JoinHandle,
     time::{sleep, Duration, Instant},
@@ -25,10 +29,7 @@ use types::{
     Transaction, TxResponse, WorkerOwnBatchMessage,
 };
 
-#[cfg(feature = "trace_transaction")]
-use byteorder::{BigEndian, ReadBytesExt};
-#[cfg(feature = "benchmark")]
-use std::convert::TryInto;
+use crate::metrics::WorkerMetrics;
 
 // The number of batches to store / transmit in parallel.
 pub const MAX_PARALLEL_BATCH: usize = 100;
@@ -54,7 +55,8 @@ pub struct BatchMaker {
     /// Metrics handler
     node_metrics: Arc<WorkerMetrics>,
     /// The timestamp of the batch creation.
-    /// Average resident time in the batch would be ~ (batch seal time - creation time) / 2
+    /// Average resident time in the batch would be ~ (batch seal time -
+    /// creation time) / 2
     batch_start_timestamp: Instant,
     /// The network client to send our batches to the primary.
     client: NetworkClient,
@@ -189,7 +191,8 @@ impl BatchMaker {
         {
             let digest = batch.digest();
 
-            // Look for sample txs (they all start with 0) and gather their txs id (the next 8 bytes).
+            // Look for sample txs (they all start with 0) and gather their txs id (the next
+            // 8 bytes).
             let tx_ids: Vec<_> = batch
                 .transactions()
                 .iter()

@@ -2,24 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::balance::Balance;
-use crate::base_types::IotaAddress;
-use crate::collection_types::{Bag, Table};
-use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
-use crate::crypto::AuthorityPublicKeyBytes;
-use crate::error::IotaError;
-use crate::storage::ObjectStore;
-use crate::iota_system_state::epoch_start_iota_system_state::{
-    EpochStartSystemState, EpochStartValidatorInfoV1,
-};
-use crate::iota_system_state::iota_system_state_summary::{
-    IotaSystemStateSummary, IotaValidatorSummary,
-};
-use crate::iota_system_state::{AdvanceEpochParams, IotaSystemStateTrait};
 use fastcrypto::traits::ToFromBytes;
 use iota_network_stack::Multiaddr;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    balance::Balance,
+    base_types::IotaAddress,
+    collection_types::{Bag, Table},
+    committee::{CommitteeWithNetworkMetadata, NetworkMetadata},
+    crypto::AuthorityPublicKeyBytes,
+    error::IotaError,
+    iota_system_state::{
+        epoch_start_iota_system_state::{EpochStartSystemState, EpochStartValidatorInfoV1},
+        iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
+        AdvanceEpochParams, IotaSystemStateTrait,
+    },
+    storage::ObjectStore,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct SimTestIotaSystemStateInnerV1 {

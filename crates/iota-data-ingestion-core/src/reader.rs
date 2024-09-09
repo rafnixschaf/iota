@@ -2,31 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::create_remote_store_client;
-use crate::executor::MAX_CHECKPOINTS_IN_PROGRESS;
+use std::{collections::BTreeMap, ffi::OsString, fs, path::PathBuf, time::Duration};
+
 use anyhow::Result;
 use backoff::backoff::Backoff;
 use futures::StreamExt;
 use iota_metrics::spawn_monitored_task;
-use notify::RecursiveMode;
-use notify::Watcher;
-use object_store::path::Path;
-use object_store::ObjectStore;
-use std::collections::BTreeMap;
-use std::ffi::OsString;
-use std::fs;
-use std::path::PathBuf;
-use std::time::Duration;
 use iota_rest_api::Client;
 use iota_storage::blob::Blob;
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::{
+    full_checkpoint_content::CheckpointData, messages_checkpoint::CheckpointSequenceNumber,
+};
+use notify::{RecursiveMode, Watcher};
+use object_store::{path::Path, ObjectStore};
 use tap::pipe::Pipe;
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::oneshot;
-use tokio::time::timeout;
+use tokio::{
+    sync::{mpsc, mpsc::error::TryRecvError, oneshot},
+    time::timeout,
+};
 use tracing::{debug, error, info};
+
+use crate::{create_remote_store_client, executor::MAX_CHECKPOINTS_IN_PROGRESS};
 
 /// Implements a checkpoint reader that monitors a local directory.
 /// Designed for setups where the indexer daemon is colocated with FN.
@@ -49,7 +45,8 @@ pub struct CheckpointReader {
 pub struct ReaderOptions {
     pub tick_interal_ms: u64,
     pub timeout_secs: u64,
-    /// number of maximum concurrent requests to the remote store. Increase it for backfills
+    /// number of maximum concurrent requests to the remote store. Increase it
+    /// for backfills
     pub batch_size: usize,
     pub data_limit: usize,
 }
@@ -73,7 +70,8 @@ enum RemoteStore {
 
 impl CheckpointReader {
     /// Represents a single iteration of the reader.
-    /// Reads files in a local directory, validates them, and forwards `CheckpointData` to the executor.
+    /// Reads files in a local directory, validates them, and forwards
+    /// `CheckpointData` to the executor.
     async fn read_local_files(&self) -> Result<Vec<CheckpointData>> {
         let mut files = vec![];
         for entry in fs::read_dir(self.path.clone())? {

@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod utils;
-use shared_crypto::intent::Intent;
 use iota_config::{iota_config_dir, IOTA_KEYSTORE_FILENAME};
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore};
 use iota_sdk::{
@@ -14,11 +13,12 @@ use iota_sdk::{
         transaction::{Argument, Command, Transaction, TransactionData},
     },
 };
+use shared_crypto::intent::Intent;
 use utils::setup_for_write;
 
 // This example shows how to use programmable transactions to chain multiple
-// actions into one transaction. Specifically, the example retrieves two addresses
-// from the local wallet, and then
+// actions into one transaction. Specifically, the example retrieves two
+// addresses from the local wallet, and then
 // 1) finds a coin from the active address that has Iota,
 // 2) splits the coin into one coin of 1000 NANOS and the rest,
 // 3  transfers the split coin to second Iota address,
@@ -43,7 +43,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .await?;
     let coin = coins.data.into_iter().next().unwrap();
 
-    // programmable transactions allows the user to bundle a number of actions into one transaction
+    // programmable transactions allows the user to bundle a number of actions into
+    // one transaction
     let mut ptb = ProgrammableTransactionBuilder::new();
 
     // 2) split coin

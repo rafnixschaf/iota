@@ -2,43 +2,45 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::{eth_iota_bridge, EthBridgeEvent, EthERC20, EthIotaBridge};
-use crate::client::bridge_authority_aggregator::BridgeAuthorityAggregator;
-use crate::e2e_tests::test_utils::BridgeTestCluster;
-use crate::e2e_tests::test_utils::{
-    get_signatures, send_eth_tx_and_get_tx_receipt, BridgeTestClusterBuilder,
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+    sync::Arc,
 };
-use crate::eth_transaction_builder::build_eth_transaction;
-use crate::events::{
-    IotaBridgeEvent, IotaToEthTokenBridgeV1, TokenTransferApproved, TokenTransferClaimed,
-};
-use crate::iota_client::IotaBridgeClient;
-use crate::iota_transaction_builder::build_add_tokens_on_iota_transaction;
-use crate::types::{AddTokensOnEvmAction, BridgeAction, BridgeActionStatus, IotaToEthBridgeAction};
-use crate::utils::publish_and_register_coins_return_add_coins_on_iota_action;
-use crate::utils::EthSigner;
-use eth_iota_bridge::EthIotaBridgeEvents;
-use ethers::prelude::*;
-use ethers::types::Address as EthAddress;
-use move_core_types::ident_str;
-use std::collections::{HashMap, HashSet};
-
-use std::path::Path;
 
 use anyhow::anyhow;
-use std::sync::Arc;
+use eth_iota_bridge::EthIotaBridgeEvents;
+use ethers::{prelude::*, types::Address as EthAddress};
 use iota_json_rpc_types::{
     IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
 };
-use iota_sdk::wallet_context::WalletContext;
-use iota_sdk::IotaClient;
-use iota_types::base_types::{ObjectRef, IotaAddress};
-use iota_types::bridge::{BridgeChainId, BridgeTokenMetadata, BRIDGE_MODULE_NAME, TOKEN_ID_ETH};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{ObjectArg, TransactionData};
-use iota_types::{TypeTag, BRIDGE_PACKAGE_ID};
+use iota_sdk::{wallet_context::WalletContext, IotaClient};
+use iota_types::{
+    base_types::{IotaAddress, ObjectRef},
+    bridge::{BridgeChainId, BridgeTokenMetadata, BRIDGE_MODULE_NAME, TOKEN_ID_ETH},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{ObjectArg, TransactionData},
+    TypeTag, BRIDGE_PACKAGE_ID,
+};
+use move_core_types::ident_str;
 use tap::TapFallible;
 use tracing::info;
+
+use crate::{
+    abi::{eth_iota_bridge, EthBridgeEvent, EthERC20, EthIotaBridge},
+    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
+    e2e_tests::test_utils::{
+        get_signatures, send_eth_tx_and_get_tx_receipt, BridgeTestCluster, BridgeTestClusterBuilder,
+    },
+    eth_transaction_builder::build_eth_transaction,
+    events::{
+        IotaBridgeEvent, IotaToEthTokenBridgeV1, TokenTransferApproved, TokenTransferClaimed,
+    },
+    iota_client::IotaBridgeClient,
+    iota_transaction_builder::build_add_tokens_on_iota_transaction,
+    types::{AddTokensOnEvmAction, BridgeAction, BridgeActionStatus, IotaToEthBridgeAction},
+    utils::{publish_and_register_coins_return_add_coins_on_iota_action, EthSigner},
+};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn test_bridge_from_eth_to_iota_to_eth() {
@@ -139,7 +141,8 @@ async fn test_bridge_from_eth_to_iota_to_eth() {
     assert_eq!(parsed_msg.parsed_payload.amount, iota_amount);
 
     let message = eth_iota_bridge::Message::from(iota_to_eth_bridge_action);
-    let signatures = get_signatures(bridge_test_cluster.bridge_client(), nonce, iota_chain_id).await;
+    let signatures =
+        get_signatures(bridge_test_cluster.bridge_client(), nonce, iota_chain_id).await;
 
     let eth_iota_bridge = EthIotaBridge::new(
         bridge_test_cluster.contracts().iota_bridge,

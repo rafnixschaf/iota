@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod utils;
-use iota_sdk::rpc_types::{
-    IotaGetPastObjectRequest, IotaObjectDataOptions, IotaTransactionBlockResponseOptions,
+use iota_sdk::{
+    rpc_types::{
+        IotaGetPastObjectRequest, IotaObjectDataOptions, IotaTransactionBlockResponseOptions,
+    },
+    types::base_types::ObjectID,
 };
-use iota_sdk::types::base_types::ObjectID;
 use utils::{setup_for_write, split_coin_digest};
 
 // This example uses the Read API to get owned objects of an address,

@@ -1,7 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+use std::net::SocketAddr;
+
 use fastcrypto::{hash::HashFunction, traits::ToFromBytes};
+use iota_core::authority_client::AuthorityAPI;
+use iota_macros::sim_test;
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{DefaultHash, PublicKey, Signature, SignatureScheme},
+    error::{IotaError, IotaResult, UserInputError},
+    passkey_authenticator::{to_signing_digest, to_signing_message, PasskeyAuthenticator},
+    signature::GenericSignature,
+    transaction::{Transaction, TransactionData},
+};
 use p256::pkcs8::DecodePublicKey;
 use passkey_authenticator::{Authenticator, UserValidationMethod};
 use passkey_client::Client;
@@ -17,26 +30,7 @@ use passkey_types::{
     Bytes, Passkey,
 };
 use shared_crypto::intent::{Intent, IntentMessage, INTENT_PREFIX_LENGTH};
-use std::net::SocketAddr;
-use iota_core::authority_client::AuthorityAPI;
-use iota_macros::sim_test;
-use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::error::UserInputError;
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::signature::GenericSignature;
-use iota_types::transaction::Transaction;
-use iota_types::{
-    base_types::IotaAddress,
-    crypto::{PublicKey, SignatureScheme},
-    passkey_authenticator::{to_signing_message, PasskeyAuthenticator},
-    transaction::TransactionData,
-};
-use iota_types::{
-    crypto::{DefaultHash, Signature},
-    passkey_authenticator::to_signing_digest,
-};
-use test_cluster::TestCluster;
-use test_cluster::TestClusterBuilder;
+use test_cluster::{TestCluster, TestClusterBuilder};
 use url::Url;
 
 struct MyUserValidationMethod {}
@@ -81,8 +75,8 @@ async fn execute_tx(tx: Transaction, test_cluster: &TestCluster) -> IotaResult {
         .map(|_| ())
 }
 
-/// Register a new passkey, derive its address, fund it with gas and create a test
-/// transaction, then get a response from the passkey from signing.
+/// Register a new passkey, derive its address, fund it with gas and create a
+/// test transaction, then get a response from the passkey from signing.
 async fn create_credential_and_sign_test_tx(
     test_cluster: &TestCluster,
     sender: Option<IotaAddress>,
@@ -158,8 +152,9 @@ async fn create_credential_and_sign_test_tx(
         .build();
     let intent_msg = IntentMessage::new(Intent::iota_transaction(), tx_data);
 
-    // Compute the challenge = blake2b_hash(intent_msg(tx)) for passkey credential request.
-    // If change_intent, mangle the intent bytes. If change_tx, mangle the hashed tx bytes.
+    // Compute the challenge = blake2b_hash(intent_msg(tx)) for passkey credential
+    // request. If change_intent, mangle the intent bytes. If change_tx, mangle
+    // the hashed tx bytes.
     let mut extended = [0; INTENT_PREFIX_LENGTH + DefaultHash::OUTPUT_SIZE];
     let passkey_digest = if change_intent {
         extended[..INTENT_PREFIX_LENGTH].copy_from_slice(&Intent::personal_message().to_bytes());

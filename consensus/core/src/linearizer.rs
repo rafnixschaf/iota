@@ -7,12 +7,11 @@ use std::{collections::HashSet, sync::Arc};
 use consensus_config::AuthorityIndex;
 use parking_lot::RwLock;
 
-use crate::commit::sort_sub_dag_blocks;
-use crate::leader_schedule::LeaderSchedule;
 use crate::{
     block::{BlockAPI, VerifiedBlock},
-    commit::{Commit, CommittedSubDag, TrustedCommit},
+    commit::{sort_sub_dag_blocks, Commit, CommittedSubDag, TrustedCommit},
     dag_state::DagState,
+    leader_schedule::LeaderSchedule,
 };
 
 /// Expand a committed sequence of leader into a sequence of sub-dags.
@@ -34,8 +33,9 @@ impl Linearizer {
         }
     }
 
-    /// Collect the sub-dag and the corresponding commit from a specific leader excluding any duplicates or
-    /// blocks that have already been committed (within previous sub-dags).
+    /// Collect the sub-dag and the corresponding commit from a specific leader
+    /// excluding any duplicates or blocks that have already been committed
+    /// (within previous sub-dags).
     fn collect_sub_dag_and_commit(
         &mut self,
         leader_block: VerifiedBlock,
@@ -118,8 +118,8 @@ impl Linearizer {
     }
 
     // This function should be called whenever a new commit is observed. This will
-    // iterate over the sequence of committed leaders and produce a list of committed
-    // sub-dags.
+    // iterate over the sequence of committed leaders and produce a list of
+    // committed sub-dags.
     pub(crate) fn handle_commit(
         &mut self,
         committed_leaders: Vec<VerifiedBlock>,
@@ -128,8 +128,8 @@ impl Linearizer {
             return vec![];
         }
 
-        // We check whether the leader schedule has been updated. If yes, then we'll send the scores as
-        // part of the first sub dag.
+        // We check whether the leader schedule has been updated. If yes, then we'll
+        // send the scores as part of the first sub dag.
         let schedule_updated = self
             .leader_schedule
             .leader_schedule_updated(&self.dag_state);
@@ -146,7 +146,8 @@ impl Linearizer {
                 vec![]
             };
 
-            // Collect the sub-dag generated using each of these leaders and the corresponding commit.
+            // Collect the sub-dag generated using each of these leaders and the
+            // corresponding commit.
             let (sub_dag, commit) =
                 self.collect_sub_dag_and_commit(leader_block, reputation_scores_desc);
 
@@ -157,11 +158,12 @@ impl Linearizer {
             committed_sub_dags.push(sub_dag);
         }
 
-        // Committed blocks must be persisted to storage before sending them to Iota and executing
-        // their transactions.
-        // Commit metadata can be persisted more lazily because they are recoverable. Uncommitted
-        // blocks can wait to persist too.
-        // But for simplicity, all unpersisted blocks and commits are flushed to storage.
+        // Committed blocks must be persisted to storage before sending them to Iota and
+        // executing their transactions.
+        // Commit metadata can be persisted more lazily because they are recoverable.
+        // Uncommitted blocks can wait to persist too.
+        // But for simplicity, all unpersisted blocks and commits are flushed to
+        // storage.
         self.dag_state.write().flush();
 
         committed_sub_dags
@@ -281,7 +283,8 @@ mod tests {
             .map(Option::unwrap)
             .collect::<Vec<_>>();
 
-        // Now on the commits only the first one should contain the updated scores, the other should be empty
+        // Now on the commits only the first one should contain the updated scores, the
+        // other should be empty
         let commits = linearizer.handle_commit(leaders.clone());
         assert_eq!(commits.len(), 10);
         let scores = vec![
@@ -344,7 +347,8 @@ mod tests {
         );
         dag_state.write().add_commit(first_commit_data);
 
-        // Now take all the blocks from round `leader_round_wave_1` up to round `leader_round_wave_2-1`
+        // Now take all the blocks from round `leader_round_wave_1` up to round
+        // `leader_round_wave_2-1`
         let mut blocks = dag_builder.blocks(leader_round_wave_1..=leader_round_wave_2 - 1);
         // Filter out leader block of round `leader_round_wave_1`
         blocks.retain(|block| {

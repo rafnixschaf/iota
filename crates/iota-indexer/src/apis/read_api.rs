@@ -4,26 +4,25 @@
 
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use iota_json_rpc::error::IotaRpcInputError;
-use iota_types::error::IotaObjectResponseError;
-use iota_types::object::ObjectRead;
-
-use crate::errors::IndexerError;
-use crate::indexer_reader::IndexerReader;
-use iota_json_rpc::IotaRpcModule;
+use iota_json_rpc::{error::IotaRpcInputError, IotaRpcModule};
 use iota_json_rpc_api::{ReadApiServer, QUERY_MAX_RESULT_LIMIT};
 use iota_json_rpc_types::{
-    Checkpoint, CheckpointId, CheckpointPage, ProtocolConfigResponse, IotaEvent,
-    IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
-    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    Checkpoint, CheckpointId, CheckpointPage, IotaEvent, IotaGetPastObjectRequest,
+    IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions, ProtocolConfigResponse,
 };
 use iota_open_rpc::Module;
 use iota_protocol_config::{ProtocolConfig, ProtocolVersion};
-use iota_types::base_types::{ObjectID, SequenceNumber};
-use iota_types::digests::{ChainIdentifier, TransactionDigest};
-use iota_types::iota_serde::BigInt;
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber},
+    digests::{ChainIdentifier, TransactionDigest},
+    error::IotaObjectResponseError,
+    iota_serde::BigInt,
+    object::ObjectRead,
+};
+use jsonrpsee::{core::RpcResult, RpcModule};
+
+use crate::{errors::IndexerError, indexer_reader::IndexerReader};
 
 #[derive(Clone)]
 pub(crate) struct ReadApi<T: R2D2Connection + 'static> {
@@ -107,9 +106,9 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         }
     }
 
-    // For ease of implementation we just forward to the single object query, although in the
-    // future we may want to improve the performance by having a more naitive multi_get
-    // functionality
+    // For ease of implementation we just forward to the single object query,
+    // although in the future we may want to improve the performance by having a
+    // more naitive multi_get functionality
     async fn multi_get_objects(
         &self,
         object_ids: Vec<ObjectID>,

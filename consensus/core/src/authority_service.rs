@@ -8,8 +8,8 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use consensus_config::AuthorityIndex;
 use futures::{ready, stream, task, Stream, StreamExt};
-use parking_lot::RwLock;
 use iota_macros::fail_point_async;
+use parking_lot::RwLock;
 use tokio::{sync::broadcast, time::sleep};
 use tokio_util::sync::ReusableBoxFuture;
 use tracing::{debug, info, trace, warn};
@@ -32,7 +32,8 @@ use crate::{
 
 pub(crate) const COMMIT_LAG_MULTIPLIER: u32 = 5;
 
-/// Authority's network service implementation, agnostic to the actual networking stack used.
+/// Authority's network service implementation, agnostic to the actual
+/// networking stack used.
 pub(crate) struct AuthorityService<C: CoreThreadDispatcher> {
     context: Arc<Context>,
     commit_vote_monitor: Arc<CommitVoteMonitor>,
@@ -170,11 +171,12 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
             sleep(forward_time_drift).await;
         }
 
-        // Observe the block for the commit votes. When local commit is lagging too much,
-        // commit sync loop will trigger fetching.
+        // Observe the block for the commit votes. When local commit is lagging too
+        // much, commit sync loop will trigger fetching.
         self.commit_vote_monitor.observe_block(&verified_block);
 
-        // Reject blocks when local commit index is lagging too far from quorum commit index.
+        // Reject blocks when local commit index is lagging too far from quorum commit
+        // index.
         //
         // IMPORTANT: this must be done after observing votes from the block, otherwise
         // observed quorum commit will no longer progress.
@@ -245,8 +247,9 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
 
         let dag_state = self.dag_state.read();
         // Find recent own blocks that have not been received by the peer.
-        // If last_received is a valid and more blocks have been proposed since then, this call is
-        // guaranteed to return at least some recent blocks, which will help with liveness.
+        // If last_received is a valid and more blocks have been proposed since then,
+        // this call is guaranteed to return at least some recent blocks, which
+        // will help with liveness.
         let missed_blocks = stream::iter(
             dag_state
                 .get_cached_blocks(self.context.own_index, last_received + 1)
@@ -261,7 +264,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
             self.subscription_counter.clone(),
         );
 
-        // Return a stream of blocks that first yields missed blocks as requested, then new blocks.
+        // Return a stream of blocks that first yields missed blocks as requested, then
+        // new blocks.
         Ok(Box::pin(missed_blocks.chain(
             broadcasted_blocks.map(|block| block.serialized().clone()),
         )))
@@ -305,8 +309,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
         // For now ask dag state directly
         let blocks = self.dag_state.read().get_blocks(&block_refs);
 
-        // Now check if an ancestor's round is higher than the one that the peer has. If yes, then serve
-        // that ancestor blocks up to `MAX_ADDITIONAL_BLOCKS`.
+        // Now check if an ancestor's round is higher than the one that the peer has. If
+        // yes, then serve that ancestor blocks up to `MAX_ADDITIONAL_BLOCKS`.
         let mut ancestor_blocks = vec![];
         if !highest_accepted_rounds.is_empty() {
             let all_ancestors = blocks
@@ -340,7 +344,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
     ) -> ConsensusResult<(Vec<TrustedCommit>, Vec<VerifiedBlock>)> {
         fail_point_async!("consensus-rpc-response");
 
-        // Compute an inclusive end index and bound the maximum number of commits scanned.
+        // Compute an inclusive end index and bound the maximum number of commits
+        // scanned.
         let inclusive_end = commit_range.end().min(
             commit_range.start() + self.context.parameters.commit_sync_batch_size as CommitIndex
                 - 1,
@@ -394,8 +399,9 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
         }
 
         // Read from the dag state to find the latest blocks.
-        // TODO: at the moment we don't look into the block manager for suspended blocks. Ideally we
-        // want in the future if we think we would like to tackle the majority of cases.
+        // TODO: at the moment we don't look into the block manager for suspended
+        // blocks. Ideally we want in the future if we think we would like to
+        // tackle the majority of cases.
         let mut blocks = vec![];
         let dag_state = self.dag_state.read();
         for authority in authorities {
@@ -403,7 +409,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
 
             debug!("Latest block for {authority}: {block:?} as requested from {peer}");
 
-            // no reason to serve back the genesis block - it's equal as if it has not received any block
+            // no reason to serve back the genesis block - it's equal as if it has not
+            // received any block
             if block.round() != GENESIS_ROUND {
                 blocks.push(block);
             }
@@ -419,8 +426,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
     }
 }
 
-/// Atomically counts the number of active subscriptions to the block broadcast stream,
-/// and dispatch commands to core based on the changes.
+/// Atomically counts the number of active subscriptions to the block broadcast
+/// stream, and dispatch commands to core based on the changes.
 struct SubscriptionCounter {
     counter: parking_lot::Mutex<usize>,
     dispatcher: Arc<dyn CoreThreadDispatcher>,
@@ -461,8 +468,8 @@ impl SubscriptionCounter {
 /// It yields blocks that are broadcasted after the stream is created.
 type BroadcastedBlockStream = BroadcastStream<VerifiedBlock>;
 
-/// Adapted from `tokio_stream::wrappers::BroadcastStream`. The main difference is that
-/// this tolerates lags with only logging, without yielding errors.
+/// Adapted from `tokio_stream::wrappers::BroadcastStream`. The main difference
+/// is that this tolerates lags with only logging, without yielding errors.
 struct BroadcastStream<T> {
     context: Arc<Context>,
     peer: AuthorityIndex,
@@ -562,12 +569,18 @@ async fn make_recv_future<T: Clone>(
 
 #[cfg(test)]
 mod tests {
-    use crate::commit::CommitRange;
-    use crate::test_dag_builder::DagBuilder;
+    use std::{collections::BTreeSet, sync::Arc, time::Duration};
+
+    use async_trait::async_trait;
+    use bytes::Bytes;
+    use consensus_config::AuthorityIndex;
+    use parking_lot::{Mutex, RwLock};
+    use tokio::{sync::broadcast, time::sleep};
+
     use crate::{
         authority_service::AuthorityService,
-        block::BlockAPI,
-        block::{BlockRef, SignedBlock, TestBlock, VerifiedBlock},
+        block::{BlockAPI, BlockRef, SignedBlock, TestBlock, VerifiedBlock},
+        commit::CommitRange,
         commit_vote_monitor::CommitVoteMonitor,
         context::Context,
         core_thread::{CoreError, CoreThreadDispatcher},
@@ -576,17 +589,9 @@ mod tests {
         network::{BlockStream, NetworkClient, NetworkService},
         storage::mem_store::MemStore,
         synchronizer::Synchronizer,
+        test_dag_builder::DagBuilder,
         Round,
     };
-    use async_trait::async_trait;
-    use bytes::Bytes;
-    use consensus_config::AuthorityIndex;
-    use parking_lot::{Mutex, RwLock};
-    use std::collections::BTreeSet;
-    use std::sync::Arc;
-    use std::time::Duration;
-    use tokio::sync::broadcast;
-    use tokio::time::sleep;
 
     struct FakeCoreThreadDispatcher {
         blocks: Mutex<Vec<VerifiedBlock>>,
@@ -775,7 +780,8 @@ mod tests {
             store,
         ));
 
-        // Create some blocks for a few authorities. Create some equivocations as well and store in dag state.
+        // Create some blocks for a few authorities. Create some equivocations as well
+        // and store in dag state.
         let mut dag_builder = DagBuilder::new(context.clone());
         dag_builder
             .layers(1..=10)

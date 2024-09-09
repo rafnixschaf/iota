@@ -2,27 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::*;
-use crate::authority::{authority_tests::init_state_with_objects, AuthorityState};
-use crate::checkpoints::CheckpointServiceNoop;
-use crate::consensus_handler::SequencedConsensusTransaction;
-use move_core_types::{account_address::AccountAddress, ident_str};
-use narwhal_types::Transactions;
-use narwhal_types::TransactionsServer;
-use narwhal_types::{Empty, TransactionProto};
 use iota_network::tonic;
-use iota_types::crypto::deterministic_random_account_key;
-use iota_types::multiaddr::Multiaddr;
-use iota_types::transaction::TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS;
-use iota_types::utils::to_sender_signed_transaction;
-use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
 use iota_types::{
     base_types::ObjectID,
+    crypto::deterministic_random_account_key,
+    multiaddr::Multiaddr,
     object::Object,
-    transaction::{CallArg, CertifiedTransaction, ObjectArg, TransactionData},
+    transaction::{
+        CallArg, CertifiedTransaction, ObjectArg, TransactionData,
+        TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS,
+    },
+    utils::to_sender_signed_transaction,
+    IOTA_FRAMEWORK_PACKAGE_ID,
 };
-use tokio::sync::mpsc::channel;
-use tokio::sync::mpsc::{Receiver, Sender};
+use move_core_types::{account_address::AccountAddress, ident_str};
+use narwhal_types::{Empty, TransactionProto, Transactions, TransactionsServer};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
+
+use super::*;
+use crate::{
+    authority::{authority_tests::init_state_with_objects, AuthorityState},
+    checkpoints::CheckpointServiceNoop,
+    consensus_handler::SequencedConsensusTransaction,
+};
 
 /// Fixture: a few test gas objects.
 pub fn test_gas_objects() -> Vec<Object> {
@@ -70,9 +72,10 @@ pub async fn test_certificates(
             IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!(module).to_owned(),
             ident_str!(function).to_owned(),
-            /* type_args */ vec![],
+            // type_args
+            vec![],
             gas_object.compute_object_reference(),
-            /* args */
+            // args
             vec![
                 CallArg::Object(shared_object_arg),
                 CallArg::Pure(16u64.to_le_bytes().to_vec()),
@@ -175,8 +178,9 @@ async fn submit_transaction_to_consensus_adapter() {
     // Make a new consensus adapter instance.
     let adapter = make_consensus_adapter_for_test(state.clone(), false);
 
-    // Submit the transaction and ensure the adapter reports success to the caller. Note
-    // that consensus may drop some transactions (so we may need to resubmit them).
+    // Submit the transaction and ensure the adapter reports success to the caller.
+    // Note that consensus may drop some transactions (so we may need to
+    // resubmit them).
     let transaction = ConsensusTransaction::new_certificate_message(&state.name, certificate);
     let waiter = adapter
         .submit(

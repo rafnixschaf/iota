@@ -2,24 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::future::join_all;
 use indexmap::map::IndexMap;
-use itertools::Itertools;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use move_bytecode_utils::module_cache::GetModule;
-use move_core_types::annotated_value::{MoveStruct, MoveStructLayout, MoveValue};
-use move_core_types::language_storage::StructTag;
-use tap::TapFallible;
-use tracing::{debug, error, info, instrument, trace, warn};
-
-use iota_metrics::add_server_timing;
-use iota_metrics::spawn_monitored_task;
 use iota_core::authority::AuthorityState;
 use iota_json_rpc_api::{
     validate_limit, JsonRpcMetrics, ReadApiOpenRpc, ReadApiServer, QUERY_MAX_RESULT_LIMIT,
@@ -27,41 +15,52 @@ use iota_json_rpc_api::{
 };
 use iota_json_rpc_types::{
     BalanceChange, Checkpoint, CheckpointId, CheckpointPage, DisplayFieldsResponse, EventFilter,
-    ObjectChange, ProtocolConfigResponse, IotaEvent, IotaGetPastObjectRequest, IotaMoveStruct,
-    IotaMoveValue, IotaMoveVariant, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
-    IotaTransactionBlock, IotaTransactionBlockEvents, IotaTransactionBlockResponse,
-    IotaTransactionBlockResponseOptions,
+    IotaEvent, IotaGetPastObjectRequest, IotaMoveStruct, IotaMoveValue, IotaMoveVariant,
+    IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse, IotaTransactionBlock,
+    IotaTransactionBlockEvents, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    ObjectChange, ProtocolConfigResponse,
 };
+use iota_metrics::{add_server_timing, spawn_monitored_task};
 use iota_open_rpc::Module;
 use iota_protocol_config::{ProtocolConfig, ProtocolVersion};
 use iota_storage::key_value_store::TransactionKeyValueStore;
-use iota_types::base_types::{ObjectID, SequenceNumber, TransactionDigest};
-use iota_types::collection_types::VecMap;
-use iota_types::crypto::AggregateAuthoritySignature;
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::display::DisplayVersionUpdatedEvent;
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use iota_types::error::{IotaError, IotaObjectResponseError};
-use iota_types::messages_checkpoint::{
-    CheckpointContents, CheckpointContentsDigest, CheckpointSequenceNumber, CheckpointSummary,
-    CheckpointTimestamp,
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber, TransactionDigest},
+    collection_types::VecMap,
+    crypto::AggregateAuthoritySignature,
+    digests::TransactionEventsDigest,
+    display::DisplayVersionUpdatedEvent,
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    error::{IotaError, IotaObjectResponseError},
+    iota_serde::BigInt,
+    messages_checkpoint::{
+        CheckpointContents, CheckpointContentsDigest, CheckpointSequenceNumber, CheckpointSummary,
+        CheckpointTimestamp,
+    },
+    object::{Object, ObjectRead, PastObjectRead},
+    transaction::{Transaction, TransactionDataAPI},
 };
-use iota_types::object::{Object, ObjectRead, PastObjectRead};
-use iota_types::iota_serde::BigInt;
-use iota_types::transaction::Transaction;
-use iota_types::transaction::TransactionDataAPI;
+use itertools::Itertools;
+use jsonrpsee::{core::RpcResult, RpcModule};
+use move_bytecode_utils::module_cache::GetModule;
+use move_core_types::{
+    annotated_value::{MoveStruct, MoveStructLayout, MoveValue},
+    language_storage::StructTag,
+};
+use tap::TapFallible;
+use tracing::{debug, error, info, instrument, trace, warn};
 
-use crate::authority_state::{StateRead, StateReadError, StateReadResult};
-use crate::error::{Error, RpcInterimResult, IotaRpcInputError};
 use crate::{
-    get_balance_changes_from_effect, get_object_changes, ObjectProviderCache, IotaRpcModule,
+    authority_state::{StateRead, StateReadError, StateReadResult},
+    error::{Error, IotaRpcInputError, RpcInterimResult},
+    get_balance_changes_from_effect, get_object_changes, with_tracing, IotaRpcModule,
+    ObjectProvider, ObjectProviderCache,
 };
-use crate::{with_tracing, ObjectProvider};
 
 const MAX_DISPLAY_NESTED_LEVEL: usize = 10;
 
-// An implementation of the read portion of the JSON-RPC interface intended for use in
-// Fullnodes.
+// An implementation of the read portion of the JSON-RPC interface intended for
+// use in Fullnodes.
 #[derive(Clone)]
 pub struct ReadApi {
     pub state: Arc<dyn StateRead>,
@@ -70,8 +69,8 @@ pub struct ReadApi {
 }
 
 // Internal data structure to make it easy to work with data returned from
-// authority store and also enable code sharing between get_transaction_with_options,
-// multi_get_transaction_with_options, etc.
+// authority store and also enable code sharing between
+// get_transaction_with_options, multi_get_transaction_with_options, etc.
 #[derive(Default)]
 struct IntermediateTransactionResponse {
     digest: TransactionDigest,
@@ -310,7 +309,8 @@ impl ReadApi {
                             .as_ref()
                             .unwrap(),
                     )
-                    // Safe to unwrap because checkpoint_seq is guaranteed to exist in checkpoint_to_timestamp
+                    // Safe to unwrap because checkpoint_seq is guaranteed to exist in
+                    // checkpoint_to_timestamp
                     .unwrap();
             }
         }
@@ -362,7 +362,9 @@ impl ReadApi {
                         Some(Ok(e)) => cache_entry.events = Some(e),
                         Some(Err(e)) => cache_entry.errors.push(e.to_string()),
                         None => {
-                            error!("Failed to fetch events with event digest {event_digest:?} for txn {transaction_digest}");
+                            error!(
+                                "Failed to fetch events with event digest {event_digest:?} for txn {transaction_digest}"
+                            );
                             cache_entry.errors.push(format!(
                                 "Failed to fetch events with event digest {event_digest:?}",
                             ))
@@ -1299,7 +1301,7 @@ fn get_value_from_move_struct(
                 return Err(Error::UnexpectedError(format!(
                     "Unexpected move value type for field {}",
                     var_name
-                )))?
+                )))?;
             }
         }
     }

@@ -4,14 +4,15 @@
 
 use std::{env, fmt};
 
-use crate::{error::IotaError, iota_serde::Readable};
 use fastcrypto::encoding::{Base58, Encoding};
+use iota_protocol_config::Chain;
 use once_cell::sync::{Lazy, OnceCell};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, Bytes};
-use iota_protocol_config::Chain;
 use tracing::info;
+
+use crate::{error::IotaError, iota_serde::Readable};
 
 /// A representation of a 32 byte digest
 #[serde_as]
@@ -161,9 +162,11 @@ pub struct ChainIdentifier(CheckpointDigest);
 pub static MAINNET_CHAIN_IDENTIFIER: OnceCell<ChainIdentifier> = OnceCell::new();
 pub static TESTNET_CHAIN_IDENTIFIER: OnceCell<ChainIdentifier> = OnceCell::new();
 
-/// For testing purposes or bootstrapping regenesis chain configuration, you can set
-/// this environment variable to force protocol config to use a specific Chain.
-const IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE_ENV_VAR_NAME: &str = "IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE";
+/// For testing purposes or bootstrapping regenesis chain configuration, you can
+/// set this environment variable to force protocol config to use a specific
+/// Chain.
+const IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE_ENV_VAR_NAME: &str =
+    "IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE";
 
 static IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE: Lazy<Option<Chain>> = Lazy::new(|| {
     if let Ok(s) = env::var(IOTA_PROTOCOL_CONFIG_CHAIN_OVERRIDE_ENV_VAR_NAME) {
@@ -232,7 +235,7 @@ pub fn get_testnet_chain_identifier() -> ChainIdentifier {
 
 impl fmt::Display for ChainIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in self.0 .0 .0[0..4].iter() {
+        for byte in self.0.0.0[0..4].iter() {
             write!(f, "{:02x}", byte)?;
         }
 
@@ -449,7 +452,8 @@ impl fmt::UpperHex for CheckpointContentsDigest {
     }
 }
 
-/// A digest of a certificate, which commits to the signatures as well as the tx.
+/// A digest of a certificate, which commits to the signatures as well as the
+/// tx.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CertificateDigest(Digest);
 
@@ -469,7 +473,8 @@ impl fmt::Debug for CertificateDigest {
     }
 }
 
-/// A digest of a SenderSignedData, which commits to the signatures as well as the tx.
+/// A digest of a SenderSignedData, which commits to the signatures as well as
+/// the tx.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SenderSignedDataDigest(Digest);
 
@@ -944,7 +949,8 @@ impl std::str::FromStr for ObjectDigest {
     }
 }
 
-/// A digest of a ZkLoginInputs, which commits to the signatures as well as the tx.
+/// A digest of a ZkLoginInputs, which commits to the signatures as well as the
+/// tx.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ZKLoginInputsDigest(Digest);
 

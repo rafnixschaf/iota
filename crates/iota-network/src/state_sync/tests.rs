@@ -2,6 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, num::NonZeroUsize, time::Duration};
+
+use anemo::{PeerId, Request};
+use anyhow::anyhow;
+use iota_archival::{reader::ArchiveReaderBalancer, writer::ArchiveWriter};
+use iota_config::{
+    node::ArchiveReaderConfig,
+    object_storage_config::{ObjectStoreConfig, ObjectStoreType},
+};
+use iota_storage::{FileCompression, StorageFormat};
+use iota_swarm_config::test_utils::{empty_contents, CommitteeFixture};
+use iota_types::{
+    messages_checkpoint::CheckpointDigest,
+    storage::{ReadStore, SharedInMemoryStore, WriteStore},
+};
+use prometheus::Registry;
+use tempfile::tempdir;
+use tokio::time::{timeout, Instant};
+
 use crate::{
     state_sync::{
         Builder, GetCheckpointSummaryRequest, PeerStateSyncInfo, StateSync, StateSyncMessage,
@@ -9,23 +28,6 @@ use crate::{
     },
     utils::build_network,
 };
-use anemo::{PeerId, Request};
-use anyhow::anyhow;
-use prometheus::Registry;
-use std::num::NonZeroUsize;
-use std::{collections::HashMap, time::Duration};
-use iota_archival::reader::ArchiveReaderBalancer;
-use iota_archival::writer::ArchiveWriter;
-use iota_config::node::ArchiveReaderConfig;
-use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
-use iota_storage::{FileCompression, StorageFormat};
-use iota_swarm_config::test_utils::{empty_contents, CommitteeFixture};
-use iota_types::{
-    messages_checkpoint::CheckpointDigest,
-    storage::{ReadStore, SharedInMemoryStore, WriteStore},
-};
-use tempfile::tempdir;
-use tokio::time::{timeout, Instant};
 
 #[tokio::test]
 async fn server_push_checkpoint() {
@@ -302,9 +304,10 @@ async fn test_state_sync_using_archive() -> anyhow::Result<()> {
         empty_contents(),
         committee.committee().to_owned(),
     );
-    // We ensure that only a part of the data exists in the archive store (and no new checkpoints after
-    // sequence number >= 50 are written to the archive store). This is to test the fact that a node
-    // can download latest checkpoints from a peer and back fill missing older data from archive
+    // We ensure that only a part of the data exists in the archive store (and no
+    // new checkpoints after sequence number >= 50 are written to the archive
+    // store). This is to test the fact that a node can download latest
+    // checkpoints from a peer and back fill missing older data from archive
     for checkpoint in &ordered_checkpoints[0..50] {
         test_store.inner_mut().insert_checkpoint(checkpoint);
     }
@@ -331,8 +334,9 @@ async fn test_state_sync_using_archive() -> anyhow::Result<()> {
         }
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
-    // Build and connect two nodes where Node 1 will be given access to an archive store
-    // Node 2 will prune older checkpoints, so Node 1 is forced to backfill from the archive
+    // Build and connect two nodes where Node 1 will be given access to an archive
+    // store Node 2 will prune older checkpoints, so Node 1 is forced to
+    // backfill from the archive
     let (builder, server) = Builder::new()
         .store(SharedInMemoryStore::default())
         .archive_readers(archive_readers)
@@ -814,8 +818,9 @@ async fn sync_with_checkpoints_watermark() {
     // Now set Peer 1's low watermark back to 0
     store_1.inner_mut().set_lowest_available_checkpoint(0);
 
-    // Peer 2 and Peer 3 will know about this change by `get_checkpoint_availability`
-    // Soon we expect them to have all checkpoints's content.
+    // Peer 2 and Peer 3 will know about this change by
+    // `get_checkpoint_availability` Soon we expect them to have all
+    // checkpoints's content.
     timeout(Duration::from_secs(6), async {
         for (checkpoint, contents) in ordered_checkpoints[2..]
             .iter()

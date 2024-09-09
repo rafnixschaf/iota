@@ -2,14 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_bridge::crypto::BridgeAuthorityKeyPair;
-use iota_bridge::BRIDGE_ENABLE_PROTOCOL_VERSION;
+use iota_bridge::{crypto::BridgeAuthorityKeyPair, BRIDGE_ENABLE_PROTOCOL_VERSION};
 use iota_json_rpc_api::BridgeReadApiClient;
 use iota_macros::sim_test;
-use iota_types::bridge::get_bridge;
-use iota_types::bridge::BridgeTrait;
-use iota_types::crypto::get_key_pair;
-use iota_types::IOTA_BRIDGE_OBJECT_ID;
+use iota_types::{
+    bridge::{get_bridge, BridgeTrait},
+    crypto::get_key_pair,
+    IOTA_BRIDGE_OBJECT_ID,
+};
 use test_cluster::TestClusterBuilder;
 
 #[sim_test]
@@ -25,12 +25,13 @@ async fn test_create_bridge_state_object() {
     // no node has the bridge state object yet
     for h in &handles {
         h.with(|node| {
-            assert!(node
-                .state()
-                .get_object_cache_reader()
-                .get_latest_object_ref_or_tombstone(IOTA_BRIDGE_OBJECT_ID)
-                .unwrap()
-                .is_none());
+            assert!(
+                node.state()
+                    .get_object_cache_reader()
+                    .get_latest_object_ref_or_tombstone(IOTA_BRIDGE_OBJECT_ID)
+                    .unwrap()
+                    .is_none()
+            );
         });
     }
 
@@ -38,8 +39,8 @@ async fn test_create_bridge_state_object() {
     test_cluster
         .wait_for_protocol_version(BRIDGE_ENABLE_PROTOCOL_VERSION.into())
         .await;
-    // wait until next epoch - authenticator state object is created at the end of the first epoch
-    // in which it is supported.
+    // wait until next epoch - authenticator state object is created at the end of
+    // the first epoch in which it is supported.
     test_cluster.wait_for_epoch_all_nodes(2).await; // protocol upgrade completes in epoch 1
 
     for h in &handles {

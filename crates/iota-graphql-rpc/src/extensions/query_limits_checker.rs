@@ -2,33 +2,40 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::{Limits, ServiceConfig};
-use crate::error::{code, graphql_error, graphql_error_at_pos};
-use crate::metrics::Metrics;
-use async_graphql::extensions::NextParseQuery;
-use async_graphql::extensions::NextRequest;
-use async_graphql::extensions::{Extension, ExtensionContext, ExtensionFactory};
-use async_graphql::parser::types::{
-    DocumentOperations, ExecutableDocument, Field, FragmentDefinition, OperationDefinition,
-    Selection,
+use std::{
+    collections::HashMap,
+    mem,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+    time::Instant,
 };
-use async_graphql::{value, Name, Positioned, Response, ServerError, ServerResult, Variables};
+
+use async_graphql::{
+    extensions::{Extension, ExtensionContext, ExtensionFactory, NextParseQuery, NextRequest},
+    parser::types::{
+        DocumentOperations, ExecutableDocument, Field, FragmentDefinition, OperationDefinition,
+        Selection,
+    },
+    value, Name, Positioned, Response, ServerError, ServerResult, Variables,
+};
 use async_graphql_value::{ConstValue, Value};
 use async_trait::async_trait;
 use axum::http::HeaderName;
-use serde::Serialize;
-use std::collections::HashMap;
-use std::mem;
-use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
 use iota_graphql_rpc_headers::LIMITS_HEADER;
+use serde::Serialize;
 use tracing::info;
 use uuid::Uuid;
 
+use crate::{
+    config::{Limits, ServiceConfig},
+    error::{code, graphql_error, graphql_error_at_pos},
+    metrics::Metrics,
+};
+
 pub(crate) const CONNECTION_FIELDS: [&str; 2] = ["edges", "nodes"];
 
-/// Extension factory for adding checks that the query is within configurable limits.
+/// Extension factory for adding checks that the query is within configurable
+/// limits.
 pub(crate) struct QueryLimitsChecker;
 
 #[derive(Debug, Default)]
@@ -39,8 +46,9 @@ struct QueryLimitsCheckerExt {
 /// Only display usage information if this header was in the request.
 pub(crate) struct ShowUsage;
 
-/// State for traversing a document to check for limits. Holds on to environments for looking up
-/// variables and fragments, limits, and the remainder of the limit that can be used.
+/// State for traversing a document to check for limits. Holds on to
+/// environments for looking up variables and fragments, limits, and the
+/// remainder of the limit that can be used.
 struct LimitsTraversal<'a> {
     // Environments for resolving lookups in the document
     fragments: &'a HashMap<Name, Positioned<FragmentDefinition>>,
@@ -163,10 +171,12 @@ impl<'a> LimitsTraversal<'a> {
         Ok(())
     }
 
-    /// Check that the operation's output node estimate will not exceed the service's limit.
+    /// Check that the operation's output node estimate will not exceed the
+    /// service's limit.
     ///
-    /// This check must be done after the input limit check, because it relies on the query depth
-    /// being bounded to protect it from recursing too deeply.
+    /// This check must be done after the input limit check, because it relies
+    /// on the query depth being bounded to protect it from recursing too
+    /// deeply.
     fn check_output_limits(&mut self, op: &Positioned<OperationDefinition>) -> ServerResult<()> {
         for selection in &op.node.selection_set.node.items {
             self.traverse_selection_for_output(selection, 1, None)?;
@@ -174,13 +184,14 @@ impl<'a> LimitsTraversal<'a> {
         Ok(())
     }
 
-    /// Account for the estimated output size of this selection and its children.
+    /// Account for the estimated output size of this selection and its
+    /// children.
     ///
-    /// `multiplicity` is the number of times this selection will be output, on account of being
-    /// nested within paginated ancestors.
+    /// `multiplicity` is the number of times this selection will be output, on
+    /// account of being nested within paginated ancestors.
     ///
-    /// If this field is inside a connection, but not inside one of its fields, `page_size` is the
-    /// size of the connection's page.
+    /// If this field is inside a connection, but not inside one of its fields,
+    /// `page_size` is the size of the connection's page.
     fn traverse_selection_for_output(
         &mut self,
         selection: &Positioned<Selection>,
@@ -195,10 +206,10 @@ impl<'a> LimitsTraversal<'a> {
                     self.output_budget -= multiplicity;
                 }
 
-                // If the field being traversed is a connection field, increase multiplicity by a
-                // factor of page size. This operation can fail due to overflow, which will be
-                // treated as a limits check failure, even if the resulting value does not get used
-                // for anything.
+                // If the field being traversed is a connection field, increase multiplicity by
+                // a factor of page size. This operation can fail due to
+                // overflow, which will be treated as a limits check failure,
+                // even if the resulting value does not get used for anything.
                 let name = &f.node.name.node;
                 let multiplicity = 'm: {
                     if !CONNECTION_FIELDS.contains(&name.as_str()) {
@@ -246,8 +257,9 @@ impl<'a> LimitsTraversal<'a> {
         Ok(())
     }
 
-    /// If the field `f` is a connection, extract its page size, otherwise return `None`.
-    /// Returns an error if the page size cannot be represented as a `u32`.
+    /// If the field `f` is a connection, extract its page size, otherwise
+    /// return `None`. Returns an error if the page size cannot be
+    /// represented as a `u32`.
     fn connection_page_size(&mut self, f: &Positioned<Field>) -> ServerResult<Option<u32>> {
         if !self.is_connection(f) {
             return Ok(None);
@@ -267,9 +279,10 @@ impl<'a> LimitsTraversal<'a> {
         ))
     }
 
-    /// Checks if the given field corresponds to a connection based on whether it contains a
-    /// selection for `edges` or `nodes`. That selection could be immediately in that field's
-    /// selection set, or nested within a fragment or inline fragment spread.
+    /// Checks if the given field corresponds to a connection based on whether
+    /// it contains a selection for `edges` or `nodes`. That selection could
+    /// be immediately in that field's selection set, or nested within a
+    /// fragment or inline fragment spread.
     fn is_connection(&self, f: &Positioned<Field>) -> bool {
         f.node
             .selection_set
@@ -279,9 +292,10 @@ impl<'a> LimitsTraversal<'a> {
             .any(|s| self.has_connection_fields(s))
     }
 
-    /// Look for fields that suggest the container for this selection is a connection. Recurses
-    /// through fragment and inline fragment applications, but does not look recursively through
-    /// fields, as only the fields requested from the immediate parent are relevant.
+    /// Look for fields that suggest the container for this selection is a
+    /// connection. Recurses through fragment and inline fragment
+    /// applications, but does not look recursively through fields, as only
+    /// the fields requested from the immediate parent are relevant.
     fn has_connection_fields(&self, s: &Positioned<Selection>) -> bool {
         match &s.node {
             Selection::Field(f) => {
@@ -313,7 +327,8 @@ impl<'a> LimitsTraversal<'a> {
         }
     }
 
-    /// Translate a GraphQL value into a u64, if possible, resolving variables if necessary.
+    /// Translate a GraphQL value into a u64, if possible, resolving variables
+    /// if necessary.
     fn resolve_u64(&self, value: Option<&Positioned<Value>>) -> Option<u64> {
         match &value?.node {
             Value::Number(num) => num,
@@ -331,10 +346,11 @@ impl<'a> LimitsTraversal<'a> {
         .as_u64()
     }
 
-    /// Error returned if output node estimate exceeds limit. Also sets the output budget to zero,
-    /// to indicate that it has been spent (This is done because unlike other budgets, the output
-    /// budget is not decremented one unit at a time, so we can have hit the limit previously but
-    /// still have budget left over).
+    /// Error returned if output node estimate exceeds limit. Also sets the
+    /// output budget to zero, to indicate that it has been spent (This is
+    /// done because unlike other budgets, the output budget is not
+    /// decremented one unit at a time, so we can have hit the limit previously
+    /// but still have budget left over).
     fn output_node_error(&mut self) -> ServerError {
         self.output_budget = 0;
         graphql_error(
@@ -437,9 +453,9 @@ impl Extension for QueryLimitsCheckerExt {
         // Document layout of the query
         let doc = next.run(ctx, query, variables).await?;
 
-        // If the query is pure introspection, we don't need to check the limits. Pure introspection
-        // queries are queries that only have one operation with one field and that field is a
-        // `__schema` query
+        // If the query is pure introspection, we don't need to check the limits. Pure
+        // introspection queries are queries that only have one operation with
+        // one field and that field is a `__schema` query
         if let DocumentOperations::Single(op) = &doc.operations {
             if let [field] = &op.node.selection_set.node.items[..] {
                 if let Selection::Field(f) = &field.node {

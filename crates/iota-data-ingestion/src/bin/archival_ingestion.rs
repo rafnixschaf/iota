@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use iota_data_ingestion::{ArchivalConfig, ArchivalWorker};
 use iota_data_ingestion_core::setup_single_workflow;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {

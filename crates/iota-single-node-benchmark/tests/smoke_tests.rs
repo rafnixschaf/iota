@@ -3,11 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::PathBuf;
-use strum::IntoEnumIterator;
+
 use iota_macros::sim_test;
-use iota_single_node_benchmark::command::{Component, WorkloadKind};
-use iota_single_node_benchmark::run_benchmark;
-use iota_single_node_benchmark::workload::Workload;
+use iota_single_node_benchmark::{
+    command::{Component, WorkloadKind},
+    run_benchmark,
+    workload::Workload,
+};
+use strum::IntoEnumIterator;
 
 #[sim_test]
 async fn benchmark_non_move_transactions_smoke_test() {

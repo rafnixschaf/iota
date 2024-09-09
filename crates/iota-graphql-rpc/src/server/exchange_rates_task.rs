@@ -9,8 +9,9 @@ use tracing::{error, info};
 
 use crate::data::pg::PgExecutor;
 
-/// Background task for kicking on epoch change the exchange rates function on the indexer, which
-/// caches the ValidatorExchangeRates that are needed for computing APYs.
+/// Background task for kicking on epoch change the exchange rates function on
+/// the indexer, which caches the ValidatorExchangeRates that are needed for
+/// computing APYs.
 pub(crate) struct TriggerExchangeRatesTask {
     cancel: CancellationToken,
     db: PgExecutor,

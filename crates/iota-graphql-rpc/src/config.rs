@@ -2,13 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::functional_group::FunctionalGroup;
+use std::{collections::BTreeSet, fmt::Display, time::Duration};
+
 use async_graphql::*;
 use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
-use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, fmt::Display, time::Duration};
 use iota_graphql_config::GraphQLConfig;
 use iota_json_rpc::name_service::NameServiceConfig;
+use serde::{Deserialize, Serialize};
+
+use crate::functional_group::FunctionalGroup;
 
 pub(crate) const RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD: Duration = Duration::from_millis(10_000);
 pub(crate) const MAX_CONCURRENT_REQUESTS: usize = 1_000;
@@ -24,9 +26,10 @@ pub struct ServerConfig {
     pub ide: Ide,
 }
 
-/// Configuration for connections for the RPC, passed in as command-line arguments. This configures
-/// specific connections between this service and other services, and might differ from instance to
-/// instance of the GraphQL service.
+/// Configuration for connections for the RPC, passed in as command-line
+/// arguments. This configures specific connections between this service and
+/// other services, and might differ from instance to instance of the GraphQL
+/// service.
 #[GraphQLConfig]
 #[derive(Clone, Eq, PartialEq)]
 pub struct ConnectionConfig {
@@ -40,9 +43,9 @@ pub struct ConnectionConfig {
     pub(crate) prom_port: u16,
 }
 
-/// Configuration on features supported by the GraphQL service, passed in a TOML-based file. These
-/// configurations are shared across fleets of the service, i.e. all testnet services will have the
-/// same `ServiceConfig`.
+/// Configuration on features supported by the GraphQL service, passed in a
+/// TOML-based file. These configurations are shared across fleets of the
+/// service, i.e. all testnet services will have the same `ServiceConfig`.
 #[GraphQLConfig]
 #[derive(Default)]
 pub struct ServiceConfig {
@@ -70,22 +73,26 @@ pub struct Limits {
     pub max_output_nodes: u32,
     /// Maximum size (in bytes) of a GraphQL request.
     pub max_query_payload_size: u32,
-    /// Queries whose EXPLAIN cost are more than this will be logged. Given in the units used by the
-    /// database (where 1.0 is roughly the cost of a sequential page access).
+    /// Queries whose EXPLAIN cost are more than this will be logged. Given in
+    /// the units used by the database (where 1.0 is roughly the cost of a
+    /// sequential page access).
     pub max_db_query_cost: u32,
-    /// Paginated queries will return this many elements if a page size is not provided.
+    /// Paginated queries will return this many elements if a page size is not
+    /// provided.
     pub default_page_size: u32,
     /// Paginated queries can return at most this many elements.
     pub max_page_size: u32,
-    /// Time (in milliseconds) to wait for a transaction to be executed and the results returned
-    /// from GraphQL. If the transaction takes longer than this time to execute, the request will
-    /// return a timeout error, but the transaction may continue executing.
+    /// Time (in milliseconds) to wait for a transaction to be executed and the
+    /// results returned from GraphQL. If the transaction takes longer than
+    /// this time to execute, the request will return a timeout error, but
+    /// the transaction may continue executing.
     pub mutation_timeout_ms: u32,
-    /// Time (in milliseconds) to wait for a read request from the GraphQL service. Requests that
-    /// take longer than this time to return a result will return a timeout error.
+    /// Time (in milliseconds) to wait for a read request from the GraphQL
+    /// service. Requests that take longer than this time to return a result
+    /// will return a timeout error.
     pub request_timeout_ms: u32,
-    /// Maximum amount of nesting among type arguments (type arguments nest when a type argument is
-    /// itself generic and has arguments).
+    /// Maximum amount of nesting among type arguments (type arguments nest when
+    /// a type argument is itself generic and has arguments).
     pub max_type_argument_depth: u32,
     /// Maximum number of type parameters a type can have.
     pub max_type_argument_width: u32,
@@ -93,7 +100,8 @@ pub struct Limits {
     pub max_type_nodes: u32,
     /// Maximum deph of a move value.
     pub max_move_value_depth: u32,
-    /// Maximum number of transaction ids that can be passed to a `TransactionBlockFilter`.
+    /// Maximum number of transaction ids that can be passed to a
+    /// `TransactionBlockFilter`.
     pub max_transaction_ids: u32,
     /// Maximum number of candidates to scan when gathering a page of results.
     pub max_scan_limit: u32,
@@ -102,27 +110,28 @@ pub struct Limits {
 #[GraphQLConfig]
 #[derive(Copy)]
 pub struct BackgroundTasksConfig {
-    /// How often the watermark task checks the indexer database to update the checkpoint and epoch
-    /// watermarks.
+    /// How often the watermark task checks the indexer database to update the
+    /// checkpoint and epoch watermarks.
     pub watermark_update_ms: u64,
 }
 
 /// The Version of the service. `year.month` represents the major release.
-/// New `patch` versions represent backwards compatible fixes for their major release.
-/// The `full` version is `year.month.patch-sha`.
+/// New `patch` versions represent backwards compatible fixes for their major
+/// release. The `full` version is `year.month.patch-sha`.
 #[derive(Copy, Clone, Debug)]
 pub struct Version {
     /// The year of this release.
     pub year: &'static str,
     /// The month of this release.
     pub month: &'static str,
-    /// The patch is a positive number incremented for every compatible release on top of the major.month release.
+    /// The patch is a positive number incremented for every compatible release
+    /// on top of the major.month release.
     pub patch: &'static str,
     /// The commit sha for this release.
     pub sha: &'static str,
     /// The full version string.
-    /// Note that this extra field is used only for the uptime_metric function which requires a
-    /// &'static str.
+    /// Note that this extra field is used only for the uptime_metric function
+    /// which requires a &'static str.
     pub full: &'static str,
 }
 
@@ -213,27 +222,31 @@ impl ServiceConfig {
         self.limits.max_query_depth
     }
 
-    /// The maximum number of nodes (field names) the service will accept in a single query.
+    /// The maximum number of nodes (field names) the service will accept in a
+    /// single query.
     pub async fn max_query_nodes(&self) -> u32 {
         self.limits.max_query_nodes
     }
 
     /// The maximum number of output nodes in a GraphQL response.
     ///
-    /// Non-connection nodes have a count of 1, while connection nodes are counted as
-    /// the specified 'first' or 'last' number of items, or the default_page_size
-    /// as set by the server if those arguments are not set.
+    /// Non-connection nodes have a count of 1, while connection nodes are
+    /// counted as the specified 'first' or 'last' number of items, or the
+    /// default_page_size as set by the server if those arguments are not
+    /// set.
     ///
-    /// Counts accumulate multiplicatively down the query tree. For example, if a query starts
-    /// with a connection of first: 10 and has a field to a connection with last: 20, the count
-    /// at the second level would be 200 nodes. This is then summed to the count of 10 nodes
-    /// at the first level, for a total of 210 nodes.
+    /// Counts accumulate multiplicatively down the query tree. For example, if
+    /// a query starts with a connection of first: 10 and has a field to a
+    /// connection with last: 20, the count at the second level would be 200
+    /// nodes. This is then summed to the count of 10 nodes at the first
+    /// level, for a total of 210 nodes.
     pub async fn max_output_nodes(&self) -> u32 {
         self.limits.max_output_nodes
     }
 
-    /// Maximum estimated cost of a database query used to serve a GraphQL request.  This is
-    /// measured in the same units that the database uses in EXPLAIN queries.
+    /// Maximum estimated cost of a database query used to serve a GraphQL
+    /// request.  This is measured in the same units that the database uses
+    /// in EXPLAIN queries.
     async fn max_db_query_cost(&self) -> u32 {
         self.limits.max_db_query_cost
     }
@@ -248,15 +261,18 @@ impl ServiceConfig {
         self.limits.max_page_size
     }
 
-    /// Maximum time in milliseconds spent waiting for a response from fullnode after issuing a
-    /// a transaction to execute. Note that the transaction may still succeed even in the case of a
-    /// timeout. Transactions are idempotent, so a transaction that times out should be resubmitted
-    /// until the network returns a definite response (success or failure, not timeout).
+    /// Maximum time in milliseconds spent waiting for a response from fullnode
+    /// after issuing a a transaction to execute. Note that the transaction
+    /// may still succeed even in the case of a timeout. Transactions are
+    /// idempotent, so a transaction that times out should be resubmitted
+    /// until the network returns a definite response (success or failure, not
+    /// timeout).
     async fn mutation_timeout_ms(&self) -> u32 {
         self.limits.mutation_timeout_ms
     }
 
-    /// Maximum time in milliseconds that will be spent to serve one query request.
+    /// Maximum time in milliseconds that will be spent to serve one query
+    /// request.
     async fn request_timeout_ms(&self) -> u32 {
         self.limits.request_timeout_ms
     }
@@ -266,29 +282,32 @@ impl ServiceConfig {
         self.limits.max_query_payload_size
     }
 
-    /// Maximum nesting allowed in type arguments in Move Types resolved by this service.
+    /// Maximum nesting allowed in type arguments in Move Types resolved by this
+    /// service.
     async fn max_type_argument_depth(&self) -> u32 {
         self.limits.max_type_argument_depth
     }
 
-    /// Maximum number of type arguments passed into a generic instantiation of a Move Type resolved
-    /// by this service.
+    /// Maximum number of type arguments passed into a generic instantiation of
+    /// a Move Type resolved by this service.
     async fn max_type_argument_width(&self) -> u32 {
         self.limits.max_type_argument_width
     }
 
-    /// Maximum number of structs that need to be processed when calculating the layout of a single
-    /// Move Type.
+    /// Maximum number of structs that need to be processed when calculating the
+    /// layout of a single Move Type.
     async fn max_type_nodes(&self) -> u32 {
         self.limits.max_type_nodes
     }
 
-    /// Maximum nesting allowed in struct fields when calculating the layout of a single Move Type.
+    /// Maximum nesting allowed in struct fields when calculating the layout of
+    /// a single Move Type.
     async fn max_move_value_depth(&self) -> u32 {
         self.limits.max_move_value_depth
     }
 
-    /// Maximum number of transaction ids that can be passed to a `TransactionBlockFilter`.
+    /// Maximum number of transaction ids that can be passed to a
+    /// `TransactionBlockFilter`.
     async fn max_transaction_ids(&self) -> u32 {
         self.limits.max_transaction_ids
     }
@@ -458,8 +477,8 @@ impl Default for Limits {
             // <https://github.com/iotaledger/iota/blob/eaf05fe5d293c06e3a2dfc22c87ba2aef419d8ea/crates/iota-core/src/authority_aggregator.rs#L84-L85>
             mutation_timeout_ms: 74_000,
             request_timeout_ms: 40_000,
-            // The following limits reflect the max values set in ProtocolConfig, at time of writing.
-            // <https://github.com/iotaledger/iota/blob/333f87061f0656607b1928aba423fa14ca16899e/crates/iota-protocol-config/src/lib.rs#L1580>
+            // The following limits reflect the max values set in ProtocolConfig, at time of
+            // writing. <https://github.com/iotaledger/iota/blob/333f87061f0656607b1928aba423fa14ca16899e/crates/iota-protocol-config/src/lib.rs#L1580>
             max_type_argument_depth: 16,
             // <https://github.com/iotaledger/iota/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/iota-protocol-config/src/lib.rs#L1618>
             max_type_argument_width: 32,
@@ -666,7 +685,8 @@ mod tests {
         )
         .unwrap();
 
-        // When reading partially, the other parts will come from the default implementation.
+        // When reading partially, the other parts will come from the default
+        // implementation.
         let expect = ServiceConfig {
             limits: Limits {
                 max_query_depth: 42,

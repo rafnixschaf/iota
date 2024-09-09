@@ -4,12 +4,14 @@
 
 use std::borrow::Cow;
 
-use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler};
-use crate::{RestService, Result};
-use axum::extract::State;
-use axum::Json;
+use axum::{extract::State, Json};
 use iota_sdk2::types::CheckpointDigest;
 use tap::Pipe;
+
+use crate::{
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    RestService, Result,
+};
 
 pub struct GetNodeInfo;
 
@@ -86,5 +88,5 @@ pub struct NodeInfo {
     #[schemars(with = "crate::_schemars::U64")]
     pub lowest_available_checkpoint_objects: u64,
     pub software_version: Cow<'static, str>,
-    //TODO include current protocol version
+    // TODO include current protocol version
 }

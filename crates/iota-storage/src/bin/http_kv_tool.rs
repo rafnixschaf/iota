@@ -2,17 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{str::FromStr, sync::Arc};
+
 use clap::*;
-use std::str::FromStr;
-use std::sync::Arc;
-use iota_storage::http_key_value_store::*;
-use iota_storage::key_value_store::TransactionKeyValueStore;
-use iota_storage::key_value_store_metrics::KeyValueStoreMetrics;
-use iota_types::base_types::ObjectID;
-use iota_types::digests::{
-    CheckpointContentsDigest, CheckpointDigest, TransactionDigest, TransactionEventsDigest,
+use iota_storage::{
+    http_key_value_store::*, key_value_store::TransactionKeyValueStore,
+    key_value_store_metrics::KeyValueStoreMetrics,
 };
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::{
+    base_types::ObjectID,
+    digests::{
+        CheckpointContentsDigest, CheckpointDigest, TransactionDigest, TransactionEventsDigest,
+    },
+    messages_checkpoint::CheckpointSequenceNumber,
+};
 
 // Command line options are:
 // --base-url <url> - the base URL of the HTTP server

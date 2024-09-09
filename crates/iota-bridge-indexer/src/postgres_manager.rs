@@ -2,19 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::models::IotaProgressStore;
-use crate::models::TokenTransfer as DBTokenTransfer;
-use crate::schema::iota_progress_store::txn_digest;
-use crate::schema::{iota_error_transactions, token_transfer_data};
-use crate::{schema, schema::token_transfer, ProcessedTxnData};
-use diesel::result::Error;
-use diesel::BoolExpressionMethods;
 use diesel::{
     pg::PgConnection,
     r2d2::{ConnectionManager, Pool},
-    Connection, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
+    result::Error,
+    BoolExpressionMethods, Connection, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl,
+    SelectableHelper,
 };
 use iota_types::digests::TransactionDigest;
+
+use crate::{
+    models::{IotaProgressStore, TokenTransfer as DBTokenTransfer},
+    schema,
+    schema::{
+        iota_error_transactions, iota_progress_store::txn_digest, token_transfer,
+        token_transfer_data,
+    },
+    ProcessedTxnData,
+};
 
 pub(crate) type PgPool = Pool<ConnectionManager<PgConnection>>;
 
@@ -86,10 +91,11 @@ pub fn update_iota_progress_store(
 
 pub fn read_iota_progress_store(pool: &PgPool) -> anyhow::Result<Option<TransactionDigest>> {
     let mut conn = pool.get()?;
-    let val: Option<IotaProgressStore> = crate::schema::iota_progress_store::dsl::iota_progress_store
-        .select(IotaProgressStore::as_select())
-        .first(&mut conn)
-        .optional()?;
+    let val: Option<IotaProgressStore> =
+        crate::schema::iota_progress_store::dsl::iota_progress_store
+            .select(IotaProgressStore::as_select())
+            .first(&mut conn)
+            .optional()?;
     match val {
         Some(val) => Ok(Some(TransactionDigest::try_from(
             val.txn_digest.as_slice(),

@@ -19,8 +19,7 @@ pub mod diesel_macro {
     macro_rules! read_only_repeatable_blocking {
         ($pool:expr, $query:expr) => {{
             use downcast::Any;
-            use $crate::db::get_pool_connection;
-            use $crate::db::PoolConnection;
+            use $crate::db::{get_pool_connection, PoolConnection};
             #[cfg(feature = "postgres-feature")]
             {
                 let mut pool_conn = get_pool_connection($pool)?;
@@ -52,8 +51,7 @@ pub mod diesel_macro {
     macro_rules! read_only_blocking {
         ($pool:expr, $query:expr) => {{
             use downcast::Any;
-            use $crate::db::get_pool_connection;
-            use $crate::db::PoolConnection;
+            use $crate::db::{get_pool_connection, PoolConnection};
             #[cfg(feature = "postgres-feature")]
             {
                 let mut pool_conn = get_pool_connection($pool)?;
@@ -84,9 +82,10 @@ pub mod diesel_macro {
     #[macro_export]
     macro_rules! transactional_blocking_with_retry {
         ($pool:expr, $query:expr, $max_elapsed:expr) => {{
-            use $crate::db::get_pool_connection;
-            use $crate::db::PoolConnection;
-            use $crate::errors::IndexerError;
+            use $crate::{
+                db::{get_pool_connection, PoolConnection},
+                errors::IndexerError,
+            };
             let mut backoff = backoff::ExponentialBackoff::default();
             backoff.max_elapsed_time = Some($max_elapsed);
             let result = match backoff::retry(backoff, || {
@@ -154,10 +153,11 @@ pub mod diesel_macro {
     macro_rules! spawn_read_only_blocking {
         ($pool:expr, $query:expr, $repeatable_read:expr) => {{
             use downcast::Any;
-            use $crate::db::get_pool_connection;
-            use $crate::db::PoolConnection;
-            use $crate::errors::IndexerError;
-            use $crate::store::diesel_macro::CALLED_FROM_BLOCKING_POOL;
+            use $crate::{
+                db::{get_pool_connection, PoolConnection},
+                errors::IndexerError,
+                store::diesel_macro::CALLED_FROM_BLOCKING_POOL,
+            };
             let current_span = tracing::Span::current();
             tokio::task::spawn_blocking(move || {
                 CALLED_FROM_BLOCKING_POOL
@@ -233,8 +233,7 @@ pub mod diesel_macro {
     #[macro_export]
     macro_rules! on_conflict_do_update {
         ($table:expr, $values:expr, $target:expr, $pg_columns:expr, $mysql_columns:expr, $conn:expr) => {{
-            use diesel::ExpressionMethods;
-            use diesel::RunQueryDsl;
+            use diesel::{ExpressionMethods, RunQueryDsl};
             #[cfg(feature = "postgres-feature")]
             {
                 diesel::insert_into($table)
@@ -278,16 +277,12 @@ pub mod diesel_macro {
 
     #[macro_export]
     macro_rules! run_query_async {
-        ($pool:expr, $query:expr) => {{
-            spawn_read_only_blocking!($pool, $query, false)
-        }};
+        ($pool:expr, $query:expr) => {{ spawn_read_only_blocking!($pool, $query, false) }};
     }
 
     #[macro_export]
     macro_rules! run_query_repeatable_async {
-        ($pool:expr, $query:expr) => {{
-            spawn_read_only_blocking!($pool, $query, true)
-        }};
+        ($pool:expr, $query:expr) => {{ spawn_read_only_blocking!($pool, $query, true) }};
     }
 
     /// Check that we are in a context conducive to making blocking calls.
@@ -295,9 +290,9 @@ pub mod diesel_macro {
     /// - Checking that we are not inside a tokio runtime context
     ///
     /// Or:
-    /// - If we are inside a tokio runtime context, ensure that the call went through
-    ///     `IndexerReader::spawn_blocking` which properly moves the blocking call to a blocking thread
-    ///     pool.
+    /// - If we are inside a tokio runtime context, ensure that the call went
+    ///   through `IndexerReader::spawn_blocking` which properly moves the
+    ///   blocking call to a blocking thread pool.
     #[macro_export]
     macro_rules! blocking_call_is_ok_or_panic {
         () => {{

@@ -2,46 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, TransactionDigest},
+    committee::{Committee, EpochId},
+    digests::TransactionEventsDigest,
+    effects::{TransactionEffects, TransactionEvents},
+    error::IotaError,
+    messages_checkpoint::{
+        CheckpointContentsDigest, CheckpointDigest, CheckpointSequenceNumber, EndOfEpochData,
+        FullCheckpointContents, VerifiedCheckpoint, VerifiedCheckpointContents,
+    },
+    object::Object,
+    storage::{
+        error::{Error as StorageError, Result},
+        AccountOwnedObjectInfo, CoinInfo, DynamicFieldIndexInfo, DynamicFieldKey, ObjectKey,
+        ObjectStore, ReadStore, RestStateReader, WriteStore,
+    },
+    transaction::VerifiedTransaction,
+};
 use move_core_types::language_storage::StructTag;
 use parking_lot::Mutex;
-use std::sync::Arc;
-use iota_types::base_types::ObjectID;
-use iota_types::base_types::IotaAddress;
-use iota_types::base_types::TransactionDigest;
-use iota_types::committee::Committee;
-use iota_types::committee::EpochId;
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::IotaError;
-use iota_types::messages_checkpoint::CheckpointContentsDigest;
-use iota_types::messages_checkpoint::CheckpointDigest;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::messages_checkpoint::EndOfEpochData;
-use iota_types::messages_checkpoint::FullCheckpointContents;
-use iota_types::messages_checkpoint::VerifiedCheckpoint;
-use iota_types::messages_checkpoint::VerifiedCheckpointContents;
-use iota_types::object::Object;
-use iota_types::storage::error::Error as StorageError;
-use iota_types::storage::error::Result;
-use iota_types::storage::AccountOwnedObjectInfo;
-use iota_types::storage::CoinInfo;
-use iota_types::storage::DynamicFieldIndexInfo;
-use iota_types::storage::DynamicFieldKey;
-use iota_types::storage::ObjectStore;
-use iota_types::storage::RestStateReader;
-use iota_types::storage::WriteStore;
-use iota_types::storage::{ObjectKey, ReadStore};
-use iota_types::transaction::VerifiedTransaction;
 use tap::Pipe;
 
-use crate::authority::AuthorityState;
-use crate::checkpoints::CheckpointStore;
-use crate::epoch::committee_store::CommitteeStore;
-use crate::execution_cache::ExecutionCacheTraitPointers;
-use crate::rest_index::CoinIndexInfo;
-use crate::rest_index::OwnerIndexInfo;
-use crate::rest_index::OwnerIndexKey;
-use crate::rest_index::RestIndexStore;
+use crate::{
+    authority::AuthorityState,
+    checkpoints::CheckpointStore,
+    epoch::committee_store::CommitteeStore,
+    execution_cache::ExecutionCacheTraitPointers,
+    rest_index::{CoinIndexInfo, OwnerIndexInfo, OwnerIndexKey, RestIndexStore},
+};
 
 #[derive(Clone)]
 pub struct RocksDbStore {
@@ -162,9 +153,10 @@ impl ReadStore for RocksDbStore {
 
         // Otherwise gather it from the individual components.
         // Note we can't insert the constructed contents into `full_checkpoint_content`,
-        // because it needs to be inserted along with `checkpoint_sequence_by_contents_digest`
-        // and `checkpoint_content`. However at this point it's likely we don't know the
-        // corresponding sequence number yet.
+        // because it needs to be inserted along with
+        // `checkpoint_sequence_by_contents_digest` and `checkpoint_content`.
+        // However at this point it's likely we don't know the corresponding
+        // sequence number yet.
         self.checkpoint_store
             .get_checkpoint_contents(digest)
             .map_err(iota_types::storage::error::Error::custom)?
@@ -250,8 +242,9 @@ impl ReadStore for RocksDbStore {
     fn get_checkpoint_contents_by_digest(
         &self,
         digest: &CheckpointContentsDigest,
-    ) -> iota_types::storage::error::Result<Option<iota_types::messages_checkpoint::CheckpointContents>>
-    {
+    ) -> iota_types::storage::error::Result<
+        Option<iota_types::messages_checkpoint::CheckpointContents>,
+    > {
         self.checkpoint_store
             .get_checkpoint_contents(digest)
             .map_err(iota_types::storage::error::Error::custom)
@@ -260,8 +253,9 @@ impl ReadStore for RocksDbStore {
     fn get_checkpoint_contents_by_sequence_number(
         &self,
         sequence_number: CheckpointSequenceNumber,
-    ) -> iota_types::storage::error::Result<Option<iota_types::messages_checkpoint::CheckpointContents>>
-    {
+    ) -> iota_types::storage::error::Result<
+        Option<iota_types::messages_checkpoint::CheckpointContents>,
+    > {
         match self.get_checkpoint_by_sequence_number(sequence_number) {
             Ok(Some(checkpoint)) => {
                 self.get_checkpoint_contents_by_digest(&checkpoint.content_digest)
@@ -378,10 +372,9 @@ impl RestReadStore {
     }
 
     fn index(&self) -> iota_types::storage::error::Result<&RestIndexStore> {
-        self.state
-            .rest_index
-            .as_deref()
-            .ok_or_else(|| iota_types::storage::error::Error::custom("rest index store is disabled"))
+        self.state.rest_index.as_deref().ok_or_else(|| {
+            iota_types::storage::error::Error::custom("rest index store is disabled")
+        })
     }
 }
 
@@ -450,16 +443,18 @@ impl ReadStore for RestReadStore {
     fn get_checkpoint_contents_by_digest(
         &self,
         digest: &CheckpointContentsDigest,
-    ) -> iota_types::storage::error::Result<Option<iota_types::messages_checkpoint::CheckpointContents>>
-    {
+    ) -> iota_types::storage::error::Result<
+        Option<iota_types::messages_checkpoint::CheckpointContents>,
+    > {
         self.rocks.get_checkpoint_contents_by_digest(digest)
     }
 
     fn get_checkpoint_contents_by_sequence_number(
         &self,
         sequence_number: CheckpointSequenceNumber,
-    ) -> iota_types::storage::error::Result<Option<iota_types::messages_checkpoint::CheckpointContents>>
-    {
+    ) -> iota_types::storage::error::Result<
+        Option<iota_types::messages_checkpoint::CheckpointContents>,
+    > {
         self.rocks
             .get_checkpoint_contents_by_sequence_number(sequence_number)
     }

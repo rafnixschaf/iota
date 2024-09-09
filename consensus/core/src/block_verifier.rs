@@ -23,7 +23,8 @@ pub(crate) trait BlockVerifier: Send + Sync + 'static {
     /// This is called after a block has complete causal history locally,
     /// and is ready to be accepted into the DAG.
     ///
-    /// Caller must make sure ancestors corresponse to block.ancestors() 1-to-1, in the same order.
+    /// Caller must make sure ancestors corresponse to block.ancestors() 1-to-1,
+    /// in the same order.
     fn check_ancestors(
         &self,
         block: &VerifiedBlock,
@@ -33,9 +34,9 @@ pub(crate) trait BlockVerifier: Send + Sync + 'static {
 
 /// `SignedBlockVerifier` checks the validity of a block.
 ///
-/// Blocks that fail verification at one honest authority will be rejected by all other honest
-/// authorities as well. The means invalid blocks, and blocks with an invalid ancestor, will never
-/// be accepted into the DAG.
+/// Blocks that fail verification at one honest authority will be rejected by
+/// all other honest authorities as well. The means invalid blocks, and blocks
+/// with an invalid ancestor, will never be accepted into the DAG.
 pub(crate) struct SignedBlockVerifier {
     context: Arc<Context>,
     genesis: BTreeSet<BlockRef>,
@@ -553,9 +554,11 @@ mod test {
                 .set_timestamp_ms(1500)
                 .build();
             let verified_block = VerifiedBlock::new_for_test(block);
-            assert!(verifier
-                .check_ancestors(&verified_block, &ancestor_blocks)
-                .is_ok());
+            assert!(
+                verifier
+                    .check_ancestors(&verified_block, &ancestor_blocks)
+                    .is_ok()
+            );
         }
 
         // Block not respecting timestamp invariant.

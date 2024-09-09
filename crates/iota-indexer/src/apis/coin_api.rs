@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_reader::IndexerReader;
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use iota_json_rpc::coin_api::{parse_to_struct_tag, parse_to_type_tag};
-use iota_json_rpc::IotaRpcModule;
+use iota_json_rpc::{
+    coin_api::{parse_to_struct_tag, parse_to_type_tag},
+    IotaRpcModule,
+};
 use iota_json_rpc_api::{cap_page_limit, CoinReadApiServer};
-use iota_json_rpc_types::{Balance, CoinPage, Page, IotaCoinMetadata};
+use iota_json_rpc_types::{Balance, CoinPage, IotaCoinMetadata, Page};
 use iota_open_rpc::Module;
-use iota_types::balance::Supply;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::gas_coin::{GAS, TOTAL_SUPPLY_NANOS};
+use iota_types::{
+    balance::Supply,
+    base_types::{IotaAddress, ObjectID},
+    gas_coin::{GAS, TOTAL_SUPPLY_NANOS},
+};
+use jsonrpsee::{core::RpcResult, RpcModule};
+
+use crate::indexer_reader::IndexerReader;
 
 pub(crate) struct CoinReadApi<T: R2D2Connection + 'static> {
     inner: IndexerReader<T>,
@@ -46,7 +50,8 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
 
         let cursor = match cursor {
             Some(c) => c,
-            // If cursor is not specified, we need to start from the beginning of the coin type, which is the minimal possible ObjectID.
+            // If cursor is not specified, we need to start from the beginning of the coin type,
+            // which is the minimal possible ObjectID.
             None => ObjectID::ZERO,
         };
         let mut results = self
@@ -77,7 +82,8 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
 
         let cursor = match cursor {
             Some(c) => c,
-            // If cursor is not specified, we need to start from the beginning of the coin type, which is the minimal possible ObjectID.
+            // If cursor is not specified, we need to start from the beginning of the coin type,
+            // which is the minimal possible ObjectID.
             None => ObjectID::ZERO,
         };
         let mut results = self

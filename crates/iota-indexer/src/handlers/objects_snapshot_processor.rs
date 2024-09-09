@@ -2,13 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::{Arc, Mutex};
+
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
 use futures::StreamExt;
-use iota_metrics::get_metrics;
-use iota_metrics::metered_channel::{Receiver, Sender};
-use iota_metrics::spawn_monitored_task;
 use iota_data_ingestion_core::Worker;
+use iota_metrics::{
+    get_metrics,
+    metered_channel::{Receiver, Sender},
+    spawn_monitored_task,
+};
 use iota_package_resolver::{PackageStoreWithLruCache, Resolver};
 use iota_rest_api::CheckpointData;
 use iota_types::messages_checkpoint::CheckpointSequenceNumber;
@@ -16,14 +20,18 @@ use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
-use crate::store::package_resolver::{IndexerStorePackageResolver, InterimPackageResolver};
-use crate::types::IndexerResult;
-use crate::{metrics::IndexerMetrics, store::IndexerStore};
-use std::sync::{Arc, Mutex};
-
-use super::checkpoint_handler::CheckpointHandler;
-use super::tx_processor::IndexingPackageBuffer;
-use super::TransactionObjectChangesToCommit;
+use super::{
+    checkpoint_handler::CheckpointHandler, tx_processor::IndexingPackageBuffer,
+    TransactionObjectChangesToCommit,
+};
+use crate::{
+    metrics::IndexerMetrics,
+    store::{
+        package_resolver::{IndexerStorePackageResolver, InterimPackageResolver},
+        IndexerStore,
+    },
+    types::IndexerResult,
+};
 
 const OBJECTS_SNAPSHOT_MAX_CHECKPOINT_LAG: usize = 900;
 const OBJECTS_SNAPSHOT_MIN_CHECKPOINT_LAG: usize = 300;
@@ -141,7 +149,8 @@ where
     let (commit_notifier, commit_receiver) = watch::channel(None);
 
     let global_metrics = get_metrics().unwrap();
-    // Channel for actually communicating indexed object changes between the ingestion pipeline and the committer.
+    // Channel for actually communicating indexed object changes between the
+    // ingestion pipeline and the committer.
     let (indexed_obj_sender, indexed_obj_receiver) = iota_metrics::metered_channel::channel(
         // TODO: placeholder for now
         600,
@@ -182,9 +191,10 @@ where
         commit_receiver: watch::Receiver<Option<CheckpointSequenceNumber>>,
         metrics: IndexerMetrics,
     ) -> ObjectsSnapshotProcessor<S, T> {
-        // Start the package buffer used for buffering packages before they are written to the db.
-        // We include a commit receiver which will be paged when a checkpoint has been processed and
-        // the corresponding package data can be deleted from the buffer.
+        // Start the package buffer used for buffering packages before they are written
+        // to the db. We include a commit receiver which will be paged when a
+        // checkpoint has been processed and the corresponding package data can
+        // be deleted from the buffer.
         let package_buffer = IndexingPackageBuffer::start(commit_receiver);
         let pg_blocking_cp = CheckpointHandler::pg_blocking_cp(store.clone()).unwrap();
         let package_db_resolver = IndexerStorePackageResolver::new(pg_blocking_cp);
@@ -205,8 +215,9 @@ where
         }
     }
 
-    // Receives object changes from the ingestion pipeline and commits them to the store,
-    // keeping the appropriate amount of checkpoint lag behind the rest of the indexer.
+    // Receives object changes from the ingestion pipeline and commits them to the
+    // store, keeping the appropriate amount of checkpoint lag behind the rest
+    // of the indexer.
     pub async fn commit_objects_snapshot(
         store: S,
         watermark: CheckpointSequenceNumber,

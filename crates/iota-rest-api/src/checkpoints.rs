@@ -2,19 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::extract::Query;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use iota_sdk2::types::{
     CheckpointData, CheckpointDigest, CheckpointSequenceNumber, SignedCheckpointSummary,
 };
 use iota_types::storage::ReadStore;
 use tap::Pipe;
 
-use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler};
-use crate::reader::StateReader;
-use crate::Page;
-use crate::{accept::AcceptFormat, response::ResponseContent, Result};
-use crate::{Direction, RestService};
+use crate::{
+    accept::AcceptFormat,
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    reader::StateReader,
+    response::ResponseContent,
+    Direction, Page, RestService, Result,
+};
 
 pub struct GetCheckpointFull;
 
@@ -63,8 +64,8 @@ async fn get_checkpoint_full(
 ) -> Result<ResponseContent<iota_types::full_checkpoint_content::CheckpointData>> {
     let verified_summary = match checkpoint_id {
         CheckpointId::SequenceNumber(s) => {
-            // Since we need object contents we need to check for the lowest available checkpoint
-            // with objects that hasn't been pruned
+            // Since we need object contents we need to check for the lowest available
+            // checkpoint with objects that hasn't been pruned
             let oldest_checkpoint = state.inner().get_lowest_available_checkpoint_objects()?;
             if s < oldest_checkpoint {
                 return Err(crate::RestError::new(

@@ -2,25 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::net::SocketAddr;
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::extract::{Query, State};
-use schemars::JsonSchema;
-use iota_sdk2::types::framework::Coin;
 use iota_sdk2::types::{
-    Address, BalanceChange, CheckpointSequenceNumber, Object, Owner, SignedTransaction,
-    TransactionEffects, TransactionEvents, ValidatorAggregatedSignature,
+    framework::Coin, Address, BalanceChange, CheckpointSequenceNumber, Object, Owner,
+    SignedTransaction, TransactionEffects, TransactionEvents, ValidatorAggregatedSignature,
 };
 use iota_types::transaction_executor::TransactionExecutor;
+use schemars::JsonSchema;
 use tap::Pipe;
 
-use crate::openapi::{
-    ApiEndpoint, OperationBuilder, RequestBodyBuilder, ResponseBuilder, RouteHandler,
+use crate::{
+    accept::AcceptFormat,
+    openapi::{ApiEndpoint, OperationBuilder, RequestBodyBuilder, ResponseBuilder, RouteHandler},
+    response::{Bcs, ResponseContent},
+    RestService, Result,
 };
-use crate::response::Bcs;
-use crate::{accept::AcceptFormat, response::ResponseContent};
-use crate::{RestService, Result};
 
 pub struct ExecuteTransaction;
 
@@ -61,11 +59,12 @@ impl ApiEndpoint<RestService> for ExecuteTransaction {
 
 /// Execute Transaction REST endpoint.
 ///
-/// Handles client transaction submission request by passing off the provided signed transaction to
-/// an internal QuorumDriver which drives execution of the transaction with the current validator
-/// set.
+/// Handles client transaction submission request by passing off the provided
+/// signed transaction to an internal QuorumDriver which drives execution of the
+/// transaction with the current validator set.
 ///
-/// A client can signal, using the `Accept` header, the response format as either JSON or BCS.
+/// A client can signal, using the `Accept` header, the response format as
+/// either JSON or BCS.
 async fn execute_transaction(
     State(state): State<Option<Arc<dyn TransactionExecutor>>>,
     Query(parameters): Query<ExecuteTransactionQueryParameters>,
@@ -279,7 +278,9 @@ enum ReadableEffectsFinality {
         signature: ValidatorAggregatedSignature,
     },
     Checkpointed {
-        #[serde_as(as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>")]
+        #[serde_as(
+            as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>"
+        )]
         #[schemars(with = "crate::_schemars::U64")]
         checkpoint: CheckpointSequenceNumber,
     },

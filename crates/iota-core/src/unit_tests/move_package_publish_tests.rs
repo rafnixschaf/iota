@@ -2,39 +2,32 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::{
-    authority_tests::{call_move, init_state_with_ids, send_and_confirm_transaction},
-    move_integration_tests::{build_and_publish_test_package, build_test_package},
-};
+use std::{collections::HashSet, env, fs::File, io::Read, path::PathBuf};
 
-use move_binary_format::CompiledModule;
+use expect_test::expect;
+use iota_framework::BuiltInFramework;
+use iota_move_build::{check_unpublished_dependencies, gather_published_ids, BuildConfig};
 use iota_types::{
     base_types::ObjectID,
-    error::UserInputError,
+    crypto::{get_key_pair, AccountKeyPair},
+    effects::TransactionEffectsAPI,
+    error::{IotaError, UserInputError},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
     object::{Data, ObjectRead, Owner},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{TransactionData, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
     utils::to_sender_signed_transaction,
 };
-
+use move_binary_format::CompiledModule;
 use move_package::source_package::manifest_parser;
-use iota_move_build::{check_unpublished_dependencies, gather_published_ids, BuildConfig};
-use iota_types::{
-    crypto::{get_key_pair, AccountKeyPair},
-    error::IotaError,
-};
 
-use crate::authority::move_integration_tests::{
-    build_multi_publish_txns, build_package, run_multi_txns,
+use crate::authority::{
+    authority_tests::{call_move, init_state_with_ids, send_and_confirm_transaction},
+    move_integration_tests::{
+        build_and_publish_test_package, build_multi_publish_txns, build_package,
+        build_test_package, run_multi_txns,
+    },
 };
-use expect_test::expect;
-use std::env;
-use std::fs::File;
-use std::io::Read;
-use std::{collections::HashSet, path::PathBuf};
-use iota_framework::BuiltInFramework;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 
 #[tokio::test]
 #[cfg_attr(msim, ignore)]
@@ -49,7 +42,8 @@ async fn test_publishing_with_unpublished_deps() {
         &sender_key,
         &gas,
         "depends_on_basics",
-        /* with_unpublished_deps */ true,
+        // with_unpublished_deps
+        true,
     )
     .await;
 
@@ -203,7 +197,8 @@ async fn test_generate_lock_file() {
         .clone()
         .build(&path)
         .expect("Move package did not build");
-    // Update the lock file with placeholder compiler version so this isn't bumped every release.
+    // Update the lock file with placeholder compiler version so this isn't bumped
+    // every release.
     build_config
         .config
         .update_lock_file_toolchain_version(&path, "0.0.1".into())

@@ -2,15 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
 use std::time::Duration;
 
-use crate::errors::IndexerError;
-use diesel::connection::BoxableConnection;
+use anyhow::anyhow;
 #[cfg(feature = "postgres-feature")]
 use diesel::query_dsl::RunQueryDsl;
-use diesel::r2d2::ConnectionManager;
-use diesel::r2d2::{Pool, PooledConnection, R2D2Connection};
+use diesel::{
+    connection::BoxableConnection,
+    r2d2::{ConnectionManager, Pool, PooledConnection, R2D2Connection},
+};
+
+use crate::errors::IndexerError;
 
 pub type ConnectionPool<T> = Pool<ConnectionManager<T>>;
 pub type PoolConnection<T> = PooledConnection<ConnectionManager<T>>;
@@ -192,20 +194,21 @@ pub fn reset_database<T: R2D2Connection + Send + 'static>(
 
 #[cfg(feature = "postgres-feature")]
 pub mod setup_postgres {
-    use crate::db::{get_pool_connection, new_connection_pool, PoolConnection};
-    use crate::errors::IndexerError;
-    use crate::indexer::Indexer;
-    use crate::metrics::IndexerMetrics;
-    use crate::store::PgIndexerStore;
-    use crate::IndexerConfig;
     use anyhow::anyhow;
-    use diesel::migration::MigrationSource;
-    use diesel::PgConnection;
-    use diesel::RunQueryDsl;
+    use diesel::{migration::MigrationSource, PgConnection, RunQueryDsl};
     use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     use prometheus::Registry;
     use secrecy::ExposeSecret;
     use tracing::{error, info};
+
+    use crate::{
+        db::{get_pool_connection, new_connection_pool, PoolConnection},
+        errors::IndexerError,
+        indexer::Indexer,
+        metrics::IndexerMetrics,
+        store::PgIndexerStore,
+        IndexerConfig,
+    };
 
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/pg");
 
@@ -349,20 +352,21 @@ pub mod setup_postgres {
 #[cfg(feature = "mysql-feature")]
 #[cfg(not(feature = "postgres-feature"))]
 pub mod setup_mysql {
-    use crate::db::{get_pool_connection, new_connection_pool, PoolConnection};
-    use crate::errors::IndexerError;
-    use crate::indexer::Indexer;
-    use crate::metrics::IndexerMetrics;
-    use crate::store::PgIndexerStore;
-    use crate::IndexerConfig;
     use anyhow::anyhow;
-    use diesel::migration::MigrationSource;
-    use diesel::MysqlConnection;
-    use diesel::RunQueryDsl;
+    use diesel::{migration::MigrationSource, MysqlConnection, RunQueryDsl};
     use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
     use prometheus::Registry;
     use secrecy::ExposeSecret;
     use tracing::{error, info};
+
+    use crate::{
+        db::{get_pool_connection, new_connection_pool, PoolConnection},
+        errors::IndexerError,
+        indexer::Indexer,
+        metrics::IndexerMetrics,
+        store::PgIndexerStore,
+        IndexerConfig,
+    };
 
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/mysql");
 

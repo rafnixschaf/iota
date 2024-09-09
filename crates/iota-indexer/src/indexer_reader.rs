@@ -2,52 +2,45 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::Mutex;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use anyhow::{anyhow, Result};
 use cached::{Cached, SizedCache};
-use diesel::r2d2::R2D2Connection;
 use diesel::{
-    dsl::sql, r2d2::ConnectionManager, sql_types::Bool, ExpressionMethods, OptionalExtension,
-    QueryDsl, RunQueryDsl, TextExpressionMethods,
+    dsl::sql,
+    r2d2::{ConnectionManager, R2D2Connection},
+    sql_types::Bool,
+    ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, TextExpressionMethods,
 };
-use itertools::{any, Itertools};
-use tap::TapFallible;
-
-use fastcrypto::encoding::Encoding;
-use fastcrypto::encoding::Hex;
-use move_core_types::annotated_value::MoveStructLayout;
-use move_core_types::language_storage::StructTag;
-use iota_json_rpc_types::DisplayFieldsResponse;
+use fastcrypto::encoding::{Encoding, Hex};
 use iota_json_rpc_types::{
-    Balance, Coin as IotaCoin, IotaCoinMetadata, IotaTransactionBlockEffects,
-    IotaTransactionBlockEffectsAPI,
+    Balance, CheckpointId, Coin as IotaCoin, DisplayFieldsResponse, EpochInfo, EventFilter,
+    IotaCoinMetadata, IotaEvent, IotaObjectDataFilter, IotaTransactionBlockEffects,
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse, TransactionFilter,
 };
-use iota_json_rpc_types::{
-    CheckpointId, EpochInfo, EventFilter, IotaEvent, IotaObjectDataFilter,
-    IotaTransactionBlockResponse, TransactionFilter,
-};
-use iota_package_resolver::Package;
-use iota_package_resolver::PackageStore;
-use iota_package_resolver::{PackageStoreWithLruCache, Resolver};
-use iota_types::effects::TransactionEvents;
-use iota_types::{balance::Supply, coin::TreasuryCap, dynamic_field::DynamicFieldName};
+use iota_package_resolver::{Package, PackageStore, PackageStoreWithLruCache, Resolver};
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress, VersionNumber},
+    balance::Supply,
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber, VersionNumber},
+    coin::{CoinMetadata, TreasuryCap},
     committee::EpochId,
     digests::{ObjectDigest, TransactionDigest},
-    dynamic_field::DynamicFieldInfo,
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName},
+    effects::TransactionEvents,
+    event::EventID,
+    iota_system_state::{iota_system_state_summary::IotaSystemStateSummary, IotaSystemStateTrait},
     is_system_package,
     object::{Object, ObjectRead},
-    iota_system_state::{iota_system_state_summary::IotaSystemStateSummary, IotaSystemStateTrait},
 };
-use iota_types::{coin::CoinMetadata, event::EventID};
+use itertools::{any, Itertools};
+use move_core_types::{annotated_value::MoveStructLayout, language_storage::StructTag};
+use tap::TapFallible;
 
-use crate::db::{ConnectionConfig, ConnectionPool, ConnectionPoolConfig};
-use crate::models::transactions::{stored_events_to_events, StoredTransactionEvents};
-use crate::store::diesel_macro::*;
 use crate::{
+    db::{ConnectionConfig, ConnectionPool, ConnectionPoolConfig},
     errors::IndexerError,
     models::{
         checkpoints::StoredCheckpoint,
@@ -55,11 +48,14 @@ use crate::{
         epoch::StoredEpochInfo,
         events::StoredEvent,
         objects::{CoinBalance, ObjectRefColumn, StoredObject},
-        transactions::{tx_events_to_iota_tx_events, StoredTransaction},
+        transactions::{
+            stored_events_to_events, tx_events_to_iota_tx_events, StoredTransaction,
+            StoredTransactionEvents,
+        },
         tx_indices::TxSequenceNumber,
     },
     schema::{checkpoints, display, epochs, events, objects, objects_snapshot, transactions},
-    store::package_resolver::IndexerStorePackageResolver,
+    store::{diesel_macro::*, package_resolver::IndexerStorePackageResolver},
     types::{IndexerResult, OwnerType},
 };
 
@@ -333,11 +329,12 @@ impl<U: R2D2Connection> IndexerReader<U> {
         Ok(system_state)
     }
 
-    /// Retrieve the system state data for the given epoch. If no epoch is given,
-    /// it will retrieve the latest epoch's data and return the system state.
-    /// System state of the an epoch is written at the end of the epoch, so system state
-    /// of the current epoch is empty until the epoch ends. You can call
-    /// `get_latest_iota_system_state` for current epoch instead.
+    /// Retrieve the system state data for the given epoch. If no epoch is
+    /// given, it will retrieve the latest epoch's data and return the
+    /// system state. System state of the an epoch is written at the end of
+    /// the epoch, so system state of the current epoch is empty until the
+    /// epoch ends. You can call `get_latest_iota_system_state` for current
+    /// epoch instead.
     pub fn get_epoch_iota_system_state(
         &self,
         epoch: Option<EpochId>,
@@ -507,8 +504,10 @@ impl<U: R2D2Connection> IndexerReader<U> {
             let package_resolver_clone = self.package_resolver();
             let options_clone = options.clone();
             tx_block_responses_futures.push(tokio::task::spawn(
-                stored_tx
-                    .try_into_iota_transaction_block_response(options_clone, package_resolver_clone),
+                stored_tx.try_into_iota_transaction_block_response(
+                    options_clone,
+                    package_resolver_clone,
+                ),
             ));
         }
 
@@ -767,7 +766,7 @@ impl<U: R2D2Connection> IndexerReader<U> {
                         limit,
                         is_descending,
                     )
-                    .await
+                    .await;
             }
             // FIXME: sanitize module & function
             Some(TransactionFilter::MoveFunction {
@@ -912,11 +911,7 @@ impl<U: R2D2Connection> IndexerReader<U> {
 
         let query = format!(
             "SELECT {TX_SEQUENCE_NUMBER_STR} FROM {} WHERE {} {} ORDER BY {TX_SEQUENCE_NUMBER_STR} {} LIMIT {}",
-            table_name,
-            main_where_clause,
-            cursor_clause,
-            order_str,
-            limit,
+            table_name, main_where_clause, cursor_clause, order_str, limit,
         );
 
         tracing::debug!("query transaction blocks: {}", query);
@@ -1076,9 +1071,15 @@ impl<U: R2D2Connection> IndexerReader<U> {
         let query = if let EventFilter::Sender(sender) = &filter {
             // Need to remove ambiguities for tx_sequence_number column
             let cursor_clause = if descending_order {
-                format!("(e.{TX_SEQUENCE_NUMBER_STR} < {} OR (e.{TX_SEQUENCE_NUMBER_STR} = {} AND e.{EVENT_SEQUENCE_NUMBER_STR} < {}))", tx_seq, tx_seq, event_seq)
+                format!(
+                    "(e.{TX_SEQUENCE_NUMBER_STR} < {} OR (e.{TX_SEQUENCE_NUMBER_STR} = {} AND e.{EVENT_SEQUENCE_NUMBER_STR} < {}))",
+                    tx_seq, tx_seq, event_seq
+                )
             } else {
-                format!("(e.{TX_SEQUENCE_NUMBER_STR} > {} OR (e.{TX_SEQUENCE_NUMBER_STR} = {} AND e.{EVENT_SEQUENCE_NUMBER_STR} > {}))", tx_seq, tx_seq, event_seq)
+                format!(
+                    "(e.{TX_SEQUENCE_NUMBER_STR} > {} OR (e.{TX_SEQUENCE_NUMBER_STR} = {} AND e.{EVENT_SEQUENCE_NUMBER_STR} > {}))",
+                    tx_seq, tx_seq, event_seq
+                )
             };
             let order_clause = if descending_order {
                 format!("e.{TX_SEQUENCE_NUMBER_STR} DESC, e.{EVENT_SEQUENCE_NUMBER_STR} DESC")
@@ -1143,9 +1144,15 @@ impl<U: R2D2Connection> IndexerReader<U> {
             };
 
             let cursor_clause = if descending_order {
-                format!("AND ({TX_SEQUENCE_NUMBER_STR} < {} OR ({TX_SEQUENCE_NUMBER_STR} = {} AND {EVENT_SEQUENCE_NUMBER_STR} < {}))", tx_seq, tx_seq, event_seq)
+                format!(
+                    "AND ({TX_SEQUENCE_NUMBER_STR} < {} OR ({TX_SEQUENCE_NUMBER_STR} = {} AND {EVENT_SEQUENCE_NUMBER_STR} < {}))",
+                    tx_seq, tx_seq, event_seq
+                )
             } else {
-                format!("AND ({TX_SEQUENCE_NUMBER_STR} > {} OR ({TX_SEQUENCE_NUMBER_STR} = {} AND {EVENT_SEQUENCE_NUMBER_STR} > {}))", tx_seq, tx_seq, event_seq)
+                format!(
+                    "AND ({TX_SEQUENCE_NUMBER_STR} > {} OR ({TX_SEQUENCE_NUMBER_STR} = {} AND {EVENT_SEQUENCE_NUMBER_STR} > {}))",
+                    tx_seq, tx_seq, event_seq
+                )
             };
             let order_clause = if descending_order {
                 format!("{TX_SEQUENCE_NUMBER_STR} DESC, {EVENT_SEQUENCE_NUMBER_STR} DESC")
@@ -1619,10 +1626,12 @@ fn get_single_obj_id_from_package_publish<U: R2D2Connection>(
         if obj_ids_with_type.len() == 1 {
             Ok(Some(obj_ids_with_type[0]))
         } else if obj_ids_with_type.is_empty() {
-            // The package exists but no such object is created in that transaction. Or maybe it is wrapped and we don't know yet.
+            // The package exists but no such object is created in that transaction. Or
+            // maybe it is wrapped and we don't know yet.
             Ok(None)
         } else {
-            // We expect there to be only one object of this type created by the package but more than one is found.
+            // We expect there to be only one object of this type created by the package but
+            // more than one is found.
             tracing::error!(
                 "There are more than one objects found for type {}",
                 obj_type

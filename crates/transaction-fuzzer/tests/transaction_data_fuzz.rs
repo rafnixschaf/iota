@@ -2,14 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use proptest::prelude::*;
 use iota_types::utils::to_sender_signed_transaction;
-
-use proptest::strategy::ValueTree;
-use transaction_fuzzer::account_universe::AccountCurrent;
-use transaction_fuzzer::account_universe::AccountData;
-
+use proptest::{prelude::*, strategy::ValueTree};
 use transaction_fuzzer::{
+    account_universe::{AccountCurrent, AccountData},
     executor::{assert_is_acceptable_result, Executor},
     transaction_data_gen::transaction_data_gen,
 };

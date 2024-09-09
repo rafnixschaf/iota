@@ -3,21 +3,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod sdk;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
+    crypto::AuthorityStrongQuorumSignInfo,
+    effects::{TransactionEffects, TransactionEvents},
+    full_checkpoint_content::CheckpointData,
+    messages_checkpoint::{CertifiedCheckpointSummary, CheckpointSequenceNumber},
+    object::Object,
+    transaction::Transaction,
+    TypeTag,
+};
+pub use reqwest;
 use sdk::Result;
 
-pub use reqwest;
-
-use crate::transactions::ExecuteTransactionQueryParameters;
-use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
-use iota_types::crypto::AuthorityStrongQuorumSignInfo;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointSequenceNumber};
-use iota_types::object::Object;
-use iota_types::transaction::Transaction;
-use iota_types::TypeTag;
-
 use self::sdk::Response;
+use crate::transactions::ExecuteTransactionQueryParameters;
 
 #[derive(Clone)]
 pub struct Client {
@@ -150,6 +150,7 @@ pub struct BalanceChange {
     /// Type of the Coin
     pub coin_type: TypeTag,
     /// The amount indicate the balance value changes,
-    /// negative amount means spending coin value and positive means receiving coin value.
+    /// negative amount means spending coin value and positive means receiving
+    /// coin value.
     pub amount: i128,
 }

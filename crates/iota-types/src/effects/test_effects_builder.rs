@@ -2,16 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{ObjectID, SequenceNumber};
-use crate::digests::{ObjectDigest, TransactionEventsDigest};
-use crate::effects::{EffectsObjectChange, IDOperation, ObjectIn, ObjectOut, TransactionEffects};
-use crate::execution::SharedInput;
-use crate::execution_status::ExecutionStatus;
-use crate::gas::GasCostSummary;
-use crate::message_envelope::Message;
-use crate::object::Owner;
-use crate::transaction::{InputObjectKind, SenderSignedData, TransactionDataAPI};
 use std::collections::{BTreeMap, BTreeSet};
+
+use crate::{
+    base_types::{ObjectID, SequenceNumber},
+    digests::{ObjectDigest, TransactionEventsDigest},
+    effects::{EffectsObjectChange, IDOperation, ObjectIn, ObjectOut, TransactionEffects},
+    execution::SharedInput,
+    execution_status::ExecutionStatus,
+    gas::GasCostSummary,
+    message_envelope::Message,
+    object::Owner,
+    transaction::{InputObjectKind, SenderSignedData, TransactionDataAPI},
+};
 
 pub struct TestEffectsBuilder {
     transaction: SenderSignedData,

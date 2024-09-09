@@ -4,19 +4,16 @@
 
 #[cfg(feature = "pg_integration")]
 mod tests {
+    use std::{cmp::max, collections::BTreeMap, fs, path::PathBuf, sync::Arc};
+
     use anyhow::{anyhow, Context, Result};
-    use rand::rngs::StdRng;
-    use rand::SeedableRng;
+    use iota_graphql_rpc::{
+        config::{ConnectionConfig, Limits},
+        test_infra::cluster::{ExecutorCluster, DEFAULT_INTERNAL_DATA_SOURCE_PORT},
+    };
+    use rand::{rngs::StdRng, SeedableRng};
     use serial_test::serial;
     use simulacrum::Simulacrum;
-    use std::cmp::max;
-    use std::collections::BTreeMap;
-    use std::fs;
-    use std::path::PathBuf;
-    use std::sync::Arc;
-    use iota_graphql_rpc::config::{ConnectionConfig, Limits};
-    use iota_graphql_rpc::test_infra::cluster::ExecutorCluster;
-    use iota_graphql_rpc::test_infra::cluster::DEFAULT_INTERNAL_DATA_SOURCE_PORT;
     use tempfile::tempdir;
 
     struct Example {

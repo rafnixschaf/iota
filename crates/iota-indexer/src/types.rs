@@ -2,29 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::errors::IndexerError;
+use iota_json_rpc_types::{
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions, ObjectChange,
+};
+use iota_types::{
+    base_types::{IotaAddress, ObjectDigest, ObjectID, SequenceNumber},
+    crypto::AggregateAuthoritySignature,
+    digests::TransactionDigest,
+    dynamic_field::DynamicFieldInfo,
+    effects::TransactionEffects,
+    event::SystemEpochInfoEvent,
+    iota_serde::IotaStructTag,
+    iota_system_state::iota_system_state_summary::IotaSystemStateSummary,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointCommitment, CheckpointDigest,
+        CheckpointSequenceNumber, EndOfEpochData,
+    },
+    move_package::MovePackage,
+    object::{Object, Owner},
+    transaction::SenderSignedData,
+};
 use move_core_types::language_storage::StructTag;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use iota_json_rpc_types::{
-    ObjectChange, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
-};
-use iota_types::base_types::{ObjectDigest, SequenceNumber};
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::crypto::AggregateAuthoritySignature;
-use iota_types::digests::TransactionDigest;
-use iota_types::dynamic_field::DynamicFieldInfo;
-use iota_types::effects::TransactionEffects;
-use iota_types::event::SystemEpochInfoEvent;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointCommitment, CheckpointDigest, CheckpointSequenceNumber,
-    EndOfEpochData,
-};
-use iota_types::move_package::MovePackage;
-use iota_types::object::{Object, Owner};
-use iota_types::iota_serde::IotaStructTag;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
-use iota_types::transaction::SenderSignedData;
+
+use crate::errors::IndexerError;
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -91,8 +93,9 @@ impl IndexedCheckpoint {
     }
 }
 
-/// Represents system state and summary info at the start and end of an epoch. Optional fields are
-/// populated at epoch boundary, since they cannot be determined at the start of the epoch.
+/// Represents system state and summary info at the start and end of an epoch.
+/// Optional fields are populated at epoch boundary, since they cannot be
+/// determined at the start of the epoch.
 #[derive(Clone, Debug, Default)]
 pub struct IndexedEpochInfo {
     pub epoch: u64,
@@ -138,9 +141,9 @@ impl IndexedEpochInfo {
         }
     }
 
-    /// Creates `IndexedEpochInfo` for epoch X-1 at the boundary of epoch X-1 to X.
-    /// `network_total_tx_num_at_last_epoch_end` is needed to determine the number of transactions
-    /// that occurred in the epoch X-1.
+    /// Creates `IndexedEpochInfo` for epoch X-1 at the boundary of epoch X-1 to
+    /// X. `network_total_tx_num_at_last_epoch_end` is needed to determine
+    /// the number of transactions that occurred in the epoch X-1.
     pub fn from_end_of_epoch_data(
         system_state_summary: &IotaSystemStateSummary,
         last_checkpoint_summary: &CertifiedCheckpointSummary,
@@ -235,7 +238,8 @@ pub struct EventIndex {
     pub type_module: String,
     /// Struct name of the event, without type parameters.
     pub type_name: String,
-    /// Type instantiation of the event, with type name and type parameters, if any.
+    /// Type instantiation of the event, with type name and type parameters, if
+    /// any.
     pub type_instantiation: String,
 }
 
@@ -288,7 +292,7 @@ impl TryFrom<i16> for ObjectStatus {
             value => {
                 return Err(IndexerError::PersistentStorageDataCorruptionError(format!(
                     "{value} as ObjectStatus"
-                )))
+                )));
             }
         })
     }
@@ -306,7 +310,7 @@ impl TryFrom<i16> for OwnerType {
             value => {
                 return Err(IndexerError::PersistentStorageDataCorruptionError(format!(
                     "{value} as OwnerType"
-                )))
+                )));
             }
         })
     }

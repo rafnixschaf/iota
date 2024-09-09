@@ -4,19 +4,14 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use tap::tap::TapFallible;
 use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
-use tracing::instrument;
-use tracing::{error, info};
-
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-
-use crate::metrics::IndexerMetrics;
-use crate::store::IndexerStore;
-use crate::types::IndexerResult;
+use tracing::{error, info, instrument};
 
 use super::{CheckpointDataToCommit, EpochToCommit};
+use crate::{metrics::IndexerMetrics, store::IndexerStore, types::IndexerResult};
 
 pub(crate) const CHECKPOINT_COMMIT_BATCH_SIZE: usize = 100;
 
@@ -189,7 +184,8 @@ async fn commit_checkpoints<S>(
         .expect("Persisting data into DB should not fail.");
 
     if is_epoch_end {
-        // The epoch has advanced so we update the configs for the new protocol version, if it has changed.
+        // The epoch has advanced so we update the configs for the new protocol version,
+        // if it has changed.
         let chain_id = state
             .get_chain_identifier()
             .await
@@ -221,8 +217,9 @@ async fn commit_checkpoints<S>(
     metrics
         .transaction_per_checkpoint
         .observe(tx_count as f64 / (last_checkpoint_seq - first_checkpoint_seq + 1) as f64);
-    // 1000.0 is not necessarily the batch size, it's to roughly map average tx commit latency to [0.1, 1] seconds,
-    // which is well covered by DB_COMMIT_LATENCY_SEC_BUCKETS.
+    // 1000.0 is not necessarily the batch size, it's to roughly map average tx
+    // commit latency to [0.1, 1] seconds, which is well covered by
+    // DB_COMMIT_LATENCY_SEC_BUCKETS.
     metrics
         .thousand_transaction_avg_db_commit_latency
         .observe(elapsed * 1000.0 / tx_count as f64);

@@ -3,29 +3,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod execution;
-pub use execution::EffectsFinality;
-pub use execution::ExecuteTransaction;
-pub use execution::ExecuteTransactionQueryParameters;
-pub use execution::TransactionExecutionResponse;
-
-use axum::extract::{Path, Query, State};
-use axum::http::StatusCode;
-use iota_sdk2::types::CheckpointSequenceNumber;
-use iota_sdk2::types::Transaction;
-use iota_sdk2::types::{TransactionDigest, TransactionEffects, TransactionEvents, UserSignature};
+use axum::{
+    extract::{Path, Query, State},
+    http::StatusCode,
+};
+pub use execution::{
+    EffectsFinality, ExecuteTransaction, ExecuteTransactionQueryParameters,
+    TransactionExecutionResponse,
+};
+use iota_sdk2::types::{
+    CheckpointSequenceNumber, Transaction, TransactionDigest, TransactionEffects,
+    TransactionEvents, UserSignature,
+};
 use tap::Pipe;
 
-use crate::openapi::ApiEndpoint;
-use crate::openapi::OperationBuilder;
-use crate::openapi::ResponseBuilder;
-use crate::openapi::RouteHandler;
-use crate::reader::StateReader;
-use crate::Direction;
-use crate::Page;
-use crate::RestError;
-use crate::RestService;
-use crate::Result;
-use crate::{accept::AcceptFormat, response::ResponseContent};
+use crate::{
+    accept::AcceptFormat,
+    openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
+    reader::StateReader,
+    response::ResponseContent,
+    Direction, Page, RestError, RestService, Result,
+};
 
 pub struct GetTransaction;
 
@@ -207,11 +205,11 @@ async fn list_transactions(
 /// A Cursor that points at a specific transaction in history.
 ///
 /// Has the format of: `<checkpoint>[.<index>]`
-/// where `<checkpoint>` is the sequence number of a checkpoint and `<index>` is the index of a
-/// transaction in the particular checkpoint.
+/// where `<checkpoint>` is the sequence number of a checkpoint and `<index>` is
+/// the index of a transaction in the particular checkpoint.
 ///
-/// `index` is optional and if omitted iteration will start at the first or last transaction in a
-/// checkpoint based on the provided `Direction`:
+/// `index` is optional and if omitted iteration will start at the first or last
+/// transaction in a checkpoint based on the provided `Direction`:
 ///   - Direction::Ascending - first
 ///   - Direction::Descending - last
 #[derive(Debug, Copy, Clone)]

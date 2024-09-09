@@ -2,36 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::env;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{env, path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use clap::*;
-use ethers::providers::Http;
-use ethers::providers::Middleware;
-use ethers::providers::Provider;
-use iota_bridge_indexer::eth_bridge_indexer::EthSubscriptionDatasource;
-use iota_bridge_indexer::eth_bridge_indexer::EthSyncDatasource;
-use tokio::task::JoinHandle;
-use tracing::info;
-
-use iota_metrics::metered_channel::channel;
-use iota_metrics::spawn_logged_monitored_task;
-use iota_metrics::start_prometheus_server;
+use ethers::providers::{Http, Middleware, Provider};
 use iota_bridge::metrics::BridgeMetrics;
-use iota_bridge_indexer::config::IndexerConfig;
-use iota_bridge_indexer::eth_bridge_indexer::EthDataMapper;
-use iota_bridge_indexer::metrics::BridgeIndexerMetrics;
-use iota_bridge_indexer::postgres_manager::{get_connection_pool, read_iota_progress_store};
-use iota_bridge_indexer::iota_bridge_indexer::{PgBridgePersistent, IotaBridgeDataMapper};
-use iota_bridge_indexer::iota_transaction_handler::handle_iota_transactions_loop;
-use iota_bridge_indexer::iota_transaction_queries::start_iota_tx_polling_task;
+use iota_bridge_indexer::{
+    config::IndexerConfig,
+    eth_bridge_indexer::{EthDataMapper, EthSubscriptionDatasource, EthSyncDatasource},
+    iota_bridge_indexer::{IotaBridgeDataMapper, PgBridgePersistent},
+    iota_transaction_handler::handle_iota_transactions_loop,
+    iota_transaction_queries::start_iota_tx_polling_task,
+    metrics::BridgeIndexerMetrics,
+    postgres_manager::{get_connection_pool, read_iota_progress_store},
+};
 use iota_config::Config;
 use iota_data_ingestion_core::DataIngestionMetrics;
-use iota_indexer_builder::indexer_builder::{BackfillStrategy, IndexerBuilder};
-use iota_indexer_builder::iota_datasource::IotaCheckpointDatasource;
+use iota_indexer_builder::{
+    indexer_builder::{BackfillStrategy, IndexerBuilder},
+    iota_datasource::IotaCheckpointDatasource,
+};
+use iota_metrics::{
+    metered_channel::channel, spawn_logged_monitored_task, start_prometheus_server,
+};
 use iota_sdk::IotaClientBuilder;
+use tokio::task::JoinHandle;
+use tracing::info;
 
 #[derive(Parser, Clone, Debug)]
 struct Args {

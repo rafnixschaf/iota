@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use clap::*;
 use std::path::PathBuf;
+
+use clap::*;
 
 #[derive(Parser)]
 #[clap(
@@ -14,8 +15,8 @@ use std::path::PathBuf;
     version
 )]
 pub enum Command {
-    /// Output a TOML config (suitable for passing into the --config parameter of the start-server
-    /// command) with all values set to their defaults.
+    /// Output a TOML config (suitable for passing into the --config parameter
+    /// of the start-server command) with all values set to their defaults.
     GenerateConfig {
         /// Optional path to an output file. Prints to `stdout` if not provided.
         output: Option<PathBuf>,

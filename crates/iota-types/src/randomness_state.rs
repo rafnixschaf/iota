@@ -6,11 +6,9 @@ use move_binary_format::{file_format::SignatureToken, CompiledModule};
 use move_bytecode_utils::resolve_struct;
 use move_core_types::{account_address::AccountAddress, ident_str, identifier::IdentStr};
 
-use crate::base_types::SequenceNumber;
-
 use crate::{
-    error::IotaResult, object::Owner, storage::ObjectStore, IOTA_FRAMEWORK_ADDRESS,
-    IOTA_RANDOMNESS_STATE_OBJECT_ID,
+    base_types::SequenceNumber, error::IotaResult, object::Owner, storage::ObjectStore,
+    IOTA_FRAMEWORK_ADDRESS, IOTA_RANDOMNESS_STATE_OBJECT_ID,
 };
 
 pub const RANDOMNESS_MODULE_NAME: &IdentStr = ident_str!("random");

@@ -2,16 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_reader::IndexerReader;
 use diesel::r2d2::R2D2Connection;
-use jsonrpsee::{core::RpcResult, RpcModule};
 use iota_json_rpc::IotaRpcModule;
 use iota_json_rpc_api::{validate_limit, ExtendedApiServer, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS};
 use iota_json_rpc_types::{
-    CheckpointedObjectID, EpochInfo, EpochPage, Page, QueryObjectsPage, IotaObjectResponseQuery,
+    CheckpointedObjectID, EpochInfo, EpochPage, IotaObjectResponseQuery, Page, QueryObjectsPage,
 };
 use iota_open_rpc::Module;
 use iota_types::iota_serde::BigInt;
+use jsonrpsee::{core::RpcResult, RpcModule};
+
+use crate::indexer_reader::IndexerReader;
 
 pub(crate) struct ExtendedApi<T: R2D2Connection + 'static> {
     inner: IndexerReader<T>,

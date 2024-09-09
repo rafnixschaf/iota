@@ -2,26 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    future::Future,
+    net::SocketAddr,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+    time::Instant,
+};
+
 use axum::{extract::Extension, http::StatusCode, routing::get, Router};
 use dashmap::DashMap;
-use parking_lot::Mutex;
-use simple_server_timing_header::Timer;
-use std::future::Future;
-use std::net::SocketAddr;
-use std::pin::Pin;
-use std::sync::Arc;
-use std::task::{Context, Poll};
-use std::time::Instant;
-
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use prometheus::{
     register_histogram_with_registry, register_int_gauge_vec_with_registry, Histogram, IntGaugeVec,
     Registry, TextEncoder,
 };
+pub use scopeguard;
+use simple_server_timing_header::Timer;
 use tap::TapFallible;
 use tracing::{warn, Span};
-
-pub use scopeguard;
 use uuid::Uuid;
 
 mod guards;
@@ -139,9 +140,10 @@ tokio::task_local! {
     static SERVER_TIMING: Arc<Mutex<Timer>>;
 }
 
-/// Create a new task-local ServerTiming context and run the provided future within it.
-/// Should be used at the top-most level of a request handler. Can be added to an axum router
-/// as a layer by using iota_service::server_timing_middleware.
+/// Create a new task-local ServerTiming context and run the provided future
+/// within it. Should be used at the top-most level of a request handler. Can be
+/// added to an axum router as a layer by using
+/// iota_service::server_timing_middleware.
 pub async fn with_new_server_timing<T>(fut: impl Future<Output = T> + Send + 'static) -> T {
     let timer = Arc::new(Mutex::new(Timer::new()));
 
@@ -155,8 +157,8 @@ pub async fn with_new_server_timing<T>(fut: impl Future<Output = T> + Send + 'st
     ret.unwrap()
 }
 
-/// Create a new task-local ServerTiming context and run the provided future within it.
-/// Only intended for use by macros within this module.
+/// Create a new task-local ServerTiming context and run the provided future
+/// within it. Only intended for use by macros within this module.
 pub async fn with_server_timing<T>(
     timer: Arc<Mutex<Timer>>,
     fut: impl Future<Output = T> + Send + 'static,
@@ -171,14 +173,15 @@ pub async fn with_server_timing<T>(
     ret.unwrap()
 }
 
-/// Get the currently active ServerTiming context. Only intended for use by macros within this module.
+/// Get the currently active ServerTiming context. Only intended for use by
+/// macros within this module.
 pub fn get_server_timing() -> Option<Arc<Mutex<Timer>>> {
     SERVER_TIMING.try_with(|timer| timer.clone()).ok()
 }
 
 /// Add a new entry to the ServerTiming header.
-/// If the caller is not currently in a ServerTiming context (created with `with_new_server_timing`),
-/// an error is logged.
+/// If the caller is not currently in a ServerTiming context (created with
+/// `with_new_server_timing`), an error is logged.
 pub fn add_server_timing(name: &str) {
     let res = SERVER_TIMING.try_with(|timer| {
         timer.lock().add(name);
@@ -191,9 +194,7 @@ pub fn add_server_timing(name: &str) {
 
 #[macro_export]
 macro_rules! monitored_future {
-    ($fut: expr) => {{
-        monitored_future!(futures, $fut, "", INFO, false)
-    }};
+    ($fut: expr) => {{ monitored_future!(futures, $fut, "", INFO, false) }};
 
     ($metric: ident, $fut: expr, $name: expr, $logging_level: ident, $logging_enabled: expr) => {{
         let location: &str = if $name.is_empty() {
@@ -303,13 +304,15 @@ impl Drop for MonitoredScopeGuard {
 }
 
 /// This function creates a named scoped object, that keeps track of
-/// - the total iterations where the scope is called in the `monitored_scope_iterations` metric.
-/// - and the total duration of the scope in the `monitored_scope_duration_ns` metric.
+/// - the total iterations where the scope is called in the
+///   `monitored_scope_iterations` metric.
+/// - and the total duration of the scope in the `monitored_scope_duration_ns`
+///   metric.
 ///
-/// The monitored scope should be single threaded, e.g. the scoped object encompass the lifetime of
-/// a select loop or guarded by mutex.
-/// Then the rate of `monitored_scope_duration_ns`, converted to the unit of sec / sec, would be
-/// how full the single threaded scope is running.
+/// The monitored scope should be single threaded, e.g. the scoped object
+/// encompass the lifetime of a select loop or guarded by mutex.
+/// Then the rate of `monitored_scope_duration_ns`, converted to the unit of sec
+/// / sec, would be how full the single threaded scope is running.
 pub fn monitored_scope(name: &'static str) -> Option<MonitoredScopeGuard> {
     let metrics = get_metrics();
     if let Some(m) = metrics {
@@ -397,9 +400,10 @@ impl<F: Sized> Drop for CancelMonitor<F> {
     }
 }
 
-/// MonitorCancellation records a cancelled = true span attribute if the future it
-/// is decorating is dropped before completion. The cancelled attribute must be added
-/// at span creation, as you cannot add new attributes after the span is created.
+/// MonitorCancellation records a cancelled = true span attribute if the future
+/// it is decorating is dropped before completion. The cancelled attribute must
+/// be added at span creation, as you cannot add new attributes after the span
+/// is created.
 pub trait MonitorCancellation {
     fn monitor_cancellation(self) -> CancelMonitor<Self>
     where
@@ -417,9 +421,9 @@ where
 
 pub type RegistryID = Uuid;
 
-/// A service to manage the prometheus registries. This service allow us to create
-/// a new Registry on demand and keep it accessible for processing/polling.
-/// The service can be freely cloned/shared across threads.
+/// A service to manage the prometheus registries. This service allow us to
+/// create a new Registry on demand and keep it accessible for
+/// processing/polling. The service can be freely cloned/shared across threads.
 #[derive(Clone)]
 pub struct RegistryService {
     // Holds a Registry that is supposed to be used
@@ -428,8 +432,8 @@ pub struct RegistryService {
 }
 
 impl RegistryService {
-    // Creates a new registry service and also adds the main/default registry that is supposed to
-    // be preserved and never get removed
+    // Creates a new registry service and also adds the main/default registry that
+    // is supposed to be preserved and never get removed
     pub fn new(default_registry: Registry) -> Self {
         Self {
             default_registry,
@@ -443,10 +447,11 @@ impl RegistryService {
         self.default_registry.clone()
     }
 
-    // Adds a new registry to the service. The corresponding RegistryID is returned so can later be
-    // used for removing the Registry. Method panics if we try to insert a registry with the same id.
-    // As this can be quite serious for the operation of the node we don't want to accidentally
-    // swap an existing registry - we expected a removal to happen explicitly.
+    // Adds a new registry to the service. The corresponding RegistryID is returned
+    // so can later be used for removing the Registry. Method panics if we try
+    // to insert a registry with the same id. As this can be quite serious for
+    // the operation of the node we don't want to accidentally swap an existing
+    // registry - we expected a removal to happen explicitly.
     pub fn add(&self, registry: Registry) -> RegistryID {
         let registry_id = Uuid::new_v4();
         if self
@@ -460,8 +465,8 @@ impl RegistryService {
         registry_id
     }
 
-    // Removes the registry from the service. If Registry existed then this method returns true,
-    // otherwise false is returned instead.
+    // Removes the registry from the service. If Registry existed then this method
+    // returns true, otherwise false is returned instead.
     pub fn remove(&self, registry_id: RegistryID) -> bool {
         self.registries_by_id.remove(&registry_id).is_some()
     }
@@ -484,11 +489,14 @@ impl RegistryService {
     }
 }
 
-/// Create a metric that measures the uptime from when this metric was constructed.
-/// The metric is labeled with:
-/// - 'process': the process type, differentiating between validator and fullnode
-/// - 'version': binary version, generally be of the format: 'semver-gitrevision'
-/// - 'chain_identifier': the identifier of the network which this process is part of
+/// Create a metric that measures the uptime from when this metric was
+/// constructed. The metric is labeled with:
+/// - 'process': the process type, differentiating between validator and
+///   fullnode
+/// - 'version': binary version, generally be of the format:
+///   'semver-gitrevision'
+/// - 'chain_identifier': the identifier of the network which this process is
+///   part of
 pub fn uptime_metric(
     process: &str,
     version: &'static str,
@@ -516,15 +524,16 @@ pub const METRICS_ROUTE: &str = "/metrics";
 
 // Creates a new http server that has as a sole purpose to expose
 // and endpoint that prometheus agent can use to poll for the metrics.
-// A RegistryService is returned that can be used to get access in prometheus Registries.
+// A RegistryService is returned that can be used to get access in prometheus
+// Registries.
 pub fn start_prometheus_server(addr: SocketAddr) -> RegistryService {
     let registry = Registry::new();
 
     let registry_service = RegistryService::new(registry);
 
     if cfg!(msim) {
-        // prometheus uses difficult-to-support features such as TcpSocket::from_raw_fd(), so we
-        // can't yet run it in the simulator.
+        // prometheus uses difficult-to-support features such as
+        // TcpSocket::from_raw_fd(), so we can't yet run it in the simulator.
         warn!("not starting prometheus server in simulator");
         return registry_service;
     }
@@ -558,9 +567,9 @@ pub async fn metrics(
 
 #[cfg(test)]
 mod tests {
+    use prometheus::{IntCounter, Registry};
+
     use crate::RegistryService;
-    use prometheus::IntCounter;
-    use prometheus::Registry;
 
     #[test]
     fn registry_service() {

@@ -2,25 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Immutable key/value store trait for storing/retrieving transactions, effects, and events
-//! to/from a scalable.
+//! Immutable key/value store trait for storing/retrieving transactions,
+//! effects, and events to/from a scalable.
+
+use std::{sync::Arc, time::Instant};
+
+use async_trait::async_trait;
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber, VersionNumber},
+    digests::{
+        CheckpointContentsDigest, CheckpointDigest, TransactionDigest, TransactionEventsDigest,
+    },
+    effects::{TransactionEffects, TransactionEvents},
+    error::{IotaError, IotaResult, UserInputError},
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
+    },
+    object::Object,
+    transaction::Transaction,
+};
+use tracing::instrument;
 
 use crate::key_value_store_metrics::KeyValueStoreMetrics;
-use async_trait::async_trait;
-use std::sync::Arc;
-use std::time::Instant;
-use iota_types::base_types::{ObjectID, SequenceNumber, VersionNumber};
-use iota_types::digests::{
-    CheckpointContentsDigest, CheckpointDigest, TransactionDigest, TransactionEventsDigest,
-};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
-};
-use iota_types::object::Object;
-use iota_types::transaction::Transaction;
-use tracing::instrument;
 
 pub type KVStoreTransactionData = (
     Vec<Option<Transaction>>,
@@ -54,7 +57,8 @@ impl TransactionKeyValueStore {
         }
     }
 
-    /// Generic multi_get, allows implementors to get heterogenous values with a single round trip.
+    /// Generic multi_get, allows implementors to get heterogenous values with a
+    /// single round trip.
     pub async fn multi_get(
         &self,
         transactions: &[TransactionDigest],
@@ -291,8 +295,8 @@ impl TransactionKeyValueStore {
             .map(|(_, _, events)| events)
     }
 
-    /// Convenience method for fetching single digest, and returning an error if it's not found.
-    /// Prefer using multi_get_tx whenever possible.
+    /// Convenience method for fetching single digest, and returning an error if
+    /// it's not found. Prefer using multi_get_tx whenever possible.
     pub async fn get_tx(&self, digest: TransactionDigest) -> IotaResult<Transaction> {
         self.multi_get_tx(&[digest])
             .await?
@@ -302,8 +306,9 @@ impl TransactionKeyValueStore {
             .ok_or(IotaError::TransactionNotFound { digest })
     }
 
-    /// Convenience method for fetching single digest, and returning an error if it's not found.
-    /// Prefer using multi_get_fx_by_tx_digest whenever possible.
+    /// Convenience method for fetching single digest, and returning an error if
+    /// it's not found. Prefer using multi_get_fx_by_tx_digest whenever
+    /// possible.
     pub async fn get_fx_by_tx_digest(
         &self,
         digest: TransactionDigest,
@@ -316,8 +321,8 @@ impl TransactionKeyValueStore {
             .ok_or(IotaError::TransactionNotFound { digest })
     }
 
-    /// Convenience method for fetching single digest, and returning an error if it's not found.
-    /// Prefer using multi_get_events whenever possible.
+    /// Convenience method for fetching single digest, and returning an error if
+    /// it's not found. Prefer using multi_get_events whenever possible.
     pub async fn get_events(
         &self,
         digest: TransactionEventsDigest,
@@ -330,8 +335,9 @@ impl TransactionKeyValueStore {
             .ok_or(IotaError::TransactionEventsNotFound { digest })
     }
 
-    /// Convenience method for fetching single checkpoint, and returning an error if it's not found.
-    /// Prefer using multi_get_checkpoints_summaries whenever possible.
+    /// Convenience method for fetching single checkpoint, and returning an
+    /// error if it's not found. Prefer using
+    /// multi_get_checkpoints_summaries whenever possible.
     pub async fn get_checkpoint_summary(
         &self,
         checkpoint: CheckpointSequenceNumber,
@@ -346,8 +352,9 @@ impl TransactionKeyValueStore {
             })
     }
 
-    /// Convenience method for fetching single checkpoint, and returning an error if it's not found.
-    /// Prefer using multi_get_checkpoints_contents whenever possible.
+    /// Convenience method for fetching single checkpoint, and returning an
+    /// error if it's not found. Prefer using multi_get_checkpoints_contents
+    /// whenever possible.
     pub async fn get_checkpoint_contents(
         &self,
         checkpoint: CheckpointSequenceNumber,
@@ -362,8 +369,9 @@ impl TransactionKeyValueStore {
             })
     }
 
-    /// Convenience method for fetching single checkpoint, and returning an error if it's not found.
-    /// Prefer using multi_get_checkpoints_summaries_by_digest whenever possible.
+    /// Convenience method for fetching single checkpoint, and returning an
+    /// error if it's not found. Prefer using
+    /// multi_get_checkpoints_summaries_by_digest whenever possible.
     pub async fn get_checkpoint_summary_by_digest(
         &self,
         digest: CheckpointDigest,
@@ -378,8 +386,9 @@ impl TransactionKeyValueStore {
             })
     }
 
-    /// Convenience method for fetching single checkpoint, and returning an error if it's not found.
-    /// Prefer using multi_get_checkpoints_contents_by_digest whenever possible.
+    /// Convenience method for fetching single checkpoint, and returning an
+    /// error if it's not found. Prefer using
+    /// multi_get_checkpoints_contents_by_digest whenever possible.
     pub async fn get_checkpoint_contents_by_digest(
         &self,
         digest: CheckpointContentsDigest,
@@ -419,11 +428,13 @@ impl TransactionKeyValueStore {
     }
 }
 
-/// Immutable key/value store trait for storing/retrieving transactions, effects, and events.
-/// Only defines multi_get/multi_put methods to discourage single key/value operations.
+/// Immutable key/value store trait for storing/retrieving transactions,
+/// effects, and events. Only defines multi_get/multi_put methods to discourage
+/// single key/value operations.
 #[async_trait]
 pub trait TransactionKeyValueStoreTrait {
-    /// Generic multi_get, allows implementors to get heterogenous values with a single round trip.
+    /// Generic multi_get, allows implementors to get heterogenous values with a
+    /// single round trip.
     async fn multi_get(
         &self,
         transactions: &[TransactionDigest],
@@ -431,7 +442,8 @@ pub trait TransactionKeyValueStoreTrait {
         events: &[TransactionEventsDigest],
     ) -> IotaResult<KVStoreTransactionData>;
 
-    /// Generic multi_get to allow implementors to get heterogenous values with a single round trip.
+    /// Generic multi_get to allow implementors to get heterogenous values with
+    /// a single round trip.
     async fn multi_get_checkpoints(
         &self,
         checkpoint_summaries: &[CheckpointSequenceNumber],
@@ -457,10 +469,11 @@ pub trait TransactionKeyValueStoreTrait {
     ) -> IotaResult<Vec<Option<CheckpointSequenceNumber>>>;
 }
 
-/// A TransactionKeyValueStoreTrait that falls back to a secondary store for any key for which the
-/// primary store returns None.
+/// A TransactionKeyValueStoreTrait that falls back to a secondary store for any
+/// key for which the primary store returns None.
 ///
-/// Will be used to check the local rocksdb store, before falling back to a remote scalable store.
+/// Will be used to check the local rocksdb store, before falling back to a
+/// remote scalable store.
 pub struct FallbackTransactionKVStore {
     primary: TransactionKeyValueStore,
     fallback: TransactionKeyValueStore,

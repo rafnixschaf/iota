@@ -2,47 +2,46 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::test_utils::make_transfer_object_transaction;
-use crate::test_utils::make_transfer_iota_transaction;
-use move_core_types::{account_address::AccountAddress, ident_str};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use shared_crypto::intent::{Intent, IntentScope};
-use std::collections::BTreeMap;
-use std::collections::HashSet;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::{BTreeMap, HashSet},
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
+
 use iota_authority_aggregation::quorum_map_then_reduce_with_timeout;
+use iota_framework::BuiltInFramework;
 use iota_macros::sim_test;
 use iota_move_build::BuildConfig;
-use iota_types::crypto::get_key_pair_from_rng;
-use iota_types::crypto::{get_key_pair, AccountKeyPair, AuthorityKeyPair};
-use iota_types::crypto::{AuthoritySignature, Signer};
-use iota_types::crypto::{KeypairTraits, Signature};
-use iota_types::object::Object;
-use iota_types::transaction::*;
-use iota_types::utils::create_fake_transaction;
-
-use super::*;
-use crate::authority_client::AuthorityAPI;
-use crate::test_authority_clients::{
-    HandleTransactionTestAuthorityClient, LocalAuthorityClient, LocalAuthorityClientFaultConfig,
-    MockAuthorityApi,
-};
-use crate::test_utils::init_local_authorities;
-use iota_framework::BuiltInFramework;
-use iota_types::utils::to_sender_signed_transaction;
-use tokio::time::Instant;
-
 #[cfg(msim)]
 use iota_simulator::configs::constant_latency_ms;
-use iota_types::effects::{
-    TestEffectsBuilder, TransactionEffects, TransactionEffectsAPI, TransactionEvents,
+use iota_types::{
+    crypto::{
+        get_key_pair, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair, AuthoritySignature,
+        KeypairTraits, Signature, Signer,
+    },
+    effects::{TestEffectsBuilder, TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
+    messages_grpc::{HandleTransactionResponse, TransactionStatus, VerifiedObjectInfoResponse},
+    object::Object,
+    transaction::*,
+    utils::{create_fake_transaction, to_sender_signed_transaction},
 };
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use iota_types::messages_grpc::{
-    HandleTransactionResponse, TransactionStatus, VerifiedObjectInfoResponse,
+use move_core_types::{account_address::AccountAddress, ident_str};
+use rand::{rngs::StdRng, SeedableRng};
+use shared_crypto::intent::{Intent, IntentScope};
+use tokio::time::Instant;
+
+use super::*;
+use crate::{
+    authority_client::AuthorityAPI,
+    test_authority_clients::{
+        HandleTransactionTestAuthorityClient, LocalAuthorityClient,
+        LocalAuthorityClientFaultConfig, MockAuthorityApi,
+    },
+    test_utils::{
+        init_local_authorities, make_transfer_iota_transaction, make_transfer_object_transaction,
+    },
 };
 
 macro_rules! assert_matches {
@@ -89,7 +88,8 @@ pub fn create_object_move_transaction(
     gas_object_ref: ObjectRef,
     gas_price: u64,
 ) -> Transaction {
-    // When creating an object_basics object, we provide the value (u64) and address which will own the object
+    // When creating an object_basics object, we provide the value (u64) and address
+    // which will own the object
     let arguments = vec![
         CallArg::Pure(value.to_le_bytes().to_vec()),
         CallArg::Pure(bcs::to_bytes(&AccountAddress::from(dest)).unwrap()),
@@ -522,10 +522,12 @@ async fn test_map_reducer() {
 
 #[sim_test]
 async fn test_process_transaction_fault_success() {
-    // This test exercises the 4 different possible failing case when one authority is faulty.
-    // A transaction is sent to all authories, however one of them will error out either before or after processing the transaction.
-    // A cert should still be created, and sent out to all authorities again. This time
-    // a different authority errors out either before or after processing the cert.
+    // This test exercises the 4 different possible failing case when one authority
+    // is faulty. A transaction is sent to all authories, however one of them
+    // will error out either before or after processing the transaction.
+    // A cert should still be created, and sent out to all authorities again. This
+    // time a different authority errors out either before or after processing
+    // the cert.
     for i in 0..4 {
         let mut config_before_process_transaction = LocalAuthorityClientFaultConfig::default();
         if i % 2 == 0 {
@@ -572,7 +574,8 @@ async fn test_process_transaction_fault_fail() {
 
 #[sim_test]
 async fn test_process_certificate_fault_fail() {
-    // Similar to test_process_transaction_fault_fail but tested on the process_certificate phase.
+    // Similar to test_process_transaction_fault_fail but tested on the
+    // process_certificate phase.
     let fail_before_process_certificate_config = LocalAuthorityClientFaultConfig {
         fail_before_handle_confirmation: true,
         ..Default::default()
@@ -631,8 +634,9 @@ async fn test_quorum_once_with_timeout() {
         Arc::try_unwrap(log).unwrap().into_inner().unwrap()
     };
 
-    // New requests are started every 50ms even though each request hangs for 1000ms.
-    // The 15th request succeeds, and we exit before processing the remaining authorities.
+    // New requests are started every 50ms even though each request hangs for
+    // 1000ms. The 15th request succeeds, and we exit before processing the
+    // remaining authorities.
     assert_eq!(
         case(agg.clone(), 1000).await,
         (0..15)
@@ -641,14 +645,16 @@ async fn test_quorum_once_with_timeout() {
     );
 
     *count.lock().unwrap() = 0;
-    // Here individual requests time out relatively quickly (100ms), but we continue increasing
-    // the parallelism every 50ms
+    // Here individual requests time out relatively quickly (100ms), but we continue
+    // increasing the parallelism every 50ms
     assert_eq!(
         case(agg.clone(), 100).await,
-        [0, 50, 100, 100, 150, 150, 200, 200, 200, 250, 250, 250, 300, 300, 300]
-            .iter()
-            .map(|d| Duration::from_millis(*d))
-            .collect::<Vec<Duration>>()
+        [
+            0, 50, 100, 100, 150, 150, 200, 200, 200, 250, 250, 250, 300, 300, 300
+        ]
+        .iter()
+        .map(|d| Duration::from_millis(*d))
+        .collect::<Vec<Duration>>()
     );
 }
 
@@ -744,8 +750,8 @@ async fn test_handle_transaction_fork() {
         666, // this is a dummy value which does not matter
     );
 
-    // Non-quorum of effects without a retryable majority indicating a safety violation
-    // or a fork
+    // Non-quorum of effects without a retryable majority indicating a safety
+    // violation or a fork
 
     // All Validators gives signed-tx
     set_tx_info_response_with_signed_tx(
@@ -905,7 +911,8 @@ async fn test_handle_transaction_response() {
     };
 
     println!("Case 0 - Non-retryable Transaction (Unknown Error)");
-    // Validators give invalid response because of the initial value set for their responses.
+    // Validators give invalid response because of the initial value set for their
+    // responses.
     let agg = get_genesis_agg(authorities.clone(), clients.clone());
 
     assert_resp_err(
@@ -970,7 +977,8 @@ async fn test_handle_transaction_response() {
         clients.get_mut(name).unwrap().reset_tx_info_response();
     }
     let agg = get_genesis_agg(authorities.clone(), clients.clone());
-    // We have a valid cert because val-0 has it. Note we can't form a cert based on what val-1 and val-2 give
+    // We have a valid cert because val-0 has it. Note we can't form a cert based on
+    // what val-1 and val-2 give
     agg.process_transaction(tx.clone().into(), Some(client_ip))
         .await
         .unwrap();
@@ -1039,7 +1047,9 @@ async fn test_handle_transaction_response() {
         .await
         .unwrap();
 
-    println!("Case 6 - Retryable Transaction (most staked effects stake + retryable stake >= 2f+1 with QuorumFailedToGetEffectsQuorumWhenProcessingTransaction Error)");
+    println!(
+        "Case 6 - Retryable Transaction (most staked effects stake + retryable stake >= 2f+1 with QuorumFailedToGetEffectsQuorumWhenProcessingTransaction Error)"
+    );
     // Val 0, 1 & 2 returns retryable error
     set_retryable_tx_info_response_error(&mut clients, &authority_keys);
     // Validators 3 returns tx-cert with epoch 1
@@ -1107,7 +1117,8 @@ async fn test_handle_transaction_response() {
         .unwrap()
         .set_tx_info_response(resp);
 
-    // Validators 3 returns different tx-effects without cert for epoch 1 (simulating byzantine behavior)
+    // Validators 3 returns different tx-effects without cert for epoch 1
+    // (simulating byzantine behavior)
     let effects = TestEffectsBuilder::new(cert_epoch_0.data())
         .with_status(ExecutionStatus::Failure {
             error: ExecutionFailureStatus::InvalidGasObject,
@@ -1193,7 +1204,8 @@ async fn test_handle_transaction_response() {
         .unwrap()
         .set_tx_info_response(resp);
 
-    // Validators 3 returns tx2-effects without cert for epoch 1 (simulating byzantine behavior)
+    // Validators 3 returns tx2-effects without cert for epoch 1 (simulating
+    // byzantine behavior)
     let effects = TestEffectsBuilder::new(cert_epoch_0_2.data())
         .with_status(ExecutionStatus::Failure {
             error: ExecutionFailureStatus::InsufficientGas,
@@ -1305,11 +1317,17 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
-    // TODO: change to use a move transaction which makes package error more realistic
+    // TODO: change to use a move transaction which makes package error more
+    // realistic
     println!("Case 8.1 - Retryable Transaction (PackageNotFound Error)");
     // < 2f+1 package not found errors
     for (name, _) in authority_keys.iter().skip(2) {
@@ -1328,7 +1346,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1352,7 +1375,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1375,7 +1403,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1398,7 +1431,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1426,7 +1464,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 }
@@ -1637,13 +1680,16 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                IotaError::ObjectLockConflict { .. } | IotaError::ByzantineAuthoritySuspicion { .. }
+                IotaError::ObjectLockConflict { .. }
+                    | IotaError::ByzantineAuthoritySuspicion { .. }
             )
         },
     )
     .await;
 
-    println!("Case 3.1 - Non-retryable Tx (Mixed Response - 1 conflict, 1 signed, 1 non-retryable, 1 retryable)");
+    println!(
+        "Case 3.1 - Non-retryable Tx (Mixed Response - 1 conflict, 1 signed, 1 non-retryable, 1 retryable)"
+    );
     // Validator 1 returns a signed tx1
     set_tx_info_response_with_signed_tx(&mut clients, &authority_keys, &tx1, 0);
     // Validator 2 returns a conflicting tx2
@@ -1792,7 +1838,8 @@ async fn test_handle_conflicting_transaction_response() {
         .unwrap()
         .into_cert_for_testing();
 
-    // Validators have moved to epoch 2 and return tx-effects with epoch 2, client expects 1
+    // Validators have moved to epoch 2 and return tx-effects with epoch 2, client
+    // expects 1
     let effects = TestEffectsBuilder::new(cert_epoch_1.data()).build();
     set_tx_info_response_with_cert_and_effects(
         &mut clients,
@@ -1882,7 +1929,8 @@ async fn test_handle_overload_response() {
     };
     let rpc_error = IotaError::RpcError("RPC".into(), "Error".into());
 
-    // Have 2f + 1 validators return the overload error and we should get the `SystemOverload` error.
+    // Have 2f + 1 validators return the overload error and we should get the
+    // `SystemOverload` error.
     set_retryable_tx_info_response_error(&mut clients, &authority_keys);
     set_tx_info_response_with_error(&mut clients, authority_keys.iter().skip(1), overload_error);
 
@@ -1908,8 +1956,8 @@ async fn test_handle_overload_response() {
     )
     .await;
 
-    // Change one of the valdiators' errors to RPC error so the system is considered not overloaded now and a `RetryableTransaction`
-    // should be returned.
+    // Change one of the valdiators' errors to RPC error so the system is considered
+    // not overloaded now and a `RetryableTransaction` should be returned.
     clients
         .get_mut(&authority_keys[1].0)
         .unwrap()
@@ -1936,7 +1984,8 @@ async fn test_handle_overload_response() {
     .await;
 }
 
-// Tests that authority aggregator can aggregate IotaError::ValidatorOverloadedRetryAfter into
+// Tests that authority aggregator can aggregate
+// IotaError::ValidatorOverloadedRetryAfter into
 // AggregatorProcessTransactionError::SystemOverloadRetryAfter.
 #[tokio::test]
 async fn test_handle_overload_retry_response() {
@@ -1955,8 +2004,9 @@ async fn test_handle_overload_retry_response() {
 
     let rpc_error = IotaError::RpcError("RPC".into(), "Error".into());
 
-    // Have all validators return the overload error and we should get the `SystemOverload` error.
-    // Uses different retry_after_secs for each validator.
+    // Have all validators return the overload error and we should get the
+    // `SystemOverload` error. Uses different retry_after_secs for each
+    // validator.
     for (index, (name, _)) in authority_keys.iter().enumerate() {
         clients.get_mut(name).unwrap().set_tx_info_response_error(
             IotaError::ValidatorOverloadedRetryAfter {
@@ -1965,8 +2015,8 @@ async fn test_handle_overload_retry_response() {
         );
     }
     let agg = get_genesis_agg(authorities.clone(), clients.clone());
-    // We should get the `SystemOverloadRetryAfter` error with the retry_after_secs corresponding to the quorum
-    // threshold of validators.
+    // We should get the `SystemOverloadRetryAfter` error with the retry_after_secs
+    // corresponding to the quorum threshold of validators.
     assert_resp_err(
         &agg,
         txn.clone(),
@@ -1988,9 +2038,10 @@ async fn test_handle_overload_retry_response() {
     )
     .await;
 
-    // Have 2f + 1 validators return the overload error (by setting one authority returning RPC error) and we
-    // should still get the `SystemOverload` error. The retry_after_secs corresponding to the quorum threshold
-    // now is the max of the retry_after_secs of the validators.
+    // Have 2f + 1 validators return the overload error (by setting one authority
+    // returning RPC error) and we should still get the `SystemOverload` error.
+    // The retry_after_secs corresponding to the quorum threshold now is the max
+    // of the retry_after_secs of the validators.
     clients
         .get_mut(&authority_keys[0].0)
         .unwrap()
@@ -2017,8 +2068,8 @@ async fn test_handle_overload_retry_response() {
     )
     .await;
 
-    // Change another valdiators' errors to RPC error so the system is considered not overloaded now and a `RetryableTransaction`
-    // should be returned.
+    // Change another valdiators' errors to RPC error so the system is considered
+    // not overloaded now and a `RetryableTransaction` should be returned.
     clients
         .get_mut(&authority_keys[1].0)
         .unwrap()
@@ -2057,8 +2108,9 @@ async fn test_early_exit_with_too_many_conflicts() {
         666, // this is a dummy value which does not matter
     );
 
-    // Now we have 3 conflicting transactions each with 1 stake. There is no hope to get quorum for any of them.
-    // So we expect to exit early before getting the final response (from whom is still sleeping).
+    // Now we have 3 conflicting transactions each with 1 stake. There is no hope to
+    // get quorum for any of them. So we expect to exit early before getting the
+    // final response (from whom is still sleeping).
     set_tx_info_response_with_error(
         &mut clients,
         authority_keys.iter().take(1),
@@ -2130,13 +2182,16 @@ async fn test_byzantine_authority_sig_aggregation() {
     assert!(run_aggregator(2, 6).await.is_ok());
     assert!(run_aggregator(3, 6).await.is_err());
 
-    // For 4 validators, we need 2f+1 = 3 for quorum for signing transaction effects.
+    // For 4 validators, we need 2f+1 = 3 for quorum for signing transaction
+    // effects.
     assert!(process_with_cert(1, 4).await.is_ok());
 
-    // For 6 validators, we need 2f+1 = 5 for quorum for signing transaction effects.
+    // For 6 validators, we need 2f+1 = 5 for quorum for signing transaction
+    // effects.
     assert!(process_with_cert(1, 6).await.is_ok());
 
-    // For 12 validators, we need 2f+1 = 9 for quorum for signing transaction effects.
+    // For 12 validators, we need 2f+1 = 9 for quorum for signing transaction
+    // effects.
     assert!(process_with_cert(1, 12).await.is_ok());
     assert!(process_with_cert(2, 12).await.is_ok());
     assert!(process_with_cert(3, 12).await.is_ok());
@@ -2165,8 +2220,8 @@ async fn test_fork_panic_process_cert_4_auths() {
 #[sim_test]
 async fn test_process_transaction_again() {
     // This test exercises the newly_formed field in the ProcessTransactionResult.
-    // Specifically, when some validator already has a certificate for a given transaction,
-    // we should see this field set to true in the result.
+    // Specifically, when some validator already has a certificate for a given
+    // transaction, we should see this field set to true in the result.
 
     telemetry_subscribers::init_for_testing();
     let (authorities, clients, authority_keys) = make_fake_authorities();
@@ -2249,8 +2304,8 @@ fn make_fake_authorities() -> (
     (authorities, clients, authority_keys)
 }
 
-// Aggregator aggregate signatures from authorities and process the transaction as signed.
-// Test [fn handle_transaction_response_with_signed].
+// Aggregator aggregate signatures from authorities and process the transaction
+// as signed. Test [fn handle_transaction_response_with_signed].
 async fn run_aggregator(
     num_byzantines: u8,
     num_authorities: u8,
@@ -2301,7 +2356,8 @@ async fn run_aggregator(
                 secret,
             )
         };
-        // For each client, set the response with the correspond good/bad auth signatures.
+        // For each client, set the response with the correspond good/bad auth
+        // signatures.
         let resp = HandleTransactionResponse {
             status: TransactionStatus::Signed(auth_signature),
         };
@@ -2313,8 +2369,8 @@ async fn run_aggregator(
         .await
 }
 
-// Aggregator aggregate signatures from authorities and process the transaction as executed.
-// Test [fn handle_transaction_response_with_executed].
+// Aggregator aggregate signatures from authorities and process the transaction
+// as executed. Test [fn handle_transaction_response_with_executed].
 async fn process_with_cert(
     num_byzantines: u8,
     num_authorities: u8,

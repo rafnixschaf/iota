@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::QueryExecutor;
-use crate::{config::Limits, error::Error, metrics::Metrics};
+use std::{fmt, time::Instant};
+
 use async_trait::async_trait;
 use diesel::{
     pg::Pg,
@@ -11,12 +11,14 @@ use diesel::{
     query_dsl::LoadQuery,
     QueryResult, RunQueryDsl,
 };
-use std::fmt;
-use std::time::Instant;
-use iota_indexer::indexer_reader::IndexerReader;
-
-use iota_indexer::{run_query_async, run_query_repeatable_async, spawn_read_only_blocking};
+use iota_indexer::{
+    indexer_reader::IndexerReader, run_query_async, run_query_repeatable_async,
+    spawn_read_only_blocking,
+};
 use tracing::error;
+
+use super::QueryExecutor;
+use crate::{config::Limits, error::Error, metrics::Metrics};
 
 #[derive(Clone)]
 pub(crate) struct PgExecutor {
@@ -131,14 +133,15 @@ pub(crate) fn bytea_literal(slice: &[u8]) -> ByteaLiteral<'_> {
     ByteaLiteral(slice)
 }
 
-/// Support for calculating estimated query cost using EXPLAIN and then logging it.
+/// Support for calculating estimated query cost using EXPLAIN and then logging
+/// it.
 mod query_cost {
-    use super::*;
-
     use diesel::{query_builder::AstPass, sql_types::Text, PgConnection, QueryResult};
     use serde_json::Value;
     use tap::{TapFallible, TapOptional};
     use tracing::{debug, info, warn};
+
+    use super::*;
 
     #[derive(Debug, Clone, Copy, QueryId)]
     struct Explained<Q> {
@@ -201,8 +204,6 @@ mod query_cost {
 
 #[cfg(all(test, feature = "pg_integration"))]
 mod tests {
-    use super::*;
-    use crate::config::ConnectionConfig;
     use diesel::QueryDsl;
     use iota_framework::BuiltInFramework;
     use iota_indexer::{
@@ -211,6 +212,9 @@ mod tests {
         schema::objects,
         types::IndexedObject,
     };
+
+    use super::*;
+    use crate::config::ConnectionConfig;
 
     #[test]
     fn test_query_cost() {

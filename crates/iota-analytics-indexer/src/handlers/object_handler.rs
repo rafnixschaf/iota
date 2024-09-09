@@ -2,27 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::path::Path;
+
 use anyhow::Result;
 use fastcrypto::encoding::{Base64, Encoding};
-use std::path::Path;
 use iota_data_ingestion_core::Worker;
-use iota_types::SYSTEM_PACKAGE_ADDRESSES;
-use tokio::sync::Mutex;
-
 use iota_json_rpc_types::IotaMoveStruct;
 use iota_package_resolver::Resolver;
 use iota_rest_api::{CheckpointData, CheckpointTransaction};
-use iota_types::effects::TransactionEffects;
-use iota_types::object::Object;
+use iota_types::{effects::TransactionEffects, object::Object, SYSTEM_PACKAGE_ADDRESSES};
+use tokio::sync::Mutex;
 
-use crate::handlers::{
-    get_move_struct, get_owner_address, get_owner_type, initial_shared_version, AnalyticsHandler,
-    ObjectStatusTracker,
+use crate::{
+    handlers::{
+        get_move_struct, get_owner_address, get_owner_type, initial_shared_version,
+        AnalyticsHandler, ObjectStatusTracker,
+    },
+    package_store::{LocalDBPackageStore, PackageCache},
+    tables::{ObjectEntry, ObjectStatus},
+    FileType,
 };
-
-use crate::package_store::{LocalDBPackageStore, PackageCache};
-use crate::tables::{ObjectEntry, ObjectStatus};
-use crate::FileType;
 
 pub struct ObjectHandler {
     state: Mutex<State>,

@@ -2,22 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_builder::{DataSender, Datasource};
+use std::path::PathBuf;
+
 use anyhow::Error;
 use async_trait::async_trait;
-use iota_metrics::{metered_channel, spawn_monitored_task};
-use std::path::PathBuf;
 use iota_data_ingestion_core::{
     DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, Worker, WorkerPool,
 };
-use iota_types::base_types::TransactionDigest;
-use iota_types::full_checkpoint_content::CheckpointData as IotaCheckpointData;
-use iota_types::full_checkpoint_content::CheckpointTransaction;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use tokio::sync::oneshot;
-use tokio::sync::oneshot::Sender;
-use tokio::task::JoinHandle;
+use iota_metrics::{metered_channel, spawn_monitored_task};
+use iota_types::{
+    base_types::TransactionDigest,
+    full_checkpoint_content::{CheckpointData as IotaCheckpointData, CheckpointTransaction},
+    messages_checkpoint::CheckpointSequenceNumber,
+};
+use tokio::{
+    sync::{oneshot, oneshot::Sender},
+    task::JoinHandle,
+};
 use tracing::info;
+
+use crate::indexer_builder::{DataSender, Datasource};
 
 pub struct IotaCheckpointDatasource {
     remote_store_url: String,

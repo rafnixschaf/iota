@@ -40,9 +40,10 @@ impl CommitVoteMonitor {
     }
 
     // Finds the highest commit index certified by a quorum.
-    // When an authority votes for commit index S, it is also voting for all commit indices 1 <= i < S.
-    // So the quorum commit index is the smallest index S such that the sum of stakes of authorities
-    // voting for commit indices >= S passes the quorum threshold.
+    // When an authority votes for commit index S, it is also voting for all commit
+    // indices 1 <= i < S. So the quorum commit index is the smallest index S
+    // such that the sum of stakes of authorities voting for commit indices >= S
+    // passes the quorum threshold.
     pub(crate) fn quorum_commit_index(&self) -> CommitIndex {
         let highest_voted_commits = self.highest_voted_commits.lock();
         let mut highest_voted_commits = highest_voted_commits

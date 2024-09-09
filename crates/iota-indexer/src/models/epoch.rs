@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use diesel::{Insertable, Queryable, Selectable};
-
-use crate::schema::epochs;
-use crate::types::IndexedEpochInfo;
-use crate::{errors::IndexerError, schema::feature_flags, schema::protocol_configs};
 use iota_json_rpc_types::{EndOfEpochInfo, EpochInfo};
 use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
+
+use crate::{
+    errors::IndexerError,
+    schema::{epochs, feature_flags, protocol_configs},
+    types::IndexedEpochInfo,
+};
 
 #[derive(Queryable, Insertable, Debug, Clone, Default)]
 #[diesel(table_name = epochs)]

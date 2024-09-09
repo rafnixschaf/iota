@@ -3,35 +3,33 @@
 // SPDX-License-Identifier: Apache-2.0
 #![recursion_limit = "256"]
 
-use std::net::SocketAddr;
-use std::time::Duration;
+use std::{net::SocketAddr, path::PathBuf, time::Duration};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use diesel::r2d2::R2D2Connection;
+use errors::IndexerError;
+use iota_json_rpc::{JsonRpcServerBuilder, ServerHandle, ServerType};
+use iota_json_rpc_api::CLIENT_SDK_TYPE_HEADER;
+use iota_metrics::spawn_monitored_task;
+use iota_types::base_types::{IotaAddress, ObjectID};
 use jsonrpsee::http_client::{HeaderMap, HeaderValue, HttpClient, HttpClientBuilder};
 use metrics::IndexerMetrics;
-use iota_metrics::spawn_monitored_task;
 use prometheus::Registry;
 use secrecy::{ExposeSecret, Secret};
-use std::path::PathBuf;
-use iota_types::base_types::{ObjectID, IotaAddress};
 use system_package_task::SystemPackageTask;
 use tokio::runtime::Handle;
 use tokio_util::sync::CancellationToken;
 use tracing::warn;
 use url::Url;
 
-use iota_json_rpc::ServerType;
-use iota_json_rpc::{JsonRpcServerBuilder, ServerHandle};
-use iota_json_rpc_api::CLIENT_SDK_TYPE_HEADER;
-
-use crate::apis::{
-    CoinReadApi, ExtendedApi, GovernanceReadApi, IndexerApi, MoveUtilsApi, ReadApi,
-    TransactionBuilderApi, WriteApi,
+use crate::{
+    apis::{
+        CoinReadApi, ExtendedApi, GovernanceReadApi, IndexerApi, MoveUtilsApi, ReadApi,
+        TransactionBuilderApi, WriteApi,
+    },
+    indexer_reader::IndexerReader,
 };
-use crate::indexer_reader::IndexerReader;
-use errors::IndexerError;
 
 pub mod apis;
 pub mod db;
@@ -111,15 +109,33 @@ impl IndexerConfig {
     }
 
     pub fn get_db_url(&self) -> Result<Secret<String>, anyhow::Error> {
-        match (&self.db_url, &self.db_user_name, &self.db_password, &self.db_host, &self.db_port, &self.db_name) {
+        match (
+            &self.db_url,
+            &self.db_user_name,
+            &self.db_password,
+            &self.db_host,
+            &self.db_port,
+            &self.db_name,
+        ) {
             (Some(db_url), _, _, _, _, _) => Ok(db_url.clone()),
-            (None, Some(db_user_name), Some(db_password), Some(db_host), Some(db_port), Some(db_name)) => {
-                Ok(secrecy::Secret::new(format!(
-                    "postgres://{}:{}@{}:{}/{}",
-                    db_user_name, db_password.expose_secret(), db_host, db_port, db_name
-                )))
-            }
-            _ => Err(anyhow!("Invalid db connection config, either db_url or (db_user_name, db_password, db_host, db_port, db_name) must be provided")),
+            (
+                None,
+                Some(db_user_name),
+                Some(db_password),
+                Some(db_host),
+                Some(db_port),
+                Some(db_name),
+            ) => Ok(secrecy::Secret::new(format!(
+                "postgres://{}:{}@{}:{}/{}",
+                db_user_name,
+                db_password.expose_secret(),
+                db_host,
+                db_port,
+                db_name
+            ))),
+            _ => Err(anyhow!(
+                "Invalid db connection config, either db_url or (db_user_name, db_password, db_host, db_port, db_name) must be provided"
+            )),
         }
     }
 }

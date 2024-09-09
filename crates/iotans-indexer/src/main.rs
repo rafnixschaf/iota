@@ -2,18 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{env, path::PathBuf};
+
 use anyhow::Result;
 use async_trait::async_trait;
 use diesel::{dsl::sql, BoolExpressionMethods, Connection, ExpressionMethods, RunQueryDsl};
-use iota_service::metrics::start_basic_prometheus_server;
-use prometheus::Registry;
-use std::path::PathBuf;
+use dotenvy::dotenv;
 use iota_data_ingestion_core::{
     DataIngestionMetrics, FileProgressStore, IndexerExecutor, ReaderOptions, Worker, WorkerPool,
 };
+use iota_service::metrics::start_basic_prometheus_server;
 use iota_types::full_checkpoint_content::CheckpointData;
-use tracing::info;
-
 use iotans_indexer::{
     get_connection_pool,
     indexer::{format_update_field_query, format_update_subdomain_wrapper_query, IotaNSIndexer},
@@ -21,10 +20,9 @@ use iotans_indexer::{
     schema::domains,
     PgConnectionPool,
 };
-
-use dotenvy::dotenv;
-use std::env;
+use prometheus::Registry;
 use tokio::sync::oneshot;
+use tracing::info;
 
 struct IotaNSIndexerWorker {
     pg_pool: PgConnectionPool,
@@ -35,12 +33,15 @@ impl IotaNSIndexerWorker {
     /// Creates a transcation that upserts the given name record updates,
     /// and deletes the given name record deletions.
     ///
-    /// This is done using 1 or 2 queries, depending on whether there are any deletions/updates in the checkpoint.
+    /// This is done using 1 or 2 queries, depending on whether there are any
+    /// deletions/updates in the checkpoint.
     ///
-    /// - The first query is a bulk insert of all updates, with an upsert on conflict.
+    /// - The first query is a bulk insert of all updates, with an upsert on
+    ///   conflict.
     /// - The second query is a bulk delete of all deletions.
     ///
-    /// You can safely call this with empty updates/deletions as it will return Ok.
+    /// You can safely call this with empty updates/deletions as it will return
+    /// Ok.
     fn commit_to_db(
         &self,
         updates: &[VerifiedDomain],
@@ -70,10 +71,13 @@ impl IotaNSIndexerWorker {
                         domains::last_checkpoint_updated
                             .eq(sql(&format_update_field_query("last_checkpoint_updated"))),
                         domains::field_id.eq(sql(&format_update_field_query("field_id"))),
-                        // We always want to respect the subdomain_wrapper re-assignment, even if the checkpoint is older.
-                        // That prevents a scenario where we first process a later checkpoint that did an update to the name record (e..g change target address),
-                        // without first executing the checkpoint that created the subdomain wrapper.
-                        // Since wrapper re-assignment can only happen every 2 days, we can't write invalid data here.
+                        // We always want to respect the subdomain_wrapper re-assignment, even if
+                        // the checkpoint is older. That prevents a
+                        // scenario where we first process a later checkpoint that did an update to
+                        // the name record (e..g change target address),
+                        // without first executing the checkpoint that created the subdomain
+                        // wrapper. Since wrapper re-assignment can only
+                        // happen every 2 days, we can't write invalid data here.
                         domains::subdomain_wrapper_id
                             .eq(sql(&format_update_subdomain_wrapper_query())),
                     ))
@@ -82,8 +86,9 @@ impl IotaNSIndexerWorker {
             }
 
             if !removals.is_empty() {
-                // We want to remove from the database all name records that were removed in the checkpoint
-                // but only if the checkpoint is newer than the last time the name record was updated.
+                // We want to remove from the database all name records that were removed in the
+                // checkpoint but only if the checkpoint is newer than the last
+                // time the name record was updated.
                 diesel::delete(domains::table)
                     .filter(
                         domains::field_id
@@ -152,17 +157,17 @@ async fn main() -> Result<()> {
             pg_pool: get_connection_pool(),
             indexer: indexer_setup,
         },
-        "iotans_indexing".to_string(), /* task name used as a key in the progress store */
-        100,                          /* concurrency */
+        "iotans_indexing".to_string(), // task name used as a key in the progress store
+        100,                           // concurrency
     );
     executor.register(worker_pool).await?;
 
     executor
         .run(
-            PathBuf::from(checkpoints_dir), /* directory should exist but can be empty */
-            remote_storage,                 /* remote_read_endpoint: If set */
-            vec![],                         /* aws credentials */
-            ReaderOptions::default(),       /* remote_read_batch_size */
+            PathBuf::from(checkpoints_dir), // directory should exist but can be empty
+            remote_storage,                 // remote_read_endpoint: If set
+            vec![],                         // aws credentials
+            ReaderOptions::default(),       // remote_read_batch_size
             exit_receiver,
         )
         .await?;

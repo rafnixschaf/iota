@@ -5,8 +5,8 @@
 use axum::http::{self, header, HeaderMap};
 use mime::Mime;
 
-// TODO look into utilizing the following way to signal the expected types since bcs doesn't
-// include type information
+// TODO look into utilizing the following way to signal the expected types since
+// bcs doesn't include type information
 // "application/x.iota.<type>+bcs"
 pub const APPLICATION_BCS: &str = "application/bcs";
 

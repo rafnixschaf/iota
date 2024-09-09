@@ -10,22 +10,22 @@ pub const IOTA_VALIDATOR_SERVER_NAME: &str = "iota";
 
 pub use acceptor::{TlsAcceptor, TlsConnectionInfo};
 pub use certgen::SelfSignedCertificate;
+pub use rustls;
 pub use verifier::{
     public_key_from_certificate, AllowAll, Allower, ClientCertVerifier, HashSetAllow,
     ServerCertVerifier, ValidatorAllowlist,
 };
 
-pub use rustls;
-
 #[cfg(test)]
 mod tests {
+    use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
+    use rustls::{
+        client::danger::ServerCertVerifier as _,
+        pki_types::{ServerName, UnixTime},
+        server::danger::ClientCertVerifier as _,
+    };
+
     use super::*;
-    use fastcrypto::ed25519::Ed25519KeyPair;
-    use fastcrypto::traits::KeyPair;
-    use rustls::client::danger::ServerCertVerifier as _;
-    use rustls::pki_types::ServerName;
-    use rustls::pki_types::UnixTime;
-    use rustls::server::danger::ClientCertVerifier as _;
 
     #[test]
     fn verify_allowall() {
@@ -102,7 +102,8 @@ mod tests {
         let disallowed = Ed25519KeyPair::generate(&mut rng);
 
         let allowed_public_key = allowed.public().to_owned();
-        let allowed_cert = SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
+        let allowed_cert =
+            SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
         let disallowed_cert =
             SelfSignedCertificate::new(disallowed.private(), IOTA_VALIDATOR_SERVER_NAME);
@@ -193,8 +194,7 @@ mod tests {
 
     #[tokio::test]
     async fn axum_acceptor() {
-        use fastcrypto::ed25519::Ed25519KeyPair;
-        use fastcrypto::traits::KeyPair;
+        use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
 
         let mut rng = rand::thread_rng();
         let client_keypair = Ed25519KeyPair::generate(&mut rng);
@@ -240,7 +240,8 @@ mod tests {
         // Client request is rejected because it isn't in the allowlist
         client.get(&server_url).send().await.unwrap_err();
 
-        // Insert the client's public key into the allowlist and verify the request is successful
+        // Insert the client's public key into the allowlist and verify the request is
+        // successful
         allowlist
             .inner_mut()
             .write()

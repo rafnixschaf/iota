@@ -30,29 +30,32 @@ pub(crate) const GENESIS_COMMIT_INDEX: CommitIndex = 0;
 /// Default wave length for all committers. A longer wave length increases the
 /// chance of committing the leader under asynchrony at the cost of latency in
 /// the common case.
-// TODO: merge DEFAULT_WAVE_LENGTH and MINIMUM_WAVE_LENGTH into a single constant,
-// because we are unlikely to change them via config in the forseeable future.
+// TODO: merge DEFAULT_WAVE_LENGTH and MINIMUM_WAVE_LENGTH into a single
+// constant, because we are unlikely to change them via config in the forseeable
+// future.
 pub(crate) const DEFAULT_WAVE_LENGTH: Round = MINIMUM_WAVE_LENGTH;
 
 /// We need at least one leader round, one voting round, and one decision round.
 pub(crate) const MINIMUM_WAVE_LENGTH: Round = 3;
 
-/// The consensus protocol operates in 'waves'. Each wave is composed of a leader
-/// round, at least one voting round, and one decision round.
+/// The consensus protocol operates in 'waves'. Each wave is composed of a
+/// leader round, at least one voting round, and one decision round.
 pub(crate) type WaveNumber = u32;
 
-/// [`Commit`] summarizes [`CommittedSubDag`] for storage and network communications.
+/// [`Commit`] summarizes [`CommittedSubDag`] for storage and network
+/// communications.
 ///
-/// Validators should be able to reconstruct a sequence of CommittedSubDag from the
-/// corresponding Commit and blocks referenced in the Commit.
+/// Validators should be able to reconstruct a sequence of CommittedSubDag from
+/// the corresponding Commit and blocks referenced in the Commit.
 /// A field must meet these requirements to be added to Commit:
 /// - helps with recovery locally and for peers catching up.
 /// - cannot be derived from a sequence of Commits and other persisted values.
 ///
-/// For example, transactions in blocks should not be included in Commit, because they can be
-/// retrieved from blocks specified in Commit. Last committed round per authority also should not
-/// be included, because it can be derived from the latest value in storage and the additional
-/// sequence of Commits.
+/// For example, transactions in blocks should not be included in Commit,
+/// because they can be retrieved from blocks specified in Commit. Last
+/// committed round per authority also should not be included, because it can be
+/// derived from the latest value in storage and the additional sequence of
+/// Commits.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[enum_dispatch(CommitAPI)]
 pub(crate) enum Commit {
@@ -95,16 +98,19 @@ pub(crate) trait CommitAPI {
 }
 
 /// Specifies one consensus commit.
-/// It is stored on disk, so it does not contain blocks which are stored individually.
+/// It is stored on disk, so it does not contain blocks which are stored
+/// individually.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub(crate) struct CommitV1 {
     /// Index of the commit.
-    /// First commit after genesis has an index of 1, then every next commit has an index incremented by 1.
+    /// First commit after genesis has an index of 1, then every next commit has
+    /// an index incremented by 1.
     index: CommitIndex,
     /// Digest of the previous commit.
     /// Set to CommitDigest::MIN for the first commit after genesis.
     previous_digest: CommitDigest,
-    /// Timestamp of the commit, max of the timestamp of the leader block and previous Commit timestamp.
+    /// Timestamp of the commit, max of the timestamp of the leader block and
+    /// previous Commit timestamp.
     timestamp_ms: BlockTimestampMs,
     /// A reference to the commit leader.
     leader: BlockRef,
@@ -138,8 +144,8 @@ impl CommitAPI for CommitV1 {
     }
 }
 
-/// A commit is trusted when it is produced locally or certified by a quorum of authorities.
-/// Blocks referenced by TrustedCommit are assumed to be valid.
+/// A commit is trusted when it is produced locally or certified by a quorum of
+/// authorities. Blocks referenced by TrustedCommit are assumed to be valid.
 /// Only trusted Commit can be sent to execution.
 ///
 /// Note: clone() is relatively cheap with the underlying data refcounted.
@@ -282,26 +288,28 @@ impl fmt::Debug for CommitRef {
 // Represents a vote on a Commit.
 pub type CommitVote = CommitRef;
 
-/// The output of consensus to execution is an ordered list of [`CommittedSubDag`].
-/// Each CommittedSubDag contains the information needed to execution transactions in
-/// the consensus commit.
+/// The output of consensus to execution is an ordered list of
+/// [`CommittedSubDag`]. Each CommittedSubDag contains the information needed to
+/// execution transactions in the consensus commit.
 ///
-/// The application processing CommittedSubDag can arbitrarily sort the blocks within
-/// each sub-dag (but using a deterministic algorithm).
+/// The application processing CommittedSubDag can arbitrarily sort the blocks
+/// within each sub-dag (but using a deterministic algorithm).
 #[derive(Clone, PartialEq)]
 pub struct CommittedSubDag {
     /// A reference to the leader of the sub-dag
     pub leader: BlockRef,
     /// All the committed blocks that are part of this sub-dag
     pub blocks: Vec<VerifiedBlock>,
-    /// The timestamp of the commit, obtained from the timestamp of the leader block.
+    /// The timestamp of the commit, obtained from the timestamp of the leader
+    /// block.
     pub timestamp_ms: BlockTimestampMs,
     /// The reference of the commit.
-    /// First commit after genesis has a index of 1, then every next commit has a
-    /// index incremented by 1.
+    /// First commit after genesis has a index of 1, then every next commit has
+    /// a index incremented by 1.
     pub commit_ref: CommitRef,
-    /// Optional scores that are provided as part of the consensus output to Iota
-    /// that can then be used by Iota for future submission to consensus.
+    /// Optional scores that are provided as part of the consensus output to
+    /// Iota that can then be used by Iota for future submission to
+    /// consensus.
     pub reputation_scores_desc: Vec<(AuthorityIndex, u64)>,
 }
 
@@ -324,8 +332,8 @@ impl CommittedSubDag {
     }
 }
 
-// Sort the blocks of the sub-dag blocks by round number then authority index. Any
-// deterministic & stable algorithm works.
+// Sort the blocks of the sub-dag blocks by round number then authority index.
+// Any deterministic & stable algorithm works.
 pub(crate) fn sort_sub_dag_blocks(blocks: &mut [VerifiedBlock]) {
     blocks.sort_by(|a, b| {
         a.round()
@@ -464,7 +472,8 @@ impl DecidedLeader {
         }
     }
 
-    // Converts to committed block if the decision is to commit. Returns None otherwise.
+    // Converts to committed block if the decision is to commit. Returns None
+    // otherwise.
     pub(crate) fn into_committed_block(self) -> Option<VerifiedBlock> {
         match self {
             Self::Commit(block) => Some(block),
@@ -498,10 +507,10 @@ impl Display for DecidedLeader {
     }
 }
 
-/// Per-commit properties that can be regenerated from past values, and do not need to be part of
-/// the Commit struct.
-/// Only the latest version is needed for recovery, but more versions are stored for debugging,
-/// and potentially restoring from an earlier state.
+/// Per-commit properties that can be regenerated from past values, and do not
+/// need to be part of the Commit struct.
+/// Only the latest version is needed for recovery, but more versions are stored
+/// for debugging, and potentially restoring from an earlier state.
 // TODO: version this struct.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct CommitInfo {
@@ -519,11 +528,13 @@ impl CommitInfo {
     }
 }
 
-/// CommitRange stores a range of CommitIndex. The range contains the start (inclusive)
-/// and end (inclusive) commit indices and can be ordered for use as the key of a table.
+/// CommitRange stores a range of CommitIndex. The range contains the start
+/// (inclusive) and end (inclusive) commit indices and can be ordered for use as
+/// the key of a table.
 ///
-/// NOTE: using Range<CommitIndex> for internal representation for backward compatibility.
-/// The external semantics of CommitRange is closer to RangeInclusive<CommitIndex>.
+/// NOTE: using Range<CommitIndex> for internal representation for backward
+/// compatibility. The external semantics of CommitRange is closer to
+/// RangeInclusive<CommitIndex>.
 #[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CommitRange(Range<CommitIndex>);
 

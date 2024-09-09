@@ -5,10 +5,12 @@
 use std::collections::BTreeMap;
 
 use iota_json_rpc_types::ObjectChange;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress};
-use iota_types::effects::ObjectRemoveKind;
-use iota_types::object::Owner;
-use iota_types::storage::WriteKind;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    effects::ObjectRemoveKind,
+    object::Owner,
+    storage::WriteKind,
+};
 
 use crate::ObjectProvider;
 

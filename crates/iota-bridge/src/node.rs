@@ -2,28 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    action_executor::BridgeActionExecutor,
-    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
-    config::{BridgeClientConfig, BridgeNodeConfig},
-    eth_syncer::EthSyncer,
-    events::init_all_struct_tags,
-    metrics::BridgeMetrics,
-    monitor::BridgeMonitor,
-    orchestrator::BridgeOrchestrator,
-    server::{handler::BridgeRequestHandler, run_server, BridgeNodePublicMetadata},
-    storage::BridgeOrchestratorTables,
-    iota_syncer::IotaSyncer,
-};
-use arc_swap::ArcSwap;
-use ethers::types::Address as EthAddress;
-use iota_metrics::spawn_logged_monitored_task;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     sync::Arc,
     time::Duration,
 };
+
+use arc_swap::ArcSwap;
+use ethers::types::Address as EthAddress;
+use iota_metrics::spawn_logged_monitored_task;
 use iota_types::{
     bridge::{
         BRIDGE_COMMITTEE_MODULE_NAME, BRIDGE_LIMITER_MODULE_NAME, BRIDGE_MODULE_NAME,
@@ -34,6 +22,20 @@ use iota_types::{
 };
 use tokio::task::JoinHandle;
 use tracing::info;
+
+use crate::{
+    action_executor::BridgeActionExecutor,
+    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
+    config::{BridgeClientConfig, BridgeNodeConfig},
+    eth_syncer::EthSyncer,
+    events::init_all_struct_tags,
+    iota_syncer::IotaSyncer,
+    metrics::BridgeMetrics,
+    monitor::BridgeMonitor,
+    orchestrator::BridgeOrchestrator,
+    server::{handler::BridgeRequestHandler, run_server, BridgeNodePublicMetadata},
+    storage::BridgeOrchestratorTables,
+};
 
 pub async fn run_bridge_node(
     config: BridgeNodeConfig,
@@ -213,7 +215,8 @@ fn get_eth_contracts_to_watch(
     let mut eth_contracts_to_watch = HashMap::new();
     for (contract, stored_cursor) in eth_contracts.iter().zip(stored_eth_cursors) {
         // start block precedence:
-        // eth_contracts_start_block_override > stored cursor > eth_contracts_start_block_fallback
+        // eth_contracts_start_block_override > stored cursor >
+        // eth_contracts_start_block_fallback
         match (eth_contracts_start_block_override, stored_cursor) {
             (Some(override_), _) => {
                 eth_contracts_to_watch.insert(*contract, override_);
@@ -223,7 +226,8 @@ fn get_eth_contracts_to_watch(
                 );
             }
             (None, Some(stored_cursor)) => {
-                // +1: The stored value is the last block that was processed, so we start from the next block.
+                // +1: The stored value is the last block that was processed, so we start from
+                // the next block.
                 eth_contracts_to_watch.insert(*contract, stored_cursor + 1);
             }
             (None, None) => {
@@ -238,26 +242,24 @@ fn get_eth_contracts_to_watch(
 #[cfg(test)]
 mod tests {
     use ethers::types::Address as EthAddress;
-    use prometheus::Registry;
-
-    use super::*;
-    use crate::config::BridgeNodeConfig;
-    use crate::config::EthConfig;
-    use crate::config::IotaConfig;
-    use crate::e2e_tests::test_utils::BridgeTestCluster;
-    use crate::e2e_tests::test_utils::BridgeTestClusterBuilder;
-    use crate::utils::wait_for_server_to_be_up;
     use fastcrypto::secp256k1::Secp256k1KeyPair;
     use iota_config::local_ip_utils::get_available_port;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::bridge::BridgeChainId;
-    use iota_types::crypto::get_key_pair;
-    use iota_types::crypto::EncodeDecodeBase64;
-    use iota_types::crypto::KeypairTraits;
-    use iota_types::crypto::IotaKeyPair;
-    use iota_types::digests::TransactionDigest;
-    use iota_types::event::EventID;
+    use iota_types::{
+        base_types::IotaAddress,
+        bridge::BridgeChainId,
+        crypto::{get_key_pair, EncodeDecodeBase64, IotaKeyPair, KeypairTraits},
+        digests::TransactionDigest,
+        event::EventID,
+    };
+    use prometheus::Registry;
     use tempfile::tempdir;
+
+    use super::*;
+    use crate::{
+        config::{BridgeNodeConfig, EthConfig, IotaConfig},
+        e2e_tests::test_utils::{BridgeTestCluster, BridgeTestClusterBuilder},
+        utils::wait_for_server_to_be_up,
+    };
 
     #[tokio::test]
     async fn test_get_eth_contracts_to_watch() {
@@ -355,8 +357,8 @@ mod tests {
             .collect::<HashMap<_, _>>()
         );
 
-        // No override, found stored watermark for `bridge` module, use stored watermark for `bridge`
-        // and None for `committee`
+        // No override, found stored watermark for `bridge` module, use stored watermark
+        // for `bridge` and None for `committee`
         let stored_cursor = EventID {
             tx_digest: TransactionDigest::random(),
             event_seq: 100,
@@ -508,8 +510,8 @@ mod tests {
 
         let server_url = format!("http://127.0.0.1:{}", server_listen_port);
         // Now we expect to see the server to be up and running.
-        // client components are spawned earlier than server, so as long as the server is up,
-        // we know the client components are already running.
+        // client components are spawned earlier than server, so as long as the server
+        // is up, we know the client components are already running.
         let res = wait_for_server_to_be_up(server_url, 5).await;
         res.unwrap();
     }
@@ -582,8 +584,8 @@ mod tests {
 
         let server_url = format!("http://127.0.0.1:{}", server_listen_port);
         // Now we expect to see the server to be up and running.
-        // client components are spawned earlier than server, so as long as the server is up,
-        // we know the client components are already running.
+        // client components are spawned earlier than server, so as long as the server
+        // is up, we know the client components are already running.
         let res = wait_for_server_to_be_up(server_url, 5).await;
         res.unwrap();
     }

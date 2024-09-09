@@ -6,16 +6,18 @@ use std::fmt::{Display, Formatter};
 
 use iota_types::base_types::{IotaAddress, TransactionDigest};
 
-use crate::models::TokenTransferData as DBTokenTransferData;
-use crate::models::{IotaErrorTransactions, TokenTransfer as DBTokenTransfer};
+use crate::models::{
+    IotaErrorTransactions, TokenTransfer as DBTokenTransfer,
+    TokenTransferData as DBTokenTransferData,
+};
 
 pub mod config;
+pub mod iota_transaction_handler;
+pub mod iota_transaction_queries;
 pub mod metrics;
 pub mod models;
 pub mod postgres_manager;
 pub mod schema;
-pub mod iota_transaction_handler;
-pub mod iota_transaction_queries;
 pub mod types;
 
 pub mod eth_bridge_indexer;

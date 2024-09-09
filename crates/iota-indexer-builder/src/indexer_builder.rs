@@ -2,14 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::cmp::{max, min};
-use std::sync::Arc;
+use std::{
+    cmp::{max, min},
+    sync::Arc,
+};
 
 use anyhow::Error;
 use async_trait::async_trait;
-use tokio::task::JoinHandle;
-
 use iota_metrics::{metered_channel, spawn_monitored_task};
+use tokio::task::JoinHandle;
 
 use crate::{Task, Tasks};
 
@@ -90,8 +91,8 @@ impl<P, D, M> Indexer<P, D, M> {
         // get updated tasks from storage and start workers
         let updated_tasks = self.storage.tasks(&self.name).await?;
         // Start latest checkpoint worker
-        // Tasks are ordered in checkpoint descending order, realtime update task always come first
-        // tasks won't be empty here, ok to unwrap.
+        // Tasks are ordered in checkpoint descending order, realtime update task always
+        // come first tasks won't be empty here, ok to unwrap.
         let live_task_future = match updated_tasks.live_task() {
             Some(live_task) if !self.disable_live_task => {
                 let live_task_future = self.datasource.start_ingestion_task(
@@ -177,7 +178,8 @@ impl<P, D, M> Indexer<P, D, M> {
         // 2, create backfill tasks base on task config and existing tasks in the db
         match latest_task {
             None => {
-                // No task in database, create backfill tasks from genesis to `start_from_checkpoint`
+                // No task in database, create backfill tasks from genesis to
+                // `start_from_checkpoint`
                 if self.start_from_checkpoint != self.genesis_checkpoint {
                     self.create_backfill_tasks(
                         self.genesis_checkpoint,

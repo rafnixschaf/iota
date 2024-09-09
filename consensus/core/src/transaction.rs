@@ -16,24 +16,28 @@ use crate::{
     context::Context,
 };
 
-/// The maximum number of transactions pending to the queue to be pulled for block proposal
+/// The maximum number of transactions pending to the queue to be pulled for
+/// block proposal
 const MAX_PENDING_TRANSACTIONS: usize = 2_000;
 
-/// The guard acts as an acknowledgment mechanism for the inclusion of the transactions to a block.
-/// When its last transaction is included to a block then `included_in_block_ack` will be signalled.
-/// If the guard is dropped without getting acknowledged that means the transactions have not been
+/// The guard acts as an acknowledgment mechanism for the inclusion of the
+/// transactions to a block. When its last transaction is included to a block
+/// then `included_in_block_ack` will be signalled. If the guard is dropped
+/// without getting acknowledged that means the transactions have not been
 /// included to a block and the consensus is shutting down.
 pub(crate) struct TransactionsGuard {
     // Holds a list of transactions to be included in the block.
-    // A TransactionsGuard may be partially consumed by `TransactionConsumer`, in which case, this holds the remaining transactions.
+    // A TransactionsGuard may be partially consumed by `TransactionConsumer`, in which case, this
+    // holds the remaining transactions.
     transactions: Vec<Transaction>,
 
     included_in_block_ack: oneshot::Sender<BlockRef>,
 }
 
-/// The TransactionConsumer is responsible for fetching the next transactions to be included for the block proposals.
-/// The transactions are submitted to a channel which is shared between the TransactionConsumer and the TransactionClient
-/// and are pulled every time the `next` method is called.
+/// The TransactionConsumer is responsible for fetching the next transactions to
+/// be included for the block proposals. The transactions are submitted to a
+/// channel which is shared between the TransactionConsumer and the
+/// TransactionClient and are pulled every time the `next` method is called.
 pub(crate) struct TransactionConsumer {
     tx_receiver: Receiver<TransactionsGuard>,
     max_consumed_bytes_per_request: u64,
@@ -55,18 +59,22 @@ impl TransactionConsumer {
         }
     }
 
-    // Attempts to fetch the next transactions that have been submitted for sequence. Also a `max_consumed_bytes_per_request` parameter
-    // is given in order to ensure up to `max_consumed_bytes_per_request` bytes of transactions are retrieved.
-    // This returns one or more transactions to be included in the block and a callback to acknowledge the inclusion of those transactions.
-    // Note that a TransactionsGuard may be partially consumed and the rest saved for the next pull, in which case its `included_in_block_ack`
-    // will not be signalled in the callback.
+    // Attempts to fetch the next transactions that have been submitted for
+    // sequence. Also a `max_consumed_bytes_per_request` parameter is given in
+    // order to ensure up to `max_consumed_bytes_per_request` bytes of transactions
+    // are retrieved. This returns one or more transactions to be included in
+    // the block and a callback to acknowledge the inclusion of those transactions.
+    // Note that a TransactionsGuard may be partially consumed and the rest saved
+    // for the next pull, in which case its `included_in_block_ack` will not be
+    // signalled in the callback.
     pub(crate) fn next(&mut self) -> (Vec<Transaction>, Box<dyn FnOnce(BlockRef)>) {
         let mut transactions = Vec::new();
         let mut acks = Vec::new();
         let mut total_size: usize = 0;
 
         // Handle one batch of incoming transactions from TransactionGuard.
-        // Returns the remaining txs as a new TransactionGuard, if the batch breaks any limit.
+        // Returns the remaining txs as a new TransactionGuard, if the batch breaks any
+        // limit.
         let mut handle_txs = |t: TransactionsGuard| -> Option<TransactionsGuard> {
             let remaining_txs: Vec<_> = t
                 .transactions
@@ -75,7 +83,8 @@ impl TransactionConsumer {
                     if (total_size + tx.data().len()) as u64 > self.max_consumed_bytes_per_request
                         || transactions.len() as u64 >= self.max_consumed_transactions_per_request
                     {
-                        // Adding this tx would exceed the size limit or the number of txs limit, cache it for the next pull.
+                        // Adding this tx would exceed the size limit or the number of txs limit,
+                        // cache it for the next pull.
                         Some(tx)
                     } else {
                         total_size += tx.data().len();
@@ -87,12 +96,14 @@ impl TransactionConsumer {
 
             if remaining_txs.is_empty() {
                 // The batch has been fully consumed, register its ack.
-                // In case a batch gets split, ack shall only be sent when the last transaction is included in the block.
+                // In case a batch gets split, ack shall only be sent when the last transaction
+                // is included in the block.
                 acks.push(t.included_in_block_ack);
                 None
             } else {
-                // If we went over the any limit while processing the batch, return the remainings.
-                // It is the caller's responsibility to cache it for the next pull.
+                // If we went over the any limit while processing the batch, return the
+                // remainings. It is the caller's responsibility to cache it for
+                // the next pull.
                 Some(TransactionsGuard {
                     transactions: remaining_txs,
                     included_in_block_ack: t.included_in_block_ack,
@@ -105,7 +116,8 @@ impl TransactionConsumer {
         }
 
         // Until we have reached the limit for the pull.
-        // We may have already reached limit in the first iteration above, in which case we stop immediately.
+        // We may have already reached limit in the first iteration above, in which case
+        // we stop immediately.
         while self.pending_transactions.is_none() {
             if let Ok(t) = self.tx_receiver.try_recv() {
                 self.pending_transactions = handle_txs(t);
@@ -167,10 +179,12 @@ impl TransactionClient {
         )
     }
 
-    /// Submits a list of transactions to be sequenced. The method returns when all the transactions have been successfully included
+    /// Submits a list of transactions to be sequenced. The method returns when
+    /// all the transactions have been successfully included
     /// to next proposed blocks.
     pub async fn submit(&self, transactions: Vec<Vec<u8>>) -> Result<BlockRef, ClientError> {
-        // TODO: Support returning the block refs for transactions that span multiple blocks
+        // TODO: Support returning the block refs for transactions that span multiple
+        // blocks
         let included_in_block = self.submit_no_wait(transactions).await?;
         included_in_block
             .await
@@ -179,12 +193,15 @@ impl TransactionClient {
     }
 
     /// Submits a list of transactions to be sequenced.
-    /// If any transaction's length exceeds `max_transaction_size`, no transaction will be submitted.
-    /// That shouldn't be the common case as sizes should be aligned between consensus and client. The method returns
-    /// a receiver to wait on until the transactions has been included in the next block to get proposed. The consumer should
-    /// wait on it to consider as inclusion acknowledgement. If the receiver errors then consensus is shutting down and transaction
-    /// has not been included to any block.
-    /// If multiple transactions are submitted, the receiver will be signalled when the last transaction is included in the block.
+    /// If any transaction's length exceeds `max_transaction_size`, no
+    /// transaction will be submitted. That shouldn't be the common case as
+    /// sizes should be aligned between consensus and client. The method returns
+    /// a receiver to wait on until the transactions has been included in the
+    /// next block to get proposed. The consumer should wait on it to
+    /// consider as inclusion acknowledgement. If the receiver errors then
+    /// consensus is shutting down and transaction has not been included to
+    /// any block. If multiple transactions are submitted, the receiver will
+    /// be signalled when the last transaction is included in the block.
     pub(crate) async fn submit_no_wait(
         &self,
         transactions: Vec<Vec<u8>>,
@@ -212,8 +229,8 @@ impl TransactionClient {
     }
 }
 
-/// `TransactionVerifier` implementation is supplied by Iota to validate transactions in a block,
-/// before acceptance of the block.
+/// `TransactionVerifier` implementation is supplied by Iota to validate
+/// transactions in a block, before acceptance of the block.
 pub trait TransactionVerifier: Send + Sync + 'static {
     /// Determines if this batch can be voted on
     fn verify_batch(
@@ -400,7 +417,8 @@ mod tests {
             all_receivers.push(w);
         }
 
-        // construct a over-size-limit batch and submit, which should get broken into smaller ones.
+        // construct a over-size-limit batch and submit, which should get broken into
+        // smaller ones.
         {
             let transactions: Vec<_> = (10..32)
                 .map(|i| {
@@ -428,7 +446,8 @@ mod tests {
         }
 
         // now pull the transactions from the consumer.
-        // we expect all transactions are fetched in order, not missing any, and not exceeding the size limit.
+        // we expect all transactions are fetched in order, not missing any, and not
+        // exceeding the size limit.
         let mut all_transactions = Vec::new();
         let mut all_acks: Vec<Box<dyn FnOnce(BlockRef)>> = Vec::new();
         while !consumer.is_empty() {

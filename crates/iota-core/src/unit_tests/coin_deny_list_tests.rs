@@ -2,27 +2,36 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_tests::send_and_confirm_transaction_;
-use crate::authority::move_integration_tests::build_and_try_publish_test_package;
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
-use crate::authority::AuthorityState;
-use move_core_types::ident_str;
-use move_core_types::language_storage::{StructTag, TypeTag};
 use std::sync::Arc;
-use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{dbg_addr, ObjectID, ObjectRef, IotaAddress};
-use iota_types::crypto::{get_account_key_pair, AccountKeyPair};
-use iota_types::deny_list_v1::{CoinDenyCap, RegulatedCoinMetadata};
-use iota_types::deny_list_v2::{
-    check_address_denied_by_config, check_global_pause, get_per_type_coin_deny_list_v2, DenyCapV2,
-};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::object::Object;
-use iota_types::transaction::{CallArg, ObjectArg, TEST_ONLY_GAS_UNIT_FOR_PUBLISH};
-use iota_types::{IOTA_DENY_LIST_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID};
 
-// Test that a regulated coin can be created and all the necessary objects are created with the right types.
-// Make sure that these types can be converted to Rust types.
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::{
+    base_types::{dbg_addr, IotaAddress, ObjectID, ObjectRef},
+    crypto::{get_account_key_pair, AccountKeyPair},
+    deny_list_v1::{CoinDenyCap, RegulatedCoinMetadata},
+    deny_list_v2::{
+        check_address_denied_by_config, check_global_pause, get_per_type_coin_deny_list_v2,
+        DenyCapV2,
+    },
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    object::Object,
+    transaction::{CallArg, ObjectArg, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
+    IOTA_DENY_LIST_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID,
+};
+use move_core_types::{
+    ident_str,
+    language_storage::{StructTag, TypeTag},
+};
+
+use crate::authority::{
+    authority_tests::send_and_confirm_transaction_,
+    move_integration_tests::build_and_try_publish_test_package,
+    test_authority_builder::TestAuthorityBuilder, AuthorityState,
+};
+
+// Test that a regulated coin can be created and all the necessary objects are
+// created with the right types. Make sure that these types can be converted to
+// Rust types.
 #[tokio::test]
 async fn test_regulated_coin_v1_creation() {
     let env = new_authority_and_publish("coin_deny_list_v1").await;
@@ -71,8 +80,9 @@ async fn test_regulated_coin_v1_creation() {
     );
 }
 
-// Test that a v2 regulated coin can be created and all the necessary objects are created with the right types.
-// Also test that we could create the deny list config for the coin and all types can be loaded in Rust.
+// Test that a v2 regulated coin can be created and all the necessary objects
+// are created with the right types. Also test that we could create the deny
+// list config for the coin and all types can be loaded in Rust.
 #[tokio::test]
 async fn test_regulated_coin_v2_types() {
     let env = new_authority_and_publish("coin_deny_list_v2").await;
@@ -126,7 +136,8 @@ async fn test_regulated_coin_v2_types() {
     );
 
     // Step 2: Deny an address and check the denylist types.
-    let deny_list_object_init_version = env.get_latest_object_ref(&IOTA_DENY_LIST_OBJECT_ID).await.1;
+    let deny_list_object_init_version =
+        env.get_latest_object_ref(&IOTA_DENY_LIST_OBJECT_ID).await.1;
     let regulated_coin_type = TypeTag::Struct(Box::new(StructTag {
         address: package_id.into(),
         module: ident_str!("regulated_coin").to_owned(),
@@ -175,14 +186,16 @@ async fn test_regulated_coin_v2_types() {
         &env.authority.get_object_store(),
         Some(0),
     ));
-    // If no epoch is specified, we always read the latest value, and it should be denied.
+    // If no epoch is specified, we always read the latest value, and it should be
+    // denied.
     assert!(check_address_denied_by_config(
         &coin_deny_config,
         deny_address,
         &env.authority.get_object_store(),
         None,
     ));
-    // If no epoch is specified, we always read the latest value, and it should be denied.
+    // If no epoch is specified, we always read the latest value, and it should be
+    // denied.
     assert!(check_address_denied_by_config(
         &coin_deny_config,
         deny_address,

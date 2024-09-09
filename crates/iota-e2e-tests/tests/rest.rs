@@ -3,13 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_macros::sim_test;
-use iota_rest_api::client::BalanceChange;
-use iota_rest_api::Client;
-use iota_rest_api::ExecuteTransactionQueryParameters;
+use iota_rest_api::{client::BalanceChange, Client, ExecuteTransactionQueryParameters};
 use iota_test_transaction_builder::make_transfer_iota_transaction;
-use iota_types::base_types::IotaAddress;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::transaction::TransactionDataAPI;
+use iota_types::{
+    base_types::IotaAddress, effects::TransactionEffectsAPI, transaction::TransactionDataAPI,
+};
 use test_cluster::TestClusterBuilder;
 
 #[sim_test]

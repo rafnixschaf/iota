@@ -2,19 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::data::{Db, DbConnection, DieselBackend, DieselConn, QueryExecutor};
-use crate::error::Error;
-use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
-use diesel::sql_types::Bool;
-use diesel::{QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{
+    query_builder::{AstPass, Query, QueryFragment, QueryId},
+    sql_types::Bool,
+    QueryDsl, QueryResult, RunQueryDsl,
+};
 
-/// Generates a function: `check_all_tables` that runs a query against every table this GraphQL
-/// service is aware of, to test for schema compatibility. Each query is of the form:
+use crate::{
+    data::{Db, DbConnection, DieselBackend, DieselConn, QueryExecutor},
+    error::Error,
+};
+
+/// Generates a function: `check_all_tables` that runs a query against every
+/// table this GraphQL service is aware of, to test for schema compatibility.
+/// Each query is of the form:
 ///
 ///   SELECT TRUE FROM (...) q WHERE FALSE
 ///
-/// where `...` is a query selecting all of the fields from the given table. The query is expected
-/// to return no results, but will complain if it relies on a column that doesn't exist.
+/// where `...` is a query selecting all of the fields from the given table. The
+/// query is expected to return no results, but will complain if it relies on a
+/// column that doesn't exist.
 macro_rules! generate_compatibility_check {
     ($($table:ident),*) => {
         pub(crate) async fn check_all_tables(db: &Db) -> Result<(), Error> {

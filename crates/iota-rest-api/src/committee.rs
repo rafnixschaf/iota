@@ -2,6 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use axum::extract::{Path, State};
+use iota_sdk2::types::{EpochId, ValidatorCommittee};
+use iota_types::storage::ReadStore;
+use tap::Pipe;
+
 use crate::{
     accept::AcceptFormat,
     openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler},
@@ -9,10 +14,6 @@ use crate::{
     response::ResponseContent,
     RestService, Result,
 };
-use axum::extract::{Path, State};
-use iota_sdk2::types::{EpochId, ValidatorCommittee};
-use iota_types::storage::ReadStore;
-use tap::Pipe;
 
 pub struct GetLatestCommittee;
 

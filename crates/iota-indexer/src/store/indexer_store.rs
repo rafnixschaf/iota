@@ -2,17 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::any::Any;
-use std::collections::BTreeMap;
+use std::{any::Any, collections::BTreeMap};
 
 use async_trait::async_trait;
 
-use crate::errors::IndexerError;
-use crate::handlers::{EpochToCommit, TransactionObjectChangesToCommit};
-use crate::models::display::StoredDisplay;
-use crate::models::objects::{StoredDeletedObject, StoredObject};
-use crate::types::{
-    EventIndex, IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex,
+use crate::{
+    errors::IndexerError,
+    handlers::{EpochToCommit, TransactionObjectChangesToCommit},
+    models::{
+        display::StoredDisplay,
+        objects::{StoredDeletedObject, StoredObject},
+    },
+    types::{
+        EventIndex, IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex,
+    },
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -58,7 +61,7 @@ pub trait IndexerStore: Any + Clone + Sync + Send + 'static {
 
     // update objects snapshot after backfill is done
     async fn update_objects_snapshot(&self, start_cp: u64, end_cp: u64)
-        -> Result<(), IndexerError>;
+    -> Result<(), IndexerError>;
 
     async fn persist_checkpoints(
         &self,

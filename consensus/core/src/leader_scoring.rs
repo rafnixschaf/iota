@@ -314,8 +314,11 @@ mod tests {
     use std::cmp::max;
 
     use super::*;
-    use crate::commit::{CommitDigest, CommitRef};
-    use crate::{leader_scoring_strategy::VoteScoringStrategy, test_dag_builder::DagBuilder};
+    use crate::{
+        commit::{CommitDigest, CommitRef},
+        leader_scoring_strategy::VoteScoringStrategy,
+        test_dag_builder::DagBuilder,
+    };
 
     #[tokio::test]
     async fn test_reputation_scores_authorities_by_score() {

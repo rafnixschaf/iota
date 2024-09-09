@@ -2,19 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::client::bridge_authority_aggregator::BridgeAuthorityAggregator;
-use crate::e2e_tests::basic::initiate_bridge_eth_to_iota;
-use crate::e2e_tests::basic::initiate_bridge_iota_to_eth;
-use crate::e2e_tests::test_utils::BridgeTestClusterBuilder;
-use crate::iota_transaction_builder::build_iota_transaction;
-use crate::types::{BridgeAction, EmergencyAction};
-use crate::types::{BridgeActionStatus, EmergencyActionType};
-use ethers::types::Address as EthAddress;
 use std::sync::Arc;
-use iota_json_rpc_types::IotaExecutionStatus;
-use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
+
+use ethers::types::Address as EthAddress;
+use iota_json_rpc_types::{IotaExecutionStatus, IotaTransactionBlockEffectsAPI};
 use iota_types::bridge::{BridgeChainId, TOKEN_ID_ETH};
 use tracing::info;
+
+use crate::{
+    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
+    e2e_tests::{
+        basic::{initiate_bridge_eth_to_iota, initiate_bridge_iota_to_eth},
+        test_utils::BridgeTestClusterBuilder,
+    },
+    iota_transaction_builder::build_iota_transaction,
+    types::{BridgeAction, BridgeActionStatus, EmergencyAction, EmergencyActionType},
+};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 16)]
 async fn test_iota_bridge_paused() {

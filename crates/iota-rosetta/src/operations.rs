@@ -2,39 +2,40 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::ops::Not;
-use std::str::FromStr;
-use std::vec;
+use std::{collections::HashMap, ops::Not, str::FromStr, vec};
 
 use anyhow::anyhow;
-use move_core_types::ident_str;
-use move_core_types::language_storage::{ModuleId, StructTag};
-use move_core_types::resolver::ModuleResolver;
-use serde::Deserialize;
-use serde::Serialize;
-
-use iota_json_rpc_types::IotaProgrammableMoveCall;
-use iota_json_rpc_types::IotaProgrammableTransactionBlock;
-use iota_json_rpc_types::{BalanceChange, IotaArgument};
-use iota_json_rpc_types::{IotaCallArg, IotaCommand};
+use iota_json_rpc_types::{
+    BalanceChange, IotaArgument, IotaCallArg, IotaCommand, IotaProgrammableMoveCall,
+    IotaProgrammableTransactionBlock,
+};
 use iota_sdk::rpc_types::{
     IotaTransactionBlockData, IotaTransactionBlockDataAPI, IotaTransactionBlockEffectsAPI,
     IotaTransactionBlockKind, IotaTransactionBlockResponse,
 };
-use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
-use iota_types::gas_coin::{GasCoin, GAS};
-use iota_types::governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME};
-use iota_types::object::Owner;
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::transaction::TransactionData;
-use iota_types::{IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_PACKAGE_ID};
-
-use crate::types::{
-    AccountIdentifier, Amount, CoinAction, CoinChange, CoinID, CoinIdentifier, InternalOperation,
-    OperationIdentifier, OperationStatus, OperationType,
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
+    gas_coin::{GasCoin, GAS},
+    governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME},
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+    object::Owner,
+    transaction::TransactionData,
+    IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_PACKAGE_ID,
 };
-use crate::Error;
+use move_core_types::{
+    ident_str,
+    language_storage::{ModuleId, StructTag},
+    resolver::ModuleResolver,
+};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    types::{
+        AccountIdentifier, Amount, CoinAction, CoinChange, CoinID, CoinIdentifier,
+        InternalOperation, OperationIdentifier, OperationStatus, OperationType,
+    },
+    Error,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/operations_tests.rs"]
@@ -95,7 +96,8 @@ impl Operations {
         self.0.first().map(|op| op.type_)
     }
 
-    /// Parse operation input from rosetta operation to intermediate internal operation;
+    /// Parse operation input from rosetta operation to intermediate internal
+    /// operation;
     pub fn into_internal(self) -> Result<InternalOperation, Error> {
         let type_ = self
             .type_()
@@ -288,9 +290,9 @@ impl Operations {
         ) -> Option<Vec<KnownValue>> {
             let addr = match recipient {
                 IotaArgument::Input(i) => inputs[i as usize].pure()?.to_iota_address().ok()?,
-                IotaArgument::GasCoin | IotaArgument::Result(_) | IotaArgument::NestedResult(_, _) => {
-                    return None
-                }
+                IotaArgument::GasCoin
+                | IotaArgument::Result(_)
+                | IotaArgument::NestedResult(_, _) => return None,
             };
             for obj in objs {
                 let value = match *obj {
@@ -318,23 +320,37 @@ impl Operations {
             let (amount, validator) = match &arguments[..] {
                 [_, coin, validator] => {
                     let amount = match coin {
-                        IotaArgument::Result(i) =>{
-                            let KnownValue::GasCoin(value) = resolve_result(known_results, *i, 0).ok_or_else(||anyhow!("Cannot resolve Gas coin value at Result({i})"))?;
+                        IotaArgument::Result(i) => {
+                            let KnownValue::GasCoin(value) = resolve_result(known_results, *i, 0)
+                                .ok_or_else(|| {
+                                anyhow!("Cannot resolve Gas coin value at Result({i})")
+                            })?;
                             value
-                        },
+                        }
                         _ => return Ok(None),
                     };
                     let (some_amount, validator) = match validator {
-                        // [WORKAROUND] - this is a hack to work out if the staking ops is for a selected amount or None amount (whole wallet).
-                        // We use the position of the validator arg as a indicator of if the rosetta stake
-                        // transaction is staking the whole wallet or not, if staking whole wallet,
-                        // we have to omit the amount value in the final operation output.
-                        IotaArgument::Input(i) => (*i==1, inputs[*i as usize].pure().map(|v|v.to_iota_address()).transpose()),
-                        _=> return Ok(None),
+                        // [WORKAROUND] - this is a hack to work out if the staking ops is for a
+                        // selected amount or None amount (whole wallet). We
+                        // use the position of the validator arg as a indicator of if the rosetta
+                        // stake transaction is staking the whole wallet or
+                        // not, if staking whole wallet, we have to omit the
+                        // amount value in the final operation output.
+                        IotaArgument::Input(i) => (
+                            *i == 1,
+                            inputs[*i as usize]
+                                .pure()
+                                .map(|v| v.to_iota_address())
+                                .transpose(),
+                        ),
+                        _ => return Ok(None),
                     };
                     (some_amount.then_some(*amount), validator)
-                },
-                _ => Err(anyhow!("Error encountered when extracting arguments from move call, expecting 3 elements, got {}", arguments.len()))?,
+                }
+                _ => Err(anyhow!(
+                    "Error encountered when extracting arguments from move call, expecting 3 elements, got {}",
+                    arguments.len()
+                ))?,
             };
             Ok(validator.map(|v| v.map(|v| (amount, v)))?)
         }
@@ -348,16 +364,22 @@ impl Operations {
                 [_, stake_id] => {
                     match stake_id {
                         IotaArgument::Input(i) => {
-                            let id = inputs[*i as usize].object().ok_or_else(|| anyhow!("Cannot find stake id from input args."))?;
-                            // [WORKAROUND] - this is a hack to work out if the withdraw stake ops is for a selected stake or None (all stakes).
+                            let id = inputs[*i as usize]
+                                .object()
+                                .ok_or_else(|| anyhow!("Cannot find stake id from input args."))?;
+                            // [WORKAROUND] - this is a hack to work out if the withdraw stake ops
+                            // is for a selected stake or None (all stakes).
                             // this hack is similar to the one in stake_call.
                             let some_id = i % 2 == 1;
                             some_id.then_some(id)
-                        },
-                        _=> return Ok(None),
+                        }
+                        _ => return Ok(None),
                     }
-                },
-                _ => Err(anyhow!("Error encountered when extracting arguments from move call, expecting 3 elements, got {}", arguments.len()))?,
+                }
+                _ => Err(anyhow!(
+                    "Error encountered when extracting arguments from move call, expecting 3 elements, got {}",
+                    arguments.len()
+                ))?,
             };
             Ok(id.cloned())
         }

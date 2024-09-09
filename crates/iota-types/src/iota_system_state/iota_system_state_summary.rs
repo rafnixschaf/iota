@@ -2,22 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{IotaSystemState, IotaSystemStateTrait};
-use crate::base_types::{AuthorityName, ObjectID, IotaAddress};
-use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
-use crate::dynamic_field::get_dynamic_field_from_store;
-use crate::error::IotaError;
-use crate::id::ID;
-use crate::multiaddr::Multiaddr;
-use crate::storage::ObjectStore;
-use crate::iota_serde::BigInt;
-use crate::iota_serde::Readable;
-use crate::iota_system_state::get_validator_from_table;
-use fastcrypto::encoding::Base64;
-use fastcrypto::traits::ToFromBytes;
+use fastcrypto::{encoding::Base64, traits::ToFromBytes};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+
+use super::{IotaSystemState, IotaSystemStateTrait};
+use crate::{
+    base_types::{AuthorityName, IotaAddress, ObjectID},
+    committee::{CommitteeWithNetworkMetadata, NetworkMetadata},
+    dynamic_field::get_dynamic_field_from_store,
+    error::IotaError,
+    id::ID,
+    iota_serde::{BigInt, Readable},
+    iota_system_state::get_validator_from_table,
+    multiaddr::Multiaddr,
+    storage::ObjectStore,
+};
 
 /// This is the JSON-RPC type for the IOTA system state object.
 /// It flattens all fields to make them top-level fields such that it as minimum
@@ -39,12 +40,14 @@ pub struct IotaSystemStateSummary {
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub system_state_version: u64,
-    /// The storage rebates of all the objects on-chain stored in the storage fund.
+    /// The storage rebates of all the objects on-chain stored in the storage
+    /// fund.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub storage_fund_total_object_storage_rebates: u64,
-    /// The non-refundable portion of the storage fund coming from storage reinvestment, non-refundable
-    /// storage rebates and any leftover staking rewards.
+    /// The non-refundable portion of the storage fund coming from storage
+    /// reinvestment, non-refundable storage rebates and any leftover
+    /// staking rewards.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub storage_fund_non_refundable_balance: u64,
@@ -52,19 +55,23 @@ pub struct IotaSystemStateSummary {
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub reference_gas_price: u64,
-    /// Whether the system is running in a downgraded safe mode due to a non-recoverable bug.
-    /// This is set whenever we failed to execute advance_epoch, and ended up executing advance_epoch_safe_mode.
+    /// Whether the system is running in a downgraded safe mode due to a
+    /// non-recoverable bug. This is set whenever we failed to execute
+    /// advance_epoch, and ended up executing advance_epoch_safe_mode.
     /// It can be reset once we are able to successfully execute advance_epoch.
     pub safe_mode: bool,
-    /// Amount of storage rewards accumulated (and not yet distributed) during safe mode.
+    /// Amount of storage rewards accumulated (and not yet distributed) during
+    /// safe mode.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub safe_mode_storage_rewards: u64,
-    /// Amount of computation rewards accumulated (and not yet distributed) during safe mode.
+    /// Amount of computation rewards accumulated (and not yet distributed)
+    /// during safe mode.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub safe_mode_computation_rewards: u64,
-    /// Amount of storage rebates accumulated (and not yet burned) during safe mode.
+    /// Amount of storage rebates accumulated (and not yet burned) during safe
+    /// mode.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub safe_mode_storage_rebates: u64,
@@ -99,15 +106,16 @@ pub struct IotaSystemStateSummary {
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub min_validator_joining_stake: u64,
 
-    /// Validators with stake amount below `validator_low_stake_threshold` are considered to
-    /// have low stake and will be escorted out of the validator set after being below this
-    /// threshold for more than `validator_low_stake_grace_period` number of epochs.
+    /// Validators with stake amount below `validator_low_stake_threshold` are
+    /// considered to have low stake and will be escorted out of the
+    /// validator set after being below this threshold for more than
+    /// `validator_low_stake_grace_period` number of epochs.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub validator_low_stake_threshold: u64,
 
-    /// Validators with stake below `validator_very_low_stake_threshold` will be removed
-    /// immediately at epoch change, no grace period.
+    /// Validators with stake below `validator_very_low_stake_threshold` will be
+    /// removed immediately at epoch change, no grace period.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub validator_very_low_stake_threshold: u64,
@@ -119,7 +127,8 @@ pub struct IotaSystemStateSummary {
     pub validator_low_stake_grace_period: u64,
 
     // Stake subsidy information
-    /// Balance of IOTA set aside for stake subsidies that will be drawn down over time.
+    /// Balance of IOTA set aside for stake subsidies that will be drawn down
+    /// over time.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub stake_subsidy_balance: u64,
@@ -142,13 +151,15 @@ pub struct IotaSystemStateSummary {
     pub stake_subsidy_decrease_rate: u16,
 
     // Validator set
-    /// Total amount of stake from all active validators at the beginning of the epoch.
+    /// Total amount of stake from all active validators at the beginning of the
+    /// epoch.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub total_stake: u64,
     /// The list of active validators in the current epoch.
     pub active_validators: Vec<IotaValidatorSummary>,
-    /// ID of the object that contains the list of new validators that will join at the end of the epoch.
+    /// ID of the object that contains the list of new validators that will join
+    /// at the end of the epoch.
     pub pending_active_validators_id: ObjectID,
     /// Number of new validators that will join at the end of the epoch.
     #[schemars(with = "BigInt<u64>")]
@@ -159,25 +170,29 @@ pub struct IotaSystemStateSummary {
     #[schemars(with = "Vec<BigInt<u64>>")]
     #[serde_as(as = "Vec<Readable<BigInt<u64>, _>>")]
     pub pending_removals: Vec<u64>,
-    /// ID of the object that maps from staking pool's ID to the iota address of a validator.
+    /// ID of the object that maps from staking pool's ID to the iota address of
+    /// a validator.
     pub staking_pool_mappings_id: ObjectID,
     /// Number of staking pool mappings.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub staking_pool_mappings_size: u64,
-    /// ID of the object that maps from a staking pool ID to the inactive validator that has that pool as its staking pool.
+    /// ID of the object that maps from a staking pool ID to the inactive
+    /// validator that has that pool as its staking pool.
     pub inactive_pools_id: ObjectID,
     /// Number of inactive staking pools.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub inactive_pools_size: u64,
-    /// ID of the object that stores preactive validators, mapping their addresses to their `Validator` structs.
+    /// ID of the object that stores preactive validators, mapping their
+    /// addresses to their `Validator` structs.
     pub validator_candidates_id: ObjectID,
     /// Number of preactive validators.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub validator_candidates_size: u64,
-    /// Map storing the number of epochs for which each validator has been below the low stake threshold.
+    /// Map storing the number of epochs for which each validator has been below
+    /// the low stake threshold.
     #[schemars(with = "Vec<(IotaAddress, BigInt<u64>)>")]
     #[serde_as(as = "Vec<(_, Readable<BigInt<u64>, _>)>")]
     pub at_risk_validators: Vec<(IotaAddress, u64)>,
@@ -212,8 +227,9 @@ impl IotaSystemStateSummary {
     }
 }
 
-/// This is the JSON-RPC type for the IOTA validator. It flattens all inner structures
-/// to top-level fields so that they are decoupled from the internal definitions.
+/// This is the JSON-RPC type for the IOTA validator. It flattens all inner
+/// structures to top-level fields so that they are decoupled from the internal
+/// definitions.
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -284,7 +300,8 @@ pub struct IotaValidatorSummary {
     #[schemars(with = "Option<BigInt<u64>>")]
     #[serde_as(as = "Option<Readable<BigInt<u64>, _>>")]
     pub staking_pool_activation_epoch: Option<u64>,
-    /// The epoch at which this staking pool ceased to be active. `None` = {pre-active, active},
+    /// The epoch at which this staking pool ceased to be active. `None` =
+    /// {pre-active, active},
     #[schemars(with = "Option<BigInt<u64>>")]
     #[serde_as(as = "Option<Readable<BigInt<u64>, _>>")]
     pub staking_pool_deactivation_epoch: Option<u64>,
@@ -304,11 +321,13 @@ pub struct IotaValidatorSummary {
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub pending_stake: u64,
-    /// Pending stake withdrawn during the current epoch, emptied at epoch boundaries.
+    /// Pending stake withdrawn during the current epoch, emptied at epoch
+    /// boundaries.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub pending_total_iota_withdraw: u64,
-    /// Pending pool token withdrawn during the current epoch, emptied at epoch boundaries.
+    /// Pending pool token withdrawn during the current epoch, emptied at epoch
+    /// boundaries.
     #[schemars(with = "BigInt<u64>")]
     #[serde_as(as = "Readable<BigInt<u64>, _>")]
     pub pending_pool_token_withdraw: u64,
@@ -410,8 +429,9 @@ impl Default for IotaValidatorSummary {
     }
 }
 
-/// Given the staking pool id of a validator, return the validator's `IotaValidatorSummary`,
-/// works for validator candidates, active validators, as well as inactive validators.
+/// Given the staking pool id of a validator, return the validator's
+/// `IotaValidatorSummary`, works for validator candidates, active validators,
+/// as well as inactive validators.
 pub fn get_validator_by_pool_id<S>(
     object_store: &S,
     system_state: &IotaSystemState,

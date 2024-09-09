@@ -9,19 +9,19 @@ pub mod programmable_transaction_gen;
 pub mod transaction_data_gen;
 pub mod type_arg_fuzzer;
 
-use executor::Executor;
-use proptest::collection::vec;
-use proptest::test_runner::TestRunner;
 use std::fmt::Debug;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::crypto::get_key_pair;
-use iota_types::crypto::AccountKeyPair;
-use iota_types::digests::TransactionDigest;
-use iota_types::object::{MoveObject, Object, Owner, OBJECT_START_VERSION};
-use iota_types::{gas_coin::TOTAL_SUPPLY_NANOS, transaction::GasData};
 
-use proptest::prelude::*;
+use executor::Executor;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    crypto::{get_key_pair, AccountKeyPair},
+    digests::TransactionDigest,
+    gas_coin::TOTAL_SUPPLY_NANOS,
+    object::{MoveObject, Object, Owner, OBJECT_START_VERSION},
+    transaction::GasData,
+};
+use proptest::{collection::vec, prelude::*, test_runner::TestRunner};
 use rand::{rngs::StdRng, SeedableRng};
 
 fn new_gas_coin_with_balance_and_owner(balance: u64, owner: Owner) -> Object {
@@ -36,8 +36,9 @@ fn new_gas_coin_with_balance_and_owner(balance: u64, owner: Owner) -> Object {
 /// with the given owners.
 fn generate_random_gas_data(
     seed: [u8; 32],
-    gas_coin_owners: Vec<Owner>, // arbitrarily generated owners, can be shared or immutable or obj-owned too
-    owned_by_sender: bool,       // whether to set owned gas coins to be owned by the sender
+    gas_coin_owners: Vec<Owner>, /* arbitrarily generated owners, can be shared or immutable or
+                                  * obj-owned too */
+    owned_by_sender: bool, // whether to set owned gas coins to be owned by the sender
 ) -> GasDataWithObjects {
     let (sender, sender_key): (IotaAddress, AccountKeyPair) = get_key_pair();
     let mut rng = StdRng::from_seed(seed);
@@ -148,8 +149,8 @@ pub struct TestData<D> {
     pub executor: Executor,
 }
 
-/// Run a proptest test with give number of test cases, a strategy for something and a test function testing that something
-/// with an `Arc<AuthorityState>`.
+/// Run a proptest test with give number of test cases, a strategy for something
+/// and a test function testing that something with an `Arc<AuthorityState>`.
 pub fn run_proptest<D>(
     num_test_cases: u32,
     strategy: impl Strategy<Value = D>,
