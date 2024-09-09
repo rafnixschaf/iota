@@ -12,9 +12,9 @@ serialization and deserialization in various environments. The main target for t
 
 This package is a perfect fit for the following applications:
 
-- Publishing new Coins
-- Publishing TransferPolicies
-- Initializing any base type with a custom sub-type
+-   Publishing new Coins
+-   Publishing TransferPolicies
+-   Initializing any base type with a custom sub-type
 
 ## Example of a Template Module
 
@@ -77,26 +77,26 @@ let updated;
 
 // Update DECIMALS
 updated = update_constants(
-	bytecode,
-	bcs.u8().serialize(3).toBytes(), // new value
-	bcs.u8().serialize(6).toBytes(), // current value
-	'U8', // type of the constant
+    bytecode,
+    bcs.u8().serialize(3).toBytes(), // new value
+    bcs.u8().serialize(6).toBytes(), // current value
+    'U8', // type of the constant
 );
 
 // Update SYMBOL
 updated = update_constants(
-	updated,
-	bcs.vector(bcs.string()).serialize('MYC').toBytes(), // new value
-	bcs.vector(bcs.string()).serialize('TMPL').toBytes(), // current value
-	'Vector(U8)', // type of the constant
+    updated,
+    bcs.vector(bcs.string()).serialize('MYC').toBytes(), // new value
+    bcs.vector(bcs.string()).serialize('TMPL').toBytes(), // current value
+    'Vector(U8)', // type of the constant
 );
 
 // Update NAME
 updated = update_constants(
-	updated,
-	bcs.vector(bcs.string()).serialize('My Coin').toBytes(), // new value
-	bcs.vector(bcs.string()).serialize('Template Coin').toBytes(), // current value
-	'Vector(U8)', // type of the constant
+    updated,
+    bcs.vector(bcs.string()).serialize('My Coin').toBytes(), // new value
+    bcs.vector(bcs.string()).serialize('Template Coin').toBytes(), // current value
+    'Vector(U8)', // type of the constant
 );
 ```
 
@@ -143,8 +143,8 @@ const templateBytecode = fromHEX('a11ceb0b06....');
 template.deserialize(templateBytecode);
 template.version();
 template.update_identifiers(templateBytecode, {
-	TEMPLATE: 'MY_MODULE',
-	template: 'my_module',
+    TEMPLATE: 'MY_MODULE',
+    template: 'my_module',
 });
 ```
 
