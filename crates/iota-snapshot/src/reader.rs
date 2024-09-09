@@ -1,42 +1,59 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
+use std::{
+    collections::BTreeMap,
+    fs,
+    fs::File,
+    io::{BufReader, Read, Seek, SeekFrom},
+    num::NonZeroUsize,
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+        Arc,
+    },
+};
+
+use anyhow::{anyhow, Context, Result};
+use byteorder::{BigEndian, ReadBytesExt};
+use bytes::{Buf, Bytes};
+use fastcrypto::hash::{HashFunction, MultisetHash, Sha3_256};
+use futures::{
+    future::{AbortRegistration, Abortable},
+    StreamExt, TryStreamExt,
+};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use integer_encoding::VarIntReader;
+use iota_config::object_storage_config::ObjectStoreConfig;
+use iota_core::authority::{
+    authority_store_tables::{AuthorityPerpetualTables, LiveObject},
+    AuthorityStore,
+};
+use iota_storage::{
+    blob::{Blob, BlobEncoding},
+    object_store::{
+        http::HttpDownloaderBuilder,
+        util::{copy_file, copy_files, path_to_filesystem},
+        ObjectStoreGetExt, ObjectStorePutExt,
+    },
+};
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::{ObjectDigest, ObjectID, ObjectRef, SequenceNumber},
+};
+use object_store::path::Path;
+use tokio::{
+    sync::Mutex,
+    task::JoinHandle,
+    time::{Duration, Instant},
+};
+use tracing::{error, info};
 
 use crate::{
     FileMetadata, FileType, Manifest, MAGIC_BYTES, MANIFEST_FILE_MAGIC, OBJECT_FILE_MAGIC,
     OBJECT_ID_BYTES, OBJECT_REF_BYTES, REFERENCE_FILE_MAGIC, SEQUENCE_NUM_BYTES, SHA3_BYTES,
 };
-use anyhow::{anyhow, Context, Result};
-use byteorder::{BigEndian, ReadBytesExt};
-use bytes::{Buf, Bytes};
-use fastcrypto::hash::MultisetHash;
-use fastcrypto::hash::{HashFunction, Sha3_256};
-use futures::future::{AbortRegistration, Abortable};
-use futures::{StreamExt, TryStreamExt};
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use integer_encoding::VarIntReader;
-use object_store::path::Path;
-use std::collections::BTreeMap;
-use std::fs;
-use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::Arc;
-use sui_config::object_storage_config::ObjectStoreConfig;
-use sui_core::authority::authority_store_tables::{AuthorityPerpetualTables, LiveObject};
-use sui_core::authority::AuthorityStore;
-use sui_storage::blob::{Blob, BlobEncoding};
-use sui_storage::object_store::http::HttpDownloaderBuilder;
-use sui_storage::object_store::util::{copy_file, copy_files, path_to_filesystem};
-use sui_storage::object_store::{ObjectStoreGetExt, ObjectStorePutExt};
-use sui_types::accumulator::Accumulator;
-use sui_types::base_types::{ObjectDigest, ObjectID, ObjectRef, SequenceNumber};
-use tokio::sync::Mutex;
-use tokio::task::JoinHandle;
-use tokio::time::Duration;
-use tokio::time::Instant;
-use tracing::{error, info};
 
 pub type SnapshotChecksums = (DigestByBucketAndPartition, Accumulator);
 pub type DigestByBucketAndPartition = BTreeMap<u32, BTreeMap<u32, [u8; 32]>>;
@@ -138,7 +155,7 @@ impl StateSnapshotReaderV1 {
         let progress_bar = m.add(
             ProgressBar::new(files.len() as u64).with_style(
                 ProgressStyle::with_template(
-                    "[{elapsed_precise}] {wide_bar} {pos} out of {len} .ref files done\n({msg})",
+                    "[{elapsed_precise}] {wide_bar} {pos} out of {len} .ref files done ({msg})",
                 )
                 .unwrap(),
             ),
@@ -170,13 +187,15 @@ impl StateSnapshotReaderV1 {
         &mut self,
         perpetual_db: &AuthorityPerpetualTables,
         abort_registration: AbortRegistration,
-        sender: Option<tokio::sync::mpsc::Sender<Accumulator>>,
+        sender: Option<tokio::sync::mpsc::Sender<(Accumulator, u64)>>,
     ) -> Result<()> {
-        // This computes and stores the sha3 digest of object references in REFERENCE file for each
-        // bucket partition. When downloading objects, we will match sha3 digest of object references
-        // per *.obj file against this. We do this so during restore we can pre fetch object
-        // references and start building state accumulator and fail early if the state root hash
-        // doesn't match but we still need to ensure that objects match references exactly.
+        // This computes and stores the sha3 digest of object references in REFERENCE
+        // file for each bucket partition. When downloading objects, we will
+        // match sha3 digest of object references per *.obj file against this.
+        // We do this so during restore we can pre fetch object references and
+        // start building state accumulator and fail early if the state root hash
+        // doesn't match but we still need to ensure that objects match references
+        // exactly.
         let sha3_digests: Arc<Mutex<DigestByBucketAndPartition>> =
             Arc::new(Mutex::new(BTreeMap::new()));
 
@@ -239,7 +258,7 @@ impl StateSnapshotReaderV1 {
 
     fn spawn_accumulation_tasks(
         &self,
-        sender: tokio::sync::mpsc::Sender<Accumulator>,
+        sender: tokio::sync::mpsc::Sender<(Accumulator, u64)>,
         num_part_files: usize,
     ) -> JoinHandle<()> {
         // Spawn accumulation progress bar
@@ -249,7 +268,7 @@ impl StateSnapshotReaderV1 {
         let accum_progress_bar = self.m.add(
              ProgressBar::new(num_part_files as u64).with_style(
                  ProgressStyle::with_template(
-                     "[{elapsed_precise}] {wide_bar} {pos} out of {len} ref files accumulated ({msg})",
+                     "[{elapsed_precise}] {wide_bar} {pos} out of {len} ref files accumulated from snapshot ({msg})",
                  )
                  .unwrap(),
              ),
@@ -306,9 +325,10 @@ impl StateSnapshotReaderV1 {
                         let sender_clone = sender.clone();
                         tokio::spawn(async move {
                             let mut partial_acc = Accumulator::default();
+                            let num_objects = obj_digests.len();
                             partial_acc.insert_all(obj_digests);
                             sender_clone
-                                .send(partial_acc)
+                                .send((partial_acc, num_objects as u64))
                                 .await
                                 .expect("Unable to send accumulator from snapshot reader");
                         })
@@ -350,7 +370,7 @@ impl StateSnapshotReaderV1 {
         let obj_progress_bar = self.m.add(
             ProgressBar::new(input_files.len() as u64).with_style(
                 ProgressStyle::with_template(
-                    "[{elapsed_precise}] {wide_bar} {pos} out of {len} .obj files done\n({msg})",
+                    "[{elapsed_precise}] {wide_bar} {pos} out of {len} .obj files done ({msg})",
                 )
                 .unwrap(),
             ),
@@ -388,8 +408,9 @@ impl StateSnapshotReaderV1 {
                                         );
                                         if timeout > max_timeout {
                                             panic!(
-                                                "Failed to get obj file after {} attempts",
-                                                attempts
+                                                "Failed to get obj file {} after {} attempts",
+                                                file_metadata.file_path(&epoch_dir),
+                                                attempts,
                                             );
                                         } else {
                                             attempts += 1;
