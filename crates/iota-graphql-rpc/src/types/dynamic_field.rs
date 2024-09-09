@@ -102,7 +102,7 @@ impl DynamicField {
     async fn value(&self, ctx: &Context<'_>) -> Result<Option<DynamicFieldValue>> {
         if self.df_kind == DynamicFieldType::DynamicObject {
             // If `df_kind` is a DynamicObject, the object we are currently on is the field object,
-            // and we must resolve one more level down to the value object. Becuase we only have
+            // and we must resolve one more level down to the value object. Because we only have
             // checkpoint-level granularity, we may end up reading a later version of the value
             // object. Thus, we use the version of the field object to bound the value object at the
             // correct version.

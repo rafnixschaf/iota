@@ -432,7 +432,7 @@ pub struct GlobalEnv {
     pub module_data: Vec<ModuleData>,
     /// A type-indexed container for storing extension data in the environment.
     extensions: RefCell<BTreeMap<TypeId, Box<dyn Any>>>,
-    /// The address of the standard and extension libaries.
+    /// The address of the standard and extension libraries.
     stdlib_address: Option<BigUint>,
     extlib_address: Option<BigUint>,
 }
@@ -3239,7 +3239,7 @@ impl<'env> FunctionEnv<'env> {
         self.definition().visibility
     }
 
-    /// Return true if the function is an entry fucntion
+    /// Return true if the function is an entry function
     pub fn is_entry(&self) -> bool {
         self.definition().is_entry
     }

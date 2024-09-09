@@ -398,7 +398,7 @@ impl std::fmt::Display for ResolvedModuleMember {
 //**************************************************************************************************
 // Module Index
 //**************************************************************************************************
-// This indes is used for looking full paths up in name resolution.
+// This index is used for looking full paths up in name resolution.
 
 pub type ModuleMembers = BTreeMap<ModuleIdent, BTreeMap<Symbol, ResolvedModuleMember>>;
 
@@ -1459,7 +1459,7 @@ impl ErrorKind {
             ErrorKind::Module => "module",
             ErrorKind::ApplyNamed => "struct or enum variant",
             ErrorKind::PatternTerm if single_name => "variable or constant",
-            ErrorKind::PatternTerm => "loca, constant, or enum variant (of no arguments)",
+            ErrorKind::PatternTerm => "local, constant, or enum variant (of no arguments)",
         }
     }
 
@@ -3567,11 +3567,11 @@ fn match_pattern(context: &mut Context, in_pat: Box<E::MatchPattern>) -> Box<N::
                     );
                     match *ctor {
                         ResolvedConstructor::Struct(stype) => {
-                            // No need to chck is_empty / is_positional because typing will report the errors.
+                            // No need to check is_empty / is_positional because typing will report the errors.
                             NP::Struct(stype.mident, stype.name, tys_opt, UniqueMap::new())
                         }
                         ResolvedConstructor::Variant(vtype) => {
-                            // No need to chck is_empty / is_positional because typing will report the errors.
+                            // No need to check is_empty / is_positional because typing will report the errors.
                             NP::Variant(
                                 vtype.mident,
                                 vtype.enum_name,

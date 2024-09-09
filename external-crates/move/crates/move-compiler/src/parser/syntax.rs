@@ -369,7 +369,7 @@ where
                     if context.tokens.peek() == end_token || context.at_stop_set() {
                         break;
                     }
-                    // expect a commma - since we are not at stop set, consume it or advance to the
+                    // expect a comma - since we are not at stop set, consume it or advance to the
                     // next time or end of the list
                     if context.tokens.at(Tok::Comma) {
                         context.advance();
@@ -829,7 +829,7 @@ fn parse_name_access_chain_<'a, F: Fn() -> &'a str>(
             Ok(ident) => ident,
             Err(_) => {
                 // diagnostic for this is reported in path expansion (as a parsing error) when we
-                // detect incomplete chaing (adding "default" diag here would make error reporting
+                // detect incomplete chain (adding "default" diag here would make error reporting
                 // somewhat redundant in this case)
                 path.is_incomplete = true;
                 return Ok(NameAccessChain_::Path(path));
@@ -1813,7 +1813,7 @@ fn parse_block_label(context: &mut Context) -> Result<BlockLabel, Box<Diagnostic
 // AND NOT,       if (cond) e1 else ({ e2 } + 1)
 // But otherwise, if (cond) e1 else e2 + 1
 // should be,     if (cond) e1 else (e2 + 1)
-// This also aplies to any named block
+// This also applies to any named block
 // e.g.           if (cond) e1 else 'a: { e2 } + 1
 // should be,    (if (cond) e1 else 'a: { e2 }) + 1
 fn parse_control_exp(context: &mut Context) -> Result<(Exp, bool), Box<Diagnostic>> {

@@ -5,7 +5,7 @@ module 0x42::m {
 
     public enum Temperature {
         Fahrenheit(u64),
-        Celcius(u32)
+        Celsius(u32)
     }
 
     public fun f(): Temperature {
@@ -13,13 +13,13 @@ module 0x42::m {
     }
 
     public fun c(): Temperature {
-        Temperature::Celcius(0)
+        Temperature::Celsius(0)
     }
 
     public fun dtor(t: Temperature) {
         match (t) {
             Temperature::Fahrenheit(_) => (), 
-            Temperature::Celcius(_) => (), 
+            Temperature::Celsius(_) => (), 
         }
     }
 

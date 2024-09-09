@@ -190,7 +190,7 @@ fn modules(
     for (mident, friends) in all_new_friends {
         let mdef = typed_modules.get_mut(&mident).unwrap();
         // point of interest: if we have any new friends, we know there can't be any
-        // "current" friends becahse all thew new friends are generated off of
+        // "current" friends because all thew new friends are generated off of
         // `public(package)` usage, which disallows other friends.
         mdef.friends = UniqueMap::maybe_from_iter(friends.into_iter())
             .expect("ICE compiler added duplicate friends to public(package) friend list");
@@ -761,9 +761,9 @@ fn enum_def(context: &mut Context, enum_: &mut N::EnumDefinition) {
 
     let mut field_types = vec![];
     for (vloc, _, variant) in enum_.variants.iter_mut() {
-        let mut varient_fields =
+        let mut variant_fields =
             variant_def(context, vloc, enum_abilities, enum_type_params, variant);
-        field_types.append(&mut varient_fields);
+        field_types.append(&mut variant_fields);
     }
 
     check_variant_type_params_usage(context, enum_type_params, field_types);
@@ -2033,7 +2033,7 @@ fn binop(
         Range | Implies | Iff => {
             context
                 .env
-                .add_diag(ice!((loc, "ICE unexpect specification operator")));
+                .add_diag(ice!((loc, "ICE unexpected specification operator")));
             (context.error_type(loc), context.error_type(loc))
         }
     };
@@ -2868,7 +2868,7 @@ fn add_struct_field_types<T>(
         N::StructFields::Native(nloc) => {
             let msg = format!(
                 "Invalid {} usage for native struct '{}::{}'. Native structs cannot be directly \
-                 constructed/deconstructed, and their fields cannot be dirctly accessed",
+                 constructed/deconstructed, and their fields cannot be directly accessed",
                 verb, m, n
             );
             context.env.add_diag(diag!(

@@ -261,7 +261,7 @@ fn find_counterexample_impl(
         arity: u32,
         ndx: &mut u32,
     ) -> Option<Vec<CounterExample>> {
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         assert!(literals.len() <= 2, "ICE match exhaustiveness failure");
         if literals.len() == 2 {
             // Saturated
@@ -316,7 +316,7 @@ fn find_counterexample_impl(
     ) -> Option<Vec<CounterExample>> {
         // For all other non-literals, we don't consider a case where the constructors are
         // saturated.
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         let (_, default) = matrix.specialize_default();
         if let Some(counterexample) = counterexample_rec(context, default, arity - 1, ndx) {
             if literals.is_empty() {
@@ -330,7 +330,7 @@ fn find_counterexample_impl(
                 *ndx += 1;
                 let lit_str = {
                     let lit_len = literals.len() as u64;
-                    let fmt_lits = if lit_len > 4 {
+                    let fmt_list = if lit_len > 4 {
                         let mut result = literals
                             .into_iter()
                             .take(3)
@@ -344,7 +344,7 @@ fn find_counterexample_impl(
                             .map(|lit| lit.to_string())
                             .collect::<Vec<_>>()
                     };
-                    format_oxford_list!("or", "{}", fmt_lits)
+                    format_oxford_list!("or", "{}", fmt_list)
                 };
                 let lit_msg = format!("When '{}' is not {}", n_id, lit_str);
                 let lit_ce = CounterExample::Note(lit_msg, Box::new(CounterExample::Literal(n_id)));
@@ -613,7 +613,7 @@ fn ide_report_missing_arms(context: &mut Context, loc: Loc, matrix: &PatternMatr
     // IDE add an arm to address that missing one.
 
     fn report_bool(context: &mut Context, loc: Loc, matrix: &PatternMatrix) {
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         assert!(literals.len() <= 2, "ICE match exhaustiveness failure");
         // Figure out which are missing
         let mut unused = BTreeSet::from([Value_::Bool(true), Value_::Bool(false)]);

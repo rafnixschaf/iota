@@ -88,7 +88,7 @@ impl CheckpointTransaction {
         // Iterator over id and versions for all deleted or wrapped objects
         match &self.effects {
             TransactionEffects::V1(v1) => Either::Left(
-                // Effects v1 has delted and wrapped objects versions as the "new" version, not the
+                // Effects v1 has deleted and wrapped objects versions as the "new" version, not the
                 // old one that was actually removed. So we need to take these and then look them
                 // up in the `modified_at_versions`.
                 // No need to chain unwrapped_then_deleted because these objects must have been wrapped

@@ -435,7 +435,7 @@ impl Position {
         self.column_offset
     }
 
-    /// Btye offset for position (0-indexed)
+    /// Byte offset for position (0-indexed)
     pub fn byte_offset(&self) -> usize {
         self.byte_offset
     }

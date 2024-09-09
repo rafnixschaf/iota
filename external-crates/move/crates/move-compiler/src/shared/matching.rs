@@ -632,7 +632,7 @@ impl PatternMatrix {
         self.patterns.iter().find_map(|pat| pat.first_struct())
     }
 
-    pub fn first_lits(&self) -> BTreeSet<Value> {
+    pub fn first_list(&self) -> BTreeSet<Value> {
         self.patterns
             .iter()
             .flat_map(|pat| pat.first_lit())

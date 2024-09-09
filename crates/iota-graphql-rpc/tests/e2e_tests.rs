@@ -853,7 +853,7 @@ mod tests {
         cluster
             .wait_for_checkpoint_catchup(0, Duration::from_secs(10))
             .await;
-        // timeout test includes mutation timeout, which requies a [IotaClient] to be able to run
+        // timeout test includes mutation timeout, which requires a [IotaClient] to be able to run
         // the test, and a transaction. [WalletContext] gives access to everything that's needed.
         let wallet = &cluster.validator_fullnode_handle.wallet;
         test_timeout_impl(wallet).await;

@@ -72,7 +72,7 @@ const DATA_INGESTION_LATENCY_SEC_BUCKETS: &[f64] = &[
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0,
 ];
 /// NOTE: for objects_snapshot update and advance_epoch, which are expected to be within [0.1, 100] seconds,
-/// and can go up to high hundres of seconds when things go wrong.
+/// and can go up to high hundreds of seconds when things go wrong.
 const DB_UPDATE_QUERY_LATENCY_SEC_BUCKETS: &[f64] = &[
     0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0,
     10000.0,
@@ -224,7 +224,7 @@ impl IndexerMetrics {
             )
             .unwrap(),
             total_transaction_chunk_committed: register_int_counter_with_registry!(
-                "total_transaction_chunk_commited",
+                "total_transaction_chunk_committed",
                 "Total number of transaction chunk committed",
                 registry,
             )

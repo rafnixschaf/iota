@@ -2,7 +2,7 @@ module a::a {
 
     public enum Temperature {
         Fahrenheit(u64),
-        Celcius(u32)
+        Celsius(u32)
     }
 
     fun is_temperature_fahrenheit(t: &Temperature): bool {

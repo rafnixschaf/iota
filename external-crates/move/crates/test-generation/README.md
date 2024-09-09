@@ -52,7 +52,7 @@ To run the tool
 
 This tool works by modeling the state of the VM abstractly, and by modeling the bytecode
 instructions in terms of that abstract state. The abstract state is defined in
-`abstact_state.rs`. It consists of type-level modeling of the VM stack, locals, and borrow
+`abstract_state.rs`. It consists of type-level modeling of the VM stack, locals, and borrow
 graph.
 
 Instructions are defined in terms of their preconditions and effects. These definitions are

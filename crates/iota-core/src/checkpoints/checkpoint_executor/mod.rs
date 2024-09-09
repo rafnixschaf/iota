@@ -1059,7 +1059,7 @@ fn get_unexecuted_transactions(
 
     let randomness_rounds = if let Some(version_specific_data) = checkpoint
         .version_specific_data(epoch_store.protocol_config())
-        .expect("unable to get verison_specific_data")
+        .expect("unable to get version_specific_data")
     {
         // With version-specific data, randomness rounds are stored in checkpoint summary.
         version_specific_data.into_v1().randomness_rounds

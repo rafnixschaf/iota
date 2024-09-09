@@ -8,15 +8,15 @@ module 0x1.Tester {
     // the key struct is here to just give a feeling why the computation might not be reorderable
     set_and_pick(init: &mut Self.Initializer, p: &mut Self.Point): &mut u64 {
     let ix: &mut u64;
-    let iy: &mut u64;
+    let it: &mut u64;
     let px: &mut u64;
     let py: &mut u64;
 
     label b0:
-        &mut Initializer.V { x: ix, y: iy } = move(init);
+        &mut Initializer.V { x: ix, y: it } = move(init);
         &mut Point.V { x: px, y: py } = copy(p);
         *move(px) = *move(ix);
-        *move(py) = *move(iy);
+        *move(py) = *move(it);
         &mut Point.V { x: px, y: py } = copy(p);
         jump_if (*copy(px) >= *copy(py)) b2;
     label b1:
@@ -56,15 +56,15 @@ module 0x1.Tester {
     // the key struct is here to just give a feeling why the computation might not be reorderable
     set_and_pick(init: &mut Self.Initializer, p: &mut Self.Point): &mut u64 {
     let ix: &mut u64;
-    let iy: &mut u64;
+    let it: &mut u64;
     let px: &mut u64;
     let py: &mut u64;
 
     label b0:
-        &mut Initializer.V { x: ix, y: iy } = move(init);
+        &mut Initializer.V { x: ix, y: it } = move(init);
         &mut Point.V { x: px, y: py } = copy(p);
         *move(px) = *move(ix);
-        *move(py) = *move(iy);
+        *move(py) = *move(it);
         &mut Point.V { x: px, y: py } = copy(p);
         jump_if (*copy(px) >= *copy(py)) b2;
     label b1:

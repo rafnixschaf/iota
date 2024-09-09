@@ -284,9 +284,9 @@ fn compile_match_head(
             .expect("ICE empty fringe in match compilation");
         let mut subject_binders = vec![];
         // treat column as a literal
-        let lits = matrix.first_lits();
+        let list = matrix.first_list();
         let mut arms = BTreeMap::new();
-        for lit in lits {
+        for lit in list {
             let lit_loc = lit.loc;
             debug_print!(context.debug.match_specialization, ("lit specializing" => lit ; fmt));
             let (mut new_binders, inner_matrix) = matrix.specialize_literal(&lit);
@@ -717,7 +717,7 @@ fn make_arm_unpack(
 
     let mut queue: VecDeque<(FringeEntry, MatchPattern)> = VecDeque::from([(subject, pattern)]);
 
-    // TODO(cgswords): we can coalese patterns a bit here, but don't for now.
+    // TODO(cgswords): we can coalesce patterns a bit here, but don't for now.
     while let Some((entry, pat)) = queue.pop_front() {
         let ploc = pat.pat.loc;
         match pat.pat.value {

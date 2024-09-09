@@ -2309,7 +2309,7 @@ pub struct CompiledModule {
 
     pub metadata: Vec<Metadata>,
 
-    /// Struc types defined in this module.
+    /// Struct types defined in this module.
     pub struct_defs: Vec<StructDefinition>,
     /// Function defined in this module.
     pub function_defs: Vec<FunctionDefinition>,

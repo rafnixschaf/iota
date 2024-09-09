@@ -248,7 +248,7 @@ fn fun_def_info(symbols: &Symbols, mod_ident: ModuleIdent_, name: Symbol) -> Opt
     symbols.def_info(&fdef.name_loc)
 }
 
-fn lamda_snippet(sp!(_, ty): &Type, snippet_idx: &mut i32) -> Option<String> {
+fn lambda_snippet(sp!(_, ty): &Type, snippet_idx: &mut i32) -> Option<String> {
     if let Type_::Fun(vec, _) = ty {
         let arg_snippets = vec
             .iter()
@@ -290,7 +290,7 @@ fn call_completion_item(
         .zip(arg_types)
         .skip(omitted_arg_count)
         .map(|(name, ty)| {
-            lamda_snippet(ty, &mut snippet_idx).unwrap_or_else(|| {
+            lambda_snippet(ty, &mut snippet_idx).unwrap_or_else(|| {
                 let mut arg_name = name.to_string();
                 if arg_name.starts_with('$') {
                     arg_name = arg_name[1..].to_string();

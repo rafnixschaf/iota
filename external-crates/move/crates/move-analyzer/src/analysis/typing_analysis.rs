@@ -29,7 +29,7 @@ use im::OrdMap;
 use lsp_types::Position;
 use std::collections::BTreeMap;
 
-/// Data used during anlysis over typed AST
+/// Data used during analysis over typed AST
 pub struct TypingAnalysisContext<'a> {
     /// Outermost definitions in a module (structs, consts, functions), keyd on a ModuleIdent
     /// string so that we can access it regardless of the ModuleIdent representation

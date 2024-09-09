@@ -605,7 +605,7 @@ impl PatternMatrix {
         self.patterns.iter().find_map(|pat| pat.first_struct())
     }
 
-    fn first_lits(&self) -> BTreeSet<Value> {
+    fn first_list(&self) -> BTreeSet<Value> {
         self.patterns
             .iter()
             .flat_map(|pat| pat.first_lit())
@@ -1175,9 +1175,9 @@ fn compile_match_head(
             .expect("ICE empty fringe in match compilation");
         let mut subject_binders = vec![];
         // treat column as a literal
-        let lits = matrix.first_lits();
+        let list = matrix.first_list();
         let mut arms = BTreeMap::new();
-        for lit in lits {
+        for lit in list {
             let lit_loc = lit.loc;
             debug_print!(context.debug.match_specialization, ("lit specializing" => lit ; fmt));
             let (mut new_binders, inner_matrix) = matrix.specialize_literal(&lit);
@@ -1612,7 +1612,7 @@ fn make_arm_unpack(
 
     let mut queue: VecDeque<(FringeEntry, MatchPattern)> = VecDeque::from([(subject, pattern)]);
 
-    // TODO(cgswords): we can coalese patterns a bit here, but don't for now.
+    // TODO(cgswords): we can coalesce patterns a bit here, but don't for now.
     while let Some((entry, pat)) = queue.pop_front() {
         let ploc = pat.pat.loc;
         match pat.pat.value {
@@ -2379,7 +2379,7 @@ fn find_counterexample_impl(
         arity: u32,
         ndx: &mut u32,
     ) -> Option<Vec<CounterExample>> {
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         assert!(literals.len() <= 2, "ICE match exhaustiveness failure");
         if literals.len() == 2 {
             // Saturated
@@ -2434,7 +2434,7 @@ fn find_counterexample_impl(
     ) -> Option<Vec<CounterExample>> {
         // For all other non-literals, we don't consider a case where the constructors are
         // saturated.
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         let (_, default) = matrix.specialize_default();
         if let Some(counterexample) = counterexample_rec(context, default, arity - 1, ndx) {
             if literals.is_empty() {
@@ -2448,7 +2448,7 @@ fn find_counterexample_impl(
                 *ndx += 1;
                 let lit_str = {
                     let lit_len = literals.len() as u64;
-                    let fmt_lits = if lit_len > 4 {
+                    let fmt_list = if lit_len > 4 {
                         let mut result = literals
                             .into_iter()
                             .take(3)
@@ -2462,7 +2462,7 @@ fn find_counterexample_impl(
                             .map(|lit| lit.to_string())
                             .collect::<Vec<_>>()
                     };
-                    format_oxford_list!("or", "{}", fmt_lits)
+                    format_oxford_list!("or", "{}", fmt_list)
                 };
                 let lit_msg = format!("When '{}' is not {}", n_id, lit_str);
                 let lit_ce = CounterExample::Note(lit_msg, Box::new(CounterExample::Literal(n_id)));
@@ -2707,7 +2707,7 @@ fn ide_report_missing_arms(context: &mut Context, loc: Loc, matrix: &PatternMatr
     // IDE add an arm to address that missing one.
 
     fn report_bool(context: &mut Context, loc: Loc, matrix: &PatternMatrix) {
-        let literals = matrix.first_lits();
+        let literals = matrix.first_list();
         assert!(literals.len() <= 2, "ICE match exhaustiveness failure");
         // Figure out which are missing
         let mut unused = BTreeSet::from([Value_::Bool(true), Value_::Bool(false)]);

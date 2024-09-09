@@ -41,7 +41,7 @@ pub trait LeftScreen {
 /// translates these indices into a `SourceContext` view of the text held by the implementor of the
 /// `RightScreen` trait.
 pub trait RightScreen<Indexer: LeftScreen> {
-    /// Take a `SourceIndex` from the `Indexer` and turn it into a context that will be diplayed on
+    /// Take a `SourceIndex` from the `Indexer` and turn it into a context that will be displayed on
     /// the right screen.
     fn source_for_code_location(
         &self,

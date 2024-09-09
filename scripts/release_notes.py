@@ -100,7 +100,7 @@ def parse_args():
     check_p = sub_parser.add_parser(
         "check",
         description=(
-            "Check if the release notes section of a givne commit is complete, "
+            "Check if the release notes section of a given commit is complete, "
             "i.e. that every impacted component has a non-empty note."
         ),
     )

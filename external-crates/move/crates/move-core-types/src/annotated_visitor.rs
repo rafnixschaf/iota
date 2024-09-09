@@ -422,7 +422,7 @@ impl<'r, 'b, 'l> VariantDriver<'r, 'b, 'l> {
 }
 
 /// Visit a serialized Move value with the provided `layout`, held in `bytes`, using the provided
-/// visitor to build a value out of it. See `annoted_value::MoveValue::visit_deserialize` for
+/// visitor to build a value out of it. See `annotated_value::MoveValue::visit_deserialize` for
 /// details.
 pub(crate) fn visit_value<V: Visitor + ?Sized>(
     bytes: &mut &[u8],

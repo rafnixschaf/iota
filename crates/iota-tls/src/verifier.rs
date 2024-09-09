@@ -25,7 +25,7 @@ static SUPPORTED_ALGORITHMS: WebPkiSupportedAlgorithms = WebPkiSupportedAlgorith
 
 pub type ValidatorAllowlist = Arc<RwLock<HashSet<Ed25519PublicKey>>>;
 
-/// The Allower trait provides an interface for callers to inject decsions whether
+/// The Allower trait provides an interface for callers to inject decisions whether
 /// to allow a cert to be verified or not.  This does not prform actual cert validation
 /// it only acts as a gatekeeper to decide if we should even try.  For example, we may want
 /// to filter our actions to well known public keys.

@@ -165,7 +165,7 @@ take a look at the `Move.lock` file and what it contains.
 
 ## Move.lock
 
-The `Move.lock` file is generated at the root of the Move pacakge when the
+The `Move.lock` file is generated at the root of the Move package when the
 package is built. The `Move.lock` file contains information about your package
 and its build configuration, and acts as a communication layer between the Move
 compiler and other tools, like chain-specific command line interfaces and

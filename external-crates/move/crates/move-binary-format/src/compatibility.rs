@@ -19,7 +19,7 @@ use move_core_types::vm_status::StatusCode;
 //
 // If `check_datatype_layout` and/or `check_datatype_and_pub_function_linking` is false, type
 // safety over a series of upgrades cannot be guaranteed for either structs or enums. This is
-// because the type could first be removed, and then re-introduced with a diferent layout and/or
+// because the type could first be removed, and then re-introduced with a different layout and/or
 // additional variants in a later upgrade. E.g.,
 // * For enums you could add a new variant even if `disallow_new_variants` is true, by first
 //   removing the enum in an upgrade, and then reintroducing it with a new variant in a later
@@ -382,7 +382,7 @@ fn type_parameter_phantom_decl_compatible(
         // phantom/non-phantom cannot change from one version to the next.
         old_type_parameter.is_phantom == new_type_parameter.is_phantom
     } else {
-        // old_type_paramter.is_phantom => new_type_parameter.is_phantom
+        // old_type_parameter.is_phantom => new_type_parameter.is_phantom
         !old_type_parameter.is_phantom || new_type_parameter.is_phantom
     }
 }
