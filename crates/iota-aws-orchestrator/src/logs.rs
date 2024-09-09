@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::cmp::max;
@@ -31,8 +32,8 @@ impl LogsAnalyzer {
         self.client_panic = log.contains("panic");
     }
 
-    /// Aggregate multiple log analyzers into one, based on the analyzer that found the
-    /// most serious errors.
+    /// Aggregate multiple log analyzers into one, based on the analyzer that
+    /// found the most serious errors.
     pub fn aggregate(counters: Vec<Self>) -> Self {
         let mut highest = Self::default();
         for counter in counters {

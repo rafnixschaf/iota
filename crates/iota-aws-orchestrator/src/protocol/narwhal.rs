@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -7,15 +8,15 @@ use std::{
     str::FromStr,
 };
 
+use narwhal_config::PrometheusMetricsParameters;
+use serde::{Deserialize, Serialize};
+
+use super::{ProtocolCommands, ProtocolMetrics};
 use crate::{
     benchmark::{BenchmarkParameters, BenchmarkType},
     client::Instance,
     settings::Settings,
 };
-use narwhal_config::PrometheusMetricsParameters;
-use serde::{Deserialize, Serialize};
-
-use super::{ProtocolCommands, ProtocolMetrics};
 
 const NUM_WORKERS: usize = 1;
 const BASE_PORT: usize = 5000;
@@ -244,7 +245,7 @@ impl ProtocolMetrics for NarwhalProtocol {
                     "{}:{}{}",
                     instance.main_ip,
                     PrometheusMetricsParameters::DEFAULT_PORT,
-                    mysten_metrics::METRICS_ROUTE
+                    iota_metrics::METRICS_ROUTE
                 );
                 (instance, path)
             })

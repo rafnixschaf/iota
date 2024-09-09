@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{fmt::Display, io::stdout};
@@ -93,9 +94,8 @@ mod test {
 
     use tokio::time::sleep;
 
-    use crate::display::status;
-
     use super::{action, config, done, error, header, newline, warn};
+    use crate::display::status;
 
     #[tokio::test]
     #[ignore = "only used to manually check if prints work correctly"]
