@@ -15,7 +15,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Retrieve `tx_digest` from command-line arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
+    if args.len() != 2 {
         println!("Usage: <tx_digest>");
         return Ok(());
     }
