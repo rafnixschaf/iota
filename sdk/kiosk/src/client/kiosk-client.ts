@@ -1,7 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SuiClient } from '@mysten/sui.js/client';
+import type { PaginationArguments, IotaClient } from '@iota/iota/client';
 
 import {
 	FLOOR_PRICE_RULE_ADDRESS,
@@ -33,7 +34,7 @@ import type {
  * If you pass packageIds, all functionality will be managed using these packages.
  */
 export class KioskClient {
-	client: SuiClient;
+	client: IotaClient;
 	network: Network;
 	rules: TransferPolicyRule[];
 	packageIds?: BaseRulePackageIds;
@@ -54,13 +55,21 @@ export class KioskClient {
 	/**
 	 * Get an addresses's owned kiosks.
 	 * @param address The address for which we want to retrieve the kiosks.
+	 * @param pagination Optional pagination arguments.
 	 * @returns An Object containing all the `kioskOwnerCap` objects as well as the kioskIds.
 	 */
-	async getOwnedKiosks({ address }: { address: string }): Promise<OwnedKiosks> {
+	async getOwnedKiosks({
+		address,
+		pagination,
+	}: {
+		address: string;
+		pagination?: PaginationArguments<string>;
+	}): Promise<OwnedKiosks> {
 		const personalPackageId =
 			this.packageIds?.personalKioskRulePackageId || PERSONAL_KIOSK_RULE_ADDRESS[this.network];
 
 		return getOwnedKiosks(this.client, address, {
+			pagination,
 			personalKioskType: personalPackageId
 				? `${personalPackageId}::personal_kiosk::PersonalKioskCap`
 				: '',

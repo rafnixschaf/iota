@@ -1,7 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ObjectOwner } from '@mysten/sui.js/client';
+import type { ObjectOwner } from '@iota/iota/client';
 
 import type { Rpc_Object_FieldsFragment } from '../generated/queries.js';
 
@@ -13,10 +14,10 @@ export function mapGraphQLOwnerToRpcOwner(
 			return owner.owner?.asObject
 				? {
 						ObjectOwner: owner.owner?.asObject.address!,
-				  }
+					}
 				: {
 						AddressOwner: owner.owner?.asAddress?.address!,
-				  };
+					};
 		case 'Parent':
 			return {
 				ObjectOwner: owner.parent?.address,

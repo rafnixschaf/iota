@@ -1,20 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { SuiTransactionBlockResponse } from '../../src/client';
-import { TransactionBlock } from '../../src/transactions';
-import { executePaySuiNTimes, setup, TestToolbox } from './utils/setup';
+import { IotaTransactionBlockResponse } from '../../src/client';
+import { Transaction } from '../../src/transactions';
+import { executePayIotaNTimes, setup, TestToolbox } from './utils/setup';
 
 describe('Transaction Reading API', () => {
 	let toolbox: TestToolbox;
-	let transactions: SuiTransactionBlockResponse[];
+	let transactions: IotaTransactionBlockResponse[];
 	const NUM_TRANSACTIONS = 10;
 
 	beforeAll(async () => {
 		toolbox = await setup();
-		transactions = await executePaySuiNTimes(toolbox.client, toolbox.keypair, NUM_TRANSACTIONS);
+		transactions = await executePayIotaNTimes(toolbox.client, toolbox.keypair, NUM_TRANSACTIONS);
 	});
 
 	it('Get Total Transactions', async () => {
@@ -22,14 +23,14 @@ describe('Transaction Reading API', () => {
 		expect(numTransactions).toBeGreaterThan(0);
 	});
 
-	describe('waitForTransactionBlock', () => {
+	describe('waitForTransaction', () => {
 		async function setupTransaction() {
-			const tx = new TransactionBlock();
-			const [coin] = tx.splitCoins(tx.gas, [tx.pure(1)]);
-			tx.transferObjects([coin], tx.pure(toolbox.address()));
-			return toolbox.client.signAndExecuteTransactionBlock({
+			const tx = new Transaction();
+			const [coin] = tx.splitCoins(tx.gas, [1]);
+			tx.transferObjects([coin], toolbox.address());
+			return toolbox.client.signAndExecuteTransaction({
 				signer: toolbox.keypair,
-				transactionBlock: tx,
+				transaction: tx,
 				requestType: 'WaitForEffectsCert',
 			});
 		}
@@ -42,15 +43,15 @@ describe('Transaction Reading API', () => {
 			const { digest } = await setupTransaction();
 
 			// Should succeed using wait
-			const waited = await toolbox.client.waitForTransactionBlock({ digest });
+			const waited = await toolbox.client.waitForTransaction({ digest });
 			expect(waited.digest).toEqual(digest);
 		});
 
 		it('abort signal doesnt throw after transaction is received', async () => {
 			const { digest } = await setupTransaction();
 
-			const waited = await toolbox.client.waitForTransactionBlock({ digest });
-			const secondWait = await toolbox.client.waitForTransactionBlock({ digest, timeout: 2000 });
+			const waited = await toolbox.client.waitForTransaction({ digest });
+			const secondWait = await toolbox.client.waitForTransaction({ digest, timeout: 2000 });
 			// wait for timeout to expire incase it causes an unhandled rejection
 			await new Promise((resolve) => setTimeout(resolve, 2100));
 			expect(waited.digest).toEqual(digest);
@@ -64,7 +65,7 @@ describe('Transaction Reading API', () => {
 			abortController.abort();
 
 			await expect(
-				toolbox.client.waitForTransactionBlock({
+				toolbox.client.waitForTransaction({
 					digest,
 					signal: abortController.signal,
 				}),
@@ -77,7 +78,7 @@ describe('Transaction Reading API', () => {
 				.mockImplementation(() => Promise.reject());
 
 			await expect(
-				toolbox.client.waitForTransactionBlock({
+				toolbox.client.waitForTransaction({
 					digest: 'foobar',
 					pollInterval: 10,
 					timeout: 55,

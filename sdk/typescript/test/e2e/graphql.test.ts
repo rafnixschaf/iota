@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it } from 'vitest';
 
-import { SuiGraphQLClient } from '../../src/graphql';
-import { graphql } from '../../src/graphql/schemas/2024-01';
+import { IotaGraphQLClient } from '../../src/graphql';
+import { graphql } from '../../src/graphql/schemas/2024.4';
 
 const queries = {
 	getFirstTransactionBlock: graphql(`
@@ -30,7 +31,7 @@ const queries = {
 	`),
 };
 
-const client = new SuiGraphQLClient({
+const client = new IotaGraphQLClient({
 	url: 'http://127.0.0.1:9125',
 	queries,
 });

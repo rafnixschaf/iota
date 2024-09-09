@@ -4,22 +4,22 @@ For these examples, assume you have the following data and functions available:
 
 ```typescript
 // a constant for bullshark's type.
-const bullsharkType = `${packageId}::suifrens::SuiFren<${packageId}::bullshark::Bullshark>`;
+const bullsharkType = `${packageId}::iotafrens::IotaFren<${packageId}::bullshark::Bullshark>`;
 // a constant for capy's type.
-const capyType = `${packageId}::suifrens::SuiFren<${packageId}::capy::Capy>`;
+const capyType = `${packageId}::iotafrens::IotaFren<${packageId}::capy::Capy>`;
 
 // initialize a kioskClient.
 const kioskClient = new KioskClient({
-	client: new SuiClient({
+	client: new IotaClient({
 		url: getFullnodeUrl('mainnet'),
 	}),
 	network: Network.MAINNET,
 });
 ```
 
-## Minting a SuiFren
+## Minting a IotaFren
 
-This example demonstrates how to mint a SuiFren.
+This example demonstrates how to mint a IotaFren.
 
 ```typescript
 async function mintFren(address: string) {
@@ -28,15 +28,15 @@ async function mintFren(address: string) {
 	// Choose the first kiosk for simplicity. We could have extra logic here (e.g. let the user choose, pick a personal one, etc).
 	const cap = kioskOwnerCaps[0];
 
-	const txb = new TransactionBlock();
-	const kioskTx = new KioskTransaction({ transactionBlock: txb, kioskClient, cap });
+	const tx = new Transaction();
+	const kioskTx = new KioskTransaction({ transaction: tx, kioskClient, cap });
 
 	// We're mixing the logic here. If the cap is undefined, we create a new kiosk.
 	if (!cap) kioskTx.create();
 
 	// Let's mint a capy here into the kiosk (either a new or an existing one).
-	txb.moveCall({
-		target: `${packageId}::suifrens::mint_app::mint`,
+	tx.moveCall({
+		target: `${packageId}::iotafrens::mint_app::mint`,
 		arguments: [kioskTx.getKiosk(), kioskTx.getKioskCap()],
 		typeArguments: [capyType],
 	});
@@ -46,20 +46,20 @@ async function mintFren(address: string) {
 
 	kioskTx.finalize();
 
-	// sign and execute transaction block.
-	await signAndExecuteTransactionBlock({ tx: txb });
+	// sign and execute transaction.
+	await signAndExecuteTransaction({ tx: tx });
 }
 ```
 
-## Mixing two Suifrens
+## Mixing two Iotafrens
 
 This example demonstrates how to use the Kiosk SDK to mix two `bullsharks`.
 
 ```typescript
 // We're mixing two frens.
 async function mixFrens(firstFrenObjectId: string, secondFrenObjectId: string, cap: KioskOwnerCap) {
-    const txb = new TransactionBlock();
-    const kioskTx = new KioskTransaction({ transactionBlock: txb, kioskClient, cap });
+    const tx = new Transaction();
+    const kioskTx = new KioskTransaction({ transaction: tx, kioskClient, cap });
 
     // borrow both frens.
     const [fren1, promise1] = kioskTx.borrow({
@@ -73,7 +73,7 @@ async function mixFrens(firstFrenObjectId: string, secondFrenObjectId: string, c
     });
 
     // Let's call the mix function. We skip any payment related stuff here.
-    txb.moveCall({
+    tx.moveCall({
         target: `${packageId}::mix_app::mix`,
         arguments: [
             fren1,
@@ -95,7 +95,7 @@ async function mixFrens(firstFrenObjectId: string, secondFrenObjectId: string, c
         promise: promise2
     }).finalize();
 
-    // sign and execute transaction block.
-    await signAndExecuteTransactionBlock({ tx: txb });
+    // sign and execute transaction.
+    await signAndExecuteTransaction({ tx: tx });
 }
 ```

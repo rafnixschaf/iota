@@ -1,13 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromB64 } from '@mysten/bcs';
+import { fromB64 } from '@iota/bcs';
 import nacl from 'tweetnacl';
 
 import type { PublicKeyInitData } from '../../cryptography/publickey.js';
 import { bytesEqual, PublicKey } from '../../cryptography/publickey.js';
 import { SIGNATURE_SCHEME_TO_FLAG } from '../../cryptography/signature-scheme.js';
-import type { SerializedSignature } from '../../cryptography/signature.js';
 import { parseSerializedSignature } from '../../cryptography/signature.js';
 
 const PUBLIC_KEY_SIZE = 32;
@@ -56,7 +56,7 @@ export class Ed25519PublicKey extends PublicKey {
 	}
 
 	/**
-	 * Return the Sui address associated with this Ed25519 public key
+	 * Return the Iota address associated with this Ed25519 public key
 	 */
 	flag(): number {
 		return SIGNATURE_SCHEME_TO_FLAG['ED25519'];
@@ -65,7 +65,7 @@ export class Ed25519PublicKey extends PublicKey {
 	/**
 	 * Verifies that the signature is valid for for the provided message
 	 */
-	async verify(message: Uint8Array, signature: Uint8Array | SerializedSignature): Promise<boolean> {
+	async verify(message: Uint8Array, signature: Uint8Array | string): Promise<boolean> {
 		let bytes;
 		if (typeof signature === 'string') {
 			const parsed = parseSerializedSignature(signature);

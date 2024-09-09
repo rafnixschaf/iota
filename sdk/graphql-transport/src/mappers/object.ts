@@ -1,7 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SuiObjectResponse } from '@mysten/sui.js/client';
+import type { IotaObjectResponse } from '@iota/iota/client';
 
 import type {
 	MoveValue,
@@ -16,7 +17,7 @@ import { toShortTypeString } from './util.js';
 export function mapGraphQLObjectToRpcObject(
 	object: Rpc_Object_FieldsFragment,
 	options: { showBcs?: boolean | null } = {},
-): NonNullable<SuiObjectResponse['data']> {
+): NonNullable<IotaObjectResponse['data']> {
 	return {
 		bcs: options?.showBcs
 			? {
@@ -25,7 +26,7 @@ export function mapGraphQLObjectToRpcObject(
 					hasPublicTransfer: object.asMoveObject?.hasPublicTransfer!,
 					version: object.version as unknown as string,
 					type: toShortTypeString(object.asMoveObject?.contents?.type.repr!),
-			  }
+				}
 			: undefined,
 		content: {
 			dataType: 'moveObject' as const,
@@ -54,7 +55,7 @@ export function mapGraphQLObjectToRpcObject(
 export function mapGraphQLMoveObjectToRpcObject(
 	object: Rpc_Move_Object_FieldsFragment,
 	options: { showBcs?: boolean | null } = {},
-): NonNullable<SuiObjectResponse['data']> {
+): NonNullable<IotaObjectResponse['data']> {
 	return {
 		bcs: options?.showBcs
 			? {
@@ -63,7 +64,7 @@ export function mapGraphQLMoveObjectToRpcObject(
 					hasPublicTransfer: object?.hasPublicTransfer!,
 					version: object.version as unknown as string,
 					type: toShortTypeString(object?.contents?.type.repr!),
-			  }
+				}
 			: undefined,
 		content: {
 			dataType: 'moveObject' as const,

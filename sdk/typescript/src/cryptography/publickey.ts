@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { toB64 } from '@mysten/bcs';
+import { toB64 } from '@iota/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bytesToHex } from '@noble/hashes/utils';
 
 import { bcs } from '../bcs/index.js';
-import { normalizeSuiAddress, SUI_ADDRESS_LENGTH } from '../utils/sui-types.js';
-import type { SerializedSignature } from './index.js';
-import { IntentScope, messageWithIntent } from './intent.js';
+import { normalizeIotaAddress, IOTA_ADDRESS_LENGTH } from '../utils/iota-types.js';
+import type { IntentScope } from './intent.js';
+import { messageWithIntent } from './intent.js';
 
 /**
  * Value to be converted into public key.
@@ -55,18 +56,18 @@ export abstract class PublicKey {
 	}
 
 	/**
-	 * Return the Sui representation of the public key encoded in
-	 * base-64. A Sui public key is formed by the concatenation
+	 * Return the Iota representation of the public key encoded in
+	 * base-64. A Iota public key is formed by the concatenation
 	 * of the scheme flag with the raw bytes of the public key
 	 */
-	toSuiPublicKey(): string {
-		const bytes = this.toSuiBytes();
+	toIotaPublicKey(): string {
+		const bytes = this.toIotaBytes();
 		return toB64(bytes);
 	}
 
 	verifyWithIntent(
 		bytes: Uint8Array,
-		signature: Uint8Array | SerializedSignature,
+		signature: Uint8Array | string,
 		intent: IntentScope,
 	): Promise<boolean> {
 		const intentMessage = messageWithIntent(intent, bytes);
@@ -78,47 +79,41 @@ export abstract class PublicKey {
 	/**
 	 * Verifies that the signature is valid for for the provided PersonalMessage
 	 */
-	verifyPersonalMessage(
-		message: Uint8Array,
-		signature: Uint8Array | SerializedSignature,
-	): Promise<boolean> {
+	verifyPersonalMessage(message: Uint8Array, signature: Uint8Array | string): Promise<boolean> {
 		return this.verifyWithIntent(
 			bcs.vector(bcs.u8()).serialize(message).toBytes(),
 			signature,
-			IntentScope.PersonalMessage,
+			'PersonalMessage',
 		);
 	}
 
 	/**
-	 * Verifies that the signature is valid for for the provided TransactionBlock
+	 * Verifies that the signature is valid for for the provided Transaction
 	 */
-	verifyTransactionBlock(
-		transactionBlock: Uint8Array,
-		signature: Uint8Array | SerializedSignature,
-	): Promise<boolean> {
-		return this.verifyWithIntent(transactionBlock, signature, IntentScope.TransactionData);
+	verifyTransaction(transaction: Uint8Array, signature: Uint8Array | string): Promise<boolean> {
+		return this.verifyWithIntent(transaction, signature, 'TransactionData');
 	}
 
 	/**
 	 * Returns the bytes representation of the public key
 	 * prefixed with the signature scheme flag
 	 */
-	toSuiBytes(): Uint8Array {
+	toIotaBytes(): Uint8Array {
 		const rawBytes = this.toRawBytes();
-		const suiBytes = new Uint8Array(rawBytes.length + 1);
-		suiBytes.set([this.flag()]);
-		suiBytes.set(rawBytes, 1);
+		const iotaBytes = new Uint8Array(rawBytes.length + 1);
+		iotaBytes.set([this.flag()]);
+		iotaBytes.set(rawBytes, 1);
 
-		return suiBytes;
+		return iotaBytes;
 	}
 
 	/**
-	 * Return the Sui address associated with this Ed25519 public key
+	 * Return the Iota address associated with this Ed25519 public key
 	 */
-	toSuiAddress(): string {
+	toIotaAddress(): string {
 		// Each hex char represents half a byte, hence hex address doubles the length
-		return normalizeSuiAddress(
-			bytesToHex(blake2b(this.toSuiBytes(), { dkLen: 32 })).slice(0, SUI_ADDRESS_LENGTH * 2),
+		return normalizeIotaAddress(
+			bytesToHex(blake2b(this.toIotaBytes(), { dkLen: 32 })).slice(0, IOTA_ADDRESS_LENGTH * 2),
 		);
 	}
 
@@ -135,5 +130,5 @@ export abstract class PublicKey {
 	/**
 	 * Verifies that the signature is valid for for the provided message
 	 */
-	abstract verify(data: Uint8Array, signature: Uint8Array | SerializedSignature): Promise<boolean>;
+	abstract verify(data: Uint8Array, signature: Uint8Array | string): Promise<boolean>;
 }
