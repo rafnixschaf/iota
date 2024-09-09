@@ -1,12 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::path::Path;
+
 use clap::Parser;
+use iota_move_build::set_iota_flavor;
 #[cfg(feature = "unit_test")]
 use move_cli::base::test::UnitTestResult;
 use move_package::BuildConfig;
-use std::path::PathBuf;
-use sui_move_build::set_sui_flavor;
 
 #[cfg(feature = "build")]
 pub mod build;
@@ -43,11 +45,11 @@ pub struct Calib {
 }
 
 pub fn execute_move_command(
-    package_path: Option<PathBuf>,
+    package_path: Option<&Path>,
     mut build_config: BuildConfig,
     command: Command,
 ) -> anyhow::Result<()> {
-    if let Some(err_msg) = set_sui_flavor(&mut build_config) {
+    if let Some(err_msg) = set_iota_flavor(&mut build_config) {
         anyhow::bail!(err_msg);
     }
     match command {
