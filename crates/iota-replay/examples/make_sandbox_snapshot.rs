@@ -24,7 +24,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let cmd = ReplayToolCommand::PersistSandbox {
         tx_digest: tx_digest.clone(),
-        base_path: path.into(),
+        base_path: path,
     };
 
     execute_replay_command(Some(localnet_addr), true, true, None, cmd).await?;
