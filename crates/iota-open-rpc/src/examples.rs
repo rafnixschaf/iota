@@ -1,78 +1,70 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::ops::Range;
-use std::str::FromStr;
+use std::{
+    collections::{BTreeMap, HashMap},
+    ops::Range,
+    str::FromStr,
+};
 
 use fastcrypto::traits::EncodeDecodeBase64;
-use move_core_types::annotated_value::MoveStructLayout;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::ModuleId;
-use move_core_types::language_storage::{StructTag, TypeTag};
-use move_core_types::resolver::ModuleResolver;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
-use serde_json::json;
-
-use sui_json::SuiJsonValue;
-use sui_json_rpc::error::Error;
-use sui_json_rpc_types::DevInspectArgs;
-use sui_json_rpc_types::{
+use iota_json::IotaJsonValue;
+use iota_json_rpc::error::Error;
+use iota_json_rpc_types::{
     Balance, Checkpoint, CheckpointId, CheckpointPage, Coin, CoinPage, DelegatedStake,
-    DevInspectResults, DynamicFieldPage, EventFilter, EventPage, MoveCallParams,
-    MoveFunctionArgType, ObjectChange, ObjectValueKind::ByImmutableReference,
-    ObjectValueKind::ByMutableReference, ObjectValueKind::ByValue, ObjectsPage, OwnedObjectRef,
-    Page, ProtocolConfigResponse, RPCTransactionRequestParams, Stake, StakeStatus, SuiCoinMetadata,
-    SuiCommittee, SuiData, SuiEvent, SuiExecutionStatus, SuiGetPastObjectRequest,
-    SuiLoadedChildObject, SuiLoadedChildObjectsResponse, SuiMoveAbility, SuiMoveAbilitySet,
-    SuiMoveNormalizedFunction, SuiMoveNormalizedModule, SuiMoveNormalizedStruct,
-    SuiMoveNormalizedType, SuiMoveVisibility, SuiObjectData, SuiObjectDataFilter,
-    SuiObjectDataOptions, SuiObjectRef, SuiObjectResponse, SuiObjectResponseQuery, SuiParsedData,
-    SuiPastObjectResponse, SuiTransactionBlock, SuiTransactionBlockData,
-    SuiTransactionBlockEffects, SuiTransactionBlockEffectsV1, SuiTransactionBlockEvents,
-    SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
-    SuiTransactionBlockResponseQuery, TransactionBlockBytes, TransactionBlocksPage,
-    TransactionFilter, TransferObjectParams,
+    DevInspectArgs, DevInspectResults, DynamicFieldPage, EventFilter, EventPage, IotaCoinMetadata,
+    IotaCommittee, IotaData, IotaEvent, IotaExecutionStatus, IotaGetPastObjectRequest,
+    IotaMoveAbility, IotaMoveAbilitySet, IotaMoveNormalizedFunction, IotaMoveNormalizedModule,
+    IotaMoveNormalizedStruct, IotaMoveNormalizedType, IotaMoveVisibility, IotaObjectData,
+    IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse,
+    IotaObjectResponseQuery, IotaParsedData, IotaPastObjectResponse, IotaTransactionBlock,
+    IotaTransactionBlockData, IotaTransactionBlockEffects, IotaTransactionBlockEffectsV1,
+    IotaTransactionBlockEvents, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockResponseQuery, IotaTypeTag, MoveCallParams, MoveFunctionArgType,
+    ObjectChange,
+    ObjectValueKind::{ByImmutableReference, ByMutableReference, ByValue},
+    ObjectsPage, OwnedObjectRef, Page, ProtocolConfigResponse, RPCTransactionRequestParams, Stake,
+    StakeStatus, TransactionBlockBytes, TransactionBlocksPage, TransactionFilter,
+    TransferObjectParams, ValidatorApy, ValidatorApys,
 };
-use sui_json_rpc_types::{SuiTypeTag, ValidatorApy, ValidatorApys};
-use sui_open_rpc::ExamplePairing;
-use sui_protocol_config::Chain;
-use sui_protocol_config::ProtocolConfig;
-use sui_types::balance::Supply;
-use sui_types::base_types::random_object_ref;
-use sui_types::base_types::{
-    MoveObjectType, ObjectDigest, ObjectID, ObjectType, SequenceNumber, SuiAddress,
-    TransactionDigest,
+use iota_open_rpc::ExamplePairing;
+use iota_protocol_config::{Chain, ProtocolConfig};
+use iota_types::{
+    balance::Supply,
+    base_types::{
+        random_object_ref, IotaAddress, MoveObjectType, ObjectDigest, ObjectID, ObjectType,
+        SequenceNumber, TransactionDigest,
+    },
+    committee::Committee,
+    crypto::{get_key_pair_from_rng, AccountKeyPair, AggregateAuthoritySignature},
+    digests::TransactionEventsDigest,
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType},
+    event::EventID,
+    gas::GasCostSummary,
+    gas_coin::GasCoin,
+    messages_checkpoint::CheckpointDigest,
+    object::{MoveObject, Owner},
+    parse_iota_struct_tag,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    quorum_driver_types::ExecuteTransactionRequestType,
+    signature::GenericSignature,
+    transaction::{CallArg, ObjectArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
+    utils::to_sender_signed_transaction,
+    IOTA_FRAMEWORK_PACKAGE_ID,
 };
-use sui_types::committee::Committee;
-use sui_types::crypto::{get_key_pair_from_rng, AccountKeyPair, AggregateAuthoritySignature};
-use sui_types::digests::TransactionEventsDigest;
-use sui_types::dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType};
-use sui_types::event::EventID;
-use sui_types::gas::GasCostSummary;
-use sui_types::gas_coin::GasCoin;
-use sui_types::messages_checkpoint::CheckpointDigest;
-use sui_types::object::MoveObject;
-use sui_types::object::Owner;
-use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
-use sui_types::signature::GenericSignature;
-use sui_types::transaction::ObjectArg;
-use sui_types::transaction::TEST_ONLY_GAS_UNIT_FOR_TRANSFER;
-use sui_types::transaction::{CallArg, TransactionData};
-use sui_types::utils::to_sender_signed_transaction;
-use sui_types::{parse_sui_struct_tag, SUI_FRAMEWORK_PACKAGE_ID};
+use move_core_types::{
+    annotated_value::MoveStructLayout,
+    identifier::Identifier,
+    language_storage::{ModuleId, StructTag, TypeTag},
+    resolver::ModuleResolver,
+};
+use rand::{rngs::StdRng, Rng, SeedableRng};
+use serde_json::json;
 
 struct Examples {
     function_name: String,
     examples: Vec<ExamplePairing>,
-}
-
-#[derive(serde::Serialize)]
-struct Value {
-    value: String,
 }
 
 impl Examples {
@@ -110,39 +102,38 @@ impl RpcExampleProvider {
             self.dev_inspect_transaction_block(),
             self.get_checkpoint_example(),
             self.get_checkpoints(),
-            self.sui_get_committee_info(),
-            self.sui_get_reference_gas_price(),
-            self.suix_get_all_balances(),
-            self.suix_get_all_coins(),
-            self.suix_get_balance(),
-            self.suix_get_coin_metadata(),
-            self.sui_get_latest_checkpoint_sequence_number(),
-            self.suix_get_coins(),
-            self.suix_get_total_supply(),
-            self.suix_get_dynamic_fields(),
-            self.suix_get_dynamic_field_object(),
-            self.suix_get_owned_objects(),
-            self.sui_get_loaded_child_objects(),
-            self.sui_get_move_function_arg_types(),
-            self.sui_get_normalized_move_function(),
-            self.sui_get_normalized_move_module(),
-            self.sui_get_normalized_move_modules_by_package(),
-            self.sui_get_normalized_move_struct(),
+            self.iota_get_committee_info(),
+            self.iota_get_reference_gas_price(),
+            self.iotax_get_all_balances(),
+            self.iotax_get_all_coins(),
+            self.iotax_get_balance(),
+            self.iotax_get_coin_metadata(),
+            self.iota_get_latest_checkpoint_sequence_number(),
+            self.iotax_get_coins(),
+            self.iotax_get_total_supply(),
+            self.iotax_get_dynamic_fields(),
+            self.iotax_get_dynamic_field_object(),
+            self.iotax_get_owned_objects(),
+            self.iota_get_move_function_arg_types(),
+            self.iota_get_normalized_move_function(),
+            self.iota_get_normalized_move_module(),
+            self.iota_get_normalized_move_modules_by_package(),
+            self.iota_get_normalized_move_struct(),
             self.multi_get_objects_example(),
             self.multi_get_transaction_blocks(),
-            self.suix_get_validators_apy(),
-            self.suix_get_dynamic_fields(),
-            self.suix_get_dynamic_field_object(),
-            self.suix_get_owned_objects(),
-            self.suix_query_events(),
-            self.suix_get_latest_sui_system_state(),
+            self.iotax_get_validators_apy(),
+            self.iotax_get_dynamic_fields(),
+            self.iotax_get_dynamic_field_object(),
+            self.iotax_get_owned_objects(),
+            self.iotax_query_events(),
+            self.iotax_get_latest_iota_system_state(),
             self.get_protocol_config(),
-            self.sui_get_chain_identifier(),
-            self.suix_get_stakes(),
-            self.suix_get_stakes_by_ids(),
-            self.suix_resolve_name_service_address(),
-            self.suix_resolve_name_service_names(),
-            self.sui_try_multi_get_past_objects(),
+            self.iota_get_chain_identifier(),
+            self.iotax_get_stakes(),
+            self.iotax_get_stakes_by_ids(),
+            self.iotax_resolve_name_service_address(),
+            self.iotax_resolve_name_service_names(),
+            self.iota_try_multi_get_past_objects(),
         ]
         .into_iter()
         .map(|example| (example.function_name, example.examples))
@@ -150,8 +141,8 @@ impl RpcExampleProvider {
     }
 
     fn batch_transaction_examples(&mut self) -> Examples {
-        let signer = SuiAddress::from(ObjectID::new(self.rng.gen()));
-        let recipient = SuiAddress::from(ObjectID::new(self.rng.gen()));
+        let signer = IotaAddress::from(ObjectID::new(self.rng.gen()));
+        let recipient = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let gas_id = ObjectID::new(self.rng.gen());
         let object_id = ObjectID::new(self.rng.gen());
         let coin_ref = random_object_ref();
@@ -159,13 +150,13 @@ impl RpcExampleProvider {
 
         let tx_params = vec![
             RPCTransactionRequestParams::MoveCallRequestParams(MoveCallParams {
-                package_object_id: SUI_FRAMEWORK_PACKAGE_ID,
+                package_object_id: IOTA_FRAMEWORK_PACKAGE_ID,
                 module: "pay".to_string(),
                 function: "split".to_string(),
-                type_arguments: vec![SuiTypeTag::new("0x2::sui::SUI".to_string())],
+                type_arguments: vec![IotaTypeTag::new("0x2::iota::IOTA".to_string())],
                 arguments: vec![
-                    SuiJsonValue::new(json!(coin_ref.0)).unwrap(),
-                    SuiJsonValue::new(json!(random_amount)).unwrap(),
+                    IotaJsonValue::new(json!(coin_ref.0)).unwrap(),
+                    IotaJsonValue::new(json!(random_amount)).unwrap(),
                 ],
             }),
             RPCTransactionRequestParams::TransferObjectRequestParams(TransferObjectParams {
@@ -178,7 +169,7 @@ impl RpcExampleProvider {
             let mut builder = ProgrammableTransactionBuilder::new();
             builder
                 .move_call(
-                    SUI_FRAMEWORK_PACKAGE_ID,
+                    IOTA_FRAMEWORK_PACKAGE_ID,
                     Identifier::from_str("pay").unwrap(),
                     Identifier::from_str("split").unwrap(),
                     vec![],
@@ -216,7 +207,7 @@ impl RpcExampleProvider {
         let result = TransactionBlockBytes::from_data(data).unwrap();
 
         Examples::new(
-            "sui_batchTransaction",
+            "iota_batchTransaction",
             vec![ExamplePairing::new(
                 "Creates unsigned batch transaction data.",
                 vec![
@@ -236,21 +227,23 @@ impl RpcExampleProvider {
         let tx_bytes = TransactionBlockBytes::from_data(data).unwrap();
 
         Examples::new(
-            "sui_executeTransactionBlock",
+            "iota_executeTransactionBlock",
             vec![ExamplePairing::new(
                 "Executes a transaction with serialized signatures.",
                 vec![
                     ("tx_bytes", json!(tx_bytes.tx_bytes)),
                     (
                         "signatures",
-                        json!(signatures
-                            .into_iter()
-                            .map(|sig| sig.encode_base64())
-                            .collect::<Vec<_>>()),
+                        json!(
+                            signatures
+                                .into_iter()
+                                .map(|sig| sig.encode_base64())
+                                .collect::<Vec<_>>()
+                        ),
                     ),
                     (
                         "options",
-                        json!(SuiTransactionBlockResponseOptions::full_content()),
+                        json!(IotaTransactionBlockResponseOptions::full_content()),
                     ),
                     (
                         "request_type",
@@ -267,12 +260,10 @@ impl RpcExampleProvider {
         let tx_bytes = TransactionBlockBytes::from_data(data).unwrap();
 
         Examples::new(
-            "sui_dryRunTransactionBlock",
+            "iota_dryRunTransactionBlock",
             vec![ExamplePairing::new(
                 "Dry runs a transaction block to get back estimated gas fees and other potential effects.",
-                vec![
-                    ("tx_bytes", json!(tx_bytes.tx_bytes)),
-                ],
+                vec![("tx_bytes", json!(tx_bytes.tx_bytes))],
                 json!(result),
             )],
         )
@@ -284,7 +275,7 @@ impl RpcExampleProvider {
 
         let dev_inspect_results = DevInspectResults {
             effects: result.effects.unwrap(),
-            events: SuiTransactionBlockEvents { data: vec![] },
+            events: IotaTransactionBlockEvents { data: vec![] },
             results: None,
             error: None,
             raw_txn_data: vec![],
@@ -292,11 +283,14 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "sui_devInspectTransactionBlock",
+            "iota_devInspectTransactionBlock",
             vec![ExamplePairing::new(
                 "Runs the transaction in dev-inspect mode. Which allows for nearly any transaction (or Move call) with any arguments. Detailed results are provided, including both the transaction effects and any return values.",
                 vec![
-                    ("sender_address", json!(SuiAddress::from(ObjectID::new(self.rng.gen())))),
+                    (
+                        "sender_address",
+                        json!(IotaAddress::from(ObjectID::new(self.rng.gen()))),
+                    ),
                     ("tx_bytes", json!(tx_bytes.tx_bytes)),
                     ("gas_price", json!(1000)),
                     ("epoch", json!(8888)),
@@ -314,33 +308,33 @@ impl RpcExampleProvider {
             .map(|o| o.object_id().unwrap())
             .collect::<Vec<_>>();
         Examples::new(
-            "sui_multiGetObjects",
+            "iota_multiGetObjects",
             vec![ExamplePairing::new(
                 "Gets objects by IDs.",
                 vec![
                     ("object_ids", json!(object_ids)),
-                    ("options", json!(SuiObjectDataOptions::full_content())),
+                    ("options", json!(IotaObjectDataOptions::full_content())),
                 ],
                 json!(objects),
             )],
         )
     }
 
-    fn get_object_responses(&mut self, object_count: usize) -> Vec<SuiObjectResponse> {
+    fn get_object_responses(&mut self, object_count: usize) -> Vec<IotaObjectResponse> {
         (0..object_count)
             .map(|_| {
                 let object_id = ObjectID::new(self.rng.gen());
                 let coin = GasCoin::new(object_id, 100000000);
 
-                SuiObjectResponse::new_with_data(SuiObjectData {
+                IotaObjectResponse::new_with_data(IotaObjectData {
                     content: Some(
-                        SuiParsedData::try_from_object(
+                        IotaParsedData::try_from_object(
                             coin.to_object(SequenceNumber::from_u64(1)),
                             GasCoin::layout(),
                         )
                         .unwrap(),
                     ),
-                    owner: Some(Owner::AddressOwner(SuiAddress::from(ObjectID::new(
+                    owner: Some(Owner::AddressOwner(IotaAddress::from(ObjectID::new(
                         self.rng.gen(),
                     )))),
                     previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -359,12 +353,12 @@ impl RpcExampleProvider {
     fn get_object_example(&mut self) -> Examples {
         let result = self.get_object_responses(1).pop().unwrap();
         Examples::new(
-            "sui_getObject",
+            "iota_getObject",
             vec![ExamplePairing::new(
                 "Gets Object data for the ID in the request.",
                 vec![
                     ("object_id", json!(result.object_id().unwrap())),
-                    ("options", json!(SuiObjectDataOptions::full_content())),
+                    ("options", json!(IotaObjectDataOptions::full_content())),
                 ],
                 json!(result),
             )],
@@ -376,15 +370,15 @@ impl RpcExampleProvider {
 
         let coin = GasCoin::new(object_id, 10000);
 
-        let result = SuiPastObjectResponse::VersionFound(SuiObjectData {
+        let result = IotaPastObjectResponse::VersionFound(IotaObjectData {
             content: Some(
-                SuiParsedData::try_from_object(
+                IotaParsedData::try_from_object(
                     coin.to_object(SequenceNumber::from_u64(1)),
                     GasCoin::layout(),
                 )
                 .unwrap(),
             ),
-            owner: Some(Owner::AddressOwner(SuiAddress::from(ObjectID::new(
+            owner: Some(Owner::AddressOwner(IotaAddress::from(ObjectID::new(
                 self.rng.gen(),
             )))),
             previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -398,13 +392,13 @@ impl RpcExampleProvider {
         });
 
         Examples::new(
-            "sui_tryGetPastObject",
+            "iota_tryGetPastObject",
             vec![ExamplePairing::new(
                 "Gets Past Object data.",
                 vec![
                     ("object_id", json!(object_id)),
                     ("version", json!(4)),
-                    ("options", json!(SuiObjectDataOptions::full_content())),
+                    ("options", json!(IotaObjectDataOptions::full_content())),
                 ],
                 json!(result),
             )],
@@ -427,7 +421,7 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "sui_getCheckpoint",
+            "iota_getCheckpoint",
             vec![ExamplePairing::new(
                 "Gets checkpoint information for the checkpoint ID in the request.",
                 vec![("id", json!(CheckpointId::SequenceNumber(1000)))],
@@ -463,19 +457,13 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "sui_getCheckpoints",
+            "iota_getCheckpoints",
             vec![ExamplePairing::new(
                 "Gets a paginated list in descending order of all checkpoints starting at the provided cursor. Each page of results has a maximum number of checkpoints set by the provided limit.",
-                vec![(
-                         "cursor", json!(seq.to_string()),
-                     ),
-                     (
-                         "limit", json!(limit),
-                     ),
-                     (
-                         "descending_order",
-                         json!(descending_order),
-                     ),
+                vec![
+                    ("cursor", json!(seq.to_string())),
+                    ("limit", json!(limit)),
+                    ("descending_order", json!(descending_order)),
                 ],
                 json!(result),
             )],
@@ -483,9 +471,9 @@ impl RpcExampleProvider {
     }
 
     fn get_owned_objects(&mut self) -> Examples {
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let result = (0..4)
-            .map(|_| SuiObjectData {
+            .map(|_| IotaObjectData {
                 object_id: ObjectID::new(self.rng.gen()),
                 version: Default::default(),
                 digest: ObjectDigest::new(self.rng.gen()),
@@ -500,19 +488,19 @@ impl RpcExampleProvider {
             .collect::<Vec<_>>();
 
         Examples::new(
-            "sui_getOwnedObjects",
+            "iota_getOwnedObjects",
             vec![ExamplePairing::new(
                 "Gets objects owned by the address in the request.",
                 vec![
                     ("address", json!(owner)),
                     (
                         "query",
-                        json!(SuiObjectResponseQuery {
-                            filter: Some(SuiObjectDataFilter::StructType(
-                                StructTag::from_str("0x2::coin::Coin<0x2::sui::SUI>").unwrap()
+                        json!(IotaObjectResponseQuery {
+                            filter: Some(IotaObjectDataFilter::StructType(
+                                StructTag::from_str("0x2::coin::Coin<0x2::iota::IOTA>").unwrap()
                             )),
                             options: Some(
-                                SuiObjectDataOptions::new()
+                                IotaObjectDataOptions::new()
                                     .with_type()
                                     .with_owner()
                                     .with_previous_transaction()
@@ -530,7 +518,7 @@ impl RpcExampleProvider {
 
     fn get_total_transaction_blocks(&mut self) -> Examples {
         Examples::new(
-            "sui_getTotalTransactionBlocks",
+            "iota_getTotalTransactionBlocks",
             vec![ExamplePairing::new(
                 "Gets total number of transactions on the network.",
                 vec![],
@@ -542,17 +530,19 @@ impl RpcExampleProvider {
     fn get_transaction_block(&mut self) -> Examples {
         let (_, _, _, _, result) = self.get_transfer_data_response();
         Examples::new(
-            "sui_getTransactionBlock",
+            "iota_getTransactionBlock",
             vec![ExamplePairing::new(
                 "Returns the transaction response object for specified transaction digest.",
                 vec![
                     ("digest", json!(result.digest)),
                     (
                         "options",
-                        json!(SuiTransactionBlockResponseOptions::new()
-                            .with_input()
-                            .with_effects()
-                            .with_events()),
+                        json!(
+                            IotaTransactionBlockResponseOptions::new()
+                                .with_input()
+                                .with_effects()
+                                .with_events()
+                        ),
                     ),
                 ],
                 json!(result),
@@ -567,7 +557,7 @@ impl RpcExampleProvider {
         let next_cursor = data.last().cloned();
         let data = data
             .into_iter()
-            .map(SuiTransactionBlockResponse::new)
+            .map(IotaTransactionBlockResponse::new)
             .collect();
 
         let result = TransactionBlocksPage {
@@ -576,13 +566,13 @@ impl RpcExampleProvider {
             has_next_page,
         };
         Examples::new(
-            "suix_queryTransactionBlocks",
+            "iotax_queryTransactionBlocks",
             vec![ExamplePairing::new(
                 "Returns the transaction digest for specified query criteria.",
                 vec![
                     (
                         "query",
-                        json!(SuiTransactionBlockResponseQuery {
+                        json!(IotaTransactionBlockResponseQuery {
                             filter: Some(TransactionFilter::InputObject(ObjectID::new(
                                 self.rng.gen()
                             ))),
@@ -604,17 +594,19 @@ impl RpcExampleProvider {
             .collect::<Vec<_>>();
         let digests = data.iter().map(|x| x.digest).collect::<Vec<_>>();
         Examples::new(
-            "sui_multiGetTransactionBlocks",
+            "iota_multiGetTransactionBlocks",
             vec![ExamplePairing::new(
                 "Returns the transaction data for specified digest.",
                 vec![
                     ("digests", json!(digests)),
                     (
                         "options",
-                        json!(SuiTransactionBlockResponseOptions::new()
-                            .with_input()
-                            .with_effects()
-                            .with_events()),
+                        json!(
+                            IotaTransactionBlockResponseOptions::new()
+                                .with_input()
+                                .with_effects()
+                                .with_events()
+                        ),
                     ),
                 ],
                 json!(data),
@@ -642,12 +634,10 @@ impl RpcExampleProvider {
     fn get_protocol_config(&mut self) -> Examples {
         let version = Some(6);
         Examples::new(
-            "sui_getProtocolConfig",
+            "iota_getProtocolConfig",
             vec![ExamplePairing::new(
                 "Returns the protocol config for the given protocol version. If none is specified, the node uses the version of the latest epoch it has processed",
-                vec![
-                    ("version", json!(version)),
-                ],
+                vec![("version", json!(version))],
                 json!(Self::get_protocol_config_impl(version)),
             )],
         )
@@ -669,12 +659,12 @@ impl RpcExampleProvider {
     ) -> (
         TransactionData,
         Vec<GenericSignature>,
-        SuiAddress,
+        IotaAddress,
         ObjectID,
-        SuiTransactionBlockResponse,
+        IotaTransactionBlockResponse,
     ) {
         let (signer, kp): (_, AccountKeyPair) = get_key_pair_from_rng(&mut self.rng);
-        let recipient = SuiAddress::from(ObjectID::new(self.rng.gen()));
+        let recipient = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let obj_id = ObjectID::new(self.rng.gen());
         let gas_ref = (
             ObjectID::new(self.rng.gen()),
@@ -706,7 +696,7 @@ impl RpcExampleProvider {
         let object_change = ObjectChange::Transferred {
             sender: signer,
             recipient: Owner::AddressOwner(recipient),
-            object_type: parse_sui_struct_tag("0x2::example::Object").unwrap(),
+            object_type: parse_iota_struct_tag("0x2::example::Object").unwrap(),
             object_id: object_ref.0,
             version: object_ref.1,
             digest: ObjectDigest::new(self.rng.gen()),
@@ -718,11 +708,11 @@ impl RpcExampleProvider {
                 Ok(None)
             }
         }
-        let result = SuiTransactionBlockResponse {
+        let result = IotaTransactionBlockResponse {
             digest: *tx_digest,
-            effects: Some(SuiTransactionBlockEffects::V1(
-                SuiTransactionBlockEffectsV1 {
-                    status: SuiExecutionStatus::Success,
+            effects: Some(IotaTransactionBlockEffects::V1(
+                IotaTransactionBlockEffectsV1 {
+                    status: IotaExecutionStatus::Success,
                     executed_epoch: 0,
                     modified_at_versions: vec![],
                     gas_used: GasCostSummary {
@@ -750,7 +740,7 @@ impl RpcExampleProvider {
                     wrapped: vec![],
                     gas_object: OwnedObjectRef {
                         owner: Owner::ObjectOwner(signer),
-                        reference: SuiObjectRef::from(gas_ref),
+                        reference: IotaObjectRef::from(gas_ref),
                     },
                     events_digest: Some(TransactionEventsDigest::new(self.rng.gen())),
                     dependencies: vec![],
@@ -760,8 +750,8 @@ impl RpcExampleProvider {
             object_changes: Some(vec![object_change]),
             balance_changes: None,
             timestamp_ms: None,
-            transaction: Some(SuiTransactionBlock {
-                data: SuiTransactionBlockData::try_from(data1, &&mut NoOpsModuleResolver).unwrap(),
+            transaction: Some(IotaTransactionBlock {
+                data: IotaTransactionBlockData::try_from(data1, &&mut NoOpsModuleResolver).unwrap(),
                 tx_signatures: signatures.clone(),
             }),
             raw_transaction,
@@ -777,15 +767,15 @@ impl RpcExampleProvider {
     fn get_events(&mut self) -> Examples {
         let tx_dig =
             TransactionDigest::from_str("11a72GCQ5hGNpWGh2QhQkkusTEGS6EDqifJqxr7nSYX").unwrap();
-        let event = SuiEvent {
+        let event = IotaEvent {
             id: EventID {
                 tx_digest: tx_dig,
                 event_seq: 0,
             },
             package_id: ObjectID::new(self.rng.gen()),
             transaction_module: Identifier::from_str("test_module").unwrap(),
-            sender: SuiAddress::from(ObjectID::new(self.rng.gen())),
-            type_: parse_sui_struct_tag("0x9::test::TestEvent").unwrap(),
+            sender: IotaAddress::from(ObjectID::new(self.rng.gen())),
+            type_: parse_iota_struct_tag("0x9::test::TestEvent").unwrap(),
             parsed_json: json!({"test": "example value"}),
             bcs: vec![],
             timestamp_ms: None,
@@ -797,7 +787,7 @@ impl RpcExampleProvider {
             has_next_page: false,
         };
         Examples::new(
-            "sui_getEvents",
+            "iota_getEvents",
             vec![ExamplePairing::new(
                 "Returns the events the transaction in the request emits.",
                 vec![("transaction_digest", json!(tx_dig))],
@@ -806,29 +796,29 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_committee_info(&mut self) -> Examples {
+    fn iota_get_committee_info(&mut self) -> Examples {
         let epoch = 5000;
         let committee = json!(Committee::new_simple_test_committee_of_size(4));
         let vals = json!(committee[0]["voting_rights"]);
-        let suicomm = SuiCommittee {
+        let iotacomm = IotaCommittee {
             epoch,
             validators: serde_json::from_value(vals).unwrap(),
         };
 
         Examples::new(
-            "suix_getCommitteeInfo",
+            "iotax_getCommitteeInfo",
             vec![ExamplePairing::new(
                 "Gets committee information for epoch 5000.",
                 vec![("epoch", json!(epoch.to_string()))],
-                json!(suicomm),
+                json!(iotacomm),
             )],
         )
     }
 
-    fn sui_get_reference_gas_price(&mut self) -> Examples {
+    fn iota_get_reference_gas_price(&mut self) -> Examples {
         let result = 1000;
         Examples::new(
-            "suix_getReferenceGasPrice",
+            "iotax_getReferenceGasPrice",
             vec![ExamplePairing::new(
                 "Gets reference gas price information for the network.",
                 vec![],
@@ -837,17 +827,17 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_all_balances(&mut self) -> Examples {
-        let address = SuiAddress::from(ObjectID::new(self.rng.gen()));
+    fn iotax_get_all_balances(&mut self) -> Examples {
+        let address = IotaAddress::from(ObjectID::new(self.rng.gen()));
 
         let result = Balance {
-            coin_type: "0x2::sui::SUI".to_string(),
+            coin_type: "0x2::iota::IOTA".to_string(),
             coin_object_count: 15,
             total_balance: 3000000000,
             locked_balance: HashMap::new(),
         };
         Examples::new(
-            "suix_getAllBalances",
+            "iotax_getAllBalances",
             vec![ExamplePairing::new(
                 "Gets all balances for the address in the request.",
                 vec![("owner", json!(address))],
@@ -856,19 +846,19 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_all_coins(&mut self) -> Examples {
+    fn iotax_get_all_coins(&mut self) -> Examples {
         let limit = 3;
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let cursor = ObjectID::new(self.rng.gen());
         let next = ObjectID::new(self.rng.gen());
         let coins = (0..3)
             .map(|_| Coin {
-                coin_type: "0x2::sui::SUI".to_string(),
+                coin_type: "0x2::iota::IOTA".to_string(),
                 coin_object_id: ObjectID::new(self.rng.gen()),
                 version: SequenceNumber::from_u64(103626),
                 digest: ObjectDigest::new(self.rng.gen()),
                 balance: 200000000,
-                //locked_until_epoch: None,
+                // locked_until_epoch: None,
                 previous_transaction: TransactionDigest::new(self.rng.gen()),
             })
             .collect::<Vec<_>>();
@@ -879,7 +869,7 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "suix_getAllCoins",
+            "iotax_getAllCoins",
             vec![ExamplePairing::new(
                 "Gets all coins for the address in the request body. Begin listing the coins that are after the provided `cursor` value and return only the `limit` amount of results per page.",
                 vec![
@@ -892,8 +882,8 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_balance(&mut self) -> Examples {
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+    fn iotax_get_balance(&mut self) -> Examples {
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let coin_type = "0x168da5bf1f48dafc111b0a488fa454aca95e0b5e::usdc::USDC".to_string();
         let result = Balance {
             coin_type: coin_type.clone(),
@@ -903,7 +893,7 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "suix_getBalance",
+            "iotax_getBalance",
             vec![ExamplePairing::new(
                 "Gets the balance of the specified type of coin for the address in the request.",
                 vec![("owner", json!(owner)), ("coin_type", json!(coin_type))],
@@ -912,8 +902,8 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_coin_metadata(&mut self) -> Examples {
-        let result = SuiCoinMetadata {
+    fn iotax_get_coin_metadata(&mut self) -> Examples {
+        let result = IotaCoinMetadata {
             decimals: 9,
             name: "Usdc".to_string(),
             symbol: "USDC".to_string(),
@@ -923,7 +913,7 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "suix_getCoinMetadata",
+            "iotax_getCoinMetadata",
             vec![ExamplePairing::new(
                 "Gets the metadata for the coin type in the request.",
                 vec![(
@@ -935,10 +925,10 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_latest_checkpoint_sequence_number(&mut self) -> Examples {
+    fn iota_get_latest_checkpoint_sequence_number(&mut self) -> Examples {
         let result = "507021";
         Examples::new(
-            "sui_getLatestCheckpointSequenceNumber",
+            "iota_getLatestCheckpointSequenceNumber",
             vec![ExamplePairing::new(
                 "Gets the sequence number for the latest checkpoint.",
                 vec![],
@@ -947,9 +937,9 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_coins(&mut self) -> Examples {
-        let coin_type = "0x2::sui::SUI".to_string();
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+    fn iotax_get_coins(&mut self) -> Examples {
+        let coin_type = "0x2::iota::IOTA".to_string();
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let coins = (0..3)
             .map(|_| Coin {
                 coin_type: coin_type.clone(),
@@ -957,7 +947,7 @@ impl RpcExampleProvider {
                 version: SequenceNumber::from_u64(103626),
                 digest: ObjectDigest::new(self.rng.gen()),
                 balance: 200000000,
-                //locked_until_epoch: None,
+                // locked_until_epoch: None,
                 previous_transaction: TransactionDigest::new(self.rng.gen()),
             })
             .collect::<Vec<_>>();
@@ -971,9 +961,9 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "suix_getCoins",
+            "iotax_getCoins",
             vec![ExamplePairing::new(
-                "Gets all SUI coins owned by the address provided. Return a paginated list of `limit` results per page. Similar to `suix_getAllCoins`, but provides a way to filter by coin type.",
+                "Gets all IOTA coins owned by the address provided. Return a paginated list of `limit` results per page. Similar to `iotax_getAllCoins`, but provides a way to filter by coin type.",
                 vec![
                     ("owner", json!(owner)),
                     ("coin_type", json!(coin_type)),
@@ -985,14 +975,14 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_total_supply(&mut self) -> Examples {
+    fn iotax_get_total_supply(&mut self) -> Examples {
         let mut coin = ObjectID::new(self.rng.gen()).to_string();
         coin.push_str("::acoin::ACOIN");
 
         let result = Supply { value: 12023692 };
 
         Examples::new(
-            "suix_getTotalSupply",
+            "iotax_getTotalSupply",
             vec![ExamplePairing::new(
                 "Gets total supply for the type of coin provided.",
                 vec![("coin_type", json!(coin))],
@@ -1001,34 +991,7 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_loaded_child_objects(&mut self) -> Examples {
-        let mut sequence = SequenceNumber::from_u64(self.rng.gen_range(24506..6450624));
-        let seqs = (0..6)
-            .map(|x| {
-                if x % 2 == 0 || x % 3 == 0 {
-                    sequence = SequenceNumber::from_u64(self.rng.gen_range(24506..6450624));
-                }
-
-                SuiLoadedChildObject::new(ObjectID::new(self.rng.gen()), sequence)
-            })
-            .collect::<Vec<_>>();
-        let result = {
-            SuiLoadedChildObjectsResponse {
-                loaded_child_objects: seqs,
-            }
-        };
-
-        Examples::new(
-            "sui_getLoadedChildObjects",
-            vec![ExamplePairing::new(
-                "Gets loaded child objects associated with the transaction the request provides.",
-                vec![("digest", json!(ObjectDigest::new(self.rng.gen())))],
-                json!(result),
-            )],
-        )
-    }
-
-    fn sui_get_move_function_arg_types(&mut self) -> Examples {
+    fn iota_get_move_function_arg_types(&mut self) -> Examples {
         let result = vec![
             MoveFunctionArgType::Object(ByMutableReference),
             MoveFunctionArgType::Pure,
@@ -1040,12 +1003,12 @@ impl RpcExampleProvider {
         ];
 
         Examples::new(
-            "sui_getMoveFunctionArgTypes",
+            "iota_getMoveFunctionArgTypes",
             vec![ExamplePairing::new(
                 "Returns the argument types for the package and function the request provides.",
                 vec![
                     ("package", json!(ObjectID::new(self.rng.gen()))),
-                    ("module", json!("suifrens".to_string())),
+                    ("module", json!("iotafrens".to_string())),
                     ("function", json!("mint".to_string())),
                 ],
                 json!(result),
@@ -1053,21 +1016,21 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_normalized_move_function(&mut self) -> Examples {
-        let ability_set = SuiMoveAbilitySet {
-            abilities: vec![SuiMoveAbility::Store, SuiMoveAbility::Key],
+    fn iota_get_normalized_move_function(&mut self) -> Examples {
+        let ability_set = IotaMoveAbilitySet {
+            abilities: vec![IotaMoveAbility::Store, IotaMoveAbility::Key],
         };
 
-        let result = SuiMoveNormalizedFunction {
+        let result = IotaMoveNormalizedFunction {
             is_entry: false,
             type_parameters: vec![ability_set],
-            parameters: vec![SuiMoveNormalizedType::U64],
-            visibility: SuiMoveVisibility::Public,
-            return_: vec![SuiMoveNormalizedType::U64],
+            parameters: vec![IotaMoveNormalizedType::U64],
+            visibility: IotaMoveVisibility::Public,
+            return_: vec![IotaMoveNormalizedType::U64],
         };
 
         Examples::new(
-            "sui_getNormalizedMoveFunction",
+            "iota_getNormalizedMoveFunction",
             vec![ExamplePairing::new(
                 "Returns the structured representation of the function the request provides.",
                 vec![
@@ -1080,8 +1043,8 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_normalized_move_module(&mut self) -> Examples {
-        let result = SuiMoveNormalizedModule {
+    fn iota_get_normalized_move_module(&mut self) -> Examples {
+        let result = IotaMoveNormalizedModule {
             address: ObjectID::new(self.rng.gen()).to_string(),
             exposed_functions: BTreeMap::new(),
             file_format_version: 6,
@@ -1091,7 +1054,7 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "sui_getNormalizedMoveModule",
+            "iota_getNormalizedMoveModule",
             vec![ExamplePairing::new(
                 "Gets a structured representation of the Move module for the package in the request.",
                 vec![
@@ -1103,8 +1066,8 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_normalized_move_modules_by_package(&mut self) -> Examples {
-        let result = SuiMoveNormalizedModule {
+    fn iota_get_normalized_move_modules_by_package(&mut self) -> Examples {
+        let result = IotaMoveNormalizedModule {
             address: ObjectID::new(self.rng.gen()).to_string(),
             exposed_functions: BTreeMap::new(),
             file_format_version: 6,
@@ -1114,31 +1077,29 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "sui_getNormalizedMoveModulesByPackage",
+            "iota_getNormalizedMoveModulesByPackage",
             vec![ExamplePairing::new(
                 "Gets structured representations of all the modules for the package in the request.",
-                vec![
-                    ("package", json!(ObjectID::new(self.rng.gen()))),
-                ],
+                vec![("package", json!(ObjectID::new(self.rng.gen())))],
                 json!(result),
             )],
         )
     }
 
-    fn sui_get_normalized_move_struct(&mut self) -> Examples {
-        let abilities = SuiMoveAbilitySet {
-            abilities: vec![SuiMoveAbility::Store, SuiMoveAbility::Key],
+    fn iota_get_normalized_move_struct(&mut self) -> Examples {
+        let abilities = IotaMoveAbilitySet {
+            abilities: vec![IotaMoveAbility::Store, IotaMoveAbility::Key],
         };
         let fields = vec![].into_iter().collect::<Vec<_>>();
         let type_parameters = vec![].into_iter().collect::<Vec<_>>();
-        let result = SuiMoveNormalizedStruct {
+        let result = IotaMoveNormalizedStruct {
             abilities,
             fields,
             type_parameters,
         };
 
         Examples::new(
-            "sui_getNormalizedMoveStruct",
+            "iota_getNormalizedMoveStruct",
             vec![ExamplePairing::new(
                 "Gets a structured representation of the struct in the request.",
                 vec![
@@ -1151,24 +1112,24 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_validators_apy(&mut self) -> Examples {
+    fn iotax_get_validators_apy(&mut self) -> Examples {
         let result = vec![
             ValidatorApy {
-                address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                address: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 apy: 0.06,
             },
             ValidatorApy {
-                address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                address: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 apy: 0.02,
             },
             ValidatorApy {
-                address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                address: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 apy: 0.05,
             },
         ];
 
         Examples::new(
-            "suix_getValidatorsApy",
+            "iotax_getValidatorsApy",
             vec![ExamplePairing::new(
                 "Gets the APY for all validators.",
                 vec![],
@@ -1180,7 +1141,7 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_dynamic_fields(&mut self) -> Examples {
+    fn iotax_get_dynamic_fields(&mut self) -> Examples {
         let object_id = ObjectID::new(self.rng.gen());
         let dynamic_fields = (0..3)
             .map(|_| DynamicFieldInfo {
@@ -1205,29 +1166,31 @@ impl RpcExampleProvider {
             has_next_page: true,
         };
 
-        Examples::new("suix_getDynamicFields",
-        vec![ExamplePairing::new(
-            "Gets dynamic fields for the object the request provides in a paginated list of `limit` dynamic field results per page. The default limit is 50.",
-            vec![
-                ("parent_object_id", json!(object_id)),
-                ("cursor", json!(ObjectID::new(self.rng.gen()))),
-                ("limit", json!(3)),
-            ],
-            json!(page),
-        )],)
+        Examples::new(
+            "iotax_getDynamicFields",
+            vec![ExamplePairing::new(
+                "Gets dynamic fields for the object the request provides in a paginated list of `limit` dynamic field results per page. The default limit is 50.",
+                vec![
+                    ("parent_object_id", json!(object_id)),
+                    ("cursor", json!(ObjectID::new(self.rng.gen()))),
+                    ("limit", json!(3)),
+                ],
+                json!(page),
+            )],
+        )
     }
 
-    fn suix_get_dynamic_field_object(&mut self) -> Examples {
+    fn iotax_get_dynamic_field_object(&mut self) -> Examples {
         let parent_object_id = ObjectID::new(self.rng.gen());
         let field_name = DynamicFieldName {
             type_: TypeTag::from_str("0x9::test::TestField").unwrap(),
             value: serde_json::Value::String("some_value".to_string()),
         };
 
-        let struct_tag = parse_sui_struct_tag("0x9::test::TestField").unwrap();
-        let resp = SuiObjectResponse::new_with_data(SuiObjectData {
+        let struct_tag = parse_iota_struct_tag("0x9::test::TestField").unwrap();
+        let resp = IotaObjectResponse::new_with_data(IotaObjectData {
             content: Some(
-                SuiParsedData::try_from_object(
+                IotaParsedData::try_from_object(
                     unsafe {
                         MoveObject::new_from_execution_with_limit(
                             MoveObjectType::from(struct_tag.clone()),
@@ -1245,7 +1208,7 @@ impl RpcExampleProvider {
                 )
                 .unwrap(),
             ),
-            owner: Some(Owner::AddressOwner(SuiAddress::from(ObjectID::new(
+            owner: Some(Owner::AddressOwner(IotaAddress::from(ObjectID::new(
                 self.rng.gen(),
             )))),
             previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -1254,13 +1217,13 @@ impl RpcExampleProvider {
             version: SequenceNumber::from_u64(1),
             digest: ObjectDigest::new(self.rng.gen()),
             type_: Some(ObjectType::Struct(MoveObjectType::from(
-                parse_sui_struct_tag("0x9::test::TestField").unwrap(),
+                parse_iota_struct_tag("0x9::test::TestField").unwrap(),
             ))),
             bcs: None,
             display: None,
         });
         Examples::new(
-            "suix_getDynamicFieldObject",
+            "iotax_getDynamicFieldObject",
             vec![ExamplePairing::new(
                 "Gets the information for the dynamic field the request provides.",
                 vec![
@@ -1272,28 +1235,28 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_owned_objects(&mut self) -> Examples {
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+    fn iotax_get_owned_objects(&mut self) -> Examples {
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let version: u64 = 13488;
         let options = Some(
-            SuiObjectDataOptions::new()
+            IotaObjectDataOptions::new()
                 .with_type()
                 .with_owner()
                 .with_previous_transaction(),
         );
-        let filter = Some(SuiObjectDataFilter::MatchAll(vec![
-            SuiObjectDataFilter::StructType(
-                StructTag::from_str("0x2::coin::Coin<0x2::sui::SUI>").unwrap(),
+        let filter = Some(IotaObjectDataFilter::MatchAll(vec![
+            IotaObjectDataFilter::StructType(
+                StructTag::from_str("0x2::coin::Coin<0x2::iota::IOTA>").unwrap(),
             ),
-            SuiObjectDataFilter::AddressOwner(owner),
-            SuiObjectDataFilter::Version(version),
+            IotaObjectDataFilter::AddressOwner(owner),
+            IotaObjectDataFilter::Version(version),
         ]));
-        let query = json!(SuiObjectResponseQuery { filter, options });
+        let query = json!(IotaObjectResponseQuery { filter, options });
         let object_id = ObjectID::new(self.rng.gen());
 
         let items = (0..3)
             .map(|_| {
-                SuiObjectResponse::new_with_data(SuiObjectData {
+                IotaObjectResponse::new_with_data(IotaObjectData {
                     content: None,
                     owner: Some(Owner::AddressOwner(owner)),
                     previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -1316,21 +1279,21 @@ impl RpcExampleProvider {
         };
 
         Examples::new(
-            "suix_getOwnedObjects",
+            "iotax_getOwnedObjects",
             vec![ExamplePairing::new(
                 "Returns all the objects the address provided in the request owns and that match the filter. By default, only the digest value is returned, but the request returns additional information by setting the relevant keys to true. A cursor value is also provided, so the list of results begin after that value.",
                 vec![
                     ("address", json!(owner)),
                     ("query", json!(query)),
                     ("cursor", json!(object_id)),
-                    ("limit", json!(3))
+                    ("limit", json!(3)),
                 ],
                 json!(result),
             )],
         )
     }
 
-    fn suix_query_events(&mut self) -> Examples {
+    fn iotax_query_events(&mut self) -> Examples {
         let package_id = ObjectID::new(self.rng.gen());
         let identifier = Identifier::from_str("test").unwrap();
         let mut event_ids = self.get_event_ids(5..9);
@@ -1341,11 +1304,11 @@ impl RpcExampleProvider {
 
         let data = event_ids
             .into_iter()
-            .map(|event_id| SuiEvent {
+            .map(|event_id| IotaEvent {
                 id: event_id,
                 package_id,
                 transaction_module: identifier.clone(),
-                sender: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                sender: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 type_: StructTag::from_str("0x3::test::Test<0x3::test::Test>").unwrap(),
                 parsed_json: serde_json::Value::String("some_value".to_string()),
                 bcs: vec![],
@@ -1359,7 +1322,7 @@ impl RpcExampleProvider {
             has_next_page,
         };
         Examples::new(
-            "suix_queryEvents",
+            "iotax_queryEvents",
             vec![ExamplePairing::new(
                 "Returns the events for a specified query criteria.",
                 vec![
@@ -1379,10 +1342,10 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_latest_sui_system_state(&mut self) -> Examples {
+    fn iotax_get_latest_iota_system_state(&mut self) -> Examples {
         let result = "some_system_state";
         Examples::new(
-            "suix_getLatestSuiSystemState",
+            "iotax_getLatestIotaSystemState",
             vec![ExamplePairing::new(
                 "Gets objects owned by the address in the request.",
                 vec![],
@@ -1391,10 +1354,10 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_get_chain_identifier(&mut self) -> Examples {
+    fn iota_get_chain_identifier(&mut self) -> Examples {
         let result = "4c78adac".to_string();
         Examples::new(
-            "sui_getChainIdentifier",
+            "iota_getChainIdentifier",
             vec![ExamplePairing::new(
                 "Gets the identifier for the chain receiving the POST.",
                 vec![],
@@ -1403,16 +1366,16 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_stakes(&mut self) -> Examples {
+    fn iotax_get_stakes(&mut self) -> Examples {
         let principal = 200000000000;
-        let owner = SuiAddress::from(ObjectID::new(self.rng.gen()));
+        let owner = IotaAddress::from(ObjectID::new(self.rng.gen()));
         let result = vec![
             DelegatedStake {
-                validator_address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                validator_address: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 staking_pool: ObjectID::new(self.rng.gen()),
                 stakes: vec![
                     Stake {
-                        staked_sui_id: ObjectID::new(self.rng.gen()),
+                        staked_iota_id: ObjectID::new(self.rng.gen()),
                         stake_request_epoch: 62,
                         stake_active_epoch: 63,
                         principal,
@@ -1421,7 +1384,7 @@ impl RpcExampleProvider {
                         },
                     },
                     Stake {
-                        staked_sui_id: ObjectID::new(self.rng.gen()),
+                        staked_iota_id: ObjectID::new(self.rng.gen()),
                         stake_request_epoch: 142,
                         stake_active_epoch: 143,
                         principal,
@@ -1430,10 +1393,10 @@ impl RpcExampleProvider {
                 ],
             },
             DelegatedStake {
-                validator_address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+                validator_address: IotaAddress::from(ObjectID::new(self.rng.gen())),
                 staking_pool: ObjectID::new(self.rng.gen()),
                 stakes: vec![Stake {
-                    staked_sui_id: ObjectID::new(self.rng.gen()),
+                    staked_iota_id: ObjectID::new(self.rng.gen()),
                     stake_request_epoch: 244,
                     stake_active_epoch: 245,
                     principal,
@@ -1443,7 +1406,7 @@ impl RpcExampleProvider {
         ];
 
         Examples::new(
-            "suix_getStakes",
+            "iotax_getStakes",
             vec![ExamplePairing::new(
                 "Returns the staking information for the address the request provides.",
                 vec![("owner", json!(owner))],
@@ -1452,16 +1415,16 @@ impl RpcExampleProvider {
         )
     }
 
-    fn suix_get_stakes_by_ids(&mut self) -> Examples {
+    fn iotax_get_stakes_by_ids(&mut self) -> Examples {
         let principal = 200000000000;
         let stake1 = ObjectID::new(self.rng.gen());
         let stake2 = ObjectID::new(self.rng.gen());
         let result = DelegatedStake {
-            validator_address: SuiAddress::from(ObjectID::new(self.rng.gen())),
+            validator_address: IotaAddress::from(ObjectID::new(self.rng.gen())),
             staking_pool: ObjectID::new(self.rng.gen()),
             stakes: vec![
                 Stake {
-                    staked_sui_id: stake1,
+                    staked_iota_id: stake1,
                     stake_request_epoch: 62,
                     stake_active_epoch: 63,
                     principal,
@@ -1470,7 +1433,7 @@ impl RpcExampleProvider {
                     },
                 },
                 Stake {
-                    staked_sui_id: stake2,
+                    staked_iota_id: stake2,
                     stake_request_epoch: 244,
                     stake_active_epoch: 245,
                     principal,
@@ -1479,39 +1442,39 @@ impl RpcExampleProvider {
             ],
         };
         Examples::new(
-            "suix_getStakesByIds",
+            "iotax_getStakesByIds",
             vec![ExamplePairing::new(
                 "Returns the staking information for the address the request provides.",
-                vec![("staked_sui_ids", json!(vec![stake1, stake2]))],
+                vec![("staked_iota_ids", json!(vec![stake1, stake2]))],
                 json!(result),
             )],
         )
     }
 
-    fn suix_resolve_name_service_address(&mut self) -> Examples {
+    fn iotax_resolve_name_service_address(&mut self) -> Examples {
         let result = ObjectID::new(self.rng.gen());
         Examples::new(
-            "suix_resolveNameServiceAddress",
+            "iotax_resolveNameServiceAddress",
             vec![ExamplePairing::new(
                 "Returns the resolved address for the name the request provides.",
-                vec![("name", json!("example.sui".to_string()))],
+                vec![("name", json!("example.iota".to_string()))],
                 json!(result),
             )],
         )
     }
 
-    fn suix_resolve_name_service_names(&mut self) -> Examples {
+    fn iotax_resolve_name_service_names(&mut self) -> Examples {
         let next_cursor = Some(ObjectID::new(self.rng.gen()));
         let object_id = ObjectID::new(self.rng.gen());
         let result = Page {
-            data: vec!["example.sui".to_string()],
+            data: vec!["example.iota".to_string()],
             next_cursor,
             has_next_page: false,
         };
         Examples::new(
-            "suix_resolveNameServiceNames",
+            "iotax_resolveNameServiceNames",
             vec![ExamplePairing::new(
-                "Returns the SuiNS name for the address the request provides. Currently, the API returns only the first name in cases where there are multiple. Future support will use the cursor ID and limit values in the request to control pagination of the response for addresses with multiple names.",
+                "Returns the IotaNS name for the address the request provides. Currently, the API returns only the first name in cases where there are multiple. Future support will use the cursor ID and limit values in the request to control pagination of the response for addresses with multiple names.",
                 vec![
                     ("address", json!(object_id)),
                     ("cursor", json!(next_cursor)),
@@ -1522,14 +1485,14 @@ impl RpcExampleProvider {
         )
     }
 
-    fn sui_try_multi_get_past_objects(&mut self) -> Examples {
+    fn iota_try_multi_get_past_objects(&mut self) -> Examples {
         let object_id = ObjectID::new(self.rng.gen());
         let object_id2 = ObjectID::new(self.rng.gen());
         let version = SequenceNumber::from_u64(4);
         let version2 = SequenceNumber::from_u64(12);
         let objects = vec![
-            SuiGetPastObjectRequest { object_id, version },
-            SuiGetPastObjectRequest {
+            IotaGetPastObjectRequest { object_id, version },
+            IotaGetPastObjectRequest {
                 object_id: object_id2,
                 version: version2,
             },
@@ -1537,15 +1500,15 @@ impl RpcExampleProvider {
         let coin = GasCoin::new(object_id, 10000);
         let coin2 = GasCoin::new(object_id, 20000);
         let result = vec![
-            SuiPastObjectResponse::VersionFound(SuiObjectData {
+            IotaPastObjectResponse::VersionFound(IotaObjectData {
                 content: Some(
-                    SuiParsedData::try_from_object(
+                    IotaParsedData::try_from_object(
                         coin.to_object(SequenceNumber::from_u64(1)),
                         GasCoin::layout(),
                     )
                     .unwrap(),
                 ),
-                owner: Some(Owner::AddressOwner(SuiAddress::from(ObjectID::new(
+                owner: Some(Owner::AddressOwner(IotaAddress::from(ObjectID::new(
                     self.rng.gen(),
                 )))),
                 previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -1557,15 +1520,15 @@ impl RpcExampleProvider {
                 bcs: None,
                 display: None,
             }),
-            SuiPastObjectResponse::VersionFound(SuiObjectData {
+            IotaPastObjectResponse::VersionFound(IotaObjectData {
                 content: Some(
-                    SuiParsedData::try_from_object(
+                    IotaParsedData::try_from_object(
                         coin2.to_object(SequenceNumber::from_u64(4)),
                         GasCoin::layout(),
                     )
                     .unwrap(),
                 ),
-                owner: Some(Owner::AddressOwner(SuiAddress::from(ObjectID::new(
+                owner: Some(Owner::AddressOwner(IotaAddress::from(ObjectID::new(
                     self.rng.gen(),
                 )))),
                 previous_transaction: Some(TransactionDigest::new(self.rng.gen())),
@@ -1580,12 +1543,12 @@ impl RpcExampleProvider {
         ];
 
         Examples::new(
-            "sui_tryMultiGetPastObjects",
+            "iota_tryMultiGetPastObjects",
             vec![ExamplePairing::new(
                 "Gets Past Object data for a vector of objects.",
                 vec![
                     ("past_objects", json!(objects)),
-                    ("options", json!(SuiObjectDataOptions::full_content())),
+                    ("options", json!(IotaObjectDataOptions::full_content())),
                 ],
                 json!(result),
             )],
