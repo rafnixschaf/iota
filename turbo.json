@@ -1,7 +1,15 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"tasks": {
-		"lint": {},
+	"pipeline": {
+		"lint": {
+			"dependsOn": ["^build"]
+		},
+		"lint:fix": {
+			"dependsOn": ["^build"]
+		},
+		"prettier:fix": {
+			"cache": false
+		},
 		"test": {
 			"dependsOn": ["^build", "build"],
 			"outputs": ["coverage/**"]
@@ -23,5 +31,13 @@
 			]
 		}
 	},
-	"globalEnv": ["VERCEL_ENV", "VITE_NETWORK", "VITE_VERCEL_ANALYTICS_ID", "VITE_SENTRY_SAMPLE_RATE"]
+	"globalEnv": [
+		"VERCEL_ENV",
+		"VITE_VERCEL_ANALYTICS_ID",
+		"VITE_SENTRY_SAMPLE_RATE",
+		"DEFAULT_NETWORK",
+		"IOTA_NETWORKS"
+	],
+	"globalDotEnv": ["sdk/.env", "sdk/.env.defaults"],
+	"globalDependencies": [".eslintrc.js", "prettier.config.js", ".prettierignore"]
 }

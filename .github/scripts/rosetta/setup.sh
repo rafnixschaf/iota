@@ -7,7 +7,7 @@ echo "Install binaries"
 cargo install --locked --bin iota --path crates/iota
 cargo install --locked --bin iota-rosetta --path crates/iota-rosetta
 
-echo "run Iota genesis"
+echo "run IOTA genesis"
 iota genesis
 
 echo "generate rosetta configuration"
