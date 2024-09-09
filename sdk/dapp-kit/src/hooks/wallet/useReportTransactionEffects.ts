@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { toB64 } from '@iota/iota/utils';
+import { toB64 } from '@iota/iota-sdk/utils';
 import type { IotaReportTransactionEffectsInput } from '@iota/wallet-standard';
 import type { UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';

@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SignatureWithBytes } from '@iota/iota/cryptography';
-import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@iota/iota/cryptography';
-import type { Ed25519Keypair, Ed25519PublicKey } from '@iota/iota/keypairs/ed25519';
-import type { ZkLoginSignatureInputs } from '@iota/iota/zklogin';
+import type { SignatureWithBytes } from '@iota/iota-sdk/cryptography';
+import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@iota/iota-sdk/cryptography';
+import type { Ed25519Keypair, Ed25519PublicKey } from '@iota/iota-sdk/keypairs/ed25519';
+import type { ZkLoginSignatureInputs } from '@iota/iota-sdk/zklogin';
 import { getZkLoginSignature } from '@iota/zklogin';
 
 export class EnokiPublicKey extends PublicKey {

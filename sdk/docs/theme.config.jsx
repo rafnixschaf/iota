@@ -27,7 +27,7 @@ const config = {
 		dismissible: false,
 		text: (
 			<a href="/typescript/migrations/iota-1.0">
-				🎉 @iota/iota 1.0 has been released - Read the full migration guide here!
+				🎉 @iota/iota-sdk 1.0 has been released - Read the full migration guide here!
 			</a>
 		),
 	},

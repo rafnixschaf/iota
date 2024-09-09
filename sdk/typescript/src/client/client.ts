@@ -119,7 +119,7 @@ type NetworkOrTransport =
           url?: never;
       };
 
-const IOTA_CLIENT_BRAND = Symbol.for('@iota/IotaClient') as never;
+const IOTA_CLIENT_BRAND = Symbol.for('@iota/iota-sdkClient') as never;
 
 export function isIotaClient(client: unknown): client is IotaClient {
     return (

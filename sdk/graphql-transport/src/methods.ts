@@ -9,9 +9,9 @@ import type {
 	IotaArgument,
 	IotaClient,
 	IotaMoveNormalizedModule,
-} from '@iota/iota/client';
-import { Transaction } from '@iota/iota/transactions';
-import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota/utils';
+} from '@iota/iota-sdk/client';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota-sdk/utils';
 
 import type {
 	ObjectFilter,

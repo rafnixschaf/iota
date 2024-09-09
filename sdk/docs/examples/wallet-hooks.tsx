@@ -18,8 +18,8 @@ import {
 	useWallets,
 	WalletProvider,
 } from '@iota/dapp-kit';
-import { getFullnodeUrl } from '@iota/iota/client';
-import { Transaction } from '@iota/iota/transactions';
+import { getFullnodeUrl } from '@iota/iota-sdk/client';
+import { Transaction } from '@iota/iota-sdk/transactions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';

@@ -2,14 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
-import type { CoinStruct } from '@iota/iota/client';
-import { decodeIotaPrivateKey } from '@iota/iota/cryptography';
-import type { Keypair, Signer } from '@iota/iota/cryptography';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import type { TransactionObjectArgument, TransactionObjectInput } from '@iota/iota/transactions';
-import { Transaction } from '@iota/iota/transactions';
-import { normalizeStructTag, normalizeIotaAddress, IOTA_TYPE_ARG, toB64 } from '@iota/iota/utils';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import type { CoinStruct } from '@iota/iota-sdk/client';
+import { decodeIotaPrivateKey } from '@iota/iota-sdk/cryptography';
+import type { Keypair, Signer } from '@iota/iota-sdk/cryptography';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import type { TransactionObjectArgument, TransactionObjectInput } from '@iota/iota-sdk/transactions';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeStructTag, normalizeIotaAddress, IOTA_TYPE_ARG, toB64 } from '@iota/iota-sdk/utils';
 
 import type { ZkBagContractOptions } from './zk-bag.js';
 import { MAINNET_CONTRACT_IDS, ZkBag } from './zk-bag.js';

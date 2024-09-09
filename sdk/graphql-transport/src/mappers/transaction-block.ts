@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fromB64, toB58 } from '@iota/bcs';
-import { bcs } from '@iota/iota/bcs';
+import { bcs } from '@iota/iota-sdk/bcs';
 import type {
 	IotaArgument,
 	IotaCallArg,
@@ -13,8 +13,8 @@ import type {
 	IotaTransactionBlockKind,
 	IotaTransactionBlockResponse,
 	IotaTransactionBlockResponseOptions,
-} from '@iota/iota/client';
-import { normalizeIotaAddress } from '@iota/iota/utils';
+} from '@iota/iota-sdk/client';
+import { normalizeIotaAddress } from '@iota/iota-sdk/utils';
 
 import type { Rpc_Transaction_FieldsFragment } from '../generated/queries.js';
 import { toShortTypeString } from './util.js';

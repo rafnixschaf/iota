@@ -1,5 +1,5 @@
 {
-    "name": "@iota/iota",
+    "name": "@iota/iota-sdk",
     "author": "IOTA Foundation <contact@iota.org>",
     "description": "Iota TypeScript API(Work in Progress)",
     "homepage": "https://wiki.iota.org/references/ts-sdk/typescript",

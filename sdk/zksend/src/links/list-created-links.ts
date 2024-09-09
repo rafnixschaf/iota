@@ -2,11 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
-import type { IotaClient } from '@iota/iota/client';
-import { IotaGraphQLClient } from '@iota/iota/graphql';
-import { graphql } from '@iota/iota/graphql/schemas/2024.4';
-import { fromB64, normalizeIotaAddress } from '@iota/iota/utils';
+import { bcs } from '@iota/iota-sdk/bcs';
+import type { IotaClient } from '@iota/iota-sdk/client';
+import { IotaGraphQLClient } from '@iota/iota-sdk/graphql';
+import { graphql } from '@iota/iota-sdk/graphql/schemas/2024.4';
+import { fromB64, normalizeIotaAddress } from '@iota/iota-sdk/utils';
 
 import { ZkSendLink } from './claim.js';
 import type { ZkBagContractOptions } from './zk-bag.js';

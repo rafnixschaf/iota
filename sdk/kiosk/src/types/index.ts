@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IotaClient } from '@iota/iota/client';
-import type { TransactionObjectArgument } from '@iota/iota/transactions';
+import type { IotaClient } from '@iota/iota-sdk/client';
+import type { TransactionObjectArgument } from '@iota/iota-sdk/transactions';
 
 import type { BaseRulePackageIds } from '../constants.js';
 

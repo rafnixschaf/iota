@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
-import { Transaction } from '@iota/iota/transactions';
+import { bcs } from '@iota/iota-sdk/bcs';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import { Transaction } from '@iota/iota-sdk/transactions';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { expect, type Mock } from 'vitest';
 

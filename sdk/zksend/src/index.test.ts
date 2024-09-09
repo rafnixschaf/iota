@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe } from 'node:test';
-import { getFullnodeUrl, IotaClient, IotaObjectChange } from '@iota/iota/client';
-import { decodeIotaPrivateKey, Keypair } from '@iota/iota/cryptography';
-import { getFaucetHost, requestIotaFromFaucetV0 } from '@iota/iota/faucet';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import { Transaction } from '@iota/iota/transactions';
-import { toB64 } from '@iota/iota/utils';
+import { getFullnodeUrl, IotaClient, IotaObjectChange } from '@iota/iota-sdk/client';
+import { decodeIotaPrivateKey, Keypair } from '@iota/iota-sdk/cryptography';
+import { getFaucetHost, requestIotaFromFaucetV0 } from '@iota/iota-sdk/faucet';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { toB64 } from '@iota/iota-sdk/utils';
 import { beforeAll, expect, test } from 'vitest';
 
 import { getSentTransactionsWithLinks, ZkSendLink, ZkSendLinkBuilder } from './index.js';

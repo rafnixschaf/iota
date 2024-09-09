@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { normalizeIotaAddress } from '@iota/iota/utils';
+import { normalizeIotaAddress } from '@iota/iota-sdk/utils';
 
 import { BalanceManagerContract } from '../transactions/balanceManager.js';
 import type { BalanceManager, Environment } from '../types/index.js';

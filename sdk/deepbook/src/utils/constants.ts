@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { normalizeStructTag, IOTA_TYPE_ARG } from '@iota/iota/utils';
+import { normalizeStructTag, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
 export const PACKAGE_ID = '0xdee9';
 

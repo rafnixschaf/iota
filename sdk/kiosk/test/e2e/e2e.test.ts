@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { Transaction } from '@iota/iota/transactions';
-import { normalizeIotaAddress } from '@iota/iota/utils';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeIotaAddress } from '@iota/iota-sdk/utils';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import {

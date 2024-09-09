@@ -1,11 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
-import { decodeIotaPrivateKey } from '@iota/iota/cryptography';
-import type { Keypair } from '@iota/iota/cryptography';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import type { Transaction } from '@iota/iota/transactions';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import { decodeIotaPrivateKey } from '@iota/iota-sdk/cryptography';
+import type { Keypair } from '@iota/iota-sdk/cryptography';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import type { Transaction } from '@iota/iota-sdk/transactions';
 
 import { DeepBookClient } from '../src/index.js'; // Adjust path according to new structure
 import type { BalanceManager } from '../src/types/index.js';

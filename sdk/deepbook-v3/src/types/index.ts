@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TransactionObjectArgument } from '@iota/iota/transactions';
+import type { TransactionObjectArgument } from '@iota/iota-sdk/transactions';
 
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0

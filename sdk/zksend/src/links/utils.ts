@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ObjectOwner, IotaObjectChange, IotaTransactionBlockResponse } from '@iota/iota/client';
-import type { Transaction } from '@iota/iota/transactions';
-import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota/utils';
+import type { ObjectOwner, IotaObjectChange, IotaTransactionBlockResponse } from '@iota/iota-sdk/client';
+import type { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota-sdk/utils';
 
 // eslint-disable-next-line import/no-cycle
 

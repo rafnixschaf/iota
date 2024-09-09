@@ -2,12 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IotaClient } from '@iota/iota/client';
-import { decodeIotaPrivateKey } from '@iota/iota/cryptography';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import type { Transaction } from '@iota/iota/transactions';
-import { fromB64, toB64 } from '@iota/iota/utils';
-import type { ZkLoginSignatureInputs } from '@iota/iota/zklogin';
+import type { IotaClient } from '@iota/iota-sdk/client';
+import { decodeIotaPrivateKey } from '@iota/iota-sdk/cryptography';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import type { Transaction } from '@iota/iota-sdk/transactions';
+import { fromB64, toB64 } from '@iota/iota-sdk/utils';
+import type { ZkLoginSignatureInputs } from '@iota/iota-sdk/zklogin';
 import { decodeJwt } from 'jose';
 import type { WritableAtom } from 'nanostores';
 import { atom, onMount, onSet } from 'nanostores';

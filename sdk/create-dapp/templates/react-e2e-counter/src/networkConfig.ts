@@ -1,4 +1,4 @@
-import { getFullnodeUrl } from "@iota/iota/client";
+import { getFullnodeUrl } from "@iota/iota-sdk/client";
 import {
   DEVNET_COUNTER_PACKAGE_ID,
   TESTNET_COUNTER_PACKAGE_ID,

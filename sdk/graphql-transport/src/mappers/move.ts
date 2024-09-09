@@ -10,8 +10,8 @@ import type {
 	IotaMoveNormalizedModule,
 	IotaMoveNormalizedStruct,
 	IotaMoveNormalizedType,
-} from '@iota/iota/client';
-import { normalizeIotaAddress, parseStructTag } from '@iota/iota/utils';
+} from '@iota/iota-sdk/client';
+import { normalizeIotaAddress, parseStructTag } from '@iota/iota-sdk/utils';
 
 import type {
 	Rpc_Move_Function_FieldsFragment,

@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
+import { bcs } from '@iota/iota-sdk/bcs';
 
 export const BcsOrder = bcs.struct('Order', {
 	orderId: bcs.u64(),

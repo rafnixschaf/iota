@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
-import { Transaction } from '@iota/iota/transactions';
-import { fromB64, toB64 } from '@iota/iota/utils';
+import { bcs } from '@iota/iota-sdk/bcs';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { fromB64, toB64 } from '@iota/iota-sdk/utils';
 import type { WalletWithFeatures } from '@wallet-standard/core';
 
 import type {

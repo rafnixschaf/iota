@@ -2,18 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
+import { bcs } from '@iota/iota-sdk/bcs';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
 import type {
 	CoinStruct,
 	IotaObjectData,
 	IotaTransaction,
 	IotaTransactionBlockResponse,
-} from '@iota/iota/client';
-import type { Keypair } from '@iota/iota/cryptography';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import type { TransactionObjectArgument } from '@iota/iota/transactions';
-import { Transaction } from '@iota/iota/transactions';
+} from '@iota/iota-sdk/client';
+import type { Keypair } from '@iota/iota-sdk/cryptography';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import type { TransactionObjectArgument } from '@iota/iota-sdk/transactions';
+import { Transaction } from '@iota/iota-sdk/transactions';
 import {
 	fromB64,
 	normalizeStructTag,
@@ -22,7 +22,7 @@ import {
 	parseStructTag,
 	IOTA_TYPE_ARG,
 	toB64,
-} from '@iota/iota/utils';
+} from '@iota/iota-sdk/utils';
 
 import type { ZkSendLinkBuilderOptions } from './builder.js';
 import { ZkSendLinkBuilder } from './builder.js';

@@ -33,7 +33,7 @@
 		"json-schema": "typescript-json-schema src/types.ts SerializedTransactionDataV2 --required --strictNullChecks > serialized-transaction-data-v2.schema.json && prettier -w serialized-transaction-data-v2.schema.json"
 	},
 	"dependencies": {
-		"@iota/iota": "workspace:*",
+		"@iota/iota-sdk": "workspace:*",
 		"@wallet-standard/core": "1.0.3"
 	},
 	"devDependencies": {

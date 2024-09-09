@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Transaction } from '@iota/iota/transactions';
-import { toB64 } from '@iota/iota/utils';
+import type { Transaction } from '@iota/iota-sdk/transactions';
+import { toB64 } from '@iota/iota-sdk/utils';
 import type {
 	IotaSignAndExecuteTransactionInput,
 	IotaSignAndExecuteTransactionOutput,

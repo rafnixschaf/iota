@@ -1,10 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { bcs } from '@iota/iota/bcs';
-import type { IotaClient } from '@iota/iota/client';
-import { Transaction } from '@iota/iota/transactions';
-import { normalizeIotaAddress } from '@iota/iota/utils';
+import { bcs } from '@iota/iota-sdk/bcs';
+import type { IotaClient } from '@iota/iota-sdk/client';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeIotaAddress } from '@iota/iota-sdk/utils';
 
 import { BalanceManagerContract } from './transactions/balanceManager.js';
 import { DeepBookContract } from './transactions/deepbook.js';

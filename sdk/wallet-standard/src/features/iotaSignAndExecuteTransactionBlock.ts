@@ -6,7 +6,7 @@ import type {
 	ExecuteTransactionRequestType,
 	IotaTransactionBlockResponse,
 	IotaTransactionBlockResponseOptions,
-} from '@iota/iota/client';
+} from '@iota/iota-sdk/client';
 
 import type { IotaSignTransactionBlockInput } from './iotaSignTransactionBlock.js';
 

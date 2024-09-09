@@ -6,8 +6,8 @@ import type {
 	PaginatedObjectsResponse,
 	IotaObjectData,
 	IotaObjectDataOptions,
-} from '@iota/iota/client';
-import type { TransactionArgument } from '@iota/iota/transactions';
+} from '@iota/iota-sdk/client';
+import type { TransactionArgument } from '@iota/iota-sdk/transactions';
 
 import type { ObjectArgument } from './index.js';
 

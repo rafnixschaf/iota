@@ -1,4 +1,4 @@
-import { Transaction } from "@iota/iota/transactions";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import { Button, Container } from "@radix-ui/themes";
 import { useSignAndExecuteTransaction, useIotaClient } from "@iota/dapp-kit";
 import { useNetworkVariable } from "./networkConfig";

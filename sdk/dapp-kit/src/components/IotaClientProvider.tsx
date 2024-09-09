@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { getFullnodeUrl, isIotaClient, IotaClient } from '@iota/iota/client';
-import type { IotaClientOptions } from '@iota/iota/client';
+import { getFullnodeUrl, isIotaClient, IotaClient } from '@iota/iota-sdk/client';
+import type { IotaClientOptions } from '@iota/iota-sdk/client';
 import { createContext, useMemo, useState } from 'react';
 
 import type { NetworkConfig } from '../hooks/networkConfig.js';

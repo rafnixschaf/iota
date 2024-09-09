@@ -4,8 +4,8 @@ import {
   useIotaClient,
   useIotaClientQuery,
 } from "@iota/dapp-kit";
-import type { IotaObjectData } from "@iota/iota/client";
-import { Transaction } from "@iota/iota/transactions";
+import type { IotaObjectData } from "@iota/iota-sdk/client";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { useNetworkVariable } from "./networkConfig";
 

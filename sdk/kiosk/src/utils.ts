@@ -10,13 +10,13 @@ import type {
 	IotaObjectDataFilter,
 	IotaObjectDataOptions,
 	IotaObjectResponse,
-} from '@iota/iota/client';
+} from '@iota/iota-sdk/client';
 import {
 	fromB64,
 	normalizeStructTag,
 	normalizeIotaAddress,
 	parseStructTag,
-} from '@iota/iota/utils';
+} from '@iota/iota-sdk/utils';
 
 import { KioskType } from './bcs.js';
 import type { Kiosk, KioskData, KioskListing, TransferPolicyCap } from './types/index.js';

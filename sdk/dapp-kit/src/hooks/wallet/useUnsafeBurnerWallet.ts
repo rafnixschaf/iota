@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IotaClient } from '@iota/iota/client';
-import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
-import { Transaction } from '@iota/iota/transactions';
-import { toB64 } from '@iota/iota/utils';
+import type { IotaClient } from '@iota/iota-sdk/client';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import { toB64 } from '@iota/iota-sdk/utils';
 import type {
 	StandardConnectFeature,
 	StandardConnectMethod,

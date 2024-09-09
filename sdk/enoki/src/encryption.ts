@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromB64, toB64 } from '@iota/iota/utils';
+import { fromB64, toB64 } from '@iota/iota-sdk/utils';
 
 /**
  * An interface

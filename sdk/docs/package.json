@@ -29,7 +29,7 @@
 		"@iota/enoki": "workspace:*",
 		"@iota/graphql-transport": "workspace:*",
 		"@iota/kiosk": "workspace:*",
-		"@iota/iota": "workspace:*",
+		"@iota/iota-sdk": "workspace:*",
 		"@iota/wallet-standard": "workspace:*",
 		"@iota/zklogin": "workspace:*",
 		"@iota/zksend": "workspace:*",

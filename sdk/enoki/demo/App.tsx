@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
-import { Transaction } from '@iota/iota/transactions';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import { Transaction } from '@iota/iota-sdk/transactions';
 import { useState } from 'react';
 
 import { useAuthCallback, useEnokiFlow, useZkLogin } from '../src/react.tsx';

@@ -2,18 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@iota/iota/bcs';
-import type { OrderArguments, PaginatedEvents, PaginationArguments } from '@iota/iota/client';
-import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
-import type { Argument, TransactionObjectInput, TransactionResult } from '@iota/iota/transactions';
-import { Transaction } from '@iota/iota/transactions';
+import { bcs } from '@iota/iota-sdk/bcs';
+import type { OrderArguments, PaginatedEvents, PaginationArguments } from '@iota/iota-sdk/client';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import type { Argument, TransactionObjectInput, TransactionResult } from '@iota/iota-sdk/transactions';
+import { Transaction } from '@iota/iota-sdk/transactions';
 import {
 	normalizeStructTag,
 	normalizeIotaAddress,
 	normalizeIotaObjectId,
 	parseStructTag,
 	IOTA_CLOCK_OBJECT_ID,
-} from '@iota/iota/utils';
+} from '@iota/iota-sdk/utils';
 
 import { BcsOrder } from './types/bcs.js';
 import type {

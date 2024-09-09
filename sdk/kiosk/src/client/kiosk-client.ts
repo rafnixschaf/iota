@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PaginationArguments, IotaClient } from '@iota/iota/client';
+import type { PaginationArguments, IotaClient } from '@iota/iota-sdk/client';
 
 import {
 	FLOOR_PRICE_RULE_ADDRESS,

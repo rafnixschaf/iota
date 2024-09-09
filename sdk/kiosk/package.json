@@ -38,7 +38,7 @@
 		"prepare:e2e": "cargo build --bin iota --profile dev && cross-env RUST_LOG=warn,iota=error,anemo_tower=warn,consensus=off cargo run --bin iota -- start --with-faucet --force-regenesis"
 	},
 	"dependencies": {
-		"@iota/iota": "workspace:*"
+		"@iota/iota-sdk": "workspace:*"
 	},
 	"devDependencies": {
 		"@iota/build-scripts": "workspace:*",

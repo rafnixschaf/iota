@@ -1,9 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { coinWithBalance } from '@iota/iota/transactions';
-import type { Transaction } from '@iota/iota/transactions';
-import { IOTA_CLOCK_OBJECT_ID } from '@iota/iota/utils';
+import { coinWithBalance } from '@iota/iota-sdk/transactions';
+import type { Transaction } from '@iota/iota-sdk/transactions';
+import { IOTA_CLOCK_OBJECT_ID } from '@iota/iota-sdk/utils';
 
 import { OrderType, SelfMatchingOptions } from '../types/index.js';
 import type { PlaceLimitOrderParams, PlaceMarketOrderParams, SwapParams } from '../types/index.js';

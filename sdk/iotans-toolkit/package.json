@@ -1,5 +1,5 @@
 {
-	"name": "@iota/iotans-toolkit",
+	"name": "@iota/iota-sdkns-toolkit",
 	"author": "IOTA Foundation <contact@iota.org>",
 	"description": "IotaNS TypeScript SDK",
 	"version": "0.5.16",
@@ -42,6 +42,6 @@
 		"vitest": "^2.0.1"
 	},
 	"dependencies": {
-		"@iota/iota": "workspace:*"
+		"@iota/iota-sdk": "workspace:*"
 	}
 }
