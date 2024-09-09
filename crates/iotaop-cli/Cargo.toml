@@ -1,13 +1,13 @@
 [package]
+name = "iotaop-cli"
+version.workspace = true
 authors = [
   "Jk Jensen <jk@iota.org>",
   "IOTA Foundation <build@iota.org>",
 ]
 edition = "2021"
 license = "Apache-2.0"
-name = "iotaop-cli"
 publish = false
-version.workspace = true
 
 [lib]
 name = "iotaoplib"
@@ -33,22 +33,19 @@ open = "5.1.2"
 prettytable-rs.workspace = true
 rand.workspace = true
 regex.workspace = true
-reqwest = {workspace = true, features = [
-  "rustls-tls",
-  "json",
-], default-features = false}
+reqwest = { workspace = true, features = ["rustls-tls", "json"], default-features = false }
 semver.workspace = true
-serde = {workspace = true, features = ["derive"]}
+serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 serde_yaml.workspace = true
 sha2 = "0.10.6"
 spinners.workspace = true
 strum.workspace = true
 tabled.workspace = true
-tokio = {workspace = true, features = ["full"]}
+tokio = { workspace = true, features = ["full"] }
 toml_edit.workspace = true
-tracing-subscriber.workspace = true
 tracing.workspace = true
+tracing-subscriber.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

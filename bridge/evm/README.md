@@ -11,7 +11,7 @@ Duplicate rename the `.env.example` file to `.env`. You'll need accounts and api
 
 #### Dependencies
 
-To install the project dependencies, run: 
+To install the project dependencies, run:
 
 ```bash
 forge install https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable@v5.0.1 https://github.com/foundry-rs/forge-std@v1.3.0 https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades --no-git --no-commit

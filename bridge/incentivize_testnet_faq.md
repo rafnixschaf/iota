@@ -5,7 +5,7 @@ title: Iota Bridge Testnet Incentive Program FAQ
 # Iota Bridge Testnet Incentive Program FAQ
 
 **Q: How long will the Incentive Program last?**\
-**A:** The program will run for a minimum of two (2) weeks. The exact end date is *TBD* but will be announced when it is decided.
+**A:** The program will run for a minimum of two (2) weeks. The exact end date is _TBD_ but will be announced when it is decided.
 
 **Q: What's the total amount of rewards for this program?**\
 **A:** 100k Iota.
@@ -16,7 +16,7 @@ title: Iota Bridge Testnet Incentive Program FAQ
 **Q: Am I eligible for rewards if I test the bridge by directly calling the contract/package?**\
 **A:** No, to be eligible, users must directly interact with the [Iota Bridge web interface on Testnet](https://bridge.testnet.iota.io/?ref=blog.iota.io)
 
-**Q: Can I use a bot to bulk test  the [Iota Bridge Testnet](https://bridge.testnet.iota.io/)?**\
+**Q: Can I use a bot to bulk test the [Iota Bridge Testnet](https://bridge.testnet.iota.io/)?**\
 **A:** We expect real valuable signals and feedback to come from human testers. **Using a bot for testing is discouraged and will negatively impact your final rewards.**
 
 **Q: How do I get test tokens?**\
