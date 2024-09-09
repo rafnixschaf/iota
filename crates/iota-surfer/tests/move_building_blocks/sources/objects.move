@@ -1,24 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module move_building_blocks::objects {
-    use sui::object::UID;
+    use iota::object::UID;
     use std::option::Option;
-    use sui::table::Table;
-    use sui::tx_context::TxContext;
-    use sui::object;
+    use iota::table::Table;
+    use iota::tx_context::TxContext;
+    use iota::object;
     use std::option;
-    use sui::table;
-    use sui::transfer;
-    use sui::tx_context;
+    use iota::table;
+    use iota::transfer;
+    use iota::tx_context;
 
-    struct Object has key, store {
+    public struct Object has key, store {
         id: UID,
         wrapped: Option<Child>,
         table: Table<u8, Child>,
     }
 
-    struct Child has key, store {
+    public struct Child has key, store {
         id: UID,
     }
 
@@ -42,7 +43,7 @@ module move_building_blocks::objects {
     }
 
     public fun create_owned_children(count: u8, ctx: &mut TxContext) {
-        let i = 0;
+        let mut i = 0;
         while (i < count) {
             create_owned_child(ctx);
             i = i + 1;
@@ -117,7 +118,7 @@ module move_building_blocks::objects {
     }
     
     public fun delete(object: Object) {
-        let Object { id, wrapped, table } = object;
+        let Object { id, mut wrapped, table } = object;
         object::delete(id);
         if (option::is_some(&wrapped)) {
             let child = option::extract(&mut wrapped);

@@ -1,21 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_trait::async_trait;
-use move_binary_format::normalized::Type;
-use move_core_types::language_storage::StructTag;
-use rand::{seq::SliceRandom, Rng};
-use sui_types::{
+use std::time::Duration;
+
+use iota_types::{
     base_types::ObjectRef,
     transaction::{CallArg, ObjectArg},
 };
-use tokio::sync::watch;
+use move_binary_format::normalized::Type;
+use move_core_types::language_storage::StructTag;
+use rand::{seq::SliceRandom, Rng};
+use tokio::time::Instant;
 use tracing::debug;
 
-use crate::{
-    surf_strategy::SurfStrategy,
-    surfer_state::{EntryFunction, SurferState},
-};
+use crate::surfer_state::{EntryFunction, SurferState};
 
 enum InputObjectPassKind {
     Value,
@@ -23,19 +22,28 @@ enum InputObjectPassKind {
     MutRef,
 }
 
-#[derive(Default)]
-pub struct DefaultSurfStrategy {}
+#[derive(Clone, Default)]
+pub struct SurfStrategy {
+    min_tx_interval: Duration,
+}
 
-#[async_trait]
-impl SurfStrategy for DefaultSurfStrategy {
-    async fn surf_for_a_while(
+impl SurfStrategy {
+    pub fn new(min_tx_interval: Duration) -> Self {
+        Self { min_tx_interval }
+    }
+
+    /// Given a state and a list of callable Move entry functions,
+    /// explore them for a while, and eventually return. This function may
+    /// not return in some situations, so its important to call it with a
+    /// timeout or select! to ensure the task doesn't block forever.
+    pub async fn surf_for_a_while(
         &mut self,
         state: &mut SurferState,
         mut entry_functions: Vec<EntryFunction>,
-        exit: &watch::Receiver<()>,
     ) {
         entry_functions.shuffle(&mut state.rng);
         for entry in entry_functions {
+            let next_tx_time = Instant::now() + self.min_tx_interval;
             let Some(args) = Self::choose_function_call_args(state, entry.parameters).await else {
                 debug!(
                     "Failed to choose arguments for Move function {:?}::{:?}",
@@ -46,14 +54,10 @@ impl SurfStrategy for DefaultSurfStrategy {
             state
                 .execute_move_transaction(entry.package, entry.module, entry.function, args)
                 .await;
-            if exit.has_changed().unwrap() {
-                return;
-            }
+            tokio::time::sleep_until(next_tx_time).await;
         }
     }
-}
 
-impl DefaultSurfStrategy {
     async fn choose_function_call_args(
         state: &mut SurferState,
         params: Vec<Type>,

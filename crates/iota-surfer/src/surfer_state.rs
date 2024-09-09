@@ -1,24 +1,29 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+    sync::Arc,
+    time::Duration,
+};
+
 use indexmap::IndexSet;
-use move_binary_format::file_format::Visibility;
-use move_binary_format::normalized::Type;
+use iota_json_rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI};
+use iota_move_build::BuildConfig;
+use iota_protocol_config::{Chain, ProtocolConfig};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    execution_config_utils::to_binary_config,
+    object::{Object, Owner},
+    storage::WriteKind,
+    transaction::{CallArg, ObjectArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
+    Identifier, IOTA_FRAMEWORK_ADDRESS,
+};
+use move_binary_format::{file_format::Visibility, normalized::Type};
 use move_core_types::language_storage::StructTag;
 use rand::rngs::StdRng;
-use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
-use sui_json_rpc_types::{SuiTransactionBlockEffects, SuiTransactionBlockEffectsAPI};
-use sui_move_build::BuildConfig;
-use sui_protocol_config::ProtocolConfig;
-use sui_types::base_types::{ObjectID, ObjectRef, SequenceNumber, SuiAddress};
-use sui_types::execution_config_utils::to_binary_config;
-use sui_types::object::{Object, Owner};
-use sui_types::storage::WriteKind;
-use sui_types::transaction::{CallArg, ObjectArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_PUBLISH};
-use sui_types::{Identifier, SUI_FRAMEWORK_ADDRESS};
 use test_cluster::TestCluster;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info};
@@ -31,7 +36,7 @@ pub struct EntryFunction {
     pub parameters: Vec<Type>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct SurfStatistics {
     pub num_successful_transactions: u64,
     pub num_failed_transactions: u64,
@@ -99,15 +104,16 @@ pub type OwnedObjects = HashMap<StructTag, IndexSet<ObjectRef>>;
 
 pub type ImmObjects = Arc<RwLock<HashMap<StructTag, Vec<ObjectRef>>>>;
 
-/// Map from StructTag to a vector of shared objects, where each shared object is a tuple of
-/// (object ID, initial shared version).
+/// Map from StructTag to a vector of shared objects, where each shared object
+/// is a tuple of (object ID, initial shared version).
 pub type SharedObjects = Arc<RwLock<HashMap<StructTag, Vec<(ObjectID, SequenceNumber)>>>>;
 
 pub struct SurferState {
+    pub id: usize,
     pub cluster: Arc<TestCluster>,
     pub rng: StdRng,
 
-    pub address: SuiAddress,
+    pub address: IotaAddress,
     pub gas_object: ObjectRef,
     pub owned_objects: OwnedObjects,
     pub immutable_objects: ImmObjects,
@@ -119,9 +125,10 @@ pub struct SurferState {
 
 impl SurferState {
     pub fn new(
+        id: usize,
         cluster: Arc<TestCluster>,
         rng: StdRng,
-        address: SuiAddress,
+        address: IotaAddress,
         gas_object: ObjectRef,
         owned_objects: OwnedObjects,
         immutable_objects: ImmObjects,
@@ -129,6 +136,7 @@ impl SurferState {
         entry_functions: Arc<RwLock<Vec<EntryFunction>>>,
     ) -> Self {
         Self {
+            id,
             cluster,
             rng,
             address,
@@ -141,6 +149,7 @@ impl SurferState {
         }
     }
 
+    #[tracing::instrument(skip_all, fields(surfer_id = self.id))]
     pub async fn execute_move_transaction(
         &mut self,
         package: ObjectID,
@@ -201,7 +210,8 @@ impl SurferState {
         self.process_tx_effects(&effects).await;
     }
 
-    async fn process_tx_effects(&mut self, effects: &SuiTransactionBlockEffects) {
+    #[tracing::instrument(skip_all, fields(surfer_id = self.id))]
+    async fn process_tx_effects(&mut self, effects: &IotaTransactionBlockEffects) {
         for (owned_ref, write_kind) in effects.all_changed_objects() {
             if matches!(owned_ref.owner, Owner::ObjectOwner(_)) {
                 // For object owned objects, we don't need to do anything.
@@ -249,8 +259,9 @@ impl SurferState {
                             .or_default()
                             .push((obj_ref.0, initial_shared_version));
                     }
-                    // We do not need to insert it if it's a Mutate, because it means
-                    // we should already have it in the inventory.
+                    // We do not need to insert it if it's a Mutate, because it
+                    // means we should already have it in
+                    // the inventory.
                 }
             }
             if obj_ref.0 == self.gas_object.0 {
@@ -262,7 +273,8 @@ impl SurferState {
     async fn discover_entry_functions(&self, package: Object) {
         let package_id = package.id();
         let move_package = package.into_inner().data.try_into_package().unwrap();
-        let config = ProtocolConfig::get_for_max_version_UNSAFE();
+        let proto_version = self.cluster.highest_protocol_version();
+        let config = ProtocolConfig::get_for_version(proto_version, Chain::Unknown);
         let binary_config = to_binary_config(&config);
         let entry_functions: Vec<_> = move_package
             .normalize(&binary_config)
@@ -277,7 +289,8 @@ impl SurferState {
                         if !matches!(func.visibility, Visibility::Public) && !func.is_entry {
                             return None;
                         }
-                        // Surfer doesn't support chaining transactions in a programmable transaction yet.
+                        // Surfer doesn't support chaining transactions in a programmable
+                        // transaction yet.
                         if !func.return_.is_empty() {
                             return None;
                         }
@@ -309,9 +322,10 @@ impl SurferState {
         self.entry_functions.write().await.extend(entry_functions);
     }
 
-    pub async fn publish_package(&mut self, path: PathBuf) {
+    #[tracing::instrument(skip_all, fields(surfer_id = self.id))]
+    pub async fn publish_package(&mut self, path: &Path) {
         let rgp = self.cluster.get_reference_gas_price().await;
-        let package = BuildConfig::new_for_testing().build(path.clone()).unwrap();
+        let package = BuildConfig::new_for_testing().build(path).unwrap();
         let modules = package.get_package_bytes(false);
         let tx_data = TransactionData::new_module(
             self.address,
@@ -397,7 +411,7 @@ fn is_type_tx_context(ty: &Type) -> bool {
                 name,
                 type_arguments,
             } => {
-                address == &SUI_FRAMEWORK_ADDRESS
+                address == &IOTA_FRAMEWORK_ADDRESS
                     && module == &Identifier::new("tx_context").unwrap()
                     && name == &Identifier::new("TxContext").unwrap()
                     && type_arguments.is_empty()
