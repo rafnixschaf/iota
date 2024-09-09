@@ -1,24 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { useTransactionData, useTransactionGasBudget } from '_src/ui/app/hooks';
-import { GAS_SYMBOL } from '_src/ui/app/redux/slices/sui-objects/Coin';
-import { type TransactionBlock } from '@mysten/sui.js/transactions';
-import { formatAddress } from '@mysten/sui.js/utils';
+import { GAS_SYMBOL } from '_src/ui/app/redux/slices/iota-objects/Coin';
+import { type Transaction } from '@iota/iota/transactions';
+import { formatAddress } from '@iota/iota/utils';
 
 import { DescriptionItem, DescriptionList } from './DescriptionList';
 import { SummaryCard } from './SummaryCard';
 
 interface Props {
 	sender?: string;
-	transaction: TransactionBlock;
+	transaction: Transaction;
 }
 
 export function GasFees({ sender, transaction }: Props) {
 	const { data: transactionData } = useTransactionData(sender, transaction);
 	const { data: gasBudget, isPending, isError } = useTransactionGasBudget(sender, transaction);
 	const isSponsored =
-		transactionData?.gasConfig.owner && transactionData.sender !== transactionData.gasConfig.owner;
+		transactionData?.gasData.owner && transactionData.sender !== transactionData.gasData.owner;
 	return (
 		<SummaryCard
 			header="Estimated Gas Fees"
@@ -36,8 +37,8 @@ export function GasFees({ sender, transaction }: Props) {
 					{isPending
 						? 'Estimating...'
 						: isError
-						? 'Gas estimation failed'
-						: `${isSponsored ? 0 : gasBudget} ${GAS_SYMBOL}`}
+							? 'Gas estimation failed'
+							: `${isSponsored ? 0 : gasBudget} ${GAS_SYMBOL}`}
 				</DescriptionItem>
 				{isSponsored && (
 					<>
@@ -45,7 +46,7 @@ export function GasFees({ sender, transaction }: Props) {
 							{gasBudget ? `${gasBudget} ${GAS_SYMBOL}` : '-'}
 						</DescriptionItem>
 						<DescriptionItem title="Sponsor">
-							{formatAddress(transactionData!.gasConfig.owner!)}
+							{formatAddress(transactionData!.gasData.owner!)}
 						</DescriptionItem>
 					</>
 				)}

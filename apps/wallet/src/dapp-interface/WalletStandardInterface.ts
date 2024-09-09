@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { createMessage } from '_messages';
@@ -28,27 +29,30 @@ import {
 } from '_src/shared/messaging/messages/payloads/QredoConnect';
 import { type SignMessageRequest } from '_src/shared/messaging/messages/payloads/transactions/SignMessage';
 import { isWalletStatusChangePayload } from '_src/shared/messaging/messages/payloads/wallet-status-change';
-import { isTransactionBlock } from '@mysten/sui.js/transactions';
-import { fromB64, toB64 } from '@mysten/sui.js/utils';
+import { bcs } from '@iota/iota/bcs';
+import { isTransaction } from '@iota/iota/transactions';
+import { fromB64, toB64 } from '@iota/iota/utils';
 import {
 	ReadonlyWalletAccount,
-	SUI_CHAINS,
-	SUI_DEVNET_CHAIN,
-	SUI_LOCALNET_CHAIN,
-	SUI_MAINNET_CHAIN,
-	SUI_TESTNET_CHAIN,
+	IOTA_CHAINS,
+	IOTA_DEVNET_CHAIN,
+	IOTA_LOCALNET_CHAIN,
+	IOTA_MAINNET_CHAIN,
+	IOTA_TESTNET_CHAIN,
 	type StandardConnectFeature,
 	type StandardConnectMethod,
 	type StandardEventsFeature,
 	type StandardEventsListeners,
 	type StandardEventsOnMethod,
-	type SuiFeatures,
-	type SuiSignAndExecuteTransactionBlockMethod,
-	type SuiSignMessageMethod,
-	type SuiSignPersonalMessageMethod,
-	type SuiSignTransactionBlockMethod,
+	type IotaFeatures,
+	type IotaSignAndExecuteTransactionBlockMethod,
+	type IotaSignAndExecuteTransactionMethod,
+	type IotaSignMessageMethod,
+	type IotaSignPersonalMessageMethod,
+	type IotaSignTransactionBlockMethod,
+	type IotaSignTransactionMethod,
 	type Wallet,
-} from '@mysten/wallet-standard';
+} from '@iota/wallet-standard';
 import mitt, { type Emitter } from 'mitt';
 import { filter, map, type Observable } from 'rxjs';
 
@@ -59,7 +63,7 @@ type WalletEventsMap = {
 };
 
 // NOTE: Because this runs in a content script, we can't fetch the manifest.
-const name = process.env.APP_NAME || 'Sui Wallet';
+const name = process.env.APP_NAME || 'Iota Wallet';
 
 export type QredoConnectInput = {
 	service: string;
@@ -83,13 +87,13 @@ type QredoConnectFeature = {
 };
 type ChainType = Wallet['chains'][number];
 const API_ENV_TO_CHAIN: Record<Exclude<API_ENV, API_ENV.customRPC>, ChainType> = {
-	[API_ENV.local]: SUI_LOCALNET_CHAIN,
-	[API_ENV.devNet]: SUI_DEVNET_CHAIN,
-	[API_ENV.testNet]: SUI_TESTNET_CHAIN,
-	[API_ENV.mainnet]: SUI_MAINNET_CHAIN,
+	[API_ENV.local]: IOTA_LOCALNET_CHAIN,
+	[API_ENV.devNet]: IOTA_DEVNET_CHAIN,
+	[API_ENV.testNet]: IOTA_TESTNET_CHAIN,
+	[API_ENV.mainnet]: IOTA_MAINNET_CHAIN,
 };
 
-export class SuiWallet implements Wallet {
+export class IotaWallet implements Wallet {
 	readonly #events: Emitter<WalletEventsMap>;
 	readonly #version = '1.0.0' as const;
 	readonly #name = name;
@@ -106,17 +110,17 @@ export class SuiWallet implements Wallet {
 	}
 
 	get icon() {
-		return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiByeD0iMTYiIGZpbGw9IiM2RkJDRjAiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yMC40MjEzIDUyLjc4MzhDMjMuNjQ5NiA1OC4zNzYgMjkuNDMyMSA2MS43MTQyIDM1Ljg4ODggNjEuNzE0MkM0Mi4zNDU1IDYxLjcxNDIgNDguMTI3IDU4LjM3NiA1MS4zNTY0IDUyLjc4MzhDNTQuNTg0OCA0Ny4xOTI2IDU0LjU4NDggNDAuNTE2MyA1MS4zNTY0IDM0LjkyNEwzNy43NTI0IDExLjM2MTVDMzYuOTI0MSA5LjkyNzAxIDM0Ljg1MzUgOS45MjcwMSAzNC4wMjUzIDExLjM2MTVMMjAuNDIxMyAzNC45MjRDMTcuMTkyOSA0MC41MTUyIDE3LjE5MjkgNDcuMTkxNSAyMC40MjEzIDUyLjc4MzhaTTMyLjA1NjYgMjIuNTcxM0wzNC45NTcxIDE3LjU0NzRDMzUuMzcxMiAxNi44MzAxIDM2LjQwNjUgMTYuODMwMSAzNi44MjA2IDE3LjU0NzRMNDcuOTc5MSAzNi44NzQ4QzUwLjAyOTEgNDAuNDI1NCA1MC40MTM5IDQ0LjUzNSA0OS4xMzM1IDQ4LjI5NTRDNDkuMDAwMiA0Ny42ODE5IDQ4LjgxMzggNDcuMDU0MiA0OC41NjI2IDQ2LjQyMDFDNDcuMDIxMyA0Mi41MzA0IDQzLjUzNjMgMzkuNTI4OSAzOC4yMDIzIDM3LjQ5ODJDMzQuNTM1MSAzNi4xMDcxIDMyLjE5NDMgMzQuMDYxMyAzMS4yNDMxIDMxLjQxNzFDMzAuMDE4IDI4LjAwODkgMzEuMjk3NiAyNC4yOTI0IDMyLjA1NjYgMjIuNTcxM1pNMjcuMTEwNyAzMS4xMzc5TDIzLjc5ODYgMzYuODc0OEMyMS4yNzQ4IDQxLjI0NTkgMjEuMjc0OCA0Ni40NjQxIDIzLjc5ODYgNTAuODM1M0MyNi4zMjIzIDU1LjIwNjQgMzAuODQxMyA1Ny44MTUgMzUuODg4OCA1Ny44MTVDMzkuMjQxMyA1Ny44MTUgNDIuMzYxNSA1Ni42NjMzIDQ0LjgxODQgNTQuNjA4OEM0NS4xMzg4IDUzLjgwMjEgNDYuMTMxIDUwLjg0OTIgNDQuOTA1MiA0Ny44MDU4QzQzLjc3MyA0NC45OTU0IDQxLjA0ODIgNDIuNzUxOSAzNi44MDYxIDQxLjEzNkMzMi4wMTEgMzkuMzE3MSAyOC44OTU4IDM2LjQ3NzQgMjcuNTQ4NiAzMi42OTg0QzI3LjM2MzEgMzIuMTc4MSAyNy4yMTg5IDMxLjY1NjggMjcuMTEwNyAzMS4xMzc5WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+' as const;
+		return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHZpZXdCb3g9IjAgMCAyOCAyOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxyZWN0IHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgZmlsbD0iIzRDQTNGRiIvPgogICAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xOC44MzI3IDEyLjM0MTNWMTIuMzQyMkMxOS42NDgyIDEzLjM2NTMgMjAuMTM2IDE0LjY2MTMgMjAuMTM2IDE2LjA3MDVDMjAuMTM2IDE3LjQ3OTggMTkuNjMzNyAxOC44MTQzIDE4Ljc5NTcgMTkuODQ0M0wxOC43MjM1IDE5LjkzM0wxOC43MDQ1IDE5LjgyMDNDMTguNjg4MiAxOS43MjQ1IDE4LjY2OSAxOS42Mjc1IDE4LjY0NyAxOS41M0MxOC4yMjc3IDE3LjY4NzUgMTYuODYxMiAxNi4xMDc1IDE0LjYxMjUgMTQuODI4MkMxMy4wOTQgMTMuOTY2OCAxMi4yMjQ3IDEyLjkyOTIgMTEuOTk2NSAxMS43NTA4QzExLjg0OSAxMC45ODg1IDExLjk1ODcgMTAuMjIzIDEyLjE3MDUgOS41NjcyNUMxMi4zODIyIDguOTExNzUgMTIuNjk3MiA4LjM2MjUgMTIuOTY0NyA4LjAzMkwxMy44Mzk1IDYuOTYyMjVDMTMuOTkzIDYuNzc0NzUgMTQuMjggNi43NzQ3NSAxNC40MzM1IDYuOTYyMjVMMTguODMzIDEyLjM0MTVMMTguODMyNyAxMi4zNDEzWk0yMC4yMTY1IDExLjI3MjVWMTEuMjcyTDE0LjM1MyA0LjEwMjc1QzE0LjI0MSAzLjk2NTc1IDE0LjAzMTUgMy45NjU3NSAxMy45MTk1IDQuMTAyNzVMOC4wNTYgMTEuMjcyM1YxMS4yNzI4TDguMDM3IDExLjI5NjVDNi45NTgyNSAxMi42MzUzIDYuMzEyNSAxNC4zMzY4IDYuMzEyNSAxNi4xODlDNi4zMTI1IDIwLjUwMjggOS44MTUyNSAyNCAxNC4xMzYzIDI0QzE4LjQ1NzIgMjQgMjEuOTYgMjAuNTAyOCAyMS45NiAxNi4xODlDMjEuOTYgMTQuMzM2OCAyMS4zMTQyIDEyLjYzNTMgMjAuMjM1MiAxMS4yOTYzTDIwLjIxNiAxMS4yNzI1SDIwLjIxNjVaTTkuNDU5MjUgMTIuMzE4TDkuOTgzNzUgMTEuNjc2NUw5Ljk5OTUgMTEuNzk1QzEwLjAxMiAxMS44ODg3IDEwLjAyNzIgMTEuOTgzIDEwLjA0NTIgMTIuMDc3OEMxMC4zODQ1IDEzLjg1ODIgMTEuNTk2NyAxNS4zNDI4IDEzLjYyMzUgMTYuNDkyNUMxNS4zODUyIDE3LjQ5NSAxNi40MTEgMTguNjQ4IDE2LjcwNjUgMTkuOTEyNUMxNi44Mjk4IDIwLjQ0MDMgMTYuODUxNyAyMC45NTk1IDE2Ljc5ODUgMjEuNDEzNUwxNi43OTUyIDIxLjQ0MTVMMTYuNzY5NyAyMS40NTRDMTUuOTc0NyAyMS44NDI1IDE1LjA4MDcgMjIuMDYwNSAxNC4xMzYgMjIuMDYwNUMxMC44MjI1IDIyLjA2MDUgOC4xMzYyNSAxOS4zNzg4IDguMTM2MjUgMTYuMDcwNUM4LjEzNjI1IDE0LjY1MDMgOC42MzE1IDEzLjM0NSA5LjQ1OSAxMi4zMTgzTDkuNDU5MjUgMTIuMzE4WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==' as const;
 	}
 
 	get chains() {
 		// TODO: Extract chain from wallet:
-		return SUI_CHAINS;
+		return IOTA_CHAINS;
 	}
 
 	get features(): StandardConnectFeature &
 		StandardEventsFeature &
-		SuiFeatures &
+		IotaFeatures &
 		QredoConnectFeature {
 		return {
 			'standard:connect': {
@@ -127,19 +131,27 @@ export class SuiWallet implements Wallet {
 				version: '1.0.0',
 				on: this.#on,
 			},
-			'sui:signTransactionBlock': {
+			'iota:signTransactionBlock': {
 				version: '1.0.0',
 				signTransactionBlock: this.#signTransactionBlock,
 			},
-			'sui:signAndExecuteTransactionBlock': {
+			'iota:signTransaction': {
+				version: '2.0.0',
+				signTransaction: this.#signTransaction,
+			},
+			'iota:signAndExecuteTransactionBlock': {
 				version: '1.0.0',
 				signAndExecuteTransactionBlock: this.#signAndExecuteTransactionBlock,
 			},
-			'sui:signMessage': {
+			'iota:signAndExecuteTransaction': {
+				version: '2.0.0',
+				signAndExecuteTransaction: this.#signAndExecuteTransaction,
+			},
+			'iota:signMessage': {
 				version: '1.0.0',
 				signMessage: this.#signMessage,
 			},
-			'sui:signPersonalMessage': {
+			'iota:signPersonalMessage': {
 				version: '1.0.0',
 				signPersonalMessage: this.#signPersonalMessage,
 			},
@@ -162,7 +174,7 @@ export class SuiWallet implements Wallet {
 					label: nickname || undefined,
 					publicKey: publicKey ? fromB64(publicKey) : new Uint8Array(),
 					chains: this.#activeChain ? [this.#activeChain] : [],
-					features: ['sui:signAndExecuteTransaction'],
+					features: ['iota:signAndExecuteTransaction'],
 				}),
 		);
 	}
@@ -170,7 +182,7 @@ export class SuiWallet implements Wallet {
 	constructor() {
 		this.#events = mitt();
 		this.#accounts = [];
-		this.#messagesStream = new WindowMessageStream('sui_in-page', 'sui_content-script');
+		this.#messagesStream = new WindowMessageStream('iota_in-page', 'iota_content-script');
 		this.#messagesStream.messages.subscribe(({ payload }) => {
 			if (isWalletStatusChangePayload(payload)) {
 				const { network, accounts } = payload;
@@ -233,14 +245,14 @@ export class SuiWallet implements Wallet {
 		return { accounts: this.accounts };
 	};
 
-	#signTransactionBlock: SuiSignTransactionBlockMethod = async ({
+	#signTransactionBlock: IotaSignTransactionBlockMethod = async ({
 		transactionBlock,
 		account,
 		...input
 	}) => {
-		if (!isTransactionBlock(transactionBlock)) {
+		if (!isTransaction(transactionBlock)) {
 			throw new Error(
-				'Unexpect transaction format found. Ensure that you are using the `Transaction` class.',
+				'Unexpected transaction format found. Ensure that you are using the `Transaction` class.',
 			);
 		}
 
@@ -259,10 +271,29 @@ export class SuiWallet implements Wallet {
 		);
 	};
 
-	#signAndExecuteTransactionBlock: SuiSignAndExecuteTransactionBlockMethod = async (input) => {
-		if (!isTransactionBlock(input.transactionBlock)) {
+	#signTransaction: IotaSignTransactionMethod = async ({ transaction, account, ...input }) => {
+		return mapToPromise(
+			this.#send<SignTransactionRequest, SignTransactionResponse>({
+				type: 'sign-transaction-request',
+				transaction: {
+					...input,
+					// account might be undefined if previous version of adapters is used
+					// in that case use the first account address
+					account: account?.address || this.#accounts[0]?.address || '',
+					transaction: await transaction.toJSON(),
+				},
+			}),
+			({ result: { signature, transactionBlockBytes: bytes } }) => ({
+				signature,
+				bytes,
+			}),
+		);
+	};
+
+	#signAndExecuteTransactionBlock: IotaSignAndExecuteTransactionBlockMethod = async (input) => {
+		if (!isTransaction(input.transactionBlock)) {
 			throw new Error(
-				'Unexpect transaction format found. Ensure that you are using the `Transaction` class.',
+				'Unexpected transaction format found. Ensure that you are using the `Transaction` class.',
 			);
 		}
 
@@ -282,7 +313,43 @@ export class SuiWallet implements Wallet {
 		);
 	};
 
-	#signMessage: SuiSignMessageMethod = async ({ message, account }) => {
+	#signAndExecuteTransaction: IotaSignAndExecuteTransactionMethod = async (input) => {
+		return mapToPromise(
+			this.#send<ExecuteTransactionRequest, ExecuteTransactionResponse>({
+				type: 'execute-transaction-request',
+				transaction: {
+					type: 'transaction',
+					data: await input.transaction.toJSON(),
+					options: {
+						showRawEffects: true,
+						showRawInput: true,
+					},
+					// account might be undefined if previous version of adapters is used
+					// in that case use the first account address
+					account: input.account?.address || this.#accounts[0]?.address || '',
+				},
+			}),
+			({ result: { rawEffects, rawTransaction, digest } }) => {
+				const [
+					{
+						txSignatures: [signature],
+						intentMessage: { value: bcsTransaction },
+					},
+				] = bcs.SenderSignedData.parse(fromB64(rawTransaction!));
+
+				const bytes = bcs.TransactionData.serialize(bcsTransaction).toBase64();
+
+				return {
+					digest,
+					signature,
+					bytes,
+					effects: toB64(new Uint8Array(rawEffects!)),
+				};
+			},
+		);
+	};
+
+	#signMessage: IotaSignMessageMethod = async ({ message, account }) => {
 		return mapToPromise(
 			this.#send<SignMessageRequest, SignMessageRequest>({
 				type: 'sign-message-request',
@@ -300,7 +367,7 @@ export class SuiWallet implements Wallet {
 		);
 	};
 
-	#signPersonalMessage: SuiSignPersonalMessageMethod = async ({ message, account }) => {
+	#signPersonalMessage: IotaSignPersonalMessageMethod = async ({ message, account }) => {
 		return mapToPromise(
 			this.#send<SignMessageRequest, SignMessageRequest>({
 				type: 'sign-message-request',
@@ -350,7 +417,7 @@ export class SuiWallet implements Wallet {
 	}
 
 	#setActiveChain({ env }: NetworkEnvType) {
-		this.#activeChain = env === API_ENV.customRPC ? 'sui:unknown' : API_ENV_TO_CHAIN[env];
+		this.#activeChain = env === API_ENV.customRPC ? 'iota:unknown' : API_ENV_TO_CHAIN[env];
 	}
 
 	#qredoConnect = async (input: QredoConnectInput): Promise<void> => {

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// An implementation of a simple `Denylist` for the Closed Loop system. For
@@ -16,15 +17,15 @@
 module regulated_token::denylist_rule {
     use std::option;
     use std::vector;
-    use sui::bag::{Self, Bag};
-    use sui::tx_context::TxContext;
-    use sui::token::{Self, TokenPolicy, TokenPolicyCap, ActionRequest};
+    use iota::bag::{Self, Bag};
+    use iota::tx_context::TxContext;
+    use iota::token::{Self, TokenPolicy, TokenPolicyCap, ActionRequest};
 
     /// Trying to `verify` but the sender or the recipient is on the denylist.
     const EUserBlocked: u64 = 0;
 
     /// The Rule witness.
-    struct Denylist has drop {}
+    public struct Denylist has drop {}
 
     /// Verifies that the sender and the recipient (if set) are not on the
     /// denylist for the given action.
@@ -60,7 +61,7 @@ module regulated_token::denylist_rule {
     public fun add_records<T>(
         policy: &mut TokenPolicy<T>,
         cap: &TokenPolicyCap<T>,
-        addresses: vector<address>,
+        mut addresses: vector<address>,
         ctx: &mut TxContext
     ) {
         if (!has_config(policy)) {
@@ -78,7 +79,7 @@ module regulated_token::denylist_rule {
     public fun remove_records<T>(
         policy: &mut TokenPolicy<T>,
         cap: &TokenPolicyCap<T>,
-        addresses: vector<address>,
+        mut addresses: vector<address>,
         _ctx: &mut TxContext
     ) {
         let config_mut = config_mut(policy, cap);

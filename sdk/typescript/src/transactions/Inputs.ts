@@ -1,123 +1,69 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SerializedBcs } from '@mysten/bcs';
-import { isSerializedBcs } from '@mysten/bcs';
-import type { Infer } from 'superstruct';
-import { array, bigint, boolean, integer, number, object, string, union } from 'superstruct';
+import { toB64 } from '@iota/bcs';
+import type { SerializedBcs } from '@iota/bcs';
 
-import { bcs } from '../bcs/index.js';
-import type { SharedObjectRef } from '../bcs/index.js';
-import { normalizeSuiAddress } from '../utils/sui-types.js';
+import { normalizeIotaAddress } from '../utils/iota-types.js';
+import type { CallArg, ObjectRef } from './data/internal.js';
 
-export const SuiObjectRef = object({
-	/** Base64 string representing the object digest */
-	digest: string(),
-	/** Hex code as string representing the object id */
-	objectId: string(),
-	/** Object version */
-	version: union([number(), string(), bigint()]),
-});
-export type SuiObjectRef = Infer<typeof SuiObjectRef>;
-
-const ObjectArg = union([
-	object({ ImmOrOwned: SuiObjectRef }),
-	object({
-		Shared: object({
-			objectId: string(),
-			initialSharedVersion: union([integer(), string()]),
-			mutable: boolean(),
-		}),
-	}),
-	object({ Receiving: SuiObjectRef }),
-]);
-
-export const PureCallArg = object({ Pure: array(integer()) });
-export const ObjectCallArg = object({ Object: ObjectArg });
-export type PureCallArg = Infer<typeof PureCallArg>;
-export type ObjectCallArg = Infer<typeof ObjectCallArg>;
-
-export const BuilderCallArg = union([PureCallArg, ObjectCallArg]);
-export type BuilderCallArg = Infer<typeof BuilderCallArg>;
-
-function Pure(data: Uint8Array | SerializedBcs<any>, type?: string): PureCallArg;
-/** @deprecated pass SerializedBcs values instead */
-function Pure(data: unknown, type?: string): PureCallArg;
-function Pure(data: unknown, type?: string): PureCallArg {
+function Pure(data: Uint8Array | SerializedBcs<any>): Extract<CallArg, { Pure: unknown }> {
 	return {
-		Pure: Array.from(
-			data instanceof Uint8Array
-				? data
-				: isSerializedBcs(data)
-				? data.toBytes()
-				: // NOTE: We explicitly set this to be growable to infinity, because we have maxSize validation at the builder-level:
-				  bcs.ser(type!, data, { maxSize: Infinity }).toBytes(),
-		),
+		$kind: 'Pure',
+		Pure: {
+			bytes: data instanceof Uint8Array ? toB64(data) : data.toBase64(),
+		},
 	};
 }
 
 export const Inputs = {
 	Pure,
-	ObjectRef({ objectId, digest, version }: SuiObjectRef): ObjectCallArg {
+	ObjectRef({ objectId, digest, version }: ObjectRef): Extract<CallArg, { Object: unknown }> {
 		return {
+			$kind: 'Object',
 			Object: {
-				ImmOrOwned: {
+				$kind: 'ImmOrOwnedObject',
+				ImmOrOwnedObject: {
 					digest,
 					version,
-					objectId: normalizeSuiAddress(objectId),
+					objectId: normalizeIotaAddress(objectId),
 				},
 			},
 		};
 	},
-	SharedObjectRef({ objectId, mutable, initialSharedVersion }: SharedObjectRef): ObjectCallArg {
+	SharedObjectRef({
+		objectId,
+		mutable,
+		initialSharedVersion,
+	}: {
+		objectId: string;
+		mutable: boolean;
+		initialSharedVersion: number | string;
+	}): Extract<CallArg, { Object: unknown }> {
 		return {
+			$kind: 'Object',
 			Object: {
-				Shared: {
+				$kind: 'SharedObject',
+				SharedObject: {
 					mutable,
 					initialSharedVersion,
-					objectId: normalizeSuiAddress(objectId),
+					objectId: normalizeIotaAddress(objectId),
 				},
 			},
 		};
 	},
-	ReceivingRef({ objectId, digest, version }: SuiObjectRef): ObjectCallArg {
+	ReceivingRef({ objectId, digest, version }: ObjectRef): Extract<CallArg, { Object: unknown }> {
 		return {
+			$kind: 'Object',
 			Object: {
+				$kind: 'Receiving',
 				Receiving: {
 					digest,
 					version,
-					objectId: normalizeSuiAddress(objectId),
+					objectId: normalizeIotaAddress(objectId),
 				},
 			},
 		};
 	},
 };
-
-export function getIdFromCallArg(arg: string | ObjectCallArg) {
-	if (typeof arg === 'string') {
-		return normalizeSuiAddress(arg);
-	}
-	if ('ImmOrOwned' in arg.Object) {
-		return normalizeSuiAddress(arg.Object.ImmOrOwned.objectId);
-	}
-
-	if ('Receiving' in arg.Object) {
-		return normalizeSuiAddress(arg.Object.Receiving.objectId);
-	}
-
-	return normalizeSuiAddress(arg.Object.Shared.objectId);
-}
-
-export function getSharedObjectInput(arg: BuilderCallArg): SharedObjectRef | undefined {
-	return typeof arg === 'object' && 'Object' in arg && 'Shared' in arg.Object
-		? arg.Object.Shared
-		: undefined;
-}
-
-export function isSharedObjectInput(arg: BuilderCallArg): boolean {
-	return !!getSharedObjectInput(arg);
-}
-
-export function isMutableSharedObjectInput(arg: BuilderCallArg): boolean {
-	return getSharedObjectInput(arg)?.mutable ?? false;
-}

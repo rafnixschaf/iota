@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { exec } from 'child_process';
@@ -32,7 +33,7 @@ function generateDateVersion(patch: number) {
 }
 
 const WALLET_BETA = process.env.WALLET_BETA === 'true';
-const PATCH_VERISON = Number(process.env.PATCH_VERSION) || 0;
+const PATCH_VERSION = Number(process.env.PATCH_VERSION) || 0;
 
 const PROJECT_ROOT = resolve(__dirname, '..', '..');
 const CONFIGS_ROOT = resolve(PROJECT_ROOT, 'configs');
@@ -42,7 +43,7 @@ const TS_CONFIGS_ROOT = resolve(CONFIGS_ROOT, 'ts');
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_PROD = process.env.NODE_ENV === 'production';
 const TS_CONFIG_FILE = resolve(TS_CONFIGS_ROOT, `tsconfig.${IS_DEV ? 'dev' : 'prod'}.json`);
-const APP_NAME = WALLET_BETA ? 'Sui Wallet (BETA)' : IS_DEV ? 'Sui Wallet (DEV)' : 'Sui Wallet';
+const APP_NAME = WALLET_BETA ? 'Iota Wallet (BETA)' : IS_DEV ? 'Iota Wallet (DEV)' : 'Iota Wallet';
 
 function loadTsConfig(tsConfigFilePath: string) {
 	return new Promise<string>((res, rej) => {
@@ -88,7 +89,7 @@ async function generateAliasFromTs() {
 
 const commonConfig: () => Promise<Configuration> = async () => {
 	const alias = await generateAliasFromTs();
-	const walletVersionDetails = generateDateVersion(PATCH_VERISON);
+	const walletVersionDetails = generateDateVersion(PATCH_VERSION);
 	const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
 	return {
 		context: SRC_ROOT,
@@ -110,7 +111,7 @@ const commonConfig: () => Promise<Configuration> = async () => {
 		},
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js'],
-			// Fix .js imports from @mysten/sui.js since we are importing it from source
+			// Fix .js imports from @iota/iota since we are importing it from source
 			extensionAlias: {
 				'.js': ['.js', '.ts', '.tsx', '.jsx'],
 				'.mjs': ['.mjs', '.mts'],
@@ -188,7 +189,7 @@ const commonConfig: () => Promise<Configuration> = async () => {
 								...(IS_DEV
 									? {
 											key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2HTQu/66edl64fM/SKDnHJmCz9SIYqM/QK7NM3vD1LTE2UNXzHX5Clj8geuoWAYS6HE/aFcd//qPnAh8TnPgqTS3IX+IbZsY/+kcokxIEWHly3eKEHWB32tQsGdJx6tgDzx8TRkFZEcCCdE4pFqQO68W3I/+8AQPosdd5fsIoF6OGKZ/i29mpGkYJSmMroCN5zYCQqvpjTBIkiTkI9TTjxmBid77pHyG4TsHz0wda4KxHV9ZtzZQXB4vexTku/Isczdtif7pDqFEDCAqEkpiGPyKoIuqrxc75IfpzIGFsIylycBr0fZellSsl2M6FM34R99/vUrGj5iWcjNmhYvZ8QIDAQAB',
-									  }
+										}
 									: undefined),
 							};
 							return JSON.stringify(manifestJson, null, 4);
@@ -217,7 +218,7 @@ const commonConfig: () => Promise<Configuration> = async () => {
 				Buffer: ['buffer', 'Buffer'],
 			}),
 			new SentryWebpackPlugin({
-				org: 'mysten-labs',
+				org: 'iota-foundation',
 				project: 'wallet',
 				include: OUTPUT_ROOT,
 				dryRun: !IS_PROD || !sentryAuthToken,

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Encoding } from './types.js';
@@ -7,7 +8,7 @@ import { encodeStr } from './utils.js';
 
 export interface BcsWriterOptions {
 	/** The initial size (in bytes) of the buffer tht will be allocated */
-	size?: number;
+	initialSize?: number;
 	/** The maximum size (in bytes) that the buffer is allowed to grow to */
 	maxSize?: number;
 	/** The amount of bytes that will be allocated whenever additional memory is required */
@@ -39,11 +40,15 @@ export class BcsWriter {
 	private maxSize: number;
 	private allocateSize: number;
 
-	constructor({ size = 1024, maxSize, allocateSize = 1024 }: BcsWriterOptions = {}) {
-		this.size = size;
-		this.maxSize = maxSize || size;
+	constructor({
+		initialSize = 1024,
+		maxSize = Infinity,
+		allocateSize = 1024,
+	}: BcsWriterOptions = {}) {
+		this.size = initialSize;
+		this.maxSize = maxSize;
 		this.allocateSize = allocateSize;
-		this.dataView = new DataView(new ArrayBuffer(size));
+		this.dataView = new DataView(new ArrayBuffer(initialSize));
 	}
 
 	private ensureSizeOrGrow(bytes: number) {

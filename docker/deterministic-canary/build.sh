@@ -1,5 +1,6 @@
 #!/bin/sh
 # Copyright (c) Mysten Labs, Inc.
+# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
 # fast fail.
@@ -9,7 +10,7 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 OCI_OUTPUT="$REPO_ROOT/build/oci"
 DOCKERFILE="$DIR/Dockerfile"
-GIT_REVISION="$(git describe --always --dirty --exclude '*')"
+GIT_REVISION="$(git describe --always --abbrev=12 --dirty --exclude '*')"
 BUILD_DATE="$(date -u +'%Y-%m-%d')"
 PROFILE="release"
 PLATFORM="linux/amd64"

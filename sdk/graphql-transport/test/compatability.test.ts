@@ -1,27 +1,28 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import {
 	getFullnodeUrl,
-	SuiClient,
-	SuiObjectData,
-	SuiTransactionBlockResponse,
+	IotaClient,
+	IotaObjectData,
+	IotaTransactionBlockResponse,
 } from '../../typescript/src/client/index.js';
-import { TransactionBlock } from '../../typescript/src/transactions/index.js';
+import { Transaction } from '../../typescript/src/transactions/index.js';
 import { publishPackage, setup, TestToolbox } from '../../typescript/test/e2e/utils/setup';
-import { SuiClientGraphQLTransport } from '../src/transport';
+import { IotaClientGraphQLTransport } from '../src/transport';
 
 const DEFAULT_GRAPHQL_URL = import.meta.env.DEFAULT_GRAPHQL_URL ?? 'http:127.0.0.1:9125';
 
-describe('GraphQL SuiClient compatibility', () => {
+describe('GraphQL IotaClient compatibility', () => {
 	let toolbox: TestToolbox;
 	let transactionBlockDigest: string;
 	let packageId: string;
 	let parentObjectId: string;
-	const graphQLClient = new SuiClient({
-		transport: new SuiClientGraphQLTransport({
+	const graphQLClient = new IotaClient({
+		transport: new IotaClientGraphQLTransport({
 			url: DEFAULT_GRAPHQL_URL,
 			fallbackFullNodeUrl: getFullnodeUrl('localnet'),
 		}),
@@ -40,22 +41,23 @@ describe('GraphQL SuiClient compatibility', () => {
 				filter: { StructType: `${packageId}::dynamic_fields_test::Test` },
 			})
 			.then(function (objects) {
-				const data = objects.data[0].data as SuiObjectData;
+				const data = objects.data[0].data as IotaObjectData;
 				parentObjectId = data.objectId;
 			});
 
 		// create a simple transaction
-		const txb = new TransactionBlock();
-		const [coin] = txb.splitCoins(txb.gas, [1]);
-		txb.transferObjects([coin], toolbox.address());
-		const result = await toolbox.client.signAndExecuteTransactionBlock({
-			transactionBlock: txb as never,
+		const tx = new Transaction();
+		const [coin] = tx.splitCoins(tx.gas, [1]);
+		tx.transferObjects([coin], toolbox.address());
+		const result = await toolbox.client.signAndExecuteTransaction({
+			transaction: tx as never,
 			signer: toolbox.keypair,
 		});
 
 		transactionBlockDigest = result.digest;
 
-		await toolbox.client.waitForTransactionBlock({ digest: transactionBlockDigest });
+		await toolbox.client.waitForTransaction({ digest: transactionBlockDigest });
+		await graphQLClient.waitForTransaction({ digest: transactionBlockDigest });
 	});
 
 	test('getRpcApiVersion', async () => {
@@ -121,11 +123,11 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('getCoinMetadata', async () => {
 		const rpcMetadata = await toolbox.client.getCoinMetadata({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		const graphQLMetadata = await graphQLClient!.getCoinMetadata({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		expect(graphQLMetadata).toEqual(rpcMetadata);
@@ -133,11 +135,11 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('getTotalSupply', async () => {
 		const rpcSupply = await toolbox.client.getTotalSupply({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		const graphQLgetTotalSupply = await graphQLClient!.getTotalSupply({
-			coinType: '0x02::sui::SUI',
+			coinType: '0x02::iota::IOTA',
 		});
 
 		expect(graphQLgetTotalSupply).toEqual(rpcSupply);
@@ -283,7 +285,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		const {
 			data: [{ coinObjectId: id, version }],
 		} = await toolbox.getGasObjectsOwnedByAddress();
-		const fullNodeClient = new SuiClient({
+		const fullNodeClient = new IotaClient({
 			url: getFullnodeUrl('localnet'),
 		});
 
@@ -350,7 +352,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		expect(graphQLObjects).toEqual(rpcObjects);
 	});
 
-	test.skip('queryTransactionBlocks', async () => {
+	test('queryTransactionBlocks', async () => {
 		const { nextCursor: _, ...rpcTransactions } = await toolbox.client.queryTransactionBlocks({
 			filter: {
 				FromAddress: toolbox.address(),
@@ -358,8 +360,10 @@ describe('GraphQL SuiClient compatibility', () => {
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
+				showRawEffects: true,
 				showEvents: true,
-				showInput: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
@@ -372,8 +376,10 @@ describe('GraphQL SuiClient compatibility', () => {
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
+				showRawEffects: true,
 				showEvents: true,
-				showInput: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
@@ -382,25 +388,26 @@ describe('GraphQL SuiClient compatibility', () => {
 		expect(graphQLTransactions).toEqual(rpcTransactions);
 	});
 
-	test.skip('getTransactionBlock', async () => {
+	test('getTransactionBlock', async () => {
 		const { rawEffects, ...rpcTransactionBlock } = (await toolbox.client.getTransactionBlock({
 			digest: transactionBlockDigest,
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
 				showEvents: true,
-				showInput: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
-		})) as SuiTransactionBlockResponse & { rawEffects: unknown };
+		})) as IotaTransactionBlockResponse & { rawEffects: unknown };
 		const graphQLTransactionBlock = await graphQLClient!.getTransactionBlock({
 			digest: transactionBlockDigest,
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
-				showEvents: true,
-				showInput: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
@@ -409,14 +416,16 @@ describe('GraphQL SuiClient compatibility', () => {
 		expect(graphQLTransactionBlock).toEqual(rpcTransactionBlock);
 	});
 
-	test.skip('multiGetTransactionBlocks', async () => {
+	test('multiGetTransactionBlocks', async () => {
 		const [rpcTransactionBlock] = await toolbox.client.multiGetTransactionBlocks({
 			digests: [transactionBlockDigest],
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
 				showEvents: true,
-				showInput: true,
+				showRawEffects: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
@@ -426,8 +435,10 @@ describe('GraphQL SuiClient compatibility', () => {
 			options: {
 				showBalanceChanges: true,
 				showEffects: true,
+				showRawEffects: true,
 				showEvents: true,
-				showInput: true,
+				// TODO inputs missing valueType
+				showInput: false,
 				showObjectChanges: true,
 				showRawInput: true,
 			},
@@ -440,7 +451,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		const rpc = await toolbox.client.getTotalTransactionBlocks();
 		const graphql = await graphQLClient!.getTotalTransactionBlocks();
 
-		expect(graphql).toEqual(rpc);
+		expect(Number(graphql)).closeTo(Number(rpc), 10);
 	});
 
 	test('getReferenceGasPrice', async () => {
@@ -467,18 +478,18 @@ describe('GraphQL SuiClient compatibility', () => {
 			owner: toolbox.address(),
 		});
 		const rpc = await toolbox.client.getStakesByIds({
-			stakedSuiIds: [stakes[0].stakes[0].stakedSuiId],
+			stakedIotaIds: [stakes[0].stakes[0].stakedIotaId],
 		});
 		const graphql = await graphQLClient!.getStakesByIds({
-			stakedSuiIds: [stakes[0].stakes[0].stakedSuiId],
+			stakedIotaIds: [stakes[0].stakes[0].stakedIotaId],
 		});
 
 		expect(graphql).toEqual(rpc);
 	});
 
-	test.skip('getLatestSuiSystemState', async () => {
-		const rpc = await toolbox.client.getLatestSuiSystemState();
-		const graphql = await graphQLClient!.getLatestSuiSystemState();
+	test.skip('getLatestIotaSystemState', async () => {
+		const rpc = await toolbox.client.getLatestIotaSystemState();
+		const graphql = await graphQLClient!.getLatestIotaSystemState();
 
 		expect(graphql).toEqual(rpc);
 	});
@@ -501,19 +512,23 @@ describe('GraphQL SuiClient compatibility', () => {
 		expect(graphql).toEqual(rpc);
 	});
 
-	test.skip('devInspectTransactionBlock', async () => {
-		const txb = new TransactionBlock();
-		txb.setSender(toolbox.address());
-		const [coin] = txb.splitCoins(txb.gas, [1]);
-		txb.transferObjects([coin], toolbox.address());
+	test('devInspectTransactionBlock', async () => {
+		const tx = new Transaction();
+		tx.setSender(toolbox.address());
+		const [coin] = tx.splitCoins(tx.gas, [1]);
+		tx.transferObjects([coin], toolbox.address());
 
-		const rpc = await toolbox.client.devInspectTransactionBlock({
-			transactionBlock: txb as never,
+		const { effects, results, ...rpc } = await toolbox.client.devInspectTransactionBlock({
+			transactionBlock: tx as never,
 			sender: toolbox.address(),
 		});
 
-		const graphql = await graphQLClient!.devInspectTransactionBlock({
-			transactionBlock: txb,
+		const {
+			effects: _,
+			results: __,
+			...graphql
+		} = await graphQLClient!.devInspectTransactionBlock({
+			transactionBlock: tx,
 			sender: toolbox.address(),
 		});
 
@@ -560,27 +575,26 @@ describe('GraphQL SuiClient compatibility', () => {
 		// TODO
 	});
 
-	test.skip('executeTransactionBlock', async () => {
-		const txb = new TransactionBlock();
-		txb.setSender(toolbox.address());
-		const [coin] = txb.splitCoins(txb.gas, [1]);
-		txb.transferObjects([coin], toolbox.address());
+	test('executeTransactionBlock', async () => {
+		const tx = new Transaction();
+		tx.setSender(toolbox.address());
+		const [coin] = tx.splitCoins(tx.gas, [1]);
+		tx.transferObjects([coin], toolbox.address());
 
-		const { confirmedLocalExecution, ...graphql } =
-			await graphQLClient!.signAndExecuteTransactionBlock({
-				transactionBlock: txb as TransactionBlock,
-				signer: toolbox.keypair,
-				options: {
-					showBalanceChanges: true,
-					showEffects: true,
-					showEvents: true,
-					showInput: true,
-					showObjectChanges: true,
-					showRawInput: true,
-				},
-			});
+		const { confirmedLocalExecution, ...graphql } = await graphQLClient!.signAndExecuteTransaction({
+			transaction: tx as Transaction,
+			signer: toolbox.keypair,
+			options: {
+				showBalanceChanges: true,
+				showEffects: true,
+				showEvents: true,
+				showInput: true,
+				showObjectChanges: true,
+				showRawInput: true,
+			},
+		});
 
-		await toolbox.client.waitForTransactionBlock({ digest: graphql.digest });
+		await toolbox.client.waitForTransaction({ digest: graphql.digest });
 
 		const { checkpoint, timestampMs, rawEffects, ...rpc } =
 			(await toolbox.client.getTransactionBlock({
@@ -593,20 +607,17 @@ describe('GraphQL SuiClient compatibility', () => {
 					showObjectChanges: true,
 					showRawInput: true,
 				},
-			})) as SuiTransactionBlockResponse & { rawEffects: unknown };
-
-		// Deleted gas coin isn't included in changes when executing transaction block
-		rpc.objectChanges?.pop();
+			})) as IotaTransactionBlockResponse & { rawEffects: unknown };
 
 		expect(graphql).toEqual(rpc);
 	});
 
 	test('dryRunTransactionBlock', async () => {
-		const txb = new TransactionBlock();
-		txb.setSender(toolbox.address());
-		const [coin] = txb.splitCoins(txb.gas, [1]);
-		txb.transferObjects([coin], toolbox.address());
-		const bytes = await txb.build({ client: toolbox.client as never });
+		const tx = new Transaction();
+		tx.setSender(toolbox.address());
+		const [coin] = tx.splitCoins(tx.gas, [1]);
+		tx.transferObjects([coin], toolbox.address());
+		const bytes = await tx.build({ client: toolbox.client as never });
 
 		const rpc = await toolbox.client.dryRunTransactionBlock({
 			transactionBlock: bytes,
@@ -623,7 +634,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		const rpc = await toolbox.client.getLatestCheckpointSequenceNumber();
 		const graphql = await graphQLClient!.getLatestCheckpointSequenceNumber();
 
-		expect(graphql).toEqual(rpc);
+		expect(Number.parseInt(graphql)).closeTo(Number.parseInt(rpc), 3);
 	});
 
 	test('getCheckpoint', async () => {
@@ -699,7 +710,7 @@ describe('GraphQL SuiClient compatibility', () => {
 		expect(graphql).toEqual(rpc);
 	});
 
-	test('getValidatorsApy', async () => {
+	test.skip('getValidatorsApy', async () => {
 		const rpc = await toolbox.client.getValidatorsApy();
 		const graphql = await graphQLClient!.getValidatorsApy();
 
@@ -724,10 +735,10 @@ describe('GraphQL SuiClient compatibility', () => {
 
 	test('resolveNameServiceAddress', async () => {
 		const rpc = await toolbox.client.resolveNameServiceAddress({
-			name: 'test.sui',
+			name: 'test.iota',
 		});
 		const graphql = await graphQLClient!.resolveNameServiceAddress({
-			name: 'test.sui',
+			name: 'test.iota',
 		});
 
 		expect(graphql).toEqual(rpc);

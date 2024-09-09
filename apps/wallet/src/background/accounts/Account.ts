@@ -1,12 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { type Serializable } from '_src/shared/cryptography/keystore';
-import {
-	toSerializedSignature,
-	type Keypair,
-	type SerializedSignature,
-} from '@mysten/sui.js/cryptography';
+import { toSerializedSignature, type Keypair } from '@iota/iota/cryptography';
 import { blake2b } from '@noble/hashes/blake2b';
 
 import { setupAutoLockAlarm } from '../auto-lock-accounts';
@@ -71,10 +68,10 @@ export abstract class Account<
 		return data as T;
 	}
 
-	protected generateSignature(data: Uint8Array, keyPair: Keypair) {
+	protected async generateSignature(data: Uint8Array, keyPair: Keypair) {
 		const digest = blake2b(data, { dkLen: 32 });
 		const pubkey = keyPair.getPublicKey();
-		const signature = keyPair.signData(digest);
+		const signature = await keyPair.sign(digest);
 		const signatureScheme = keyPair.getKeyScheme();
 		return toSerializedSignature({
 			signature,
@@ -106,7 +103,7 @@ export abstract class Account<
 
 	protected async onLocked(allowRead: boolean) {
 		// skip clearing last unlocked value to allow read access
-		// when possible (last unlocked withing time limits)
+		// when possible (last unlocked within time limits)
 		if (allowRead) {
 			return;
 		}
@@ -176,7 +173,7 @@ export function isPasswordUnLockable(account: unknown): account is PasswordUnloc
 
 export interface SigningAccount {
 	readonly canSign: true;
-	signData(data: Uint8Array): Promise<SerializedSignature>;
+	signData(data: Uint8Array): Promise<string>;
 }
 
 export function isSigningAccount(account: any): account is SigningAccount {

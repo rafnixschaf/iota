@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@mysten/sui.js/bcs';
+import { bcs } from '@iota/iota/bcs';
 import type {
+	Transaction,
 	TransactionArgument,
-	TransactionBlock,
 	TransactionObjectArgument,
-} from '@mysten/sui.js/transactions';
+} from '@iota/iota/transactions';
 
 import type { ObjectArgument } from '../types/index.js';
 import { TRANSFER_POLICY_MODULE, TRANSFER_POLICY_TYPE } from '../types/index.js';
@@ -16,7 +17,7 @@ import { TRANSFER_POLICY_MODULE, TRANSFER_POLICY_TYPE } from '../types/index.js'
  * Returns `transferPolicyCap`
  */
 export function createTransferPolicy(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	publisher: ObjectArgument,
 ): TransactionObjectArgument {
@@ -36,7 +37,7 @@ export function createTransferPolicy(
  * Used if we want to use the policy before making it a shared object.
  */
 export function createTransferPolicyWithoutSharing(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	publisher: ObjectArgument,
 ): [TransactionObjectArgument, TransactionObjectArgument] {
@@ -52,7 +53,7 @@ export function createTransferPolicyWithoutSharing(
  * Converts Transfer Policy to a shared object.
  */
 export function shareTransferPolicy(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	transferPolicy: TransactionObjectArgument,
 ) {
@@ -67,7 +68,7 @@ export function shareTransferPolicy(
  * Call the `transfer_policy::withdraw` function to withdraw profits from a transfer policy.
  */
 export function withdrawFromPolicy(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	policy: ObjectArgument,
 	policyCap: ObjectArgument,
@@ -89,7 +90,7 @@ export function withdrawFromPolicy(
  * transaction.
  */
 export function confirmRequest(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	policy: ObjectArgument,
 	request: TransactionArgument,
@@ -105,7 +106,7 @@ export function confirmRequest(
  * Calls the `transfer_policy::remove_rule` function to remove a Rule from the transfer policy's ruleset.
  */
 export function removeTransferPolicyRule(
-	tx: TransactionBlock,
+	tx: Transaction,
 	itemType: string,
 	ruleType: string,
 	configType: string,

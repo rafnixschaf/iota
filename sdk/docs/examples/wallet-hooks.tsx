@@ -1,29 +1,30 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import {
 	ConnectButton,
-	SuiClientProvider,
+	IotaClientProvider,
 	useAccounts,
 	useAutoConnectWallet,
 	useConnectWallet,
 	useCurrentAccount,
 	useCurrentWallet,
 	useDisconnectWallet,
-	useSignAndExecuteTransactionBlock,
+	useSignAndExecuteTransaction,
 	useSignPersonalMessage,
-	useSignTransactionBlock,
+	useSignTransaction,
 	useSwitchAccount,
 	useWallets,
 	WalletProvider,
-} from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+} from '@iota/dapp-kit';
+import { getFullnodeUrl } from '@iota/iota/client';
+import { Transaction } from '@iota/iota/transactions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 
-import '@mysten/dapp-kit/dist/index.css';
+import '@iota/dapp-kit/dist/index.css';
 
 export const UseWalletsExample = withProviders(() => {
 	const wallets = useWallets();
@@ -226,8 +227,8 @@ export const UseSignPersonalMessageExample = withProviders(() => {
 	);
 });
 
-export const UseSignTransactionBlockExample = withProviders(() => {
-	const { mutate: signTransactionBlock } = useSignTransactionBlock();
+export const UseSignTransactionExample = withProviders(() => {
+	const { mutate: signTransaction } = useSignTransaction();
 	const [signature, setSignature] = useState('');
 	const currentAccount = useCurrentAccount();
 
@@ -239,10 +240,10 @@ export const UseSignTransactionBlockExample = withProviders(() => {
 					<div>
 						<button
 							onClick={() => {
-								signTransactionBlock(
+								signTransaction(
 									{
-										transactionBlock: new TransactionBlock(),
-										chain: 'sui:devnet',
+										transaction: new Transaction(),
+										chain: 'iota:devnet',
 									},
 									{
 										onSuccess: (result) => {
@@ -253,7 +254,7 @@ export const UseSignTransactionBlockExample = withProviders(() => {
 								);
 							}}
 						>
-							Sign empty transaction block
+							Sign empty transaction
 						</button>
 					</div>
 					<div>Signature: {signature}</div>
@@ -263,8 +264,8 @@ export const UseSignTransactionBlockExample = withProviders(() => {
 	);
 });
 
-export const UseSignAndExecuteTransactionBlockExample = withProviders(() => {
-	const { mutate: signAndExecuteTransactionBlock } = useSignAndExecuteTransactionBlock();
+export const UseSignAndExecuteTransactionExample = withProviders(() => {
+	const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 	const [digest, setDigest] = useState('');
 	const currentAccount = useCurrentAccount();
 
@@ -276,21 +277,21 @@ export const UseSignAndExecuteTransactionBlockExample = withProviders(() => {
 					<div>
 						<button
 							onClick={() => {
-								signAndExecuteTransactionBlock(
+								signAndExecuteTransaction(
 									{
-										transactionBlock: new TransactionBlock(),
-										chain: 'sui:devnet',
+										transaction: new Transaction(),
+										chain: 'iota:devnet',
 									},
 									{
 										onSuccess: (result) => {
-											console.log('executed transaction block', result);
+											console.log('executed transaction', result);
 											setDigest(result.digest);
 										},
 									},
 								);
 							}}
 						>
-							Sign and execute transaction block
+							Sign and execute transaction
 						</button>
 					</div>
 					<div>Digest: {digest}</div>
@@ -322,11 +323,11 @@ function withProviders(
 
 		return (
 			<QueryClientProvider client={queryClient}>
-				<SuiClientProvider networks={networks}>
+				<IotaClientProvider networks={networks}>
 					<WalletProvider {...walletProviderProps}>
 						<Component />
 					</WalletProvider>
-				</SuiClientProvider>
+				</IotaClientProvider>
 			</QueryClientProvider>
 		);
 	};

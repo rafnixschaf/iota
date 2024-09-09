@@ -1,11 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { fromB64, toB64 } from '@mysten/bcs';
+import { fromB64, toB64 } from '@iota/bcs';
 import { blake2b } from '@noble/hashes/blake2b';
 import { bytesToHex } from '@noble/hashes/utils';
 
 import { bcs } from '../bcs/index.js';
+import type { Signer } from '../cryptography/keypair.js';
 import { bytesEqual, PublicKey } from '../cryptography/publickey.js';
 import {
 	SIGNATURE_FLAG_TO_SCHEME,
@@ -13,11 +15,12 @@ import {
 } from '../cryptography/signature-scheme.js';
 import type { SignatureFlag, SignatureScheme } from '../cryptography/signature-scheme.js';
 import { parseSerializedSignature } from '../cryptography/signature.js';
-import type { SerializedSignature } from '../cryptography/signature.js';
-import { normalizeSuiAddress } from '../utils/sui-types.js';
+import type { IotaGraphQLClient } from '../graphql/client.js';
+import { normalizeIotaAddress } from '../utils/iota-types.js';
 // eslint-disable-next-line import/no-cycle
 import { publicKeyFromRawBytes } from '../verify/index.js';
 import { toZkLoginPublicIdentifier } from '../zklogin/publickey.js';
+import { MultiSigSigner } from './signer.js';
 
 type CompressedSignature =
 	| { ED25519: number[] }
@@ -74,6 +77,7 @@ export class MultiSigPublicKey extends PublicKey {
 		 *  MultiSig public key as buffer or base-64 encoded string
 		 */
 		value: string | Uint8Array | MultiSigPublicKeyStruct,
+		options: { client?: IotaGraphQLClient } = {},
 	) {
 		super();
 
@@ -95,7 +99,10 @@ export class MultiSigPublicKey extends PublicKey {
 		const seenPublicKeys = new Set<string>();
 
 		this.publicKeys = this.multisigPublicKey.pk_map.map(({ pubKey, weight }) => {
-			const [scheme, bytes] = Object.entries(pubKey)[0] as [SignatureScheme, number[]];
+			const [scheme, bytes] = Object.entries(pubKey).filter(([name]) => name !== '$kind')[0] as [
+				SignatureScheme,
+				number[],
+			];
 			const publicKeyStr = Uint8Array.from(bytes).toString();
 
 			if (seenPublicKeys.has(publicKeyStr)) {
@@ -108,7 +115,7 @@ export class MultiSigPublicKey extends PublicKey {
 			}
 
 			return {
-				publicKey: publicKeyFromRawBytes(scheme, Uint8Array.from(bytes)),
+				publicKey: publicKeyFromRawBytes(scheme, Uint8Array.from(bytes), options),
 				weight,
 			};
 		});
@@ -169,10 +176,18 @@ export class MultiSigPublicKey extends PublicKey {
 		return this.publicKeys;
 	}
 
+	getThreshold() {
+		return this.multisigPublicKey.threshold;
+	}
+
+	getSigner(...signers: [signer: Signer]) {
+		return new MultiSigSigner(this, signers);
+	}
+
 	/**
-	 * Return the Sui address associated with this MultiSig public key
+	 * Return the Iota address associated with this MultiSig public key
 	 */
-	override toSuiAddress(): string {
+	override toIotaAddress(): string {
 		// max length = 1 flag byte + (max pk size + max weight size (u8)) * max signer size + 2 threshold bytes (u16)
 		const maxLength = 1 + (64 + 1) * MAX_SIGNER_IN_MULTISIG + 2;
 		const tmp = new Uint8Array(maxLength);
@@ -182,16 +197,16 @@ export class MultiSigPublicKey extends PublicKey {
 		// The initial value 3 ensures that following data will be after the flag byte and threshold bytes
 		let i = 3;
 		for (const { publicKey, weight } of this.publicKeys) {
-			const bytes = publicKey.toSuiBytes();
+			const bytes = publicKey.toIotaBytes();
 			tmp.set(bytes, i);
 			i += bytes.length;
 			tmp.set([weight], i++);
 		}
-		return normalizeSuiAddress(bytesToHex(blake2b(tmp.slice(0, i), { dkLen: 32 })));
+		return normalizeIotaAddress(bytesToHex(blake2b(tmp.slice(0, i), { dkLen: 32 })));
 	}
 
 	/**
-	 * Return the Sui address associated with this MultiSig public key
+	 * Return the Iota address associated with this MultiSig public key
 	 */
 	flag(): number {
 		return SIGNATURE_SCHEME_TO_FLAG['MultiSig'];
@@ -200,13 +215,15 @@ export class MultiSigPublicKey extends PublicKey {
 	/**
 	 * Verifies that the signature is valid for for the provided message
 	 */
-	async verify(message: Uint8Array, multisigSignature: SerializedSignature): Promise<boolean> {
+	async verify(message: Uint8Array, multisigSignature: string): Promise<boolean> {
 		// Multisig verification only supports serialized signature
-		const { signatureScheme, multisig } = parseSerializedSignature(multisigSignature);
+		const parsed = parseSerializedSignature(multisigSignature);
 
-		if (signatureScheme !== 'MultiSig') {
+		if (parsed.signatureScheme !== 'MultiSig') {
 			throw new Error('Invalid signature scheme');
 		}
+
+		const { multisig } = parsed;
 
 		let signatureWeight = 0;
 
@@ -234,7 +251,7 @@ export class MultiSigPublicKey extends PublicKey {
 	 * Combines multiple partial signatures into a single multisig, ensuring that each public key signs only once
 	 * and that all the public keys involved are known and valid, and then serializes multisig into the standard format
 	 */
-	combinePartialSignatures(signatures: SerializedSignature[]): SerializedSignature {
+	combinePartialSignatures(signatures: string[]): string {
 		if (signatures.length > MAX_SIGNER_IN_MULTISIG) {
 			throw new Error(`Max number of signatures in a multisig is ${MAX_SIGNER_IN_MULTISIG}`);
 		}
@@ -297,13 +314,15 @@ export class MultiSigPublicKey extends PublicKey {
 /**
  * Parse multisig structure into an array of individual signatures: signature scheme, the actual individual signature, public key and its weight.
  */
-export function parsePartialSignatures(multisig: MultiSigStruct): ParsedPartialMultiSigSignature[] {
+export function parsePartialSignatures(
+	multisig: MultiSigStruct,
+	options: { client?: IotaGraphQLClient } = {},
+): ParsedPartialMultiSigSignature[] {
 	let res: ParsedPartialMultiSigSignature[] = new Array(multisig.sigs.length);
 	for (let i = 0; i < multisig.sigs.length; i++) {
-		const [signatureScheme, signature] = Object.entries(multisig.sigs[i])[0] as [
-			SignatureScheme,
-			number[],
-		];
+		const [signatureScheme, signature] = Object.entries(multisig.sigs[i]).filter(
+			([name]) => name !== '$kind',
+		)[0] as [SignatureScheme, number[]];
 		const pkIndex = asIndices(multisig.bitmap).at(i)!;
 		const pair = multisig.multisig_pk.pk_map[pkIndex];
 		const pkBytes = Uint8Array.from(Object.values(pair.pubKey)[0]);
@@ -312,7 +331,7 @@ export function parsePartialSignatures(multisig: MultiSigStruct): ParsedPartialM
 			throw new Error('MultiSig is not supported inside MultiSig');
 		}
 
-		const publicKey = publicKeyFromRawBytes(signatureScheme, pkBytes);
+		const publicKey = publicKeyFromRawBytes(signatureScheme, pkBytes, options);
 
 		res[i] = {
 			signatureScheme,

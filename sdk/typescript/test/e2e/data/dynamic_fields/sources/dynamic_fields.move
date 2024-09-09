@@ -1,27 +1,26 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module dynamic_fields::dynamic_fields_test {
-    use sui::dynamic_field as dfield;
-    use sui::dynamic_object_field as dof;
-    use sui::object::{Self, UID};
-    use sui::tx_context::{Self, TxContext};
-    use sui::transfer;
+    use iota::dynamic_field as dfield;
+    use iota::dynamic_object_field as dof;
+    use iota::transfer;
 
-    struct Test has key {
+    public struct Test has key {
         id: UID,
     }
 
-    struct Test1 has key, store {
+    public struct Test1 has key, store {
         id: UID,
     }
 
-    struct Test2 has key, store {
+    public struct Test2 has key, store {
         id: UID,
     }
 
     fun init(ctx: &mut TxContext) {
-        let test = Test{
+        let mut test = Test{
             id: object::new(ctx),
         };
 

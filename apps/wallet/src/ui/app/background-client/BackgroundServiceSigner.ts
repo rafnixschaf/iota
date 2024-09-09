@@ -1,9 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { type SerializedUIAccount } from '_src/background/accounts/Account';
-import { type SuiClient } from '@mysten/sui.js/client';
-import type { SerializedSignature } from '@mysten/sui.js/cryptography';
+import { type IotaClient } from '@iota/iota/client';
 
 import type { BackgroundClient } from '.';
 import { WalletSigner } from '../WalletSigner';
@@ -12,7 +12,7 @@ export class BackgroundServiceSigner extends WalletSigner {
 	readonly #account: SerializedUIAccount;
 	readonly #backgroundClient: BackgroundClient;
 
-	constructor(account: SerializedUIAccount, backgroundClient: BackgroundClient, client: SuiClient) {
+	constructor(account: SerializedUIAccount, backgroundClient: BackgroundClient, client: IotaClient) {
 		super(client);
 		this.#account = account;
 		this.#backgroundClient = backgroundClient;
@@ -22,11 +22,11 @@ export class BackgroundServiceSigner extends WalletSigner {
 		return this.#account.address;
 	}
 
-	signData(data: Uint8Array): Promise<SerializedSignature> {
+	signData(data: Uint8Array): Promise<string> {
 		return this.#backgroundClient.signData(this.#account.id, data);
 	}
 
-	connect(client: SuiClient) {
+	connect(client: IotaClient) {
 		return new BackgroundServiceSigner(this.#account, this.#backgroundClient, client);
 	}
 }

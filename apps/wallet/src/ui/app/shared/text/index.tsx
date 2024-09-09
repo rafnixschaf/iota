@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -27,6 +28,7 @@ const textStyles = cva([], {
 			pSubtitleSmall: 'text-pSubtitleSmall',
 		},
 		color: {
+			black: 'text-black',
 			white: 'text-white',
 			'gray-100': 'text-gray-100',
 			'gray-90': 'text-gray-90',
@@ -36,9 +38,9 @@ const textStyles = cva([], {
 			'gray-70': 'text-gray-70',
 			'gray-65': 'text-gray-65',
 			'gray-60': 'text-gray-60',
-			'sui-dark': 'text-sui-dark',
-			sui: 'text-sui',
-			'sui-light': 'text-sui-light',
+			'iota-dark': 'text-iota-dark',
+			iota: 'text-iota',
+			'iota-light': 'text-iota-light',
 			steel: 'text-steel',
 			'steel-dark': 'text-steel-dark',
 			'steel-darker': 'text-steel-darker',

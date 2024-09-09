@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import type { MutationKey } from '@tanstack/react-query';
@@ -9,9 +10,10 @@ export const walletMutationKeys = {
 	autoconnectWallet: formMutationKeyFn('autoconnect-wallet'),
 	disconnectWallet: formMutationKeyFn('disconnect-wallet'),
 	signPersonalMessage: formMutationKeyFn('sign-personal-message'),
-	signTransactionBlock: formMutationKeyFn('sign-transaction-block'),
-	signAndExecuteTransactionBlock: formMutationKeyFn('sign-and-execute-transaction-block'),
+	signTransaction: formMutationKeyFn('sign-transaction'),
+	signAndExecuteTransaction: formMutationKeyFn('sign-and-execute-transaction'),
 	switchAccount: formMutationKeyFn('switch-account'),
+	reportTransactionEffects: formMutationKeyFn('report-transaction-effects'),
 };
 
 function formMutationKeyFn(baseEntity: string) {

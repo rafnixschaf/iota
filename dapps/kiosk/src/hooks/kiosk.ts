@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 /* eslint-disable @tanstack/query/exhaustive-deps */
 
-import { useSuiClient } from '@mysten/dapp-kit';
+import { useIotaClient, useIotaClientContext } from '@iota/dapp-kit';
 import {
 	getKioskObject,
 	Kiosk,
@@ -10,8 +11,8 @@ import {
 	KioskItem,
 	KioskListing,
 	KioskOwnerCap,
-} from '@mysten/kiosk';
-import { SuiObjectResponse } from '@mysten/sui.js/client';
+} from '@iota/kiosk';
+import { IotaObjectResponse } from '@iota/iota/client';
 import { useQuery } from '@tanstack/react-query';
 
 import { OwnedObjectType } from '../components/Inventory/OwnedObjects';
@@ -31,9 +32,10 @@ export type KioskFnType = (item: OwnedObjectType, price?: string) => Promise<voi
  */
 export function useOwnedKiosk(address: string | undefined) {
 	const kioskClient = useKioskClient();
+	const { network } = useIotaClientContext();
 
 	return useQuery({
-		queryKey: [TANSTACK_OWNED_KIOSK_KEY, address],
+		queryKey: [TANSTACK_OWNED_KIOSK_KEY, address, network],
 		refetchOnMount: false,
 		retry: false,
 		queryFn: async (): Promise<{
@@ -59,12 +61,13 @@ export function useOwnedKiosk(address: string | undefined) {
  */
 export function useKiosk(kioskId: string | undefined | null) {
 	const kioskClient = useKioskClient();
+	const { network } = useIotaClientContext();
 
 	return useQuery({
-		queryKey: [TANSTACK_KIOSK_KEY, kioskId],
+		queryKey: [TANSTACK_KIOSK_KEY, kioskId, network],
 		queryFn: async (): Promise<{
 			kioskData: KioskData | null;
-			items: SuiObjectResponse[];
+			items: IotaObjectResponse[];
 		}> => {
 			if (!kioskId) return { kioskData: null, items: [] };
 			const res = await kioskClient.getKiosk({
@@ -114,10 +117,11 @@ export function useKiosk(kioskId: string | undefined | null) {
  * A hook to fetch a kiosk's details.
  */
 export function useKioskDetails(kioskId: string | undefined | null) {
-	const client = useSuiClient();
+	const client = useIotaClient();
+	const { network } = useIotaClientContext();
 
 	return useQuery({
-		queryKey: [TANSTACK_KIOSK_DATA_KEY, kioskId],
+		queryKey: [TANSTACK_KIOSK_DATA_KEY, kioskId, network],
 		queryFn: async (): Promise<Kiosk | null> => {
 			if (!kioskId) return null;
 			return await getKioskObject(client, kioskId);

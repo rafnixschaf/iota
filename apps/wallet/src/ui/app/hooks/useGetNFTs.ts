@@ -1,18 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { hasDisplayData, isKioskOwnerToken, useGetOwnedObjects } from '@mysten/core';
-import { useKioskClient } from '@mysten/core/src/hooks/useKioskClient';
-import { type SuiObjectData } from '@mysten/sui.js/client';
+import { hasDisplayData, isKioskOwnerToken, useGetOwnedObjects } from '@iota/core';
+import { useKioskClient } from '@iota/core/src/hooks/useKioskClient';
+import { type IotaObjectData } from '@iota/iota/client';
 import { useMemo } from 'react';
 
-import { useBuyNLargeAsset } from '../components/buynlarge/useBuyNLargeAsset';
+import { useBuyNLargeAssets } from '../components/buynlarge/useBuyNLargeAssets';
 import { useHiddenAssets } from '../pages/home/hidden-assets/HiddenAssetsProvider';
 
 type OwnedAssets = {
-	visual: SuiObjectData[];
-	other: SuiObjectData[];
-	hidden: SuiObjectData[];
+	visual: IotaObjectData[];
+	other: IotaObjectData[];
+	hidden: IotaObjectData[];
 };
 
 export enum AssetFilterTypes {
@@ -22,7 +23,7 @@ export enum AssetFilterTypes {
 
 export function useGetNFTs(address?: string | null) {
 	const kioskClient = useKioskClient();
-	const { asset, objectType } = useBuyNLargeAsset();
+	const bnl = useBuyNLargeAssets();
 	const {
 		data,
 		isPending,
@@ -35,9 +36,12 @@ export function useGetNFTs(address?: string | null) {
 	} = useGetOwnedObjects(
 		address,
 		{
-			MatchNone: objectType
-				? [{ StructType: '0x2::coin::Coin' }, { StructType: objectType }]
-				: [{ StructType: '0x2::coin::Coin' }],
+			MatchNone: [
+				{ StructType: '0x2::coin::Coin' },
+				...(bnl
+					.filter((item) => !!item?.objectType)
+					.map((item) => ({ StructType: item?.objectType })) as { StructType: string }[]),
+			],
 		},
 		50,
 	);
@@ -55,19 +59,21 @@ export function useGetNFTs(address?: string | null) {
 			.filter((asset) => !hiddenAssetIds.includes(asset.data?.objectId!))
 			.reduce((acc, curr) => {
 				if (hasDisplayData(curr) || isKioskOwnerToken(kioskClient.network, curr))
-					acc.visual.push(curr.data as SuiObjectData);
-				if (!hasDisplayData(curr)) acc.other.push(curr.data as SuiObjectData);
+					acc.visual.push(curr.data as IotaObjectData);
+				if (!hasDisplayData(curr)) acc.other.push(curr.data as IotaObjectData);
 				if (hiddenAssetIds.includes(curr.data?.objectId!))
-					acc.hidden.push(curr.data as SuiObjectData);
+					acc.hidden.push(curr.data as IotaObjectData);
 				return acc;
 			}, ownedAssets);
 
-		if (asset?.data) {
-			groupedAssets?.visual.unshift(asset.data);
-		}
+		bnl.forEach((item) => {
+			if (item?.asset?.data) {
+				groupedAssets?.visual.unshift(item.asset.data);
+			}
+		});
 
 		return groupedAssets;
-	}, [hiddenAssetIds, data?.pages, kioskClient.network, asset]);
+	}, [hiddenAssetIds, data?.pages, kioskClient.network, bnl]);
 
 	return {
 		data: assets,

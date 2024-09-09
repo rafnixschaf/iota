@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSuiClientContext } from '@mysten/dapp-kit';
-import { DryRunTransactionBlockResponse, GasCostSummary } from '@mysten/sui.js/src/client';
+import { DryRunTransactionBlockResponse, GasCostSummary } from '@iota/iota/client';
 import { ReactNode } from 'react';
 
+import { useDryRunContext } from '../DryRunContext';
 import { ObjectLink } from '../ObjectLink';
 import { onChainAmountToFloat } from '../utils';
 
@@ -22,15 +23,16 @@ const calculateGas = (gas: GasCostSummary): string => {
 };
 
 export function Overview({ output }: { output: DryRunTransactionBlockResponse }) {
-	const { network } = useSuiClientContext();
+	const { network } = useDryRunContext();
+
 	const metadata: Record<string, ReactNode> = {
 		network,
 		status:
 			output.effects.status?.status === 'success'
 				? '✅ Transaction dry run executed succesfully!'
 				: output.effects.status?.status === 'failure'
-				? '❌ Transaction failed to execute!'
-				: null,
+					? '❌ Transaction failed to execute!'
+					: null,
 
 		sender: (
 			<span className="flex gap-2 items-center">
@@ -42,7 +44,7 @@ export function Overview({ output }: { output: DryRunTransactionBlockResponse })
 			</span>
 		),
 		epoch: output.effects.executedEpoch,
-		gas: calculateGas(output.effects.gasUsed) + ' SUI',
+		gas: calculateGas(output.effects.gasUsed) + ' IOTA',
 	};
 
 	return (

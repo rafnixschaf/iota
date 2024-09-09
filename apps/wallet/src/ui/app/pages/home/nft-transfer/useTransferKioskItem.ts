@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { useActiveAccount } from '_src/ui/app/hooks/useActiveAccount';
@@ -10,11 +11,11 @@ import {
 	ORIGINBYTE_KIOSK_OWNER_TOKEN,
 	useGetKioskContents,
 	useGetObject,
-} from '@mysten/core';
-import { useKioskClient } from '@mysten/core/src/hooks/useKioskClient';
-import { useSuiClient } from '@mysten/dapp-kit';
-import { KioskTransaction } from '@mysten/kiosk';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+} from '@iota/core';
+import { useKioskClient } from '@iota/core/src/hooks/useKioskClient';
+import { useIotaClient } from '@iota/dapp-kit';
+import { KioskTransaction } from '@iota/kiosk';
+import { Transaction } from '@iota/iota/transactions';
 import { useMutation } from '@tanstack/react-query';
 
 const ORIGINBYTE_PACKAGE_ID = '0x083b02db943238dcea0ff0938a54a17d7575f5b48034506446e501e963391480';
@@ -26,7 +27,7 @@ export function useTransferKioskItem({
 	objectId: string;
 	objectType?: string | null;
 }) {
-	const client = useSuiClient();
+	const client = useIotaClient();
 	const activeAccount = useActiveAccount();
 	const signer = useSigner(activeAccount);
 	const address = activeAccount?.address;
@@ -48,10 +49,10 @@ export function useTransferKioskItem({
 				throw new Error('Failed to find object in a kiosk');
 			}
 
-			if (kiosk.type === KioskTypes.SUI && objectData?.data?.data?.type && kiosk?.ownerCap) {
-				const txb = new TransactionBlock();
+			if (kiosk.type === KioskTypes.IOTA && objectData?.data?.data?.type && kiosk?.ownerCap) {
+				const txb = new Transaction();
 
-				new KioskTransaction({ transactionBlock: txb, kioskClient, cap: kiosk.ownerCap })
+				new KioskTransaction({ transaction: txb, kioskClient, cap: kiosk.ownerCap })
 					.transfer({
 						itemType: objectData.data.data.type as string,
 						itemId: objectId,
@@ -73,7 +74,7 @@ export function useTransferKioskItem({
 			}
 
 			if (kiosk.type === KioskTypes.ORIGINBYTE && objectData?.data?.data?.type) {
-				const tx = new TransactionBlock();
+				const tx = new Transaction();
 				const recipientKiosks = await client.getOwnedObjects({
 					owner: to,
 					options: { showContent: true },
@@ -86,13 +87,13 @@ export function useTransferKioskItem({
 					tx.moveCall({
 						target: `${obPackageId}::ob_kiosk::p2p_transfer`,
 						typeArguments: [objectType],
-						arguments: [tx.object(kioskId), tx.object(recipientKioskId), tx.pure(objectId)],
+						arguments: [tx.object(kioskId), tx.object(recipientKioskId), tx.pure.id(objectId)],
 					});
 				} else {
 					tx.moveCall({
 						target: `${obPackageId}::ob_kiosk::p2p_transfer_and_create_target_kiosk`,
 						typeArguments: [objectType],
-						arguments: [tx.object(kioskId), tx.pure(to), tx.pure(objectId)],
+						arguments: [tx.object(kioskId), tx.pure.address(to), tx.pure.id(objectId)],
 					});
 				}
 				return signer.signAndExecuteTransactionBlock(

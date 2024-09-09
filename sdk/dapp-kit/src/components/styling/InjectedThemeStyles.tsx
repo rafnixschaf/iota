@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { assignInlineVars } from '@vanilla-extract/dynamic';
@@ -18,6 +19,10 @@ export function InjectedThemeStyles({ theme }: InjectedThemeStylesProps) {
 
 	return (
 		<style
+			// @ts-expect-error The precedence prop hasn't made it to the stable release of React, but we
+			// don't want this to break in frameworks like Next which use the latest canary build.
+			precedence="default"
+			href="iota-dapp-kit-theme"
 			dangerouslySetInnerHTML={{
 				__html: themeStyles,
 			}}

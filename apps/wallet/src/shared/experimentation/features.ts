@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { API_ENV } from '_src/shared/api-env';
@@ -8,7 +9,7 @@ import Browser from 'webextension-polyfill';
 export const growthbook = new GrowthBook({
 	// If you want to develop locally, you can set the API host to this:
 	// apiHost: 'http://localhost:3003',
-	apiHost: 'https://apps-backend.sui.io',
+	apiHost: 'https://apps-backend.iota.io',
 	clientKey: process.env.NODE_ENV === 'development' ? 'development' : 'production',
 	enableDevMode: process.env.NODE_ENV === 'development',
 });
@@ -29,6 +30,7 @@ export enum FEATURES {
 	WALLET_DEFI = 'wallet-defi',
 	WALLET_FEE_ADDRESS = 'wallet-fee-address',
 	DEEP_BOOK_CONFIGS = 'deep-book-configs',
+	TOKEN_METADATA_OVERRIDES = 'token-metadata-overrides',
 }
 
 export function setAttributes(network?: { apiEnv: API_ENV; customRPC?: string | null }) {

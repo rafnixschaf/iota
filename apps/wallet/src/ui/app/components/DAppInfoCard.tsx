@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { type PermissionType } from '_src/shared/messaging/messages/payloads/permissions';
 import { getValidDAppUrl } from '_src/shared/utils';
-import { CheckFill16 } from '@mysten/icons';
+import { CheckFill16 } from '@iota/icons';
 import cn from 'clsx';
 
 import { useAccountByAddress } from '../hooks/useAccountByAddress';
@@ -13,6 +14,7 @@ import { AccountIcon } from './accounts/AccountIcon';
 import { AccountItem } from './accounts/AccountItem';
 import { LockUnlockButton } from './accounts/LockUnlockButton';
 import { useUnlockAccount } from './accounts/UnlockAccountContext';
+import Alert from './alert';
 import { DAppPermissionsList } from './DAppPermissionsList';
 import { SummaryCard } from './SummaryCard';
 
@@ -22,6 +24,7 @@ export type DAppInfoCardProps = {
 	iconUrl?: string;
 	connectedAddress?: string;
 	permissions?: PermissionType[];
+	showSecurityWarning?: boolean;
 };
 
 export function DAppInfoCard({
@@ -30,6 +33,7 @@ export function DAppInfoCard({
 	iconUrl,
 	connectedAddress,
 	permissions,
+	showSecurityWarning,
 }: DAppInfoCardProps) {
 	const validDAppUrl = getValidDAppUrl(url);
 	const appHostname = validDAppUrl?.hostname ?? url;
@@ -92,13 +96,24 @@ export function DAppInfoCard({
 					hideExplorerLink
 				/>
 			) : null}
-			{permissions?.length ? (
-				<SummaryCard
-					header="Permissions requested"
-					body={<DAppPermissionsList permissions={permissions} />}
-					boxShadow
-				/>
-			) : null}
+			<>
+				{showSecurityWarning && (
+					<Alert mode="warning">
+						<div className="flex flex-col">
+							<strong>Unable to verify site security</strong>
+							An error occurred while validating the integrity of this website. Please proceed with
+							caution.
+						</div>
+					</Alert>
+				)}
+				{permissions?.length ? (
+					<SummaryCard
+						header="Permissions requested"
+						body={<DAppPermissionsList permissions={permissions} />}
+						boxShadow
+					/>
+				) : null}
+			</>
 		</div>
 	);
 }

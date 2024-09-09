@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { API_ENV, type NetworkEnvType } from '_src/shared/api-env';
 import { fetchWithSentry } from '_src/shared/utils';
-import { type PublicKey } from '@mysten/sui.js/cryptography';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { type PublicKey } from '@iota/iota/cryptography';
+import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
 import {
 	generateNonce,
 	generateRandomness,
 	getExtendedEphemeralPublicKey,
 	type getZkLoginSignature,
-} from '@mysten/zklogin';
+} from '@iota/zklogin';
 import { randomBytes } from '@noble/hashes/utils';
 import { base64url } from 'jose';
 import { v4 as uuidV4 } from 'uuid';
@@ -34,7 +35,7 @@ export function prepareZkLogin(currentEpoch: number) {
 const forceSilentGetProviders: ZkLoginProvider[] = ['twitch'];
 
 /**
- * This method does a get request to the authorize url and is used as a workarround
+ * This method does a get request to the authorize url and is used as a workaround
  * for `forceSilentGetProviders` that they do the silent login/token refresh using
  * html directives or js code to redirect to the redirect_url (instead of response headers) and that forces the launchWebAuthFlow
  * to open and close quickly a new window. Which closes the popup window when open but also creates a weird flickering effect.
@@ -118,7 +119,7 @@ export async function zkLoginAuthenticate({
 	return jwt;
 }
 
-const saltRegistryUrl = 'https://salt.api.mystenlabs.com';
+const saltRegistryUrl = 'https://salt.api.iota.org';
 
 export async function fetchSalt(jwt: string): Promise<string> {
 	const response = await fetchWithSentry('fetchUserSalt', `${saltRegistryUrl}/get_salt`, {
@@ -147,8 +148,8 @@ export type PartialZkLoginSignature = Omit<
 	'addressSeed'
 >;
 
-const zkLoginProofsServerUrlDev = 'https://prover-dev.mystenlabs.com/v1';
-const zkLoginProofsServerUrlProd = 'https://prover.mystenlabs.com/v1';
+const zkLoginProofsServerUrlDev = 'https://prover-dev.iota.org/v1';
+const zkLoginProofsServerUrlProd = 'https://prover.iota.org/v1';
 
 export async function createPartialZkLoginSignature({
 	jwt,

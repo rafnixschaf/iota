@@ -1,13 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type {
-	ObjectOwner,
-	SuiObjectChange,
-	SuiTransactionBlockResponse,
-} from '@mysten/sui.js/client';
-import type { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, parseStructTag } from '@mysten/sui.js/utils';
+import type { ObjectOwner, IotaObjectChange, IotaTransactionBlockResponse } from '@iota/iota/client';
+import type { Transaction } from '@iota/iota/transactions';
+import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota/utils';
 
 // eslint-disable-next-line import/no-cycle
 
@@ -33,33 +30,35 @@ export interface LinkAssets {
 }
 
 export function isClaimTransaction(
-	txb: TransactionBlock,
+	tx: Transaction,
 	options: {
 		packageId: string;
 	},
 ) {
 	let transfers = 0;
 
-	for (const tx of txb.blockData.transactions) {
-		switch (tx.kind) {
+	for (const command of tx.getData().commands) {
+		switch (command.$kind) {
 			case 'TransferObjects':
 				// Ensure that we are only transferring results of a claim
-				if (!tx.objects.every((o) => o.kind === 'Result' || o.kind === 'NestedResult')) {
+				if (
+					!command.TransferObjects.objects.every(
+						(o) => o.$kind === 'Result' || o.$kind === 'NestedResult',
+					)
+				) {
 					return false;
 				}
 				transfers++;
 				break;
 			case 'MoveCall':
-				const [packageId, module, fn] = tx.target.split('::');
-
-				if (packageId !== options.packageId) {
+				if (command.MoveCall.package !== options.packageId) {
 					return false;
 				}
 
-				if (module !== 'zk_bag') {
+				if (command.MoveCall.module !== 'zk_bag') {
 					return false;
 				}
-
+				const fn = command.MoveCall.function;
 				if (fn !== 'init_claim' && fn !== 'reclaim' && fn !== 'claim' && fn !== 'finalize') {
 					return false;
 				}
@@ -72,16 +71,16 @@ export function isClaimTransaction(
 	return transfers === 1;
 }
 
-export function getAssetsFromTxnBlock({
-	transactionBlock,
+export function getAssetsFromTransaction({
+	transaction,
 	address,
 	isSent,
 }: {
-	transactionBlock: SuiTransactionBlockResponse;
+	transaction: IotaTransactionBlockResponse;
 	address: string;
 	isSent: boolean;
 }): LinkAssets {
-	const normalizedAddress = normalizeSuiAddress(address);
+	const normalizedAddress = normalizeIotaAddress(address);
 	const balances: {
 		coinType: string;
 		amount: bigint;
@@ -101,7 +100,7 @@ export function getAssetsFromTxnBlock({
 		digest: string;
 	}[] = [];
 
-	transactionBlock.balanceChanges?.forEach((change) => {
+	transaction.balanceChanges?.forEach((change) => {
 		const validAmountChange = isSent ? BigInt(change.amount) < 0n : BigInt(change.amount) > 0n;
 		if (validAmountChange && isOwner(change.owner, normalizedAddress)) {
 			balances.push({
@@ -111,12 +110,16 @@ export function getAssetsFromTxnBlock({
 		}
 	});
 
-	transactionBlock.objectChanges?.forEach((change) => {
+	transaction.objectChanges?.forEach((change) => {
+		if (!isObjectOwner(change, normalizedAddress, isSent)) {
+			return;
+		}
+
 		if ('objectType' in change) {
 			const type = parseStructTag(change.objectType);
 
 			if (
-				type.address === normalizeSuiAddress('0x2') &&
+				type.address === normalizeIotaAddress('0x2') &&
 				type.module === 'coin' &&
 				type.name === 'Coin'
 			) {
@@ -125,7 +128,10 @@ export function getAssetsFromTxnBlock({
 					change.type === 'transferred' ||
 					change.type === 'mutated'
 				) {
-					coins.push(change);
+					coins.push({
+						...change,
+						type: change.objectType,
+					});
 				}
 				return;
 			}
@@ -135,7 +141,12 @@ export function getAssetsFromTxnBlock({
 			isObjectOwner(change, normalizedAddress, isSent) &&
 			(change.type === 'created' || change.type === 'transferred' || change.type === 'mutated')
 		) {
-			nfts.push(change);
+			nfts.push({
+				objectId: change.objectId,
+				type: change.objectType,
+				version: change.version,
+				digest: change.digest,
+			});
 		}
 	});
 
@@ -146,7 +157,7 @@ export function getAssetsFromTxnBlock({
 	};
 }
 
-function getObjectOwnerFromObjectChange(objectChange: SuiObjectChange, isSent: boolean) {
+function getObjectOwnerFromObjectChange(objectChange: IotaObjectChange, isSent: boolean) {
 	if (isSent) {
 		return 'owner' in objectChange ? objectChange.owner : null;
 	}
@@ -154,7 +165,7 @@ function getObjectOwnerFromObjectChange(objectChange: SuiObjectChange, isSent: b
 	return 'recipient' in objectChange ? objectChange.recipient : null;
 }
 
-function isObjectOwner(objectChange: SuiObjectChange, address: string, isSent: boolean) {
+function isObjectOwner(objectChange: IotaObjectChange, address: string, isSent: boolean) {
 	const owner = getObjectOwnerFromObjectChange(objectChange, isSent);
 
 	if (isSent) {
@@ -165,9 +176,9 @@ function isObjectOwner(objectChange: SuiObjectChange, address: string, isSent: b
 }
 
 export function ownedAfterChange(
-	objectChange: SuiObjectChange,
+	objectChange: IotaObjectChange,
 	address: string,
-): objectChange is Extract<SuiObjectChange, { type: 'created' | 'transferred' | 'mutated' }> {
+): objectChange is Extract<IotaObjectChange, { type: 'created' | 'transferred' | 'mutated' }> {
 	if (objectChange.type === 'transferred' && isOwner(objectChange.recipient, address)) {
 		return true;
 	}
@@ -187,6 +198,6 @@ export function isOwner(owner: ObjectOwner, address: string): owner is { Address
 		owner &&
 		typeof owner === 'object' &&
 		'AddressOwner' in owner &&
-		normalizeSuiAddress(owner.AddressOwner) === address
+		normalizeIotaAddress(owner.AddressOwner) === address
 	);
 }

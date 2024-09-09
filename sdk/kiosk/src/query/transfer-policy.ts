@@ -1,10 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SuiClient } from '@mysten/sui.js/client';
-import { isValidSuiAddress } from '@mysten/sui.js/utils';
+import type { IotaClient } from '@iota/iota/client';
+import { fromB64, isValidIotaAddress } from '@iota/iota/utils';
 
-import { bcs } from '../bcs.js';
+import '../bcs.js';
+
+import { TransferPolicyType } from '../bcs.js';
 import type { TransferPolicy, TransferPolicyCap } from '../types/index.js';
 import {
 	TRANSFER_POLICY_CAP_TYPE,
@@ -14,7 +17,7 @@ import {
 import { getAllOwnedObjects, parseTransferPolicyCapObject } from '../utils.js';
 
 /**
- * Searches the `TransferPolicy`-s for the given type. The seach is performed via
+ * Searches the `TransferPolicy`-s for the given type. The search is performed via
  * the `TransferPolicyCreated` event. The policy can either be owned or shared,
  * and the caller needs to filter the results accordingly (ie single owner can not
  * be accessed by anyone but the owner).
@@ -23,7 +26,7 @@ import { getAllOwnedObjects, parseTransferPolicyCapObject } from '../utils.js';
  * @param type
  */
 export async function queryTransferPolicy(
-	client: SuiClient,
+	client: IotaClient,
 	type: string,
 ): Promise<TransferPolicy[]> {
 	// console.log('event type: %s', `${TRANSFER_POLICY_CREATED_EVENT}<${type}>`);
@@ -48,7 +51,7 @@ export async function queryTransferPolicy(
 				throw new Error(`Invalid policy: ${policy?.objectId}, expected object, got package`);
 			}
 
-			const parsed = bcs.de(TRANSFER_POLICY_TYPE, policy.bcs.bcsBytes, 'base64');
+			const parsed = TransferPolicyType.parse(fromB64(policy.bcs.bcsBytes));
 
 			return {
 				id: policy?.objectId,
@@ -68,11 +71,11 @@ export async function queryTransferPolicy(
  * @returns TransferPolicyCap Object ID | undefined if not found.
  */
 export async function queryTransferPolicyCapsByType(
-	client: SuiClient,
+	client: IotaClient,
 	address: string,
 	type: string,
 ): Promise<TransferPolicyCap[]> {
-	if (!isValidSuiAddress(address)) return [];
+	if (!isValidIotaAddress(address)) return [];
 
 	const filter = {
 		MatchAll: [
@@ -102,10 +105,10 @@ export async function queryTransferPolicyCapsByType(
  * @returns TransferPolicyCap Object ID | undefined if not found.
  */
 export async function queryOwnedTransferPolicies(
-	client: SuiClient,
+	client: IotaClient,
 	address: string,
 ): Promise<TransferPolicyCap[] | undefined> {
-	if (!isValidSuiAddress(address)) return;
+	if (!isValidIotaAddress(address)) return;
 
 	const filter = {
 		MatchAll: [

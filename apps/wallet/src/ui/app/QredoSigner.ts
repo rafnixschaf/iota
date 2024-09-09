@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { type QredoSerializedUiAccount } from '_src/background/accounts/QredoAccount';
@@ -8,13 +9,9 @@ import {
 	type QredoAPI,
 	type TransactionInfoResponse,
 } from '_src/shared/qredo-api';
-import { type SuiClient } from '@mysten/sui.js/client';
-import {
-	IntentScope,
-	messageWithIntent,
-	type SerializedSignature,
-} from '@mysten/sui.js/cryptography';
-import { toB64 } from '@mysten/sui.js/utils';
+import { type IotaClient } from '@iota/iota/client';
+import { messageWithIntent } from '@iota/iota/cryptography';
+import { toB64 } from '@iota/iota/utils';
 import mitt from 'mitt';
 
 import { WalletSigner } from './WalletSigner';
@@ -39,7 +36,7 @@ export class QredoSigner extends WalletSigner {
 	#apiEnv: API_ENV;
 
 	constructor(
-		client: SuiClient,
+		client: IotaClient,
 		account: QredoSerializedUiAccount,
 		qredoAPI: QredoAPI,
 		apiEnv: API_ENV,
@@ -55,7 +52,7 @@ export class QredoSigner extends WalletSigner {
 		return this.#qredoAccount.address;
 	}
 
-	async signData(data: Uint8Array, clientIdentifier?: string): Promise<SerializedSignature> {
+	async signData(data: Uint8Array, clientIdentifier?: string): Promise<string> {
 		let txInfo = await this.#createQredoTransaction(data, false, clientIdentifier);
 		try {
 			txInfo = await this.#pollForQredoTransaction(
@@ -86,7 +83,7 @@ export class QredoSigner extends WalletSigner {
 
 	signMessage: WalletSigner['signMessage'] = async (input, clientIdentifier) => {
 		const signature = await this.signData(
-			messageWithIntent(IntentScope.PersonalMessage, input.message),
+			messageWithIntent('PersonalMessage', input.message),
 			clientIdentifier,
 		);
 		return {
@@ -98,7 +95,7 @@ export class QredoSigner extends WalletSigner {
 	signTransactionBlock: WalletSigner['signTransactionBlock'] = async (input, clientIdentifier) => {
 		const transactionBlockBytes = await this.prepareTransactionBlock(input.transactionBlock);
 		const signature = await this.signData(
-			messageWithIntent(IntentScope.TransactionData, transactionBlockBytes),
+			messageWithIntent('TransactionData', transactionBlockBytes),
 			clientIdentifier,
 		);
 		return {
@@ -112,10 +109,7 @@ export class QredoSigner extends WalletSigner {
 		clientIdentifier,
 	) => {
 		let txInfo = await this.#createQredoTransaction(
-			messageWithIntent(
-				IntentScope.TransactionData,
-				await this.prepareTransactionBlock(transactionBlock),
-			),
+			messageWithIntent('TransactionData', await this.prepareTransactionBlock(transactionBlock)),
 			true,
 			clientIdentifier,
 		);
@@ -149,13 +143,13 @@ export class QredoSigner extends WalletSigner {
 		if (!txInfo.txHash) {
 			throw new Error(`Digest is not set in Qredo transaction ${txInfo.txID}`);
 		}
-		return this.client.waitForTransactionBlock({
+		return this.client.waitForTransaction({
 			digest: txInfo.txHash,
 			options: options,
 		});
 	};
 
-	connect(client: SuiClient): WalletSigner {
+	connect(client: IotaClient): WalletSigner {
 		return new QredoSigner(client, this.#qredoAccount, this.#qredoAPI, this.#apiEnv);
 	}
 

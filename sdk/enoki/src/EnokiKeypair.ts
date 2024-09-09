@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SignatureWithBytes } from '@mysten/sui.js/cryptography';
-import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@mysten/sui.js/cryptography';
-import type { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519';
-import type { ZkLoginSignatureInputs } from '@mysten/sui.js/zklogin';
-import { getZkLoginSignature } from '@mysten/zklogin';
+import type { SignatureWithBytes } from '@iota/iota/cryptography';
+import { Keypair, PublicKey, SIGNATURE_SCHEME_TO_FLAG } from '@iota/iota/cryptography';
+import type { Ed25519Keypair, Ed25519PublicKey } from '@iota/iota/keypairs/ed25519';
+import type { ZkLoginSignatureInputs } from '@iota/iota/zklogin';
+import { getZkLoginSignature } from '@iota/zklogin';
 
 export class EnokiPublicKey extends PublicKey {
 	#address: string;
@@ -21,7 +22,7 @@ export class EnokiPublicKey extends PublicKey {
 		return SIGNATURE_SCHEME_TO_FLAG['ZkLogin'];
 	}
 
-	toSuiAddress(): string {
+	toIotaAddress(): string {
 		return this.#address;
 	}
 
@@ -56,21 +57,29 @@ export class EnokiKeypair extends Keypair {
 		});
 	}
 
-	signData(data: Uint8Array) {
-		return this.#ephemeralKeypair.signData(data);
-	}
-
 	async sign(data: Uint8Array) {
 		return this.#ephemeralKeypair.sign(data);
 	}
 
-	signPersonalMessage(): never {
-		throw new Error('Signing personal messages is not supported');
+	async signPersonalMessage(bytes: Uint8Array): Promise<SignatureWithBytes> {
+		const { bytes: signedBytes, signature: userSignature } =
+			await this.#ephemeralKeypair.signPersonalMessage(bytes);
+
+		const zkSignature = getZkLoginSignature({
+			inputs: this.#proof,
+			maxEpoch: this.#maxEpoch,
+			userSignature,
+		});
+
+		return {
+			bytes: signedBytes,
+			signature: zkSignature,
+		};
 	}
 
-	async signTransactionBlock(bytes: Uint8Array): Promise<SignatureWithBytes> {
+	async signTransaction(bytes: Uint8Array): Promise<SignatureWithBytes> {
 		const { bytes: signedBytes, signature: userSignature } =
-			await this.#ephemeralKeypair.signTransactionBlock(bytes);
+			await this.#ephemeralKeypair.signTransaction(bytes);
 
 		const zkSignature = getZkLoginSignature({
 			inputs: this.#proof,
@@ -97,6 +106,6 @@ export class EnokiKeypair extends Keypair {
 	}
 
 	getSecretKey(): never {
-		throw new Error('EnokiKeypair does not support get secret key');
+		throw new Error('EnokiKeypair does not support getting the secret key');
 	}
 }
