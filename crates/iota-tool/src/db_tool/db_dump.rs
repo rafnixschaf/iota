@@ -1,32 +1,42 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    str,
+    sync::Arc,
+};
 
 use anyhow::{anyhow, Ok};
 use clap::{Parser, ValueEnum};
 use comfy_table::{Cell, ContentArrangement, Row, Table};
-use prometheus::Registry;
-use rocksdb::MultiThreaded;
-use std::collections::{BTreeMap, HashMap};
-use std::path::PathBuf;
-use std::str;
-use std::sync::Arc;
-use strum_macros::EnumString;
-use sui_archival::reader::ArchiveReaderBalancer;
-use sui_config::node::AuthorityStorePruningConfig;
-use sui_core::authority::authority_per_epoch_store::AuthorityEpochTables;
-use sui_core::authority::authority_store_pruner::{
-    AuthorityStorePruner, AuthorityStorePruningMetrics,
+use iota_archival::reader::ArchiveReaderBalancer;
+use iota_config::node::AuthorityStorePruningConfig;
+use iota_core::{
+    authority::{
+        authority_per_epoch_store::AuthorityEpochTables,
+        authority_store_pruner::{
+            AuthorityStorePruner, AuthorityStorePruningMetrics, EPOCH_DURATION_MS_FOR_TESTING,
+        },
+        authority_store_tables::AuthorityPerpetualTables,
+        authority_store_types::{StoreData, StoreObject},
+    },
+    checkpoints::CheckpointStore,
+    epoch::committee_store::CommitteeStoreTables,
+    rest_index::RestIndexStore,
 };
-use sui_core::authority::authority_store_tables::AuthorityPerpetualTables;
-use sui_core::authority::authority_store_types::{StoreData, StoreObject};
-use sui_core::checkpoints::CheckpointStore;
-use sui_core::epoch::committee_store::CommitteeStoreTables;
-use sui_storage::mutex_table::RwLockTable;
-use sui_storage::IndexStoreTables;
-use sui_types::base_types::{EpochId, ObjectID};
+use iota_storage::{mutex_table::RwLockTable, IndexStoreTables};
+use iota_types::base_types::{EpochId, ObjectID};
+use prometheus::Registry;
+use strum_macros::EnumString;
 use tracing::info;
-use typed_store::rocks::{default_db_options, MetricConf};
-use typed_store::traits::{Map, TableSummary};
+use typed_store::{
+    rocks::{default_db_options, MetricConf},
+    rocksdb::MultiThreaded,
+    traits::{Map, TableSummary},
+};
 
 #[derive(EnumString, Clone, Parser, Debug, ValueEnum)]
 pub enum StoreName {
@@ -42,20 +52,23 @@ impl std::fmt::Display for StoreName {
 }
 
 pub fn list_tables(path: PathBuf) -> anyhow::Result<Vec<String>> {
-    rocksdb::DBWithThreadMode::<MultiThreaded>::list_cf(&default_db_options().options, path)
-        .map_err(|e| e.into())
-        .map(|q| {
-            q.iter()
-                .filter_map(|s| {
-                    // The `default` table is not used
-                    if s != "default" {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        })
+    typed_store::rocksdb::DBWithThreadMode::<MultiThreaded>::list_cf(
+        &default_db_options().options,
+        path,
+    )
+    .map_err(|e| e.into())
+    .map(|q| {
+        q.iter()
+            .filter_map(|s| {
+                // The `default` table is not used
+                if s != "default" {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    })
 }
 
 pub fn table_summary(
@@ -200,6 +213,7 @@ pub async fn prune_objects(db_path: PathBuf) -> anyhow::Result<()> {
         None,
         None,
     ));
+    let rest_index = RestIndexStore::new_without_init(db_path.join("rest_index"));
     let highest_pruned_checkpoint = checkpoint_store.get_highest_pruned_checkpoint_seq_number()?;
     let latest_checkpoint = checkpoint_store.get_highest_executed_checkpoint()?;
     info!(
@@ -218,10 +232,12 @@ pub async fn prune_objects(db_path: PathBuf) -> anyhow::Result<()> {
     AuthorityStorePruner::prune_objects_for_eligible_epochs(
         &perpetual_db,
         &checkpoint_store,
+        Some(&rest_index),
         &lock_table,
         pruning_config,
         metrics,
         usize::MAX,
+        EPOCH_DURATION_MS_FOR_TESTING,
     )
     .await?;
     Ok(())
@@ -235,6 +251,7 @@ pub async fn prune_checkpoints(db_path: PathBuf) -> anyhow::Result<()> {
         None,
         None,
     ));
+    let rest_index = RestIndexStore::new_without_init(db_path.join("rest_index"));
     let metrics = AuthorityStorePruningMetrics::new(&Registry::default());
     let lock_table = Arc::new(RwLockTable::new(1));
     info!("Pruning setup for db at path: {:?}", db_path.display());
@@ -247,11 +264,13 @@ pub async fn prune_checkpoints(db_path: PathBuf) -> anyhow::Result<()> {
     AuthorityStorePruner::prune_checkpoints_for_eligible_epochs(
         &perpetual_db,
         &checkpoint_store,
+        Some(&rest_index),
         &lock_table,
         pruning_config,
         metrics,
         usize::MAX,
         archive_readers,
+        EPOCH_DURATION_MS_FOR_TESTING,
     )
     .await?;
     Ok(())
@@ -301,8 +320,10 @@ pub fn dump_table(
 
 #[cfg(test)]
 mod test {
-    use sui_core::authority::authority_per_epoch_store::AuthorityEpochTables;
-    use sui_core::authority::authority_store_tables::AuthorityPerpetualTables;
+    use iota_core::authority::{
+        authority_per_epoch_store::AuthorityEpochTables,
+        authority_store_tables::AuthorityPerpetualTables,
+    };
 
     use crate::db_tool::db_dump::{dump_table, list_tables, StoreName};
 
