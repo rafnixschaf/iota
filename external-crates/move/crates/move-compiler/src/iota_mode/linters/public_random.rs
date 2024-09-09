@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This analysis flags uses of random::Random and random::RandomGenerator in public functions.
@@ -6,7 +7,7 @@
 use crate::diagnostics::WarningFilters;
 use crate::expansion::ast::ModuleIdent;
 use crate::parser::ast::FunctionName;
-use crate::sui_mode::SUI_ADDR_NAME;
+use crate::iota_mode::IOTA_ADDR_NAME;
 use crate::typing::visitor::{TypingVisitorConstructor, TypingVisitorContext};
 use crate::{
     diag,
@@ -19,15 +20,15 @@ use crate::{
 
 use super::{
     LinterDiagnosticCategory, LinterDiagnosticCode, LINT_WARNING_PREFIX,
-    RANDOM_GENERATOR_STRUCT_NAME, RANDOM_MOD_NAME, RANDOM_STRUCT_NAME, SUI_PKG_NAME,
+    RANDOM_GENERATOR_STRUCT_NAME, RANDOM_MOD_NAME, RANDOM_STRUCT_NAME, IOTA_PKG_NAME,
 };
 
 const PUBLIC_RANDOM_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::PublicRandom as u8,
-    "Risky use of 'sui::random'",
+    "Risky use of 'iota::random'",
 );
 
 pub struct PublicRandomVisitor;
@@ -54,7 +55,7 @@ impl TypingVisitorContext for Context<'_> {
 
     fn visit_module_custom(&mut self, ident: ModuleIdent, mdef: &mut T::ModuleDefinition) -> bool {
         // skips if true
-        mdef.attributes.is_test_or_test_only() || ident.value.address.is(SUI_ADDR_NAME)
+        mdef.attributes.is_test_or_test_only() || ident.value.address.is(IOTA_ADDR_NAME)
     }
 
     fn visit_function_custom(
@@ -75,7 +76,7 @@ impl TypingVisitorContext for Context<'_> {
                     format!("'public' function '{fname}' accepts '{struct_name}' as a parameter");
                 let mut d = diag!(PUBLIC_RANDOM_DIAG, (tloc, msg));
                 let note = format!("Functions that accept '{}::{}::{}' as a parameter might be abused by attackers by inspecting the results of randomness",
-                                   SUI_PKG_NAME, RANDOM_MOD_NAME, struct_name);
+                                   IOTA_PKG_NAME, RANDOM_MOD_NAME, struct_name);
                 d.add_note(note);
                 d.add_note("Non-public functions are preferred");
                 self.env.add_diag(d);
@@ -90,9 +91,9 @@ fn is_random_or_random_generator(sp!(_, t): &N::Type) -> Option<&str> {
     match t {
         T::Ref(_, inner_t) => is_random_or_random_generator(inner_t),
         T::Apply(_, sp!(_, tname), _) => {
-            if tname.is(SUI_PKG_NAME, RANDOM_MOD_NAME, RANDOM_STRUCT_NAME) {
+            if tname.is(IOTA_PKG_NAME, RANDOM_MOD_NAME, RANDOM_STRUCT_NAME) {
                 Some(RANDOM_STRUCT_NAME)
-            } else if tname.is(SUI_PKG_NAME, RANDOM_MOD_NAME, RANDOM_GENERATOR_STRUCT_NAME) {
+            } else if tname.is(IOTA_PKG_NAME, RANDOM_MOD_NAME, RANDOM_GENERATOR_STRUCT_NAME) {
                 Some(RANDOM_GENERATOR_STRUCT_NAME)
             } else {
                 None

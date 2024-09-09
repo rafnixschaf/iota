@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::executor::MAX_CHECKPOINTS_IN_PROGRESS;
 use crate::Worker;
-use mysten_metrics::spawn_monitored_task;
+use iota_metrics::spawn_monitored_task;
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Instant;
-use sui_types::full_checkpoint_content::CheckpointData;
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::full_checkpoint_content::CheckpointData;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tracing::info;

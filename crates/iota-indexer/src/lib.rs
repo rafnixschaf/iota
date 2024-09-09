@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 #![recursion_limit = "256"]
 
@@ -10,20 +11,20 @@ use clap::Parser;
 use diesel::r2d2::R2D2Connection;
 use jsonrpsee::http_client::{HeaderMap, HeaderValue, HttpClient, HttpClientBuilder};
 use metrics::IndexerMetrics;
-use mysten_metrics::spawn_monitored_task;
+use iota_metrics::spawn_monitored_task;
 use prometheus::Registry;
 use secrecy::{ExposeSecret, Secret};
 use std::path::PathBuf;
-use sui_types::base_types::{ObjectID, SuiAddress};
+use iota_types::base_types::{ObjectID, IotaAddress};
 use system_package_task::SystemPackageTask;
 use tokio::runtime::Handle;
 use tokio_util::sync::CancellationToken;
 use tracing::warn;
 use url::Url;
 
-use sui_json_rpc::ServerType;
-use sui_json_rpc::{JsonRpcServerBuilder, ServerHandle};
-use sui_json_rpc_api::CLIENT_SDK_TYPE_HEADER;
+use iota_json_rpc::ServerType;
+use iota_json_rpc::{JsonRpcServerBuilder, ServerHandle};
+use iota_json_rpc_api::CLIENT_SDK_TYPE_HEADER;
 
 use crate::apis::{
     CoinReadApi, ExtendedApi, GovernanceReadApi, IndexerApi, MoveUtilsApi, ReadApi,
@@ -48,8 +49,8 @@ pub mod types;
 
 #[derive(Parser, Clone, Debug)]
 #[clap(
-    name = "Sui indexer",
-    about = "An off-fullnode service serving data from Sui protocol",
+    name = "Iota indexer",
+    about = "An off-fullnode service serving data from Iota protocol",
     rename_all = "kebab-case"
 )]
 pub struct IndexerConfig {
@@ -67,7 +68,7 @@ pub struct IndexerConfig {
     pub db_name: Option<String>,
     #[clap(long, default_value = "http://0.0.0.0:9000", global = true)]
     pub rpc_client_url: String,
-    #[clap(long, default_value = Some("https://checkpoints.mainnet.sui.io"), global = true)]
+    #[clap(long, default_value = Some("https://checkpoints.mainnet.iota.io"), global = true)]
     pub remote_store_url: Option<String>,
     #[clap(long, default_value = "0.0.0.0", global = true)]
     pub client_metric_host: String,
@@ -86,7 +87,7 @@ pub struct IndexerConfig {
     #[clap(long)]
     pub data_ingestion_path: Option<PathBuf>,
     #[clap(long)]
-    pub name_service_package_address: Option<SuiAddress>,
+    pub name_service_package_address: Option<IotaAddress>,
     #[clap(long)]
     pub name_service_registry_id: Option<ObjectID>,
     #[clap(long)]
@@ -127,7 +128,7 @@ impl Default for IndexerConfig {
     fn default() -> Self {
         Self {
             db_url: Some(secrecy::Secret::new(
-                "postgres://postgres:postgres@localhost:5432/sui_indexer".to_string(),
+                "postgres://postgres:postgres@localhost:5432/iota_indexer".to_string(),
             )),
             db_user_name: None,
             db_password: None,
@@ -135,7 +136,7 @@ impl Default for IndexerConfig {
             db_port: None,
             db_name: None,
             rpc_client_url: "http://127.0.0.1:9000".to_string(),
-            remote_store_url: Some("https://checkpoints.mainnet.sui.io".to_string()),
+            remote_store_url: Some("https://checkpoints.mainnet.iota.io".to_string()),
             client_metric_host: "0.0.0.0".to_string(),
             client_metric_port: 9184,
             rpc_server_url: "0.0.0.0".to_string(),
@@ -167,13 +168,13 @@ pub async fn build_json_rpc_server<T: R2D2Connection>(
             config.name_service_registry_id,
             config.name_service_reverse_registry_id,
         ) {
-            sui_json_rpc::name_service::NameServiceConfig::new(
+            iota_json_rpc::name_service::NameServiceConfig::new(
                 package_address,
                 registry_id,
                 reverse_registry_id,
             )
         } else {
-            sui_json_rpc::name_service::NameServiceConfig::default()
+            iota_json_rpc::name_service::NameServiceConfig::default()
         };
 
     builder.register_module(WriteApi::new(http_client.clone()))?;

@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use fastcrypto::error::FastCryptoError;
 use jsonrpsee::core::Error as RpcError;
 use jsonrpsee::types::error::CallError;
-use sui_json_rpc::name_service::NameServiceError;
+use iota_json_rpc::name_service::NameServiceError;
 use thiserror::Error;
 
-use sui_types::base_types::ObjectIDParseError;
-use sui_types::error::{SuiError, SuiObjectResponseError, UserInputError};
+use iota_types::base_types::ObjectIDParseError;
+use iota_types::error::{IotaError, IotaObjectResponseError, UserInputError};
 
 #[derive(Debug, Error)]
 pub struct DataDownloadError {
@@ -47,7 +48,7 @@ pub enum IndexerError {
     InsertableParsingError(String),
 
     #[error("Indexer failed to build JsonRpcServer with error: `{0}`")]
-    JsonRpcServerError(#[from] sui_json_rpc::error::Error),
+    JsonRpcServerError(#[from] iota_json_rpc::error::Error),
 
     #[error("Indexer failed to find object mutations, which should never happen.")]
     ObjectMutationNotAvailable,
@@ -101,7 +102,7 @@ pub enum IndexerError {
     InvalidTransactionDigestError(String),
 
     #[error(transparent)]
-    SuiError(#[from] SuiError),
+    IotaError(#[from] IotaError),
 
     #[error(transparent)]
     BcsError(#[from] bcs::Error),
@@ -116,7 +117,7 @@ pub enum IndexerError {
     ModuleResolutionError(String),
 
     #[error(transparent)]
-    ObjectResponseError(#[from] SuiObjectResponseError),
+    ObjectResponseError(#[from] IotaObjectResponseError),
 
     #[error(transparent)]
     FastCryptoError(#[from] FastCryptoError),

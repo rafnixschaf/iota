@@ -1,15 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module reviews_rating::service {
     use std::string::String;
 
-    use sui::balance::{Self, Balance};
-    use sui::clock::Clock;
-    use sui::coin::{Self, Coin};
-    use sui::dynamic_field as df;
-    use sui::sui::SUI;
-    use sui::object_table::{Self, ObjectTable};
+    use iota::balance::{Self, Balance};
+    use iota::clock::Clock;
+    use iota::coin::{Self, Coin};
+    use iota::dynamic_field as df;
+    use iota::iota::IOTA;
+    use iota::object_table::{Self, ObjectTable};
     
     use reviews_rating::moderator::{Moderator};
     use reviews_rating::review::{Self, Review};
@@ -29,7 +30,7 @@ module reviews_rating::service {
     /// Represents a service
     public struct Service has key, store {
         id: UID,
-        reward_pool: Balance<SUI>,
+        reward_pool: Balance<IOTA>,
         reward: u64,
         top_reviews: vector<ID>,
         reviews: ObjectTable<ID, Review>,
@@ -219,7 +220,7 @@ module reviews_rating::service {
     /// Adds coins to reward pool
     public fun top_up_reward(
         service: &mut Service,
-        coin: Coin<SUI>
+        coin: Coin<IOTA>
     ) {
         service.reward_pool.join(coin.into_balance());
     }

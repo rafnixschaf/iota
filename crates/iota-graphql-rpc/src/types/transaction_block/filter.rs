@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::TransactionBlockKindInput;
-use crate::types::{digest::Digest, sui_address::SuiAddress, type_filter::FqNameFilter};
+use crate::types::{digest::Digest, iota_address::IotaAddress, type_filter::FqNameFilter};
 use crate::types::{intersect, uint53::UInt53};
 use async_graphql::InputObject;
 use std::collections::BTreeSet;
-use sui_types::base_types::SuiAddress as NativeSuiAddress;
+use iota_types::base_types::IotaAddress as NativeIotaAddress;
 
 #[derive(InputObject, Debug, Default, Clone)]
 pub(crate) struct TransactionBlockFilter {
@@ -18,11 +19,11 @@ pub(crate) struct TransactionBlockFilter {
     pub at_checkpoint: Option<UInt53>,
     pub before_checkpoint: Option<UInt53>,
 
-    pub sign_address: Option<SuiAddress>,
-    pub recv_address: Option<SuiAddress>,
+    pub sign_address: Option<IotaAddress>,
+    pub recv_address: Option<IotaAddress>,
 
-    pub input_object: Option<SuiAddress>,
-    pub changed_object: Option<SuiAddress>,
+    pub input_object: Option<IotaAddress>,
+    pub changed_object: Option<IotaAddress>,
 
     pub transaction_ids: Option<Vec<Digest>>,
 }
@@ -80,7 +81,7 @@ impl TransactionBlockFilter {
 
     /// If we don't query a lookup table that has a denormalized sender column, we need to
     /// explicitly sp
-    pub(crate) fn explicit_sender(&self) -> Option<SuiAddress> {
+    pub(crate) fn explicit_sender(&self) -> Option<IotaAddress> {
         if self.function.is_none()
             && self.kind.is_none()
             && self.recv_address.is_none()
@@ -124,7 +125,7 @@ impl TransactionBlockFilter {
                 (self.kind, self.sign_address),
                 (Some(kind), Some(signer))
                     if (kind == TransactionBlockKindInput::SystemTx)
-                        != (signer == SuiAddress::from(NativeSuiAddress::ZERO))
+                        != (signer == IotaAddress::from(NativeIotaAddress::ZERO))
             )
     }
 }

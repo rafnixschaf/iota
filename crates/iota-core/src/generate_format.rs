@@ -1,5 +1,6 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use clap::*;
 use fastcrypto_zkp::bn254::zk_login::OIDCProvider;
@@ -12,13 +13,13 @@ use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
 use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
 use std::str::FromStr;
 use std::{fs::File, io::Write};
-use sui_types::execution_status::{
+use iota_types::execution_status::{
     CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
     TypeArgumentError,
 };
-use sui_types::messages_grpc::ObjectInfoRequestKind;
-use sui_types::move_package::TypeOrigin;
-use sui_types::{
+use iota_types::messages_grpc::ObjectInfoRequestKind;
+use iota_types::move_package::TypeOrigin;
+use iota_types::{
     base_types::MoveObjectType_,
     crypto::Signer,
     messages_checkpoint::{
@@ -27,13 +28,13 @@ use sui_types::{
     },
     transaction::TransactionExpiration,
 };
-use sui_types::{
+use iota_types::{
     base_types::{
         self, MoveObjectType, ObjectDigest, ObjectID, TransactionDigest, TransactionEffectsDigest,
     },
     crypto::{
         get_key_pair, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-        AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, Signature, SuiKeyPair,
+        AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, Signature, IotaKeyPair,
     },
     multisig::{MultiSig, MultiSigPublicKey},
     object::{Data, Owner},
@@ -43,7 +44,7 @@ use sui_types::{
         Argument, CallArg, Command, EndOfEpochTransactionKind, ObjectArg, TransactionKind,
     },
 };
-use sui_types::{
+use iota_types::{
     crypto::{PublicKey, ZkLoginPublicIdentifier},
     effects::{IDOperation, ObjectIn, ObjectOut, TransactionEffects, UnchangedSharedKind},
     utils::DEFAULT_ADDRESS_SEED,
@@ -78,12 +79,12 @@ fn get_registry() -> Result<Registry> {
     let sig: Signature = Signer::sign(&s_kp, b"hello world");
     tracer.trace_value(&mut samples, &sig)?;
 
-    let kp1: SuiKeyPair =
-        SuiKeyPair::Ed25519(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
-    let kp2: SuiKeyPair =
-        SuiKeyPair::Secp256k1(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
-    let kp3: SuiKeyPair =
-        SuiKeyPair::Secp256r1(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
+    let kp1: IotaKeyPair =
+        IotaKeyPair::Ed25519(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
+    let kp2: IotaKeyPair =
+        IotaKeyPair::Secp256k1(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
+    let kp3: IotaKeyPair =
+        IotaKeyPair::Secp256r1(get_key_pair_from_rng(&mut StdRng::from_seed([0; 32])).1);
     let pk_zklogin = PublicKey::ZkLogin(
         ZkLoginPublicIdentifier::new(
             &OIDCProvider::Twitch.get_config().iss,
@@ -100,7 +101,7 @@ fn get_registry() -> Result<Registry> {
     .unwrap();
 
     let msg = IntentMessage::new(
-        Intent::sui_transaction(),
+        Intent::iota_transaction(),
         PersonalMessage {
             message: "Message".as_bytes().to_vec(),
         },
@@ -127,7 +128,7 @@ fn get_registry() -> Result<Registry> {
     tracer.trace_value(&mut samples, &sig3)?;
     tracer.trace_value(&mut samples, &sig4)?;
     tracer.trace_value(&mut samples, &sig5)?;
-    // ObjectID and SuiAddress are the same length
+    // ObjectID and IotaAddress are the same length
     let oid: ObjectID = addr.into();
     tracer.trace_value(&mut samples, &oid)?;
 
@@ -143,7 +144,7 @@ fn get_registry() -> Result<Registry> {
     let ccd = CheckpointContentsDigest::random();
     tracer.trace_value(&mut samples, &ccd)?;
 
-    let struct_tag = StructTag::from_str("0x2::coin::Coin<0x2::sui::SUI>").unwrap();
+    let struct_tag = StructTag::from_str("0x2::coin::Coin<0x2::iota::IOTA>").unwrap();
     tracer.trace_value(&mut samples, &struct_tag)?;
 
     let ccd = CheckpointDigest::random();
@@ -169,7 +170,7 @@ fn get_registry() -> Result<Registry> {
     tracer.trace_type::<TransactionKind>(&samples)?;
     tracer.trace_type::<MoveObjectType>(&samples)?;
     tracer.trace_type::<MoveObjectType_>(&samples)?;
-    tracer.trace_type::<base_types::SuiAddress>(&samples)?;
+    tracer.trace_type::<base_types::IotaAddress>(&samples)?;
     tracer.trace_type::<DeleteKind>(&samples)?;
     tracer.trace_type::<Argument>(&samples)?;
     tracer.trace_type::<Command>(&samples)?;
@@ -202,15 +203,15 @@ enum Action {
 
 #[derive(Debug, Parser)]
 #[clap(
-    name = "Sui format generator",
-    about = "Trace serde (de)serialization to generate format descriptions for Sui types"
+    name = "Iota format generator",
+    about = "Trace serde (de)serialization to generate format descriptions for Iota types"
 )]
 struct Options {
     #[clap(value_enum, default_value = "Print", ignore_case = true)]
     action: Action,
 }
 
-const FILE_PATH: &str = "sui-core/tests/staged/sui.yaml";
+const FILE_PATH: &str = "iota-core/tests/staged/iota.yaml";
 
 fn main() {
     let options = Options::parse();

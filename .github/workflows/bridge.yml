@@ -7,12 +7,12 @@ on:
       - 'devnet'
       - 'testnet'
       - 'mainnet'
-      - 'releases/sui-*-release'
+      - 'releases/iota-*-release'
   pull_request:
     types: [ opened, synchronize, reopened, ready_for_review ]
   workflow_dispatch:
     inputs:
-      sui_repo_ref:
+      iota_repo_ref:
         description: "Branch / commit to test"
         type: string
         required: false
@@ -71,7 +71,7 @@ jobs:
       # Tests written with #[sim_test] are often flaky if run as #[tokio::test] - this var
       # causes #[sim_test] to only run under the deterministic `simtest` job, and not the
       # non-deterministic `test` job.
-      SUI_SKIP_SIMTESTS: 1
+      IOTA_SKIP_SIMTESTS: 1
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -95,7 +95,7 @@ jobs:
           forge install https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable@v5.0.1 https://github.com/foundry-rs/forge-std@v1.3.0 https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades --no-git --no-commit
       - name: cargo test
         run: |
-          cargo nextest run --profile ci -E 'package(sui-bridge)'
+          cargo nextest run --profile ci -E 'package(iota-bridge)'
       # Ensure there are no uncommitted changes in the repo after running tests
       - run: scripts/changed-files.sh
         shell: bash

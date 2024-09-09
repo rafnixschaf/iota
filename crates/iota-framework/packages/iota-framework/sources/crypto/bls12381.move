@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Group operations of BLS12-381.
-module sui::bls12381 {
+module iota::bls12381 {
 
-    use sui::group_ops;
-    use sui::group_ops::Element;
+    use iota::group_ops;
+    use iota::group_ops::Element;
 
     /// @param signature: A 48-bytes signature that is a point on the G1 subgroup.
     /// @param public_key: A 96-bytes public key that is a point on the G2 subgroup.

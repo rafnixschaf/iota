@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Example of proving plaintext equivalence of two ElGamal ciphertexts.
 module elgamal::example {
-    use sui::bls12381::{Self, Scalar, G1};
-    use sui::hash::blake2b256;
-    use sui::group_ops::{bytes, equal, Element};
+    use iota::bls12381::{Self, Scalar, G1};
+    use iota::hash::blake2b256;
+    use iota::group_ops::{bytes, equal, Element};
 
     /// An encryption of group element m under pk is (r*G, r*pk + m) for random r.
     public struct ElGamalEncryption has drop, store {

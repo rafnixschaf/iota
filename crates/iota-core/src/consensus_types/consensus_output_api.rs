@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use std::fmt::Display;
 
 use consensus_core::{BlockAPI, CommitDigest};
 use fastcrypto::hash::Hash;
 use narwhal_types::{BatchAPI, CertificateAPI, ConsensusOutputDigest, HeaderAPI};
-use sui_protocol_config::ProtocolConfig;
-use sui_types::{digests::ConsensusCommitDigest, messages_consensus::ConsensusTransaction};
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{digests::ConsensusCommitDigest, messages_consensus::ConsensusTransaction};
 
 use crate::consensus_types::AuthorityIndex;
 
@@ -97,7 +98,7 @@ impl ConsensusOutputAPI for narwhal_types::ConsensusOutput {
     }
 
     fn consensus_digest(&self, _protocol_config: &ProtocolConfig) -> ConsensusCommitDigest {
-        // We port ConsensusOutputDigest, a narwhal space object, into ConsensusCommitDigest, a sui-core space object.
+        // We port ConsensusOutputDigest, a narwhal space object, into ConsensusCommitDigest, a iota-core space object.
         // We assume they always have the same format.
         static_assertions::assert_eq_size!(ConsensusCommitDigest, ConsensusOutputDigest);
         ConsensusCommitDigest::new(self.digest().into_inner())
@@ -165,7 +166,7 @@ impl ConsensusOutputAPI for consensus_core::CommittedSubDag {
 
     fn consensus_digest(&self, protocol_config: &ProtocolConfig) -> ConsensusCommitDigest {
         if protocol_config.mysticeti_use_committed_subdag_digest() {
-            // We port CommitDigest, a consensus space object, into ConsensusCommitDigest, a sui-core space object.
+            // We port CommitDigest, a consensus space object, into ConsensusCommitDigest, a iota-core space object.
             // We assume they always have the same format.
             static_assertions::assert_eq_size!(ConsensusCommitDigest, CommitDigest);
             ConsensusCommitDigest::new(self.commit_ref.digest.into_inner())

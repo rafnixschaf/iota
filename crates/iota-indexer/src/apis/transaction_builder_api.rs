@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::governance_api::GovernanceReadApi;
@@ -6,11 +7,11 @@ use crate::indexer_reader::IndexerReader;
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
 use move_core_types::language_storage::StructTag;
-use sui_json_rpc::transaction_builder_api::TransactionBuilderApi as SuiTransactionBuilderApi;
-use sui_json_rpc_types::{SuiObjectDataFilter, SuiObjectDataOptions, SuiObjectResponse};
-use sui_transaction_builder::DataReader;
-use sui_types::base_types::{ObjectID, ObjectInfo, SuiAddress};
-use sui_types::object::Object;
+use iota_json_rpc::transaction_builder_api::TransactionBuilderApi as IotaTransactionBuilderApi;
+use iota_json_rpc_types::{IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse};
+use iota_transaction_builder::DataReader;
+use iota_types::base_types::{ObjectID, ObjectInfo, IotaAddress};
+use iota_types::object::Object;
 
 pub(crate) struct TransactionBuilderApi<T: R2D2Connection + 'static> {
     inner: IndexerReader<T>,
@@ -18,8 +19,8 @@ pub(crate) struct TransactionBuilderApi<T: R2D2Connection + 'static> {
 
 impl<T: R2D2Connection> TransactionBuilderApi<T> {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(inner: IndexerReader<T>) -> SuiTransactionBuilderApi {
-        SuiTransactionBuilderApi::new_with_data_reader(std::sync::Arc::new(Self { inner }))
+    pub fn new(inner: IndexerReader<T>) -> IotaTransactionBuilderApi {
+        IotaTransactionBuilderApi::new_with_data_reader(std::sync::Arc::new(Self { inner }))
     }
 }
 
@@ -27,14 +28,14 @@ impl<T: R2D2Connection> TransactionBuilderApi<T> {
 impl<T: R2D2Connection> DataReader for TransactionBuilderApi<T> {
     async fn get_owned_objects(
         &self,
-        address: SuiAddress,
+        address: IotaAddress,
         object_type: StructTag,
     ) -> Result<Vec<ObjectInfo>, anyhow::Error> {
         let stored_objects = self
             .inner
             .get_owned_objects_in_blocking_task(
                 address,
-                Some(SuiObjectDataFilter::StructType(object_type)),
+                Some(IotaObjectDataFilter::StructType(object_type)),
                 None,
                 50, // Limit the number of objects returned to 50
             )
@@ -54,8 +55,8 @@ impl<T: R2D2Connection> DataReader for TransactionBuilderApi<T> {
     async fn get_object_with_options(
         &self,
         object_id: ObjectID,
-        options: SuiObjectDataOptions,
-    ) -> Result<SuiObjectResponse, anyhow::Error> {
+        options: IotaObjectDataOptions,
+    ) -> Result<IotaObjectResponse, anyhow::Error> {
         let result = self
             .inner
             .get_object_read_in_blocking_task(object_id)

@@ -1,30 +1,31 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
 use async_trait::async_trait;
-use mysten_network::config::Config;
+use iota_network_stack::config::Config;
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::time::Duration;
-use sui_network::{api::ValidatorClient, tonic};
-use sui_types::base_types::AuthorityName;
-use sui_types::committee::CommitteeWithNetworkMetadata;
-use sui_types::messages_checkpoint::{
+use iota_network::{api::ValidatorClient, tonic};
+use iota_types::base_types::AuthorityName;
+use iota_types::committee::CommitteeWithNetworkMetadata;
+use iota_types::messages_checkpoint::{
     CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
 };
-use sui_types::multiaddr::Multiaddr;
-use sui_types::sui_system_state::SuiSystemState;
-use sui_types::{
-    error::{SuiError, SuiResult},
+use iota_types::multiaddr::Multiaddr;
+use iota_types::iota_system_state::IotaSystemState;
+use iota_types::{
+    error::{IotaError, IotaResult},
     transaction::*,
 };
 
 use crate::authority_client::tonic::IntoRequest;
-use sui_network::tonic::metadata::KeyAndValueRef;
-use sui_network::tonic::transport::Channel;
-use sui_types::messages_grpc::{
+use iota_network::tonic::metadata::KeyAndValueRef;
+use iota_network::tonic::transport::Channel;
+use iota_types::messages_grpc::{
     HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
     HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
     HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse, SystemStateRequest,
@@ -33,79 +34,79 @@ use sui_types::messages_grpc::{
 
 #[async_trait]
 pub trait AuthorityAPI {
-    /// Initiate a new transaction to a Sui or Primary account.
+    /// Initiate a new transaction to a Iota or Primary account.
     async fn handle_transaction(
         &self,
         transaction: Transaction,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleTransactionResponse, SuiError>;
+    ) -> Result<HandleTransactionResponse, IotaError>;
 
     /// Execute a certificate.
     async fn handle_certificate_v2(
         &self,
         certificate: CertifiedTransaction,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleCertificateResponseV2, SuiError>;
+    ) -> Result<HandleCertificateResponseV2, IotaError>;
 
     /// Execute a certificate.
     async fn handle_certificate_v3(
         &self,
         request: HandleCertificateRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleCertificateResponseV3, SuiError>;
+    ) -> Result<HandleCertificateResponseV3, IotaError>;
 
     /// Execute a Soft Bundle with multiple certificates.
     async fn handle_soft_bundle_certificates_v3(
         &self,
         request: HandleSoftBundleCertificatesRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleSoftBundleCertificatesResponseV3, SuiError>;
+    ) -> Result<HandleSoftBundleCertificatesResponseV3, IotaError>;
 
     /// Handle Object information requests for this account.
     async fn handle_object_info_request(
         &self,
         request: ObjectInfoRequest,
-    ) -> Result<ObjectInfoResponse, SuiError>;
+    ) -> Result<ObjectInfoResponse, IotaError>;
 
     /// Handle Object information requests for this account.
     async fn handle_transaction_info_request(
         &self,
         request: TransactionInfoRequest,
-    ) -> Result<TransactionInfoResponse, SuiError>;
+    ) -> Result<TransactionInfoResponse, IotaError>;
 
     async fn handle_checkpoint(
         &self,
         request: CheckpointRequest,
-    ) -> Result<CheckpointResponse, SuiError>;
+    ) -> Result<CheckpointResponse, IotaError>;
 
     async fn handle_checkpoint_v2(
         &self,
         request: CheckpointRequestV2,
-    ) -> Result<CheckpointResponseV2, SuiError>;
+    ) -> Result<CheckpointResponseV2, IotaError>;
 
     // This API is exclusively used by the benchmark code.
     // Hence it's OK to return a fixed system state type.
     async fn handle_system_state_object(
         &self,
         request: SystemStateRequest,
-    ) -> Result<SuiSystemState, SuiError>;
+    ) -> Result<IotaSystemState, IotaError>;
 }
 
 #[derive(Clone)]
 pub struct NetworkAuthorityClient {
-    client: SuiResult<ValidatorClient<Channel>>,
+    client: IotaResult<ValidatorClient<Channel>>,
 }
 
 impl NetworkAuthorityClient {
     pub async fn connect(address: &Multiaddr) -> anyhow::Result<Self> {
-        let channel = mysten_network::client::connect(address)
+        let channel = iota_network_stack::client::connect(address)
             .await
             .map_err(|err| anyhow!(err.to_string()))?;
         Ok(Self::new(channel))
     }
 
     pub fn connect_lazy(address: &Multiaddr) -> Self {
-        let client: SuiResult<_> = mysten_network::client::connect_lazy(address)
+        let client: IotaResult<_> = iota_network_stack::client::connect_lazy(address)
             .map(ValidatorClient::new)
             .map_err(|err| err.to_string().into());
         Self { client }
@@ -117,25 +118,25 @@ impl NetworkAuthorityClient {
         }
     }
 
-    fn new_lazy(client: SuiResult<Channel>) -> Self {
+    fn new_lazy(client: IotaResult<Channel>) -> Self {
         Self {
             client: client.map(ValidatorClient::new),
         }
     }
 
-    fn client(&self) -> SuiResult<ValidatorClient<Channel>> {
+    fn client(&self) -> IotaResult<ValidatorClient<Channel>> {
         self.client.clone()
     }
 }
 
 #[async_trait]
 impl AuthorityAPI for NetworkAuthorityClient {
-    /// Initiate a new transfer to a Sui or Primary account.
+    /// Initiate a new transfer to a Iota or Primary account.
     async fn handle_transaction(
         &self,
         transaction: Transaction,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleTransactionResponse, SuiError> {
+    ) -> Result<HandleTransactionResponse, IotaError> {
         let mut request = transaction.into_request();
         insert_metadata(&mut request, client_addr);
 
@@ -151,7 +152,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
         &self,
         certificate: CertifiedTransaction,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleCertificateResponseV2, SuiError> {
+    ) -> Result<HandleCertificateResponseV2, IotaError> {
         let mut request = certificate.into_request();
         insert_metadata(&mut request, client_addr);
 
@@ -168,7 +169,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
         &self,
         request: HandleCertificateRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleCertificateResponseV3, SuiError> {
+    ) -> Result<HandleCertificateResponseV3, IotaError> {
         let mut request = request.into_request();
         insert_metadata(&mut request, client_addr);
 
@@ -185,7 +186,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
         &self,
         request: HandleSoftBundleCertificatesRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> Result<HandleSoftBundleCertificatesResponseV3, SuiError> {
+    ) -> Result<HandleSoftBundleCertificatesResponseV3, IotaError> {
         let mut request = request.into_request();
         insert_metadata(&mut request, client_addr);
 
@@ -201,7 +202,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_object_info_request(
         &self,
         request: ObjectInfoRequest,
-    ) -> Result<ObjectInfoResponse, SuiError> {
+    ) -> Result<ObjectInfoResponse, IotaError> {
         self.client()?
             .object_info(request)
             .await
@@ -213,7 +214,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_transaction_info_request(
         &self,
         request: TransactionInfoRequest,
-    ) -> Result<TransactionInfoResponse, SuiError> {
+    ) -> Result<TransactionInfoResponse, IotaError> {
         self.client()?
             .transaction_info(request)
             .await
@@ -225,7 +226,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_checkpoint(
         &self,
         request: CheckpointRequest,
-    ) -> Result<CheckpointResponse, SuiError> {
+    ) -> Result<CheckpointResponse, IotaError> {
         self.client()?
             .checkpoint(request)
             .await
@@ -237,7 +238,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_checkpoint_v2(
         &self,
         request: CheckpointRequestV2,
-    ) -> Result<CheckpointResponseV2, SuiError> {
+    ) -> Result<CheckpointResponseV2, IotaError> {
         self.client()?
             .checkpoint_v2(request)
             .await
@@ -248,7 +249,7 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_system_state_object(
         &self,
         request: SystemStateRequest,
-    ) -> Result<SuiSystemState, SuiError> {
+    ) -> Result<IotaSystemState, IotaError> {
         self.client()?
             .get_system_state_object(request)
             .await
@@ -284,7 +285,7 @@ pub fn make_authority_clients_with_timeout_config(
     connect_timeout: Duration,
     request_timeout: Duration,
 ) -> BTreeMap<AuthorityName, NetworkAuthorityClient> {
-    let mut network_config = mysten_network::config::Config::new();
+    let mut network_config = iota_network_stack::config::Config::new();
     network_config.connect_timeout = Some(connect_timeout);
     network_config.request_timeout = Some(request_timeout);
     make_network_authority_clients_with_network_config(committee, &network_config)

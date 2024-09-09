@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::genesis_config::{ValidatorGenesisConfig, ValidatorGenesisConfigBuilder};
@@ -9,23 +10,23 @@ use narwhal_config::{NetworkAdminServerParameters, PrometheusMetricsParameters};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
-use sui_config::node::{
+use iota_config::node::{
     default_enable_index_processing, default_end_of_epoch_broadcast_channel_capacity,
     AuthorityKeyPairWithPath, AuthorityOverloadConfig, AuthorityStorePruningConfig,
     CheckpointExecutorConfig, DBCheckpointConfig, ExecutionCacheConfig, ExpensiveSafetyCheckConfig,
     Genesis, KeyPairWithPath, StateArchiveConfig, StateSnapshotConfig,
     DEFAULT_GRPC_CONCURRENCY_LIMIT,
 };
-use sui_config::node::{default_zklogin_oauth_providers, RunWithRange};
-use sui_config::p2p::{P2pConfig, SeedPeer, StateSyncConfig};
-use sui_config::{
+use iota_config::node::{default_zklogin_oauth_providers, RunWithRange};
+use iota_config::p2p::{P2pConfig, SeedPeer, StateSyncConfig};
+use iota_config::{
     local_ip_utils, ConsensusConfig, NodeConfig, AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME,
     FULL_NODE_DB_PATH,
 };
-use sui_types::crypto::{AuthorityKeyPair, AuthorityPublicKeyBytes, NetworkKeyPair, SuiKeyPair};
-use sui_types::multiaddr::Multiaddr;
-use sui_types::supported_protocol_versions::SupportedProtocolVersions;
-use sui_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
+use iota_types::crypto::{AuthorityKeyPair, AuthorityPublicKeyBytes, NetworkKeyPair, IotaKeyPair};
+use iota_types::multiaddr::Multiaddr;
+use iota_types::supported_protocol_versions::SupportedProtocolVersions;
+use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
 
 /// This builder contains information that's not included in ValidatorGenesisConfig for building
 /// a validator NodeConfig. It can be used to build either a genesis validator or a new validator.
@@ -118,7 +119,7 @@ impl ValidatorConfigBuilder {
     pub fn build(
         self,
         validator: ValidatorGenesisConfig,
-        genesis: sui_config::genesis::Genesis,
+        genesis: iota_config::genesis::Genesis,
     ) -> NodeConfig {
         let key_path = get_key_path(&validator.key_pair);
         let config_directory = self
@@ -186,9 +187,9 @@ impl ValidatorConfigBuilder {
 
         NodeConfig {
             protocol_key_pair: AuthorityKeyPairWithPath::new(validator.key_pair),
-            network_key_pair: KeyPairWithPath::new(SuiKeyPair::Ed25519(validator.network_key_pair)),
+            network_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(validator.network_key_pair)),
             account_key_pair: KeyPairWithPath::new(validator.account_key_pair),
-            worker_key_pair: KeyPairWithPath::new(SuiKeyPair::Ed25519(validator.worker_key_pair)),
+            worker_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(validator.worker_key_pair)),
             db_path,
             network_address,
             metrics_address: validator.metrics_address,
@@ -199,7 +200,7 @@ impl ValidatorConfigBuilder {
             consensus_config: Some(consensus_config),
             remove_deprecated_tables: false,
             enable_index_processing: default_enable_index_processing(),
-            genesis: sui_config::node::Genesis::new(genesis),
+            genesis: iota_config::node::Genesis::new(genesis),
             grpc_load_shed: None,
             grpc_concurrency_limit: Some(DEFAULT_GRPC_CONCURRENCY_LIMIT),
             p2p_config,
@@ -360,7 +361,7 @@ impl FullnodeConfigBuilder {
     pub fn with_network_key_pair(mut self, network_key_pair: Option<NetworkKeyPair>) -> Self {
         if let Some(network_key_pair) = network_key_pair {
             self.network_key_pair =
-                Some(KeyPairWithPath::new(SuiKeyPair::Ed25519(network_key_pair)));
+                Some(KeyPairWithPath::new(IotaKeyPair::Ed25519(network_key_pair)));
         }
         self
     }
@@ -458,11 +459,11 @@ impl FullnodeConfigBuilder {
         NodeConfig {
             protocol_key_pair: AuthorityKeyPairWithPath::new(validator_config.key_pair),
             account_key_pair: KeyPairWithPath::new(validator_config.account_key_pair),
-            worker_key_pair: KeyPairWithPath::new(SuiKeyPair::Ed25519(
+            worker_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(
                 validator_config.worker_key_pair,
             )),
             network_key_pair: self.network_key_pair.unwrap_or(KeyPairWithPath::new(
-                SuiKeyPair::Ed25519(validator_config.network_key_pair),
+                IotaKeyPair::Ed25519(validator_config.network_key_pair),
             )),
             db_path: self
                 .db_path
@@ -480,7 +481,7 @@ impl FullnodeConfigBuilder {
             consensus_config: None,
             remove_deprecated_tables: false,
             enable_index_processing: default_enable_index_processing(),
-            genesis: self.genesis.unwrap_or(sui_config::node::Genesis::new(
+            genesis: self.genesis.unwrap_or(iota_config::node::Genesis::new(
                 network_config.genesis.clone(),
             )),
             grpc_load_shed: None,

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -7,8 +8,8 @@ use crate::{
 };
 use async_graphql::*;
 use diesel::QueryDsl;
-use sui_indexer::schema::chain_identifier;
-use sui_types::{
+use iota_indexer::schema::chain_identifier;
+use iota_types::{
     digests::ChainIdentifier as NativeChainIdentifier, messages_checkpoint::CheckpointDigest,
 };
 

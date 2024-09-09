@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::indexer_reader::IndexerReader;
@@ -6,14 +7,14 @@ use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
-use sui_json_rpc::coin_api::{parse_to_struct_tag, parse_to_type_tag};
-use sui_json_rpc::SuiRpcModule;
-use sui_json_rpc_api::{cap_page_limit, CoinReadApiServer};
-use sui_json_rpc_types::{Balance, CoinPage, Page, SuiCoinMetadata};
-use sui_open_rpc::Module;
-use sui_types::balance::Supply;
-use sui_types::base_types::{ObjectID, SuiAddress};
-use sui_types::gas_coin::{GAS, TOTAL_SUPPLY_MIST};
+use iota_json_rpc::coin_api::{parse_to_struct_tag, parse_to_type_tag};
+use iota_json_rpc::IotaRpcModule;
+use iota_json_rpc_api::{cap_page_limit, CoinReadApiServer};
+use iota_json_rpc_types::{Balance, CoinPage, Page, IotaCoinMetadata};
+use iota_open_rpc::Module;
+use iota_types::balance::Supply;
+use iota_types::base_types::{ObjectID, IotaAddress};
+use iota_types::gas_coin::{GAS, TOTAL_SUPPLY_NANOS};
 
 pub(crate) struct CoinReadApi<T: R2D2Connection + 'static> {
     inner: IndexerReader<T>,
@@ -29,7 +30,7 @@ impl<T: R2D2Connection> CoinReadApi<T> {
 impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
     async fn get_coins(
         &self,
-        owner: SuiAddress,
+        owner: IotaAddress,
         coin_type: Option<String>,
         cursor: Option<ObjectID>,
         limit: Option<usize>,
@@ -65,7 +66,7 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
 
     async fn get_all_coins(
         &self,
-        owner: SuiAddress,
+        owner: IotaAddress,
         cursor: Option<ObjectID>,
         limit: Option<usize>,
     ) -> RpcResult<CoinPage> {
@@ -96,7 +97,7 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
 
     async fn get_balance(
         &self,
-        owner: SuiAddress,
+        owner: IotaAddress,
         coin_type: Option<String>,
     ) -> RpcResult<Balance> {
         // Normalize coin type tag and default to Gas
@@ -113,14 +114,14 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
         Ok(results.swap_remove(0))
     }
 
-    async fn get_all_balances(&self, owner: SuiAddress) -> RpcResult<Vec<Balance>> {
+    async fn get_all_balances(&self, owner: IotaAddress) -> RpcResult<Vec<Balance>> {
         self.inner
             .get_coin_balances_in_blocking_task(owner, None)
             .await
             .map_err(Into::into)
     }
 
-    async fn get_coin_metadata(&self, coin_type: String) -> RpcResult<Option<SuiCoinMetadata>> {
+    async fn get_coin_metadata(&self, coin_type: String) -> RpcResult<Option<IotaCoinMetadata>> {
         let coin_struct = parse_to_struct_tag(&coin_type)?;
         self.inner
             .get_coin_metadata_in_blocking_task(coin_struct)
@@ -132,7 +133,7 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
         let coin_struct = parse_to_struct_tag(&coin_type)?;
         if GAS::is_gas(&coin_struct) {
             Ok(Supply {
-                value: TOTAL_SUPPLY_MIST,
+                value: TOTAL_SUPPLY_NANOS,
             })
         } else {
             self.inner
@@ -143,12 +144,12 @@ impl<T: R2D2Connection + 'static> CoinReadApiServer for CoinReadApi<T> {
     }
 }
 
-impl<T: R2D2Connection> SuiRpcModule for CoinReadApi<T> {
+impl<T: R2D2Connection> IotaRpcModule for CoinReadApi<T> {
     fn rpc(self) -> RpcModule<Self> {
         self.into_rpc()
     }
 
     fn rpc_doc_module() -> Module {
-        sui_json_rpc_api::CoinReadApiOpenRpc::module_doc()
+        iota_json_rpc_api::CoinReadApiOpenRpc::module_doc()
     }
 }

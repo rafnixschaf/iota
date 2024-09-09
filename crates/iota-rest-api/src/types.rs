@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Chain ID of the current chain
-pub const X_SUI_CHAIN_ID: &str = "x-sui-chain-id";
+pub const X_IOTA_CHAIN_ID: &str = "x-iota-chain-id";
 
 /// Chain name of the current chain
-pub const X_SUI_CHAIN: &str = "x-sui-chain";
+pub const X_IOTA_CHAIN: &str = "x-iota-chain";
 
 /// Current checkpoint height
-pub const X_SUI_CHECKPOINT_HEIGHT: &str = "x-sui-checkpoint-height";
+pub const X_IOTA_CHECKPOINT_HEIGHT: &str = "x-iota-checkpoint-height";
 
 /// Lowest available checkpoint for which transaction and checkpoint data can be requested.
 ///
@@ -17,20 +18,20 @@ pub const X_SUI_CHECKPOINT_HEIGHT: &str = "x-sui-checkpoint-height";
 ///  - transactions
 ///  - effects
 ///  - events
-pub const X_SUI_LOWEST_AVAILABLE_CHECKPOINT: &str = "x-sui-lowest-available-checkpoint";
+pub const X_IOTA_LOWEST_AVAILABLE_CHECKPOINT: &str = "x-iota-lowest-available-checkpoint";
 
 /// Lowest available checkpoint for which object data can be requested.
 ///
 /// Specifically this is the lowest checkpoint for which input/output object data will be
 /// available.
-pub const X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS: &str =
-    "x-sui-lowest-available-checkpoint-objects";
+pub const X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS: &str =
+    "x-iota-lowest-available-checkpoint-objects";
 
 /// Current epoch of the chain
-pub const X_SUI_EPOCH: &str = "x-sui-epoch";
+pub const X_IOTA_EPOCH: &str = "x-iota-epoch";
 
 /// Cursor to be used for endpoints that support cursor-based pagination. Pass this to the start field of the endpoint on the next call to get the next page of results.
-pub const X_SUI_CURSOR: &str = "x-sui-cursor";
+pub const X_IOTA_CURSOR: &str = "x-iota-cursor";
 
 /// Current timestamp of the chain - represented as number of milliseconds from the Unix epoch
-pub const X_SUI_TIMESTAMP_MS: &str = "x-sui-timestamp-ms";
+pub const X_IOTA_TIMESTAMP_MS: &str = "x-iota-timestamp-ms";

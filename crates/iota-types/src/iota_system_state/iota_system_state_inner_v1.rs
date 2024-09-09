@@ -1,25 +1,26 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::balance::Balance;
-use crate::base_types::{ObjectID, SuiAddress};
+use crate::base_types::{ObjectID, IotaAddress};
 use crate::collection_types::{Bag, Table, TableVec, VecMap, VecSet};
 use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
 use crate::crypto::verify_proof_of_possession;
 use crate::crypto::AuthorityPublicKeyBytes;
-use crate::error::SuiError;
+use crate::error::IotaError;
 use crate::id::ID;
 use crate::multiaddr::Multiaddr;
 use crate::storage::ObjectStore;
-use crate::sui_system_state::epoch_start_sui_system_state::EpochStartSystemState;
+use crate::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
 use anyhow::Result;
 use fastcrypto::traits::ToFromBytes;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use super::epoch_start_sui_system_state::EpochStartValidatorInfoV1;
-use super::sui_system_state_summary::{SuiSystemStateSummary, SuiValidatorSummary};
-use super::{get_validators_from_table_vec, AdvanceEpochParams, SuiSystemStateTrait};
+use super::epoch_start_iota_system_state::EpochStartValidatorInfoV1;
+use super::iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary};
+use super::{get_validators_from_table_vec, AdvanceEpochParams, IotaSystemStateTrait};
 
 const E_METADATA_INVALID_POP: u64 = 0;
 const E_METADATA_INVALID_PUBKEY: u64 = 1;
@@ -30,7 +31,7 @@ const E_METADATA_INVALID_P2P_ADDR: u64 = 5;
 const E_METADATA_INVALID_PRIMARY_ADDR: u64 = 6;
 const E_METADATA_INVALID_WORKER_ADDR: u64 = 7;
 
-/// Rust version of the Move sui::sui_system::SystemParameters type
+/// Rust version of the Move iota::iota_system::SystemParameters type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct SystemParametersV1 {
     /// The duration of an epoch, in milliseconds.
@@ -64,7 +65,7 @@ pub struct SystemParametersV1 {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct ValidatorMetadataV1 {
-    pub sui_address: SuiAddress,
+    pub iota_address: IotaAddress,
     pub protocol_pubkey_bytes: Vec<u8>,
     pub network_pubkey_bytes: Vec<u8>,
     pub worker_pubkey_bytes: Vec<u8>,
@@ -91,7 +92,7 @@ pub struct ValidatorMetadataV1 {
 #[derive(derivative::Derivative, Clone, Eq, PartialEq)]
 #[derivative(Debug)]
 pub struct VerifiedValidatorMetadataV1 {
-    pub sui_address: SuiAddress,
+    pub iota_address: IotaAddress,
     pub protocol_pubkey: narwhal_crypto::PublicKey,
     pub network_pubkey: narwhal_crypto::NetworkPublicKey,
     pub worker_pubkey: narwhal_crypto::NetworkPublicKey,
@@ -116,7 +117,7 @@ pub struct VerifiedValidatorMetadataV1 {
 }
 
 impl VerifiedValidatorMetadataV1 {
-    pub fn sui_pubkey_bytes(&self) -> AuthorityPublicKeyBytes {
+    pub fn iota_pubkey_bytes(&self) -> AuthorityPublicKeyBytes {
         (&self.protocol_pubkey).into()
     }
 }
@@ -131,7 +132,7 @@ impl ValidatorMetadataV1 {
         // Verify proof of possession for the protocol key
         let pop = narwhal_crypto::Signature::from_bytes(self.proof_of_possession_bytes.as_ref())
             .map_err(|_| E_METADATA_INVALID_POP)?;
-        verify_proof_of_possession(&pop, &protocol_pubkey, self.sui_address)
+        verify_proof_of_possession(&pop, &protocol_pubkey, self.iota_address)
             .map_err(|_| E_METADATA_INVALID_POP)?;
 
         let network_pubkey =
@@ -188,7 +189,7 @@ impl ValidatorMetadataV1 {
                     verify_proof_of_possession(
                         &next_epoch_pop,
                         next_epoch_protocol_pubkey,
-                        self.sui_address,
+                        self.iota_address,
                     )
                     .map_err(|_| E_METADATA_INVALID_POP)?;
                 }
@@ -267,7 +268,7 @@ impl ValidatorMetadataV1 {
         }?;
 
         Ok(VerifiedValidatorMetadataV1 {
-            sui_address: self.sui_address,
+            iota_address: self.iota_address,
             protocol_pubkey,
             network_pubkey,
             worker_pubkey,
@@ -292,7 +293,7 @@ impl ValidatorMetadataV1 {
     }
 }
 
-/// Rust version of the Move sui::validator::Validator type
+/// Rust version of the Move iota::validator::Validator type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct ValidatorV1 {
     metadata: ValidatorMetadataV1,
@@ -319,11 +320,11 @@ impl ValidatorV1 {
         })
     }
 
-    pub fn into_sui_validator_summary(self) -> SuiValidatorSummary {
+    pub fn into_iota_validator_summary(self) -> IotaValidatorSummary {
         let Self {
             metadata:
                 ValidatorMetadataV1 {
-                    sui_address,
+                    iota_address,
                     protocol_pubkey_bytes,
                     network_pubkey_bytes,
                     worker_pubkey_bytes,
@@ -355,7 +356,7 @@ impl ValidatorV1 {
                     id: staking_pool_id,
                     activation_epoch: staking_pool_activation_epoch,
                     deactivation_epoch: staking_pool_deactivation_epoch,
-                    sui_balance: staking_pool_sui_balance,
+                    iota_balance: staking_pool_iota_balance,
                     rewards_pool,
                     pool_token_balance,
                     exchange_rates:
@@ -364,7 +365,7 @@ impl ValidatorV1 {
                             size: exchange_rates_size,
                         },
                     pending_stake,
-                    pending_total_sui_withdraw,
+                    pending_total_iota_withdraw,
                     pending_pool_token_withdraw,
                     extra_fields: _,
                 },
@@ -374,8 +375,8 @@ impl ValidatorV1 {
             next_epoch_commission_rate,
             extra_fields: _,
         } = self;
-        SuiValidatorSummary {
-            sui_address,
+        IotaValidatorSummary {
+            iota_address,
             protocol_pubkey_bytes,
             network_pubkey_bytes,
             worker_pubkey_bytes,
@@ -402,13 +403,13 @@ impl ValidatorV1 {
             staking_pool_id,
             staking_pool_activation_epoch,
             staking_pool_deactivation_epoch,
-            staking_pool_sui_balance,
+            staking_pool_iota_balance,
             rewards_pool: rewards_pool.value(),
             pool_token_balance,
             exchange_rates_id,
             exchange_rates_size,
             pending_stake,
-            pending_total_sui_withdraw,
+            pending_total_iota_withdraw,
             pending_pool_token_withdraw,
             commission_rate,
             next_epoch_stake,
@@ -418,23 +419,23 @@ impl ValidatorV1 {
     }
 }
 
-/// Rust version of the Move sui_system::staking_pool::StakingPool type
+/// Rust version of the Move iota_system::staking_pool::StakingPool type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StakingPoolV1 {
     pub id: ObjectID,
     pub activation_epoch: Option<u64>,
     pub deactivation_epoch: Option<u64>,
-    pub sui_balance: u64,
+    pub iota_balance: u64,
     pub rewards_pool: Balance,
     pub pool_token_balance: u64,
     pub exchange_rates: Table,
     pub pending_stake: u64,
-    pub pending_total_sui_withdraw: u64,
+    pub pending_total_iota_withdraw: u64,
     pub pending_pool_token_withdraw: u64,
     pub extra_fields: Bag,
 }
 
-/// Rust version of the Move sui_system::validator_set::ValidatorSet type
+/// Rust version of the Move iota_system::validator_set::ValidatorSet type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct ValidatorSetV1 {
     pub total_stake: u64,
@@ -444,20 +445,20 @@ pub struct ValidatorSetV1 {
     pub staking_pool_mappings: Table,
     pub inactive_validators: Table,
     pub validator_candidates: Table,
-    pub at_risk_validators: VecMap<SuiAddress, u64>,
+    pub at_risk_validators: VecMap<IotaAddress, u64>,
     pub extra_fields: Bag,
 }
 
-/// Rust version of the Move sui_system::storage_fund::StorageFund type
+/// Rust version of the Move iota_system::storage_fund::StorageFund type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StorageFundV1 {
     pub total_object_storage_rebates: Balance,
     pub non_refundable_balance: Balance,
 }
 
-/// Rust version of the Move sui_system::sui_system::SuiSystemStateInner type
+/// Rust version of the Move iota_system::iota_system::IotaSystemStateInner type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct SuiSystemStateInnerV1 {
+pub struct IotaSystemStateInnerV1 {
     pub epoch: u64,
     pub protocol_version: u64,
     pub system_state_version: u64,
@@ -465,7 +466,7 @@ pub struct SuiSystemStateInnerV1 {
     pub storage_fund: StorageFundV1,
     pub parameters: SystemParametersV1,
     pub reference_gas_price: u64,
-    pub validator_report_records: VecMap<SuiAddress, VecSet<SuiAddress>>,
+    pub validator_report_records: VecMap<IotaAddress, VecSet<IotaAddress>>,
     pub stake_subsidy: StakeSubsidyV1,
     pub safe_mode: bool,
     pub safe_mode_storage_rewards: Balance,
@@ -479,7 +480,7 @@ pub struct SuiSystemStateInnerV1 {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StakeSubsidyV1 {
-    /// Balance of SUI set aside for stake subsidies that will be drawn down over time.
+    /// Balance of IOTA set aside for stake subsidies that will be drawn down over time.
     pub balance: Balance,
 
     /// Count of the number of times stake subsidies have been distributed.
@@ -499,7 +500,7 @@ pub struct StakeSubsidyV1 {
     pub extra_fields: Bag,
 }
 
-impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
+impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
     fn epoch(&self) -> u64 {
         self.epoch
     }
@@ -548,7 +549,7 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
             .iter()
             .map(|validator| {
                 let verified_metadata = validator.verified_metadata();
-                let name = verified_metadata.sui_pubkey_bytes();
+                let name = verified_metadata.iota_pubkey_bytes();
                 (
                     name,
                     (
@@ -567,14 +568,14 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
     fn get_pending_active_validators<S: ObjectStore + ?Sized>(
         &self,
         object_store: &S,
-    ) -> Result<Vec<SuiValidatorSummary>, SuiError> {
+    ) -> Result<Vec<IotaValidatorSummary>, IotaError> {
         let table_id = self.validators.pending_active_validators.contents.id;
         let table_size = self.validators.pending_active_validators.contents.size;
         let validators: Vec<ValidatorV1> =
             get_validators_from_table_vec(object_store, table_id, table_size)?;
         Ok(validators
             .into_iter()
-            .map(|v| v.into_sui_validator_summary())
+            .map(|v| v.into_iota_validator_summary())
             .collect())
     }
 
@@ -592,11 +593,11 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
                 .map(|validator| {
                     let metadata = validator.verified_metadata();
                     EpochStartValidatorInfoV1 {
-                        sui_address: metadata.sui_address,
+                        iota_address: metadata.iota_address,
                         protocol_pubkey: metadata.protocol_pubkey.clone(),
                         narwhal_network_pubkey: metadata.network_pubkey.clone(),
                         narwhal_worker_pubkey: metadata.worker_pubkey.clone(),
-                        sui_net_address: metadata.net_address.clone(),
+                        iota_net_address: metadata.net_address.clone(),
                         p2p_address: metadata.p2p_address.clone(),
                         narwhal_primary_address: metadata.primary_address.clone(),
                         narwhal_worker_address: metadata.worker_address.clone(),
@@ -608,9 +609,9 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
         )
     }
 
-    fn into_sui_system_state_summary(self) -> SuiSystemStateSummary {
-        // If you are making any changes to SuiSystemStateV1 or any of its dependent types before
-        // mainnet, please also update SuiSystemStateSummary and its corresponding TS type.
+    fn into_iota_system_state_summary(self) -> IotaSystemStateSummary {
+        // If you are making any changes to IotaSystemStateV1 or any of its dependent types before
+        // mainnet, please also update IotaSystemStateSummary and its corresponding TS type.
         // Post-mainnet, we will need to introduce a new version.
         let Self {
             epoch,
@@ -684,7 +685,7 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
             epoch_start_timestamp_ms,
             extra_fields: _,
         } = self;
-        SuiSystemStateSummary {
+        IotaSystemStateSummary {
             epoch,
             protocol_version,
             system_state_version,
@@ -707,7 +708,7 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
             total_stake,
             active_validators: active_validators
                 .into_iter()
-                .map(|v| v.into_sui_validator_summary())
+                .map(|v| v.into_iota_validator_summary())
                 .collect(),
             pending_active_validators_id,
             pending_active_validators_size,
@@ -737,9 +738,9 @@ impl SuiSystemStateTrait for SuiSystemStateInnerV1 {
     }
 }
 
-/// Rust version of the Move sui_system::validator_cap::UnverifiedValidatorOperationCap type
+/// Rust version of the Move iota_system::validator_cap::UnverifiedValidatorOperationCap type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct UnverifiedValidatorOperationCapV1 {
     pub id: ObjectID,
-    pub authorizer_validator_address: SuiAddress,
+    pub authorizer_validator_address: IotaAddress,
 }

@@ -2,7 +2,7 @@
 CREATE TABLE tx_senders (
     cp_sequence_number          BIGINT       NOT NULL,
     tx_sequence_number          BIGINT       NOT NULL,
-    -- SuiAddress in bytes.
+    -- IotaAddress in bytes.
     sender                      BLOB         NOT NULL,
     PRIMARY KEY(sender(32), tx_sequence_number, cp_sequence_number)
 );
@@ -12,7 +12,7 @@ CREATE INDEX tx_senders_tx_sequence_number_index ON tx_senders (tx_sequence_numb
 CREATE TABLE tx_recipients (
     cp_sequence_number          BIGINT       NOT NULL,
     tx_sequence_number          BIGINT       NOT NULL,
-    -- SuiAddress in bytes.
+    -- IotaAddress in bytes.
     recipient                   BLOB         NOT NULL,
     PRIMARY KEY(recipient(32), tx_sequence_number)
 );

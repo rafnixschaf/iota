@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 // chkpt 1 | chkpt 2 | chkpt 3 | chkpt 4 | chkpt 5 | snapshot [0, 4)
@@ -11,7 +12,7 @@
 
 //# publish --sender A
 module P0::fake {
-    use sui::coin;
+    use iota::coin;
 
     public struct FAKE has drop {}
 
@@ -41,7 +42,7 @@ module P0::fake {
 //# create-checkpoint
 
 //# programmable --sender A --inputs object(1,5) 100000 object(1,1)
-//> 0: sui::coin::mint<P0::fake::FAKE>(Input(0), Input(1));
+//> 0: iota::coin::mint<P0::fake::FAKE>(Input(0), Input(1));
 //> MergeCoins(Input(2), [Result(0)]);
 
 //# create-checkpoint

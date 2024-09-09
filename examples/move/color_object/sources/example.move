@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module color_object::example {
@@ -52,7 +53,7 @@ module color_object::example {
     }
 
     // === Tests ===
-    #[test_only] use sui::test_scenario as ts;
+    #[test_only] use iota::test_scenario as ts;
 
     // === Tests covered in Chapter 1 ===
 

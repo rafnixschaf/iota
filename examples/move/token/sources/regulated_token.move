@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// This example demonstrates how to use Closed Loop to create a regulated coin
@@ -25,11 +26,11 @@
 ///
 /// - KYC in this example is represented by an allowlist rule
 module examples::regulated_token {
-    use sui::vec_map;
-    use sui::coin::{Self, TreasuryCap};
-    use sui::tx_context::{sender};
+    use iota::vec_map;
+    use iota::coin::{Self, TreasuryCap};
+    use iota::tx_context::{sender};
 
-    use sui::token::{Self, TokenPolicy, TokenPolicyCap};
+    use iota::token::{Self, TokenPolicy, TokenPolicyCap};
 
     // import rules and use them for this app
     use examples::allowlist_rule::Allowlist;
@@ -113,10 +114,10 @@ module examples::regulated_token {
 /// We don't test the currency itself but rather use the same set of regulations
 /// on a test currency.
 module examples::regulated_token_tests {
-    use sui::coin;
+    use iota::coin;
 
-    use sui::token::{Self, TokenPolicy, TokenPolicyCap};
-    use sui::token_test_utils::{Self as test, TEST};
+    use iota::token::{Self, TokenPolicy, TokenPolicyCap};
+    use iota::token_test_utils::{Self as test, TEST};
 
     use examples::regulated_token::set_rules;
 

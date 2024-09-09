@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use enum_dispatch::enum_dispatch;
 use std::collections::{BTreeMap, HashMap};
 
-use crate::base_types::{AuthorityName, EpochId, SuiAddress};
+use crate::base_types::{AuthorityName, EpochId, IotaAddress};
 use crate::committee::{Committee, CommitteeWithNetworkMetadata, NetworkMetadata, StakeUnit};
 use crate::multiaddr::Multiaddr;
 use anemo::types::{PeerAffinity, PeerInfo};
@@ -15,7 +16,7 @@ use consensus_config::{
 };
 use narwhal_config::{Committee as NarwhalCommittee, CommitteeBuilder, WorkerCache, WorkerIndex};
 use serde::{Deserialize, Serialize};
-use sui_protocol_config::ProtocolVersion;
+use iota_protocol_config::ProtocolVersion;
 use tracing::{error, warn};
 
 #[enum_dispatch]
@@ -26,9 +27,9 @@ pub trait EpochStartSystemStateTrait {
     fn safe_mode(&self) -> bool;
     fn epoch_start_timestamp_ms(&self) -> u64;
     fn epoch_duration_ms(&self) -> u64;
-    fn get_validator_addresses(&self) -> Vec<SuiAddress>;
-    fn get_sui_committee(&self) -> Committee;
-    fn get_sui_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata;
+    fn get_validator_addresses(&self) -> Vec<IotaAddress>;
+    fn get_iota_committee(&self) -> Committee;
+    fn get_iota_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata;
     fn get_narwhal_committee(&self) -> NarwhalCommittee;
     fn get_mysticeti_committee(&self) -> ConsensusCommittee;
     fn get_validator_as_p2p_peers(&self, excluding_self: AuthorityName) -> Vec<PeerInfo>;
@@ -37,9 +38,9 @@ pub trait EpochStartSystemStateTrait {
     fn get_narwhal_worker_cache(&self, transactions_address: &Multiaddr) -> WorkerCache;
 }
 
-/// This type captures the minimum amount of information from SuiSystemState needed by a validator
-/// to run the protocol. This allows us to decouple from the actual SuiSystemState type, and hence
-/// do not need to evolve it when we upgrade the SuiSystemState type.
+/// This type captures the minimum amount of information from IotaSystemState needed by a validator
+/// to run the protocol. This allows us to decouple from the actual IotaSystemState type, and hence
+/// do not need to evolve it when we upgrade the IotaSystemState type.
 /// Evolving EpochStartSystemState is also a lot easier in that we could add optional fields
 /// and fill them with None for older versions. When we absolutely must delete fields, we could
 /// also add new db tables to store the new version. This is OK because we only store one copy of
@@ -145,14 +146,14 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
         self.epoch_duration_ms
     }
 
-    fn get_validator_addresses(&self) -> Vec<SuiAddress> {
+    fn get_validator_addresses(&self) -> Vec<IotaAddress> {
         self.active_validators
             .iter()
-            .map(|validator| validator.sui_address)
+            .map(|validator| validator.iota_address)
             .collect()
     }
 
-    fn get_sui_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata {
+    fn get_iota_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata {
         let validators = self
             .active_validators
             .iter()
@@ -162,7 +163,7 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
                     (
                         validator.voting_power,
                         NetworkMetadata {
-                            network_address: validator.sui_net_address.clone(),
+                            network_address: validator.iota_net_address.clone(),
                             narwhal_primary_address: validator.narwhal_primary_address.clone(),
                         },
                     ),
@@ -173,7 +174,7 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
         CommitteeWithNetworkMetadata::new(self.epoch, validators)
     }
 
-    fn get_sui_committee(&self) -> Committee {
+    fn get_iota_committee(&self) -> Committee {
         let voting_rights = self
             .active_validators
             .iter()
@@ -213,18 +214,18 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
         }
 
         // Sort the authorities by their protocol (public) key in ascending order, same as the order
-        // in the Sui committee returned from get_sui_committee().
+        // in the Iota committee returned from get_iota_committee().
         authorities.sort_by(|a1, a2| a1.authority_key.cmp(&a2.authority_key));
 
-        for ((i, mysticeti_authority), sui_authority_name) in authorities
+        for ((i, mysticeti_authority), iota_authority_name) in authorities
             .iter()
             .enumerate()
-            .zip(self.get_sui_committee().names())
+            .zip(self.get_iota_committee().names())
         {
-            if sui_authority_name.0 != mysticeti_authority.authority_key.to_bytes() {
+            if iota_authority_name.0 != mysticeti_authority.authority_key.to_bytes() {
                 error!(
-                    "Mismatched authority order between Sui and Mysticeti! Index {}, Mysticeti authority {:?}\nSui authority name {}",
-                    i, mysticeti_authority, sui_authority_name
+                    "Mismatched authority order between Iota and Mysticeti! Index {}, Mysticeti authority {:?}\nIota authority name {}",
+                    i, mysticeti_authority, iota_authority_name
                 );
             }
         }
@@ -312,11 +313,11 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct EpochStartValidatorInfoV1 {
-    pub sui_address: SuiAddress,
+    pub iota_address: IotaAddress,
     pub protocol_pubkey: narwhal_crypto::PublicKey,
     pub narwhal_network_pubkey: narwhal_crypto::NetworkPublicKey,
     pub narwhal_worker_pubkey: narwhal_crypto::NetworkPublicKey,
-    pub sui_net_address: Multiaddr,
+    pub iota_net_address: Multiaddr,
     pub p2p_address: Multiaddr,
     pub narwhal_primary_address: Multiaddr,
     pub narwhal_worker_address: Multiaddr,
@@ -332,33 +333,33 @@ impl EpochStartValidatorInfoV1 {
 
 #[cfg(test)]
 mod test {
-    use crate::base_types::SuiAddress;
+    use crate::base_types::IotaAddress;
     use crate::committee::CommitteeTrait;
     use crate::crypto::{get_key_pair, AuthorityKeyPair};
-    use crate::sui_system_state::epoch_start_sui_system_state::{
+    use crate::iota_system_state::epoch_start_iota_system_state::{
         EpochStartSystemStateTrait, EpochStartSystemStateV1, EpochStartValidatorInfoV1,
     };
     use fastcrypto::traits::KeyPair;
-    use mysten_network::Multiaddr;
+    use iota_network_stack::Multiaddr;
     use narwhal_crypto::NetworkKeyPair;
     use rand::thread_rng;
-    use sui_protocol_config::ProtocolVersion;
+    use iota_protocol_config::ProtocolVersion;
 
     #[test]
-    fn test_sui_and_mysticeti_committee_are_same() {
+    fn test_iota_and_mysticeti_committee_are_same() {
         // GIVEN
         let mut active_validators = vec![];
 
         for i in 0..10 {
-            let (sui_address, protocol_key): (SuiAddress, AuthorityKeyPair) = get_key_pair();
+            let (iota_address, protocol_key): (IotaAddress, AuthorityKeyPair) = get_key_pair();
             let narwhal_network_key = NetworkKeyPair::generate(&mut thread_rng());
 
             active_validators.push(EpochStartValidatorInfoV1 {
-                sui_address,
+                iota_address,
                 protocol_pubkey: protocol_key.public().clone(),
                 narwhal_network_pubkey: narwhal_network_key.public().clone(),
                 narwhal_worker_pubkey: narwhal_network_key.public().clone(),
-                sui_net_address: Multiaddr::empty(),
+                iota_net_address: Multiaddr::empty(),
                 p2p_address: Multiaddr::empty(),
                 narwhal_primary_address: Multiaddr::empty(),
                 narwhal_worker_address: Multiaddr::empty(),
@@ -378,37 +379,37 @@ mod test {
         };
 
         // WHEN
-        let sui_committee = state.get_sui_committee();
+        let iota_committee = state.get_iota_committee();
         let mysticeti_committee = state.get_mysticeti_committee();
 
         // THEN
         // assert the validators details
-        assert_eq!(sui_committee.num_members(), 10);
-        assert_eq!(sui_committee.num_members(), mysticeti_committee.size());
+        assert_eq!(iota_committee.num_members(), 10);
+        assert_eq!(iota_committee.num_members(), mysticeti_committee.size());
         assert_eq!(
-            sui_committee.validity_threshold(),
+            iota_committee.validity_threshold(),
             mysticeti_committee.validity_threshold()
         );
         assert_eq!(
-            sui_committee.quorum_threshold(),
+            iota_committee.quorum_threshold(),
             mysticeti_committee.quorum_threshold()
         );
         assert_eq!(state.epoch, mysticeti_committee.epoch());
 
         for (authority_index, mysticeti_authority) in mysticeti_committee.authorities() {
-            let sui_authority_name = sui_committee
+            let iota_authority_name = iota_committee
                 .authority_by_index(authority_index.value() as u32)
                 .unwrap();
 
             assert_eq!(
                 mysticeti_authority.authority_key.to_bytes(),
-                sui_authority_name.0,
-                "Mysten & SUI committee member of same index correspond to different public key"
+                iota_authority_name.0,
+                "IOTA Foundation & IOTA committee member of same index correspond to different public key"
             );
             assert_eq!(
                 mysticeti_authority.stake,
-                sui_committee.weight(sui_authority_name),
-                "Mysten & SUI committee member stake differs"
+                iota_committee.weight(iota_authority_name),
+                "IOTA Foundation & IOTA committee member stake differs"
             );
         }
     }

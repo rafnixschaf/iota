@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -25,18 +26,18 @@ use move_core_types::{
 };
 use move_package::BuildConfig;
 use std::{collections::BTreeMap, path::Path};
-use sui_json::{is_receiving_argument, primitive_type};
-use sui_json_rpc_types::{SuiObjectData, SuiObjectDataOptions, SuiRawData};
-use sui_move::manage_package::resolve_lock_file_path;
-use sui_sdk::apis::ReadApi;
-use sui_types::{
+use iota_json::{is_receiving_argument, primitive_type};
+use iota_json_rpc_types::{IotaObjectData, IotaObjectDataOptions, IotaRawData};
+use iota_move::manage_package::resolve_lock_file_path;
+use iota_sdk::apis::ReadApi;
+use iota_types::{
     base_types::{is_primitive_type_tag, ObjectID, TxContext, TxContextKind},
     move_package::MovePackage,
     object::Owner,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     resolve_address,
     transaction::{self as Tx, ObjectArg},
-    Identifier, TypeTag, SUI_FRAMEWORK_PACKAGE_ID,
+    Identifier, TypeTag, IOTA_FRAMEWORK_PACKAGE_ID,
 };
 
 use super::ast::{ModuleAccess as PTBModuleAccess, ParsedPTBCommand, Program};
@@ -380,7 +381,7 @@ impl<'a> PTBBuilder<'a> {
                     self.addresses.insert(ident, *addr);
                 }
             }
-            // If we encounter a dotted string e.g., "foo.0" or "sui.io" or something like that
+            // If we encounter a dotted string e.g., "foo.0" or "iota.io" or something like that
             // this see if we can find an address for it in the environment and bind to it.
             PTBArg::VariableAccess(ref head, ref fields) => {
                 let key = format!(
@@ -408,13 +409,13 @@ impl<'a> PTBBuilder<'a> {
     ) -> PTBResult<MovePackage> {
         let object = self
             .reader
-            .get_object_with_options(package_id, SuiObjectDataOptions::bcs_lossless())
+            .get_object_with_options(package_id, IotaObjectDataOptions::bcs_lossless())
             .await
             .map_err(|e| err!(loc, "{e}"))?
             .into_object()
             .map_err(|e| err!(loc, "{e}"))?;
 
-        let Some(SuiRawData::Package(package)) = object.bcs else {
+        let Some(IotaRawData::Package(package)) = object.bcs else {
             error!(
                 loc,
                 "BCS field in object '{}' is missing or not a package.", package_id
@@ -755,13 +756,13 @@ impl<'a> PTBBuilder<'a> {
         }
     }
 
-    /// Fetch the `SuiObjectData` for an object ID -- this is used for object resolution.
-    async fn get_object(&self, object_id: ObjectID, obj_loc: Span) -> PTBResult<SuiObjectData> {
+    /// Fetch the `IotaObjectData` for an object ID -- this is used for object resolution.
+    async fn get_object(&self, object_id: ObjectID, obj_loc: Span) -> PTBResult<IotaObjectData> {
         let res = self
             .reader
             .get_object_with_options(
                 object_id,
-                SuiObjectDataOptions::new().with_type().with_owner(),
+                IotaObjectDataOptions::new().with_type().with_owner(),
             )
             .await
             .map_err(|e| err!(obj_loc, "{e}"))?
@@ -933,7 +934,7 @@ impl<'a> PTBBuilder<'a> {
                 let build_config = resolve_lock_file_path(build_config.clone(), Some(package_path))
                     .map_err(|e| err!(pkg_loc, "{e}"))?;
                 let previous_id = if let Some(ref chain_id) = chain_id {
-                    sui_package_management::set_package_id(
+                    iota_package_management::set_package_id(
                         package_path,
                         build_config.install_dir.clone(),
                         chain_id,
@@ -953,7 +954,7 @@ impl<'a> PTBBuilder<'a> {
                 .await;
                 // Restore original ID, then check result.
                 if let (Some(chain_id), Some(previous_id)) = (chain_id, previous_id) {
-                    let _ = sui_package_management::set_package_id(
+                    let _ = iota_package_management::set_package_id(
                         package_path,
                         build_config.install_dir.clone(),
                         &chain_id,
@@ -1000,7 +1001,7 @@ impl<'a> PTBBuilder<'a> {
                 let build_config = resolve_lock_file_path(build_config.clone(), Some(package_path))
                     .map_err(|e| err!(path_loc, "{e}"))?;
                 let previous_id = if let Some(ref chain_id) = chain_id {
-                    sui_package_management::set_package_id(
+                    iota_package_management::set_package_id(
                         package_path,
                         build_config.install_dir.clone(),
                         chain_id,
@@ -1022,7 +1023,7 @@ impl<'a> PTBBuilder<'a> {
                 .await;
                 // Restore original ID, then check result.
                 if let (Some(chain_id), Some(previous_id)) = (chain_id, previous_id) {
-                    let _ = sui_package_management::set_package_id(
+                    let _ = iota_package_management::set_package_id(
                         package_path,
                         build_config.install_dir.clone(),
                         &chain_id,
@@ -1044,7 +1045,7 @@ impl<'a> PTBBuilder<'a> {
                 let upgrade_ticket =
                     self.ptb
                         .command(Tx::Command::MoveCall(Box::new(Tx::ProgrammableMoveCall {
-                            package: SUI_FRAMEWORK_PACKAGE_ID,
+                            package: IOTA_FRAMEWORK_PACKAGE_ID,
                             module: ident_str!("package").to_owned(),
                             function: ident_str!("authorize_upgrade").to_owned(),
                             type_arguments: vec![],
@@ -1059,7 +1060,7 @@ impl<'a> PTBBuilder<'a> {
                 let res =
                     self.ptb
                         .command(Tx::Command::MoveCall(Box::new(Tx::ProgrammableMoveCall {
-                            package: SUI_FRAMEWORK_PACKAGE_ID,
+                            package: IOTA_FRAMEWORK_PACKAGE_ID,
                             module: ident_str!("package").to_owned(),
                             function: ident_str!("commit_upgrade").to_owned(),
                             type_arguments: vec![],

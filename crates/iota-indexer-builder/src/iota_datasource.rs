@@ -1,37 +1,38 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::indexer_builder::{DataSender, Datasource};
 use anyhow::Error;
 use async_trait::async_trait;
-use mysten_metrics::{metered_channel, spawn_monitored_task};
+use iota_metrics::{metered_channel, spawn_monitored_task};
 use std::path::PathBuf;
-use sui_data_ingestion_core::{
+use iota_data_ingestion_core::{
     DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, Worker, WorkerPool,
 };
-use sui_types::base_types::TransactionDigest;
-use sui_types::full_checkpoint_content::CheckpointData as SuiCheckpointData;
-use sui_types::full_checkpoint_content::CheckpointTransaction;
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::base_types::TransactionDigest;
+use iota_types::full_checkpoint_content::CheckpointData as IotaCheckpointData;
+use iota_types::full_checkpoint_content::CheckpointTransaction;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use tokio::sync::oneshot;
 use tokio::sync::oneshot::Sender;
 use tokio::task::JoinHandle;
 use tracing::info;
 
-pub struct SuiCheckpointDatasource {
+pub struct IotaCheckpointDatasource {
     remote_store_url: String,
     concurrency: usize,
     checkpoint_path: PathBuf,
     metrics: DataIngestionMetrics,
 }
-impl SuiCheckpointDatasource {
+impl IotaCheckpointDatasource {
     pub fn new(
         remote_store_url: String,
         concurrency: usize,
         checkpoint_path: PathBuf,
         metrics: DataIngestionMetrics,
     ) -> Self {
-        SuiCheckpointDatasource {
+        IotaCheckpointDatasource {
             remote_store_url,
             concurrency,
             checkpoint_path,
@@ -41,7 +42,7 @@ impl SuiCheckpointDatasource {
 }
 
 #[async_trait]
-impl Datasource<CheckpointTxnData> for SuiCheckpointDatasource {
+impl Datasource<CheckpointTxnData> for IotaCheckpointDatasource {
     async fn start_data_retrieval(
         &self,
         starting_checkpoint: u64,
@@ -123,7 +124,7 @@ pub type CheckpointTxnData = (CheckpointTransaction, u64, u64);
 
 #[async_trait]
 impl Worker for IndexerWorker<CheckpointTxnData> {
-    async fn process_checkpoint(&self, checkpoint: SuiCheckpointData) -> anyhow::Result<()> {
+    async fn process_checkpoint(&self, checkpoint: IotaCheckpointData) -> anyhow::Result<()> {
         info!(
             "Received checkpoint [{}] {}: {}",
             checkpoint.checkpoint_summary.epoch,

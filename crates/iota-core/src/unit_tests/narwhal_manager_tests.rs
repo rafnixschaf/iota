@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::authority::test_authority_builder::TestAuthorityBuilder;
@@ -7,23 +8,23 @@ use crate::checkpoints::{CheckpointMetrics, CheckpointService, CheckpointService
 use crate::consensus_handler::ConsensusHandlerInitializer;
 use crate::consensus_manager::narwhal_manager::{NarwhalConfiguration, NarwhalManager};
 use crate::consensus_manager::{ConsensusManagerMetrics, ConsensusManagerTrait};
-use crate::consensus_validator::{SuiTxValidator, SuiTxValidatorMetrics};
+use crate::consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics};
 use crate::state_accumulator::StateAccumulator;
 use bytes::Bytes;
 use fastcrypto::bls12381;
 use fastcrypto::traits::KeyPair;
-use mysten_metrics::RegistryService;
+use iota_metrics::RegistryService;
 use narwhal_config::{Epoch, WorkerCache};
 use narwhal_types::{TransactionProto, TransactionsClient};
 use prometheus::Registry;
 use std::sync::Arc;
 use std::time::Duration;
-use sui_swarm_config::network_config_builder::ConfigBuilder;
-use sui_types::messages_checkpoint::{
+use iota_swarm_config::network_config_builder::ConfigBuilder;
+use iota_types::messages_checkpoint::{
     CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
 };
-use sui_types::sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait;
-use sui_types::sui_system_state::SuiSystemStateTrait;
+use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
+use iota_types::iota_system_state::IotaSystemStateTrait;
 use tokio::sync::{broadcast, mpsc};
 use tokio::time::{interval, sleep};
 
@@ -37,7 +38,7 @@ async fn send_transactions(
         .worker(name, /* id */ &0)
         .expect("Our key or worker id is not in the worker cache")
         .transactions;
-    let config = mysten_network::config::Config::new();
+    let config = iota_network_stack::config::Config::new();
     let channel = config.connect_lazy(&target).unwrap();
     let mut client = TransactionsClient::new(channel);
     // Make a transaction to submit forever.
@@ -111,8 +112,8 @@ async fn test_narwhal_manager() {
             .await;
 
         let system_state = state
-            .get_sui_system_state_object_for_testing()
-            .expect("Reading Sui system state object cannot fail")
+            .get_iota_system_state_object_for_testing()
+            .expect("Reading Iota system state object cannot fail")
             .into_epoch_start_state();
 
         let transactions_addr = &config.consensus_config.as_ref().unwrap().address;
@@ -144,11 +145,11 @@ async fn test_narwhal_manager() {
                 config,
                 epoch_store.clone(),
                 consensus_handler_initializer,
-                SuiTxValidator::new(
+                IotaTxValidator::new(
                     epoch_store.clone(),
                     Arc::new(CheckpointServiceNoop {}),
                     state.transaction_manager().clone(),
-                    SuiTxValidatorMetrics::new(&Registry::new()),
+                    IotaTxValidatorMetrics::new(&Registry::new()),
                 ),
             )
             .await;
@@ -200,8 +201,8 @@ async fn test_narwhal_manager() {
             .is_empty());
 
         let system_state = state
-            .get_sui_system_state_object_for_testing()
-            .expect("Reading Sui system state object cannot fail")
+            .get_iota_system_state_object_for_testing()
+            .expect("Reading Iota system state object cannot fail")
             .into_epoch_start_state();
         let narwhal_committee = system_state.get_narwhal_committee();
         let worker_cache = system_state.get_narwhal_worker_cache(&transactions_addr);
@@ -219,11 +220,11 @@ async fn test_narwhal_manager() {
                 config,
                 epoch_store.clone(),
                 consensus_handler_initializer,
-                SuiTxValidator::new(
+                IotaTxValidator::new(
                     epoch_store.clone(),
                     Arc::new(CheckpointServiceNoop {}),
                     state.transaction_manager().clone(),
-                    SuiTxValidatorMetrics::new(&Registry::new()),
+                    IotaTxValidatorMetrics::new(&Registry::new()),
                 ),
             )
             .await;

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use fastcrypto::{hash::HashFunction, traits::ToFromBytes};
 use p256::pkcs8::DecodePublicKey;
@@ -17,20 +18,20 @@ use passkey_types::{
 };
 use shared_crypto::intent::{Intent, IntentMessage, INTENT_PREFIX_LENGTH};
 use std::net::SocketAddr;
-use sui_core::authority_client::AuthorityAPI;
-use sui_macros::sim_test;
-use sui_test_transaction_builder::TestTransactionBuilder;
-use sui_types::error::UserInputError;
-use sui_types::error::{SuiError, SuiResult};
-use sui_types::signature::GenericSignature;
-use sui_types::transaction::Transaction;
-use sui_types::{
-    base_types::SuiAddress,
+use iota_core::authority_client::AuthorityAPI;
+use iota_macros::sim_test;
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::error::UserInputError;
+use iota_types::error::{IotaError, IotaResult};
+use iota_types::signature::GenericSignature;
+use iota_types::transaction::Transaction;
+use iota_types::{
+    base_types::IotaAddress,
     crypto::{PublicKey, SignatureScheme},
     passkey_authenticator::{to_signing_message, PasskeyAuthenticator},
     transaction::TransactionData,
 };
-use sui_types::{
+use iota_types::{
     crypto::{DefaultHash, Signature},
     passkey_authenticator::to_signing_digest,
 };
@@ -67,7 +68,7 @@ pub struct PasskeyResponse<T> {
 }
 
 /// Submits a transaction to the test cluster and returns the result.
-async fn execute_tx(tx: Transaction, test_cluster: &TestCluster) -> SuiResult {
+async fn execute_tx(tx: Transaction, test_cluster: &TestCluster) -> IotaResult {
     test_cluster
         .authority_aggregator()
         .authority_clients
@@ -84,7 +85,7 @@ async fn execute_tx(tx: Transaction, test_cluster: &TestCluster) -> SuiResult {
 /// transaction, then get a response from the passkey from signing.
 async fn create_credential_and_sign_test_tx(
     test_cluster: &TestCluster,
-    sender: Option<SuiAddress>,
+    sender: Option<IotaAddress>,
     change_intent: bool,
     change_tx: bool,
 ) -> PasskeyResponse<TransactionData> {
@@ -94,7 +95,7 @@ async fn create_credential_and_sign_test_tx(
     let store: Option<Passkey> = None;
     let my_authenticator = Authenticator::new(my_aaguid, store, user_validation_method);
     let mut my_client = Client::new(my_authenticator);
-    let origin = Url::parse("https://www.sui.io").unwrap();
+    let origin = Url::parse("https://www.iota.io").unwrap();
 
     // Create credential.
     let challenge_bytes_from_rp: Bytes = random_vec(32).into();
@@ -143,19 +144,19 @@ async fn create_credential_and_sign_test_tx(
     pk_bytes.extend_from_slice(x.unwrap());
     let pk = PublicKey::try_from_bytes(SignatureScheme::PasskeyAuthenticator, &pk_bytes).unwrap();
 
-    // Compute sui address as sender, fund gas and make a test transaction.
+    // Compute iota address as sender, fund gas and make a test transaction.
     let sender = match sender {
         Some(s) => s,
-        None => SuiAddress::from(&pk),
+        None => IotaAddress::from(&pk),
     };
     let rgp = test_cluster.get_reference_gas_price().await;
     let gas = test_cluster
         .fund_address_and_return_gas(rgp, Some(20000000000), sender)
         .await;
     let tx_data = TestTransactionBuilder::new(sender, gas, rgp)
-        .transfer_sui(None, SuiAddress::ZERO)
+        .transfer_iota(None, IotaAddress::ZERO)
         .build();
-    let intent_msg = IntentMessage::new(Intent::sui_transaction(), tx_data);
+    let intent_msg = IntentMessage::new(Intent::iota_transaction(), tx_data);
 
     // Compute the challenge = blake2b_hash(intent_msg(tx)) for passkey credential request.
     // If change_intent, mangle the intent bytes. If change_tx, mangle the hashed tx bytes.
@@ -227,7 +228,7 @@ fn make_good_passkey_tx(response: PasskeyResponse<TransactionData>) -> Transacti
 
 #[sim_test]
 async fn test_passkey_feature_deny() {
-    use sui_protocol_config::ProtocolConfig;
+    use iota_protocol_config::ProtocolConfig;
     let _guard = ProtocolConfig::apply_overrides_for_testing(|_, mut config| {
         config.set_passkey_auth_for_testing(false);
         config
@@ -238,7 +239,7 @@ async fn test_passkey_feature_deny() {
     let err = execute_tx(tx, &test_cluster).await.unwrap_err();
     assert!(matches!(
         err,
-        SuiError::UserInputError {
+        IotaError::UserInputError {
             error: UserInputError::Unsupported(..)
         }
     ));
@@ -272,7 +273,7 @@ async fn test_passkey_fails_mismatched_challenge() {
     let err = res.unwrap_err();
     assert_eq!(
         err,
-        SuiError::InvalidSignature {
+        IotaError::InvalidSignature {
             error: "Invalid challenge".to_string()
         }
     );
@@ -292,7 +293,7 @@ async fn test_passkey_fails_mismatched_challenge() {
     let err = res.unwrap_err();
     assert_eq!(
         err,
-        SuiError::InvalidSignature {
+        IotaError::InvalidSignature {
             error: "Invalid challenge".to_string()
         }
     );
@@ -321,7 +322,7 @@ async fn test_passkey_fails_to_verify_sig() {
     let err = res.unwrap_err();
     assert_eq!(
         err,
-        SuiError::InvalidSignature {
+        IotaError::InvalidSignature {
             error: "Fails to verify".to_string()
         }
     );
@@ -332,7 +333,7 @@ async fn test_passkey_fails_wrong_author() {
     let test_cluster = TestClusterBuilder::new().build().await;
     // Modify sender that receives gas and construct test txn.
     let response =
-        create_credential_and_sign_test_tx(&test_cluster, Some(SuiAddress::ZERO), false, false)
+        create_credential_and_sign_test_tx(&test_cluster, Some(IotaAddress::ZERO), false, false)
             .await;
     let sig = GenericSignature::PasskeyAuthenticator(
         PasskeyAuthenticator::new_for_testing(
@@ -345,5 +346,5 @@ async fn test_passkey_fails_wrong_author() {
     let tx = Transaction::from_generic_sig_data(response.intent_msg.value, vec![sig]);
     let res = execute_tx(tx, &test_cluster).await;
     let err = res.unwrap_err();
-    assert!(matches!(err, SuiError::SignerSignatureAbsent { .. }));
+    assert!(matches!(err, IotaError::SignerSignatureAbsent { .. }));
 }

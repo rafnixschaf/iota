@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -16,9 +17,9 @@ use consensus_config::{AuthorityIndex, NetworkKeyPair, NetworkPublicKey};
 use futures::{stream, Stream, StreamExt as _};
 use hyper_util::rt::tokio::TokioIo;
 use hyper_util::service::TowerToHyperService;
-use mysten_common::sync::notify_once::NotifyOnce;
-use mysten_metrics::monitored_future;
-use mysten_network::{
+use iota_common::sync::notify_once::NotifyOnce;
+use iota_metrics::monitored_future;
+use iota_network_stack::{
     callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler},
     multiaddr::Protocol,
     Multiaddr,
@@ -323,7 +324,7 @@ impl NetworkClient for TonicClient {
 }
 
 // Tonic channel wrapped with layers.
-type Channel = mysten_network::callback::Callback<
+type Channel = iota_network_stack::callback::Callback<
     tower_http::trace::Trace<
         tonic::transport::Channel,
         tower_http::classify::SharedClassifier<tower_http::classify::GrpcErrorsAsFailures>,
@@ -844,7 +845,7 @@ impl<S: NetworkService> NetworkManager<S> for TonicManager {
                                 return Err(ConsensusError::NetworkServerConnection(msg));
                             }
                             trace!("Received {} certificates", certs.len());
-                            sui_tls::public_key_from_certificate(&certs[0]).map_err(|e| {
+                            iota_tls::public_key_from_certificate(&certs[0]).map_err(|e| {
                                 trace!("Failed to extract public key from certificate: {e:?}");
                                 ConsensusError::NetworkServerConnection(format!(
                                     "Failed to extract public key from certificate: {e:?}"

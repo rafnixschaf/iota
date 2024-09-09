@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
@@ -12,11 +13,11 @@ use tokio_util::sync::CancellationToken;
 use tracing::info;
 
 use async_trait::async_trait;
-use mysten_metrics::spawn_monitored_task;
-use sui_data_ingestion_core::{
+use iota_metrics::spawn_monitored_task;
+use iota_data_ingestion_core::{
     DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, WorkerPool,
 };
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 
 use crate::build_json_rpc_server;
 use crate::errors::IndexerError;
@@ -70,7 +71,7 @@ impl Indexer {
         cancel: CancellationToken,
     ) -> Result<(), IndexerError> {
         info!(
-            "Sui Indexer Writer (version {:?}) started...",
+            "Iota Indexer Writer (version {:?}) started...",
             env!("CARGO_PKG_VERSION")
         );
 
@@ -180,7 +181,7 @@ impl Indexer {
         db_url: String,
     ) -> Result<(), IndexerError> {
         info!(
-            "Sui Indexer Reader (version {:?}) started...",
+            "Iota Indexer Reader (version {:?}) started...",
             env!("CARGO_PKG_VERSION")
         );
         let indexer_reader = IndexerReader::<T>::new(db_url)?;

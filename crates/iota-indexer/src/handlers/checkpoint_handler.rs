@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, HashMap};
@@ -14,25 +15,25 @@ use tracing::{info, warn};
 
 use move_core_types::annotated_value::{MoveStructLayout, MoveTypeLayout};
 use move_core_types::language_storage::{StructTag, TypeTag};
-use mysten_metrics::{get_metrics, spawn_monitored_task};
-use sui_data_ingestion_core::Worker;
-use sui_json_rpc_types::SuiMoveValue;
-use sui_package_resolver::{PackageStore, PackageStoreWithLruCache, Resolver};
-use sui_rest_api::{CheckpointData, CheckpointTransaction};
-use sui_types::base_types::ObjectID;
-use sui_types::dynamic_field::DynamicFieldInfo;
-use sui_types::dynamic_field::DynamicFieldName;
-use sui_types::dynamic_field::DynamicFieldType;
-use sui_types::effects::TransactionEffectsAPI;
-use sui_types::event::SystemEpochInfoEvent;
-use sui_types::messages_checkpoint::{
+use iota_metrics::{get_metrics, spawn_monitored_task};
+use iota_data_ingestion_core::Worker;
+use iota_json_rpc_types::IotaMoveValue;
+use iota_package_resolver::{PackageStore, PackageStoreWithLruCache, Resolver};
+use iota_rest_api::{CheckpointData, CheckpointTransaction};
+use iota_types::base_types::ObjectID;
+use iota_types::dynamic_field::DynamicFieldInfo;
+use iota_types::dynamic_field::DynamicFieldName;
+use iota_types::dynamic_field::DynamicFieldType;
+use iota_types::effects::TransactionEffectsAPI;
+use iota_types::event::SystemEpochInfoEvent;
+use iota_types::messages_checkpoint::{
     CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
 };
-use sui_types::object::Object;
-use sui_types::object::Owner;
-use sui_types::sui_system_state::sui_system_state_summary::SuiSystemStateSummary;
-use sui_types::sui_system_state::{get_sui_system_state, SuiSystemStateTrait};
-use sui_types::transaction::TransactionDataAPI;
+use iota_types::object::Object;
+use iota_types::object::Owner;
+use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
+use iota_types::iota_system_state::{get_iota_system_state, IotaSystemStateTrait};
+use iota_types::transaction::TransactionDataAPI;
 
 use crate::db::ConnectionPool;
 use crate::errors::IndexerError;
@@ -71,7 +72,7 @@ where
         .unwrap();
     let global_metrics = get_metrics().unwrap();
     let (indexed_checkpoint_sender, indexed_checkpoint_receiver) =
-        mysten_metrics::metered_channel::channel(
+        iota_metrics::metered_channel::channel(
             checkpoint_queue_size,
             &global_metrics
                 .channel_inflight
@@ -100,7 +101,7 @@ where
 pub struct CheckpointHandler<S, T: R2D2Connection + 'static> {
     state: S,
     metrics: IndexerMetrics,
-    indexed_checkpoint_sender: mysten_metrics::metered_channel::Sender<CheckpointDataToCommit>,
+    indexed_checkpoint_sender: iota_metrics::metered_channel::Sender<CheckpointDataToCommit>,
     // buffers for packages that are being indexed but not committed to DB,
     // they will be periodically GCed to avoid OOM.
     package_buffer: Arc<Mutex<IndexingPackageBuffer>>,
@@ -163,7 +164,7 @@ where
     fn new(
         state: S,
         metrics: IndexerMetrics,
-        indexed_checkpoint_sender: mysten_metrics::metered_channel::Sender<CheckpointDataToCommit>,
+        indexed_checkpoint_sender: iota_metrics::metered_channel::Sender<CheckpointDataToCommit>,
         package_tx: watch::Receiver<Option<CheckpointSequenceNumber>>,
     ) -> Self {
         let package_buffer = IndexingPackageBuffer::start(package_tx);
@@ -200,8 +201,8 @@ where
         // Genesis epoch
         if *checkpoint_summary.sequence_number() == 0 {
             info!("Processing genesis epoch");
-            let system_state: SuiSystemStateSummary =
-                get_sui_system_state(&checkpoint_object_store)?.into_sui_system_state_summary();
+            let system_state: IotaSystemStateSummary =
+                get_iota_system_state(&checkpoint_object_store)?.into_iota_system_state_summary();
             return Ok(Some(EpochToCommit {
                 last_epoch: None,
                 new_epoch: IndexedEpochInfo::from_new_system_state_summary(
@@ -218,8 +219,8 @@ where
             return Ok(None);
         }
 
-        let system_state: SuiSystemStateSummary =
-            get_sui_system_state(&checkpoint_object_store)?.into_sui_system_state_summary();
+        let system_state: IotaSystemStateSummary =
+            get_iota_system_state(&checkpoint_object_store)?.into_iota_system_state_summary();
 
         let epoch_event = transactions
             .iter()
@@ -306,7 +307,7 @@ where
 
             let successful_tx_num: u64 = db_transactions.iter().map(|t| t.successful_tx_num).sum();
             (
-                IndexedCheckpoint::from_sui_checkpoint(
+                IndexedCheckpoint::from_iota_checkpoint(
                     &checkpoint_summary,
                     &checkpoint_contents,
                     successful_tx_num as usize,
@@ -636,7 +637,7 @@ where
                     .iter()
                     .flat_map(|tx| &tx.output_objects)
                     .filter_map(|o| {
-                        if let sui_types::object::Data::Package(p) = &o.data {
+                        if let iota_types::object::Data::Package(p) = &o.data {
                             Some(IndexedPackage {
                                 package_id: o.id(),
                                 move_package: p.clone(),
@@ -662,7 +663,7 @@ where
                     .iter()
                     .flat_map(|tx| &tx.output_objects)
                     .filter_map(|o| {
-                        if let sui_types::object::Data::Package(p) = &o.data {
+                        if let iota_types::object::Data::Package(p) = &o.data {
                             let indexed_pkg = IndexedPackage {
                                 package_id: o.id(),
                                 move_package: p.clone(),
@@ -781,7 +782,7 @@ fn try_create_dynamic_field_info(
     })?;
     let name = DynamicFieldName {
         type_: name_type,
-        value: SuiMoveValue::from(name_value).to_json_value(),
+        value: IotaMoveValue::from(name_value).to_json_value(),
     };
     Ok(Some(match type_ {
         DynamicFieldType::DynamicObject => {

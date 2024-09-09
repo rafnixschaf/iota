@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 mod acceptor;
 mod certgen;
 mod verifier;
 
-pub const SUI_VALIDATOR_SERVER_NAME: &str = "sui";
+pub const IOTA_VALIDATOR_SERVER_NAME: &str = "iota";
 
 pub use acceptor::{TlsAcceptor, TlsConnectionInfo};
 pub use certgen::SelfSignedCertificate;
@@ -32,11 +33,11 @@ mod tests {
         let allowed = Ed25519KeyPair::generate(&mut rng);
         let disallowed = Ed25519KeyPair::generate(&mut rng);
         let random_cert_bob =
-            SelfSignedCertificate::new(allowed.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
         let random_cert_alice =
-            SelfSignedCertificate::new(disallowed.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(disallowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
-        let verifier = ClientCertVerifier::new(AllowAll, SUI_VALIDATOR_SERVER_NAME.to_string());
+        let verifier = ClientCertVerifier::new(AllowAll, IOTA_VALIDATOR_SERVER_NAME.to_string());
 
         // The bob passes validation
         verifier
@@ -60,12 +61,12 @@ mod tests {
         let disallowed = Ed25519KeyPair::generate(&mut rng);
         let allowed_public_key = allowed.public().to_owned();
         let random_cert_bob =
-            SelfSignedCertificate::new(allowed.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
         let random_cert_alice =
-            SelfSignedCertificate::new(disallowed.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(disallowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
         let verifier =
-            ServerCertVerifier::new(allowed_public_key, SUI_VALIDATOR_SERVER_NAME.to_string());
+            ServerCertVerifier::new(allowed_public_key, IOTA_VALIDATOR_SERVER_NAME.to_string());
 
         // The bob passes validation
         verifier
@@ -101,14 +102,14 @@ mod tests {
         let disallowed = Ed25519KeyPair::generate(&mut rng);
 
         let allowed_public_key = allowed.public().to_owned();
-        let allowed_cert = SelfSignedCertificate::new(allowed.private(), SUI_VALIDATOR_SERVER_NAME);
+        let allowed_cert = SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
         let disallowed_cert =
-            SelfSignedCertificate::new(disallowed.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(disallowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
         let mut allowlist = HashSetAllow::new();
         let verifier =
-            ClientCertVerifier::new(allowlist.clone(), SUI_VALIDATOR_SERVER_NAME.to_string());
+            ClientCertVerifier::new(allowlist.clone(), IOTA_VALIDATOR_SERVER_NAME.to_string());
 
         // Add our public key to the allower
         allowlist
@@ -147,11 +148,11 @@ mod tests {
         let mut rng = rand::thread_rng();
         let keypair = Ed25519KeyPair::generate(&mut rng);
         let public_key = keypair.public().to_owned();
-        let cert = SelfSignedCertificate::new(keypair.private(), "not-sui");
+        let cert = SelfSignedCertificate::new(keypair.private(), "not-iota");
 
         let mut allowlist = HashSetAllow::new();
         let client_verifier =
-            ClientCertVerifier::new(allowlist.clone(), SUI_VALIDATOR_SERVER_NAME.to_string());
+            ClientCertVerifier::new(allowlist.clone(), IOTA_VALIDATOR_SERVER_NAME.to_string());
 
         // Add our public key to the allower
         allowlist
@@ -160,7 +161,7 @@ mod tests {
             .unwrap()
             .insert(public_key.clone());
 
-        // Allowed public key but the server-name in the cert is not the required "sui"
+        // Allowed public key but the server-name in the cert is not the required "iota"
         let err = client_verifier
             .verify_client_cert(&cert.rustls_certificate(), &[], UnixTime::now())
             .unwrap_err();
@@ -171,9 +172,9 @@ mod tests {
         );
 
         let server_verifier =
-            ServerCertVerifier::new(public_key, SUI_VALIDATOR_SERVER_NAME.to_string());
+            ServerCertVerifier::new(public_key, IOTA_VALIDATOR_SERVER_NAME.to_string());
 
-        // Allowed public key but the server-name in the cert is not the required "sui"
+        // Allowed public key but the server-name in the cert is not the required "iota"
         let err = server_verifier
             .verify_server_cert(
                 &cert.rustls_certificate(),
@@ -199,7 +200,7 @@ mod tests {
         let client_keypair = Ed25519KeyPair::generate(&mut rng);
         let client_public_key = client_keypair.public().to_owned();
         let client_certificate =
-            SelfSignedCertificate::new(client_keypair.private(), SUI_VALIDATOR_SERVER_NAME);
+            SelfSignedCertificate::new(client_keypair.private(), IOTA_VALIDATOR_SERVER_NAME);
         let server_keypair = Ed25519KeyPair::generate(&mut rng);
         let server_certificate = SelfSignedCertificate::new(server_keypair.private(), "localhost");
 
@@ -212,7 +213,7 @@ mod tests {
 
         let mut allowlist = HashSetAllow::new();
         let tls_config =
-            ClientCertVerifier::new(allowlist.clone(), SUI_VALIDATOR_SERVER_NAME.to_string())
+            ClientCertVerifier::new(allowlist.clone(), IOTA_VALIDATOR_SERVER_NAME.to_string())
                 .rustls_server_config(
                     vec![server_certificate.rustls_certificate()],
                     server_certificate.rustls_private_key(),

@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::models::SuiProgressStore;
+use crate::models::IotaProgressStore;
 use crate::models::TokenTransfer as DBTokenTransfer;
-use crate::schema::sui_progress_store::txn_digest;
-use crate::schema::{sui_error_transactions, token_transfer_data};
+use crate::schema::iota_progress_store::txn_digest;
+use crate::schema::{iota_error_transactions, token_transfer_data};
 use crate::{schema, schema::token_transfer, ProcessedTxnData};
 use diesel::result::Error;
 use diesel::BoolExpressionMethods;
@@ -13,11 +14,11 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
     Connection, ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper,
 };
-use sui_types::digests::TransactionDigest;
+use iota_types::digests::TransactionDigest;
 
 pub(crate) type PgPool = Pool<ConnectionManager<PgConnection>>;
 
-const SUI_PROGRESS_STORE_DUMMY_KEY: i32 = 1;
+const IOTA_PROGRESS_STORE_DUMMY_KEY: i32 = 1;
 
 pub fn get_connection_pool(database_url: String) -> PgPool {
     let manager = ConnectionManager::<PgConnection>::new(database_url);
@@ -58,7 +59,7 @@ pub fn write(pool: &PgPool, token_txns: Vec<ProcessedTxnData>) -> Result<(), any
             .values(&transfers)
             .on_conflict_do_nothing()
             .execute(conn)?;
-        diesel::insert_into(sui_error_transactions::table)
+        diesel::insert_into(iota_error_transactions::table)
             .values(&errors)
             .on_conflict_do_nothing()
             .execute(conn)
@@ -66,27 +67,27 @@ pub fn write(pool: &PgPool, token_txns: Vec<ProcessedTxnData>) -> Result<(), any
     Ok(())
 }
 
-pub fn update_sui_progress_store(
+pub fn update_iota_progress_store(
     pool: &PgPool,
     tx_digest: TransactionDigest,
 ) -> Result<(), anyhow::Error> {
     let mut conn = pool.get()?;
-    diesel::insert_into(schema::sui_progress_store::table)
-        .values(&SuiProgressStore {
-            id: SUI_PROGRESS_STORE_DUMMY_KEY,
+    diesel::insert_into(schema::iota_progress_store::table)
+        .values(&IotaProgressStore {
+            id: IOTA_PROGRESS_STORE_DUMMY_KEY,
             txn_digest: tx_digest.inner().to_vec(),
         })
-        .on_conflict(schema::sui_progress_store::dsl::id)
+        .on_conflict(schema::iota_progress_store::dsl::id)
         .do_update()
         .set(txn_digest.eq(tx_digest.inner().to_vec()))
         .execute(&mut conn)?;
     Ok(())
 }
 
-pub fn read_sui_progress_store(pool: &PgPool) -> anyhow::Result<Option<TransactionDigest>> {
+pub fn read_iota_progress_store(pool: &PgPool) -> anyhow::Result<Option<TransactionDigest>> {
     let mut conn = pool.get()?;
-    let val: Option<SuiProgressStore> = crate::schema::sui_progress_store::dsl::sui_progress_store
-        .select(SuiProgressStore::as_select())
+    let val: Option<IotaProgressStore> = crate::schema::iota_progress_store::dsl::iota_progress_store
+        .select(IotaProgressStore::as_select())
         .first(&mut conn)
         .optional()?;
     match val {

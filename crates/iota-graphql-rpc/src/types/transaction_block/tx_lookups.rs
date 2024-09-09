@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Cursor, TransactionBlockFilter};
@@ -9,14 +10,14 @@ use crate::{
     types::{
         cursor::{End, Page},
         digest::Digest,
-        sui_address::SuiAddress,
+        iota_address::IotaAddress,
         transaction_block::TransactionBlockKindInput,
         type_filter::{FqNameFilter, ModuleFilter},
     },
 };
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use std::fmt::Write;
-use sui_indexer::schema::checkpoints;
+use iota_indexer::schema::checkpoints;
 
 /// Bounds on transaction sequence number, imposed by filters, cursors, and the scan limit. The
 /// outermost bounds are determined by the checkpoint filters. These get translated into bounds in
@@ -305,7 +306,7 @@ pub(crate) fn subqueries(filter: &TransactionBlockFilter, tx_bounds: TxBounds) -
     Some(subquery)
 }
 
-fn select_tx(sender: Option<SuiAddress>, bound: TxBounds, from: &str) -> RawQuery {
+fn select_tx(sender: Option<IotaAddress>, bound: TxBounds, from: &str) -> RawQuery {
     let mut query = filter!(
         query!(format!("SELECT tx_sequence_number FROM {from}")),
         format!(
@@ -325,7 +326,7 @@ fn select_tx(sender: Option<SuiAddress>, bound: TxBounds, from: &str) -> RawQuer
     query
 }
 
-fn select_pkg(pkg: &SuiAddress, sender: Option<SuiAddress>, bound: TxBounds) -> RawQuery {
+fn select_pkg(pkg: &IotaAddress, sender: Option<IotaAddress>, bound: TxBounds) -> RawQuery {
     filter!(
         select_tx(sender, bound, "tx_calls_pkg"),
         format!("package = {}", bytea_literal(pkg.as_slice()))
@@ -333,9 +334,9 @@ fn select_pkg(pkg: &SuiAddress, sender: Option<SuiAddress>, bound: TxBounds) -> 
 }
 
 fn select_mod(
-    pkg: &SuiAddress,
+    pkg: &IotaAddress,
     mod_: String,
-    sender: Option<SuiAddress>,
+    sender: Option<IotaAddress>,
     bound: TxBounds,
 ) -> RawQuery {
     filter!(
@@ -349,10 +350,10 @@ fn select_mod(
 }
 
 fn select_fun(
-    pkg: &SuiAddress,
+    pkg: &IotaAddress,
     mod_: String,
     fun: String,
-    sender: Option<SuiAddress>,
+    sender: Option<IotaAddress>,
     bound: TxBounds,
 ) -> RawQuery {
     filter!(
@@ -374,7 +375,7 @@ fn select_fun(
 /// called.
 fn select_kind(
     kind: TransactionBlockKindInput,
-    sender: Option<SuiAddress>,
+    sender: Option<IotaAddress>,
     bound: TxBounds,
 ) -> RawQuery {
     match (kind, sender) {
@@ -389,25 +390,25 @@ fn select_kind(
     }
 }
 
-fn select_sender(sender: &SuiAddress, bound: TxBounds) -> RawQuery {
+fn select_sender(sender: &IotaAddress, bound: TxBounds) -> RawQuery {
     select_tx(Some(*sender), bound, "tx_senders")
 }
 
-fn select_recipient(recv: &SuiAddress, sender: Option<SuiAddress>, bound: TxBounds) -> RawQuery {
+fn select_recipient(recv: &IotaAddress, sender: Option<IotaAddress>, bound: TxBounds) -> RawQuery {
     filter!(
         select_tx(sender, bound, "tx_recipients"),
         format!("recipient = {}", bytea_literal(recv.as_slice()))
     )
 }
 
-fn select_input(input: &SuiAddress, sender: Option<SuiAddress>, bound: TxBounds) -> RawQuery {
+fn select_input(input: &IotaAddress, sender: Option<IotaAddress>, bound: TxBounds) -> RawQuery {
     filter!(
         select_tx(sender, bound, "tx_input_objects"),
         format!("object_id = {}", bytea_literal(input.as_slice()))
     )
 }
 
-fn select_changed(changed: &SuiAddress, sender: Option<SuiAddress>, bound: TxBounds) -> RawQuery {
+fn select_changed(changed: &IotaAddress, sender: Option<IotaAddress>, bound: TxBounds) -> RawQuery {
     filter!(
         select_tx(sender, bound, "tx_changed_objects"),
         format!("object_id = {}", bytea_literal(changed.as_slice()))

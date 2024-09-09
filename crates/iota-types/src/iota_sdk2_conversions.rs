@@ -1,7 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Module for conversions between sui-core types and sui-sdk types
+//! Module for conversions between iota-core types and iota-sdk types
 //!
 //! For now this module makes heavy use of the `bcs_convert_impl` macro to implement the `From` trait
 //! for converting between core and external sdk types, relying on the fact that the BCS format of
@@ -9,7 +10,7 @@
 //! directly to avoid going through the BCS machinery.
 
 use fastcrypto::traits::ToFromBytes;
-use sui_sdk2::types::*;
+use iota_sdk2::types::*;
 
 macro_rules! bcs_convert_impl {
     ($core:ty, $external:ty) => {
@@ -115,13 +116,13 @@ impl From<Owner> for crate::object::Owner {
     }
 }
 
-impl From<crate::base_types::SuiAddress> for Address {
-    fn from(value: crate::base_types::SuiAddress) -> Self {
+impl From<crate::base_types::IotaAddress> for Address {
+    fn from(value: crate::base_types::IotaAddress) -> Self {
         Self::new(value.to_inner())
     }
 }
 
-impl From<Address> for crate::base_types::SuiAddress {
+impl From<Address> for crate::base_types::IotaAddress {
     fn from(value: Address) -> Self {
         crate::base_types::ObjectID::new(value.into_inner()).into()
     }
@@ -139,13 +140,13 @@ impl From<ObjectId> for crate::base_types::ObjectID {
     }
 }
 
-impl From<crate::base_types::SuiAddress> for ObjectId {
-    fn from(value: crate::base_types::SuiAddress) -> Self {
+impl From<crate::base_types::IotaAddress> for ObjectId {
+    fn from(value: crate::base_types::IotaAddress) -> Self {
         Self::new(value.to_inner())
     }
 }
 
-impl From<ObjectId> for crate::base_types::SuiAddress {
+impl From<ObjectId> for crate::base_types::IotaAddress {
     fn from(value: ObjectId) -> Self {
         crate::base_types::ObjectID::new(value.into_inner()).into()
     }

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod sdk;
@@ -7,14 +8,14 @@ use sdk::Result;
 pub use reqwest;
 
 use crate::transactions::ExecuteTransactionQueryParameters;
-use sui_types::base_types::{ObjectID, SequenceNumber, SuiAddress};
-use sui_types::crypto::AuthorityStrongQuorumSignInfo;
-use sui_types::effects::{TransactionEffects, TransactionEvents};
-use sui_types::full_checkpoint_content::CheckpointData;
-use sui_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointSequenceNumber};
-use sui_types::object::Object;
-use sui_types::transaction::Transaction;
-use sui_types::TypeTag;
+use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
+use iota_types::crypto::AuthorityStrongQuorumSignInfo;
+use iota_types::effects::{TransactionEffects, TransactionEvents};
+use iota_types::full_checkpoint_content::CheckpointData;
+use iota_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointSequenceNumber};
+use iota_types::object::Object;
+use iota_types::transaction::Transaction;
+use iota_types::TypeTag;
 
 use self::sdk::Response;
 
@@ -96,8 +97,8 @@ impl Client {
     ) -> Result<TransactionExecutionResponse> {
         #[derive(serde::Serialize)]
         struct SignedTransaction<'a> {
-            transaction: &'a sui_types::transaction::TransactionData,
-            signatures: &'a [sui_types::signature::GenericSignature],
+            transaction: &'a iota_types::transaction::TransactionData,
+            signatures: &'a [iota_types::signature::GenericSignature],
         }
 
         let url = self.inner.url().join("transactions")?;
@@ -145,7 +146,7 @@ pub enum EffectsFinality {
 #[derive(PartialEq, Eq, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BalanceChange {
     /// Owner of the balance change
-    pub address: SuiAddress,
+    pub address: IotaAddress,
     /// Type of the Coin
     pub coin_type: TypeTag,
     /// The amount indicate the balance value changes,

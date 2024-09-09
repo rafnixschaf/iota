@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
@@ -6,13 +7,13 @@ use std::sync::Arc;
 use consensus_core::{TransactionVerifier, ValidationError};
 use eyre::WrapErr;
 use fastcrypto_tbls::dkg;
-use mysten_metrics::monitored_scope;
+use iota_metrics::monitored_scope;
 use narwhal_types::{validate_batch_version, BatchAPI};
 use narwhal_worker::TransactionValidator;
 use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
-use sui_protocol_config::ProtocolConfig;
-use sui_types::{
-    error::SuiError,
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    error::IotaError,
     messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
 };
 use tap::TapFallible;
@@ -25,22 +26,22 @@ use crate::{
 
 /// Allows verifying the validity of transactions
 #[derive(Clone)]
-pub struct SuiTxValidator {
+pub struct IotaTxValidator {
     epoch_store: Arc<AuthorityPerEpochStore>,
     checkpoint_service: Arc<dyn CheckpointServiceNotify + Send + Sync>,
     _transaction_manager: Arc<TransactionManager>,
-    metrics: Arc<SuiTxValidatorMetrics>,
+    metrics: Arc<IotaTxValidatorMetrics>,
 }
 
-impl SuiTxValidator {
+impl IotaTxValidator {
     pub fn new(
         epoch_store: Arc<AuthorityPerEpochStore>,
         checkpoint_service: Arc<dyn CheckpointServiceNotify + Send + Sync>,
         transaction_manager: Arc<TransactionManager>,
-        metrics: Arc<SuiTxValidatorMetrics>,
+        metrics: Arc<IotaTxValidatorMetrics>,
     ) -> Self {
         info!(
-            "SuiTxValidator constructed for epoch {}",
+            "IotaTxValidator constructed for epoch {}",
             epoch_store.epoch()
         );
         Self {
@@ -76,13 +77,13 @@ impl SuiTxValidator {
                 ConsensusTransactionKind::RandomnessDkgMessage(_, bytes) => {
                     if bytes.len() > dkg::DKG_MESSAGES_MAX_SIZE {
                         warn!("batch verification error: DKG Message too large");
-                        return Err(SuiError::InvalidDkgMessageSize.into());
+                        return Err(IotaError::InvalidDkgMessageSize.into());
                     }
                 }
                 ConsensusTransactionKind::RandomnessDkgConfirmation(_, bytes) => {
                     if bytes.len() > dkg::DKG_MESSAGES_MAX_SIZE {
                         warn!("batch verification error: DKG Confirmation too large");
-                        return Err(SuiError::InvalidDkgMessageSize.into());
+                        return Err(IotaError::InvalidDkgMessageSize.into());
                     }
                 }
 
@@ -135,11 +136,11 @@ fn tx_from_bytes(tx: &[u8]) -> Result<ConsensusTransaction, eyre::Report> {
         .wrap_err("Malformed transaction (failed to deserialize)")
 }
 
-impl TransactionValidator for SuiTxValidator {
+impl TransactionValidator for IotaTxValidator {
     type Error = eyre::Report;
 
     fn validate(&self, _tx: &[u8]) -> Result<(), Self::Error> {
-        // We only accept transactions from local sui instance so no need to re-verify it
+        // We only accept transactions from local iota instance so no need to re-verify it
         Ok(())
     }
 
@@ -164,7 +165,7 @@ impl TransactionValidator for SuiTxValidator {
     }
 }
 
-impl TransactionVerifier for SuiTxValidator {
+impl TransactionVerifier for IotaTxValidator {
     fn verify_batch(
         &self,
         _protocol_config: &ProtocolConfig,
@@ -186,12 +187,12 @@ impl TransactionVerifier for SuiTxValidator {
     }
 }
 
-pub struct SuiTxValidatorMetrics {
+pub struct IotaTxValidatorMetrics {
     certificate_signatures_verified: IntCounter,
     checkpoint_signatures_verified: IntCounter,
 }
 
-impl SuiTxValidatorMetrics {
+impl IotaTxValidatorMetrics {
     pub fn new(registry: &Registry) -> Arc<Self> {
         Arc::new(Self {
             certificate_signatures_verified: register_int_counter_with_registry!(
@@ -217,9 +218,9 @@ mod tests {
     use narwhal_test_utils::latest_protocol_version;
     use narwhal_types::{Batch, BatchV1};
     use narwhal_worker::TransactionValidator;
-    use sui_macros::sim_test;
-    use sui_types::{
-        crypto::Ed25519SuiSignature, messages_consensus::ConsensusTransaction, object::Object,
+    use iota_macros::sim_test;
+    use iota_types::{
+        crypto::Ed25519IotaSignature, messages_consensus::ConsensusTransaction, object::Object,
         signature::GenericSignature,
     };
 
@@ -227,7 +228,7 @@ mod tests {
         authority::test_authority_builder::TestAuthorityBuilder,
         checkpoints::CheckpointServiceNoop,
         consensus_adapter::consensus_tests::{test_certificates, test_gas_objects},
-        consensus_validator::{SuiTxValidator, SuiTxValidatorMetrics},
+        consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics},
     };
 
     #[sim_test]
@@ -241,7 +242,7 @@ mod tests {
         let latest_protocol_config = &latest_protocol_version();
 
         let network_config =
-            sui_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
+            iota_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
                 .with_objects(objects.clone())
                 .build();
 
@@ -258,8 +259,8 @@ mod tests {
         )
         .unwrap();
 
-        let metrics = SuiTxValidatorMetrics::new(&Default::default());
-        let validator = SuiTxValidator::new(
+        let metrics = IotaTxValidatorMetrics::new(&Default::default());
+        let validator = IotaTxValidator::new(
             state.epoch_store_for_testing().clone(),
             Arc::new(CheckpointServiceNoop {}),
             state.transaction_manager().clone(),
@@ -285,8 +286,8 @@ mod tests {
             .map(|mut cert| {
                 // set it to an all-zero user signature
                 cert.tx_signatures_mut_for_testing()[0] =
-                    GenericSignature::Signature(sui_types::crypto::Signature::Ed25519SuiSignature(
-                        Ed25519SuiSignature::default(),
+                    GenericSignature::Signature(iota_types::crypto::Signature::Ed25519IotaSignature(
+                        Ed25519IotaSignature::default(),
                     ));
                 bcs::to_bytes(&ConsensusTransaction::new_certificate_message(&name1, cert)).unwrap()
             })

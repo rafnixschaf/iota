@@ -10,7 +10,7 @@ import "../contracts/BridgeCommittee.sol";
 import "../contracts/BridgeVault.sol";
 import "../contracts/BridgeConfig.sol";
 import "../contracts/BridgeLimiter.sol";
-import "../contracts/SuiBridge.sol";
+import "../contracts/IotaBridge.sol";
 import "../test/mocks/MockTokens.sol";
 
 contract DeployBridge is Script {
@@ -50,7 +50,7 @@ contract DeployBridge is Script {
             // update deployConfig with mock addresses
             deployConfig.supportedTokens = new address[](5);
             // In BridgeConfig.sol `supportedTokens is shifted by one
-            // and the first token is SUI.
+            // and the first token is IOTA.
             deployConfig.supportedTokens[0] = address(0);
             deployConfig.supportedTokens[1] = address(wBTC);
             deployConfig.supportedTokens[2] = deployConfig.WETH;
@@ -67,7 +67,7 @@ contract DeployBridge is Script {
         }
 
         // deploy bridge config
-        // price of Sui (id = 0) should not be included in tokenPrices
+        // price of Iota (id = 0) should not be included in tokenPrices
         require(
             deployConfig.supportedTokens.length == deployConfig.tokenPrices.length,
             "supportedTokens.length + 1 != tokenPrices.length"
@@ -148,23 +148,23 @@ contract DeployBridge is Script {
         uint8[] memory _destinationChains = new uint8[](1);
         _destinationChains[0] = 1;
 
-        // deploy Sui Bridge ========================================================================
+        // deploy Iota Bridge ========================================================================
 
-        address suiBridge = Upgrades.deployUUPSProxy(
-            "SuiBridge.sol",
-            abi.encodeCall(SuiBridge.initialize, (bridgeCommittee, address(vault), limiter)),
+        address iotaBridge = Upgrades.deployUUPSProxy(
+            "IotaBridge.sol",
+            abi.encodeCall(IotaBridge.initialize, (bridgeCommittee, address(vault), limiter)),
             opts
         );
 
         // transfer vault ownership to bridge
-        vault.transferOwnership(suiBridge);
+        vault.transferOwnership(iotaBridge);
         // transfer limiter ownership to bridge
         BridgeLimiter instance = BridgeLimiter(limiter);
-        instance.transferOwnership(suiBridge);
+        instance.transferOwnership(iotaBridge);
 
         // print deployed addresses for post deployment setup
         console.log("[Deployed] BridgeConfig:", bridgeConfig);
-        console.log("[Deployed] SuiBridge:", suiBridge);
+        console.log("[Deployed] IotaBridge:", iotaBridge);
         console.log("[Deployed] BridgeLimiter:", limiter);
         console.log("[Deployed] BridgeCommittee:", bridgeCommittee);
         console.log("[Deployed] BridgeVault:", address(vault));

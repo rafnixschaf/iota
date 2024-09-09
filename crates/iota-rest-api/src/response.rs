@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use axum::{
@@ -10,9 +11,9 @@ use axum::{
 use crate::{
     content_type::ContentType,
     types::{
-        X_SUI_CHAIN, X_SUI_CHAIN_ID, X_SUI_CHECKPOINT_HEIGHT, X_SUI_EPOCH,
-        X_SUI_LOWEST_AVAILABLE_CHECKPOINT, X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS,
-        X_SUI_TIMESTAMP_MS,
+        X_IOTA_CHAIN, X_IOTA_CHAIN_ID, X_IOTA_CHECKPOINT_HEIGHT, X_IOTA_EPOCH,
+        X_IOTA_LOWEST_AVAILABLE_CHECKPOINT, X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS,
+        X_IOTA_TIMESTAMP_MS,
     },
     RestService, APPLICATION_BCS, TEXT_PLAIN_UTF_8,
 };
@@ -145,19 +146,19 @@ pub async fn append_info_headers(
     let mut headers = HeaderMap::new();
 
     headers.insert(
-        X_SUI_CHAIN_ID,
+        X_IOTA_CHAIN_ID,
         state.chain_id().to_string().try_into().unwrap(),
     );
     headers.insert(
-        X_SUI_CHAIN,
+        X_IOTA_CHAIN,
         state.chain_id().chain().as_str().try_into().unwrap(),
     );
     headers.insert(
-        X_SUI_EPOCH,
+        X_IOTA_EPOCH,
         latest_checkpoint.epoch().to_string().try_into().unwrap(),
     );
     headers.insert(
-        X_SUI_CHECKPOINT_HEIGHT,
+        X_IOTA_CHECKPOINT_HEIGHT,
         latest_checkpoint
             .sequence_number()
             .to_string()
@@ -165,7 +166,7 @@ pub async fn append_info_headers(
             .unwrap(),
     );
     headers.insert(
-        X_SUI_TIMESTAMP_MS,
+        X_IOTA_TIMESTAMP_MS,
         latest_checkpoint
             .timestamp_ms
             .to_string()
@@ -173,12 +174,12 @@ pub async fn append_info_headers(
             .unwrap(),
     );
     headers.insert(
-        X_SUI_LOWEST_AVAILABLE_CHECKPOINT,
+        X_IOTA_LOWEST_AVAILABLE_CHECKPOINT,
         lowest_available_checkpoint.to_string().try_into().unwrap(),
     );
 
     headers.insert(
-        X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS,
+        X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS,
         lowest_available_checkpoint_objects
             .to_string()
             .try_into()

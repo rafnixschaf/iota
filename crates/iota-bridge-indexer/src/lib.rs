@@ -1,35 +1,36 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::fmt::{Display, Formatter};
 
-use sui_types::base_types::{SuiAddress, TransactionDigest};
+use iota_types::base_types::{IotaAddress, TransactionDigest};
 
 use crate::models::TokenTransferData as DBTokenTransferData;
-use crate::models::{SuiErrorTransactions, TokenTransfer as DBTokenTransfer};
+use crate::models::{IotaErrorTransactions, TokenTransfer as DBTokenTransfer};
 
 pub mod config;
 pub mod metrics;
 pub mod models;
 pub mod postgres_manager;
 pub mod schema;
-pub mod sui_transaction_handler;
-pub mod sui_transaction_queries;
+pub mod iota_transaction_handler;
+pub mod iota_transaction_queries;
 pub mod types;
 
 pub mod eth_bridge_indexer;
-pub mod sui_bridge_indexer;
+pub mod iota_bridge_indexer;
 
 #[derive(Clone)]
 pub enum ProcessedTxnData {
     TokenTransfer(TokenTransfer),
-    Error(SuiTxnError),
+    Error(IotaTxnError),
 }
 
 #[derive(Clone)]
-pub struct SuiTxnError {
+pub struct IotaTxnError {
     tx_digest: TransactionDigest,
-    sender: SuiAddress,
+    sender: IotaAddress,
     timestamp_ms: u64,
     failure_status: String,
     cmd_idx: Option<u64>,
@@ -89,9 +90,9 @@ impl TokenTransfer {
     }
 }
 
-impl SuiTxnError {
-    fn to_db(&self) -> SuiErrorTransactions {
-        SuiErrorTransactions {
+impl IotaTxnError {
+    fn to_db(&self) -> IotaErrorTransactions {
+        IotaErrorTransactions {
             txn_digest: self.tx_digest.inner().to_vec(),
             sender_address: self.sender.to_vec(),
             timestamp_ms: self.timestamp_ms as i64,
@@ -121,7 +122,7 @@ impl Display for TokenTransferStatus {
 
 #[derive(Clone)]
 enum BridgeDataSource {
-    Sui,
+    Iota,
     Eth,
 }
 
@@ -129,7 +130,7 @@ impl Display for BridgeDataSource {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let str = match self {
             BridgeDataSource::Eth => "ETH",
-            BridgeDataSource::Sui => "SUI",
+            BridgeDataSource::Iota => "IOTA",
         };
         write!(f, "{str}")
     }

@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
-module sui::test_scenario_tests {
-    use sui::test_scenario;
+module iota::test_scenario_tests {
+    use iota::test_scenario;
 
     const EIdBytesMismatch: u64 = 0;
     const EValueMismatch: u64 = 1;
@@ -904,8 +905,8 @@ module sui::test_scenario_tests {
         let sender = @0x0;
         let mut scenario = test_scenario::begin(sender);
         let mut parent = scenario.new_object();
-        sui::dynamic_field::add(&mut parent, b"", 10);
-        let r = sui::dynamic_field::borrow<vector<u8>, u64>(&parent, b"");
+        iota::dynamic_field::add(&mut parent, b"", 10);
+        let r = iota::dynamic_field::borrow<vector<u8>, u64>(&parent, b"");
         scenario.end();
         assert!(*r == 10);
         parent.delete();
@@ -917,8 +918,8 @@ module sui::test_scenario_tests {
         let mut scenario = test_scenario::begin(sender);
         let mut parent = scenario.new_object();
         let id = scenario.new_object();
-        sui::dynamic_object_field::add(&mut parent, b"", Object { id, value: 10});
-        let obj = sui::dynamic_object_field::borrow<vector<u8>, Object>(&parent, b"");
+        iota::dynamic_object_field::add(&mut parent, b"", Object { id, value: 10});
+        let obj = iota::dynamic_object_field::borrow<vector<u8>, Object>(&parent, b"");
         scenario.end();
         assert!(obj.value == 10);
         parent.delete();
@@ -938,7 +939,7 @@ module sui::test_scenario_tests {
         let obj = scenario.take_from_sender<Object>();
         assert!(object::id(&obj) == id);
         assert!(!test_scenario::has_most_recent_for_address<Object>(sender));
-        sui::dynamic_object_field::add(&mut parent, b"", obj);
+        iota::dynamic_object_field::add(&mut parent, b"", obj);
         scenario.next_tx(sender);
         assert!(!test_scenario::has_most_recent_for_address<Object>(sender));
         scenario.end();
@@ -959,7 +960,7 @@ module sui::test_scenario_tests {
         let obj = scenario.take_shared<Object>();
         assert!(object::id(&obj) == id);
         // wraps the object
-        sui::dynamic_field::add(&mut parent, b"", obj);
+        iota::dynamic_field::add(&mut parent, b"", obj);
         scenario.next_tx(sender);
         abort 42
     }
@@ -978,7 +979,7 @@ module sui::test_scenario_tests {
         let obj = scenario.take_immutable<Object>();
         assert!(object::id(&obj) == id);
         // wraps the object
-        sui::dynamic_field::add(&mut parent, b"", obj);
+        iota::dynamic_field::add(&mut parent, b"", obj);
         scenario.next_tx(sender);
         abort 42
     }
@@ -996,7 +997,7 @@ module sui::test_scenario_tests {
         scenario.next_tx(sender);
         let obj = scenario.take_shared<Object>();
         assert!(object::id(&obj) == id);
-        sui::dynamic_object_field::add(&mut parent, b"", obj);
+        iota::dynamic_object_field::add(&mut parent, b"", obj);
         scenario.next_tx(sender);
         abort 42
     }
@@ -1014,7 +1015,7 @@ module sui::test_scenario_tests {
         scenario.next_tx(sender);
         let obj = scenario.take_immutable<Object>();
         assert!(object::id(&obj) == id);
-        sui::dynamic_object_field::add(&mut parent, b"", obj);
+        iota::dynamic_object_field::add(&mut parent, b"", obj);
         scenario.next_tx(sender);
         abort 42
     }
@@ -1023,8 +1024,8 @@ module sui::test_scenario_tests {
 
     #[test]
     fun test_events() {
-        use sui::event;
-        use sui::test_utils::assert_eq;
+        use iota::event;
+        use iota::test_utils::assert_eq;
 
         // calling test_scenario::end should dump events emitted during previous txes
         let sender = @0x0;

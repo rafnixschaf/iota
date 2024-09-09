@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
@@ -16,7 +17,7 @@ use crate::{
     },
     parser::ast::{Ability_, DatatypeName, FunctionName},
     shared::{program_info::TypingProgramInfo, CompilationEnv, Identifier},
-    sui_mode::*,
+    iota_mode::*,
     typing::{
         ast::{self as T, ModuleCall},
         core::{ability_not_satisfied_tips, error_format, error_format_, Subst},
@@ -28,9 +29,9 @@ use crate::{
 // Visitor
 //**************************************************************************************************
 
-pub struct SuiTypeChecks;
+pub struct IotaTypeChecks;
 
-impl TypingVisitorConstructor for SuiTypeChecks {
+impl TypingVisitorConstructor for IotaTypeChecks {
     type Context<'a> = Context<'a>;
     fn context<'a>(env: &'a mut CompilationEnv, program: &T::Program) -> Self::Context<'a> {
         Context::new(env, program.info.clone())
@@ -45,7 +46,7 @@ impl TypingVisitorConstructor for SuiTypeChecks {
 pub struct Context<'a> {
     env: &'a mut CompilationEnv,
     info: Arc<TypingProgramInfo>,
-    sui_transfer_ident: Option<ModuleIdent>,
+    iota_transfer_ident: Option<ModuleIdent>,
     current_module: Option<ModuleIdent>,
     otw_name: Option<Symbol>,
     one_time_witness: Option<Result<DatatypeName, ()>>,
@@ -54,15 +55,15 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     fn new(env: &'a mut CompilationEnv, info: Arc<TypingProgramInfo>) -> Self {
-        let sui_module_ident = info
+        let iota_module_ident = info
             .modules
             .key_cloned_iter()
-            .find(|(m, _)| m.value.is(SUI_ADDR_NAME, TRANSFER_MODULE_NAME))
+            .find(|(m, _)| m.value.is(IOTA_ADDR_NAME, TRANSFER_MODULE_NAME))
             .map(|(m, _)| m);
         Context {
             env,
             info,
-            sui_transfer_ident: sui_module_ident,
+            iota_transfer_ident: iota_module_ident,
             current_module: None,
             otw_name: None,
             one_time_witness: None,
@@ -108,8 +109,8 @@ impl<'a> TypingVisitorContext for Context<'a> {
 
     fn visit_module_custom(&mut self, ident: ModuleIdent, mdef: &mut T::ModuleDefinition) -> bool {
         let config = self.env.package_config(mdef.package_name);
-        if config.flavor != Flavor::Sui {
-            // Skip if not sui
+        if config.flavor != Flavor::Iota {
+            // Skip if not iota
             return true;
         }
         if !matches!(
@@ -215,7 +216,7 @@ fn struct_def(context: &mut Context, name: DatatypeName, sdef: &N::StructDefinit
     let id_field_loc = fields.get_loc_(&ID_FIELD_NAME).unwrap();
     if !id_field_type
         .value
-        .is(SUI_ADDR_NAME, OBJECT_MODULE_NAME, UID_TYPE_NAME)
+        .is(IOTA_ADDR_NAME, OBJECT_MODULE_NAME, UID_TYPE_NAME)
     {
         let actual = format!(
             "But found type: {}",
@@ -228,7 +229,7 @@ fn struct_def(context: &mut Context, name: DatatypeName, sdef: &N::StructDefinit
 }
 
 fn invalid_object_id_field_diag(key_loc: Loc, loc: Loc, name: DatatypeName) -> Diagnostic {
-    const KEY_MSG: &str = "The 'key' ability is used to declare objects in Sui";
+    const KEY_MSG: &str = "The 'key' ability is used to declare objects in Iota";
 
     let msg = format!(
         "Invalid object '{}'. \
@@ -236,7 +237,7 @@ fn invalid_object_id_field_diag(key_loc: Loc, loc: Loc, name: DatatypeName) -> D
         name,
         Ability_::Key,
         ID_FIELD_NAME,
-        SUI_ADDR_NAME,
+        IOTA_ADDR_NAME,
         OBJECT_MODULE_NAME,
         UID_TYPE_NAME
     );
@@ -363,7 +364,7 @@ fn init_signature(context: &mut Context, name: FunctionName, signature: &Functio
         let msg = format!(
             "'init' functions must have their last parameter as \
             '&{a}::{m}::{t}' or '&mut {a}::{m}::{t}'",
-            a = SUI_ADDR_NAME,
+            a = IOTA_ADDR_NAME,
             m = TX_CONTEXT_MODULE_NAME,
             t = TX_CONTEXT_TYPE_NAME,
         );
@@ -608,7 +609,7 @@ fn tx_context_kind(sp!(_, last_param_ty_): &Type) -> TxContextKind {
         // not a user defined type
         return TxContextKind::None;
     };
-    if inner_name.is(SUI_ADDR_NAME, TX_CONTEXT_MODULE_NAME, TX_CONTEXT_TYPE_NAME) {
+    if inner_name.is(IOTA_ADDR_NAME, TX_CONTEXT_MODULE_NAME, TX_CONTEXT_TYPE_NAME) {
         if *is_mut {
             TxContextKind::Mutable
         } else {
@@ -673,14 +674,14 @@ fn entry_param_ty(
         let tmsg = if is_mut_clock {
             format!(
                 "{a}::{m}::{n} must be passed by immutable reference, e.g. '&{a}::{m}::{n}'",
-                a = SUI_ADDR_NAME,
+                a = IOTA_ADDR_NAME,
                 m = CLOCK_MODULE_NAME,
                 n = CLOCK_TYPE_NAME,
             )
         } else if is_mut_random {
             format!(
                 "{a}::{m}::{n} must be passed by immutable reference, e.g. '&{a}::{m}::{n}'",
-                a = SUI_ADDR_NAME,
+                a = IOTA_ADDR_NAME,
                 m = RANDOMNESS_MODULE_NAME,
                 n = RANDOMNESS_STATE_TYPE_NAME,
             )
@@ -703,7 +704,7 @@ fn is_mut_clock(param_ty: &Type) -> bool {
     match &param_ty.value {
         Type_::Ref(/* mut */ false, _) => false,
         Type_::Ref(/* mut */ true, t) => is_mut_clock(t),
-        Type_::Apply(_, sp!(_, n_), _) => n_.is(SUI_ADDR_NAME, CLOCK_MODULE_NAME, CLOCK_TYPE_NAME),
+        Type_::Apply(_, sp!(_, n_), _) => n_.is(IOTA_ADDR_NAME, CLOCK_MODULE_NAME, CLOCK_TYPE_NAME),
         Type_::Unit
         | Type_::Param(_)
         | Type_::Var(_)
@@ -718,7 +719,7 @@ fn is_mut_random(param_ty: &Type) -> bool {
         Type_::Ref(/* mut */ false, _) => false,
         Type_::Ref(/* mut */ true, t) => is_mut_random(t),
         Type_::Apply(_, sp!(_, n_), _) => n_.is(
-            SUI_ADDR_NAME,
+            IOTA_ADDR_NAME,
             RANDOMNESS_MODULE_NAME,
             RANDOMNESS_STATE_TYPE_NAME,
         ),
@@ -735,7 +736,7 @@ fn is_entry_receiving_ty(param_ty: &Type) -> bool {
     match &param_ty.value {
         Type_::Ref(_, t) => is_entry_receiving_ty(t),
         Type_::Apply(_, sp!(_, n), targs)
-            if n.is(SUI_ADDR_NAME, TRANSFER_MODULE_NAME, RECEIVING_TYPE_NAME) =>
+            if n.is(IOTA_ADDR_NAME, TRANSFER_MODULE_NAME, RECEIVING_TYPE_NAME) =>
         {
             debug_assert!(targs.len() == 1);
             // Don't care about the type parameter, just that it's a receiving type -- since it has
@@ -767,7 +768,7 @@ fn is_entry_primitive_ty(param_ty: &Type) -> bool {
         Type_::Apply(_, sp!(_, n), targs)
             if n.is(STD_ADDR_NAME, ASCII_MODULE_NAME, ASCII_TYPE_NAME)
                 || n.is(STD_ADDR_NAME, UTF_MODULE_NAME, UTF_TYPE_NAME)
-                || n.is(SUI_ADDR_NAME, OBJECT_MODULE_NAME, ID_TYPE_NAME) =>
+                || n.is(IOTA_ADDR_NAME, OBJECT_MODULE_NAME, ID_TYPE_NAME) =>
         {
             debug_assert!(targs.is_empty());
             true
@@ -942,12 +943,12 @@ fn exp(context: &mut Context, e: &T::Exp) {
                 );
                 context.env.add_diag(diag)
             }
-            if module.value.is(SUI_ADDR_NAME, EVENT_MODULE_NAME)
+            if module.value.is(IOTA_ADDR_NAME, EVENT_MODULE_NAME)
                 && name.value() == EVENT_FUNCTION_NAME
             {
                 check_event_emit(context, e.exp.loc, mcall)
             }
-            let is_transfer_module = module.value.is(SUI_ADDR_NAME, TRANSFER_MODULE_NAME);
+            let is_transfer_module = module.value.is(IOTA_ADDR_NAME, TRANSFER_MODULE_NAME);
             if is_transfer_module && PRIVATE_TRANSFER_FUNCTIONS.contains(&name.value()) {
                 check_private_transfer(context, e.exp.loc, mcall)
             }
@@ -978,7 +979,7 @@ fn otw_special_cases(context: &Context) -> bool {
         || context
             .current_module()
             .value
-            .is(SUI_ADDR_NAME, SUI_MODULE_NAME)
+            .is(IOTA_ADDR_NAME, IOTA_MODULE_NAME)
 }
 
 fn check_event_emit(context: &mut Context, loc: Loc, mcall: &ModuleCall) {
@@ -1022,7 +1023,7 @@ fn check_private_transfer(context: &mut Context, loc: Loc, mcall: &ModuleCall) {
     let current_module = context.current_module();
     if current_module
         .value
-        .is(SUI_ADDR_NAME, TRANSFER_FUNCTION_NAME)
+        .is(IOTA_ADDR_NAME, TRANSFER_FUNCTION_NAME)
     {
         // inside the transfer module, so no private transfer rules
         return;

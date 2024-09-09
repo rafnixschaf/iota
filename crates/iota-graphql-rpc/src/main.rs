@@ -1,22 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::fs;
 use std::path::PathBuf;
 
 use clap::Parser;
-use sui_graphql_rpc::commands::Command;
-use sui_graphql_rpc::config::{
+use iota_graphql_rpc::commands::Command;
+use iota_graphql_rpc::config::{
     ConnectionConfig, Ide, ServerConfig, ServiceConfig, TxExecFullNodeConfig, Version,
 };
-use sui_graphql_rpc::server::graphiql_server::start_graphiql_server;
+use iota_graphql_rpc::server::graphiql_server::start_graphiql_server;
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 
 // Define the `GIT_REVISION` const
 bin_version::git_revision!();
 
-// VERSION mimics what other sui binaries use for the same const
+// VERSION mimics what other iota binaries use for the same const
 static VERSION: Version = Version {
     year: env!("CARGO_PKG_VERSION_MAJOR"),
     month: env!("CARGO_PKG_VERSION_MINOR"),

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "pg_integration")]
@@ -13,9 +14,9 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
     use std::sync::Arc;
-    use sui_graphql_rpc::config::{ConnectionConfig, Limits};
-    use sui_graphql_rpc::test_infra::cluster::ExecutorCluster;
-    use sui_graphql_rpc::test_infra::cluster::DEFAULT_INTERNAL_DATA_SOURCE_PORT;
+    use iota_graphql_rpc::config::{ConnectionConfig, Limits};
+    use iota_graphql_rpc::test_infra::cluster::ExecutorCluster;
+    use iota_graphql_rpc::test_infra::cluster::DEFAULT_INTERNAL_DATA_SOURCE_PORT;
     use tempfile::tempdir;
 
     struct Example {
@@ -152,7 +153,7 @@ mod tests {
         sim.set_data_ingestion_path(data_ingestion_path.clone());
         sim.create_checkpoint();
 
-        let cluster = sui_graphql_rpc::test_infra::cluster::serve_executor(
+        let cluster = iota_graphql_rpc::test_infra::cluster::serve_executor(
             ConnectionConfig::default(),
             DEFAULT_INTERNAL_DATA_SOURCE_PORT,
             Arc::new(sim),
@@ -218,7 +219,7 @@ mod tests {
 
         sim.create_checkpoint();
 
-        let cluster = sui_graphql_rpc::test_infra::cluster::serve_executor(
+        let cluster = iota_graphql_rpc::test_infra::cluster::serve_executor(
             ConnectionConfig::default(),
             DEFAULT_INTERNAL_DATA_SOURCE_PORT,
             Arc::new(sim),

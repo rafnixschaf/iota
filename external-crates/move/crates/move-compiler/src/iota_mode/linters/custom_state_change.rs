@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This analysis flags potential custom implementations of transfer/share/freeze calls on objects
@@ -33,20 +34,20 @@ use std::collections::BTreeMap;
 
 use super::{
     LinterDiagnosticCategory, LinterDiagnosticCode, FREEZE_FUN, INVALID_LOC, LINT_WARNING_PREFIX,
-    RECEIVE_FUN, SHARE_FUN, SUI_PKG_NAME, TRANSFER_FUN, TRANSFER_MOD_NAME,
+    RECEIVE_FUN, SHARE_FUN, IOTA_PKG_NAME, TRANSFER_FUN, TRANSFER_MOD_NAME,
 };
 
 const PRIVATE_OBJ_FUNCTIONS: &[(&str, &str, &str)] = &[
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, TRANSFER_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, SHARE_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, RECEIVE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, TRANSFER_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, SHARE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, RECEIVE_FUN),
 ];
 
 const CUSTOM_STATE_CHANGE_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::CustomStateChange as u8,
     "potentially unenforceable custom transfer/share/freeze policy",
 );

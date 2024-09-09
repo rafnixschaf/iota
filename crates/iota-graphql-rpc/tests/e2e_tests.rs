@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "pg_integration")]
@@ -11,19 +12,19 @@ mod tests {
     use simulacrum::Simulacrum;
     use std::sync::Arc;
     use std::time::Duration;
-    use sui_graphql_rpc::client::simple_client::GraphqlQueryVariable;
-    use sui_graphql_rpc::client::ClientError;
-    use sui_graphql_rpc::config::ConnectionConfig;
-    use sui_graphql_rpc::test_infra::cluster::ExecutorCluster;
-    use sui_graphql_rpc::test_infra::cluster::DEFAULT_INTERNAL_DATA_SOURCE_PORT;
-    use sui_types::digests::ChainIdentifier;
-    use sui_types::gas_coin::GAS;
-    use sui_types::transaction::CallArg;
-    use sui_types::transaction::ObjectArg;
-    use sui_types::transaction::TransactionDataAPI;
-    use sui_types::DEEPBOOK_ADDRESS;
-    use sui_types::SUI_FRAMEWORK_ADDRESS;
-    use sui_types::SUI_FRAMEWORK_PACKAGE_ID;
+    use iota_graphql_rpc::client::simple_client::GraphqlQueryVariable;
+    use iota_graphql_rpc::client::ClientError;
+    use iota_graphql_rpc::config::ConnectionConfig;
+    use iota_graphql_rpc::test_infra::cluster::ExecutorCluster;
+    use iota_graphql_rpc::test_infra::cluster::DEFAULT_INTERNAL_DATA_SOURCE_PORT;
+    use iota_types::digests::ChainIdentifier;
+    use iota_types::gas_coin::GAS;
+    use iota_types::transaction::CallArg;
+    use iota_types::transaction::ObjectArg;
+    use iota_types::transaction::TransactionDataAPI;
+    use iota_types::DEEPBOOK_ADDRESS;
+    use iota_types::IOTA_FRAMEWORK_ADDRESS;
+    use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
     use tempfile::tempdir;
     use tokio::time::sleep;
 
@@ -38,7 +39,7 @@ mod tests {
 
         let connection_config = ConnectionConfig::ci_integration_test_cfg();
 
-        let cluster = sui_graphql_rpc::test_infra::cluster::serve_executor(
+        let cluster = iota_graphql_rpc::test_infra::cluster::serve_executor(
             connection_config.clone(),
             DEFAULT_INTERNAL_DATA_SOURCE_PORT,
             Arc::new(sim),
@@ -62,7 +63,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         cluster
@@ -82,7 +83,7 @@ mod tests {
         let chain_id_actual = cluster
             .validator_fullnode_handle
             .fullnode_handle
-            .sui_client
+            .iota_client
             .read_api()
             .get_chain_identifier()
             .await
@@ -118,7 +119,7 @@ mod tests {
             "{{\"data\":{{\"chainIdentifier\":\"{}\"}}}}",
             chain_id_actual
         );
-        let cluster = sui_graphql_rpc::test_infra::cluster::serve_executor(
+        let cluster = iota_graphql_rpc::test_infra::cluster::serve_executor(
             ConnectionConfig::default(),
             DEFAULT_INTERNAL_DATA_SOURCE_PORT,
             Arc::new(sim),
@@ -183,12 +184,12 @@ mod tests {
         let variables = vec![
             GraphqlQueryVariable {
                 name: "framework_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0x2"),
             },
             GraphqlQueryVariable {
                 name: "deepbook_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
         ];
@@ -208,7 +209,7 @@ mod tests {
                 .unwrap()
                 .as_str()
                 .unwrap(),
-            SUI_FRAMEWORK_ADDRESS.to_canonical_string(true)
+            IOTA_FRAMEWORK_ADDRESS.to_canonical_string(true)
         );
         assert_eq!(
             data.get("obj2")
@@ -223,17 +224,17 @@ mod tests {
         let bad_variables = vec![
             GraphqlQueryVariable {
                 name: "framework_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0x2"),
             },
             GraphqlQueryVariable {
                 name: "deepbook_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
             GraphqlQueryVariable {
                 name: "deepbook_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee96666666"),
             },
         ];
@@ -247,17 +248,17 @@ mod tests {
         let bad_variables = vec![
             GraphqlQueryVariable {
                 name: "framework_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0x2"),
             },
             GraphqlQueryVariable {
                 name: "deepbook_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
             GraphqlQueryVariable {
                 name: "deepbook_addr".to_string(),
-                ty: "SuiAddressP!".to_string(),
+                ty: "IotaAddressP!".to_string(),
                 value: json!("0xdee9"),
             },
         ];
@@ -271,27 +272,27 @@ mod tests {
         let bad_variables = vec![
             GraphqlQueryVariable {
                 name: "framework addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0x2"),
             },
             GraphqlQueryVariable {
                 name: " deepbook_addr".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
             GraphqlQueryVariable {
                 name: "4deepbook_addr".to_string(),
-                ty: "SuiAddressP!".to_string(),
+                ty: "IotaAddressP!".to_string(),
                 value: json!("0xdee9"),
             },
             GraphqlQueryVariable {
                 name: "".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
             GraphqlQueryVariable {
                 name: " ".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!("0xdee9"),
             },
         ];
@@ -321,7 +322,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         let addresses = cluster.validator_fullnode_handle.wallet.get_addresses();
@@ -332,7 +333,7 @@ mod tests {
             .validator_fullnode_handle
             .test_transaction_builder()
             .await
-            .transfer_sui(Some(1_000), recipient)
+            .transfer_iota(Some(1_000), recipient)
             .build();
         let signed_tx = cluster
             .validator_fullnode_handle
@@ -420,19 +421,19 @@ mod tests {
     async fn test_zklogin_sig_verify() {
         use shared_crypto::intent::Intent;
         use shared_crypto::intent::IntentMessage;
-        use sui_test_transaction_builder::TestTransactionBuilder;
-        use sui_types::base_types::SuiAddress;
-        use sui_types::crypto::Signature;
-        use sui_types::signature::GenericSignature;
-        use sui_types::utils::load_test_vectors;
-        use sui_types::zk_login_authenticator::ZkLoginAuthenticator;
+        use iota_test_transaction_builder::TestTransactionBuilder;
+        use iota_types::base_types::IotaAddress;
+        use iota_types::crypto::Signature;
+        use iota_types::signature::GenericSignature;
+        use iota_types::utils::load_test_vectors;
+        use iota_types::zk_login_authenticator::ZkLoginAuthenticator;
 
         let _guard = telemetry_subscribers::TelemetryConfig::new()
             .with_env()
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         let test_cluster = &cluster.validator_fullnode_handle;
@@ -441,7 +442,7 @@ mod tests {
 
         // Construct a valid zkLogin transaction data, signature.
         let (kp, pk_zklogin, inputs) =
-            &load_test_vectors("../sui-types/src/unit_tests/zklogin_test_vectors.json")[1];
+            &load_test_vectors("../iota-types/src/unit_tests/zklogin_test_vectors.json")[1];
 
         let zklogin_addr = (pk_zklogin).into();
         let rgp = test_cluster.get_reference_gas_price().await;
@@ -449,9 +450,9 @@ mod tests {
             .fund_address_and_return_gas(rgp, Some(20000000000), zklogin_addr)
             .await;
         let tx_data = TestTransactionBuilder::new(zklogin_addr, gas, rgp)
-            .transfer_sui(None, SuiAddress::ZERO)
+            .transfer_iota(None, IotaAddress::ZERO)
             .build();
-        let msg = IntentMessage::new(Intent::sui_transaction(), tx_data.clone());
+        let msg = IntentMessage::new(Intent::iota_transaction(), tx_data.clone());
         let eph_sig = Signature::new_secure(&msg, kp);
         let generic_sig = GenericSignature::ZkLoginAuthenticator(ZkLoginAuthenticator::new(
             inputs.clone(),
@@ -485,7 +486,7 @@ mod tests {
             },
             GraphqlQueryVariable {
                 name: "author".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!(author),
             },
         ];
@@ -521,7 +522,7 @@ mod tests {
             },
             GraphqlQueryVariable {
                 name: "author".to_string(),
-                ty: "SuiAddress!".to_string(),
+                ty: "IotaAddress!".to_string(),
                 value: json!(author),
             },
         ];
@@ -546,7 +547,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         let addresses = cluster.validator_fullnode_handle.wallet.get_addresses();
@@ -557,7 +558,7 @@ mod tests {
             .validator_fullnode_handle
             .test_transaction_builder()
             .await
-            .transfer_sui(Some(1_000), recipient)
+            .transfer_iota(Some(1_000), recipient)
             .build();
         let tx_bytes = Base64::encode(bcs::to_bytes(&tx).unwrap());
 
@@ -640,7 +641,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         let addresses = cluster.validator_fullnode_handle.wallet.get_addresses();
@@ -650,7 +651,7 @@ mod tests {
             .validator_fullnode_handle
             .test_transaction_builder()
             .await
-            .transfer_sui(Some(1_000), recipient)
+            .transfer_iota(Some(1_000), recipient)
             .build();
         let tx_kind_bytes = Base64::encode(bcs::to_bytes(&tx.into_kind()).unwrap());
 
@@ -711,7 +712,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         let addresses = cluster.validator_fullnode_handle.wallet.get_addresses();
@@ -731,7 +732,7 @@ mod tests {
             .await
             // A split coin that goes nowhere -> execution failure
             .move_call(
-                SUI_FRAMEWORK_PACKAGE_ID,
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 "coin",
                 "split",
                 vec![
@@ -800,7 +801,7 @@ mod tests {
             .init();
 
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
 
         cluster
@@ -838,7 +839,7 @@ mod tests {
         cluster.cleanup_resources().await
     }
 
-    use sui_graphql_rpc::server::builder::tests::*;
+    use iota_graphql_rpc::server::builder::tests::*;
 
     #[tokio::test]
     #[serial]
@@ -847,12 +848,12 @@ mod tests {
             .with_env()
             .init();
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
+            iota_graphql_rpc::test_infra::cluster::start_cluster(ConnectionConfig::default(), None)
                 .await;
         cluster
             .wait_for_checkpoint_catchup(0, Duration::from_secs(10))
             .await;
-        // timeout test includes mutation timeout, which requies a [SuiClient] to be able to run
+        // timeout test includes mutation timeout, which requies a [IotaClient] to be able to run
         // the test, and a transaction. [WalletContext] gives access to everything that's needed.
         let wallet = &cluster.validator_fullnode_handle.wallet;
         test_timeout_impl(wallet).await;
@@ -898,7 +899,7 @@ mod tests {
             .init();
         let connection_config = ConnectionConfig::ci_integration_test_cfg();
         let cluster =
-            sui_graphql_rpc::test_infra::cluster::start_cluster(connection_config, None).await;
+            iota_graphql_rpc::test_infra::cluster::start_cluster(connection_config, None).await;
 
         cluster
             .wait_for_checkpoint_catchup(0, Duration::from_secs(10))

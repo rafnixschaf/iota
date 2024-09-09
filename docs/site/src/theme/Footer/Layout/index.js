@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 import React, { useEffect } from "react";
 import Link from "@docusaurus/Link";
@@ -22,7 +23,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
         <div className={styles.footerLogo}>{logo}</div>
         <div className={styles.footerContent}>
           <div className={styles.footerLinks}>
-            <Link to="https://discord.gg/Sui">
+            <Link to="https://discord.gg/Iota">
               <svg
                 width="32"
                 height="32"
@@ -38,7 +39,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://twitter.com/Mysten_Labs">
+            <Link to="https://x.com/iota">
               <svg
                 width="32"
                 height="32"
@@ -54,7 +55,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://medium.com/mysten-labs">
+            <Link to="https://medium.com/iota-foundation">
               <svg
                 width="32"
                 height="32"
@@ -70,7 +71,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
                 />
               </svg>
             </Link>
-            <Link to="https://www.linkedin.com/company/mysten-labs/">
+            <Link to="https://www.linkedin.com/company/iotafoundation/">
               <svg
                 width="32"
                 height="32"

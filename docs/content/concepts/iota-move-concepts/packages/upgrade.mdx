@@ -1,11 +1,11 @@
 ---
 title: Upgrading Packages
-description: Sui provides a method of upgrading your packages while still retaining their immutable properties.
+description: Iota provides a method of upgrading your packages while still retaining their immutable properties.
 ---
 
-Sui smart contracts are immutable package objects consisting of a collection of Move modules. Because the packages are immutable, transactions can safely access smart contracts without full consensus (fastpath transactions). If someone could change these packages, they would become [shared objects](/concepts/object-ownership/shared.mdx#shared), which would require full consensus before completing a transaction.
+Iota smart contracts are immutable package objects consisting of a collection of Move modules. Because the packages are immutable, transactions can safely access smart contracts without full consensus (fastpath transactions). If someone could change these packages, they would become [shared objects](/concepts/object-ownership/shared.mdx#shared), which would require full consensus before completing a transaction.
 
-The inability to change package objects, however, becomes a problem when considering the iterative nature of code development. Builders require the ability to update their code and pull changes from other developers while still being able to reap the benefits of fastpath transactions. Fortunately, the Sui network provides a method of upgrading your packages while still retaining their immutable properties.
+The inability to change package objects, however, becomes a problem when considering the iterative nature of code development. Builders require the ability to update their code and pull changes from other developers while still being able to reap the benefits of fastpath transactions. Fortunately, the Iota network provides a method of upgrading your packages while still retaining their immutable properties.
 
 ## Upgrade considerations
 
@@ -13,7 +13,7 @@ There are some details of the process that you should consider before upgrading 
 
 For example, [module initializers](../init.mdx) do not re-run with package upgrades. When you publish your initial package, Move runs the `init` function you define for the package once (and only once) at the time of the publish event. Any `init` functions you might include in subsequent versions of your package are ignored.
 
-As alluded to previously, all packages on the Sui network are immutable. Because of this fact, you cannot delete old packages from the chain. As a result, there is nothing that prevents other packages from accessing the methods and types defined in the old versions of your upgraded packages. By default, users can choose to keep using the old version of a package, as well. As a package developer, you must be aware of and account for this possibility.
+As alluded to previously, all packages on the Iota network are immutable. Because of this fact, you cannot delete old packages from the chain. As a result, there is nothing that prevents other packages from accessing the methods and types defined in the old versions of your upgraded packages. By default, users can choose to keep using the old version of a package, as well. As a package developer, you must be aware of and account for this possibility.
 
 For example, you might define an `increment` function in your original package:
 
@@ -53,9 +53,9 @@ Considering the earlier `counter` example, which might have started life as foll
 
 ```move
 module example::counter {
-    use sui::object::{Self, UID};
-    use sui::transfer;
-    use sui::tx_context::TxContext;
+    use iota::object::{Self, UID};
+    use iota::transfer;
+    use iota::tx_context::TxContext;
 
     struct Counter has key {
         id: UID,
@@ -86,9 +86,9 @@ An upgrade-aware `counter` module that incorporates all these ideas looks as fol
 
 ```move
 module example::counter {
-    use sui::object::{Self, ID, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use iota::object::{Self, ID, UID};
+    use iota::transfer;
+    use iota::tx_context::{Self, TxContext};
 
     // 1. Track the current version of the module
     const VERSION: u64 = 1;
@@ -145,10 +145,10 @@ The following module is an upgraded `counter` that emits `Progress` events as or
 
 ```move
 module example::counter {
-    use sui::event;
-    use sui::object::{Self, ID, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    use iota::event;
+    use iota::object::{Self, ID, UID};
+    use iota::transfer;
+    use iota::tx_context::{Self, TxContext};
 
     // 1. Bump the `VERSION` of the package.
     const VERSION: u64 = 2;
@@ -234,7 +234,7 @@ This pattern forms the basis for upgradeable packages involving shared objects, 
 ## Upgrade requirements
 
 To upgrade a package, your package must satisfy the following requirements:
-- You must have an `UpgradeTicket` for the package you want to upgrade. The Sui network issues `UpgradeCap`s when you publish a package, then you can issue `UpgradeTicket`s as the owner of that `UpgradeCap`. The Sui Client CLI handles this requirement automatically.
+- You must have an `UpgradeTicket` for the package you want to upgrade. The Iota network issues `UpgradeCap`s when you publish a package, then you can issue `UpgradeTicket`s as the owner of that `UpgradeCap`. The Iota Client CLI handles this requirement automatically.
 - Your changes must be layout-compatible with the previous version.
     - Existing `public` function signatures must remain the same.
     - Existing struct layouts (including struct abilities) must remain the same.
@@ -251,48 +251,48 @@ If you have a package with a dependency, and that dependency is upgraded, your p
 
 ## Upgrading
 
-Use the `sui client upgrade` command to upgrade packages that meet the previous requirements, providing values for the following flags:
+Use the `iota client upgrade` command to upgrade packages that meet the previous requirements, providing values for the following flags:
 
 {@include: ../../../snippets/info-gas-budget.mdx}
 
 - `--gas-budget`: The maximum number of gas units that can be expended before the network cancels the transaction.
 - `--cap`: The ID of the `UpgradeCap`. You receive this ID as a return from the publish command.
 
-Developers upgrading packages using Move code have access to types and functions to define custom upgrade policies. For example, a Move developer might want to disallow upgrading a package, regardless of the current package owner. The [`make_immutable` function](https://github.com/MystenLabs/sui/blob/main/crates/sui-framework/docs/sui-framework/package.md#0x2_package_make_immutable) is available to them to create this behavior. More advanced policies using available types like `UpgradeTicket` and `Upgrade Receipt` are also possible. For an example, see this [custom upgrade policy](https://github.com/MystenLabs/sui/issues/2045#:~:text=Implement%20a%20custom%20upgrade%20policy) on GitHub.
+Developers upgrading packages using Move code have access to types and functions to define custom upgrade policies. For example, a Move developer might want to disallow upgrading a package, regardless of the current package owner. The [`make_immutable` function](https://github.com/iotaledger/iota/blob/develop/crates/iota-framework/docs/iota-framework/package.md#0x2_package_make_immutable) is available to them to create this behavior. More advanced policies using available types like `UpgradeTicket` and `Upgrade Receipt` are also possible. For an example, see this [custom upgrade policy](https://github.com/iotaledger/iota/issues/2045#:~:text=Implement%20a%20custom%20upgrade%20policy) on GitHub.
 
-When you use the Sui Client CLI, the `upgrade` command handles generating the upgrade digest, authorizing the upgrade with the `UpgradeCap` to get an `UpgradeTicket`, and updating the `UpgradeCap` with the `UpgradeReceipt` after a successful upgrade. To learn more about these processes, see the Move documentation for the [package module](https://github.com/MystenLabs/sui/blob/main/crates/sui-framework/docs/sui-framework/package.md).
+When you use the Iota Client CLI, the `upgrade` command handles generating the upgrade digest, authorizing the upgrade with the `UpgradeCap` to get an `UpgradeTicket`, and updating the `UpgradeCap` with the `UpgradeReceipt` after a successful upgrade. To learn more about these processes, see the Move documentation for the [package module](https://github.com/iotaledger/iota/blob/develop/crates/iota-framework/docs/iota-framework/package.md).
 
 ## Example
 
-You develop a package named `sui_package`. Its manifest looks like the following:
+You develop a package named `iota_package`. Its manifest looks like the following:
 
 ```toml
 [package]
-name = "sui_package"
+name = "iota_package"
 version = "0.0.0"
 
 [addresses]
-sui_package = "0x0"
+iota_package = "0x0"
 ```
 
 When your package is ready, you publish it:
 
 ```shell
-sui client publish --gas-budget <GAS-BUDGET-AMOUNT>
+iota client publish --gas-budget <GAS-BUDGET-AMOUNT>
 ```
 And receive the response:
 
 ```shell
-INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY Iota
 INCLUDING DEPENDENCY MoveStdlib
 BUILDING MyFirstPackage
 Successfully verified dependencies on-chain against source.
 ----- Transaction Digest ----
 2bn3EtHvbVY4bM1887MvFiGWnqq1YZ2RKmbeK7TrRbLL
 ----- Transaction Data ----
-Transaction Signature: [Signature(Ed25519SuiSignature(Ed25519SuiSignature([0, 156, 133, 71, 156, 44, 204, 30, 31, 250, 204, 247, 60, 212, 249, 61, 112, 249, 148, 180, 83, 207, 236, 58, 99, 134, 5, 174, 115, 226, 41, 139, 192, 1, 183, 133, 38, 73, 254, 205, 190, 54, 210, 112, 144, 204, 137, 3, 8, 30, 165, 147, 120, 199, 227, 119, 53, 208, 28, 101, 34, 239, 102, 210, 1, 103, 111, 108, 165, 156, 100, 95, 13, 236, 27, 13, 127, 150, 50, 47, 155, 217, 27, 164, 61, 245, 254, 81, 182, 121, 231, 58, 150, 214, 46, 27, 222])))]
+Transaction Signature: [Signature(Ed25519IotaSignature(Ed25519IotaSignature([0, 156, 133, 71, 156, 44, 204, 30, 31, 250, 204, 247, 60, 212, 249, 61, 112, 249, 148, 180, 83, 207, 236, 58, 99, 134, 5, 174, 115, 226, 41, 139, 192, 1, 183, 133, 38, 73, 254, 205, 190, 54, 210, 112, 144, 204, 137, 3, 8, 30, 165, 147, 120, 199, 227, 119, 53, 208, 28, 101, 34, 239, 102, 210, 1, 103, 111, 108, 165, 156, 100, 95, 13, 236, 27, 13, 127, 150, 50, 47, 155, 217, 27, 164, 61, 245, 254, 81, 182, 121, 231, 58, 150, 214, 46, 27, 222])))]
 Transaction Kind : Programmable
-Inputs: [Pure(SuiPureValue { value_type: Some(Address), value: "<PUBLISHER-ID>" })]
+Inputs: [Pure(IotaPureValue { value_type: Some(Address), value: "<PUBLISHER-ID>" })]
 Commands: [
   Publish(_,,0x00000000000000000000000000000000000000000000000000000000000000010x0000000000000000000000000000000000000000000000000000000000000002),
   TransferObjects([Result(0)],Input(0)),
@@ -323,7 +323,7 @@ Array [
         "owner": Object {
             "AddressOwner": String("<PUBLISHER-ID>"),
         },
-        "objectType": String("0x2::coin::Coin<0x2::sui::SUI>"),
+        "objectType": String("0x2::coin::Coin<0x2::iota::IOTA>"),
         "objectId": String("<GAS-COIN-ID>"),
         "version": Number(7),
         "previousVersion": Number(6),
@@ -335,7 +335,7 @@ Array [
         "version": Number(1),
         "digest": String("FrBhLF2Rn4jP3SUsss7aXqwDDRtoKxgGbPm8eVkH7jrQ"),
         "modules": Array [
-            String("sui_package"),
+            String("iota_package"),
         ],
     },
     Object {
@@ -355,7 +355,7 @@ Array [
         "owner": Object {
             "AddressOwner": String("<PUBLISHER-ID>"),
         },
-        "objectType": String("<ORIGINAL-PACKAGE-ID>::sui_package::<MODULE-NAME>"),
+        "objectType": String("<ORIGINAL-PACKAGE-ID>::iota_package::<MODULE-NAME>"),
         "objectId": String("<PACKAGE-ID>"),
         "version": Number(7),
         "digest": String("BC3KeuATKJozLNipbUz2GWzoDXbodXH4HLm59TxJSmVd"),
@@ -367,7 +367,7 @@ Array [
         "owner": Object {
             "AddressOwner": String("<PUBLISHER-ID>"),
         },
-        "coinType": String("0x2::sui::SUI"),
+        "coinType": String("0x2::iota::IOTA"),
         "amount": String("-9328480"),
     },
 ]
@@ -375,7 +375,7 @@ Array [
 
 The result includes an **Object changes** section with two pieces of information you need for upgrading, an `UpgradeCap` ID and your package ID.
 
-You can identify the different objects using the `Object.objectType` value in the response. The `UpgradeCap` entry has a value of `String("0x2::package::UpgradeCap")` and the `objectType` for the package reads `String("<PACKAGE-ID>::sui_package::<MODULE-NAME>")`
+You can identify the different objects using the `Object.objectType` value in the response. The `UpgradeCap` entry has a value of `String("0x2::package::UpgradeCap")` and the `objectType` for the package reads `String("<PACKAGE-ID>::iota_package::<MODULE-NAME>")`
 
 <Tabs>
 
@@ -383,13 +383,13 @@ You can identify the different objects using the `Object.objectType` value in th
 
 :::info
 
-Beginning with the Sui `v1.29.0` release, published addresses are automatically managed in the `Move.lock` file and you do not need to take further action.
+Beginning with the Iota `v1.29.0` release, published addresses are automatically managed in the `Move.lock` file and you do not need to take further action.
 
-If the package was published or upgraded with a Sui version prior to `v1.29.0`, you can follow [the guide for adopting automated address management](automated-address-management#adopting-automated-address-management-for-published-packages). Alternatively, refer to the `Manual Addresses` tab above for further steps.
+If the package was published or upgraded with a Iota version prior to `v1.29.0`, you can follow [the guide for adopting automated address management](automated-address-management#adopting-automated-address-management-for-published-packages). Alternatively, refer to the `Manual Addresses` tab above for further steps.
 
 :::
 
-After a while, you decide to upgrade your `sui_package` to include some requested features.
+After a while, you decide to upgrade your `iota_package` to include some requested features.
 
 </TabItem>
 
@@ -403,26 +403,26 @@ Update the alias address and add a new `published-at` entry in the `[package]` s
 
 ```toml
 [package]
-name = "sui_package"
+name = "iota_package"
 version = "0.0.0"
 published-at = "<ORIGINAL-PACKAGE-ID>"
 
 [addresses]
-sui_package = "<ORIGINAL-PACKAGE-ID>"
+iota_package = "<ORIGINAL-PACKAGE-ID>"
 ```
 
-After a while, you decide to upgrade your `sui_package` to include some requested features. Before running the `upgrade` command, you need to edit the manifest again.
+After a while, you decide to upgrade your `iota_package` to include some requested features. Before running the `upgrade` command, you need to edit the manifest again.
 
-In the `[addresses]` section, you update the `sui_package` address value to `0x0` again so the validator issues a new address for the upgrade package. You can leave the `published-at` value the same, because it is only read by the toolchain when publishing a dependent package. The saved manifest now resembles the following:
+In the `[addresses]` section, you update the `iota_package` address value to `0x0` again so the validator issues a new address for the upgrade package. You can leave the `published-at` value the same, because it is only read by the toolchain when publishing a dependent package. The saved manifest now resembles the following:
 
 ```toml
 [package]
-name = "sui_package"
+name = "iota_package"
 version = "0.0.1"
 published-at = "<ORIGINAL-PACKAGE-ID>"
 
 [addresses]
-sui_package = "0x0"
+iota_package = "0x0"
 ```
 
 With the new manifest and code in place, you can proceed.
@@ -431,25 +431,25 @@ With the new manifest and code in place, you can proceed.
 
 </Tabs>
 
-Run `sui client upgrade` command to upgrade your package. Pass the `UpgradeCap` ID (the `<UPGRADE-CAP-ID>` value from the example) to the `--upgrade-capability` flag.
+Run `iota client upgrade` command to upgrade your package. Pass the `UpgradeCap` ID (the `<UPGRADE-CAP-ID>` value from the example) to the `--upgrade-capability` flag.
 
 ```shell
-sui client upgrade --gas-budget <GAS-BUDGET-AMOUNT> --upgrade-capability <UPGRADE-CAP-ID>
+iota client upgrade --gas-budget <GAS-BUDGET-AMOUNT> --upgrade-capability <UPGRADE-CAP-ID>
 ```
 
 The console alerts you if the new package doesn't satisfy [requirements](#requirements), otherwise the compiler publishes the upgraded package to the network and returns its result:
 
 ```shell
-INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY Iota
 INCLUDING DEPENDENCY MoveStdlib
 BUILDING MyFirstPackage
 Successfully verified dependencies on-chain against source.
 ----- Transaction Digest ----
 HZdnGWE2VoqDWwBhoBwe17tDFn7uYgfBpK5nk75Rmh5z
 ----- Transaction Data ----
-Transaction Signature: [Signature(Ed25519SuiSignature(Ed25519SuiSignature([0, 108, 166, 235, 244, 238, 72, 232, 143, 49, 225, 180, 55, 63, 131, 155, 146, 126, 50, 158, 138, 213, 174, 71, 162, 222, 62, 198, 245, 219, 224, 171, 82, 43, 197, 56, 16, 252, 186, 83, 154, 109, 104, 90, 212, 236, 122, 78, 175, 173, 107, 9, 2, 10, 30, 74, 101, 138, 228, 251, 170, 39, 25, 242, 8, 103, 111, 108, 165, 156, 100, 95, 13, 236, 27, 13, 127, 150, 50, 47, 155, 217, 27, 164, 61, 245, 254, 81, 182, 121, 231, 58, 150, 214, 46, 27, 222])))]
+Transaction Signature: [Signature(Ed25519IotaSignature(Ed25519IotaSignature([0, 108, 166, 235, 244, 238, 72, 232, 143, 49, 225, 180, 55, 63, 131, 155, 146, 126, 50, 158, 138, 213, 174, 71, 162, 222, 62, 198, 245, 219, 224, 171, 82, 43, 197, 56, 16, 252, 186, 83, 154, 109, 104, 90, 212, 236, 122, 78, 175, 173, 107, 9, 2, 10, 30, 74, 101, 138, 228, 251, 170, 39, 25, 242, 8, 103, 111, 108, 165, 156, 100, 95, 13, 236, 27, 13, 127, 150, 50, 47, 155, 217, 27, 164, 61, 245, 254, 81, 182, 121, 231, 58, 150, 214, 46, 27, 222])))]
 Transaction Kind : Programmable
-Inputs: [Object(ImmOrOwnedObject { object_id: <UPGRADE-CAP-ID>, version: SequenceNumber(9), digest: o#Bvy7R33o4ogLuyfzM76nmM1RqKnEALQrbd34CLWZhf5Y }), Pure(SuiPureValue { value_type: Some(U8), value: 0 }), Pure(SuiPureValue { value_type: Some(Vector(U8)), value: [202,122,179,32,64,155,14,236,160,5,75,17,159,202,125,114,234,36,182,41,159,84,56,222,99,121,250,82,206,19,212,5] })]
+Inputs: [Object(ImmOrOwnedObject { object_id: <UPGRADE-CAP-ID>, version: SequenceNumber(9), digest: o#Bvy7R33o4ogLuyfzM76nmM1RqKnEALQrbd34CLWZhf5Y }), Pure(IotaPureValue { value_type: Some(U8), value: 0 }), Pure(IotaPureValue { value_type: Some(Vector(U8)), value: [202,122,179,32,64,155,14,236,160,5,75,17,159,202,125,114,234,36,182,41,159,84,56,222,99,121,250,82,206,19,212,5] })]
 Commands: [
   MoveCall(0x0000000000000000000000000000000000000000000000000000000000000002::package::authorize_upgrade(,Input(0),Input(1)Input(2))),
   Upgrade(Result(0),,0x00000000000000000000000000000000000000000000000000000000000000010x0000000000000000000000000000000000000000000000000000000000000002, <ORIGINAL-PACKAGE-ID>, _)),
@@ -480,7 +480,7 @@ Array [
         "owner": Object {
             "AddressOwner": String("<PUBLISHER-ID>"),
         },
-        "objectType": String("0x2::coin::Coin<0x2::sui::SUI>"),
+        "objectType": String("0x2::coin::Coin<0x2::iota::IOTA>"),
         "objectId": String("<GAS-COIN-ID>"),
         "version": Number(10),
         "previousVersion": Number(9),
@@ -514,7 +514,7 @@ Array [
         "owner": Object {
             "AddressOwner": String("<PUBLISHER-ID>"),
         },
-        "coinType": String("0x2::sui::SUI"),
+        "coinType": String("0x2::iota::IOTA"),
         "amount": String("-6350420"),
     },
 ]
@@ -530,9 +530,9 @@ The result provides a new ID for the upgraded package.
 
 :::info
 
-Beginning with the Sui `v1.29.0` release, upgraded addresses are automatically managed in the `Move.lock` file and you do not need to take further action.
+Beginning with the Iota `v1.29.0` release, upgraded addresses are automatically managed in the `Move.lock` file and you do not need to take further action.
 
-If the package was published or upgraded with a Sui version prior to `v1.29.0`, you may follow [the guide for adopting automated address management](automated-address-management#adopting-automated-address-management-for-published-packages). Alternatively, refer to the `Manual Addresses` tab above for further steps.
+If the package was published or upgraded with a Iota version prior to `v1.29.0`, you may follow [the guide for adopting automated address management](automated-address-management#adopting-automated-address-management-for-published-packages). Alternatively, refer to the `Manual Addresses` tab above for further steps.
 
 :::
 
@@ -540,22 +540,22 @@ If the package was published or upgraded with a Sui version prior to `v1.29.0`, 
 
 <TabItem value="manual-address-management" label="Manual Addresses">
 
-So that packages that depend on your `sui_package` know where to find the on-chain bytecode for verification, edit your manifest again. Provide the upgraded package ID for the `published-at` value and return the original `sui_package` ID value in the `[addresses]` section:
+So that packages that depend on your `iota_package` know where to find the on-chain bytecode for verification, edit your manifest again. Provide the upgraded package ID for the `published-at` value and return the original `iota_package` ID value in the `[addresses]` section:
 
 
 ```toml
 [package]
-name = "sui_package"
+name = "iota_package"
 version = "0.0.1"
 published-at = "<UPGRADED-PACKAGE-ID>"
 
 [addresses]
-sui_package = "<ORIGINAL-PACKAGE-ID>"
+iota_package = "<ORIGINAL-PACKAGE-ID>"
 ```
 
 Note the `published-at` value changes with every upgrade and needs to be updated after every upgrade.
 
-The ID for the `sui_package` in the `[addresses]` section always points to the original package ID after upgrading. You must always change that value back to `0x0`, however, before running the `upgrade` command so the validator knows to create a new ID for the upgrade.
+The ID for the `iota_package` in the `[addresses]` section always points to the original package ID after upgrading. You must always change that value back to `0x0`, however, before running the `upgrade` command so the validator knows to create a new ID for the upgrade.
 
 </TabItem>
 

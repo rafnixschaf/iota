@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
 module vdf::lottery_tests {
-    use sui::test_scenario as ts;
-    use sui::clock;
+    use iota::test_scenario as ts;
+    use iota::clock;
     use vdf::lottery::{Self, Game, GameWinner};
 
     const OUTPUT: vector<u8> =

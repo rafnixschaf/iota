@@ -1,28 +1,29 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Defines the `Coin` type - platform wide representation of fungible
 /// tokens and coins. `Coin` can be described as a secure wrapper around
 /// `Balance` type.
-module sui::coin {
+module iota::coin {
     use std::string;
     use std::ascii;
-    use sui::balance::{Self, Balance, Supply};
-    use sui::url::{Self, Url};
-    use sui::deny_list::DenyList;
+    use iota::balance::{Self, Balance, Supply};
+    use iota::url::{Self, Url};
+    use iota::deny_list::DenyList;
     use std::type_name;
 
     // Allows calling `.split_vec(amounts, ctx)` on `coin`
-    public use fun sui::pay::split_vec as Coin.split_vec;
+    public use fun iota::pay::split_vec as Coin.split_vec;
 
     // Allows calling `.join_vec(coins)` on `coin`
-    public use fun sui::pay::join_vec as Coin.join_vec;
+    public use fun iota::pay::join_vec as Coin.join_vec;
 
     // Allows calling `.split_and_transfer(amount, recipient, ctx)` on `coin`
-    public use fun sui::pay::split_and_transfer as Coin.split_and_transfer;
+    public use fun iota::pay::split_and_transfer as Coin.split_and_transfer;
 
     // Allows calling `.divide_and_keep(n, ctx)` on `coin`
-    public use fun sui::pay::divide_and_keep as Coin.divide_and_keep;
+    public use fun iota::pay::divide_and_keep as Coin.divide_and_keep;
 
     /// A type passed to create_supply is not a one-time witness.
     const EBadWitness: u64 = 0;
@@ -223,7 +224,7 @@ module sui::coin {
         ctx: &mut TxContext
     ): (TreasuryCap<T>, CoinMetadata<T>) {
         // Make sure there's only one instance of the type T
-        assert!(sui::types::is_one_time_witness(&witness), EBadWitness);
+        assert!(iota::types::is_one_time_witness(&witness), EBadWitness);
 
         (
             TreasuryCap {
@@ -561,7 +562,7 @@ module sui::coin {
     }
 
 
-    /// The index into the deny list vector for the `sui::coin::Coin` type.
+    /// The index into the deny list vector for the `iota::coin::Coin` type.
     const DENY_LIST_COIN_INDEX: u64 = 0; // TODO public(package) const
 
     /// Adds the given address to the deny list, preventing it

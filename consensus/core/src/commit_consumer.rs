@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::{atomic::AtomicU32, Arc};
 
-use mysten_metrics::monitored_mpsc::UnboundedSender;
+use iota_metrics::monitored_mpsc::UnboundedSender;
 
 use crate::{CommitIndex, CommittedSubDag};
 

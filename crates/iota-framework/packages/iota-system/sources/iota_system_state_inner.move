@@ -1,23 +1,24 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-module sui_system::sui_system_state_inner {
-    use sui::balance::{Self, Balance};
-    use sui::coin::Coin;
-    use sui_system::staking_pool::StakedSui;
-    use sui::sui::SUI;
-    use sui_system::validator::{Self, Validator};
-    use sui_system::validator_set::{Self, ValidatorSet};
-    use sui_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
-    use sui_system::stake_subsidy::StakeSubsidy;
-    use sui_system::storage_fund::{Self, StorageFund};
-    use sui_system::staking_pool::PoolTokenExchangeRate;
-    use sui::vec_map::{Self, VecMap};
-    use sui::vec_set::{Self, VecSet};
-    use sui::event;
-    use sui::table::Table;
-    use sui::bag::Bag;
-    use sui::bag;
+module iota_system::iota_system_state_inner {
+    use iota::balance::{Self, Balance};
+    use iota::coin::Coin;
+    use iota_system::staking_pool::StakedIota;
+    use iota::iota::IOTA;
+    use iota_system::validator::{Self, Validator};
+    use iota_system::validator_set::{Self, ValidatorSet};
+    use iota_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
+    use iota_system::stake_subsidy::StakeSubsidy;
+    use iota_system::storage_fund::{Self, StorageFund};
+    use iota_system::staking_pool::PoolTokenExchangeRate;
+    use iota::vec_map::{Self, VecMap};
+    use iota::vec_set::{Self, VecSet};
+    use iota::event;
+    use iota::table::Table;
+    use iota::bag::Bag;
+    use iota::bag;
 
     // same as in validator_set
     const ACTIVE_VALIDATOR_ONLY: u8 = 1;
@@ -93,15 +94,15 @@ module sui_system::sui_system_state_inner {
         extra_fields: Bag,
     }
 
-    /// The top-level object containing all information of the Sui system.
-    public struct SuiSystemStateInner has store {
+    /// The top-level object containing all information of the Iota system.
+    public struct IotaSystemStateInner has store {
         /// The current epoch ID, starting from 0.
         epoch: u64,
         /// The current protocol version, starting from 1.
         protocol_version: u64,
         /// The current version of the system state data structure type.
-        /// This is always the same as SuiSystemState.version. Keeping a copy here so that
-        /// we know what version it is by inspecting SuiSystemStateInner as well.
+        /// This is always the same as IotaSystemState.version. Keeping a copy here so that
+        /// we know what version it is by inspecting IotaSystemStateInner as well.
         system_state_version: u64,
         /// Contains all information about the validators.
         validators: ValidatorSet,
@@ -130,8 +131,8 @@ module sui_system::sui_system_state_inner {
         /// when advance_epoch_safe_mode is executed. They will eventually be processed once we
         /// are out of safe mode.
         safe_mode: bool,
-        safe_mode_storage_rewards: Balance<SUI>,
-        safe_mode_computation_rewards: Balance<SUI>,
+        safe_mode_storage_rewards: Balance<IOTA>,
+        safe_mode_computation_rewards: Balance<IOTA>,
         safe_mode_storage_rebates: u64,
         safe_mode_non_refundable_storage_fee: u64,
 
@@ -142,14 +143,14 @@ module sui_system::sui_system_state_inner {
     }
 
     /// Uses SystemParametersV2 as the parameters.
-    public struct SuiSystemStateInnerV2 has store {
+    public struct IotaSystemStateInnerV2 has store {
         /// The current epoch ID, starting from 0.
         epoch: u64,
         /// The current protocol version, starting from 1.
         protocol_version: u64,
         /// The current version of the system state data structure type.
-        /// This is always the same as SuiSystemState.version. Keeping a copy here so that
-        /// we know what version it is by inspecting SuiSystemStateInner as well.
+        /// This is always the same as IotaSystemState.version. Keeping a copy here so that
+        /// we know what version it is by inspecting IotaSystemStateInner as well.
         system_state_version: u64,
         /// Contains all information about the validators.
         validators: ValidatorSet,
@@ -178,8 +179,8 @@ module sui_system::sui_system_state_inner {
         /// when advance_epoch_safe_mode is executed. They will eventually be processed once we
         /// are out of safe mode.
         safe_mode: bool,
-        safe_mode_storage_rewards: Balance<SUI>,
-        safe_mode_computation_rewards: Balance<SUI>,
+        safe_mode_storage_rewards: Balance<IOTA>,
+        safe_mode_computation_rewards: Balance<IOTA>,
         safe_mode_storage_rebates: u64,
         safe_mode_non_refundable_storage_fee: u64,
 
@@ -221,21 +222,21 @@ module sui_system::sui_system_state_inner {
 
     // ==== functions that can only be called by genesis ====
 
-    /// Create a new SuiSystemState object and make it shared.
+    /// Create a new IotaSystemState object and make it shared.
     /// This function will be called only once in genesis.
     public(package) fun create(
         validators: vector<Validator>,
-        initial_storage_fund: Balance<SUI>,
+        initial_storage_fund: Balance<IOTA>,
         protocol_version: u64,
         epoch_start_timestamp_ms: u64,
         parameters: SystemParameters,
         stake_subsidy: StakeSubsidy,
         ctx: &mut TxContext,
-    ): SuiSystemStateInner {
+    ): IotaSystemStateInner {
         let validators = validator_set::new(validators, ctx);
         let reference_gas_price = validators.derive_reference_gas_price();
         // This type is fixed as it's created at genesis. It should not be updated during type upgrade.
-        let system_state = SuiSystemStateInner {
+        let system_state = IotaSystemStateInner {
             epoch: 0,
             protocol_version,
             system_state_version: genesis_system_state_version(),
@@ -280,8 +281,8 @@ module sui_system::sui_system_state_inner {
         }
     }
 
-    public(package) fun v1_to_v2(self: SuiSystemStateInner): SuiSystemStateInnerV2 {
-        let SuiSystemStateInner {
+    public(package) fun v1_to_v2(self: IotaSystemStateInner): IotaSystemStateInnerV2 {
+        let IotaSystemStateInner {
             epoch,
             protocol_version,
             system_state_version: _,
@@ -309,7 +310,7 @@ module sui_system::sui_system_state_inner {
             validator_low_stake_grace_period,
             extra_fields: param_extra_fields,
         } = parameters;
-        SuiSystemStateInnerV2 {
+        IotaSystemStateInnerV2 {
             epoch,
             protocol_version,
             system_state_version: 2,
@@ -345,10 +346,10 @@ module sui_system::sui_system_state_inner {
     /// stakes in their staking pool. Once they have at least `MIN_VALIDATOR_JOINING_STAKE` amount of stake they
     /// can call `request_add_validator` to officially become an active validator at the next epoch.
     /// Aborts if the caller is already a pending or active validator, or a validator candidate.
-    /// Note: `proof_of_possession` MUST be a valid signature using sui_address and protocol_pubkey_bytes.
+    /// Note: `proof_of_possession` MUST be a valid signature using iota_address and protocol_pubkey_bytes.
     /// To produce a valid PoP, run [fn test_proof_of_possession].
     public(package) fun request_add_validator_candidate(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         pubkey_bytes: vector<u8>,
         network_pubkey_bytes: vector<u8>,
         worker_pubkey_bytes: vector<u8>,
@@ -390,7 +391,7 @@ module sui_system::sui_system_state_inner {
     /// Called by a validator candidate to remove themselves from the candidacy. After this call
     /// their staking pool becomes deactivate.
     public(package) fun request_remove_validator_candidate(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         ctx: &mut TxContext,
     ) {
         self.validators.request_remove_validator_candidate(ctx);
@@ -401,7 +402,7 @@ module sui_system::sui_system_state_inner {
     /// stake the validator has doesn't meet the min threshold, or if the number of new validators for the next
     /// epoch has already reached the maximum.
     public(package) fun request_add_validator(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         ctx: &TxContext,
     ) {
         assert!(
@@ -414,11 +415,11 @@ module sui_system::sui_system_state_inner {
 
     /// A validator can call this function to request a removal in the next epoch.
     /// We use the sender of `ctx` to look up the validator
-    /// (i.e. sender must match the sui_address in the validator).
-    /// At the end of the epoch, the `validator` object will be returned to the sui_address
+    /// (i.e. sender must match the iota_address in the validator).
+    /// At the end of the epoch, the `validator` object will be returned to the iota_address
     /// of the validator.
     public(package) fun request_remove_validator(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         ctx: &TxContext,
     ) {
         // Only check min validator condition if the current number of validators satisfy the constraint.
@@ -437,7 +438,7 @@ module sui_system::sui_system_state_inner {
     /// A validator can call this function to submit a new gas price quote, to be
     /// used for the reference gas price calculation at the end of the epoch.
     public(package) fun request_set_gas_price(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         cap: &UnverifiedValidatorOperationCap,
         new_gas_price: u64,
     ) {
@@ -450,7 +451,7 @@ module sui_system::sui_system_state_inner {
 
     /// This function is used to set new gas price for candidate validators
     public(package) fun set_candidate_validator_gas_price(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         cap: &UnverifiedValidatorOperationCap,
         new_gas_price: u64,
     ) {
@@ -463,7 +464,7 @@ module sui_system::sui_system_state_inner {
     /// A validator can call this function to set a new commission rate, updated at the end of
     /// the epoch.
     public(package) fun request_set_commission_rate(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         new_commission_rate: u64,
         ctx: &TxContext,
     ) {
@@ -475,7 +476,7 @@ module sui_system::sui_system_state_inner {
 
     /// This function is used to set new commission rate for candidate validators
     public(package) fun set_candidate_validator_commission_rate(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         new_commission_rate: u64,
         ctx: &TxContext,
     ) {
@@ -485,11 +486,11 @@ module sui_system::sui_system_state_inner {
 
     /// Add stake to a validator's staking pool.
     public(package) fun request_add_stake(
-        self: &mut SuiSystemStateInnerV2,
-        stake: Coin<SUI>,
+        self: &mut IotaSystemStateInnerV2,
+        stake: Coin<IOTA>,
         validator_address: address,
         ctx: &mut TxContext,
-    ) : StakedSui {
+    ) : StakedIota {
         self.validators.request_add_stake(
             validator_address,
             stake.into_balance(),
@@ -499,23 +500,23 @@ module sui_system::sui_system_state_inner {
 
     /// Add stake to a validator's staking pool using multiple coins.
     public(package) fun request_add_stake_mul_coin(
-        self: &mut SuiSystemStateInnerV2,
-        stakes: vector<Coin<SUI>>,
+        self: &mut IotaSystemStateInnerV2,
+        stakes: vector<Coin<IOTA>>,
         stake_amount: option::Option<u64>,
         validator_address: address,
         ctx: &mut TxContext,
-    ) : StakedSui {
+    ) : StakedIota {
         let balance = extract_coin_balance(stakes, stake_amount, ctx);
         self.validators.request_add_stake(validator_address, balance, ctx)
     }
 
     /// Withdraw some portion of a stake from a validator's staking pool.
     public(package) fun request_withdraw_stake(
-        self: &mut SuiSystemStateInnerV2,
-        staked_sui: StakedSui,
+        self: &mut IotaSystemStateInnerV2,
+        staked_iota: StakedIota,
         ctx: &TxContext,
-    ) : Balance<SUI> {
-        self.validators.request_withdraw_stake(staked_sui, ctx)
+    ) : Balance<IOTA> {
+        self.validators.request_withdraw_stake(staked_iota, ctx)
     }
 
     /// Report a validator as a bad or non-performant actor in the system.
@@ -525,12 +526,12 @@ module sui_system::sui_system_state_inner {
     /// 3. the cap object is still valid.
     /// This function is idempotent.
     public(package) fun report_validator(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         cap: &UnverifiedValidatorOperationCap,
         reportee_addr: address,
     ) {
         // Reportee needs to be an active validator
-        assert!(self.validators.is_active_validator_by_sui_address(reportee_addr), ENotValidator);
+        assert!(self.validators.is_active_validator_by_iota_address(reportee_addr), ENotValidator);
         // Verify the represented reporter address is an active validator, and the capability is still valid.
         let verified_cap = self.validators.verify_cap(cap, ACTIVE_VALIDATOR_ONLY);
         report_validator_impl(verified_cap, reportee_addr, &mut self.validator_report_records);
@@ -542,7 +543,7 @@ module sui_system::sui_system_state_inner {
     /// 2. the sender has not previously reported the `reportee_addr`, or
     /// 3. the cap is not valid
     public(package) fun undo_report_validator(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         cap: &UnverifiedValidatorOperationCap,
         reportee_addr: address,
     ) {
@@ -589,7 +590,7 @@ module sui_system::sui_system_state_inner {
     /// Create a new `UnverifiedValidatorOperationCap`, transfer it to the
     /// validator and registers it. The original object is thus revoked.
     public(package) fun rotate_operation_cap(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         ctx: &mut TxContext,
     ) {
         let validator = self.validators.get_validator_mut_with_ctx_including_candidates(ctx);
@@ -598,7 +599,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update a validator's name.
     public(package) fun update_validator_name(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         name: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -609,7 +610,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update a validator's description
     public(package) fun update_validator_description(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         description: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -619,7 +620,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update a validator's image url
     public(package) fun update_validator_image_url(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         image_url: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -629,7 +630,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update a validator's project url
     public(package) fun update_validator_project_url(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         project_url: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -640,7 +641,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's network address.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_network_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         network_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -652,7 +653,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's network address.
     public(package) fun update_candidate_validator_network_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         network_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -663,7 +664,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's p2p address.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_p2p_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         p2p_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -675,7 +676,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's p2p address.
     public(package) fun update_candidate_validator_p2p_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         p2p_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -686,7 +687,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's narwhal primary address.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_primary_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         primary_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -696,7 +697,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's narwhal primary address.
     public(package) fun update_candidate_validator_primary_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         primary_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -707,7 +708,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's narwhal worker address.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_worker_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         worker_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -717,7 +718,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's narwhal worker address.
     public(package) fun update_candidate_validator_worker_address(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         worker_address: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -728,7 +729,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's public key of protocol key and proof of possession.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_protocol_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         protocol_pubkey: vector<u8>,
         proof_of_possession: vector<u8>,
         ctx: &TxContext,
@@ -741,7 +742,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's public key of protocol key and proof of possession.
     public(package) fun update_candidate_validator_protocol_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         protocol_pubkey: vector<u8>,
         proof_of_possession: vector<u8>,
         ctx: &TxContext,
@@ -753,7 +754,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's public key of worker key.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_worker_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         worker_pubkey: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -765,7 +766,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's public key of worker key.
     public(package) fun update_candidate_validator_worker_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         worker_pubkey: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -776,7 +777,7 @@ module sui_system::sui_system_state_inner {
     /// Update a validator's public key of network key.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_network_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         network_pubkey: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -788,7 +789,7 @@ module sui_system::sui_system_state_inner {
 
     /// Update candidate validator's public key of network key.
     public(package) fun update_candidate_validator_network_pubkey(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         network_pubkey: vector<u8>,
         ctx: &TxContext,
     ) {
@@ -804,11 +805,11 @@ module sui_system::sui_system_state_inner {
     /// 3. Distribute computation charge to validator stake.
     /// 4. Update all validators.
     public(package) fun advance_epoch(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         new_epoch: u64,
         next_protocol_version: u64,
-        mut storage_reward: Balance<SUI>,
-        mut computation_reward: Balance<SUI>,
+        mut storage_reward: Balance<IOTA>,
+        mut computation_reward: Balance<IOTA>,
         mut storage_rebate_amount: u64,
         mut non_refundable_storage_fee_amount: u64,
         storage_fund_reinvest_rate: u64, // share of storage fund's rewards that's reinvested
@@ -816,7 +817,7 @@ module sui_system::sui_system_state_inner {
         reward_slashing_rate: u64, // how much rewards are slashed to punish a validator, in bps.
         epoch_start_timestamp_ms: u64, // Timestamp of the epoch start
         ctx: &mut TxContext,
-    ) : Balance<SUI> {
+    ) : Balance<IOTA> {
         let prev_epoch_start_timestamp = self.epoch_start_timestamp_ms;
         self.epoch_start_timestamp_ms = epoch_start_timestamp_ms;
 
@@ -950,15 +951,15 @@ module sui_system::sui_system_state_inner {
 
     /// Return the current epoch number. Useful for applications that need a coarse-grained concept of time,
     /// since epochs are ever-increasing and epoch changes are intended to happen every 24 hours.
-    public(package) fun epoch(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun epoch(self: &IotaSystemStateInnerV2): u64 {
         self.epoch
     }
 
-    public(package) fun protocol_version(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun protocol_version(self: &IotaSystemStateInnerV2): u64 {
         self.protocol_version
     }
 
-    public(package) fun system_state_version(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun system_state_version(self: &IotaSystemStateInnerV2): u64 {
         self.system_state_version
     }
 
@@ -969,19 +970,19 @@ module sui_system::sui_system_state_inner {
     }
 
     /// Returns unix timestamp of the start of current epoch
-    public(package) fun epoch_start_timestamp_ms(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun epoch_start_timestamp_ms(self: &IotaSystemStateInnerV2): u64 {
         self.epoch_start_timestamp_ms
     }
 
     /// Returns the total amount staked with `validator_addr`.
     /// Aborts if `validator_addr` is not an active validator.
-    public(package) fun validator_stake_amount(self: &SuiSystemStateInnerV2, validator_addr: address): u64 {
+    public(package) fun validator_stake_amount(self: &IotaSystemStateInnerV2, validator_addr: address): u64 {
         self.validators.validator_total_stake_amount(validator_addr)
     }
 
     /// Returns the voting power for `validator_addr`.
     /// Aborts if `validator_addr` is not an active validator.
-    public(package) fun active_validator_voting_powers(self: &SuiSystemStateInnerV2): VecMap<address, u64> {
+    public(package) fun active_validator_voting_powers(self: &IotaSystemStateInnerV2): VecMap<address, u64> {
         let mut active_validators = active_validator_addresses(self);
         let mut voting_powers = vec_map::empty();
         while (!vector::is_empty(&active_validators)) {
@@ -994,19 +995,19 @@ module sui_system::sui_system_state_inner {
 
     /// Returns the staking pool id of a given validator.
     /// Aborts if `validator_addr` is not an active validator.
-    public(package) fun validator_staking_pool_id(self: &SuiSystemStateInnerV2, validator_addr: address): ID {
+    public(package) fun validator_staking_pool_id(self: &IotaSystemStateInnerV2, validator_addr: address): ID {
 
         self.validators.validator_staking_pool_id(validator_addr)
     }
 
     /// Returns reference to the staking pool mappings that map pool ids to active validator addresses
-    public(package) fun validator_staking_pool_mappings(self: &SuiSystemStateInnerV2): &Table<ID, address> {
+    public(package) fun validator_staking_pool_mappings(self: &IotaSystemStateInnerV2): &Table<ID, address> {
 
         self.validators.staking_pool_mappings()
     }
 
     /// Returns all the validators who are currently reporting `addr`
-    public(package) fun get_reporters_of(self: &SuiSystemStateInnerV2, addr: address): VecSet<address> {
+    public(package) fun get_reporters_of(self: &IotaSystemStateInnerV2, addr: address): VecSet<address> {
 
         if (self.validator_report_records.contains(&addr)) {
             self.validator_report_records[&addr]
@@ -1015,30 +1016,30 @@ module sui_system::sui_system_state_inner {
         }
     }
 
-    public(package) fun get_storage_fund_total_balance(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun get_storage_fund_total_balance(self: &IotaSystemStateInnerV2): u64 {
         self.storage_fund.total_balance()
     }
 
-    public(package) fun get_storage_fund_object_rebates(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun get_storage_fund_object_rebates(self: &IotaSystemStateInnerV2): u64 {
         self.storage_fund.total_object_storage_rebates()
     }
 
     public(package) fun pool_exchange_rates(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         pool_id: &ID
     ): &Table<u64, PoolTokenExchangeRate>  {
         let validators = &mut self.validators;
         validators.pool_exchange_rates(pool_id)
     }
 
-    public(package) fun active_validator_addresses(self: &SuiSystemStateInnerV2): vector<address> {
+    public(package) fun active_validator_addresses(self: &IotaSystemStateInnerV2): vector<address> {
         let validator_set = &self.validators;
         validator_set.active_validator_addresses()
     }
 
     #[allow(lint(self_transfer))]
-    /// Extract required Balance from vector of Coin<SUI>, transfer the remainder back to sender.
-    fun extract_coin_balance(mut coins: vector<Coin<SUI>>, amount: option::Option<u64>, ctx: &mut TxContext): Balance<SUI> {
+    /// Extract required Balance from vector of Coin<IOTA>, transfer the remainder back to sender.
+    fun extract_coin_balance(mut coins: vector<Coin<IOTA>>, amount: option::Option<u64>, ctx: &mut TxContext): Balance<IOTA> {
         let mut merged_coin = coins.pop_back();
         merged_coin.join_vec(coins);
 
@@ -1061,41 +1062,41 @@ module sui_system::sui_system_state_inner {
 
     #[test_only]
     /// Return the current validator set
-    public(package) fun validators(self: &SuiSystemStateInnerV2): &ValidatorSet {
+    public(package) fun validators(self: &IotaSystemStateInnerV2): &ValidatorSet {
         &self.validators
     }
 
     #[test_only]
     /// Return the currently active validator by address
-    public(package) fun active_validator_by_address(self: &SuiSystemStateInnerV2, validator_address: address): &Validator {
+    public(package) fun active_validator_by_address(self: &IotaSystemStateInnerV2, validator_address: address): &Validator {
         self.validators().get_active_validator_ref(validator_address)
     }
 
     #[test_only]
     /// Return the currently pending validator by address
-    public(package) fun pending_validator_by_address(self: &SuiSystemStateInnerV2, validator_address: address): &Validator {
+    public(package) fun pending_validator_by_address(self: &IotaSystemStateInnerV2, validator_address: address): &Validator {
         self.validators().get_pending_validator_ref(validator_address)
     }
 
     #[test_only]
     /// Return the currently candidate validator by address
-    public(package) fun candidate_validator_by_address(self: &SuiSystemStateInnerV2, validator_address: address): &Validator {
+    public(package) fun candidate_validator_by_address(self: &IotaSystemStateInnerV2, validator_address: address): &Validator {
         validators(self).get_candidate_validator_ref(validator_address)
     }
 
     #[test_only]
-    public(package) fun get_stake_subsidy_distribution_counter(self: &SuiSystemStateInnerV2): u64 {
+    public(package) fun get_stake_subsidy_distribution_counter(self: &IotaSystemStateInnerV2): u64 {
         self.stake_subsidy.get_distribution_counter()
     }
 
     #[test_only]
-    public(package) fun set_epoch_for_testing(self: &mut SuiSystemStateInnerV2, epoch_num: u64) {
+    public(package) fun set_epoch_for_testing(self: &mut IotaSystemStateInnerV2, epoch_num: u64) {
         self.epoch = epoch_num
     }
 
     #[test_only]
     public(package) fun request_add_validator_for_testing(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         min_joining_stake_for_testing: u64,
         ctx: &TxContext,
     ) {
@@ -1112,7 +1113,7 @@ module sui_system::sui_system_state_inner {
     // in the process.
     #[test_only]
     public(package) fun request_add_validator_candidate_for_testing(
-        self: &mut SuiSystemStateInnerV2,
+        self: &mut IotaSystemStateInnerV2,
         pubkey_bytes: vector<u8>,
         network_pubkey_bytes: vector<u8>,
         worker_pubkey_bytes: vector<u8>,

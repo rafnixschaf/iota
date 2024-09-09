@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::client_commands::SuiClientCommands;
+use crate::client_commands::IotaClientCommands;
 use crate::console::start_console;
 use crate::fire_drill::{run_fire_drill, FireDrill};
 use crate::genesis_ceremony::{run, Ceremony};
 use crate::keytool::KeyToolCommand;
-use crate::validator_commands::SuiValidatorCommand;
+use crate::validator_commands::IotaValidatorCommand;
 use anyhow::{anyhow, bail, ensure};
 use clap::*;
 use fastcrypto::traits::KeyPair;
@@ -19,46 +20,46 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::{fs, io};
-use sui_bridge::config::BridgeCommitteeConfig;
-use sui_bridge::sui_client::SuiBridgeClient;
-use sui_bridge::sui_transaction_builder::build_committee_register_transaction;
-use sui_config::node::Genesis;
-use sui_config::p2p::SeedPeer;
-use sui_config::{
-    genesis_blob_exists, sui_config_dir, Config, PersistedConfig, FULL_NODE_DB_PATH,
-    SUI_CLIENT_CONFIG, SUI_FULLNODE_CONFIG, SUI_NETWORK_CONFIG,
+use iota_bridge::config::BridgeCommitteeConfig;
+use iota_bridge::iota_client::IotaBridgeClient;
+use iota_bridge::iota_transaction_builder::build_committee_register_transaction;
+use iota_config::node::Genesis;
+use iota_config::p2p::SeedPeer;
+use iota_config::{
+    genesis_blob_exists, iota_config_dir, Config, PersistedConfig, FULL_NODE_DB_PATH,
+    IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_NETWORK_CONFIG,
 };
-use sui_config::{
-    SUI_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME, SUI_GENESIS_FILENAME, SUI_KEYSTORE_FILENAME,
+use iota_config::{
+    IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME,
 };
-use sui_faucet::{create_wallet_context, start_faucet, AppState, FaucetConfig, SimpleFaucet};
+use iota_faucet::{create_wallet_context, start_faucet, AppState, FaucetConfig, SimpleFaucet};
 #[cfg(feature = "indexer")]
-use sui_graphql_rpc::{
+use iota_graphql_rpc::{
     config::ConnectionConfig, test_infra::cluster::start_graphql_server_with_fn_rpc,
 };
 #[cfg(feature = "indexer")]
-use sui_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
-use sui_keys::keypair_file::read_key;
-use sui_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
-use sui_move::{self, execute_move_command};
-use sui_move_build::SuiPackageHooks;
-use sui_sdk::sui_client_config::{SuiClientConfig, SuiEnv};
-use sui_sdk::wallet_context::WalletContext;
-use sui_swarm::memory::Swarm;
-use sui_swarm_config::genesis_config::{GenesisConfig, DEFAULT_NUMBER_OF_AUTHORITIES};
-use sui_swarm_config::network_config::NetworkConfig;
-use sui_swarm_config::network_config_builder::ConfigBuilder;
-use sui_swarm_config::node_config_builder::FullnodeConfigBuilder;
-use sui_types::base_types::SuiAddress;
-use sui_types::crypto::{SignatureScheme, SuiKeyPair, ToFromBytes};
+use iota_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
+use iota_keys::keypair_file::read_key;
+use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
+use iota_move::{self, execute_move_command};
+use iota_move_build::IotaPackageHooks;
+use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
+use iota_sdk::wallet_context::WalletContext;
+use iota_swarm::memory::Swarm;
+use iota_swarm_config::genesis_config::{GenesisConfig, DEFAULT_NUMBER_OF_AUTHORITIES};
+use iota_swarm_config::network_config::NetworkConfig;
+use iota_swarm_config::network_config_builder::ConfigBuilder;
+use iota_swarm_config::node_config_builder::FullnodeConfigBuilder;
+use iota_types::base_types::IotaAddress;
+use iota_types::crypto::{SignatureScheme, IotaKeyPair, ToFromBytes};
 use tempfile::tempdir;
 use tracing;
 use tracing::info;
 
 const CONCURRENCY_LIMIT: usize = 30;
 const DEFAULT_EPOCH_DURATION_MS: u64 = 60_000;
-const DEFAULT_FAUCET_NUM_COINS: usize = 5; // 5 coins per request was the default in sui-test-validator
-const DEFAULT_FAUCET_MIST_AMOUNT: u64 = 200_000_000_000; // 200 SUI
+const DEFAULT_FAUCET_NUM_COINS: usize = 5; // 5 coins per request was the default in iota-test-validator
+const DEFAULT_FAUCET_NANOS_AMOUNT: u64 = 200_000_000_000; // 200 IOTA
 const DEFAULT_FAUCET_PORT: u16 = 9123;
 #[cfg(feature = "indexer")]
 const DEFAULT_GRAPHQL_PORT: u16 = 9125;
@@ -105,8 +106,8 @@ pub struct IndexerFeatureArgs {
     #[clap(long, default_value = "localhost")]
     pg_host: String,
 
-    /// DB name for the Indexer Postgres DB. Default DB name is sui_indexer.
-    #[clap(long, default_value = "sui_indexer")]
+    /// DB name for the Indexer Postgres DB. Default DB name is iota_indexer.
+    #[clap(long, default_value = "iota_indexer")]
     pg_db_name: String,
 
     /// DB username for the Indexer Postgres DB. Default username is postgres.
@@ -126,7 +127,7 @@ impl IndexerFeatureArgs {
             with_graphql: None,
             pg_port: 5432,
             pg_host: "localhost".to_string(),
-            pg_db_name: "sui_indexer".to_string(),
+            pg_db_name: "iota_indexer".to_string(),
             pg_user: "postgres".to_string(),
             pg_password: "postgrespw".to_string(),
         }
@@ -136,12 +137,12 @@ impl IndexerFeatureArgs {
 #[allow(clippy::large_enum_variant)]
 #[derive(Parser)]
 #[clap(rename_all = "kebab-case")]
-pub enum SuiCommand {
+pub enum IotaCommand {
     /// Start a local network in two modes: saving state between re-runs and not saving state
     /// between re-runs. Please use (--help) to see the full description.
     ///
-    /// By default, sui start will start a local network from the genesis blob that exists in
-    /// the Sui config default dir or in the config_dir that was passed. If the default directory
+    /// By default, iota start will start a local network from the genesis blob that exists in
+    /// the Iota config default dir or in the config_dir that was passed. If the default directory
     /// does not exist and the config_dir is not passed, it will generate a new default directory,
     /// generate the genesis blob, and start the network.
     ///
@@ -149,9 +150,9 @@ pub enum SuiCommand {
     #[clap(name = "start")]
     Start {
         /// Config directory that will be used to store network config, node db, keystore
-        /// sui genesis -f --with-faucet generates a genesis config that can be used to start this
+        /// iota genesis -f --with-faucet generates a genesis config that can be used to start this
         /// proces. Use with caution as the `-f` flag will overwrite the existing config directory.
-        /// We can use any config dir that is generated by the `sui genesis`.
+        /// We can use any config dir that is generated by the `iota genesis`.
         #[clap(long = "network.config")]
         config_dir: Option<std::path::PathBuf>,
 
@@ -159,7 +160,7 @@ pub enum SuiCommand {
         /// runs. Only use this flag when you want to start the network from scratch every time you
         /// run this command.
         ///
-        /// To run with persisted state, do not pass this flag and use the `sui genesis` command
+        /// To run with persisted state, do not pass this flag and use the `iota genesis` command
         /// to generate a genesis that can be used to start the network with.
         #[clap(long)]
         force_regenesis: bool,
@@ -202,7 +203,7 @@ pub enum SuiCommand {
         #[clap(short, long, help = "Dump the public keys of all authorities")]
         dump_addresses: bool,
     },
-    /// Bootstrap and initialize a new sui network
+    /// Bootstrap and initialize a new iota network
     #[clap(name = "genesis")]
     Genesis {
         #[clap(long, help = "Start genesis with a given config file")]
@@ -228,12 +229,12 @@ pub enum SuiCommand {
         benchmark_ips: Option<Vec<String>>,
         #[clap(
             long,
-            help = "Creates an extra faucet configuration for sui persisted runs."
+            help = "Creates an extra faucet configuration for iota persisted runs."
         )]
         with_faucet: bool,
     },
     GenesisCeremony(Ceremony),
-    /// Sui keystore tool.
+    /// Iota keystore tool.
     #[clap(name = "keytool")]
     KeyTool {
         #[clap(long)]
@@ -245,21 +246,21 @@ pub enum SuiCommand {
         #[clap(subcommand)]
         cmd: KeyToolCommand,
     },
-    /// Start Sui interactive console.
+    /// Start Iota interactive console.
     #[clap(name = "console")]
     Console {
         /// Sets the file storing the state of our user accounts (an empty one will be created if missing)
         #[clap(long = "client.config")]
         config: Option<PathBuf>,
     },
-    /// Client for interacting with the Sui network.
+    /// Client for interacting with the Iota network.
     #[clap(name = "client")]
     Client {
         /// Sets the file storing the state of our user accounts (an empty one will be created if missing)
         #[clap(long = "client.config")]
         config: Option<PathBuf>,
         #[clap(subcommand)]
-        cmd: Option<SuiClientCommands>,
+        cmd: Option<IotaClientCommands>,
         /// Return command outputs in json format.
         #[clap(long, global = true)]
         json: bool,
@@ -273,7 +274,7 @@ pub enum SuiCommand {
         #[clap(long = "client.config")]
         config: Option<PathBuf>,
         #[clap(subcommand)]
-        cmd: Option<SuiValidatorCommand>,
+        cmd: Option<IotaValidatorCommand>,
         /// Return command outputs in json format.
         #[clap(long, global = true)]
         json: bool,
@@ -296,7 +297,7 @@ pub enum SuiCommand {
         build_config: BuildConfig,
         /// Subcommands.
         #[clap(subcommand)]
-        cmd: sui_move::Command,
+        cmd: iota_move::Command,
     },
 
     /// Command to initialize the bridge committee, usually used when
@@ -317,23 +318,23 @@ pub enum SuiCommand {
         fire_drill: FireDrill,
     },
 
-    /// Invoke Sui's move-analyzer via CLI
+    /// Invoke Iota's move-analyzer via CLI
     #[clap(name = "analyzer", hide = true)]
     Analyzer,
 }
 
-impl SuiCommand {
+impl IotaCommand {
     pub async fn execute(self) -> Result<(), anyhow::Error> {
-        move_package::package_hooks::register_package_hooks(Box::new(SuiPackageHooks));
+        move_package::package_hooks::register_package_hooks(Box::new(IotaPackageHooks));
         match self {
-            SuiCommand::Network {
+            IotaCommand::Network {
                 config,
                 dump_addresses,
             } => {
-                let config_path = config.unwrap_or(sui_config_dir()?.join(SUI_NETWORK_CONFIG));
+                let config_path = config.unwrap_or(iota_config_dir()?.join(IOTA_NETWORK_CONFIG));
                 let config: NetworkConfig = PersistedConfig::read(&config_path).map_err(|err| {
                     err.context(format!(
-                        "Cannot open Sui network config file at {:?}",
+                        "Cannot open Iota network config file at {:?}",
                         config_path
                     ))
                 })?;
@@ -349,7 +350,7 @@ impl SuiCommand {
                 }
                 Ok(())
             }
-            SuiCommand::Start {
+            IotaCommand::Start {
                 config_dir,
                 force_regenesis,
                 with_faucet,
@@ -373,7 +374,7 @@ impl SuiCommand {
 
                 Ok(())
             }
-            SuiCommand::Genesis {
+            IotaCommand::Genesis {
                 working_dir,
                 force,
                 from_config,
@@ -393,76 +394,76 @@ impl SuiCommand {
                 )
                 .await
             }
-            SuiCommand::GenesisCeremony(cmd) => run(cmd),
-            SuiCommand::KeyTool {
+            IotaCommand::GenesisCeremony(cmd) => run(cmd),
+            IotaCommand::KeyTool {
                 keystore_path,
                 json,
                 cmd,
             } => {
                 let keystore_path =
-                    keystore_path.unwrap_or(sui_config_dir()?.join(SUI_KEYSTORE_FILENAME));
+                    keystore_path.unwrap_or(iota_config_dir()?.join(IOTA_KEYSTORE_FILENAME));
                 let mut keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
                 cmd.execute(&mut keystore).await?.print(!json);
                 Ok(())
             }
-            SuiCommand::Console { config } => {
-                let config = config.unwrap_or(sui_config_dir()?.join(SUI_CLIENT_CONFIG));
+            IotaCommand::Console { config } => {
+                let config = config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                 prompt_if_no_config(&config, false).await?;
                 let context = WalletContext::new(&config, None, None)?;
                 start_console(context, &mut stdout(), &mut stderr()).await
             }
-            SuiCommand::Client {
+            IotaCommand::Client {
                 config,
                 cmd,
                 json,
                 accept_defaults,
             } => {
-                let config_path = config.unwrap_or(sui_config_dir()?.join(SUI_CLIENT_CONFIG));
+                let config_path = config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                 prompt_if_no_config(&config_path, accept_defaults).await?;
                 let mut context = WalletContext::new(&config_path, None, None)?;
                 if let Some(cmd) = cmd {
                     cmd.execute(&mut context).await?.print(!json);
                 } else {
                     // Print help
-                    let mut app: Command = SuiCommand::command();
+                    let mut app: Command = IotaCommand::command();
                     app.build();
                     app.find_subcommand_mut("client").unwrap().print_help()?;
                 }
                 Ok(())
             }
-            SuiCommand::Validator {
+            IotaCommand::Validator {
                 config,
                 cmd,
                 json,
                 accept_defaults,
             } => {
-                let config_path = config.unwrap_or(sui_config_dir()?.join(SUI_CLIENT_CONFIG));
+                let config_path = config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                 prompt_if_no_config(&config_path, accept_defaults).await?;
                 let mut context = WalletContext::new(&config_path, None, None)?;
                 if let Some(cmd) = cmd {
                     cmd.execute(&mut context).await?.print(!json);
                 } else {
                     // Print help
-                    let mut app: Command = SuiCommand::command();
+                    let mut app: Command = IotaCommand::command();
                     app.build();
                     app.find_subcommand_mut("validator").unwrap().print_help()?;
                 }
                 Ok(())
             }
-            SuiCommand::Move {
+            IotaCommand::Move {
                 package_path,
                 build_config,
                 mut cmd,
                 config: client_config,
             } => {
                 match &mut cmd {
-                    sui_move::Command::Build(build) if build.dump_bytecode_as_base64 => {
-                        // `sui move build` does not ordinarily require a network connection.
+                    iota_move::Command::Build(build) if build.dump_bytecode_as_base64 => {
+                        // `iota move build` does not ordinarily require a network connection.
                         // The exception is when --dump-bytecode-as-base64 is specified: In this
                         // case, we should resolve the correct addresses for the respective chain
                         // (e.g., testnet, mainnet) from the Move.lock under automated address management.
                         let config =
-                            client_config.unwrap_or(sui_config_dir()?.join(SUI_CLIENT_CONFIG));
+                            client_config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                         prompt_if_no_config(&config, false).await?;
                         let context = WalletContext::new(&config, None, None)?;
                         let client = context.get_client().await?;
@@ -473,19 +474,19 @@ impl SuiCommand {
                 };
                 execute_move_command(package_path.as_deref(), build_config, cmd)
             }
-            SuiCommand::BridgeInitialize {
+            IotaCommand::BridgeInitialize {
                 network_config,
                 client_config,
                 bridge_committee_config_path,
             } => {
-                // Load the config of the Sui authority.
+                // Load the config of the Iota authority.
                 let network_config_path = network_config
                     .clone()
-                    .unwrap_or(sui_config_dir()?.join(SUI_NETWORK_CONFIG));
+                    .unwrap_or(iota_config_dir()?.join(IOTA_NETWORK_CONFIG));
                 let network_config: NetworkConfig = PersistedConfig::read(&network_config_path)
                     .map_err(|err| {
                         err.context(format!(
-                            "Cannot open Sui network config file at {:?}",
+                            "Cannot open Iota network config file at {:?}",
                             network_config_path
                         ))
                     })?;
@@ -498,13 +499,13 @@ impl SuiCommand {
                     })?;
 
                 let config_path =
-                    client_config.unwrap_or(sui_config_dir()?.join(SUI_CLIENT_CONFIG));
+                    client_config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                 let mut context = WalletContext::new(&config_path, None, None)?;
                 let rgp = context.get_reference_gas_price().await?;
                 let rpc_url = &context.config.get_active_env()?.rpc;
                 println!("rpc_url: {}", rpc_url);
-                let sui_bridge_client = SuiBridgeClient::new(rpc_url).await?;
-                let bridge_arg = sui_bridge_client
+                let iota_bridge_client = IotaBridgeClient::new(rpc_url).await?;
+                let bridge_arg = iota_bridge_client
                     .get_mutable_bridge_object_arg_must_succeed()
                     .await;
                 assert_eq!(
@@ -526,19 +527,19 @@ impl SuiCommand {
                     .zip(bridge_committee_config.bridge_authority_port_and_key_path)
                 {
                     let account_kp = node_config.account_key_pair.keypair();
-                    let sui_address = SuiAddress::from(&account_kp.public());
+                    let iota_address = IotaAddress::from(&account_kp.public());
                     let gas_obj_ref = context
-                        .get_one_gas_object_owned_by_address(sui_address)
+                        .get_one_gas_object_owned_by_address(iota_address)
                         .await?
                         .expect("Validator does not own any gas objects");
                     let kp = match read_key(&key_path, true)? {
-                        SuiKeyPair::Secp256k1(key) => key,
+                        IotaKeyPair::Secp256k1(key) => key,
                         _ => unreachable!("we required secp256k1 key in `read_key`"),
                     };
 
                     // build registration tx
                     let tx = build_committee_register_transaction(
-                        sui_address,
+                        iota_address,
                         &gas_obj_ref,
                         bridge_arg,
                         kp.public().as_bytes().to_vec(),
@@ -553,8 +554,8 @@ impl SuiCommand {
                 futures::future::join_all(tasks).await;
                 Ok(())
             }
-            SuiCommand::FireDrill { fire_drill } => run_fire_drill(fire_drill).await,
-            SuiCommand::Analyzer => {
+            IotaCommand::FireDrill { fire_drill } => run_fire_drill(fire_drill).await,
+            IotaCommand::Analyzer => {
                 analyzer::run();
                 Ok(())
             }
@@ -606,7 +607,7 @@ async fn start(
     if epoch_duration_ms.is_some() && genesis_blob_exists(config.clone()) && !force_regenesis {
         bail!(
             "Epoch duration can only be set when passing the `--force-regenesis` flag, or when \
-            there is no genesis configuration in the default Sui configuration folder or the given \
+            there is no genesis configuration in the default Iota configuration folder or the given \
             network.config argument.",
         );
     }
@@ -622,16 +623,16 @@ async fn start(
         let epoch_duration_ms = epoch_duration_ms.unwrap_or(DEFAULT_EPOCH_DURATION_MS);
         swarm_builder = swarm_builder.with_epoch_duration_ms(epoch_duration_ms);
     } else {
-        if config.is_none() && !sui_config_dir()?.join(SUI_NETWORK_CONFIG).exists() {
+        if config.is_none() && !iota_config_dir()?.join(IOTA_NETWORK_CONFIG).exists() {
             genesis(None, None, None, false, epoch_duration_ms, None, false).await?;
         }
 
-        // Load the config of the Sui authority.
-        // To keep compatibility with sui-test-validator where the user can pass a config
+        // Load the config of the Iota authority.
+        // To keep compatibility with iota-test-validator where the user can pass a config
         // directory, this checks if the config is a file or a directory
         let network_config_path = if let Some(ref config) = config {
             if config.is_dir() {
-                config.join(SUI_NETWORK_CONFIG)
+                config.join(IOTA_NETWORK_CONFIG)
             } else if config.is_file()
                 && config
                     .extension()
@@ -639,24 +640,24 @@ async fn start(
             {
                 config.clone()
             } else {
-                config.join(SUI_NETWORK_CONFIG)
+                config.join(IOTA_NETWORK_CONFIG)
             }
         } else {
             config
                 .clone()
-                .unwrap_or(sui_config_dir()?)
-                .join(SUI_NETWORK_CONFIG)
+                .unwrap_or(iota_config_dir()?)
+                .join(IOTA_NETWORK_CONFIG)
         };
         let network_config: NetworkConfig =
             PersistedConfig::read(&network_config_path).map_err(|err| {
                 err.context(format!(
-                    "Cannot open Sui network config file at {:?}",
+                    "Cannot open Iota network config file at {:?}",
                     network_config_path
                 ))
             })?;
 
         swarm_builder = swarm_builder
-            .dir(sui_config_dir()?)
+            .dir(iota_config_dir()?)
             .with_network_config(network_config);
     }
 
@@ -671,7 +672,7 @@ async fn start(
         swarm_builder = swarm_builder.with_data_ingestion_dir(data_ingestion_path.clone());
     }
 
-    let mut fullnode_url = sui_config::node::default_json_rpc_address();
+    let mut fullnode_url = iota_config::node::default_json_rpc_address();
     fullnode_url.set_port(fullnode_rpc_port);
 
     if no_full_node {
@@ -751,7 +752,7 @@ async fn start(
         } else {
             match config {
                 Some(config) => config,
-                None => sui_config_dir()?,
+                None => iota_config_dir()?,
             }
         };
 
@@ -764,20 +765,20 @@ async fn start(
             host_ip,
             port: faucet_address.port(),
             num_coins: DEFAULT_FAUCET_NUM_COINS,
-            amount: DEFAULT_FAUCET_MIST_AMOUNT,
+            amount: DEFAULT_FAUCET_NANOS_AMOUNT,
             ..Default::default()
         };
 
         let prometheus_registry = prometheus::Registry::new();
         if force_regenesis {
             let kp = swarm.config_mut().account_keys.swap_remove(0);
-            let keystore_path = config_dir.join(SUI_KEYSTORE_FILENAME);
+            let keystore_path = config_dir.join(IOTA_KEYSTORE_FILENAME);
             let mut keystore = Keystore::from(FileBasedKeystore::new(&keystore_path).unwrap());
-            let address: SuiAddress = kp.public().into();
-            keystore.add_key(None, SuiKeyPair::Ed25519(kp)).unwrap();
-            SuiClientConfig {
+            let address: IotaAddress = kp.public().into();
+            keystore.add_key(None, IotaKeyPair::Ed25519(kp)).unwrap();
+            IotaClientConfig {
                 keystore,
-                envs: vec![SuiEnv {
+                envs: vec![IotaEnv {
                     alias: "localnet".to_string(),
                     rpc: fullnode_url,
                     ws: None,
@@ -786,7 +787,7 @@ async fn start(
                 active_address: Some(address),
                 active_env: Some("localnet".to_string()),
             }
-            .persisted(config_dir.join(SUI_CLIENT_CONFIG).as_path())
+            .persisted(config_dir.join(IOTA_CLIENT_CONFIG).as_path())
             .save()
             .unwrap();
         }
@@ -839,36 +840,36 @@ async fn genesis(
     benchmark_ips: Option<Vec<String>>,
     with_faucet: bool,
 ) -> Result<(), anyhow::Error> {
-    let sui_config_dir = &match working_dir {
+    let iota_config_dir = &match working_dir {
         // if a directory is specified, it must exist (it
         // will not be created)
         Some(v) => v,
-        // create default Sui config dir if not specified
+        // create default Iota config dir if not specified
         // on the command line and if it does not exist
         // yet
         None => {
-            let config_path = sui_config_dir()?;
+            let config_path = iota_config_dir()?;
             fs::create_dir_all(&config_path)?;
             config_path
         }
     };
 
-    // if Sui config dir is not empty then either clean it
+    // if Iota config dir is not empty then either clean it
     // up (if --force/-f option was specified or report an
     // error
-    let dir = sui_config_dir.read_dir().map_err(|err| {
-        anyhow!(err).context(format!("Cannot open Sui config dir {:?}", sui_config_dir))
+    let dir = iota_config_dir.read_dir().map_err(|err| {
+        anyhow!(err).context(format!("Cannot open Iota config dir {:?}", iota_config_dir))
     })?;
     let files = dir.collect::<Result<Vec<_>, _>>()?;
 
-    let client_path = sui_config_dir.join(SUI_CLIENT_CONFIG);
-    let keystore_path = sui_config_dir.join(SUI_KEYSTORE_FILENAME);
+    let client_path = iota_config_dir.join(IOTA_CLIENT_CONFIG);
+    let keystore_path = iota_config_dir.join(IOTA_KEYSTORE_FILENAME);
 
     if write_config.is_none() && !files.is_empty() {
         if force {
             // check old keystore and client.yaml is compatible
             let is_compatible = FileBasedKeystore::new(&keystore_path).is_ok()
-                && PersistedConfig::<SuiClientConfig>::read(&client_path).is_ok();
+                && PersistedConfig::<IotaClientConfig>::read(&client_path).is_ok();
             // Keep keystore and client.yaml if they are compatible
             if is_compatible {
                 for file in files {
@@ -885,29 +886,29 @@ async fn genesis(
                     }
                 }
             } else {
-                fs::remove_dir_all(sui_config_dir).map_err(|err| {
+                fs::remove_dir_all(iota_config_dir).map_err(|err| {
                     anyhow!(err)
-                        .context(format!("Cannot remove Sui config dir {:?}", sui_config_dir))
+                        .context(format!("Cannot remove Iota config dir {:?}", iota_config_dir))
                 })?;
-                fs::create_dir(sui_config_dir).map_err(|err| {
+                fs::create_dir(iota_config_dir).map_err(|err| {
                     anyhow!(err)
-                        .context(format!("Cannot create Sui config dir {:?}", sui_config_dir))
+                        .context(format!("Cannot create Iota config dir {:?}", iota_config_dir))
                 })?;
             }
         } else if files.len() != 2 || !client_path.exists() || !keystore_path.exists() {
-            bail!("Cannot run genesis with non-empty Sui config directory {}, please use the --force/-f option to remove the existing configuration", sui_config_dir.to_str().unwrap());
+            bail!("Cannot run genesis with non-empty Iota config directory {}, please use the --force/-f option to remove the existing configuration", iota_config_dir.to_str().unwrap());
         }
     }
 
-    let network_path = sui_config_dir.join(SUI_NETWORK_CONFIG);
-    let genesis_path = sui_config_dir.join(SUI_GENESIS_FILENAME);
+    let network_path = iota_config_dir.join(IOTA_NETWORK_CONFIG);
+    let genesis_path = iota_config_dir.join(IOTA_GENESIS_FILENAME);
 
     let mut genesis_conf = match from_config {
         Some(path) => PersistedConfig::read(&path)?,
         None => {
             if let Some(ips) = benchmark_ips {
                 // Make a keystore containing the key for the genesis gas object.
-                let path = sui_config_dir.join(SUI_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME);
+                let path = iota_config_dir.join(IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME);
                 let mut keystore = FileBasedKeystore::new(&path)?;
                 for gas_key in GenesisConfig::benchmark_gas_keys(ips.len()) {
                     keystore.add_key(None, gas_key)?;
@@ -940,7 +941,7 @@ async fn genesis(
     let validator_info = genesis_conf.validator_config_info.take();
     let ssfn_info = genesis_conf.ssfn_config_info.take();
 
-    let builder = ConfigBuilder::new(sui_config_dir);
+    let builder = ConfigBuilder::new(iota_config_dir);
     if let Some(epoch_duration_ms) = epoch_duration_ms {
         genesis_conf.parameters.epoch_duration_ms = epoch_duration_ms;
     }
@@ -958,13 +959,13 @@ async fn genesis(
 
     let mut keystore = FileBasedKeystore::new(&keystore_path)?;
     for key in &network_config.account_keys {
-        keystore.add_key(None, SuiKeyPair::Ed25519(key.copy()))?;
+        keystore.add_key(None, IotaKeyPair::Ed25519(key.copy()))?;
     }
     let active_address = keystore.addresses().pop();
 
     network_config.genesis.save(&genesis_path)?;
     for validator in &mut network_config.validator_configs {
-        validator.genesis = sui_config::node::Genesis::new_from_file(&genesis_path);
+        validator.genesis = iota_config::node::Genesis::new_from_file(&genesis_path);
     }
 
     info!("Network genesis completed.");
@@ -975,27 +976,27 @@ async fn genesis(
 
     let fullnode_config = FullnodeConfigBuilder::new()
         .with_config_directory(FULL_NODE_DB_PATH.into())
-        .with_rpc_addr(sui_config::node::default_json_rpc_address())
+        .with_rpc_addr(iota_config::node::default_json_rpc_address())
         .build(&mut OsRng, &network_config);
 
-    fullnode_config.save(sui_config_dir.join(SUI_FULLNODE_CONFIG))?;
+    fullnode_config.save(iota_config_dir.join(IOTA_FULLNODE_CONFIG))?;
     let mut ssfn_nodes = vec![];
     if let Some(ssfn_info) = ssfn_info {
         for (i, ssfn) in ssfn_info.into_iter().enumerate() {
             let path =
-                sui_config_dir.join(sui_config::ssfn_config_file(ssfn.p2p_address.clone(), i));
+                iota_config_dir.join(iota_config::ssfn_config_file(ssfn.p2p_address.clone(), i));
             // join base fullnode config with each SsfnGenesisConfig entry
             let ssfn_config = FullnodeConfigBuilder::new()
                 .with_config_directory(FULL_NODE_DB_PATH.into())
                 .with_p2p_external_address(ssfn.p2p_address)
                 .with_network_key_pair(ssfn.network_key_pair)
                 .with_p2p_listen_address("0.0.0.0:8084".parse().unwrap())
-                .with_db_path(PathBuf::from("/opt/sui/db/authorities_db/full_node_db"))
+                .with_db_path(PathBuf::from("/opt/iota/db/authorities_db/full_node_db"))
                 .with_network_address("/ip4/0.0.0.0/tcp/8080/http".parse().unwrap())
                 .with_metrics_address("0.0.0.0:9184".parse().unwrap())
                 .with_admin_interface_port(1337)
                 .with_json_rpc_address("0.0.0.0:9000".parse().unwrap())
-                .with_genesis(Genesis::new_from_file("/opt/sui/config/genesis.blob"))
+                .with_genesis(Genesis::new_from_file("/opt/iota/config/genesis.blob"))
                 .build(&mut OsRng, &network_config);
             ssfn_nodes.push(ssfn_config.clone());
             ssfn_config.save(path)?;
@@ -1016,7 +1017,7 @@ async fn genesis(
             .into_iter()
             .enumerate()
         {
-            let path = sui_config_dir.join(sui_config::validator_config_file(
+            let path = iota_config_dir.join(iota_config::validator_config_file(
                 validator.network_address.clone(),
                 i,
             ));
@@ -1031,7 +1032,7 @@ async fn genesis(
             .into_iter()
             .enumerate()
         {
-            let path = sui_config_dir.join(sui_config::validator_config_file(
+            let path = iota_config_dir.join(iota_config::validator_config_file(
                 validator.network_address.clone(),
                 i,
             ));
@@ -1042,7 +1043,7 @@ async fn genesis(
     let mut client_config = if client_path.exists() {
         PersistedConfig::read(&client_path)?
     } else {
-        SuiClientConfig::new(keystore.into())
+        IotaClientConfig::new(keystore.into())
     };
 
     if client_config.active_address.is_none() {
@@ -1057,7 +1058,7 @@ async fn genesis(
         } else {
             fullnode_config.json_rpc_address.ip().to_string()
         };
-    client_config.add_env(SuiEnv {
+    client_config.add_env(IotaEnv {
         alias: "localnet".to_string(),
         rpc: format!(
             "http://{}:{}",
@@ -1067,7 +1068,7 @@ async fn genesis(
         ws: None,
         basic_auth: None,
     });
-    client_config.add_env(SuiEnv::devnet());
+    client_config.add_env(IotaEnv::devnet());
 
     if client_config.active_env.is_none() {
         client_config.active_env = client_config.envs.first().map(|env| env.alias.clone());
@@ -1085,8 +1086,8 @@ async fn prompt_if_no_config(
 ) -> Result<(), anyhow::Error> {
     // Prompt user for connect to devnet fullnode if config does not exist.
     if !wallet_conf_path.exists() {
-        let env = match std::env::var_os("SUI_CONFIG_WITH_RPC_URL") {
-            Some(v) => Some(SuiEnv {
+        let env = match std::env::var_os("IOTA_CONFIG_WITH_RPC_URL") {
+            Some(v) => Some(IotaEnv {
                 alias: "custom".to_string(),
                 rpc: v.into_string().unwrap(),
                 ws: None,
@@ -1097,7 +1098,7 @@ async fn prompt_if_no_config(
                     print!("Creating config file [{:?}] with default (devnet) Full node server and ed25519 key scheme.", wallet_conf_path);
                 } else {
                     print!(
-                        "Config file [{:?}] doesn't exist, do you want to connect to a Sui Full node server [y/N]?",
+                        "Config file [{:?}] doesn't exist, do you want to connect to a Iota Full node server [y/N]?",
                         wallet_conf_path
                     );
                 }
@@ -1108,12 +1109,12 @@ async fn prompt_if_no_config(
                         String::new()
                     } else {
                         print!(
-                            "Sui Full node server URL (Defaults to Sui Testnet if not specified) : "
+                            "Iota Full node server URL (Defaults to Iota Testnet if not specified) : "
                         );
                         read_line()?
                     };
                     Some(if url.trim().is_empty() {
-                        SuiEnv::testnet()
+                        IotaEnv::testnet()
                     } else {
                         print!("Environment alias for [{url}] : ");
                         let alias = read_line()?;
@@ -1122,7 +1123,7 @@ async fn prompt_if_no_config(
                         } else {
                             alias
                         };
-                        SuiEnv {
+                        IotaEnv {
                             alias,
                             rpc: url,
                             ws: None,
@@ -1138,8 +1139,8 @@ async fn prompt_if_no_config(
         if let Some(env) = env {
             let keystore_path = wallet_conf_path
                 .parent()
-                .unwrap_or(&sui_config_dir()?)
-                .join(SUI_KEYSTORE_FILENAME);
+                .unwrap_or(&iota_config_dir()?)
+                .join(IOTA_KEYSTORE_FILENAME);
             let mut keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
             let key_scheme = if accept_defaults {
                 SignatureScheme::ED25519
@@ -1159,7 +1160,7 @@ async fn prompt_if_no_config(
             );
             println!("Secret Recovery Phrase : [{phrase}]");
             let alias = env.alias.clone();
-            SuiClientConfig {
+            IotaClientConfig {
                 keystore,
                 envs: vec![env],
                 active_address: Some(new_address),

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "pg_integration")]
@@ -10,17 +11,17 @@ mod ingestion_tests {
     use std::path::PathBuf;
     use std::sync::Arc;
     use std::time::Duration;
-    use sui_indexer::db::get_pool_connection;
-    use sui_indexer::errors::Context;
-    use sui_indexer::errors::IndexerError;
-    use sui_indexer::models::{objects::StoredObject, transactions::StoredTransaction};
-    use sui_indexer::schema::{objects, transactions};
-    use sui_indexer::store::{indexer_store::IndexerStore, PgIndexerStore};
-    use sui_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
-    use sui_types::base_types::SuiAddress;
-    use sui_types::effects::TransactionEffectsAPI;
-    use sui_types::gas_coin::GasCoin;
-    use sui_types::SUI_FRAMEWORK_PACKAGE_ID;
+    use iota_indexer::db::get_pool_connection;
+    use iota_indexer::errors::Context;
+    use iota_indexer::errors::IndexerError;
+    use iota_indexer::models::{objects::StoredObject, transactions::StoredTransaction};
+    use iota_indexer::schema::{objects, transactions};
+    use iota_indexer::store::{indexer_store::IndexerStore, PgIndexerStore};
+    use iota_indexer::test_utils::{start_test_indexer, ReaderWriterConfig};
+    use iota_types::base_types::IotaAddress;
+    use iota_types::effects::TransactionEffectsAPI;
+    use iota_types::gas_coin::GasCoin;
+    use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
     use tempfile::tempdir;
     use tokio::task::JoinHandle;
 
@@ -36,7 +37,7 @@ mod ingestion_tests {
     }
 
     const DEFAULT_SERVER_PORT: u16 = 3000;
-    const DEFAULT_DB_URL: &str = "postgres://postgres:postgrespw@localhost:5432/sui_indexer";
+    const DEFAULT_DB_URL: &str = "postgres://postgres:postgrespw@localhost:5432/iota_indexer";
 
     /// Set up a test indexer fetching from a REST endpoint served by the given Simulacrum.
     async fn set_up(
@@ -52,7 +53,7 @@ mod ingestion_tests {
             .unwrap();
 
         let server_handle = tokio::spawn(async move {
-            sui_rest_api::RestService::new_without_version(sim)
+            iota_rest_api::RestService::new_without_version(sim)
                 .start_service(server_url)
                 .await;
         });
@@ -95,7 +96,7 @@ mod ingestion_tests {
         sim.set_data_ingestion_path(data_ingestion_path.clone());
 
         // Execute a simple transaction.
-        let transfer_recipient = SuiAddress::random_for_testing_only();
+        let transfer_recipient = IotaAddress::random_for_testing_only();
         let (transaction, _) = sim.transfer_txn(transfer_recipient);
         let (effects, err) = sim.execute_transaction(transaction.clone()).unwrap();
         assert!(err.is_none());
@@ -140,7 +141,7 @@ mod ingestion_tests {
         sim.set_data_ingestion_path(data_ingestion_path.clone());
 
         // Execute a simple transaction.
-        let transfer_recipient = SuiAddress::random_for_testing_only();
+        let transfer_recipient = IotaAddress::random_for_testing_only();
         let (transaction, _) = sim.transfer_txn(transfer_recipient);
         let (_, err) = sim.execute_transaction(transaction.clone()).unwrap();
         assert!(err.is_none());
@@ -172,7 +173,7 @@ mod ingestion_tests {
         );
         assert_eq!(
             db_object.object_type_package,
-            Some(SUI_FRAMEWORK_PACKAGE_ID.to_vec())
+            Some(IOTA_FRAMEWORK_PACKAGE_ID.to_vec())
         );
         assert_eq!(db_object.object_type_module, Some("coin".to_string()));
         assert_eq!(db_object.object_type_name, Some("Coin".to_string()));

@@ -1,17 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { bcs } from '@mysten/sui/bcs';
+import { bcs } from '@iota/iota/bcs';
 import {
 	type DryRunTransactionBlockResponse,
 	type ExecuteTransactionRequestType,
-	type SuiClient,
-	type SuiTransactionBlockResponse,
-	type SuiTransactionBlockResponseOptions,
-} from '@mysten/sui/client';
-import { messageWithIntent } from '@mysten/sui/cryptography';
-import { isTransaction, type Transaction } from '@mysten/sui/transactions';
-import { fromB64, toB64 } from '@mysten/sui/utils';
+	type IotaClient,
+	type IotaTransactionBlockResponse,
+	type IotaTransactionBlockResponseOptions,
+} from '@iota/iota/client';
+import { messageWithIntent } from '@iota/iota/cryptography';
+import { isTransaction, type Transaction } from '@iota/iota/transactions';
+import { fromB64, toB64 } from '@iota/iota/utils';
 
 export type SignedTransaction = {
 	transactionBlockBytes: string;
@@ -24,9 +25,9 @@ export type SignedMessage = {
 };
 
 export abstract class WalletSigner {
-	client: SuiClient;
+	client: IotaClient;
 
-	constructor(client: SuiClient) {
+	constructor(client: IotaClient) {
 		this.client = client;
 	}
 
@@ -86,11 +87,11 @@ export abstract class WalletSigner {
 	async signAndExecuteTransactionBlock(
 		input: {
 			transactionBlock: Uint8Array | Transaction;
-			options?: SuiTransactionBlockResponseOptions;
+			options?: IotaTransactionBlockResponseOptions;
 			requestType?: ExecuteTransactionRequestType;
 		},
 		clientIdentifier?: string,
-	): Promise<SuiTransactionBlockResponse> {
+	): Promise<IotaTransactionBlockResponse> {
 		const bytes = await this.prepareTransactionBlock(input.transactionBlock);
 		const signed = await this.signTransactionBlock({
 			transactionBlock: bytes,

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::*;
@@ -9,13 +10,13 @@ use move_core_types::{account_address::AccountAddress, ident_str};
 use narwhal_types::Transactions;
 use narwhal_types::TransactionsServer;
 use narwhal_types::{Empty, TransactionProto};
-use sui_network::tonic;
-use sui_types::crypto::deterministic_random_account_key;
-use sui_types::multiaddr::Multiaddr;
-use sui_types::transaction::TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS;
-use sui_types::utils::to_sender_signed_transaction;
-use sui_types::SUI_FRAMEWORK_PACKAGE_ID;
-use sui_types::{
+use iota_network::tonic;
+use iota_types::crypto::deterministic_random_account_key;
+use iota_types::multiaddr::Multiaddr;
+use iota_types::transaction::TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS;
+use iota_types::utils::to_sender_signed_transaction;
+use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
+use iota_types::{
     base_types::ObjectID,
     object::Object,
     transaction::{CallArg, CertifiedTransaction, ObjectArg, TransactionData},
@@ -66,7 +67,7 @@ pub async fn test_certificates(
 
         let data = TransactionData::new_move_call(
             sender,
-            SUI_FRAMEWORK_PACKAGE_ID,
+            IOTA_FRAMEWORK_PACKAGE_ID,
             ident_str!(module).to_owned(),
             ident_str!(function).to_owned(),
             /* type_args */ vec![],
@@ -118,7 +119,7 @@ pub fn make_consensus_adapter_for_test(
             &self,
             transactions: &[ConsensusTransaction],
             epoch_store: &Arc<AuthorityPerEpochStore>,
-        ) -> SuiResult {
+        ) -> IotaResult {
             let sequenced_transactions = transactions
                 .iter()
                 .map(|txn| SequencedConsensusTransaction::new_test(txn.clone()))
@@ -195,7 +196,7 @@ impl ConsensusMockServer {
     pub fn spawn(address: Multiaddr) -> Receiver<TransactionProto> {
         let (sender, receiver) = channel(1);
         tokio::spawn(async move {
-            let config = mysten_network::config::Config::new();
+            let config = iota_network_stack::config::Config::new();
             let mock = Self { sender };
             config
                 .server_builder()

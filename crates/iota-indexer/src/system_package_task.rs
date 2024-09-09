@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::time::Duration;
@@ -6,7 +7,7 @@ use std::time::Duration;
 use crate::store::diesel_macro::*;
 use diesel::r2d2::R2D2Connection;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use sui_types::SYSTEM_PACKAGE_ADDRESSES;
+use iota_types::SYSTEM_PACKAGE_ADDRESSES;
 use tokio_util::sync::CancellationToken;
 
 use crate::{indexer_reader::IndexerReader, schema::epochs};

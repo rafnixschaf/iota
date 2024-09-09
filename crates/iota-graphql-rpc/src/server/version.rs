@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use axum::{
@@ -15,13 +16,13 @@ use crate::{
     error::{code, graphql_error_response},
 };
 
-pub(crate) static VERSION_HEADER: HeaderName = HeaderName::from_static("x-sui-rpc-version");
+pub(crate) static VERSION_HEADER: HeaderName = HeaderName::from_static("x-iota-rpc-version");
 
 #[allow(unused)]
-pub(crate) struct SuiRpcVersion(Vec<u8>, Vec<Vec<u8>>);
+pub(crate) struct IotaRpcVersion(Vec<u8>, Vec<Vec<u8>>);
 const NAMED_VERSIONS: [&str; 3] = ["beta", "legacy", "stable"];
 
-impl headers::Header for SuiRpcVersion {
+impl headers::Header for IotaRpcVersion {
     fn name() -> &'static HeaderName {
         &VERSION_HEADER
     }
@@ -39,7 +40,7 @@ impl headers::Header for SuiRpcVersion {
         // Extract the header values as bytes.  Distinguish the first value as we expect there to be
         // just one under normal operation.  Do not attempt to parse the value, as a header parsing
         // failure produces a generic error.
-        Ok(SuiRpcVersion(value, values.collect()))
+        Ok(IotaRpcVersion(value, values.collect()))
     }
 
     fn encode<E: Extend<HeaderValue>>(&self, _values: &mut E) {
@@ -138,13 +139,13 @@ mod tests {
     };
     use axum::{body::Body, middleware, routing::get, Router};
     use expect_test::expect;
-    use mysten_metrics;
+    use iota_metrics;
     use tokio_util::sync::CancellationToken;
     use tower::ServiceExt;
 
     fn metrics() -> Metrics {
         let binding_address: SocketAddr = "0.0.0.0:9185".parse().unwrap();
-        let registry = mysten_metrics::start_prometheus_server(binding_address).default_registry();
+        let registry = iota_metrics::start_prometheus_server(binding_address).default_registry();
         Metrics::new(&registry)
     }
     fn service() -> Router {

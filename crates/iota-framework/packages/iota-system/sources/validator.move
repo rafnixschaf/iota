@@ -1,20 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[allow(unused_const)]
-module sui_system::validator {
+module iota_system::validator {
     use std::bcs;
 
-    use sui::balance::Balance;
-    use sui::sui::SUI;
-    use sui_system::validator_cap::{Self, ValidatorOperationCap};
-    use sui_system::staking_pool::{Self, PoolTokenExchangeRate, StakedSui, StakingPool};
+    use iota::balance::Balance;
+    use iota::iota::IOTA;
+    use iota_system::validator_cap::{Self, ValidatorOperationCap};
+    use iota_system::staking_pool::{Self, PoolTokenExchangeRate, StakedIota, StakingPool};
     use std::string::String;
-    use sui::url::Url;
-    use sui::url;
-    use sui::event;
-    use sui::bag::Bag;
-    use sui::bag;
+    use iota::url::Url;
+    use iota::url;
+    use iota::event;
+    use iota::bag::Bag;
+    use iota::bag;
 
     /// Invalid proof_of_possession field in ValidatorMetadata
     const EInvalidProofOfPossession: u64 = 0;
@@ -70,13 +71,13 @@ module sui_system::validator {
     const MAX_VALIDATOR_METADATA_LENGTH: u64 = 256;
 
     // TODO: Move this to onchain config when we have a good way to do it.
-    /// Max gas price a validator can set is 100K MIST.
+    /// Max gas price a validator can set is 100K NANOS.
     const MAX_VALIDATOR_GAS_PRICE: u64 = 100_000;
 
     public struct ValidatorMetadata has store {
-        /// The Sui Address of the validator. This is the sender that created the Validator object,
+        /// The Iota Address of the validator. This is the sender that created the Validator object,
         /// and also the address to send validator/coins to during withdraws.
-        sui_address: address,
+        iota_address: address,
         /// The public key bytes corresponding to the private key that the validator
         /// holds to sign transactions. For now, this is the same as AuthorityName.
         protocol_pubkey_bytes: vector<u8>,
@@ -161,7 +162,7 @@ module sui_system::validator {
     }
 
     public(package) fun new_metadata(
-        sui_address: address,
+        iota_address: address,
         protocol_pubkey_bytes: vector<u8>,
         network_pubkey_bytes: vector<u8>,
         worker_pubkey_bytes: vector<u8>,
@@ -177,7 +178,7 @@ module sui_system::validator {
         extra_fields: Bag,
     ): ValidatorMetadata {
         let metadata = ValidatorMetadata {
-            sui_address,
+            iota_address,
             protocol_pubkey_bytes,
             network_pubkey_bytes,
             worker_pubkey_bytes,
@@ -204,7 +205,7 @@ module sui_system::validator {
     }
 
     public(package) fun new(
-        sui_address: address,
+        iota_address: address,
         protocol_pubkey_bytes: vector<u8>,
         network_pubkey_bytes: vector<u8>,
         worker_pubkey_bytes: vector<u8>,
@@ -236,7 +237,7 @@ module sui_system::validator {
         assert!(gas_price < MAX_VALIDATOR_GAS_PRICE, EGasPriceHigherThanThreshold);
 
         let metadata = new_metadata(
-            sui_address,
+            iota_address,
             protocol_pubkey_bytes,
             network_pubkey_bytes,
             worker_pubkey_bytes,
@@ -281,14 +282,14 @@ module sui_system::validator {
     /// Request to add stake to the validator's staking pool, processed at the end of the epoch.
     public(package) fun request_add_stake(
         self: &mut Validator,
-        stake: Balance<SUI>,
+        stake: Balance<IOTA>,
         staker_address: address,
         ctx: &mut TxContext,
-    ) : StakedSui {
+    ) : StakedIota {
         let stake_amount = stake.value();
         assert!(stake_amount > 0, EInvalidStakeAmount);
         let stake_epoch = ctx.epoch() + 1;
-        let staked_sui = self.staking_pool.request_add_stake(stake, stake_epoch, ctx);
+        let staked_iota = self.staking_pool.request_add_stake(stake, stake_epoch, ctx);
         // Process stake right away if staking pool is preactive.
         if (self.staking_pool.is_preactive()) {
             self.staking_pool.process_pending_stake();
@@ -297,19 +298,19 @@ module sui_system::validator {
         event::emit(
             StakingRequestEvent {
                 pool_id: staking_pool_id(self),
-                validator_address: self.metadata.sui_address,
+                validator_address: self.metadata.iota_address,
                 staker_address,
                 epoch: ctx.epoch(),
                 amount: stake_amount,
             }
         );
-        staked_sui
+        staked_iota
     }
 
     /// Request to add stake to the validator's staking pool at genesis
     public(package) fun request_add_stake_at_genesis(
         self: &mut Validator,
-        stake: Balance<SUI>,
+        stake: Balance<IOTA>,
         staker_address: address,
         ctx: &mut TxContext,
     ) {
@@ -317,13 +318,13 @@ module sui_system::validator {
         let stake_amount = stake.value();
         assert!(stake_amount > 0, EInvalidStakeAmount);
 
-        let staked_sui = self.staking_pool.request_add_stake(
+        let staked_iota = self.staking_pool.request_add_stake(
             stake,
             0, // epoch 0 -- genesis
             ctx
         );
 
-        transfer::public_transfer(staked_sui, staker_address);
+        transfer::public_transfer(staked_iota, staker_address);
 
         // Process stake right away
         self.staking_pool.process_pending_stake();
@@ -333,19 +334,19 @@ module sui_system::validator {
     /// Request to withdraw stake from the validator's staking pool, processed at the end of the epoch.
     public(package) fun request_withdraw_stake(
         self: &mut Validator,
-        staked_sui: StakedSui,
+        staked_iota: StakedIota,
         ctx: &TxContext,
-    ) : Balance<SUI> {
-        let principal_amount = staked_sui.staked_sui_amount();
-        let stake_activation_epoch = staked_sui.stake_activation_epoch();
-        let withdrawn_stake = self.staking_pool.request_withdraw_stake(staked_sui, ctx);
+    ) : Balance<IOTA> {
+        let principal_amount = staked_iota.staked_iota_amount();
+        let stake_activation_epoch = staked_iota.stake_activation_epoch();
+        let withdrawn_stake = self.staking_pool.request_withdraw_stake(staked_iota, ctx);
         let withdraw_amount = withdrawn_stake.value();
         let reward_amount = withdraw_amount - principal_amount;
         self.next_epoch_stake = self.next_epoch_stake - withdraw_amount;
         event::emit(
             UnstakingRequestEvent {
                 pool_id: staking_pool_id(self),
-                validator_address: self.metadata.sui_address,
+                validator_address: self.metadata.iota_address,
                 staker_address: ctx.sender(),
                 stake_activation_epoch,
                 unstaking_epoch: ctx.epoch(),
@@ -365,7 +366,7 @@ module sui_system::validator {
     ) {
         assert!(new_price < MAX_VALIDATOR_GAS_PRICE, EGasPriceHigherThanThreshold);
         let validator_address = *verified_cap.verified_operation_cap_address();
-        assert!(validator_address == self.metadata.sui_address, EInvalidCap);
+        assert!(validator_address == self.metadata.iota_address, EInvalidCap);
         self.next_epoch_gas_price = new_price;
     }
 
@@ -378,7 +379,7 @@ module sui_system::validator {
         assert!(is_preactive(self), ENotValidatorCandidate);
         assert!(new_price < MAX_VALIDATOR_GAS_PRICE, EGasPriceHigherThanThreshold);
         let validator_address = *verified_cap.verified_operation_cap_address();
-        assert!(validator_address == self.metadata.sui_address, EInvalidCap);
+        assert!(validator_address == self.metadata.iota_address, EInvalidCap);
         self.next_epoch_gas_price = new_price;
         self.gas_price = new_price;
     }
@@ -397,7 +398,7 @@ module sui_system::validator {
     }
 
     /// Deposit stakes rewards into the validator's staking pool, called at the end of the epoch.
-    public(package) fun deposit_stake_rewards(self: &mut Validator, reward: Balance<SUI>) {
+    public(package) fun deposit_stake_rewards(self: &mut Validator, reward: Balance<IOTA>) {
         self.next_epoch_stake = self.next_epoch_stake + reward.value();
         self.staking_pool.deposit_rewards(reward);
     }
@@ -417,8 +418,8 @@ module sui_system::validator {
         &self.metadata
     }
 
-    public fun sui_address(self: &Validator): address {
-        self.metadata.sui_address
+    public fun iota_address(self: &Validator): address {
+        self.metadata.iota_address
     }
 
     public fun name(self: &Validator): &String {
@@ -512,11 +513,11 @@ module sui_system::validator {
     // TODO: this and `delegate_amount` and `total_stake` all seem to return the same value?
     // two of the functions can probably be removed.
     public fun total_stake_amount(self: &Validator): u64 {
-        self.staking_pool.sui_balance()
+        self.staking_pool.iota_balance()
     }
 
     public fun stake_amount(self: &Validator): u64 {
-        self.staking_pool.sui_balance()
+        self.staking_pool.iota_balance()
     }
 
     /// Return the total amount staked with this validator
@@ -560,7 +561,7 @@ module sui_system::validator {
 
     // MUSTFIX: We need to check this when updating metadata as well.
     public fun is_duplicate(self: &Validator, other: &Validator): bool {
-         self.metadata.sui_address == other.metadata.sui_address
+         self.metadata.iota_address == other.metadata.iota_address
             || self.metadata.name == other.metadata.name
             || self.metadata.net_address == other.metadata.net_address
             || self.metadata.p2p_address == other.metadata.p2p_address
@@ -617,7 +618,7 @@ module sui_system::validator {
     /// and registers it, thus revoking the previous cap's permission.
     public(package) fun new_unverified_validator_operation_cap_and_transfer(self: &mut Validator, ctx: &mut TxContext) {
         let address = ctx.sender();
-        assert!(address == self.metadata.sui_address, ENewCapNotCreatedByValidatorItself);
+        assert!(address == self.metadata.iota_address, ENewCapNotCreatedByValidatorItself);
         let new_id = validator_cap::new_unverified_validator_operation_cap_and_transfer(address, ctx);
         self.operation_cap_id = new_id;
     }
@@ -852,11 +853,11 @@ module sui_system::validator {
         commission_rate: u64,
         ctx: &mut TxContext
     ): Validator {
-        let sui_address = metadata.sui_address;
+        let iota_address = metadata.iota_address;
 
         let staking_pool = staking_pool::new(ctx);
 
-        let operation_cap_id = validator_cap::new_unverified_validator_operation_cap_and_transfer(sui_address, ctx);
+        let operation_cap_id = validator_cap::new_unverified_validator_operation_cap_and_transfer(iota_address, ctx);
         Validator {
             metadata,
             // Initialize the voting power to be 0.
@@ -877,11 +878,11 @@ module sui_system::validator {
     // CAUTION: THIS CODE IS ONLY FOR TESTING AND THIS MACRO MUST NEVER EVER BE REMOVED.
     // Creates a validator - bypassing the proof of possession check and other metadata
     // validation in the process.
-    // Note: `proof_of_possession` MUST be a valid signature using sui_address and
+    // Note: `proof_of_possession` MUST be a valid signature using iota_address and
     // protocol_pubkey_bytes. To produce a valid PoP, run [fn test_proof_of_possession].
     #[test_only]
     public(package) fun new_for_testing(
-        sui_address: address,
+        iota_address: address,
         protocol_pubkey_bytes: vector<u8>,
         network_pubkey_bytes: vector<u8>,
         worker_pubkey_bytes: vector<u8>,
@@ -894,7 +895,7 @@ module sui_system::validator {
         p2p_address: vector<u8>,
         primary_address: vector<u8>,
         worker_address: vector<u8>,
-        mut initial_stake_option: Option<Balance<SUI>>,
+        mut initial_stake_option: Option<Balance<IOTA>>,
         gas_price: u64,
         commission_rate: u64,
         is_active_at_genesis: bool,
@@ -902,7 +903,7 @@ module sui_system::validator {
     ): Validator {
         let mut validator = new_from_metadata(
             new_metadata(
-                sui_address,
+                iota_address,
                 protocol_pubkey_bytes,
                 network_pubkey_bytes,
                 worker_pubkey_bytes,
@@ -927,7 +928,7 @@ module sui_system::validator {
             request_add_stake_at_genesis(
                 &mut validator,
                 initial_stake_option.extract(),
-                sui_address, // give the stake to the validator
+                iota_address, // give the stake to the validator
                 ctx
             );
         };

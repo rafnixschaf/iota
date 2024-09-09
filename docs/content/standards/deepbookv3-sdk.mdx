@@ -2,10 +2,10 @@
 title: DeepBookV3 SDK
 ---
 
-The DeepBook typescript SDK abstracts away the transaction calls, allowing for direct interactions with the DeepBook package. To use the SDK in your projects, install the `@mysten/deepbook` package.
+The DeepBook typescript SDK abstracts away the transaction calls, allowing for direct interactions with the DeepBook package. To use the SDK in your projects, install the `@iota/deepbook` package.
 
 ```sh npm2yarn
-npm install @mysten/deepbook-v3
+npm install @iota/deepbook-v3
 ```
 
 ## Constants
@@ -21,41 +21,41 @@ Toggle constants.ts code
 
 ## DeepBookClient
 
-To work with DeepBook, you must create a `DeepBookClient`. To construct the `DeepBookClient`, pass in a `SuiClient`, the sender address, and environment. The [Sui TypeScript SDK](https://sdk.mystenlabs.com/typescript) provides the `SuiClient` and key functionality necessary to process transactions. The following example imports those libraries, as well. 
+To work with DeepBook, you must create a `DeepBookClient`. To construct the `DeepBookClient`, pass in a `IotaClient`, the sender address, and environment. The [Iota TypeScript SDK](https://wiki.iota.org/references/ts-sdk/typescript) provides the `IotaClient` and key functionality necessary to process transactions. The following example imports those libraries, as well. 
 
 ```tsx
-import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { IotaClient, getFullnodeUrl } from "@iota/iota/client";
+import { Ed25519Keypair } from "@iota/iota/keypairs/ed25519";
+import { decodeIotaPrivateKey } from "@iota/iota/cryptography";
 
-import { DeepBookClient } from "@mysten/deepbook";
+import { DeepBookClient } from "@iota/deepbook";
 
 class DeepBookMarketMaker {
     dbClient: DeepBookClient; // For building transactions
-    suiClient: SuiClient; // For executing transactions
+    iotaClient: IotaClient; // For executing transactions
     keypair: Ed25519Keypair; // For signing transactions
 
     constructor(privateKey: string, env: 'testnet' | 'mainnet') {
         this.keypair = this.getSignerFromPK(privateKey);
-        this.suiClient = new SuiClient({
+        this.iotaClient = new IotaClient({
             url: getFullnodeUrl(env)
         })
         this.dbClient = new DeepBookClient({
             address: this.getActiveAddress(),
             env: env,
-            client: this.suiClient,
+            client: this.iotaClient,
         });
     }
 
     getSignerFromPK = (privateKey: string): Ed25519Keypair => {
-      const { schema, secretKey } = decodeSuiPrivateKey(privateKey);
+      const { schema, secretKey } = decodeIotaPrivateKey(privateKey);
       if (schema === 'ED25519') return Ed25519Keypair.fromSecretKey(secretKey);
   
       throw new Error(`Unsupported schema: ${schema}`);
     };
 
     getActiveAddress() {
-        return this.keypair.toSuiAddress();
+        return this.keypair.toIotaAddress();
     }
 }
 ```
@@ -71,9 +71,9 @@ Before placing any trade, you must supply a balance manager address to the clien
 Example using an existing balance manager:
     
 ```tsx
-import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { IotaClient, getFullnodeUrl } from "@iota/iota/client";
+import { Ed25519Keypair } from "@iota/iota/keypairs/ed25519";
+import { decodeIotaPrivateKey } from "@iota/iota/cryptography";
 import { config } from 'dotenv';
 config();
 
@@ -85,33 +85,33 @@ const BALANCE_MANAGER_KEY = 'MANAGER_1';
 
 class DeepBookMarketMaker {
     dbClient: DeepBookClient; // For building transactions
-    suiClient: SuiClient; // For executing transactions
+    iotaClient: IotaClient; // For executing transactions
     keypair: Ed25519Keypair; // For signing transactions
     env: 'testnet' | 'mainnet';
 
     constructor(privateKey: string, env: 'testnet' | 'mainnet') {
         this.env = env;
         this.keypair = this.getSignerFromPK(privateKey);
-        this.suiClient = new SuiClient({
+        this.iotaClient = new IotaClient({
             url: getFullnodeUrl(env)
         })
         this.dbClient = new DeepBookClient({
             address: this.getActiveAddress(),
             env: env,
-            client: this.suiClient,
+            client: this.iotaClient,
             balanceManagers: this.getBalanceManagers()
         });
     }
 
     getSignerFromPK = (privateKey: string): Ed25519Keypair => {
-    const { schema, secretKey } = decodeSuiPrivateKey(privateKey);
+    const { schema, secretKey } = decodeIotaPrivateKey(privateKey);
     if (schema === 'ED25519') return Ed25519Keypair.fromSecretKey(secretKey);
 
     throw new Error(`Unsupported schema: ${schema}`);
   };
 
     getActiveAddress() {
-        return this.keypair.toSuiAddress();
+        return this.keypair.toIotaAddress();
     }
 
     getBalanceManagers(): { [key: string]: BalanceManager } {
@@ -134,12 +134,12 @@ class DeepBookMarketMaker {
 Example creating a balance manager:
     
 ```tsx
-import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { IotaClient, getFullnodeUrl } from "@iota/iota/client";
+import { Ed25519Keypair } from "@iota/iota/keypairs/ed25519";
+import { decodeIotaPrivateKey } from "@iota/iota/cryptography";
 
 import { DeepBookClient } from "../src";
-import { Transaction } from "@mysten/sui/transactions";
+import { Transaction } from "@iota/iota/transactions";
 import { BalanceManager } from "./types";
 
 // Used wherever balance manager key is required
@@ -147,39 +147,39 @@ const BALANCE_MANAGER_KEY = 'MANAGER_1';
 
 class DeepBookMarketMaker {
     dbClient: DeepBookClient; // For building transactions
-    suiClient: SuiClient; // For executing transactions
+    iotaClient: IotaClient; // For executing transactions
     keypair: Ed25519Keypair; // For signing transactions
     env: 'testnet' | 'mainnet';
 
     constructor(privateKey: string, env: 'testnet' | 'mainnet') {
         this.env = env;
         this.keypair = this.getSignerFromPK(privateKey);
-        this.suiClient = new SuiClient({
+        this.iotaClient = new IotaClient({
             url: getFullnodeUrl(env)
         })
         this.dbClient = new DeepBookClient({
             address: this.getActiveAddress(),
             env: env,
-            client: this.suiClient,
+            client: this.iotaClient,
         });
     }
 
     getSignerFromPK = (privateKey: string): Ed25519Keypair => {
-      const { schema, secretKey } = decodeSuiPrivateKey(privateKey);
+      const { schema, secretKey } = decodeIotaPrivateKey(privateKey);
       if (schema === 'ED25519') return Ed25519Keypair.fromSecretKey(secretKey);
   
       throw new Error(`Unsupported schema: ${schema}`);
     };
 
     getActiveAddress() {
-        return this.keypair.toSuiAddress();
+        return this.keypair.toIotaAddress();
     }
 
     async createBalanceManagerAndReinitialize() {
         let tx = new Transaction();
         tx.add(this.dbClient.balanceManager.createAndShareBalanceManager());
         
-        const res = await this.suiClient.signAndExecuteTransaction({
+        const res = await this.iotaClient.signAndExecuteTransaction({
             transaction: tx,
             signer: this.keypair,
             options: {
@@ -203,7 +203,7 @@ class DeepBookMarketMaker {
         this.dbClient = new DeepBookClient({
             address: this.getActiveAddress(),
             env: this.env,
-            client: this.suiClient,
+            client: this.iotaClient,
             balanceManagers: balanceManagers,
         })
     }
@@ -216,13 +216,13 @@ The SDK comes with four default coins on Testnet and five default coins on Mainn
 
 **Default Testnet coins**
 - DEEP
-- SUI
+- IOTA
 - DBUSDC
 - DBUSDT
 
 **Default Mainnet coins**
 - DEEP
-- SUI
+- IOTA
 - USDC
 - USDT
 - WETH
@@ -234,18 +234,18 @@ You can also initialize the SDK with custom coins to interact with pools that ar
 Similar to coins, the SDK comes with default pools. You can provide a `PoolMap` during construction to override this behavior.
     
 ```tsx
-import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import type { Keypair } from '@mysten/sui/cryptography';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import type { Transaction } from '@mysten/sui/transactions';
+import { decodeIotaPrivateKey } from '@iota/iota-sdk/cryptography';
+import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
+import type { Keypair } from '@iota/iota/cryptography';
+import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
+import type { Transaction } from '@iota/iota/transactions';
 
 import { DeepBookClient } from '../src/index.js'; // Adjust path according to new structure
 import type { BalanceManager } from '../src/types/index.js';
 
 export class DeepBookMarketMaker extends DeepBookClient {
   keypair: Keypair;
-  suiClient: SuiClient;
+  iotaClient: IotaClient;
 
   constructor(
     keypair: string | Keypair,
@@ -261,12 +261,12 @@ export class DeepBookMarketMaker extends DeepBookClient {
       resolvedKeypair = keypair;
     }
 
-    const address = resolvedKeypair.toSuiAddress();
+    const address = resolvedKeypair.toIotaAddress();
 
     super({
       address: address,
       env: env,
-      client: new SuiClient({
+      client: new IotaClient({
         url: getFullnodeUrl(env),
       }),
       balanceManagers: balanceManagers,
@@ -274,13 +274,13 @@ export class DeepBookMarketMaker extends DeepBookClient {
     });
 
     this.keypair = resolvedKeypair;
-    this.suiClient = new SuiClient({
+    this.iotaClient = new IotaClient({
       url: getFullnodeUrl(env),
     });
   }
 
   static #getSignerFromPK = (privateKey: string) => {
-    const { schema, secretKey } = decodeSuiPrivateKey(privateKey);
+    const { schema, secretKey } = decodeIotaPrivateKey(privateKey);
     if (schema === 'ED25519') return Ed25519Keypair.fromSecretKey(secretKey);
 
     throw new Error(`Unsupported schema: ${schema}`);
@@ -288,7 +288,7 @@ export class DeepBookMarketMaker extends DeepBookClient {
 
   signAndExecute = async (tx: Transaction) => {
     // remove arguments
-    return this.suiClient.signAndExecuteTransaction({
+    return this.iotaClient.signAndExecuteTransaction({
       transaction: tx,
       signer: this.keypair,
       options: {
@@ -299,7 +299,7 @@ export class DeepBookMarketMaker extends DeepBookClient {
   };
 
   getActiveAddress() {
-    return this.keypair.getPublicKey().toSuiAddress();
+    return this.keypair.getPublicKey().toIotaAddress();
   }
 }
 
@@ -310,7 +310,7 @@ export class DeepBookMarketMaker extends DeepBookClient {
 The following example uses the default pools and coins provided.
     
 ```tsx
-import { Transaction } from '@mysten/sui/transactions';
+import { Transaction } from '@iota/iota/transactions';
 import { DeepBookMarketMaker } from './deepbookMarketMaker.js';
 
 (async () => {
@@ -332,8 +332,8 @@ import { DeepBookMarketMaker } from './deepbookMarketMaker.js';
   const tx = new Transaction();
 
   // Read only call
-  console.log(await mmClient.checkManagerBalance('MANAGER_1', 'SUI'));
-  console.log(await mmClient.getLevel2Range('SUI_DBUSDC', 0.1, 100, true));
+  console.log(await mmClient.checkManagerBalance('MANAGER_1', 'IOTA'));
+  console.log(await mmClient.getLevel2Range('IOTA_DBUSDC', 0.1, 100, true));
 
   // Balance manager contract call
   mmClient.balanceManager.depositIntoManager('MANAGER_1', 'DBUSDT', 10000)(tx);

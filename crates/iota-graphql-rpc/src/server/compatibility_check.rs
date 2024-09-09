@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::data::{Db, DbConnection, DieselBackend, DieselConn, QueryExecutor};
@@ -18,7 +19,7 @@ macro_rules! generate_compatibility_check {
     ($($table:ident),*) => {
         pub(crate) async fn check_all_tables(db: &Db) -> Result<(), Error> {
             use futures::future::join_all;
-            use sui_indexer::schema::*;
+            use iota_indexer::schema::*;
 
             let futures = vec![
                 $(
@@ -43,7 +44,7 @@ macro_rules! generate_compatibility_check {
     };
 }
 
-sui_indexer::for_all_tables!(generate_compatibility_check);
+iota_indexer::for_all_tables!(generate_compatibility_check);
 
 #[derive(Debug, Clone, Copy, QueryId)]
 struct Check<Q> {

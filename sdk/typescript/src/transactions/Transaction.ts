@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SerializedBcs } from '@mysten/bcs';
-import { fromB64, isSerializedBcs } from '@mysten/bcs';
+import type { SerializedBcs } from '@iota/bcs';
+import { fromB64, isSerializedBcs } from '@iota/bcs';
 import type { InferInput } from 'valibot';
 import { is, parse } from 'valibot';
 
-import type { SuiClient } from '../client/index.js';
+import type { IotaClient } from '../client/index.js';
 import type { SignatureWithBytes, Signer } from '../cryptography/index.js';
-import { normalizeSuiAddress } from '../utils/sui-types.js';
+import { normalizeIotaAddress } from '../utils/iota-types.js';
 import type { TransactionArgument } from './Commands.js';
 import { Commands } from './Commands.js';
 import type { CallArg, Command } from './data/internal.js';
@@ -87,7 +88,7 @@ function createTransactionResult(index: number) {
 	}) as TransactionResult;
 }
 
-const TRANSACTION_BRAND = Symbol.for('@mysten/transaction') as never;
+const TRANSACTION_BRAND = Symbol.for('@iota/transaction') as never;
 
 interface SignOptions extends BuildTransactionOptions {
 	signer: Signer;
@@ -104,7 +105,7 @@ const modulePluginRegistry = {
 	serializationPlugins: [] as TransactionPlugin[],
 };
 
-const TRANSACTION_REGISTRY_KEY = Symbol.for('@mysten/transaction/registry');
+const TRANSACTION_REGISTRY_KEY = Symbol.for('@iota/transaction/registry');
 function getGlobalPluginRegistry() {
 	try {
 		const target = globalThis as {
@@ -320,7 +321,7 @@ export class Transaction {
 						typeof value === 'string'
 							? {
 									$kind: 'UnresolvedObject',
-									UnresolvedObject: { objectId: normalizeSuiAddress(value) },
+									UnresolvedObject: { objectId: normalizeIotaAddress(value) },
 								}
 							: value,
 					);
@@ -521,7 +522,7 @@ export class Transaction {
 	/** Derive transaction digest */
 	async getDigest(
 		options: {
-			client?: SuiClient;
+			client?: IotaClient;
 		} = {},
 	): Promise<string> {
 		await this.#prepareBuild(options);

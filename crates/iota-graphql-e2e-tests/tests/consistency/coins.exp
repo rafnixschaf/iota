@@ -16,7 +16,7 @@ Checkpoint created: 1
 
 task 3, lines 43-45:
 //# programmable --sender A --inputs object(1,5) 100000 object(1,1)
-//> 0: sui::coin::mint<P0::fake::FAKE>(Input(0), Input(1));
+//> 0: iota::coin::mint<P0::fake::FAKE>(Input(0), Input(1));
 //> MergeCoins(Input(2), [Result(0)]);
 mutated: object(0,0), object(1,1), object(1,5)
 unchanged_shared: 0x0000000000000000000000000000000000000000000000000000000000000403

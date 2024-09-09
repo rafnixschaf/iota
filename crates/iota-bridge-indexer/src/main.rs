@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::env;
@@ -10,27 +11,27 @@ use clap::*;
 use ethers::providers::Http;
 use ethers::providers::Middleware;
 use ethers::providers::Provider;
-use sui_bridge_indexer::eth_bridge_indexer::EthSubscriptionDatasource;
-use sui_bridge_indexer::eth_bridge_indexer::EthSyncDatasource;
+use iota_bridge_indexer::eth_bridge_indexer::EthSubscriptionDatasource;
+use iota_bridge_indexer::eth_bridge_indexer::EthSyncDatasource;
 use tokio::task::JoinHandle;
 use tracing::info;
 
-use mysten_metrics::metered_channel::channel;
-use mysten_metrics::spawn_logged_monitored_task;
-use mysten_metrics::start_prometheus_server;
-use sui_bridge::metrics::BridgeMetrics;
-use sui_bridge_indexer::config::IndexerConfig;
-use sui_bridge_indexer::eth_bridge_indexer::EthDataMapper;
-use sui_bridge_indexer::metrics::BridgeIndexerMetrics;
-use sui_bridge_indexer::postgres_manager::{get_connection_pool, read_sui_progress_store};
-use sui_bridge_indexer::sui_bridge_indexer::{PgBridgePersistent, SuiBridgeDataMapper};
-use sui_bridge_indexer::sui_transaction_handler::handle_sui_transactions_loop;
-use sui_bridge_indexer::sui_transaction_queries::start_sui_tx_polling_task;
-use sui_config::Config;
-use sui_data_ingestion_core::DataIngestionMetrics;
-use sui_indexer_builder::indexer_builder::{BackfillStrategy, IndexerBuilder};
-use sui_indexer_builder::sui_datasource::SuiCheckpointDatasource;
-use sui_sdk::SuiClientBuilder;
+use iota_metrics::metered_channel::channel;
+use iota_metrics::spawn_logged_monitored_task;
+use iota_metrics::start_prometheus_server;
+use iota_bridge::metrics::BridgeMetrics;
+use iota_bridge_indexer::config::IndexerConfig;
+use iota_bridge_indexer::eth_bridge_indexer::EthDataMapper;
+use iota_bridge_indexer::metrics::BridgeIndexerMetrics;
+use iota_bridge_indexer::postgres_manager::{get_connection_pool, read_iota_progress_store};
+use iota_bridge_indexer::iota_bridge_indexer::{PgBridgePersistent, IotaBridgeDataMapper};
+use iota_bridge_indexer::iota_transaction_handler::handle_iota_transactions_loop;
+use iota_bridge_indexer::iota_transaction_queries::start_iota_tx_polling_task;
+use iota_config::Config;
+use iota_data_ingestion_core::DataIngestionMetrics;
+use iota_indexer_builder::indexer_builder::{BackfillStrategy, IndexerBuilder};
+use iota_indexer_builder::iota_datasource::IotaCheckpointDatasource;
+use iota_sdk::IotaClientBuilder;
 
 #[derive(Parser, Clone, Debug)]
 struct Args {
@@ -65,7 +66,7 @@ async fn main() -> Result<()> {
     );
     let registry = registry_service.default_registry();
 
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     info!(
         "Metrics server started at {}::{}",
@@ -89,7 +90,7 @@ async fn main() -> Result<()> {
     // Start the eth subscription indexer
 
     let eth_subscription_datasource = EthSubscriptionDatasource::new(
-        config.eth_sui_bridge_contract_address.clone(),
+        config.eth_iota_bridge_contract_address.clone(),
         config.eth_ws_url.clone(),
         indexer_meterics.clone(),
     )?;
@@ -106,7 +107,7 @@ async fn main() -> Result<()> {
 
     // Start the eth sync indexer
     let eth_sync_datasource = EthSyncDatasource::new(
-        config.eth_sui_bridge_contract_address.clone(),
+        config.eth_iota_bridge_contract_address.clone(),
         config.eth_rpc_url.clone(),
         indexer_meterics.clone(),
         bridge_metrics.clone(),
@@ -123,26 +124,26 @@ async fn main() -> Result<()> {
     .build(current_block, config.start_block, datastore.clone());
     let sync_indexer_fut = spawn_logged_monitored_task!(eth_sync_indexer.start());
 
-    if let Some(sui_rpc_url) = config.sui_rpc_url.clone() {
-        // Todo: impl datasource for sui RPC datasource
-        start_processing_sui_checkpoints_by_querying_txns(
-            sui_rpc_url,
+    if let Some(iota_rpc_url) = config.iota_rpc_url.clone() {
+        // Todo: impl datasource for iota RPC datasource
+        start_processing_iota_checkpoints_by_querying_txns(
+            iota_rpc_url,
             db_url.clone(),
             indexer_meterics.clone(),
             bridge_metrics,
         )
         .await?;
     } else {
-        let sui_checkpoint_datasource = SuiCheckpointDatasource::new(
+        let iota_checkpoint_datasource = IotaCheckpointDatasource::new(
             config.remote_store_url,
             config.concurrency as usize,
             config.checkpoints_path.clone().into(),
             ingestion_metrics.clone(),
         );
         let indexer = IndexerBuilder::new(
-            "SuiBridgeIndexer",
-            sui_checkpoint_datasource,
-            SuiBridgeDataMapper {
+            "IotaBridgeIndexer",
+            iota_checkpoint_datasource,
+            IotaBridgeDataMapper {
                 metrics: indexer_meterics.clone(),
             },
         )
@@ -155,14 +156,14 @@ async fn main() -> Result<()> {
         );
         indexer.start().await?;
     }
-    // We are not waiting for the sui tasks to finish here, which is ok.
+    // We are not waiting for the iota tasks to finish here, which is ok.
     futures::future::join_all(vec![subscription_indexer_fut, sync_indexer_fut]).await;
 
     Ok(())
 }
 
-async fn start_processing_sui_checkpoints_by_querying_txns(
-    sui_rpc_url: String,
+async fn start_processing_iota_checkpoints_by_querying_txns(
+    iota_rpc_url: String,
     db_url: String,
     indexer_metrics: BridgeIndexerMetrics,
     bridge_metrics: Arc<BridgeMetrics>,
@@ -170,22 +171,22 @@ async fn start_processing_sui_checkpoints_by_querying_txns(
     let pg_pool = get_connection_pool(db_url.clone());
     let (tx, rx) = channel(
         100,
-        &mysten_metrics::get_metrics()
+        &iota_metrics::get_metrics()
             .unwrap()
             .channel_inflight
-            .with_label_values(&["sui_transaction_processing_queue"]),
+            .with_label_values(&["iota_transaction_processing_queue"]),
     );
     let mut handles = vec![];
     let cursor =
-        read_sui_progress_store(&pg_pool).expect("Failed to read cursor from sui progress store");
-    let sui_client = SuiClientBuilder::default().build(sui_rpc_url).await?;
+        read_iota_progress_store(&pg_pool).expect("Failed to read cursor from iota progress store");
+    let iota_client = IotaClientBuilder::default().build(iota_rpc_url).await?;
     handles.push(spawn_logged_monitored_task!(
-        start_sui_tx_polling_task(sui_client, cursor, tx, bridge_metrics),
-        "start_sui_tx_polling_task"
+        start_iota_tx_polling_task(iota_client, cursor, tx, bridge_metrics),
+        "start_iota_tx_polling_task"
     ));
     handles.push(spawn_logged_monitored_task!(
-        handle_sui_transactions_loop(pg_pool.clone(), rx, indexer_metrics.clone()),
-        "handle_sui_transcations_loop"
+        handle_iota_transactions_loop(pg_pool.clone(), rx, indexer_metrics.clone()),
+        "handle_iota_transcations_loop"
     ));
     Ok(handles)
 }

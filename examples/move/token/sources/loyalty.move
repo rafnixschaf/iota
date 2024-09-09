@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// This module illustrates a Closed Loop Loyalty Token. The `Token` is sent to
@@ -8,8 +9,8 @@
 /// Actions:
 /// - spend - spend the token in the shop
 module examples::loyalty {
-    use sui::coin::{Self, TreasuryCap};
-    use sui::token::{Self, ActionRequest, Token};
+    use iota::coin::{Self, TreasuryCap};
+    use iota::token::{Self, ActionRequest, Token};
 
     /// Token amount does not match the `GIFT_PRICE`.
     const EIncorrectAmount: u64 = 0;

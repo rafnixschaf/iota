@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
 use crate::consensus_handler::ConsensusHandlerInitializer;
 use crate::consensus_manager::{
     ConsensusManagerMetrics, ConsensusManagerTrait, Running, RunningLockGuard,
 };
-use crate::consensus_validator::SuiTxValidator;
+use crate::consensus_validator::IotaTxValidator;
 use async_trait::async_trait;
 use fastcrypto::traits::KeyPair;
-use mysten_metrics::RegistryService;
+use iota_metrics::RegistryService;
 use narwhal_config::{Parameters, WorkerId};
 use narwhal_network::client::NetworkClient;
 use narwhal_node::primary_node::PrimaryNode;
@@ -16,10 +17,10 @@ use narwhal_node::worker_node::WorkerNodes;
 use narwhal_node::{CertificateStoreCacheMetrics, NodeStorage};
 use std::path::PathBuf;
 use std::sync::Arc;
-use sui_config::NodeConfig;
-use sui_types::committee::EpochId;
-use sui_types::crypto::{AuthorityKeyPair, NetworkKeyPair};
-use sui_types::sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait;
+use iota_config::NodeConfig;
+use iota_types::committee::EpochId;
+use iota_types::crypto::{AuthorityKeyPair, NetworkKeyPair};
+use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
 use tokio::sync::Mutex;
 
 #[cfg(test)]
@@ -96,7 +97,7 @@ impl ConsensusManagerTrait for NarwhalManager {
         config: &NodeConfig,
         epoch_store: Arc<AuthorityPerEpochStore>,
         consensus_handler_initializer: ConsensusHandlerInitializer,
-        tx_validator: SuiTxValidator,
+        tx_validator: IotaTxValidator,
     ) {
         let system_state = epoch_store.epoch_start_state();
         let epoch = epoch_store.epoch();

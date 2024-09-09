@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! This analysis flags situations when instances of a sui::table::Table or sui::table_vec::TableVec
-//! or sui::bag::Bag are being compared for (in)equality at this type of comparison is not very
+//! This analysis flags situations when instances of a iota::table::Table or iota::table_vec::TableVec
+//! or iota::bag::Bag are being compared for (in)equality at this type of comparison is not very
 //! useful and DOES NOT take into consideration structural (in)equality.
 
 use crate::{
@@ -23,7 +24,7 @@ use crate::{
 use super::{
     base_type, LinterDiagnosticCategory, LinterDiagnosticCode, BAG_MOD_NAME, BAG_STRUCT_NAME,
     LINKED_TABLE_MOD_NAME, LINKED_TABLE_STRUCT_NAME, LINT_WARNING_PREFIX, OBJECT_BAG_MOD_NAME,
-    OBJECT_BAG_STRUCT_NAME, OBJECT_TABLE_MOD_NAME, OBJECT_TABLE_STRUCT_NAME, SUI_PKG_NAME,
+    OBJECT_BAG_STRUCT_NAME, OBJECT_TABLE_MOD_NAME, OBJECT_TABLE_STRUCT_NAME, IOTA_PKG_NAME,
     TABLE_MOD_NAME, TABLE_STRUCT_NAME, TABLE_VEC_MOD_NAME, TABLE_VEC_STRUCT_NAME, VEC_MAP_MOD_NAME,
     VEC_MAP_STRUCT_NAME, VEC_SET_MOD_NAME, VEC_SET_STRUCT_NAME,
 };
@@ -31,28 +32,28 @@ use super::{
 const COLLECTIONS_EQUALITY_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::CollectionEquality as u8,
     "possibly useless collections compare",
 );
 
 const COLLECTION_TYPES: &[(&str, &str, &str)] = &[
-    (SUI_PKG_NAME, BAG_MOD_NAME, BAG_STRUCT_NAME),
-    (SUI_PKG_NAME, OBJECT_BAG_MOD_NAME, OBJECT_BAG_STRUCT_NAME),
-    (SUI_PKG_NAME, TABLE_MOD_NAME, TABLE_STRUCT_NAME),
+    (IOTA_PKG_NAME, BAG_MOD_NAME, BAG_STRUCT_NAME),
+    (IOTA_PKG_NAME, OBJECT_BAG_MOD_NAME, OBJECT_BAG_STRUCT_NAME),
+    (IOTA_PKG_NAME, TABLE_MOD_NAME, TABLE_STRUCT_NAME),
     (
-        SUI_PKG_NAME,
+        IOTA_PKG_NAME,
         OBJECT_TABLE_MOD_NAME,
         OBJECT_TABLE_STRUCT_NAME,
     ),
     (
-        SUI_PKG_NAME,
+        IOTA_PKG_NAME,
         LINKED_TABLE_MOD_NAME,
         LINKED_TABLE_STRUCT_NAME,
     ),
-    (SUI_PKG_NAME, TABLE_VEC_MOD_NAME, TABLE_VEC_STRUCT_NAME),
-    (SUI_PKG_NAME, VEC_MAP_MOD_NAME, VEC_MAP_STRUCT_NAME),
-    (SUI_PKG_NAME, VEC_SET_MOD_NAME, VEC_SET_STRUCT_NAME),
+    (IOTA_PKG_NAME, TABLE_VEC_MOD_NAME, TABLE_VEC_STRUCT_NAME),
+    (IOTA_PKG_NAME, VEC_MAP_MOD_NAME, VEC_MAP_STRUCT_NAME),
+    (IOTA_PKG_NAME, VEC_SET_MOD_NAME, VEC_SET_STRUCT_NAME),
 ];
 
 pub struct CollectionEqualityVisitor;

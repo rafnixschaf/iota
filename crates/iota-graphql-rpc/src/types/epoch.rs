@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -23,9 +24,9 @@ use async_graphql::dataloader::Loader;
 use async_graphql::*;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use fastcrypto::encoding::{Base58, Encoding};
-use sui_indexer::models::epoch::QueryableEpochInfo;
-use sui_indexer::schema::epochs;
-use sui_types::messages_checkpoint::CheckpointCommitment as EpochCommitment;
+use iota_indexer::models::epoch::QueryableEpochInfo;
+use iota_indexer::schema::epochs;
+use iota_types::messages_checkpoint::CheckpointCommitment as EpochCommitment;
 
 #[derive(Clone)]
 pub(crate) struct Epoch {
@@ -41,7 +42,7 @@ struct EpochKey {
     pub checkpoint_viewed_at: u64,
 }
 
-/// Operation of the Sui network is temporally partitioned into non-overlapping epochs,
+/// Operation of the Iota network is temporally partitioned into non-overlapping epochs,
 /// and the network aims to keep epochs roughly the same duration as each other.
 /// During a particular epoch the following data is fixed:
 ///
@@ -64,7 +65,7 @@ impl Epoch {
     async fn validator_set(&self, ctx: &Context<'_>) -> Result<Option<ValidatorSet>> {
         let system_state = ctx
             .data_unchecked::<PgManager>()
-            .fetch_sui_system_state(Some(self.stored.epoch as u64))
+            .fetch_iota_system_state(Some(self.stored.epoch as u64))
             .await?;
 
         let active_validators = convert_to_validators(
@@ -126,12 +127,12 @@ impl Epoch {
             .map(|v| UInt53::from(v as u64)))
     }
 
-    /// The total amount of gas fees (in MIST) that were paid in this epoch.
+    /// The total amount of gas fees (in NANOS) that were paid in this epoch.
     async fn total_gas_fees(&self) -> Option<BigInt> {
         self.stored.total_gas_fees.map(BigInt::from)
     }
 
-    /// The total MIST rewarded as stake.
+    /// The total NANOS rewarded as stake.
     async fn total_stake_rewards(&self) -> Option<BigInt> {
         self.stored
             .total_stake_rewards_distributed
@@ -185,7 +186,7 @@ impl Epoch {
     async fn system_state_summary(&self, ctx: &Context<'_>) -> Result<SystemStateSummary> {
         let state = ctx
             .data_unchecked::<PgManager>()
-            .fetch_sui_system_state(Some(self.stored.epoch as u64))
+            .fetch_iota_system_state(Some(self.stored.epoch as u64))
             .await?;
         Ok(SystemStateSummary { native: state })
     }

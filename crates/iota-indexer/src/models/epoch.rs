@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use diesel::{Insertable, Queryable, Selectable};
@@ -6,8 +7,8 @@ use diesel::{Insertable, Queryable, Selectable};
 use crate::schema::epochs;
 use crate::types::IndexedEpochInfo;
 use crate::{errors::IndexerError, schema::feature_flags, schema::protocol_configs};
-use sui_json_rpc_types::{EndOfEpochInfo, EpochInfo};
-use sui_types::sui_system_state::sui_system_state_summary::SuiSystemStateSummary;
+use iota_json_rpc_types::{EndOfEpochInfo, EpochInfo};
+use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
 
 #[derive(Queryable, Insertable, Debug, Clone, Default)]
 #[diesel(table_name = epochs)]
@@ -153,7 +154,7 @@ impl TryFrom<StoredEpochInfo> for EpochInfo {
     fn try_from(value: StoredEpochInfo) -> Result<Self, Self::Error> {
         let epoch = value.epoch as u64;
         let end_of_epoch_info = (&value).into();
-        let system_state: Option<SuiSystemStateSummary> = bcs::from_bytes(&value.system_state)
+        let system_state: Option<IotaSystemStateSummary> = bcs::from_bytes(&value.system_state)
             .map_err(|_| {
                 IndexerError::PersistentStorageDataCorruptionError(format!(
                     "Failed to deserialize `system_state` for epoch {epoch}",

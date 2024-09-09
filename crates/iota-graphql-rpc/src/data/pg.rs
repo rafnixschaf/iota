@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::QueryExecutor;
@@ -12,9 +13,9 @@ use diesel::{
 };
 use std::fmt;
 use std::time::Instant;
-use sui_indexer::indexer_reader::IndexerReader;
+use iota_indexer::indexer_reader::IndexerReader;
 
-use sui_indexer::{run_query_async, run_query_repeatable_async, spawn_read_only_blocking};
+use iota_indexer::{run_query_async, run_query_repeatable_async, spawn_read_only_blocking};
 use tracing::error;
 
 #[derive(Clone)]
@@ -203,8 +204,8 @@ mod tests {
     use super::*;
     use crate::config::ConnectionConfig;
     use diesel::QueryDsl;
-    use sui_framework::BuiltInFramework;
-    use sui_indexer::{
+    use iota_framework::BuiltInFramework;
+    use iota_indexer::{
         db::{get_pool_connection, new_connection_pool, reset_database},
         models::objects::StoredObject,
         schema::objects,

@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::indexer_reader::IndexerReader;
 use diesel::r2d2::R2D2Connection;
 use jsonrpsee::{core::RpcResult, RpcModule};
-use sui_json_rpc::SuiRpcModule;
-use sui_json_rpc_api::{validate_limit, ExtendedApiServer, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS};
-use sui_json_rpc_types::{
-    CheckpointedObjectID, EpochInfo, EpochPage, Page, QueryObjectsPage, SuiObjectResponseQuery,
+use iota_json_rpc::IotaRpcModule;
+use iota_json_rpc_api::{validate_limit, ExtendedApiServer, QUERY_MAX_RESULT_LIMIT_CHECKPOINTS};
+use iota_json_rpc_types::{
+    CheckpointedObjectID, EpochInfo, EpochPage, Page, QueryObjectsPage, IotaObjectResponseQuery,
 };
-use sui_open_rpc::Module;
-use sui_types::sui_serde::BigInt;
+use iota_open_rpc::Module;
+use iota_types::iota_serde::BigInt;
 
 pub(crate) struct ExtendedApi<T: R2D2Connection + 'static> {
     inner: IndexerReader<T>,
@@ -62,7 +63,7 @@ impl<T: R2D2Connection + 'static> ExtendedApiServer for ExtendedApi<T> {
 
     async fn query_objects(
         &self,
-        _query: SuiObjectResponseQuery,
+        _query: IotaObjectResponseQuery,
         _cursor: Option<CheckpointedObjectID>,
         _limit: Option<usize>,
     ) -> RpcResult<QueryObjectsPage> {
@@ -81,12 +82,12 @@ impl<T: R2D2Connection + 'static> ExtendedApiServer for ExtendedApi<T> {
     }
 }
 
-impl<T: R2D2Connection> SuiRpcModule for ExtendedApi<T> {
+impl<T: R2D2Connection> IotaRpcModule for ExtendedApi<T> {
     fn rpc(self) -> RpcModule<Self> {
         self.into_rpc()
     }
 
     fn rpc_doc_module() -> Module {
-        sui_json_rpc_api::ExtendedApiOpenRpc::module_doc()
+        iota_json_rpc_api::ExtendedApiOpenRpc::module_doc()
     }
 }

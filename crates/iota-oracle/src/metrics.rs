@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use prometheus::{
@@ -6,7 +7,7 @@ use prometheus::{
     IntCounterVec, Registry,
 };
 
-use mysten_metrics::histogram::{Histogram, HistogramVec};
+use iota_metrics::histogram::{Histogram, HistogramVec};
 
 #[derive(Clone)]
 pub struct OracleMetrics {

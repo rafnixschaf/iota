@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -9,8 +10,8 @@ use crate::{
     RestService, Result,
 };
 use axum::extract::{Path, State};
-use sui_sdk2::types::{EpochId, ValidatorCommittee};
-use sui_types::storage::ReadStore;
+use iota_sdk2::types::{EpochId, ValidatorCommittee};
+use iota_types::storage::ReadStore;
 use tap::Pipe;
 
 pub struct GetLatestCommittee;

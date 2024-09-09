@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
 module groth16::example_tests {
-    use sui::bls12381;
+    use iota::bls12381;
     use groth16::example::{create_verifying_key, create_proof, verify};
 
     #[test]

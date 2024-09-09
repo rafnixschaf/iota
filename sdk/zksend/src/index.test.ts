@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe } from 'node:test';
-import { getFullnodeUrl, SuiClient, SuiObjectChange } from '@mysten/sui/client';
-import { decodeSuiPrivateKey, Keypair } from '@mysten/sui/cryptography';
-import { getFaucetHost, requestSuiFromFaucetV0 } from '@mysten/sui/faucet';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
-import { Transaction } from '@mysten/sui/transactions';
-import { toB64 } from '@mysten/sui/utils';
+import { getFullnodeUrl, IotaClient, IotaObjectChange } from '@iota/iota/client';
+import { decodeIotaPrivateKey, Keypair } from '@iota/iota/cryptography';
+import { getFaucetHost, requestIotaFromFaucetV0 } from '@iota/iota/faucet';
+import { Ed25519Keypair } from '@iota/iota/keypairs/ed25519';
+import { Transaction } from '@iota/iota/transactions';
+import { toB64 } from '@iota/iota/utils';
 import { beforeAll, expect, test } from 'vitest';
 
 import { getSentTransactionsWithLinks, ZkSendLink, ZkSendLinkBuilder } from './index.js';
@@ -23,7 +24,7 @@ export const ZK_BAG_CONFIG = {
 	bagStoreTableId: '0x4e1bc4085d64005e03eb4eab2510d527aeba9548cda431cb8f149ff37451f870',
 };
 
-const client = new SuiClient({
+const client = new IotaClient({
 	url: getFullnodeUrl('testnet'),
 });
 const keypair = new Ed25519Keypair();
@@ -31,14 +32,14 @@ const keypair = new Ed25519Keypair();
 // Automatically get gas from testnet is not working reliably, manually request gas via discord,
 // or uncomment the beforeAll and gas function below
 beforeAll(async () => {
-	await getSuiFromFaucet(keypair);
+	await getIotaFromFaucet(keypair);
 });
 
-async function getSuiFromFaucet(keypair: Keypair) {
+async function getIotaFromFaucet(keypair: Keypair) {
 	const faucetHost = getFaucetHost('testnet');
-	const result = await requestSuiFromFaucetV0({
+	const result = await requestIotaFromFaucetV0({
 		host: faucetHost,
-		recipient: keypair.toSuiAddress(),
+		recipient: keypair.toIotaAddress(),
 	});
 
 	if (result.error) {
@@ -57,7 +58,7 @@ describe('Contract links', () => {
 			const link = new ZkSendLinkBuilder({
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 			});
 
 			const bears = await createBears(3);
@@ -66,7 +67,7 @@ describe('Contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const linkUrl = link.getLink();
 
@@ -78,7 +79,7 @@ describe('Contract links', () => {
 			const claimLink = await ZkSendLink.fromUrl(linkUrl, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 
 			const claimableAssets = claimLink.assets!;
@@ -89,12 +90,12 @@ describe('Contract links', () => {
 				[
 				  {
 				    "amount": 100n,
-				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
 				  },
 				]
 			`);
 
-			const claim = await claimLink.claimAssets(keypair.toSuiAddress());
+			const claim = await claimLink.claimAssets(keypair.toIotaAddress());
 
 			const res = await client.waitForTransaction({
 				digest: claim.digest,
@@ -113,7 +114,7 @@ describe('Contract links', () => {
 			const link2 = await ZkSendLink.fromUrl(linkUrl, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 			expect(link2.assets?.balances).toEqual(claimLink.assets?.balances);
 			expect(link2.assets?.nfts.map((nft) => nft.objectId)).toEqual(
@@ -135,7 +136,7 @@ describe('Contract links', () => {
 				keypair: linkKp,
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 			});
 
 			const bears = await createBears(3);
@@ -144,7 +145,7 @@ describe('Contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const { digest } = await link.create({
 				signer: keypair,
@@ -160,13 +161,13 @@ describe('Contract links', () => {
 					},
 				],
 			} = await getSentTransactionsWithLinks({
-				address: keypair.toSuiAddress(),
+				address: keypair.toIotaAddress(),
 				network: 'testnet',
 				contract: ZK_BAG_CONFIG,
 			});
 
 			const { url, transaction } = await lostLink.createRegenerateTransaction(
-				keypair.toSuiAddress(),
+				keypair.toIotaAddress(),
 			);
 
 			const result = await client.signAndExecuteTransaction({
@@ -183,7 +184,7 @@ describe('Contract links', () => {
 			const claimLink = await ZkSendLink.fromUrl(url, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 
 			expect(claimLink.assets?.nfts.length).toEqual(3);
@@ -191,12 +192,12 @@ describe('Contract links', () => {
 				[
 				  {
 				    "amount": 100n,
-				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
 				  },
 				]
 			`);
 
-			const claim = await claimLink.claimAssets(keypair.toSuiAddress());
+			const claim = await claimLink.claimAssets(keypair.toIotaAddress());
 
 			const res = await client.waitForTransaction({
 				digest: claim.digest,
@@ -214,7 +215,7 @@ describe('Contract links', () => {
 			const link2 = await ZkSendLink.fromUrl(url, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 			expect(link2.assets?.balances).toEqual(claimLink.assets?.balances);
 			expect(link2.assets?.nfts.map((nft) => nft.objectId)).toEqual(
@@ -236,7 +237,7 @@ describe('Contract links', () => {
 				keypair: linkKp,
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 			});
 
 			const bears = await createBears(3);
@@ -245,7 +246,7 @@ describe('Contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const { digest } = await link.create({
 				signer: keypair,
@@ -261,12 +262,12 @@ describe('Contract links', () => {
 					},
 				],
 			} = await getSentTransactionsWithLinks({
-				address: keypair.toSuiAddress(),
+				address: keypair.toIotaAddress(),
 				network: 'testnet',
 				contract: ZK_BAG_CONFIG,
 			});
 
-			const { digest: claimDigest } = await lostLink.claimAssets(keypair.toSuiAddress(), {
+			const { digest: claimDigest } = await lostLink.claimAssets(keypair.toIotaAddress(), {
 				reclaim: true,
 				sign: async (tx) => (await keypair.signTransaction(tx)).signature,
 			});
@@ -298,10 +299,10 @@ describe('Contract links', () => {
 				const link = new ZkSendLinkBuilder({
 					client,
 					contract: ZK_BAG_CONFIG,
-					sender: keypair.toSuiAddress(),
+					sender: keypair.toIotaAddress(),
 				});
 
-				link.addClaimableMist(100n);
+				link.addClaimableNanos(100n);
 				link.addClaimableObject(bear.objectId);
 
 				links.push(link);
@@ -326,7 +327,7 @@ describe('Contract links', () => {
 				const claimLink = await ZkSendLink.fromUrl(linkUrl, {
 					contract: ZK_BAG_CONFIG,
 					network: 'testnet',
-					claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+					claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 				});
 
 				const claimableAssets = claimLink.assets!;
@@ -337,12 +338,12 @@ describe('Contract links', () => {
 					[
 					  {
 					    "amount": 100n,
-					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
 					  },
 					]
 				`);
 
-				const claim = await claimLink.claimAssets(keypair.toSuiAddress());
+				const claim = await claimLink.claimAssets(keypair.toIotaAddress());
 
 				const res = await client.waitForTransaction({
 					digest: claim.digest,
@@ -371,7 +372,7 @@ describe('Non contract links', () => {
 		async () => {
 			const link = new ZkSendLinkBuilder({
 				client,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 				contract: null,
 			});
 
@@ -381,7 +382,7 @@ describe('Non contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const linkUrl = link.getLink();
 
@@ -403,12 +404,12 @@ describe('Non contract links', () => {
 					[
 					  {
 					    "amount": 100n,
-					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+					    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
 					  },
 					]
 				`);
 
-			const claimTx = await claimLink.claimAssets(new Ed25519Keypair().toSuiAddress());
+			const claimTx = await claimLink.claimAssets(new Ed25519Keypair().toIotaAddress());
 
 			const res = await client.waitForTransaction({
 				digest: claimTx.digest,
@@ -426,7 +427,7 @@ describe('Non contract links', () => {
 			const link2 = await ZkSendLink.fromUrl(linkUrl, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 			expect(link2.assets?.balances).toEqual(claimLink.assets?.balances);
 			expect(link2.assets?.nfts.map((nft) => nft.objectId)).toEqual(
@@ -447,7 +448,7 @@ describe('Non contract links', () => {
 			const tx = new Transaction();
 
 			const [coin] = tx.splitCoins(tx.gas, [5_000_000]);
-			tx.transferObjects([coin], linkKp.toSuiAddress());
+			tx.transferObjects([coin], linkKp.toIotaAddress());
 
 			const { digest } = await client.signAndExecuteTransaction({
 				signer: keypair,
@@ -467,10 +468,10 @@ describe('Non contract links', () => {
 			expect(claimLink.assets?.nfts.length).toEqual(0);
 			expect(claimLink.assets?.balances.length).toEqual(1);
 			expect(claimLink.assets?.balances[0].coinType).toEqual(
-				'0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+				'0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA',
 			);
 
-			const claimTx = await claimLink.claimAssets(keypair.toSuiAddress());
+			const claimTx = await claimLink.claimAssets(keypair.toIotaAddress());
 
 			const res = await client.waitForTransaction({
 				digest: claimTx.digest,
@@ -481,11 +482,11 @@ describe('Non contract links', () => {
 
 			expect(res.balanceChanges?.length).toEqual(2);
 			const link2 = await ZkSendLink.fromUrl(
-				`https://zksend.con/claim#${toB64(decodeSuiPrivateKey(linkKp.getSecretKey()).secretKey)}`,
+				`https://zksend.con/claim#${toB64(decodeIotaPrivateKey(linkKp.getSecretKey()).secretKey)}`,
 				{
 					contract: ZK_BAG_CONFIG,
 					network: 'testnet',
-					claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+					claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 				},
 			);
 			expect(link2.assets?.balances).toEqual(claimLink.assets?.balances);
@@ -504,7 +505,7 @@ describe('Non contract links', () => {
 		async () => {
 			const link = new ZkSendLinkBuilder({
 				client,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 				contract: null,
 			});
 
@@ -514,12 +515,12 @@ describe('Non contract links', () => {
 				link.addClaimableObject(bear.objectId);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const receiver = new Ed25519Keypair();
 
 			const tx = await link.createSendToAddressTransaction({
-				address: receiver.toSuiAddress(),
+				address: receiver.toIotaAddress(),
 			});
 
 			const { digest } = await client.signAndExecuteTransaction({
@@ -532,7 +533,7 @@ describe('Non contract links', () => {
 			});
 
 			const objects = await client.getOwnedObjects({
-				owner: receiver.toSuiAddress(),
+				owner: receiver.toIotaAddress(),
 			});
 
 			expect(objects.data.length).toEqual(4);
@@ -548,7 +549,7 @@ describe('Non contract links', () => {
 			const link = new ZkSendLinkBuilder({
 				client,
 				contract: ZK_BAG_CONFIG,
-				sender: keypair.toSuiAddress(),
+				sender: keypair.toIotaAddress(),
 			});
 
 			const tx = new Transaction();
@@ -564,7 +565,7 @@ describe('Non contract links', () => {
 				link.addClaimableObjectRef(bear, DEMO_BEAR_CONFIG.type);
 			}
 
-			link.addClaimableMist(100n);
+			link.addClaimableNanos(100n);
 
 			const linkUrl = link.getLink();
 
@@ -577,7 +578,7 @@ describe('Non contract links', () => {
 			const claimLink = await ZkSendLink.fromUrl(linkUrl, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 
 			const claimableAssets = claimLink.assets!;
@@ -588,12 +589,12 @@ describe('Non contract links', () => {
 				[
 				  {
 				    "amount": 100n,
-				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+				    "coinType": "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA",
 				  },
 				]
 			`);
 
-			const claim = await claimLink.claimAssets(keypair.toSuiAddress());
+			const claim = await claimLink.claimAssets(keypair.toIotaAddress());
 
 			const res = await client.waitForTransaction({
 				digest: claim.digest,
@@ -612,7 +613,7 @@ describe('Non contract links', () => {
 			const link2 = await ZkSendLink.fromUrl(linkUrl, {
 				contract: ZK_BAG_CONFIG,
 				network: 'testnet',
-				claimApi: 'https://zksend-git-mh-contract-claims-mysten-labs.vercel.app/api',
+				claimApi: 'https://zksend-git-mh-contract-claims-iota-foundation.vercel.app/api',
 			});
 			expect(link2.assets?.balances).toEqual(claimLink.assets?.balances);
 			expect(link2.assets?.nfts.map((nft) => nft.objectId).sort()).toEqual(
@@ -639,7 +640,7 @@ async function createBears(totalBears: number) {
 		bears.push(bear);
 	}
 
-	tx.transferObjects(bears, tx.pure.address(keypair.toSuiAddress()));
+	tx.transferObjects(bears, tx.pure.address(keypair.toIotaAddress()));
 
 	const res = await client.signAndExecuteTransaction({
 		transaction: tx,
@@ -655,9 +656,9 @@ async function createBears(totalBears: number) {
 
 	const bearList = res
 		.objectChanges!.filter(
-			(x: SuiObjectChange) => x.type === 'created' && x.objectType.includes(DEMO_BEAR_CONFIG.type),
+			(x: IotaObjectChange) => x.type === 'created' && x.objectType.includes(DEMO_BEAR_CONFIG.type),
 		)
-		.map((x: SuiObjectChange) => {
+		.map((x: IotaObjectChange) => {
 			if (!('objectId' in x)) throw new Error('invalid data');
 			return {
 				objectId: x.objectId,

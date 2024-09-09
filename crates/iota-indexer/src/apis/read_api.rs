@@ -1,28 +1,29 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
 use jsonrpsee::core::RpcResult;
 use jsonrpsee::RpcModule;
-use sui_json_rpc::error::SuiRpcInputError;
-use sui_types::error::SuiObjectResponseError;
-use sui_types::object::ObjectRead;
+use iota_json_rpc::error::IotaRpcInputError;
+use iota_types::error::IotaObjectResponseError;
+use iota_types::object::ObjectRead;
 
 use crate::errors::IndexerError;
 use crate::indexer_reader::IndexerReader;
-use sui_json_rpc::SuiRpcModule;
-use sui_json_rpc_api::{ReadApiServer, QUERY_MAX_RESULT_LIMIT};
-use sui_json_rpc_types::{
-    Checkpoint, CheckpointId, CheckpointPage, ProtocolConfigResponse, SuiEvent,
-    SuiGetPastObjectRequest, SuiObjectDataOptions, SuiObjectResponse, SuiPastObjectResponse,
-    SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
+use iota_json_rpc::IotaRpcModule;
+use iota_json_rpc_api::{ReadApiServer, QUERY_MAX_RESULT_LIMIT};
+use iota_json_rpc_types::{
+    Checkpoint, CheckpointId, CheckpointPage, ProtocolConfigResponse, IotaEvent,
+    IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
-use sui_open_rpc::Module;
-use sui_protocol_config::{ProtocolConfig, ProtocolVersion};
-use sui_types::base_types::{ObjectID, SequenceNumber};
-use sui_types::digests::{ChainIdentifier, TransactionDigest};
-use sui_types::sui_serde::BigInt;
+use iota_open_rpc::Module;
+use iota_protocol_config::{ProtocolConfig, ProtocolVersion};
+use iota_types::base_types::{ObjectID, SequenceNumber};
+use iota_types::digests::{ChainIdentifier, TransactionDigest};
+use iota_types::iota_serde::BigInt;
 
 #[derive(Clone)]
 pub(crate) struct ReadApi<T: R2D2Connection + 'static> {
@@ -65,8 +66,8 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
     async fn get_object(
         &self,
         object_id: ObjectID,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiObjectResponse> {
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaObjectResponse> {
         let options = options.unwrap_or_default();
         let object_read = self
             .inner
@@ -74,8 +75,8 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
             .await?;
 
         match object_read {
-            ObjectRead::NotExists(id) => Ok(SuiObjectResponse::new_with_error(
-                SuiObjectResponseError::NotExists { object_id: id },
+            ObjectRead::NotExists(id) => Ok(IotaObjectResponse::new_with_error(
+                IotaObjectResponseError::NotExists { object_id: id },
             )),
             ObjectRead::Exists(object_ref, o, layout) => {
                 let mut display_fields = None;
@@ -83,21 +84,21 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
                     match self.inner.get_display_fields(&o, &layout).await {
                         Ok(rendered_fields) => display_fields = Some(rendered_fields),
                         Err(e) => {
-                            return Ok(SuiObjectResponse::new(
+                            return Ok(IotaObjectResponse::new(
                                 Some((object_ref, o, layout, options, None).try_into()?),
-                                Some(SuiObjectResponseError::DisplayError {
+                                Some(IotaObjectResponseError::DisplayError {
                                     error: e.to_string(),
                                 }),
                             ));
                         }
                     }
                 }
-                Ok(SuiObjectResponse::new_with_data(
+                Ok(IotaObjectResponse::new_with_data(
                     (object_ref, o, layout, options, display_fields).try_into()?,
                 ))
             }
             ObjectRead::Deleted((object_id, version, digest)) => Ok(
-                SuiObjectResponse::new_with_error(SuiObjectResponseError::Deleted {
+                IotaObjectResponse::new_with_error(IotaObjectResponseError::Deleted {
                     object_id,
                     version,
                     digest,
@@ -112,11 +113,11 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
     async fn multi_get_objects(
         &self,
         object_ids: Vec<ObjectID>,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiObjectResponse>> {
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaObjectResponse>> {
         if object_ids.len() > *QUERY_MAX_RESULT_LIMIT {
             return Err(
-                SuiRpcInputError::SizeLimitExceeded(QUERY_MAX_RESULT_LIMIT.to_string()).into(),
+                IotaRpcInputError::SizeLimitExceeded(QUERY_MAX_RESULT_LIMIT.to_string()).into(),
             );
         }
 
@@ -139,8 +140,8 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
     async fn get_transaction_block(
         &self,
         digest: TransactionDigest,
-        options: Option<SuiTransactionBlockResponseOptions>,
-    ) -> RpcResult<SuiTransactionBlockResponse> {
+        options: Option<IotaTransactionBlockResponseOptions>,
+    ) -> RpcResult<IotaTransactionBlockResponse> {
         let mut txn = self
             .multi_get_transaction_blocks(vec![digest], options)
             .await?;
@@ -155,11 +156,11 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
     async fn multi_get_transaction_blocks(
         &self,
         digests: Vec<TransactionDigest>,
-        options: Option<SuiTransactionBlockResponseOptions>,
-    ) -> RpcResult<Vec<SuiTransactionBlockResponse>> {
+        options: Option<IotaTransactionBlockResponseOptions>,
+    ) -> RpcResult<Vec<IotaTransactionBlockResponse>> {
         let num_digests = digests.len();
         if num_digests > *QUERY_MAX_RESULT_LIMIT {
-            Err(SuiRpcInputError::SizeLimitExceeded(
+            Err(IotaRpcInputError::SizeLimitExceeded(
                 QUERY_MAX_RESULT_LIMIT.to_string(),
             ))?
         }
@@ -177,8 +178,8 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         &self,
         _object_id: ObjectID,
         _version: SequenceNumber,
-        _options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiPastObjectResponse> {
+        _options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaPastObjectResponse> {
         Err(jsonrpsee::types::error::CallError::Custom(
             jsonrpsee::types::error::ErrorCode::MethodNotFound.into(),
         )
@@ -189,7 +190,7 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         &self,
         _: ObjectID,
         _: SequenceNumber,
-    ) -> RpcResult<SuiPastObjectResponse> {
+    ) -> RpcResult<IotaPastObjectResponse> {
         Err(jsonrpsee::types::error::CallError::Custom(
             jsonrpsee::types::error::ErrorCode::MethodNotFound.into(),
         )
@@ -198,9 +199,9 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
 
     async fn try_multi_get_past_objects(
         &self,
-        _past_objects: Vec<SuiGetPastObjectRequest>,
-        _options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiPastObjectResponse>> {
+        _past_objects: Vec<IotaGetPastObjectRequest>,
+        _options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaPastObjectResponse>> {
         Err(jsonrpsee::types::error::CallError::Custom(
             jsonrpsee::types::error::ErrorCode::MethodNotFound.into(),
         )
@@ -223,11 +224,11 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         descending_order: bool,
     ) -> RpcResult<CheckpointPage> {
         let cursor = cursor.map(BigInt::into_inner);
-        let limit = sui_json_rpc_api::validate_limit(
+        let limit = iota_json_rpc_api::validate_limit(
             limit,
-            sui_json_rpc_api::QUERY_MAX_RESULT_LIMIT_CHECKPOINTS,
+            iota_json_rpc_api::QUERY_MAX_RESULT_LIMIT_CHECKPOINTS,
         )
-        .map_err(SuiRpcInputError::from)?;
+        .map_err(IotaRpcInputError::from)?;
 
         let mut checkpoints = self
             .inner
@@ -260,7 +261,7 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         .await
     }
 
-    async fn get_events(&self, transaction_digest: TransactionDigest) -> RpcResult<Vec<SuiEvent>> {
+    async fn get_events(&self, transaction_digest: TransactionDigest) -> RpcResult<Vec<IotaEvent>> {
         self.inner
             .get_transaction_events_in_blocking_task(transaction_digest)
             .await
@@ -283,7 +284,7 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
         };
 
         ProtocolConfig::get_for_version_if_supported(version, chain)
-            .ok_or(SuiRpcInputError::ProtocolVersionUnsupported(
+            .ok_or(IotaRpcInputError::ProtocolVersionUnsupported(
                 ProtocolVersion::MIN.as_u64(),
                 ProtocolVersion::MAX.as_u64(),
             ))
@@ -296,12 +297,12 @@ impl<T: R2D2Connection + 'static> ReadApiServer for ReadApi<T> {
     }
 }
 
-impl<T: R2D2Connection> SuiRpcModule for ReadApi<T> {
+impl<T: R2D2Connection> IotaRpcModule for ReadApi<T> {
     fn rpc(self) -> RpcModule<Self> {
         self.into_rpc()
     }
 
     fn rpc_doc_module() -> Module {
-        sui_json_rpc_api::ReadApiOpenRpc::module_doc()
+        iota_json_rpc_api::ReadApiOpenRpc::module_doc()
     }
 }

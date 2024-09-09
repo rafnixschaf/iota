@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This analysis flags making objects passed as function parameters or resulting from unpacking
@@ -30,18 +31,18 @@ use std::collections::BTreeMap;
 
 use super::{
     type_abilities, LinterDiagnosticCategory, LinterDiagnosticCode, LINT_WARNING_PREFIX,
-    PUBLIC_SHARE_FUN, SHARE_FUN, SUI_PKG_NAME, TRANSFER_MOD_NAME,
+    PUBLIC_SHARE_FUN, SHARE_FUN, IOTA_PKG_NAME, TRANSFER_MOD_NAME,
 };
 
 const SHARE_FUNCTIONS: &[(&str, &str, &str)] = &[
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_SHARE_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, SHARE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_SHARE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, SHARE_FUN),
 ];
 
 const SHARE_OWNED_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::ShareOwned as u8,
     "possible owned object share",
 );

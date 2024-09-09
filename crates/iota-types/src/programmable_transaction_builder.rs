@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! Utility for generating programmable transactions, either by specifying a command or for
@@ -10,12 +11,12 @@ use move_core_types::{ident_str, identifier::Identifier, language_storage::TypeT
 use serde::Serialize;
 
 use crate::{
-    base_types::{ObjectID, ObjectRef, SuiAddress},
+    base_types::{ObjectID, ObjectRef, IotaAddress},
     move_package::PACKAGE_MODULE_NAME,
     transaction::{
         Argument, CallArg, Command, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction,
     },
-    SUI_FRAMEWORK_PACKAGE_ID,
+    IOTA_FRAMEWORK_PACKAGE_ID,
 };
 
 #[derive(PartialEq, Eq, Hash)]
@@ -191,7 +192,7 @@ impl ProgrammableTransactionBuilder {
         let cap = self.publish_upgradeable(modules, dep_ids);
         self.commands
             .push(Command::MoveCall(Box::new(ProgrammableMoveCall {
-                package: SUI_FRAMEWORK_PACKAGE_ID,
+                package: IOTA_FRAMEWORK_PACKAGE_ID,
                 module: PACKAGE_MODULE_NAME.to_owned(),
                 function: ident_str!("make_immutable").to_owned(),
                 type_arguments: vec![],
@@ -214,18 +215,18 @@ impl ProgrammableTransactionBuilder {
         ))
     }
 
-    pub fn transfer_arg(&mut self, recipient: SuiAddress, arg: Argument) {
+    pub fn transfer_arg(&mut self, recipient: IotaAddress, arg: Argument) {
         self.transfer_args(recipient, vec![arg])
     }
 
-    pub fn transfer_args(&mut self, recipient: SuiAddress, args: Vec<Argument>) {
+    pub fn transfer_args(&mut self, recipient: IotaAddress, args: Vec<Argument>) {
         let rec_arg = self.pure(recipient).unwrap();
         self.commands.push(Command::TransferObjects(args, rec_arg));
     }
 
     pub fn transfer_object(
         &mut self,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         object_ref: ObjectRef,
     ) -> anyhow::Result<()> {
         let rec_arg = self.pure(recipient).unwrap();
@@ -235,7 +236,7 @@ impl ProgrammableTransactionBuilder {
         Ok(())
     }
 
-    pub fn transfer_sui(&mut self, recipient: SuiAddress, amount: Option<u64>) {
+    pub fn transfer_iota(&mut self, recipient: IotaAddress, amount: Option<u64>) {
         let rec_arg = self.pure(recipient).unwrap();
         let coin_arg = if let Some(amount) = amount {
             let amt_arg = self.pure(amount).unwrap();
@@ -246,15 +247,15 @@ impl ProgrammableTransactionBuilder {
         self.command(Command::TransferObjects(vec![coin_arg], rec_arg));
     }
 
-    pub fn pay_all_sui(&mut self, recipient: SuiAddress) {
+    pub fn pay_all_iota(&mut self, recipient: IotaAddress) {
         let rec_arg = self.pure(recipient).unwrap();
         self.command(Command::TransferObjects(vec![Argument::GasCoin], rec_arg));
     }
 
     /// Will fail to generate if recipients and amounts do not have the same lengths
-    pub fn pay_sui(
+    pub fn pay_iota(
         &mut self,
-        recipients: Vec<SuiAddress>,
+        recipients: Vec<IotaAddress>,
         amounts: Vec<u64>,
     ) -> anyhow::Result<()> {
         self.pay_impl(recipients, amounts, Argument::GasCoin)
@@ -265,7 +266,7 @@ impl ProgrammableTransactionBuilder {
     pub fn pay(
         &mut self,
         coins: Vec<ObjectRef>,
-        recipients: Vec<SuiAddress>,
+        recipients: Vec<IotaAddress>,
         amounts: Vec<u64>,
     ) -> anyhow::Result<()> {
         let mut coins = coins.into_iter();
@@ -284,7 +285,7 @@ impl ProgrammableTransactionBuilder {
 
     fn pay_impl(
         &mut self,
-        recipients: Vec<SuiAddress>,
+        recipients: Vec<IotaAddress>,
         amounts: Vec<u64>,
         coin: Argument,
     ) -> anyhow::Result<()> {
@@ -301,7 +302,7 @@ impl ProgrammableTransactionBuilder {
 
         // collect recipients in the case where they are non-unique in order
         // to minimize the number of transfers that must be performed
-        let mut recipient_map: IndexMap<SuiAddress, Vec<usize>> = IndexMap::new();
+        let mut recipient_map: IndexMap<IotaAddress, Vec<usize>> = IndexMap::new();
         let mut amt_args = Vec::with_capacity(recipients.len());
         for (i, (recipient, amount)) in recipients.into_iter().zip(amounts).enumerate() {
             recipient_map.entry(recipient).or_default().push(i);

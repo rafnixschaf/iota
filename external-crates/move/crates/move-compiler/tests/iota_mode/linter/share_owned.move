@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module a::test1 {
-    use sui::transfer;
-    use sui::object::UID;
+    use iota::transfer;
+    use iota::object::UID;
 
     struct Obj has key, store {
         id: UID
@@ -16,8 +17,8 @@ module a::test1 {
 }
 
 module a::test2 {
-    use sui::transfer;
-    use sui::object::{Self, UID};
+    use iota::transfer;
+    use iota::object::{Self, UID};
 
     struct Obj has key, store {
         id: UID
@@ -43,7 +44,7 @@ module a::test2 {
     }
 }
 
-module sui::object {
+module iota::object {
     struct UID has store {
         id: address,
     }
@@ -52,7 +53,7 @@ module sui::object {
     }
 }
 
-module sui::transfer {
+module iota::transfer {
     public fun public_share_object<T: key>(_: T) {
         abort 0
     }

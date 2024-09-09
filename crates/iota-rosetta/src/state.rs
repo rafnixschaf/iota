@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::operations::Operations;
@@ -8,10 +9,10 @@ use crate::types::{
 use crate::Error;
 use async_trait::async_trait;
 use std::sync::Arc;
-use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
-use sui_sdk::rpc_types::Checkpoint;
-use sui_sdk::SuiClient;
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
+use iota_sdk::rpc_types::Checkpoint;
+use iota_sdk::IotaClient;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 
 #[cfg(test)]
 #[path = "unit_tests/balance_changing_tx_tests.rs"]
@@ -19,12 +20,12 @@ mod balance_changing_tx_tests;
 
 #[derive(Clone)]
 pub struct OnlineServerContext {
-    pub client: SuiClient,
+    pub client: IotaClient,
     block_provider: Arc<dyn BlockProvider + Send + Sync>,
 }
 
 impl OnlineServerContext {
-    pub fn new(client: SuiClient, block_provider: Arc<dyn BlockProvider + Send + Sync>) -> Self {
+    pub fn new(client: IotaClient, block_provider: Arc<dyn BlockProvider + Send + Sync>) -> Self {
         Self {
             client,
             block_provider,
@@ -52,7 +53,7 @@ pub trait BlockProvider {
 
 #[derive(Clone)]
 pub struct CheckpointBlockProvider {
-    client: SuiClient,
+    client: IotaClient,
 }
 
 #[async_trait]
@@ -103,7 +104,7 @@ impl BlockProvider for CheckpointBlockProvider {
 }
 
 impl CheckpointBlockProvider {
-    pub fn new(client: SuiClient) -> Self {
+    pub fn new(client: IotaClient) -> Self {
         Self { client }
     }
 
@@ -117,7 +118,7 @@ impl CheckpointBlockProvider {
                 .read_api()
                 .multi_get_transactions_with_options(
                     batch.to_vec(),
-                    SuiTransactionBlockResponseOptions::new()
+                    IotaTransactionBlockResponseOptions::new()
                         .with_input()
                         .with_effects()
                         .with_balance_changes()

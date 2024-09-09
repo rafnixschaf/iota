@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::data::{Db, DbConnection, QueryExecutor};
@@ -9,7 +10,7 @@ use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use std::mem;
 use std::sync::Arc;
 use std::time::Duration;
-use sui_indexer::schema::checkpoints;
+use iota_indexer::schema::checkpoints;
 use tokio::sync::{watch, RwLock};
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};

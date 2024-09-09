@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! `BridgeOrchestrator` is the component that:
-//! 1. monitors Sui and Ethereum events with the help of `SuiSyncer` and `EthSyncer`
+//! 1. monitors Iota and Ethereum events with the help of `IotaSyncer` and `EthSyncer`
 //! 2. updates WAL table and cursor tables
 //! 2. hands actions to `BridgeExecutor` for execution
 
@@ -11,43 +12,43 @@ use crate::action_executor::{
     submit_to_executor, BridgeActionExecutionWrapper, BridgeActionExecutorTrait,
 };
 use crate::error::BridgeError;
-use crate::events::SuiBridgeEvent;
+use crate::events::IotaBridgeEvent;
 use crate::metrics::BridgeMetrics;
 use crate::storage::BridgeOrchestratorTables;
-use crate::sui_client::{SuiClient, SuiClientInner};
+use crate::iota_client::{IotaClient, IotaClientInner};
 use crate::types::EthLog;
 use ethers::types::Address as EthAddress;
-use mysten_metrics::spawn_logged_monitored_task;
+use iota_metrics::spawn_logged_monitored_task;
 use std::sync::Arc;
-use sui_json_rpc_types::SuiEvent;
-use sui_types::Identifier;
+use iota_json_rpc_types::IotaEvent;
+use iota_types::Identifier;
 use tokio::task::JoinHandle;
 use tracing::{error, info};
 
 pub struct BridgeOrchestrator<C> {
-    _sui_client: Arc<SuiClient<C>>,
-    sui_events_rx: mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
-    eth_events_rx: mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
+    _iota_client: Arc<IotaClient<C>>,
+    iota_events_rx: iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
+    eth_events_rx: iota_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
     store: Arc<BridgeOrchestratorTables>,
-    monitor_tx: mysten_metrics::metered_channel::Sender<SuiBridgeEvent>,
+    monitor_tx: iota_metrics::metered_channel::Sender<IotaBridgeEvent>,
     metrics: Arc<BridgeMetrics>,
 }
 
 impl<C> BridgeOrchestrator<C>
 where
-    C: SuiClientInner + 'static,
+    C: IotaClientInner + 'static,
 {
     pub fn new(
-        sui_client: Arc<SuiClient<C>>,
-        sui_events_rx: mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
-        eth_events_rx: mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
+        iota_client: Arc<IotaClient<C>>,
+        iota_events_rx: iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
+        eth_events_rx: iota_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
         store: Arc<BridgeOrchestratorTables>,
-        monitor_tx: mysten_metrics::metered_channel::Sender<SuiBridgeEvent>,
+        monitor_tx: iota_metrics::metered_channel::Sender<IotaBridgeEvent>,
         metrics: Arc<BridgeMetrics>,
     ) -> Self {
         Self {
-            _sui_client: sui_client,
-            sui_events_rx,
+            _iota_client: iota_client,
+            iota_events_rx,
             eth_events_rx,
             store,
             monitor_tx,
@@ -68,10 +69,10 @@ where
         task_handles.extend(handles);
         let executor_sender_clone = executor_sender.clone();
         let metrics_clone = self.metrics.clone();
-        task_handles.push(spawn_logged_monitored_task!(Self::run_sui_watcher(
+        task_handles.push(spawn_logged_monitored_task!(Self::run_iota_watcher(
             store_clone,
             executor_sender_clone,
-            self.sui_events_rx,
+            self.iota_events_rx,
             self.monitor_tx,
             metrics_clone,
         )));
@@ -99,35 +100,35 @@ where
         task_handles
     }
 
-    async fn run_sui_watcher(
+    async fn run_iota_watcher(
         store: Arc<BridgeOrchestratorTables>,
-        executor_tx: mysten_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
-        mut sui_events_rx: mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
-        monitor_tx: mysten_metrics::metered_channel::Sender<SuiBridgeEvent>,
+        executor_tx: iota_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
+        mut iota_events_rx: iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
+        monitor_tx: iota_metrics::metered_channel::Sender<IotaBridgeEvent>,
         metrics: Arc<BridgeMetrics>,
     ) {
-        info!("Starting sui watcher task");
-        while let Some((identifier, events)) = sui_events_rx.recv().await {
+        info!("Starting iota watcher task");
+        while let Some((identifier, events)) = iota_events_rx.recv().await {
             if events.is_empty() {
                 continue;
             }
-            info!("Received {} Sui events: {:?}", events.len(), events);
+            info!("Received {} Iota events: {:?}", events.len(), events);
             metrics
-                .sui_watcher_received_events
+                .iota_watcher_received_events
                 .inc_by(events.len() as u64);
             let bridge_events = events
                 .iter()
-                .filter_map(|sui_event| {
-                    match SuiBridgeEvent::try_from_sui_event(sui_event) {
+                .filter_map(|iota_event| {
+                    match IotaBridgeEvent::try_from_iota_event(iota_event) {
                         Ok(bridge_event) => Some(bridge_event),
                         // On testnet some early bridge transactions could have zero value (before we disallow it in Move)
                         Err(BridgeError::ZeroValueBridgeTransfer(_)) => {
-                            error!("Zero value bridge transfer: {:?}", sui_event);
+                            error!("Zero value bridge transfer: {:?}", iota_event);
                             None
                         }
                         Err(e) => {
                             panic!(
-                                "Sui Event could not be deserialzed to SuiBridgeEvent: {:?}",
+                                "Iota Event could not be deserialzed to IotaBridgeEvent: {:?}",
                                 e
                             );
                         }
@@ -136,16 +137,16 @@ where
                 .collect::<Vec<_>>();
 
             let mut actions = vec![];
-            for (sui_event, opt_bridge_event) in events.iter().zip(bridge_events) {
+            for (iota_event, opt_bridge_event) in events.iter().zip(bridge_events) {
                 if opt_bridge_event.is_none() {
                     // TODO: we probably should not miss any events, log for now.
-                    metrics.sui_watcher_unrecognized_events.inc();
-                    error!("Sui event not recognized: {:?}", sui_event);
+                    metrics.iota_watcher_unrecognized_events.inc();
+                    error!("Iota event not recognized: {:?}", iota_event);
                     continue;
                 }
                 // Unwrap safe: checked above
-                let bridge_event: SuiBridgeEvent = opt_bridge_event.unwrap();
-                info!("Observed Sui bridge event: {:?}", bridge_event);
+                let bridge_event: IotaBridgeEvent = opt_bridge_event.unwrap();
+                info!("Observed Iota bridge event: {:?}", bridge_event);
 
                 // Send event to monitor
                 monitor_tx
@@ -154,16 +155,16 @@ where
                     .expect("Sending event to monitor channel should not fail");
 
                 if let Some(action) = bridge_event
-                    .try_into_bridge_action(sui_event.id.tx_digest, sui_event.id.event_seq as u16)
+                    .try_into_bridge_action(iota_event.id.tx_digest, iota_event.id.event_seq as u16)
                 {
                     actions.push(action);
                 }
             }
 
             if !actions.is_empty() {
-                info!("Received {} actions from Sui: {:?}", actions.len(), actions);
+                info!("Received {} actions from Iota: {:?}", actions.len(), actions);
                 metrics
-                    .sui_watcher_received_actions
+                    .iota_watcher_received_actions
                     .inc_by(actions.len() as u64);
                 // Write action to pending WAL
                 store
@@ -179,16 +180,16 @@ where
             // Unwrap safe: in the beginning of the loop we checked that events is not empty
             let cursor = events.last().unwrap().id;
             store
-                .update_sui_event_cursor(identifier, cursor)
+                .update_iota_event_cursor(identifier, cursor)
                 .expect("Store operation should not fail");
         }
-        panic!("Sui event channel was closed unexpectedly");
+        panic!("Iota event channel was closed unexpectedly");
     }
 
     async fn run_eth_watcher(
         store: Arc<BridgeOrchestratorTables>,
-        executor_tx: mysten_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
-        mut eth_events_rx: mysten_metrics::metered_channel::Receiver<(
+        executor_tx: iota_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
+        mut eth_events_rx: iota_metrics::metered_channel::Receiver<(
             ethers::types::Address,
             u64,
             Vec<EthLog>,
@@ -263,7 +264,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        test_utils::{get_test_eth_to_sui_bridge_action, get_test_log_and_action},
+        test_utils::{get_test_eth_to_iota_bridge_action, get_test_log_and_action},
         types::BridgeActionDigest,
     };
     use ethers::types::{Address as EthAddress, TxHash};
@@ -272,22 +273,22 @@ mod tests {
 
     use super::*;
     use crate::events::init_all_struct_tags;
-    use crate::test_utils::get_test_sui_to_eth_bridge_action;
-    use crate::{events::tests::get_test_sui_event_and_action, sui_mock_client::SuiMockClient};
+    use crate::test_utils::get_test_iota_to_eth_bridge_action;
+    use crate::{events::tests::get_test_iota_event_and_action, iota_mock_client::IotaMockClient};
 
     #[tokio::test]
-    async fn test_sui_watcher_task() {
+    async fn test_iota_watcher_task() {
         // Note: this test may fail because of the following reasons:
-        // the SuiEvent's struct tag does not match the ones in events.rs
+        // the IotaEvent's struct tag does not match the ones in events.rs
 
         let (
-            sui_events_tx,
-            sui_events_rx,
+            iota_events_tx,
+            iota_events_rx,
             _eth_events_tx,
             eth_events_rx,
             monitor_tx,
             _monitor_rx,
-            sui_client,
+            iota_client,
             store,
         ) = setup();
         let (executor, mut executor_requested_action_rx) = MockExecutor::new();
@@ -295,8 +296,8 @@ mod tests {
         let registry = Registry::new();
         let metrics = Arc::new(BridgeMetrics::new(&registry));
         let _handles = BridgeOrchestrator::new(
-            Arc::new(sui_client),
-            sui_events_rx,
+            Arc::new(iota_client),
+            iota_events_rx,
             eth_events_rx,
             store.clone(),
             monitor_tx,
@@ -305,10 +306,10 @@ mod tests {
         .run(executor)
         .await;
 
-        let identifier = Identifier::from_str("test_sui_watcher_task").unwrap();
-        let (sui_event, bridge_action) = get_test_sui_event_and_action(identifier.clone());
-        sui_events_tx
-            .send((identifier.clone(), vec![sui_event.clone()]))
+        let identifier = Identifier::from_str("test_iota_watcher_task").unwrap();
+        let (iota_event, bridge_action) = get_test_iota_event_and_action(identifier.clone());
+        iota_events_tx
+            .send((identifier.clone(), vec![iota_event.clone()]))
             .await
             .unwrap();
 
@@ -331,8 +332,8 @@ mod tests {
             let action = actions.get(&bridge_action.digest()).unwrap();
             assert_eq!(action, &bridge_action);
             assert_eq!(
-                store.get_sui_event_cursors(&[identifier]).unwrap()[0].unwrap(),
-                sui_event.id,
+                store.get_iota_event_cursors(&[identifier]).unwrap()[0].unwrap(),
+                iota_event.id,
             );
             break;
         }
@@ -345,13 +346,13 @@ mod tests {
         // 2. Log returned from `get_test_log_and_action` is not parseable log (not abigen!, check abi.rs)
 
         let (
-            _sui_events_tx,
-            sui_events_rx,
+            _iota_events_tx,
+            iota_events_rx,
             eth_events_tx,
             eth_events_rx,
             monitor_tx,
             _monitor_rx,
-            sui_client,
+            iota_client,
             store,
         ) = setup();
         let (executor, mut executor_requested_action_rx) = MockExecutor::new();
@@ -359,8 +360,8 @@ mod tests {
         let registry = Registry::new();
         let metrics = Arc::new(BridgeMetrics::new(&registry));
         let _handles = BridgeOrchestrator::new(
-            Arc::new(sui_client),
-            sui_events_rx,
+            Arc::new(iota_client),
+            iota_events_rx,
             eth_events_rx,
             store.clone(),
             monitor_tx,
@@ -415,18 +416,18 @@ mod tests {
     /// Test that when orchestrator starts, all pending actions are sent to executor
     async fn test_resume_actions_in_pending_logs() {
         let (
-            _sui_events_tx,
-            sui_events_rx,
+            _iota_events_tx,
+            iota_events_rx,
             _eth_events_tx,
             eth_events_rx,
             monitor_tx,
             _monitor_rx,
-            sui_client,
+            iota_client,
             store,
         ) = setup();
         let (executor, mut executor_requested_action_rx) = MockExecutor::new();
 
-        let action1 = get_test_sui_to_eth_bridge_action(
+        let action1 = get_test_iota_to_eth_bridge_action(
             None,
             Some(0),
             Some(99),
@@ -436,7 +437,7 @@ mod tests {
             None,
         );
 
-        let action2 = get_test_eth_to_sui_bridge_action(None, None, None, None);
+        let action2 = get_test_eth_to_iota_bridge_action(None, None, None, None);
         store
             .insert_pending_actions(&vec![action1.clone(), action2.clone()])
             .unwrap();
@@ -445,8 +446,8 @@ mod tests {
         let registry = Registry::new();
         let metrics = Arc::new(BridgeMetrics::new(&registry));
         let _handles = BridgeOrchestrator::new(
-            Arc::new(sui_client),
-            sui_events_rx,
+            Arc::new(iota_client),
+            iota_events_rx,
             eth_events_rx,
             store.clone(),
             monitor_tx,
@@ -466,57 +467,57 @@ mod tests {
 
     #[allow(clippy::type_complexity)]
     fn setup() -> (
-        mysten_metrics::metered_channel::Sender<(Identifier, Vec<SuiEvent>)>,
-        mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
-        mysten_metrics::metered_channel::Sender<(EthAddress, u64, Vec<EthLog>)>,
-        mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
-        mysten_metrics::metered_channel::Sender<SuiBridgeEvent>,
-        mysten_metrics::metered_channel::Receiver<SuiBridgeEvent>,
-        SuiClient<SuiMockClient>,
+        iota_metrics::metered_channel::Sender<(Identifier, Vec<IotaEvent>)>,
+        iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
+        iota_metrics::metered_channel::Sender<(EthAddress, u64, Vec<EthLog>)>,
+        iota_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
+        iota_metrics::metered_channel::Sender<IotaBridgeEvent>,
+        iota_metrics::metered_channel::Receiver<IotaBridgeEvent>,
+        IotaClient<IotaMockClient>,
         Arc<BridgeOrchestratorTables>,
     ) {
         telemetry_subscribers::init_for_testing();
         let registry = Registry::new();
-        mysten_metrics::init_metrics(&registry);
+        iota_metrics::init_metrics(&registry);
 
         init_all_struct_tags();
 
         let temp_dir = tempfile::tempdir().unwrap();
         let store = BridgeOrchestratorTables::new(temp_dir.path());
 
-        let mock_client = SuiMockClient::default();
-        let sui_client = SuiClient::new_for_testing(mock_client.clone());
+        let mock_client = IotaMockClient::default();
+        let iota_client = IotaClient::new_for_testing(mock_client.clone());
 
-        let (eth_events_tx, eth_events_rx) = mysten_metrics::metered_channel::channel(
+        let (eth_events_tx, eth_events_rx) = iota_metrics::metered_channel::channel(
             100,
-            &mysten_metrics::get_metrics()
+            &iota_metrics::get_metrics()
                 .unwrap()
                 .channel_inflight
                 .with_label_values(&["unit_test_eth_events_queue"]),
         );
 
-        let (sui_events_tx, sui_events_rx) = mysten_metrics::metered_channel::channel(
+        let (iota_events_tx, iota_events_rx) = iota_metrics::metered_channel::channel(
             100,
-            &mysten_metrics::get_metrics()
+            &iota_metrics::get_metrics()
                 .unwrap()
                 .channel_inflight
-                .with_label_values(&["unit_test_sui_events_queue"]),
+                .with_label_values(&["unit_test_iota_events_queue"]),
         );
-        let (monitor_tx, monitor_rx) = mysten_metrics::metered_channel::channel(
+        let (monitor_tx, monitor_rx) = iota_metrics::metered_channel::channel(
             10000,
-            &mysten_metrics::get_metrics()
+            &iota_metrics::get_metrics()
                 .unwrap()
                 .channel_inflight
                 .with_label_values(&["monitor_queue"]),
         );
         (
-            sui_events_tx,
-            sui_events_rx,
+            iota_events_tx,
+            iota_events_rx,
             eth_events_tx,
             eth_events_rx,
             monitor_tx,
             monitor_rx,
-            sui_client,
+            iota_client,
             store,
         )
     }
@@ -543,12 +544,12 @@ mod tests {
             self,
         ) -> (
             Vec<tokio::task::JoinHandle<()>>,
-            mysten_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
+            iota_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
         ) {
             let (tx, mut rx) =
-                mysten_metrics::metered_channel::channel::<BridgeActionExecutionWrapper>(
+                iota_metrics::metered_channel::channel::<BridgeActionExecutionWrapper>(
                     100,
-                    &mysten_metrics::get_metrics()
+                    &iota_metrics::get_metrics()
                         .unwrap()
                         .channel_inflight
                         .with_label_values(&["unit_test_mock_executor"]),

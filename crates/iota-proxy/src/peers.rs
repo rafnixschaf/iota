@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{bail, Context, Result};
 use fastcrypto::ed25519::Ed25519PublicKey;
@@ -13,8 +14,8 @@ use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
 };
-use sui_tls::Allower;
-use sui_types::sui_system_state::sui_system_state_summary::SuiSystemStateSummary;
+use iota_tls::Allower;
+use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
 use tracing::{debug, error, info};
 
 static JSON_RPC_STATE: Lazy<CounterVec> = Lazy::new(|| {
@@ -38,40 +39,40 @@ static JSON_RPC_DURATION: Lazy<HistogramVec> = Lazy::new(|| {
     .unwrap()
 });
 
-/// SuiNods a mapping of public key to SuiPeer data
-pub type SuiPeers = Arc<RwLock<HashMap<Ed25519PublicKey, SuiPeer>>>;
+/// IotaNods a mapping of public key to IotaPeer data
+pub type IotaPeers = Arc<RwLock<HashMap<Ed25519PublicKey, IotaPeer>>>;
 
-/// A SuiPeer is the collated sui chain data we have about validators
+/// A IotaPeer is the collated iota chain data we have about validators
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
-pub struct SuiPeer {
+pub struct IotaPeer {
     pub name: String,
     pub p2p_address: Multiaddr,
     pub public_key: Ed25519PublicKey,
 }
 
-/// SuiNodeProvider queries the sui blockchain and keeps a record of known validators based on the response from
-/// sui_getValidators.  The node name, public key and other info is extracted from the chain and stored in this
+/// IotaNodeProvider queries the iota blockchain and keeps a record of known validators based on the response from
+/// iota_getValidators.  The node name, public key and other info is extracted from the chain and stored in this
 /// data structure.  We pass this struct to the tls verifier and it depends on the state contained within.
 /// Handlers also use this data in an Extractor extension to check incoming clients on the http api against known keys.
 #[derive(Debug, Clone)]
-pub struct SuiNodeProvider {
-    nodes: SuiPeers,
-    static_nodes: SuiPeers,
+pub struct IotaNodeProvider {
+    nodes: IotaPeers,
+    static_nodes: IotaPeers,
     rpc_url: String,
     rpc_poll_interval: Duration,
 }
 
-impl Allower for SuiNodeProvider {
+impl Allower for IotaNodeProvider {
     fn allowed(&self, key: &Ed25519PublicKey) -> bool {
         self.static_nodes.read().unwrap().contains_key(key)
             || self.nodes.read().unwrap().contains_key(key)
     }
 }
 
-impl SuiNodeProvider {
-    pub fn new(rpc_url: String, rpc_poll_interval: Duration, static_peers: Vec<SuiPeer>) -> Self {
+impl IotaNodeProvider {
+    pub fn new(rpc_url: String, rpc_poll_interval: Duration, static_peers: Vec<IotaPeer>) -> Self {
         // build our hashmap with the static pub keys. we only do this one time at binary startup.
-        let static_nodes: HashMap<Ed25519PublicKey, SuiPeer> = static_peers
+        let static_nodes: HashMap<Ed25519PublicKey, IotaPeer> = static_peers
             .into_iter()
             .map(|v| (v.public_key.clone(), v))
             .collect();
@@ -86,11 +87,11 @@ impl SuiNodeProvider {
     }
 
     /// get is used to retrieve peer info in our handlers
-    pub fn get(&self, key: &Ed25519PublicKey) -> Option<SuiPeer> {
+    pub fn get(&self, key: &Ed25519PublicKey) -> Option<IotaPeer> {
         debug!("look for {:?}", key);
         // check static nodes first
         if let Some(v) = self.static_nodes.read().unwrap().get(key) {
-            return Some(SuiPeer {
+            return Some(IotaPeer {
                 name: v.name.to_owned(),
                 p2p_address: v.p2p_address.to_owned(),
                 public_key: v.public_key.to_owned(),
@@ -98,7 +99,7 @@ impl SuiNodeProvider {
         }
         // check dynamic nodes
         if let Some(v) = self.nodes.read().unwrap().get(key) {
-            return Some(SuiPeer {
+            return Some(IotaPeer {
                 name: v.name.to_owned(),
                 p2p_address: v.p2p_address.to_owned(),
                 public_key: v.public_key.to_owned(),
@@ -107,18 +108,18 @@ impl SuiNodeProvider {
         None
     }
     /// Get a reference to the inner service
-    pub fn get_ref(&self) -> &SuiPeers {
+    pub fn get_ref(&self) -> &IotaPeers {
         &self.nodes
     }
 
     /// Get a mutable reference to the inner service
-    pub fn get_mut(&mut self) -> &mut SuiPeers {
+    pub fn get_mut(&mut self) -> &mut IotaPeers {
         &mut self.nodes
     }
 
     /// get_validators will retrieve known validators
-    async fn get_validators(url: String) -> Result<SuiSystemStateSummary> {
-        let rpc_method = "suix_getLatestSuiSystemState";
+    async fn get_validators(url: String) -> Result<IotaSystemStateSummary> {
+        let rpc_method = "iotax_getLatestIotaSystemState";
         let observe = || {
             let timer = JSON_RPC_DURATION
                 .with_label_values(&[rpc_method])
@@ -157,7 +158,7 @@ impl SuiNodeProvider {
 
         #[derive(Debug, Deserialize)]
         struct ResponseBody {
-            result: SuiSystemStateSummary,
+            result: IotaSystemStateSummary,
         }
 
         let body: ResponseBody = match serde_json::from_slice(&raw) {
@@ -218,10 +219,10 @@ impl SuiNodeProvider {
     }
 }
 
-/// extract will get the network pubkey bytes from a SuiValidatorSummary type.  This type comes from a
+/// extract will get the network pubkey bytes from a IotaValidatorSummary type.  This type comes from a
 /// full node rpc result.  See get_validators for details.  The key here, if extracted successfully, will
 /// ultimately be stored in the allow list and let us communicate with those actual peers via tls.
-fn extract(summary: SuiSystemStateSummary) -> impl Iterator<Item = (Ed25519PublicKey, SuiPeer)> {
+fn extract(summary: IotaSystemStateSummary) -> impl Iterator<Item = (Ed25519PublicKey, IotaPeer)> {
     summary.active_validators.into_iter().filter_map(|vm| {
         match Ed25519PublicKey::from_bytes(&vm.network_pubkey_bytes) {
             Ok(public_key) => {
@@ -238,7 +239,7 @@ fn extract(summary: SuiSystemStateSummary) -> impl Iterator<Item = (Ed25519Publi
                 );
                 Some((
                     public_key.clone(),
-                    SuiPeer {
+                    IotaPeer {
                         name: vm.name,
                         p2p_address,
                         public_key,
@@ -247,8 +248,8 @@ fn extract(summary: SuiSystemStateSummary) -> impl Iterator<Item = (Ed25519Publi
             }
             Err(error) => {
                 error!(
-                    "unable to decode public key for name: {:?} sui_address: {:?} error: {error}",
-                    vm.name, vm.sui_address
+                    "unable to decode public key for name: {:?} iota_address: {:?} error: {error}",
+                    vm.name, vm.iota_address
                 );
                 None // scoped to filter_map
             }
@@ -261,23 +262,23 @@ mod tests {
     use super::*;
     use crate::admin::{generate_self_cert, CertKeyPair};
     use serde::Serialize;
-    use sui_types::sui_system_state::sui_system_state_summary::{
-        SuiSystemStateSummary, SuiValidatorSummary,
+    use iota_types::iota_system_state::iota_system_state_summary::{
+        IotaSystemStateSummary, IotaValidatorSummary,
     };
 
-    /// creates a test that binds our proxy use case to the structure in sui_getLatestSuiSystemState
+    /// creates a test that binds our proxy use case to the structure in iota_getLatestIotaSystemState
     /// most of the fields are garbage, but we will send the results of the serde process to a private decode
     /// function that should always work if the structure is valid for our use
     #[test]
-    fn depend_on_sui_sui_system_state_summary() {
-        let CertKeyPair(_, client_pub_key) = generate_self_cert("sui".into());
+    fn depend_on_iota_iota_system_state_summary() {
+        let CertKeyPair(_, client_pub_key) = generate_self_cert("iota".into());
         let p2p_address: Multiaddr = "/ip4/127.0.0.1/tcp/10000"
             .parse()
             .expect("expected a multiaddr value");
         // all fields here just satisfy the field types, with exception to active_validators, we use
         // some of those.
-        let depends_on = SuiSystemStateSummary {
-            active_validators: vec![SuiValidatorSummary {
+        let depends_on = IotaSystemStateSummary {
+            active_validators: vec![IotaValidatorSummary {
                 network_pubkey_bytes: Vec::from(client_pub_key.as_bytes()),
                 p2p_address: format!("{p2p_address}"),
                 primary_address: "empty".into(),
@@ -289,14 +290,14 @@ mod tests {
 
         #[derive(Debug, Serialize, Deserialize)]
         struct ResponseBody {
-            result: SuiSystemStateSummary,
+            result: IotaSystemStateSummary,
         }
 
         let r = serde_json::to_string(&ResponseBody { result: depends_on })
-            .expect("expected to serialize ResponseBody{SuiSystemStateSummary}");
+            .expect("expected to serialize ResponseBody{IotaSystemStateSummary}");
 
         let deserialized = serde_json::from_str::<ResponseBody>(&r)
-            .expect("expected to deserialize ResponseBody{SuiSystemStateSummary}");
+            .expect("expected to deserialize ResponseBody{IotaSystemStateSummary}");
 
         let peers = extract(deserialized.result);
         assert_eq!(peers.count(), 1, "peers should have been a length of 1");

@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use move_ir_types::location::*;
@@ -19,7 +20,7 @@ use crate::{
     hlir::ast::{Exp, Label, ModuleCall, SingleType, Type, Type_, Var},
     parser::ast::Ability_,
     shared::{program_info::TypingProgramInfo, CompilationEnv, Identifier},
-    sui_mode::{OBJECT_NEW, TEST_SCENARIO_MODULE_NAME, TS_NEW_OBJECT},
+    iota_mode::{OBJECT_NEW, TEST_SCENARIO_MODULE_NAME, TS_NEW_OBJECT},
 };
 use std::collections::BTreeMap;
 
@@ -27,33 +28,33 @@ use super::{
     AUTHENTICATOR_STATE_CREATE, AUTHENTICATOR_STATE_MODULE_NAME, BRIDGE_ADDR_NAME, BRIDGE_CREATE,
     BRIDGE_MODULE_NAME, CLOCK_MODULE_NAME, DENY_LIST_CREATE, DENY_LIST_MODULE_NAME, ID_LEAK_DIAG,
     OBJECT_MODULE_NAME, OBJECT_NEW_UID_FROM_HASH, RANDOMNESS_MODULE_NAME, RANDOMNESS_STATE_CREATE,
-    SUI_ADDR_NAME, SUI_CLOCK_CREATE, SUI_SYSTEM_ADDR_NAME, SUI_SYSTEM_CREATE,
-    SUI_SYSTEM_MODULE_NAME, UID_TYPE_NAME,
+    IOTA_ADDR_NAME, IOTA_CLOCK_CREATE, IOTA_SYSTEM_ADDR_NAME, IOTA_SYSTEM_CREATE,
+    IOTA_SYSTEM_MODULE_NAME, UID_TYPE_NAME,
 };
 
 pub const FRESH_ID_FUNCTIONS: &[(Symbol, Symbol, Symbol)] = &[
-    (SUI_ADDR_NAME, OBJECT_MODULE_NAME, OBJECT_NEW),
-    (SUI_ADDR_NAME, OBJECT_MODULE_NAME, OBJECT_NEW_UID_FROM_HASH),
-    (SUI_ADDR_NAME, TEST_SCENARIO_MODULE_NAME, TS_NEW_OBJECT),
+    (IOTA_ADDR_NAME, OBJECT_MODULE_NAME, OBJECT_NEW),
+    (IOTA_ADDR_NAME, OBJECT_MODULE_NAME, OBJECT_NEW_UID_FROM_HASH),
+    (IOTA_ADDR_NAME, TEST_SCENARIO_MODULE_NAME, TS_NEW_OBJECT),
 ];
 pub const FUNCTIONS_TO_SKIP: &[(Symbol, Symbol, Symbol)] = &[
     (
-        SUI_SYSTEM_ADDR_NAME,
-        SUI_SYSTEM_MODULE_NAME,
-        SUI_SYSTEM_CREATE,
+        IOTA_SYSTEM_ADDR_NAME,
+        IOTA_SYSTEM_MODULE_NAME,
+        IOTA_SYSTEM_CREATE,
     ),
-    (SUI_ADDR_NAME, CLOCK_MODULE_NAME, SUI_CLOCK_CREATE),
+    (IOTA_ADDR_NAME, CLOCK_MODULE_NAME, IOTA_CLOCK_CREATE),
     (
-        SUI_ADDR_NAME,
+        IOTA_ADDR_NAME,
         AUTHENTICATOR_STATE_MODULE_NAME,
         AUTHENTICATOR_STATE_CREATE,
     ),
     (
-        SUI_ADDR_NAME,
+        IOTA_ADDR_NAME,
         RANDOMNESS_MODULE_NAME,
         RANDOMNESS_STATE_CREATE,
     ),
-    (SUI_ADDR_NAME, DENY_LIST_MODULE_NAME, DENY_LIST_CREATE),
+    (IOTA_ADDR_NAME, DENY_LIST_MODULE_NAME, DENY_LIST_CREATE),
     (BRIDGE_ADDR_NAME, BRIDGE_MODULE_NAME, BRIDGE_CREATE),
 ];
 
@@ -100,8 +101,8 @@ impl SimpleAbsIntConstructor for IDLeakVerifier {
         let minfo = context.info.module(module);
         let package_name = minfo.package;
         let config = env.package_config(package_name);
-        if config.flavor != Flavor::Sui {
-            // Skip if not sui
+        if config.flavor != Flavor::Iota {
+            // Skip if not iota
             return None;
         }
         if !matches!(
@@ -175,9 +176,9 @@ impl<'a> SimpleAbsInt for IDLeakVerifierAI<'a> {
         if !matches!(first_value, Value::FreshID(_)) {
             let msg = "Invalid object creation without a newly created UID.".to_string();
             let uid_msg = format!(
-                "The UID must come directly from {sui}::{object}::{new}. \
-                Or for tests, it can come from {sui}::{ts}::{ts_new}",
-                sui = SUI_ADDR_NAME,
+                "The UID must come directly from {iota}::{object}::{new}. \
+                Or for tests, it can come from {iota}::{ts}::{ts_new}",
+                iota = IOTA_ADDR_NAME,
                 object = OBJECT_MODULE_NAME,
                 new = OBJECT_NEW,
                 ts = TEST_SCENARIO_MODULE_NAME,
@@ -221,7 +222,7 @@ impl<'a> SimpleAbsInt for IDLeakVerifierAI<'a> {
 }
 
 fn value_for_ty(loc: &Loc, sp!(_, t): &SingleType) -> Value {
-    if t.is_apply(SUI_ADDR_NAME, OBJECT_MODULE_NAME, UID_TYPE_NAME)
+    if t.is_apply(IOTA_ADDR_NAME, OBJECT_MODULE_NAME, UID_TYPE_NAME)
         .is_some()
     {
         Value::NotFresh(*loc)

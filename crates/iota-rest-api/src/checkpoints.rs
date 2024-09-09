@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use axum::extract::Query;
 use axum::extract::{Path, State};
-use sui_sdk2::types::{
+use iota_sdk2::types::{
     CheckpointData, CheckpointDigest, CheckpointSequenceNumber, SignedCheckpointSummary,
 };
-use sui_types::storage::ReadStore;
+use iota_types::storage::ReadStore;
 use tap::Pipe;
 
 use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandler};
@@ -59,7 +60,7 @@ async fn get_checkpoint_full(
     Path(checkpoint_id): Path<CheckpointId>,
     accept: AcceptFormat,
     State(state): State<StateReader>,
-) -> Result<ResponseContent<sui_types::full_checkpoint_content::CheckpointData>> {
+) -> Result<ResponseContent<iota_types::full_checkpoint_content::CheckpointData>> {
     let verified_summary = match checkpoint_id {
         CheckpointId::SequenceNumber(s) => {
             // Since we need object contents we need to check for the lowest available checkpoint
@@ -245,7 +246,7 @@ impl ApiEndpoint<RestService> for ListCheckpoints {
                 ResponseBuilder::new()
                     .json_content::<Vec<SignedCheckpointSummary>>(generator)
                     .bcs_content()
-                    .header::<String>(crate::types::X_SUI_CURSOR, generator)
+                    .header::<String>(crate::types::X_IOTA_CURSOR, generator)
                     .build(),
             )
             .response(410, ResponseBuilder::new().build())

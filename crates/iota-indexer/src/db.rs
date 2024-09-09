@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
@@ -305,7 +306,7 @@ pub mod setup_postgres {
             info!("Reset Postgres database complete.");
         }
         let indexer_metrics = IndexerMetrics::new(&registry);
-        mysten_metrics::init_metrics(&registry);
+        iota_metrics::init_metrics(&registry);
 
         let report_cp = blocking_cp.clone();
         let report_metrics = indexer_metrics.clone();
@@ -430,7 +431,7 @@ pub mod setup_mysql {
             info!("Reset MySQL database complete.");
         }
         let indexer_metrics = IndexerMetrics::new(&registry);
-        mysten_metrics::init_metrics(&registry);
+        iota_metrics::init_metrics(&registry);
 
         let report_cp = blocking_cp.clone();
         let report_metrics = indexer_metrics.clone();

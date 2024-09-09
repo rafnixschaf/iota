@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 module examples::testnet_nft {
-    use sui::url::{Self, Url};
+    use iota::url::{Self, Url};
     use std::string;
-    use sui::event;
+    use iota::event;
 
     /// An example NFT that can be minted by anybody
     public struct TestnetNFT has key, store {

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 //! This module implements the [Rosetta Account API](https://www.rosetta-api.org/docs/AccountApi.html)
 use axum::extract::State;
@@ -6,9 +7,9 @@ use axum::{Extension, Json};
 use axum_extra::extract::WithRejection;
 use futures::StreamExt;
 
-use sui_sdk::rpc_types::StakeStatus;
-use sui_sdk::{SuiClient, SUI_COIN_TYPE};
-use sui_types::base_types::SuiAddress;
+use iota_sdk::rpc_types::StakeStatus;
+use iota_sdk::{IotaClient, IOTA_COIN_TYPE};
+use iota_types::base_types::IotaAddress;
 use tracing::info;
 
 use crate::errors::Error;
@@ -16,7 +17,7 @@ use crate::types::{
     AccountBalanceRequest, AccountBalanceResponse, AccountCoinsRequest, AccountCoinsResponse,
     Amount, Coin, SubAccount, SubAccountType, SubBalance,
 };
-use crate::{OnlineServerContext, SuiEnv};
+use crate::{OnlineServerContext, IotaEnv};
 use std::time::Duration;
 
 /// Get an array of all AccountBalances for an AccountIdentifier and the BlockIdentifier
@@ -24,7 +25,7 @@ use std::time::Duration;
 /// [Rosetta API Spec](https://www.rosetta-api.org/docs/AccountApi.html#accountbalance)
 pub async fn balance(
     State(ctx): State<OnlineServerContext>,
-    Extension(env): Extension<SuiEnv>,
+    Extension(env): Extension<IotaEnv>,
     WithRejection(Json(request), _): WithRejection<Json<AccountBalanceRequest>, Error>,
 ) -> Result<AccountBalanceResponse, Error> {
     env.check_network_identifier(&request.network_identifier)?;
@@ -73,7 +74,7 @@ pub async fn balance(
             let balances_first = ctx
                 .client
                 .coin_read_api()
-                .get_balance(address, Some(SUI_COIN_TYPE.to_string()))
+                .get_balance(address, Some(IOTA_COIN_TYPE.to_string()))
                 .await?
                 .total_balance as i128;
 
@@ -104,7 +105,7 @@ pub async fn balance(
             let balances_second = ctx
                 .client
                 .coin_read_api()
-                .get_balance(address, Some(SUI_COIN_TYPE.to_string()))
+                .get_balance(address, Some(IOTA_COIN_TYPE.to_string()))
                 .await?
                 .total_balance as i128;
 
@@ -133,8 +134,8 @@ pub async fn balance(
 
 async fn get_sub_account_balances(
     account_type: SubAccountType,
-    client: &SuiClient,
-    address: SuiAddress,
+    client: &IotaClient,
+    address: IotaAddress,
 ) -> Result<Vec<Amount>, Error> {
     let amounts = match account_type {
         SubAccountType::Stake => {
@@ -143,7 +144,7 @@ async fn get_sub_account_balances(
                 for stake in &stakes.stakes {
                     if let StakeStatus::Active { .. } = stake.status {
                         amounts.push(SubBalance {
-                            stake_id: stake.staked_sui_id,
+                            stake_id: stake.staked_iota_id,
                             validator: stakes.validator_address,
                             value: stake.principal as i128,
                         });
@@ -158,7 +159,7 @@ async fn get_sub_account_balances(
                 for stake in &stakes.stakes {
                     if let StakeStatus::Pending = stake.status {
                         amounts.push(SubBalance {
-                            stake_id: stake.staked_sui_id,
+                            stake_id: stake.staked_iota_id,
                             validator: stakes.validator_address,
                             value: stake.principal as i128,
                         });
@@ -174,7 +175,7 @@ async fn get_sub_account_balances(
                 for stake in &stakes.stakes {
                     if let StakeStatus::Active { estimated_reward } = stake.status {
                         amounts.push(SubBalance {
-                            stake_id: stake.staked_sui_id,
+                            stake_id: stake.staked_iota_id,
                             validator: stakes.validator_address,
                             value: estimated_reward as i128,
                         });
@@ -197,7 +198,7 @@ async fn get_sub_account_balances(
 /// [Rosetta API Spec](https://www.rosetta-api.org/docs/AccountApi.html#accountcoins)
 pub async fn coins(
     State(context): State<OnlineServerContext>,
-    Extension(env): Extension<SuiEnv>,
+    Extension(env): Extension<IotaEnv>,
     WithRejection(Json(request), _): WithRejection<Json<AccountCoinsRequest>, Error>,
 ) -> Result<AccountCoinsResponse, Error> {
     env.check_network_identifier(&request.network_identifier)?;
@@ -206,7 +207,7 @@ pub async fn coins(
         .coin_read_api()
         .get_coins_stream(
             request.account_identifier.address,
-            Some(SUI_COIN_TYPE.to_string()),
+            Some(IOTA_COIN_TYPE.to_string()),
         )
         .map(Coin::from)
         .collect()

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -12,20 +13,20 @@ use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use consensus_core::CommitConsumerMonitor;
 use lru::LruCache;
-use mysten_metrics::{monitored_mpsc::UnboundedReceiver, monitored_scope, spawn_monitored_task};
+use iota_metrics::{monitored_mpsc::UnboundedReceiver, monitored_scope, spawn_monitored_task};
 use narwhal_config::Committee;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use narwhal_types::ConsensusOutput;
 use serde::{Deserialize, Serialize};
-use sui_macros::{fail_point_async, fail_point_if};
-use sui_protocol_config::ProtocolConfig;
-use sui_types::{
+use iota_macros::{fail_point_async, fail_point_if};
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
     authenticator_state::ActiveJwk,
     base_types::{AuthorityName, EpochId, ObjectID, SequenceNumber, TransactionDigest},
     digests::ConsensusCommitDigest,
     executable_transaction::{TrustedExecutableTransaction, VerifiedExecutableTransaction},
     messages_consensus::{ConsensusTransaction, ConsensusTransactionKey, ConsensusTransactionKind},
-    sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
     transaction::{SenderSignedData, VerifiedTransaction},
 };
 use tracing::{debug, error, info, instrument, trace_span, warn};
@@ -450,8 +451,8 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
 
         fail_point_if!("correlated-crash-after-consensus-commit-boundary", || {
             let key = [commit_sub_dag_index, self.epoch_store.epoch()];
-            if sui_simulator::random::deterministic_probability(&key, 0.01) {
-                sui_simulator::task::kill_current_node(None);
+            if iota_simulator::random::deterministic_probability(&key, 0.01) {
+                iota_simulator::task::kill_current_node(None);
             }
         });
 
@@ -878,15 +879,15 @@ mod tests {
     use narwhal_test_utils::latest_protocol_version;
     use narwhal_types::{Batch, Certificate, CommittedSubDag, HeaderV1Builder, ReputationScores};
     use prometheus::Registry;
-    use sui_protocol_config::ConsensusTransactionOrdering;
-    use sui_types::{
-        base_types::{random_object_ref, AuthorityName, SuiAddress},
+    use iota_protocol_config::ConsensusTransactionOrdering;
+    use iota_types::{
+        base_types::{random_object_ref, AuthorityName, IotaAddress},
         committee::Committee,
         messages_consensus::{
             AuthorityCapabilitiesV1, ConsensusTransaction, ConsensusTransactionKind,
         },
         object::Object,
-        sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait,
+        iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
         supported_protocol_versions::SupportedProtocolVersions,
         transaction::{
             CertifiedTransaction, SenderSignedData, TransactionData, TransactionDataAPI,
@@ -914,7 +915,7 @@ mod tests {
         let latest_protocol_config = &latest_protocol_version();
 
         let network_config =
-            sui_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
+            iota_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
                 .with_objects(objects.clone())
                 .build();
 
@@ -1155,9 +1156,9 @@ mod tests {
         let (committee, keypairs) = Committee::new_simple_test_committee();
         let data = SenderSignedData::new(
             TransactionData::new_transfer(
-                SuiAddress::default(),
+                IotaAddress::default(),
                 random_object_ref(),
-                SuiAddress::default(),
+                IotaAddress::default(),
                 random_object_ref(),
                 1000 * gas_price,
                 gas_price,

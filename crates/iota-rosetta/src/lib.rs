@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::net::SocketAddr;
@@ -9,11 +10,11 @@ use axum::{Extension, Router};
 use once_cell::sync::Lazy;
 use tracing::info;
 
-use sui_sdk::SuiClient;
+use iota_sdk::IotaClient;
 
 use crate::errors::Error;
 use crate::state::{CheckpointBlockProvider, OnlineServerContext};
-use crate::types::{Currency, SuiEnv};
+use crate::types::{Currency, IotaEnv};
 
 /// This lib implements the Rosetta online and offline server defined by the [Rosetta API Spec](https://www.rosetta-api.org/docs/Reference.html)
 mod account;
@@ -25,18 +26,18 @@ pub mod operations;
 mod state;
 pub mod types;
 
-pub static SUI: Lazy<Currency> = Lazy::new(|| Currency {
-    symbol: "SUI".to_string(),
+pub static IOTA: Lazy<Currency> = Lazy::new(|| Currency {
+    symbol: "IOTA".to_string(),
     decimals: 9,
 });
 
 pub struct RosettaOnlineServer {
-    env: SuiEnv,
+    env: IotaEnv,
     context: OnlineServerContext,
 }
 
 impl RosettaOnlineServer {
-    pub fn new(env: SuiEnv, client: SuiClient) -> Self {
+    pub fn new(env: IotaEnv, client: IotaClient) -> Self {
         let blocks = Arc::new(CheckpointBlockProvider::new(client.clone()));
         Self {
             env,
@@ -62,7 +63,7 @@ impl RosettaOnlineServer {
         let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
         info!(
-            "Sui Rosetta online server listening on {}",
+            "Iota Rosetta online server listening on {}",
             listener.local_addr().unwrap()
         );
         axum::serve(listener, app).await.unwrap();
@@ -70,11 +71,11 @@ impl RosettaOnlineServer {
 }
 
 pub struct RosettaOfflineServer {
-    env: SuiEnv,
+    env: IotaEnv,
 }
 
 impl RosettaOfflineServer {
-    pub fn new(env: SuiEnv) -> Self {
+    pub fn new(env: IotaEnv) -> Self {
         Self { env }
     }
 
@@ -93,7 +94,7 @@ impl RosettaOfflineServer {
         let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
         info!(
-            "Sui Rosetta offline server listening on {}",
+            "Iota Rosetta offline server listening on {}",
             listener.local_addr().unwrap()
         );
         axum::serve(listener, app).await.unwrap();

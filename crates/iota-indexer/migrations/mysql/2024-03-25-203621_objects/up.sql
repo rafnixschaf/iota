@@ -6,7 +6,7 @@ CREATE TABLE objects (
     checkpoint_sequence_number  BIGINT        NOT NULL,
     -- Immutable/Address/Object/Shared, see types.rs
     owner_type                  SMALLINT      NOT NULL,
-    -- bytes of SuiAddress/ObjectID of the owner ID.
+    -- bytes of IotaAddress/ObjectID of the owner ID.
     -- Non-null for objects with an owner: Addresso or Objects
     owner_id                    BLOB,
     -- Object type
@@ -18,7 +18,7 @@ CREATE TABLE objects (
     -- bcs serialized Object
     serialized_object           MEDIUMBLOB    NOT NULL,
     -- Non-null when the object is a coin.
-    -- e.g. `0x2::sui::SUI`
+    -- e.g. `0x2::iota::IOTA`
     coin_type                   TEXT,
     -- Non-null when the object is a coin.
     coin_balance                BIGINT,

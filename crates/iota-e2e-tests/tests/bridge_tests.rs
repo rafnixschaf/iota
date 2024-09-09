@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use sui_bridge::crypto::BridgeAuthorityKeyPair;
-use sui_bridge::BRIDGE_ENABLE_PROTOCOL_VERSION;
-use sui_json_rpc_api::BridgeReadApiClient;
-use sui_macros::sim_test;
-use sui_types::bridge::get_bridge;
-use sui_types::bridge::BridgeTrait;
-use sui_types::crypto::get_key_pair;
-use sui_types::SUI_BRIDGE_OBJECT_ID;
+use iota_bridge::crypto::BridgeAuthorityKeyPair;
+use iota_bridge::BRIDGE_ENABLE_PROTOCOL_VERSION;
+use iota_json_rpc_api::BridgeReadApiClient;
+use iota_macros::sim_test;
+use iota_types::bridge::get_bridge;
+use iota_types::bridge::BridgeTrait;
+use iota_types::crypto::get_key_pair;
+use iota_types::IOTA_BRIDGE_OBJECT_ID;
 use test_cluster::TestClusterBuilder;
 
 #[sim_test]
@@ -27,7 +28,7 @@ async fn test_create_bridge_state_object() {
             assert!(node
                 .state()
                 .get_object_cache_reader()
-                .get_latest_object_ref_or_tombstone(SUI_BRIDGE_OBJECT_ID)
+                .get_latest_object_ref_or_tombstone(IOTA_BRIDGE_OBJECT_ID)
                 .unwrap()
                 .is_none());
         });
@@ -45,7 +46,7 @@ async fn test_create_bridge_state_object() {
         h.with(|node| {
             node.state()
                 .get_object_cache_reader()
-                .get_latest_object_ref_or_tombstone(SUI_BRIDGE_OBJECT_ID)
+                .get_latest_object_ref_or_tombstone(IOTA_BRIDGE_OBJECT_ID)
                 .unwrap()
                 .expect("auth state object should exist");
         });
@@ -68,7 +69,7 @@ async fn test_committee_registration() {
     let bridge = get_bridge(
         test_cluster
             .fullnode_handle
-            .sui_node
+            .iota_node
             .state()
             .get_object_store(),
     )

@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use move_core_types::annotated_value::MoveTypeLayout;
-use sui_json_rpc_types::SuiCallArg;
-use sui_types::base_types::{ObjectDigest, ObjectID, SequenceNumber, SuiAddress};
-use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use sui_types::transaction::{CallArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER};
+use iota_json_rpc_types::IotaCallArg;
+use iota_types::base_types::{ObjectDigest, ObjectID, SequenceNumber, IotaAddress};
+use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_types::transaction::{CallArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER};
 
 use crate::operations::Operations;
 use crate::types::ConstructionMetadata;
@@ -18,12 +19,12 @@ async fn test_operation_data_parsing() -> Result<(), anyhow::Error> {
         ObjectDigest::random(),
     );
 
-    let sender = SuiAddress::random_for_testing_only();
+    let sender = IotaAddress::random_for_testing_only();
 
     let pt = {
         let mut builder = ProgrammableTransactionBuilder::new();
         builder
-            .pay_sui(vec![SuiAddress::random_for_testing_only()], vec![10000])
+            .pay_iota(vec![IotaAddress::random_for_testing_only()], vec![10000])
             .unwrap();
         builder.finish()
     };
@@ -51,10 +52,10 @@ async fn test_operation_data_parsing() -> Result<(), anyhow::Error> {
     Ok(())
 }
 #[tokio::test]
-async fn test_sui_json() {
+async fn test_iota_json() {
     let arg1 = CallArg::Pure(bcs::to_bytes(&1000000u64).unwrap());
     let arg2 = CallArg::Pure(bcs::to_bytes(&30215u64).unwrap());
-    let json1 = SuiCallArg::try_from(arg1, Some(&MoveTypeLayout::U64)).unwrap();
-    let json2 = SuiCallArg::try_from(arg2, Some(&MoveTypeLayout::U64)).unwrap();
+    let json1 = IotaCallArg::try_from(arg1, Some(&MoveTypeLayout::U64)).unwrap();
+    let json2 = IotaCallArg::try_from(arg2, Some(&MoveTypeLayout::U64)).unwrap();
     println!("{:?}, {:?}", json1, json2);
 }

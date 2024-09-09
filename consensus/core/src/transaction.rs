@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
 
-use mysten_metrics::monitored_mpsc::{channel, Receiver, Sender};
-use sui_protocol_config::ProtocolConfig;
+use iota_metrics::monitored_mpsc::{channel, Receiver, Sender};
+use iota_protocol_config::ProtocolConfig;
 use tap::tap::TapFallible;
 use thiserror::Error;
 use tokio::sync::oneshot;
@@ -211,7 +212,7 @@ impl TransactionClient {
     }
 }
 
-/// `TransactionVerifier` implementation is supplied by Sui to validate transactions in a block,
+/// `TransactionVerifier` implementation is supplied by Iota to validate transactions in a block,
 /// before acceptance of the block.
 pub trait TransactionVerifier: Send + Sync + 'static {
     /// Determines if this batch can be voted on
@@ -247,7 +248,7 @@ mod tests {
     use std::{sync::Arc, time::Duration};
 
     use futures::{stream::FuturesUnordered, StreamExt};
-    use sui_protocol_config::ProtocolConfig;
+    use iota_protocol_config::ProtocolConfig;
     use tokio::time::timeout;
 
     use crate::{

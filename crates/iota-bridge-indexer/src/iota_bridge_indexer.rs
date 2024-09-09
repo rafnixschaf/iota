@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::{anyhow, Error};
@@ -8,24 +9,24 @@ use diesel::{Connection, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHel
 use diesel::{ExpressionMethods, TextExpressionMethods};
 use tracing::info;
 
-use sui_bridge::events::{
+use iota_bridge::events::{
     MoveTokenDepositedEvent, MoveTokenTransferApproved, MoveTokenTransferClaimed,
 };
-use sui_indexer_builder::indexer_builder::{DataMapper, IndexerProgressStore, Persistent};
-use sui_indexer_builder::sui_datasource::CheckpointTxnData;
-use sui_indexer_builder::Task;
-use sui_types::effects::TransactionEffectsAPI;
-use sui_types::event::Event;
-use sui_types::execution_status::ExecutionStatus;
-use sui_types::full_checkpoint_content::CheckpointTransaction;
-use sui_types::{BRIDGE_ADDRESS, SUI_BRIDGE_OBJECT_ID};
+use iota_indexer_builder::indexer_builder::{DataMapper, IndexerProgressStore, Persistent};
+use iota_indexer_builder::iota_datasource::CheckpointTxnData;
+use iota_indexer_builder::Task;
+use iota_types::effects::TransactionEffectsAPI;
+use iota_types::event::Event;
+use iota_types::execution_status::ExecutionStatus;
+use iota_types::full_checkpoint_content::CheckpointTransaction;
+use iota_types::{BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID};
 
 use crate::metrics::BridgeIndexerMetrics;
 use crate::postgres_manager::PgPool;
 use crate::schema::progress_store::{columns, dsl};
-use crate::schema::{sui_error_transactions, token_transfer, token_transfer_data};
+use crate::schema::{iota_error_transactions, token_transfer, token_transfer_data};
 use crate::{
-    models, schema, BridgeDataSource, ProcessedTxnData, SuiTxnError, TokenTransfer,
+    models, schema, BridgeDataSource, ProcessedTxnData, IotaTxnError, TokenTransfer,
     TokenTransferData, TokenTransferStatus,
 };
 
@@ -41,7 +42,7 @@ impl PgBridgePersistent {
     }
 }
 
-// TODO: this is shared between SUI and ETH, move to different file.
+// TODO: this is shared between IOTA and ETH, move to different file.
 #[async_trait]
 impl Persistent<ProcessedTxnData> for PgBridgePersistent {
     async fn write(&self, data: Vec<ProcessedTxnData>) -> Result<(), Error> {
@@ -66,7 +67,7 @@ impl Persistent<ProcessedTxnData> for PgBridgePersistent {
                         }
                     }
                     ProcessedTxnData::Error(e) => {
-                        diesel::insert_into(sui_error_transactions::table)
+                        diesel::insert_into(iota_error_transactions::table)
                             .values(&e.to_db())
                             .on_conflict_do_nothing()
                             .execute(conn)?;
@@ -163,20 +164,20 @@ impl IndexerProgressStore for PgBridgePersistent {
 
 /// Data mapper impl
 #[derive(Clone)]
-pub struct SuiBridgeDataMapper {
+pub struct IotaBridgeDataMapper {
     pub metrics: BridgeIndexerMetrics,
 }
 
-impl DataMapper<CheckpointTxnData, ProcessedTxnData> for SuiBridgeDataMapper {
+impl DataMapper<CheckpointTxnData, ProcessedTxnData> for IotaBridgeDataMapper {
     fn map(
         &self,
         (data, checkpoint_num, timestamp_ms): CheckpointTxnData,
     ) -> Result<Vec<ProcessedTxnData>, Error> {
-        self.metrics.total_sui_bridge_transactions.inc();
+        self.metrics.total_iota_bridge_transactions.inc();
         if !data
             .input_objects
             .iter()
-            .any(|obj| obj.id() == SUI_BRIDGE_OBJECT_ID)
+            .any(|obj| obj.id() == IOTA_BRIDGE_OBJECT_ID)
         {
             return Ok(vec![]);
         }
@@ -184,7 +185,7 @@ impl DataMapper<CheckpointTxnData, ProcessedTxnData> for SuiBridgeDataMapper {
         match &data.events {
             Some(events) => {
                 let token_transfers = events.data.iter().try_fold(vec![], |mut result, ev| {
-                    if let Some(data) = process_sui_event(ev, &data, checkpoint_num, timestamp_ms)?
+                    if let Some(data) = process_iota_event(ev, &data, checkpoint_num, timestamp_ms)?
                     {
                         result.push(data);
                     }
@@ -193,7 +194,7 @@ impl DataMapper<CheckpointTxnData, ProcessedTxnData> for SuiBridgeDataMapper {
 
                 if !token_transfers.is_empty() {
                     info!(
-                        "SUI: Extracted {} bridge token transfer data entries for tx {}.",
+                        "IOTA: Extracted {} bridge token transfer data entries for tx {}.",
                         token_transfers.len(),
                         data.transaction.digest()
                     );
@@ -202,7 +203,7 @@ impl DataMapper<CheckpointTxnData, ProcessedTxnData> for SuiBridgeDataMapper {
             }
             None => {
                 if let ExecutionStatus::Failure { error, command } = data.effects.status() {
-                    Ok(vec![ProcessedTxnData::Error(SuiTxnError {
+                    Ok(vec![ProcessedTxnData::Error(IotaTxnError {
                         tx_digest: *data.transaction.digest(),
                         sender: data.transaction.sender_address(),
                         timestamp_ms,
@@ -217,7 +218,7 @@ impl DataMapper<CheckpointTxnData, ProcessedTxnData> for SuiBridgeDataMapper {
     }
 }
 
-fn process_sui_event(
+fn process_iota_event(
     ev: &Event,
     tx: &CheckpointTransaction,
     checkpoint: u64,
@@ -226,8 +227,8 @@ fn process_sui_event(
     Ok(if ev.type_.address == BRIDGE_ADDRESS {
         match ev.type_.name.as_str() {
             "TokenDepositedEvent" => {
-                info!("Observed Sui Deposit {:?}", ev);
-                // todo: metrics.total_sui_token_deposited.inc();
+                info!("Observed Iota Deposit {:?}", ev);
+                // todo: metrics.total_iota_token_deposited.inc();
                 let move_event: MoveTokenDepositedEvent = bcs::from_bytes(&ev.contents)?;
                 Some(ProcessedTxnData::TokenTransfer(TokenTransfer {
                     chain_id: move_event.source_chain,
@@ -238,19 +239,19 @@ fn process_sui_event(
                     txn_sender: ev.sender.to_vec(),
                     status: TokenTransferStatus::Deposited,
                     gas_usage: tx.effects.gas_cost_summary().net_gas_usage(),
-                    data_source: BridgeDataSource::Sui,
+                    data_source: BridgeDataSource::Iota,
                     data: Some(TokenTransferData {
                         destination_chain: move_event.target_chain,
                         sender_address: move_event.sender_address.clone(),
                         recipient_address: move_event.target_address.clone(),
                         token_id: move_event.token_type,
-                        amount: move_event.amount_sui_adjusted,
+                        amount: move_event.amount_iota_adjusted,
                     }),
                 }))
             }
             "TokenTransferApproved" => {
-                info!("Observed Sui Approval {:?}", ev);
-                // todo: metrics.total_sui_token_transfer_approved.inc();
+                info!("Observed Iota Approval {:?}", ev);
+                // todo: metrics.total_iota_token_transfer_approved.inc();
                 let event: MoveTokenTransferApproved = bcs::from_bytes(&ev.contents)?;
                 Some(ProcessedTxnData::TokenTransfer(TokenTransfer {
                     chain_id: event.message_key.source_chain,
@@ -261,13 +262,13 @@ fn process_sui_event(
                     txn_sender: ev.sender.to_vec(),
                     status: TokenTransferStatus::Approved,
                     gas_usage: tx.effects.gas_cost_summary().net_gas_usage(),
-                    data_source: BridgeDataSource::Sui,
+                    data_source: BridgeDataSource::Iota,
                     data: None,
                 }))
             }
             "TokenTransferClaimed" => {
-                info!("Observed Sui Claim {:?}", ev);
-                // todo: metrics.total_sui_token_transfer_claimed.inc();
+                info!("Observed Iota Claim {:?}", ev);
+                // todo: metrics.total_iota_token_transfer_claimed.inc();
                 let event: MoveTokenTransferClaimed = bcs::from_bytes(&ev.contents)?;
                 Some(ProcessedTxnData::TokenTransfer(TokenTransfer {
                     chain_id: event.message_key.source_chain,
@@ -278,12 +279,12 @@ fn process_sui_event(
                     txn_sender: ev.sender.to_vec(),
                     status: TokenTransferStatus::Claimed,
                     gas_usage: tx.effects.gas_cost_summary().net_gas_usage(),
-                    data_source: BridgeDataSource::Sui,
+                    data_source: BridgeDataSource::Iota,
                     data: None,
                 }))
             }
             _ => {
-                // todo: metrics.total_sui_bridge_txn_other.inc();
+                // todo: metrics.total_iota_bridge_txn_other.inc();
                 None
             }
         }

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use prometheus::{
@@ -17,23 +18,23 @@ const FINE_GRAINED_LATENCY_SEC_BUCKETS: &[f64] = &[
 
 #[derive(Clone, Debug)]
 pub struct BridgeMetrics {
-    pub(crate) err_build_sui_transaction: IntCounter,
+    pub(crate) err_build_iota_transaction: IntCounter,
     pub(crate) err_signature_aggregation: IntCounter,
-    pub(crate) err_sui_transaction_submission: IntCounter,
-    pub(crate) err_sui_transaction_submission_too_many_failures: IntCounter,
-    pub(crate) err_sui_transaction_execution: IntCounter,
+    pub(crate) err_iota_transaction_submission: IntCounter,
+    pub(crate) err_iota_transaction_submission_too_many_failures: IntCounter,
+    pub(crate) err_iota_transaction_execution: IntCounter,
     pub(crate) requests_received: IntCounterVec,
     pub(crate) requests_ok: IntCounterVec,
     pub(crate) err_requests: IntCounterVec,
     pub(crate) requests_inflight: IntGaugeVec,
 
-    pub last_synced_sui_checkpoint: IntGauge,
+    pub last_synced_iota_checkpoint: IntGauge,
     pub(crate) last_finalized_eth_block: IntGauge,
     pub(crate) last_synced_eth_block: IntGauge,
 
-    pub(crate) sui_watcher_received_events: IntCounter,
-    pub(crate) sui_watcher_received_actions: IntCounter,
-    pub(crate) sui_watcher_unrecognized_events: IntCounter,
+    pub(crate) iota_watcher_received_events: IntCounter,
+    pub(crate) iota_watcher_received_actions: IntCounter,
+    pub(crate) iota_watcher_unrecognized_events: IntCounter,
     pub(crate) eth_watcher_received_events: IntCounter,
     pub(crate) eth_watcher_received_actions: IntCounter,
     pub(crate) eth_watcher_unrecognized_events: IntCounter,
@@ -55,9 +56,9 @@ pub struct BridgeMetrics {
 impl BridgeMetrics {
     pub fn new(registry: &Registry) -> Self {
         Self {
-            err_build_sui_transaction: register_int_counter_with_registry!(
-                "bridge_err_build_sui_transaction",
-                "Total number of errors of building sui transactions",
+            err_build_iota_transaction: register_int_counter_with_registry!(
+                "bridge_err_build_iota_transaction",
+                "Total number of errors of building iota transactions",
                 registry,
             )
             .unwrap(),
@@ -67,21 +68,21 @@ impl BridgeMetrics {
                 registry,
             )
             .unwrap(),
-            err_sui_transaction_submission: register_int_counter_with_registry!(
-                "bridge_err_sui_transaction_submission",
-                "Total number of errors of submitting sui transactions",
+            err_iota_transaction_submission: register_int_counter_with_registry!(
+                "bridge_err_iota_transaction_submission",
+                "Total number of errors of submitting iota transactions",
                 registry,
             )
             .unwrap(),
-            err_sui_transaction_submission_too_many_failures: register_int_counter_with_registry!(
-                "bridge_err_sui_transaction_submission_too_many_failures",
-                "Total number of continuous failures to submitting sui transactions",
+            err_iota_transaction_submission_too_many_failures: register_int_counter_with_registry!(
+                "bridge_err_iota_transaction_submission_too_many_failures",
+                "Total number of continuous failures to submitting iota transactions",
                 registry,
             )
             .unwrap(),
-            err_sui_transaction_execution: register_int_counter_with_registry!(
-                "bridge_err_sui_transaction_execution",
-                "Total number of failures of sui transaction execution",
+            err_iota_transaction_execution: register_int_counter_with_registry!(
+                "bridge_err_iota_transaction_execution",
+                "Total number of failures of iota transaction execution",
                 registry,
             )
             .unwrap(),
@@ -113,9 +114,9 @@ impl BridgeMetrics {
                 registry,
             )
             .unwrap(),
-            sui_watcher_received_events: register_int_counter_with_registry!(
-                "bridge_sui_watcher_received_events",
-                "Total number of received events in sui watcher",
+            iota_watcher_received_events: register_int_counter_with_registry!(
+                "bridge_iota_watcher_received_events",
+                "Total number of received events in iota watcher",
                 registry,
             )
             .unwrap(),
@@ -125,9 +126,9 @@ impl BridgeMetrics {
                 registry,
             )
             .unwrap(),
-            sui_watcher_received_actions: register_int_counter_with_registry!(
-                "bridge_sui_watcher_received_actions",
-                "Total number of received actions in sui watcher",
+            iota_watcher_received_actions: register_int_counter_with_registry!(
+                "bridge_iota_watcher_received_actions",
+                "Total number of received actions in iota watcher",
                 registry,
             )
             .unwrap(),
@@ -137,9 +138,9 @@ impl BridgeMetrics {
                 registry,
             )
             .unwrap(),
-            sui_watcher_unrecognized_events: register_int_counter_with_registry!(
-                "bridge_sui_watcher_unrecognized_events",
-                "Total number of unrecognized events in sui watcher",
+            iota_watcher_unrecognized_events: register_int_counter_with_registry!(
+                "bridge_iota_watcher_unrecognized_events",
+                "Total number of unrecognized events in iota watcher",
                 registry,
             )
             .unwrap(),
@@ -181,7 +182,7 @@ impl BridgeMetrics {
             .unwrap(),
             gas_coin_balance: register_int_gauge_with_registry!(
                 "bridge_gas_coin_balance",
-                "Current balance of gas coin, in mist",
+                "Current balance of gas coin, in nanos",
                 registry,
             )
             .unwrap(),
@@ -200,9 +201,9 @@ impl BridgeMetrics {
                 registry,
             )
             .unwrap(),
-            last_synced_sui_checkpoint: register_int_gauge_with_registry!(
-                "last_synced_sui_checkpoint",
-                "The latest sui checkpoint that indexer synced",
+            last_synced_iota_checkpoint: register_int_gauge_with_registry!(
+                "last_synced_iota_checkpoint",
+                "The latest iota checkpoint that indexer synced",
                 registry,
             )
             .unwrap(),

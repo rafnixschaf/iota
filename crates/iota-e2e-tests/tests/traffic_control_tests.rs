@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! NB: Most tests in this module expect real network connections and interactions, thus
@@ -12,19 +13,19 @@ use jsonrpsee::{
 };
 use std::fs::File;
 use std::time::Duration;
-use sui_core::authority_client::make_network_authority_clients_with_network_config;
-use sui_core::authority_client::AuthorityAPI;
-use sui_core::traffic_controller::{
+use iota_core::authority_client::make_network_authority_clients_with_network_config;
+use iota_core::authority_client::AuthorityAPI;
+use iota_core::traffic_controller::{
     nodefw_test_server::NodeFwTestServer, TrafficController, TrafficSim,
 };
-use sui_json_rpc_types::{
-    SuiTransactionBlockEffectsAPI, SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
+use iota_json_rpc_types::{
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
-use sui_macros::sim_test;
-use sui_network::default_mysten_network_config;
-use sui_swarm_config::network_config_builder::ConfigBuilder;
-use sui_test_transaction_builder::batch_make_transfer_transactions;
-use sui_types::{
+use iota_macros::sim_test;
+use iota_network::default_iota_network_config;
+use iota_swarm_config::network_config_builder::ConfigBuilder;
+use iota_test_transaction_builder::batch_make_transfer_transactions;
+use iota_types::{
     quorum_driver_types::ExecuteTransactionRequestType,
     traffic_control::{
         FreqThresholdConfig, PolicyConfig, PolicyType, RemoteFirewallConfig, Weight,
@@ -177,15 +178,15 @@ async fn test_fullnode_traffic_control_dry_run() -> Result<(), anyhow::Error> {
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new(),
+        IotaTransactionBlockResponseOptions::new(),
         ExecuteTransactionRequestType::WaitForLocalExecution
     ];
 
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params.clone())
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params.clone())
         .await
         .unwrap();
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         digest,
         confirmed_local_execution,
         ..
@@ -195,8 +196,8 @@ async fn test_fullnode_traffic_control_dry_run() -> Result<(), anyhow::Error> {
 
     // it should take no more than 4 requests to be added to the blocklist
     for _ in 0..txn_count {
-        let response: RpcResult<SuiTransactionBlockResponse> = jsonrpc_client
-            .request("sui_getTransactionBlock", rpc_params![*tx_digest])
+        let response: RpcResult<IotaTransactionBlockResponse> = jsonrpc_client
+            .request("iota_getTransactionBlock", rpc_params![*tx_digest])
             .await;
         assert!(
             response.is_ok(),
@@ -226,7 +227,7 @@ async fn test_validator_traffic_control_error_blocked() -> Result<(), anyhow::Er
         .await;
     let local_clients = make_network_authority_clients_with_network_config(
         &committee,
-        &default_mysten_network_config(),
+        &default_iota_network_config(),
     );
     let (_, auth_client) = local_clients.first_key_value().unwrap();
 
@@ -281,15 +282,15 @@ async fn test_fullnode_traffic_control_spam_blocked() -> Result<(), anyhow::Erro
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new(),
+        IotaTransactionBlockResponseOptions::new(),
         ExecuteTransactionRequestType::WaitForLocalExecution
     ];
 
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params.clone())
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params.clone())
         .await
         .unwrap();
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         digest,
         confirmed_local_execution,
         ..
@@ -299,8 +300,8 @@ async fn test_fullnode_traffic_control_spam_blocked() -> Result<(), anyhow::Erro
 
     // it should take no more than 4 requests to be added to the blocklist
     for _ in 0..txn_count {
-        let response: RpcResult<SuiTransactionBlockResponse> = jsonrpc_client
-            .request("sui_getTransactionBlock", rpc_params![*tx_digest])
+        let response: RpcResult<IotaTransactionBlockResponse> = jsonrpc_client
+            .request("iota_getTransactionBlock", rpc_params![*tx_digest])
             .await;
         if let Err(err) = response {
             // TODO: fix validator blocking error handling such that the error message
@@ -351,18 +352,18 @@ async fn test_fullnode_traffic_control_error_blocked() -> Result<(), anyhow::Err
         let params = rpc_params![
             tx_bytes,
             signatures,
-            SuiTransactionBlockResponseOptions::new(),
+            IotaTransactionBlockResponseOptions::new(),
             ExecuteTransactionRequestType::WaitForLocalExecution
         ];
-        let response: RpcResult<SuiTransactionBlockResponse> = jsonrpc_client
-            .request("sui_executeTransactionBlock", params.clone())
+        let response: RpcResult<IotaTransactionBlockResponse> = jsonrpc_client
+            .request("iota_executeTransactionBlock", params.clone())
             .await;
         if let Err(err) = response {
             if err.to_string().contains("Too many requests") {
                 return Ok(());
             }
         } else {
-            let SuiTransactionBlockResponse {
+            let IotaTransactionBlockResponse {
                 digest,
                 confirmed_local_execution,
                 ..
@@ -406,7 +407,7 @@ async fn test_validator_traffic_control_error_delegated() -> Result<(), anyhow::
         .await;
     let local_clients = make_network_authority_clients_with_network_config(
         &committee,
-        &default_mysten_network_config(),
+        &default_iota_network_config(),
     );
     let (_, auth_client) = local_clients.first_key_value().unwrap();
 
@@ -489,16 +490,16 @@ async fn test_fullnode_traffic_control_spam_delegated() -> Result<(), anyhow::Er
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new(),
+        IotaTransactionBlockResponseOptions::new(),
         ExecuteTransactionRequestType::WaitForLocalExecution
     ];
 
     // it should take no more than 4 requests to be added to the blocklist
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params.clone())
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params.clone())
         .await
         .unwrap();
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         digest,
         confirmed_local_execution,
         ..
@@ -507,8 +508,8 @@ async fn test_fullnode_traffic_control_spam_delegated() -> Result<(), anyhow::Er
     assert!(confirmed_local_execution.unwrap());
 
     for _ in 0..txn_count {
-        let response: RpcResult<SuiTransactionBlockResponse> = jsonrpc_client
-            .request("sui_getTransactionBlock", rpc_params![*tx_digest])
+        let response: RpcResult<IotaTransactionBlockResponse> = jsonrpc_client
+            .request("iota_getTransactionBlock", rpc_params![*tx_digest])
             .await;
         assert!(response.is_ok(), "Expected request to succeed");
     }
@@ -724,15 +725,15 @@ async fn assert_traffic_control_ok(mut test_cluster: TestCluster) -> Result<(), 
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new(),
+        IotaTransactionBlockResponseOptions::new(),
         ExecuteTransactionRequestType::WaitForLocalExecution
     ];
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params)
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params)
         .await
         .unwrap();
 
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         digest,
         confirmed_local_execution,
         ..
@@ -740,8 +741,8 @@ async fn assert_traffic_control_ok(mut test_cluster: TestCluster) -> Result<(), 
     assert_eq!(&digest, tx_digest);
     assert!(confirmed_local_execution.unwrap());
 
-    let _response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_getTransactionBlock", rpc_params![*tx_digest])
+    let _response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_getTransactionBlock", rpc_params![*tx_digest])
         .await
         .unwrap();
 
@@ -750,15 +751,15 @@ async fn assert_traffic_control_ok(mut test_cluster: TestCluster) -> Result<(), 
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new().with_effects(),
+        IotaTransactionBlockResponseOptions::new().with_effects(),
         ExecuteTransactionRequestType::WaitForEffectsCert
     ];
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params)
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params)
         .await
         .unwrap();
 
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         effects,
         confirmed_local_execution,
         ..
@@ -791,15 +792,15 @@ async fn assert_validator_traffic_control_dry_run(
     let params = rpc_params![
         tx_bytes,
         signatures,
-        SuiTransactionBlockResponseOptions::new(),
+        IotaTransactionBlockResponseOptions::new(),
         ExecuteTransactionRequestType::WaitForLocalExecution
     ];
 
-    let response: SuiTransactionBlockResponse = jsonrpc_client
-        .request("sui_executeTransactionBlock", params.clone())
+    let response: IotaTransactionBlockResponse = jsonrpc_client
+        .request("iota_executeTransactionBlock", params.clone())
         .await
         .unwrap();
-    let SuiTransactionBlockResponse {
+    let IotaTransactionBlockResponse {
         digest,
         confirmed_local_execution,
         ..
@@ -809,8 +810,8 @@ async fn assert_validator_traffic_control_dry_run(
 
     // it should take no more than 4 requests to be added to the blocklist
     for _ in 0..txn_count {
-        let response: RpcResult<SuiTransactionBlockResponse> = jsonrpc_client
-            .request("sui_getTransactionBlock", rpc_params![*tx_digest])
+        let response: RpcResult<IotaTransactionBlockResponse> = jsonrpc_client
+            .request("iota_getTransactionBlock", rpc_params![*tx_digest])
             .await;
         assert!(
             response.is_ok(),

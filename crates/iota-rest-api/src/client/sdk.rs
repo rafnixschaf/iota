@@ -1,22 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use reqwest::header::HeaderValue;
 use reqwest::StatusCode;
 use reqwest::Url;
-use sui_sdk2::types::Address;
-use sui_sdk2::types::CheckpointData;
-use sui_sdk2::types::CheckpointDigest;
-use sui_sdk2::types::CheckpointSequenceNumber;
-use sui_sdk2::types::EpochId;
-use sui_sdk2::types::Object;
-use sui_sdk2::types::ObjectId;
-use sui_sdk2::types::SignedCheckpointSummary;
-use sui_sdk2::types::SignedTransaction;
-use sui_sdk2::types::StructTag;
-use sui_sdk2::types::TransactionDigest;
-use sui_sdk2::types::ValidatorCommittee;
-use sui_sdk2::types::Version;
+use iota_sdk2::types::Address;
+use iota_sdk2::types::CheckpointData;
+use iota_sdk2::types::CheckpointDigest;
+use iota_sdk2::types::CheckpointSequenceNumber;
+use iota_sdk2::types::EpochId;
+use iota_sdk2::types::Object;
+use iota_sdk2::types::ObjectId;
+use iota_sdk2::types::SignedCheckpointSummary;
+use iota_sdk2::types::SignedTransaction;
+use iota_sdk2::types::StructTag;
+use iota_sdk2::types::TransactionDigest;
+use iota_sdk2::types::ValidatorCommittee;
+use iota_sdk2::types::Version;
 use tap::Pipe;
 
 use crate::accounts::AccountOwnedObjectInfo;
@@ -30,19 +31,19 @@ use crate::objects::ListDynamicFieldsQueryParameters;
 use crate::system::GasInfo;
 use crate::system::ProtocolConfigResponse;
 use crate::system::SystemStateSummary;
-use crate::system::X_SUI_MAX_SUPPORTED_PROTOCOL_VERSION;
-use crate::system::X_SUI_MIN_SUPPORTED_PROTOCOL_VERSION;
+use crate::system::X_IOTA_MAX_SUPPORTED_PROTOCOL_VERSION;
+use crate::system::X_IOTA_MIN_SUPPORTED_PROTOCOL_VERSION;
 use crate::transactions::ListTransactionsQueryParameters;
 use crate::transactions::TransactionExecutionResponse;
 use crate::transactions::TransactionResponse;
-use crate::types::X_SUI_CHAIN;
-use crate::types::X_SUI_CHAIN_ID;
-use crate::types::X_SUI_CHECKPOINT_HEIGHT;
-use crate::types::X_SUI_CURSOR;
-use crate::types::X_SUI_EPOCH;
-use crate::types::X_SUI_LOWEST_AVAILABLE_CHECKPOINT;
-use crate::types::X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS;
-use crate::types::X_SUI_TIMESTAMP_MS;
+use crate::types::X_IOTA_CHAIN;
+use crate::types::X_IOTA_CHAIN_ID;
+use crate::types::X_IOTA_CHECKPOINT_HEIGHT;
+use crate::types::X_IOTA_CURSOR;
+use crate::types::X_IOTA_EPOCH;
+use crate::types::X_IOTA_LOWEST_AVAILABLE_CHECKPOINT;
+use crate::types::X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS;
+use crate::types::X_IOTA_TIMESTAMP_MS;
 use crate::ExecuteTransactionQueryParameters;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
@@ -468,43 +469,43 @@ impl ResponseParts {
         let headers = response.headers();
         let status = response.status();
         let chain_id = headers
-            .get(X_SUI_CHAIN_ID)
+            .get(X_IOTA_CHAIN_ID)
             .map(HeaderValue::as_bytes)
             .and_then(|s| CheckpointDigest::from_base58(s).ok());
         let chain = headers
-            .get(X_SUI_CHAIN)
+            .get(X_IOTA_CHAIN)
             .and_then(|h| h.to_str().ok())
             .map(ToOwned::to_owned);
         let epoch = headers
-            .get(X_SUI_EPOCH)
+            .get(X_IOTA_EPOCH)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let checkpoint_height = headers
-            .get(X_SUI_CHECKPOINT_HEIGHT)
+            .get(X_IOTA_CHECKPOINT_HEIGHT)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let timestamp_ms = headers
-            .get(X_SUI_TIMESTAMP_MS)
+            .get(X_IOTA_TIMESTAMP_MS)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let lowest_available_checkpoint = headers
-            .get(X_SUI_LOWEST_AVAILABLE_CHECKPOINT)
+            .get(X_IOTA_LOWEST_AVAILABLE_CHECKPOINT)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let lowest_available_checkpoint_objects = headers
-            .get(X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS)
+            .get(X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let cursor = headers
-            .get(X_SUI_CURSOR)
+            .get(X_IOTA_CURSOR)
             .and_then(|h| h.to_str().ok())
             .map(ToOwned::to_owned);
         let min_supported_protocol_version = headers
-            .get(X_SUI_MIN_SUPPORTED_PROTOCOL_VERSION)
+            .get(X_IOTA_MIN_SUPPORTED_PROTOCOL_VERSION)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
         let max_supported_protocol_version = headers
-            .get(X_SUI_MAX_SUPPORTED_PROTOCOL_VERSION)
+            .get(X_IOTA_MAX_SUPPORTED_PROTOCOL_VERSION)
             .and_then(|h| h.to_str().ok())
             .and_then(|s| s.parse().ok());
 

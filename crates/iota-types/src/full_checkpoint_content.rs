@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::BTreeMap;
@@ -262,7 +263,7 @@ impl BackingPackageStore for CheckpointData {
     fn get_package_object(
         &self,
         package_id: &crate::base_types::ObjectID,
-    ) -> crate::error::SuiResult<Option<crate::storage::PackageObject>> {
+    ) -> crate::error::IotaResult<Option<crate::storage::PackageObject>> {
         self.transactions
             .iter()
             .flat_map(|transaction| transaction.output_objects.iter())

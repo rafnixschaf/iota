@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::net::SocketAddr;
@@ -6,12 +7,12 @@ use std::sync::Arc;
 
 use axum::extract::{Query, State};
 use schemars::JsonSchema;
-use sui_sdk2::types::framework::Coin;
-use sui_sdk2::types::{
+use iota_sdk2::types::framework::Coin;
+use iota_sdk2::types::{
     Address, BalanceChange, CheckpointSequenceNumber, Object, Owner, SignedTransaction,
     TransactionEffects, TransactionEvents, ValidatorAggregatedSignature,
 };
-use sui_types::transaction_executor::TransactionExecutor;
+use iota_types::transaction_executor::TransactionExecutor;
 use tap::Pipe;
 
 use crate::openapi::{
@@ -73,7 +74,7 @@ async fn execute_transaction(
     Bcs(transaction): Bcs<SignedTransaction>,
 ) -> Result<ResponseContent<TransactionExecutionResponse>> {
     let executor = state.ok_or_else(|| anyhow::anyhow!("No Transaction Executor"))?;
-    let request = sui_types::quorum_driver_types::ExecuteTransactionRequestV3 {
+    let request = iota_types::quorum_driver_types::ExecuteTransactionRequestV3 {
         transaction: transaction.into(),
         include_events: parameters.events,
         include_input_objects: parameters.input_objects || parameters.balance_changes,
@@ -81,7 +82,7 @@ async fn execute_transaction(
         include_auxiliary_data: false,
     };
 
-    let sui_types::quorum_driver_types::ExecuteTransactionResponseV3 {
+    let iota_types::quorum_driver_types::ExecuteTransactionResponseV3 {
         effects,
         events,
         input_objects,
@@ -92,17 +93,17 @@ async fn execute_transaction(
         .await?;
 
     let (effects, finality) = {
-        let sui_types::quorum_driver_types::FinalizedEffects {
+        let iota_types::quorum_driver_types::FinalizedEffects {
             effects,
             finality_info,
         } = effects;
         let finality = match finality_info {
-            sui_types::quorum_driver_types::EffectsFinalityInfo::Certified(sig) => {
+            iota_types::quorum_driver_types::EffectsFinalityInfo::Certified(sig) => {
                 EffectsFinality::Certified {
                     signature: sig.into(),
                 }
             }
-            sui_types::quorum_driver_types::EffectsFinalityInfo::Checkpointed(
+            iota_types::quorum_driver_types::EffectsFinalityInfo::Checkpointed(
                 _epoch,
                 checkpoint,
             ) => EffectsFinality::Checkpointed { checkpoint },
@@ -278,7 +279,7 @@ enum ReadableEffectsFinality {
         signature: ValidatorAggregatedSignature,
     },
     Checkpointed {
-        #[serde_as(as = "sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>")]
+        #[serde_as(as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>")]
         #[schemars(with = "crate::_schemars::U64")]
         checkpoint: CheckpointSequenceNumber,
     },

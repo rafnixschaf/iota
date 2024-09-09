@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::cmp::{max, min};
@@ -8,7 +9,7 @@ use anyhow::Error;
 use async_trait::async_trait;
 use tokio::task::JoinHandle;
 
-use mysten_metrics::{metered_channel, spawn_monitored_task};
+use iota_metrics::{metered_channel, spawn_monitored_task};
 
 use crate::{Task, Tasks};
 
@@ -275,7 +276,7 @@ pub trait Datasource<T: Send>: Sync + Send {
         // todo: add metrics for number of tasks
         let (data_sender, mut data_channel) = metered_channel::channel(
             1000,
-            &mysten_metrics::get_metrics()
+            &iota_metrics::get_metrics()
                 .unwrap()
                 .channel_inflight
                 .with_label_values(&[&task_name]),

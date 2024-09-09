@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::authority::transaction_deferral::DeferralKey;
 use narwhal_types::Round;
 use std::collections::HashMap;
-use sui_protocol_config::PerObjectCongestionControlMode;
-use sui_types::base_types::{ObjectID, TransactionDigest};
-use sui_types::executable_transaction::VerifiedExecutableTransaction;
-use sui_types::transaction::SharedInputObject;
+use iota_protocol_config::PerObjectCongestionControlMode;
+use iota_types::base_types::{ObjectID, TransactionDigest};
+use iota_types::executable_transaction::VerifiedExecutableTransaction;
+use iota_types::transaction::SharedInputObject;
 
 // SharedObjectCongestionTracker stores the accumulated cost of executing transactions on an object, for
 // all transactions in a consensus commit.
@@ -161,10 +162,10 @@ mod object_cost_tests {
     use super::*;
 
     use rstest::rstest;
-    use sui_test_transaction_builder::TestTransactionBuilder;
-    use sui_types::base_types::{random_object_ref, SequenceNumber};
-    use sui_types::crypto::{get_key_pair, AccountKeyPair};
-    use sui_types::transaction::{CallArg, ObjectArg, VerifiedTransaction};
+    use iota_test_transaction_builder::TestTransactionBuilder;
+    use iota_types::base_types::{random_object_ref, SequenceNumber};
+    use iota_types::crypto::{get_key_pair, AccountKeyPair};
+    use iota_types::transaction::{CallArg, ObjectArg, VerifiedTransaction};
 
     fn construct_shared_input_objects(objects: &[(ObjectID, bool)]) -> Vec<SharedInputObject> {
         objects

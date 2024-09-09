@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::faucet::write_ahead_log;
 use crate::metrics::FaucetMetrics;
 use async_recursion::async_recursion;
 use async_trait::async_trait;
-use mysten_metrics::spawn_monitored_task;
+use iota_metrics::spawn_monitored_task;
 use prometheus::Registry;
 use shared_crypto::intent::Intent;
 use std::collections::HashMap;
@@ -14,22 +15,22 @@ use std::collections::HashSet;
 use std::fmt;
 use std::path::Path;
 use std::sync::{Arc, Weak};
-use sui_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use tap::tap::TapFallible;
 use tokio::sync::oneshot;
 use ttl_cache::TtlCache;
 use typed_store::Map;
 
-use sui_json_rpc_types::{
-    OwnedObjectRef, SuiObjectDataOptions, SuiTransactionBlockEffectsAPI,
-    SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
+use iota_json_rpc_types::{
+    OwnedObjectRef, IotaObjectDataOptions, IotaTransactionBlockEffectsAPI,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
-use sui_keys::keystore::AccountKeystore;
-use sui_sdk::wallet_context::WalletContext;
-use sui_types::object::Owner;
-use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
-use sui_types::{
-    base_types::{ObjectID, SuiAddress, TransactionDigest},
+use iota_keys::keystore::AccountKeystore;
+use iota_sdk::wallet_context::WalletContext;
+use iota_types::object::Owner;
+use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
+use iota_types::{
+    base_types::{ObjectID, IotaAddress, TransactionDigest},
     gas_coin::GasCoin,
     transaction::{Transaction, TransactionData},
 };
@@ -49,14 +50,14 @@ use crate::{
 
 pub struct SimpleFaucet {
     wallet: WalletContext,
-    active_address: SuiAddress,
+    active_address: IotaAddress,
     producer: Mutex<Sender<ObjectID>>,
     consumer: Mutex<Receiver<ObjectID>>,
     batch_producer: Mutex<Sender<ObjectID>>,
     batch_consumer: Mutex<Receiver<ObjectID>>,
     pub metrics: FaucetMetrics,
     pub wal: Mutex<WriteAheadLog>,
-    request_producer: Sender<(Uuid, SuiAddress, Vec<u64>)>,
+    request_producer: Sender<(Uuid, IotaAddress, Vec<u64>)>,
     batch_request_size: u64,
     task_id_cache: Mutex<TtlCache<Uuid, BatchSendStatus>>,
     ttl_expiration: u64,
@@ -125,7 +126,7 @@ impl SimpleFaucet {
         let (batch_producer, batch_consumer) = mpsc::channel(coins.len());
 
         let (sender, mut receiver) =
-            mpsc::channel::<(Uuid, SuiAddress, Vec<u64>)>(config.max_request_queue_length as usize);
+            mpsc::channel::<(Uuid, IotaAddress, Vec<u64>)>(config.max_request_queue_length as usize);
 
         // This is to handle the case where there is only 1 coin, we want it to go to the normal queue
         let split_point = if coins.len() > 10 {
@@ -341,7 +342,7 @@ impl SimpleFaucet {
             .read_api()
             .get_object_with_options(
                 coin_id,
-                SuiObjectDataOptions::new()
+                IotaObjectDataOptions::new()
                     .with_type()
                     .with_owner()
                     .with_content(),
@@ -410,16 +411,16 @@ impl SimpleFaucet {
     async fn sign_and_execute_txn(
         &self,
         uuid: Uuid,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         coin_id: ObjectID,
         tx_data: TransactionData,
         for_batch: bool,
-    ) -> Result<SuiTransactionBlockResponse, FaucetError> {
+    ) -> Result<IotaTransactionBlockResponse, FaucetError> {
         let signature = self
             .wallet
             .config
             .keystore
-            .sign_secure(&self.active_address, &tx_data, Intent::sui_transaction())
+            .sign_secure(&self.active_address, &tx_data, Intent::iota_transaction())
             .map_err(FaucetError::internal)?;
         let tx = Transaction::from_data(tx_data, vec![signature]);
         let tx_digest = *tx.digest();
@@ -428,12 +429,12 @@ impl SimpleFaucet {
             ?recipient,
             ?coin_id,
             ?uuid,
-            "PaySui transaction in faucet."
+            "PayIota transaction in faucet."
         );
 
         match timeout(
             Duration::from_secs(300),
-            self.execute_pay_sui_txn_with_retries(&tx, coin_id, recipient, uuid),
+            self.execute_pay_iota_txn_with_retries(&tx, coin_id, recipient, uuid),
         )
         .await
         {
@@ -442,7 +443,7 @@ impl SimpleFaucet {
                     ?recipient,
                     ?coin_id,
                     ?uuid,
-                    "Failed to execute PaySui transactions in faucet after {elapsed}. Coin will \
+                    "Failed to execute PayIota transactions in faucet after {elapsed}. Coin will \
                      not be reused."
                 );
 
@@ -491,7 +492,7 @@ impl SimpleFaucet {
     async fn transfer_gases(
         &self,
         amounts: &[u64],
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         uuid: Uuid,
     ) -> Result<(TransactionDigest, Vec<ObjectID>), FaucetError> {
         let number_of_coins = amounts.len();
@@ -504,7 +505,7 @@ impl SimpleFaucet {
         match gas_coin_response {
             GasCoinResponse::ValidGasCoin(coin_id) => {
                 let tx_data = self
-                    .build_pay_sui_txn(coin_id, self.active_address, recipient, amounts, gas_cost)
+                    .build_pay_iota_txn(coin_id, self.active_address, recipient, amounts, gas_cost)
                     .await
                     .map_err(FaucetError::internal)?;
 
@@ -574,17 +575,17 @@ impl SimpleFaucet {
         info!(?uuid, ?coin_id, "Recycled coin");
     }
 
-    async fn execute_pay_sui_txn_with_retries(
+    async fn execute_pay_iota_txn_with_retries(
         &self,
         tx: &Transaction,
         coin_id: ObjectID,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         uuid: Uuid,
-    ) -> SuiTransactionBlockResponse {
+    ) -> IotaTransactionBlockResponse {
         let mut retry_delay = Duration::from_millis(500);
 
         loop {
-            let res = self.execute_pay_sui_txn(tx, coin_id, recipient, uuid).await;
+            let res = self.execute_pay_iota_txn(tx, coin_id, recipient, uuid).await;
 
             if let Ok(res) = res {
                 return res;
@@ -595,7 +596,7 @@ impl SimpleFaucet {
                 ?coin_id,
                 ?uuid,
                 ?retry_delay,
-                "PaySui transaction in faucet failed, previous error: {:?}",
+                "PayIota transaction in faucet failed, previous error: {:?}",
                 &res,
             );
 
@@ -604,13 +605,13 @@ impl SimpleFaucet {
         }
     }
 
-    async fn execute_pay_sui_txn(
+    async fn execute_pay_iota_txn(
         &self,
         tx: &Transaction,
         coin_id: ObjectID,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         uuid: Uuid,
-    ) -> Result<SuiTransactionBlockResponse, anyhow::Error> {
+    ) -> Result<IotaTransactionBlockResponse, anyhow::Error> {
         self.metrics.current_executions_in_flight.inc();
         let _metrics_guard = scopeguard::guard(self.metrics.clone(), |metrics| {
             metrics.current_executions_in_flight.dec();
@@ -622,7 +623,7 @@ impl SimpleFaucet {
             .quorum_driver_api()
             .execute_transaction_block(
                 tx.clone(),
-                SuiTransactionBlockResponseOptions::new().with_effects(),
+                IotaTransactionBlockResponseOptions::new().with_effects(),
                 Some(ExecuteTransactionRequestType::WaitForLocalExecution),
             )
             .await
@@ -656,11 +657,11 @@ impl SimpleFaucet {
             .map_err(|e| FaucetError::FullnodeReadingError(format!("Error fetch gas price {e:?}")))
     }
 
-    async fn build_pay_sui_txn(
+    async fn build_pay_iota_txn(
         &self,
         coin_id: ObjectID,
-        signer: SuiAddress,
-        recipient: SuiAddress,
+        signer: IotaAddress,
+        recipient: IotaAddress,
         amounts: &[u64],
         budget: u64,
     ) -> Result<TransactionData, anyhow::Error> {
@@ -668,11 +669,11 @@ impl SimpleFaucet {
         let client = self.wallet.get_client().await?;
         client
             .transaction_builder()
-            .pay_sui(signer, vec![coin_id], recipients, amounts.to_vec(), budget)
+            .pay_iota(signer, vec![coin_id], recipients, amounts.to_vec(), budget)
             .await
             .map_err(|e| {
                 anyhow::anyhow!(
-                    "Failed to build PaySui transaction for coin {:?}, with err {:?}",
+                    "Failed to build PayIota transaction for coin {:?}, with err {:?}",
                     coin_id,
                     e
                 )
@@ -681,9 +682,9 @@ impl SimpleFaucet {
 
     async fn check_and_map_transfer_gas_result(
         &self,
-        res: SuiTransactionBlockResponse,
+        res: IotaTransactionBlockResponse,
         number_of_coins: usize,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
     ) -> Result<(TransactionDigest, Vec<ObjectID>), FaucetError> {
         let created = res
             .effects
@@ -697,7 +698,7 @@ impl SimpleFaucet {
             .to_vec();
         if created.len() != number_of_coins {
             return Err(FaucetError::CoinAmountTransferredIncorrect(format!(
-                "PaySui Transaction should create exact {:?} new coins, but got {:?}",
+                "PayIota Transaction should create exact {:?} new coins, but got {:?}",
                 number_of_coins, created
             )));
         }
@@ -711,11 +712,11 @@ impl SimpleFaucet {
         Ok((res.digest, coin_ids))
     }
 
-    async fn build_batch_pay_sui_txn(
+    async fn build_batch_pay_iota_txn(
         &self,
         coin_id: ObjectID,
-        batch_requests: Vec<(Uuid, SuiAddress, Vec<u64>)>,
-        signer: SuiAddress,
+        batch_requests: Vec<(Uuid, IotaAddress, Vec<u64>)>,
+        signer: IotaAddress,
         budget: u64,
     ) -> Result<TransactionData, anyhow::Error> {
         let gas_payment = self.wallet.get_object_ref(coin_id).await?;
@@ -725,7 +726,7 @@ impl SimpleFaucet {
             let mut builder = ProgrammableTransactionBuilder::new();
             for (_uuid, recipient, amounts) in batch_requests {
                 let recipients = vec![recipient; amounts.len()];
-                builder.pay_sui(recipients, amounts)?;
+                builder.pay_iota(recipients, amounts)?;
             }
             builder.finish()
         };
@@ -741,10 +742,10 @@ impl SimpleFaucet {
 
     async fn check_and_map_batch_transfer_gas_result(
         &self,
-        res: SuiTransactionBlockResponse,
-        requests: Vec<(Uuid, SuiAddress, Vec<u64>)>,
+        res: IotaTransactionBlockResponse,
+        requests: Vec<(Uuid, IotaAddress, Vec<u64>)>,
     ) -> Result<(), FaucetError> {
-        // Grab the list of created coins and turn it into a map of destination SuiAddress to Vec<Coins>
+        // Grab the list of created coins and turn it into a map of destination IotaAddress to Vec<Coins>
         let created = res
             .effects
             .ok_or_else(|| {
@@ -756,7 +757,7 @@ impl SimpleFaucet {
             .created()
             .to_vec();
 
-        let mut address_coins_map: HashMap<SuiAddress, Vec<OwnedObjectRef>> = HashMap::new();
+        let mut address_coins_map: HashMap<IotaAddress, Vec<OwnedObjectRef>> = HashMap::new();
         created.iter().for_each(|created_coin_owner_ref| {
             let owner = created_coin_owner_ref.owner;
             let coin_obj_ref = created_coin_owner_ref.clone();
@@ -768,14 +769,14 @@ impl SimpleFaucet {
                 .push(coin_obj_ref);
         });
 
-        // Assert that the number of times a sui_address occurs is the number of times the coins
+        // Assert that the number of times a iota_address occurs is the number of times the coins
         // come up in the vector.
-        let mut request_count: HashMap<SuiAddress, u64> = HashMap::new();
+        let mut request_count: HashMap<IotaAddress, u64> = HashMap::new();
         // Acquire lock and update all of the request Uuids
         let mut task_map = self.task_id_cache.lock().await;
         for (uuid, addy, amounts) in requests {
             let number_of_coins = amounts.len();
-            // Get or insert sui_address into request count
+            // Get or insert iota_address into request count
             let index = *request_count.entry(addy).or_insert(0);
 
             // The address coin map should contain the coins transferred in the given request.
@@ -783,7 +784,7 @@ impl SimpleFaucet {
 
             if number_of_coins as u64 + index > coins_created_for_address.len() as u64 {
                 return Err(FaucetError::CoinAmountTransferredIncorrect(format!(
-                    "PaySui Transaction should create exact {:?} new coins, but got {:?}",
+                    "PayIota Transaction should create exact {:?} new coins, but got {:?}",
                     number_of_coins as u64 + index,
                     coins_created_for_address.len()
                 )));
@@ -864,14 +865,14 @@ impl Faucet for SimpleFaucet {
     async fn send(
         &self,
         id: Uuid,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         amounts: &[u64],
     ) -> Result<FaucetReceipt, FaucetError> {
         info!(?recipient, uuid = ?id, ?amounts, "Getting faucet requests");
 
         let (digest, coin_ids) = self.transfer_gases(amounts, recipient, id).await?;
 
-        info!(uuid = ?id, ?recipient, ?digest, "PaySui txn succeeded");
+        info!(uuid = ?id, ?recipient, ?digest, "PayIota txn succeeded");
         let mut sent = Vec::with_capacity(coin_ids.len());
         let coin_results =
             futures::future::join_all(coin_ids.iter().map(|coin_id| self.get_coin(*coin_id))).await;
@@ -913,7 +914,7 @@ impl Faucet for SimpleFaucet {
     async fn batch_send(
         &self,
         id: Uuid,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         amounts: &[u64],
     ) -> Result<BatchFaucetReceipt, FaucetError> {
         info!(?recipient, uuid = ?id, "Getting faucet request");
@@ -948,8 +949,8 @@ impl Faucet for SimpleFaucet {
 }
 
 pub async fn batch_gather(
-    request_consumer: &mut Receiver<(Uuid, SuiAddress, Vec<u64>)>,
-    requests: &mut Vec<(Uuid, SuiAddress, Vec<u64>)>,
+    request_consumer: &mut Receiver<(Uuid, IotaAddress, Vec<u64>)>,
+    requests: &mut Vec<(Uuid, IotaAddress, Vec<u64>)>,
     batch_request_size: u64,
 ) -> Result<(), FaucetError> {
     // Gather the rest of the batch after the first item has been taken.
@@ -968,7 +969,7 @@ pub async fn batch_gather(
 // Function to process the batch send of the mcsp queue
 pub async fn batch_transfer_gases(
     weak_faucet: &Weak<SimpleFaucet>,
-    request_consumer: &mut Receiver<(Uuid, SuiAddress, Vec<u64>)>,
+    request_consumer: &mut Receiver<(Uuid, IotaAddress, Vec<u64>)>,
     rx_batch_transfer_shutdown: &mut oneshot::Receiver<()>,
 ) -> Result<TransactionDigest, FaucetError> {
     let mut requests = Vec::new();
@@ -1012,17 +1013,17 @@ pub async fn batch_transfer_gases(
         ?uuid,
         "Batch transfer attempted of size: {:?}", total_requests
     );
-    let total_sui_needed: u64 = requests.iter().flat_map(|(_, _, amounts)| amounts).sum();
+    let total_iota_needed: u64 = requests.iter().flat_map(|(_, _, amounts)| amounts).sum();
     // This loop is utilized to grab a coin that is large enough for the request
     loop {
         let gas_coin_response = faucet
-            .prepare_gas_coin(total_sui_needed + gas_cost, uuid, true)
+            .prepare_gas_coin(total_iota_needed + gas_cost, uuid, true)
             .await;
 
         match gas_coin_response {
             GasCoinResponse::ValidGasCoin(coin_id) => {
                 let tx_data = faucet
-                    .build_batch_pay_sui_txn(
+                    .build_batch_pay_iota_txn(
                         coin_id,
                         requests.clone(),
                         faucet.active_address,
@@ -1032,8 +1033,8 @@ pub async fn batch_transfer_gases(
                     .map_err(FaucetError::internal)?;
 
                 // Because we are batching transactions to faucet, we will just not use a real recipient for
-                // sui address, and instead just fill it with the ZERO address.
-                let recipient = SuiAddress::ZERO;
+                // iota address, and instead just fill it with the ZERO address.
+                let recipient = IotaAddress::ZERO;
                 {
                     // Register the intention to send this transaction before we send it, so that if
                     // faucet fails or we give up before we get a definite response, we have a
@@ -1090,21 +1091,21 @@ mod tests {
     use super::*;
     use anyhow::*;
     use shared_crypto::intent::Intent;
-    use sui_json_rpc_types::SuiExecutionStatus;
-    use sui_json_rpc_types::SuiTransactionBlockEffects;
-    use sui_sdk::wallet_context::WalletContext;
-    use sui_types::transaction::SenderSignedData;
-    use sui_types::transaction::TransactionDataAPI;
+    use iota_json_rpc_types::IotaExecutionStatus;
+    use iota_json_rpc_types::IotaTransactionBlockEffects;
+    use iota_sdk::wallet_context::WalletContext;
+    use iota_types::transaction::SenderSignedData;
+    use iota_types::transaction::TransactionDataAPI;
     use test_cluster::TestClusterBuilder;
 
     async fn execute_tx(
         ctx: &mut WalletContext,
         tx_data: TransactionData,
-    ) -> Result<SuiTransactionBlockEffects, anyhow::Error> {
+    ) -> Result<IotaTransactionBlockEffects, anyhow::Error> {
         let signature = ctx.config.keystore.sign_secure(
             &tx_data.sender(),
             &tx_data,
-            Intent::sui_transaction(),
+            Intent::iota_transaction(),
         )?;
         let sender_signed_data = SenderSignedData::new_from_sender_signature(tx_data, signature);
         let transaction = Transaction::new(sender_signed_data);
@@ -1112,7 +1113,7 @@ mod tests {
         let result_effects = response.clone().effects;
 
         if let Some(effects) = result_effects {
-            if matches!(effects.status(), SuiExecutionStatus::Failure { .. }) {
+            if matches!(effects.status(), IotaExecutionStatus::Failure { .. }) {
                 Err(anyhow!(
                     "Error executing transaction: {:#?}",
                     effects.status()
@@ -1122,7 +1123,7 @@ mod tests {
             }
         } else {
             Err(anyhow!(
-                "Effects from SuiTransactionBlockResult should not be empty"
+                "Effects from IotaTransactionBlockResult should not be empty"
             ))
         }
     }
@@ -1243,7 +1244,7 @@ mod tests {
         let _ = futures::future::join_all((0..number_of_coins).map(|_| {
             faucet.send(
                 Uuid::new_v4(),
-                SuiAddress::random_for_testing_only(),
+                IotaAddress::random_for_testing_only(),
                 amounts,
             )
         }))
@@ -1307,8 +1308,8 @@ mod tests {
         let amounts = &[coin_amount];
 
         // Create a vector containing five randomly generated addresses
-        let target_addresses: Vec<SuiAddress> = (0..5)
-            .map(|_| SuiAddress::random_for_testing_only())
+        let target_addresses: Vec<IotaAddress> = (0..5)
+            .map(|_| IotaAddress::random_for_testing_only())
             .collect();
 
         let response = futures::future::join_all(
@@ -1387,8 +1388,8 @@ mod tests {
 
         let amounts = &[1; 1];
         // Create a vector containing five randomly generated addresses
-        let target_addresses: Vec<SuiAddress> = (0..5)
-            .map(|_| SuiAddress::random_for_testing_only())
+        let target_addresses: Vec<IotaAddress> = (0..5)
+            .map(|_| IotaAddress::random_for_testing_only())
             .collect();
 
         let response = futures::future::join_all(
@@ -1448,10 +1449,10 @@ mod tests {
         let gas_budget = 50_000_000;
         let tx_data = client
             .transaction_builder()
-            .pay_all_sui(
+            .pay_all_iota(
                 address,
                 vec![bad_gas.0],
-                SuiAddress::random_for_testing_only(),
+                IotaAddress::random_for_testing_only(),
                 gas_budget,
             )
             .await
@@ -1464,7 +1465,7 @@ mod tests {
         futures::future::join_all((0..2).map(|_| {
             faucet.send(
                 Uuid::new_v4(),
-                SuiAddress::random_for_testing_only(),
+                IotaAddress::random_for_testing_only(),
                 amounts,
             )
         }))
@@ -1504,7 +1505,7 @@ mod tests {
         let original_available = faucet.metrics.total_available_coins.get();
         let original_discarded = faucet.metrics.total_discarded_coins.get();
 
-        let recipient = SuiAddress::random_for_testing_only();
+        let recipient = IotaAddress::random_for_testing_only();
         let faucet_address = faucet.active_address;
         let uuid = Uuid::new_v4();
 
@@ -1515,7 +1516,7 @@ mod tests {
         };
 
         let tx_data = faucet
-            .build_pay_sui_txn(coin_id, faucet_address, recipient, &[100], 200_000_000)
+            .build_pay_iota_txn(coin_id, faucet_address, recipient, &[100], 200_000_000)
             .await
             .map_err(FaucetError::internal)
             .unwrap();
@@ -1616,7 +1617,7 @@ mod tests {
         futures::future::join_all((0..10).map(|_| {
             faucet.send(
                 Uuid::new_v4(),
-                SuiAddress::random_for_testing_only(),
+                IotaAddress::random_for_testing_only(),
                 amounts,
             )
         }))
@@ -1671,12 +1672,12 @@ mod tests {
             .unwrap();
         execute_tx(&mut context, tx_data).await.unwrap();
 
-        let destination_address = SuiAddress::random_for_testing_only();
+        let destination_address = IotaAddress::random_for_testing_only();
         // Transfer all valid gases away except for 1
         for gas in gas_coins.iter().take(gas_coins.len() - 1) {
             let tx_data = client
                 .transaction_builder()
-                .transfer_sui(address, gas.0, gas_budget, destination_address, None)
+                .transfer_iota(address, gas.0, gas_budget, destination_address, None)
                 .await
                 .unwrap();
             execute_tx(&mut context, tx_data).await.unwrap();
@@ -1705,7 +1706,7 @@ mod tests {
         futures::future::join_all((0..2).map(|_| {
             faucet.send(
                 Uuid::new_v4(),
-                SuiAddress::random_for_testing_only(),
+                IotaAddress::random_for_testing_only(),
                 &[30000000000],
             )
         }))
@@ -1750,13 +1751,13 @@ mod tests {
 
         execute_tx(&mut context, tx_data).await.unwrap();
 
-        let destination_address = SuiAddress::random_for_testing_only();
+        let destination_address = IotaAddress::random_for_testing_only();
 
         // Transfer all valid gases away
         for gas in gas_coins {
             let tx_data = client
                 .transaction_builder()
-                .transfer_sui(address, gas.0, gas_budget, destination_address, None)
+                .transfer_iota(address, gas.0, gas_budget, destination_address, None)
                 .await
                 .unwrap();
             execute_tx(&mut context, tx_data).await.unwrap();
@@ -1780,7 +1781,7 @@ mod tests {
         .await
         .unwrap();
 
-        let destination_address = SuiAddress::random_for_testing_only();
+        let destination_address = IotaAddress::random_for_testing_only();
         // Assert that faucet will discard and also terminate
         let res = faucet
             .send(Uuid::new_v4(), destination_address, &[30000000000])
@@ -1807,7 +1808,7 @@ mod tests {
         .await
         .unwrap();
 
-        let recipient = SuiAddress::random_for_testing_only();
+        let recipient = IotaAddress::random_for_testing_only();
         let faucet_address = faucet.active_address;
         let uuid = Uuid::new_v4();
 
@@ -1818,7 +1819,7 @@ mod tests {
         };
 
         let tx_data = faucet
-            .build_pay_sui_txn(coin_id, faucet_address, recipient, &[100], 200_000_000)
+            .build_pay_iota_txn(coin_id, faucet_address, recipient, &[100], 200_000_000)
             .await
             .map_err(FaucetError::internal)
             .unwrap();
@@ -1901,11 +1902,11 @@ mod tests {
         .unwrap();
 
         // Create a vector containing two randomly generated addresses
-        let target_addresses: Vec<SuiAddress> = (0..2)
-            .map(|_| SuiAddress::random_for_testing_only())
+        let target_addresses: Vec<IotaAddress> = (0..2)
+            .map(|_| IotaAddress::random_for_testing_only())
             .collect();
 
-        // Send 2 coins of 1 sui each. We
+        // Send 2 coins of 1 iota each. We
         let coins_sent = 2;
         let amounts = &vec![amount_to_send; coins_sent];
 
@@ -1954,7 +1955,7 @@ mod tests {
     }
 
     async fn test_send_interface_has_success_status(faucet: &impl Faucet) {
-        let recipient = SuiAddress::random_for_testing_only();
+        let recipient = IotaAddress::random_for_testing_only();
         let amounts = vec![1, 2, 3];
         let uuid_test = Uuid::new_v4();
 
@@ -1975,7 +1976,7 @@ mod tests {
     }
 
     async fn test_basic_interface(faucet: &impl Faucet) {
-        let recipient = SuiAddress::random_for_testing_only();
+        let recipient = IotaAddress::random_for_testing_only();
         let amounts = vec![1, 2, 3];
 
         let FaucetReceipt { sent } = faucet

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::base_types::{AuthorityName, ObjectRef, TransactionDigest};
@@ -83,7 +84,7 @@ pub fn check_total_jwk_size(id: &JwkId, jwk: &JWK) -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConsensusTransaction {
-    /// Encodes an u64 unique tracking id to allow us trace a message between Sui and Narwhal.
+    /// Encodes an u64 unique tracking id to allow us trace a message between Iota and Narwhal.
     /// Use an byte array instead of u64 to ensure stable serialization.
     pub tracking_id: [u8; 8],
     pub kind: ConsensusTransactionKind,
@@ -179,10 +180,10 @@ impl AuthorityCapabilitiesV1 {
     ) -> Self {
         let generation = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("Sui did not exist prior to 1970")
+            .expect("Iota did not exist prior to 1970")
             .as_millis()
             .try_into()
-            .expect("This build of sui is not supported in the year 500,000,000");
+            .expect("This build of iota is not supported in the year 500,000,000");
         Self {
             authority,
             generation,
@@ -236,10 +237,10 @@ impl AuthorityCapabilitiesV2 {
     ) -> Self {
         let generation = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("Sui did not exist prior to 1970")
+            .expect("Iota did not exist prior to 1970")
             .as_millis()
             .try_into()
-            .expect("This build of sui is not supported in the year 500,000,000");
+            .expect("This build of iota is not supported in the year 500,000,000");
         Self {
             authority,
             generation,

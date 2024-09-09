@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use async_graphql::*;
@@ -314,7 +315,7 @@ impl TryFrom<A::MoveFieldLayout> for MoveFieldLayout {
     }
 }
 
-/// Error from seeing a `signer` value or type, which shouldn't be possible in Sui Move.
+/// Error from seeing a `signer` value or type, which shouldn't be possible in Iota Move.
 pub(crate) fn unexpected_signer_error() -> Error {
     Error::Internal("Unexpected value of type: signer.".to_string())
 }

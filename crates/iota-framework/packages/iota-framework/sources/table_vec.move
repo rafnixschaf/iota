@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// A basic scalable vector library implemented using `Table`.
-module sui::table_vec {
-    use sui::table::{Self, Table};
+module iota::table_vec {
+    use iota::table::{Self, Table};
 
     public struct TableVec<phantom Element: store> has store {
         /// The contents of the table vector.
@@ -106,7 +107,7 @@ module sui::table_vec {
 
     #[test]
     fun test_swap() {
-        let ctx = &mut sui::tx_context::dummy();
+        let ctx = &mut iota::tx_context::dummy();
         let mut tv = singleton(0, ctx);
         tv.push_back(1);
         tv.push_back(2);

@@ -1,36 +1,37 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store::{ExecutionLockWriteGuard, SuiLockResult};
+use crate::authority::authority_store::{ExecutionLockWriteGuard, IotaLockResult};
 use crate::authority::epoch_start_configuration::EpochFlag;
 use crate::authority::epoch_start_configuration::EpochStartConfiguration;
 use crate::authority::AuthorityStore;
 use crate::state_accumulator::AccumulatorStore;
 use crate::transaction_outputs::TransactionOutputs;
-use sui_types::bridge::Bridge;
+use iota_types::bridge::Bridge;
 
 use futures::{future::BoxFuture, FutureExt};
 use prometheus::Registry;
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
-use sui_config::ExecutionCacheConfig;
-use sui_protocol_config::ProtocolVersion;
-use sui_types::base_types::VerifiedExecutionData;
-use sui_types::digests::{TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest};
-use sui_types::effects::{TransactionEffects, TransactionEvents};
-use sui_types::error::{SuiError, SuiResult, UserInputError};
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
-use sui_types::object::Object;
-use sui_types::storage::{
+use iota_config::ExecutionCacheConfig;
+use iota_protocol_config::ProtocolVersion;
+use iota_types::base_types::VerifiedExecutionData;
+use iota_types::digests::{TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest};
+use iota_types::effects::{TransactionEffects, TransactionEvents};
+use iota_types::error::{IotaError, IotaResult, UserInputError};
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::object::Object;
+use iota_types::storage::{
     error::{Error as StorageError, Result as StorageResult},
     BackingPackageStore, BackingStore, ChildObjectResolver, MarkerValue, ObjectKey,
     ObjectOrTombstone, ObjectStore, PackageObject, ParentSync,
 };
-use sui_types::sui_system_state::SuiSystemState;
-use sui_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
-use sui_types::{
+use iota_types::iota_system_state::IotaSystemState;
+use iota_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
+use iota_types::{
     base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber},
     object::Owner,
     storage::InputKey,
@@ -116,7 +117,7 @@ pub fn choose_execution_cache(config: &ExecutionCacheConfig) -> ExecutionCacheCo
     #[cfg(msim)]
     {
         let mut use_random_cache = None;
-        sui_macros::fail_point_if!("select-random-cache", || {
+        iota_macros::fail_point_if!("select-random-cache", || {
             let random = rand::random::<bool>();
             tracing::info!("Randomly selecting cache: {}", random);
             use_random_cache = Some(random);
@@ -150,7 +151,7 @@ pub fn build_execution_cache(
     )
 }
 
-/// Should only be used for sui-tool or tests. Nodes must use build_execution_cache which
+/// Should only be used for iota-tool or tests. Nodes must use build_execution_cache which
 /// uses the epoch_start_config to prevent cache impl from switching except at epoch boundaries.
 pub fn build_execution_cache_from_env(
     prometheus_registry: &Registry,
@@ -177,7 +178,7 @@ pub trait ExecutionCacheCommit: Send + Sync {
         &'a self,
         epoch: EpochId,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult>;
+    ) -> BoxFuture<'a, IotaResult>;
 
     /// Durably commit transactions (but not their outputs) to the database.
     /// Called before writing a locally built checkpoint to the CheckpointStore, so that
@@ -192,16 +193,16 @@ pub trait ExecutionCacheCommit: Send + Sync {
     fn persist_transactions<'a>(
         &'a self,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult>;
+    ) -> BoxFuture<'a, IotaResult>;
 }
 
 pub trait ObjectCacheRead: Send + Sync {
-    fn get_package_object(&self, id: &ObjectID) -> SuiResult<Option<PackageObject>>;
+    fn get_package_object(&self, id: &ObjectID) -> IotaResult<Option<PackageObject>>;
     fn force_reload_system_packages(&self, system_package_ids: &[ObjectID]);
 
-    fn get_object(&self, id: &ObjectID) -> SuiResult<Option<Object>>;
+    fn get_object(&self, id: &ObjectID) -> IotaResult<Option<Object>>;
 
-    fn get_objects(&self, objects: &[ObjectID]) -> SuiResult<Vec<Option<Object>>> {
+    fn get_objects(&self, objects: &[ObjectID]) -> IotaResult<Vec<Option<Object>>> {
         let mut ret = Vec::with_capacity(objects.len());
         for object_id in objects {
             ret.push(self.get_object(object_id)?);
@@ -212,29 +213,29 @@ pub trait ObjectCacheRead: Send + Sync {
     fn get_latest_object_ref_or_tombstone(
         &self,
         object_id: ObjectID,
-    ) -> SuiResult<Option<ObjectRef>>;
+    ) -> IotaResult<Option<ObjectRef>>;
 
     fn get_latest_object_or_tombstone(
         &self,
         object_id: ObjectID,
-    ) -> SuiResult<Option<(ObjectKey, ObjectOrTombstone)>>;
+    ) -> IotaResult<Option<(ObjectKey, ObjectOrTombstone)>>;
 
     fn get_object_by_key(
         &self,
         object_id: &ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<Option<Object>>;
+    ) -> IotaResult<Option<Object>>;
 
     fn multi_get_objects_by_key(&self, object_keys: &[ObjectKey])
-        -> SuiResult<Vec<Option<Object>>>;
+        -> IotaResult<Vec<Option<Object>>>;
 
     fn object_exists_by_key(
         &self,
         object_id: &ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<bool>;
+    ) -> IotaResult<bool>;
 
-    fn multi_object_exists_by_key(&self, object_keys: &[ObjectKey]) -> SuiResult<Vec<bool>>;
+    fn multi_object_exists_by_key(&self, object_keys: &[ObjectKey]) -> IotaResult<Vec<bool>>;
 
     /// Load a list of objects from the store by object reference.
     /// If they exist in the store, they are returned directly.
@@ -246,7 +247,7 @@ pub trait ObjectCacheRead: Send + Sync {
     fn multi_get_objects_with_more_accurate_error_return(
         &self,
         object_refs: &[ObjectRef],
-    ) -> Result<Vec<Object>, SuiError> {
+    ) -> Result<Vec<Object>, IotaError> {
         let objects = self.multi_get_objects_by_key(
             &object_refs.iter().map(ObjectKey::from).collect::<Vec<_>>(),
         )?;
@@ -266,7 +267,7 @@ pub trait ObjectCacheRead: Send + Sync {
                             version: Some(object_ref.1),
                         }
                     };
-                    return Err(SuiError::UserInputError { error });
+                    return Err(IotaError::UserInputError { error });
                 }
                 Some(object) => {
                     result.push(object);
@@ -285,7 +286,7 @@ pub trait ObjectCacheRead: Send + Sync {
         keys: &[InputKey],
         receiving_objects: HashSet<InputKey>,
         epoch: EpochId,
-    ) -> Result<Vec<bool>, SuiError> {
+    ) -> Result<Vec<bool>, IotaError> {
         let (keys_with_version, keys_without_version): (Vec<_>, Vec<_>) = keys
             .iter()
             .enumerate()
@@ -372,20 +373,20 @@ pub trait ObjectCacheRead: Send + Sync {
         &self,
         object_id: ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<Option<Object>>;
+    ) -> IotaResult<Option<Object>>;
 
-    fn get_lock(&self, obj_ref: ObjectRef, epoch_store: &AuthorityPerEpochStore) -> SuiLockResult;
+    fn get_lock(&self, obj_ref: ObjectRef, epoch_store: &AuthorityPerEpochStore) -> IotaLockResult;
 
     // This method is considered "private" - only used by multi_get_objects_with_more_accurate_error_return
-    fn _get_live_objref(&self, object_id: ObjectID) -> SuiResult<ObjectRef>;
+    fn _get_live_objref(&self, object_id: ObjectID) -> IotaResult<ObjectRef>;
 
     // Check that the given set of objects are live at the given version. This is used as a
     // safety check before execution, and could potentially be deleted or changed to a debug_assert
-    fn check_owned_objects_are_live(&self, owned_object_refs: &[ObjectRef]) -> SuiResult;
+    fn check_owned_objects_are_live(&self, owned_object_refs: &[ObjectRef]) -> IotaResult;
 
-    fn get_sui_system_state_object_unsafe(&self) -> SuiResult<SuiSystemState>;
+    fn get_iota_system_state_object_unsafe(&self) -> IotaResult<IotaSystemState>;
 
-    fn get_bridge_object_unsafe(&self) -> SuiResult<Bridge>;
+    fn get_bridge_object_unsafe(&self) -> IotaResult<Bridge>;
 
     // Marker methods
 
@@ -395,21 +396,21 @@ pub trait ObjectCacheRead: Send + Sync {
         object_id: &ObjectID,
         version: SequenceNumber,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<MarkerValue>>;
+    ) -> IotaResult<Option<MarkerValue>>;
 
     /// Get the latest marker for a given object.
     fn get_latest_marker(
         &self,
         object_id: &ObjectID,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<(SequenceNumber, MarkerValue)>>;
+    ) -> IotaResult<Option<(SequenceNumber, MarkerValue)>>;
 
     /// If the shared object was deleted, return deletion info for the current live version
     fn get_last_shared_object_deletion_info(
         &self,
         object_id: &ObjectID,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<(SequenceNumber, TransactionDigest)>> {
+    ) -> IotaResult<Option<(SequenceNumber, TransactionDigest)>> {
         match self.get_latest_marker(object_id, epoch_id)? {
             Some((version, MarkerValue::SharedDeleted(digest))) => Ok(Some((version, digest))),
             _ => Ok(None),
@@ -422,7 +423,7 @@ pub trait ObjectCacheRead: Send + Sync {
         object_id: &ObjectID,
         version: SequenceNumber,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<TransactionDigest>> {
+    ) -> IotaResult<Option<TransactionDigest>> {
         match self.get_marker_value(object_id, version, epoch_id)? {
             Some(MarkerValue::SharedDeleted(digest)) => Ok(Some(digest)),
             _ => Ok(None),
@@ -434,7 +435,7 @@ pub trait ObjectCacheRead: Send + Sync {
         object_id: &ObjectID,
         version: SequenceNumber,
         epoch_id: EpochId,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         match self.get_marker_value(object_id, version, epoch_id)? {
             Some(MarkerValue::Received) => Ok(true),
             _ => Ok(false),
@@ -446,7 +447,7 @@ pub trait ObjectCacheRead: Send + Sync {
         object_id: &ObjectID,
         version: SequenceNumber,
         epoch_id: EpochId,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         match self.get_latest_marker(object_id, epoch_id)? {
             Some((marker_version, MarkerValue::OwnedDeleted)) if marker_version >= version => {
                 Ok(true)
@@ -456,19 +457,19 @@ pub trait ObjectCacheRead: Send + Sync {
     }
 
     /// Return the watermark for the highest checkpoint for which we've pruned objects.
-    fn get_highest_pruned_checkpoint(&self) -> SuiResult<CheckpointSequenceNumber>;
+    fn get_highest_pruned_checkpoint(&self) -> IotaResult<CheckpointSequenceNumber>;
 }
 
 pub trait TransactionCacheRead: Send + Sync {
     fn multi_get_transaction_blocks(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<Arc<VerifiedTransaction>>>>;
+    ) -> IotaResult<Vec<Option<Arc<VerifiedTransaction>>>>;
 
     fn get_transaction_block(
         &self,
         digest: &TransactionDigest,
-    ) -> SuiResult<Option<Arc<VerifiedTransaction>>> {
+    ) -> IotaResult<Option<Arc<VerifiedTransaction>>> {
         self.multi_get_transaction_blocks(&[*digest])
             .map(|mut blocks| {
                 blocks
@@ -481,7 +482,7 @@ pub trait TransactionCacheRead: Send + Sync {
     fn get_transactions_and_serialized_sizes(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<(VerifiedTransaction, usize)>>> {
+    ) -> IotaResult<Vec<Option<(VerifiedTransaction, usize)>>> {
         let txns = self.multi_get_transaction_blocks(digests)?;
         txns.into_iter()
             .map(|txn| {
@@ -503,9 +504,9 @@ pub trait TransactionCacheRead: Send + Sync {
     fn multi_get_executed_effects_digests(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<TransactionEffectsDigest>>>;
+    ) -> IotaResult<Vec<Option<TransactionEffectsDigest>>>;
 
-    fn is_tx_already_executed(&self, digest: &TransactionDigest) -> SuiResult<bool> {
+    fn is_tx_already_executed(&self, digest: &TransactionDigest) -> IotaResult<bool> {
         self.multi_get_executed_effects_digests(&[*digest])
             .map(|mut digests| {
                 digests
@@ -518,7 +519,7 @@ pub trait TransactionCacheRead: Send + Sync {
     fn multi_get_executed_effects(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<TransactionEffects>>> {
+    ) -> IotaResult<Vec<Option<TransactionEffects>>> {
         let effects_digests = self.multi_get_executed_effects_digests(digests)?;
         assert_eq!(effects_digests.len(), digests.len());
 
@@ -544,7 +545,7 @@ pub trait TransactionCacheRead: Send + Sync {
     fn get_executed_effects(
         &self,
         digest: &TransactionDigest,
-    ) -> SuiResult<Option<TransactionEffects>> {
+    ) -> IotaResult<Option<TransactionEffects>> {
         self.multi_get_executed_effects(&[*digest])
             .map(|mut effects| {
                 effects
@@ -556,12 +557,12 @@ pub trait TransactionCacheRead: Send + Sync {
     fn multi_get_effects(
         &self,
         digests: &[TransactionEffectsDigest],
-    ) -> SuiResult<Vec<Option<TransactionEffects>>>;
+    ) -> IotaResult<Vec<Option<TransactionEffects>>>;
 
     fn get_effects(
         &self,
         digest: &TransactionEffectsDigest,
-    ) -> SuiResult<Option<TransactionEffects>> {
+    ) -> IotaResult<Option<TransactionEffects>> {
         self.multi_get_effects(&[*digest]).map(|mut effects| {
             effects
                 .pop()
@@ -572,9 +573,9 @@ pub trait TransactionCacheRead: Send + Sync {
     fn multi_get_events(
         &self,
         event_digests: &[TransactionEventsDigest],
-    ) -> SuiResult<Vec<Option<TransactionEvents>>>;
+    ) -> IotaResult<Vec<Option<TransactionEvents>>>;
 
-    fn get_events(&self, digest: &TransactionEventsDigest) -> SuiResult<Option<TransactionEvents>> {
+    fn get_events(&self, digest: &TransactionEventsDigest) -> IotaResult<Option<TransactionEvents>> {
         self.multi_get_events(&[*digest]).map(|mut events| {
             events
                 .pop()
@@ -585,12 +586,12 @@ pub trait TransactionCacheRead: Send + Sync {
     fn notify_read_executed_effects_digests<'a>(
         &'a self,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult<Vec<TransactionEffectsDigest>>>;
+    ) -> BoxFuture<'a, IotaResult<Vec<TransactionEffectsDigest>>>;
 
     fn notify_read_executed_effects<'a>(
         &'a self,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult<Vec<TransactionEffects>>> {
+    ) -> BoxFuture<'a, IotaResult<Vec<TransactionEffects>>> {
         async move {
             let digests = self.notify_read_executed_effects_digests(digests).await?;
             // once digests are available, effects must be present as well
@@ -627,7 +628,7 @@ pub trait ExecutionCacheWrite: Send + Sync {
         &self,
         epoch_id: EpochId,
         tx_outputs: Arc<TransactionOutputs>,
-    ) -> BoxFuture<'_, SuiResult>;
+    ) -> BoxFuture<'_, IotaResult>;
 
     /// Attempt to acquire object locks for all of the owned input locks.
     fn acquire_transaction_locks<'a>(
@@ -635,7 +636,7 @@ pub trait ExecutionCacheWrite: Send + Sync {
         epoch_store: &'a AuthorityPerEpochStore,
         owned_input_objects: &'a [ObjectRef],
         transaction: VerifiedSignedTransaction,
-    ) -> BoxFuture<'a, SuiResult>;
+    ) -> BoxFuture<'a, IotaResult>;
 }
 
 pub trait CheckpointCache: Send + Sync {
@@ -646,41 +647,41 @@ pub trait CheckpointCache: Send + Sync {
     fn deprecated_get_transaction_checkpoint(
         &self,
         digest: &TransactionDigest,
-    ) -> SuiResult<Option<(EpochId, CheckpointSequenceNumber)>>;
+    ) -> IotaResult<Option<(EpochId, CheckpointSequenceNumber)>>;
 
     fn deprecated_multi_get_transaction_checkpoint(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>>;
+    ) -> IotaResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>>;
 
     fn deprecated_insert_finalized_transactions(
         &self,
         digests: &[TransactionDigest],
         epoch: EpochId,
         sequence: CheckpointSequenceNumber,
-    ) -> SuiResult;
+    ) -> IotaResult;
 }
 
 pub trait ExecutionCacheReconfigAPI: Send + Sync {
-    fn insert_genesis_object(&self, object: Object) -> SuiResult;
-    fn bulk_insert_genesis_objects(&self, objects: &[Object]) -> SuiResult;
+    fn insert_genesis_object(&self, object: Object) -> IotaResult;
+    fn bulk_insert_genesis_objects(&self, objects: &[Object]) -> IotaResult;
 
-    fn revert_state_update(&self, digest: &TransactionDigest) -> SuiResult;
+    fn revert_state_update(&self, digest: &TransactionDigest) -> IotaResult;
     fn set_epoch_start_configuration(
         &self,
         epoch_start_config: &EpochStartConfiguration,
-    ) -> SuiResult;
+    ) -> IotaResult;
 
     fn update_epoch_flags_metrics(&self, old: &[EpochFlag], new: &[EpochFlag]);
 
     fn clear_state_end_of_epoch(&self, execution_guard: &ExecutionLockWriteGuard<'_>);
 
-    fn expensive_check_sui_conservation(
+    fn expensive_check_iota_conservation(
         &self,
         old_epoch_store: &AuthorityPerEpochStore,
-    ) -> SuiResult;
+    ) -> IotaResult;
 
-    fn checkpoint_db(&self, path: &Path) -> SuiResult;
+    fn checkpoint_db(&self, path: &Path) -> IotaResult;
 
     /// This is a temporary method to be used when we enable simplified_unwrap_then_delete.
     /// It re-accumulates state hash for the new epoch if simplified_unwrap_then_delete is enabled.
@@ -707,12 +708,12 @@ pub trait StateSyncAPI: Send + Sync {
         &self,
         transaction: &VerifiedTransaction,
         transaction_effects: &TransactionEffects,
-    ) -> SuiResult;
+    ) -> IotaResult;
 
     fn multi_insert_transaction_and_effects(
         &self,
         transactions_and_effects: &[VerifiedExecutionData],
-    ) -> SuiResult;
+    ) -> IotaResult;
 }
 
 pub trait TestingAPI: Send + Sync {
@@ -729,7 +730,7 @@ macro_rules! implement_storage_traits {
             fn get_object_by_key(
                 &self,
                 object_id: &ObjectID,
-                version: sui_types::base_types::VersionNumber,
+                version: iota_types::base_types::VersionNumber,
             ) -> StorageResult<Option<Object>> {
                 ObjectCacheRead::get_object_by_key(self, object_id, version)
                     .map_err(StorageError::custom)
@@ -742,7 +743,7 @@ macro_rules! implement_storage_traits {
                 parent: &ObjectID,
                 child: &ObjectID,
                 child_version_upper_bound: SequenceNumber,
-            ) -> SuiResult<Option<Object>> {
+            ) -> IotaResult<Option<Object>> {
                 let Some(child_object) =
                     self.find_object_lt_or_eq_version(*child, child_version_upper_bound)?
                 else {
@@ -751,7 +752,7 @@ macro_rules! implement_storage_traits {
 
                 let parent = *parent;
                 if child_object.owner != Owner::ObjectOwner(parent.into()) {
-                    return Err(SuiError::InvalidChildObjectAccess {
+                    return Err(IotaError::InvalidChildObjectAccess {
                         object: *child,
                         given_parent: parent,
                         actual_owner: child_object.owner,
@@ -766,7 +767,7 @@ macro_rules! implement_storage_traits {
                 receiving_object_id: &ObjectID,
                 receive_object_at_version: SequenceNumber,
                 epoch_id: EpochId,
-            ) -> SuiResult<Option<Object>> {
+            ) -> IotaResult<Option<Object>> {
                 let Some(recv_object) = ObjectCacheRead::get_object_by_key(
                     self,
                     receiving_object_id,
@@ -799,7 +800,7 @@ macro_rules! implement_storage_traits {
             fn get_package_object(
                 &self,
                 package_id: &ObjectID,
-            ) -> SuiResult<Option<PackageObject>> {
+            ) -> IotaResult<Option<PackageObject>> {
                 ObjectCacheRead::get_package_object(self, package_id)
             }
         }
@@ -808,7 +809,7 @@ macro_rules! implement_storage_traits {
             fn get_latest_parent_entry_ref_deprecated(
                 &self,
                 object_id: ObjectID,
-            ) -> SuiResult<Option<ObjectRef>> {
+            ) -> IotaResult<Option<ObjectRef>> {
                 ObjectCacheRead::get_latest_object_ref_or_tombstone(self, object_id)
             }
         }
@@ -822,14 +823,14 @@ macro_rules! implement_passthrough_traits {
             fn deprecated_get_transaction_checkpoint(
                 &self,
                 digest: &TransactionDigest,
-            ) -> SuiResult<Option<(EpochId, CheckpointSequenceNumber)>> {
+            ) -> IotaResult<Option<(EpochId, CheckpointSequenceNumber)>> {
                 self.store.deprecated_get_transaction_checkpoint(digest)
             }
 
             fn deprecated_multi_get_transaction_checkpoint(
                 &self,
                 digests: &[TransactionDigest],
-            ) -> SuiResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>> {
+            ) -> IotaResult<Vec<Option<(EpochId, CheckpointSequenceNumber)>>> {
                 self.store
                     .deprecated_multi_get_transaction_checkpoint(digests)
             }
@@ -839,29 +840,29 @@ macro_rules! implement_passthrough_traits {
                 digests: &[TransactionDigest],
                 epoch: EpochId,
                 sequence: CheckpointSequenceNumber,
-            ) -> SuiResult {
+            ) -> IotaResult {
                 self.store
                     .deprecated_insert_finalized_transactions(digests, epoch, sequence)
             }
         }
 
         impl ExecutionCacheReconfigAPI for $implementor {
-            fn insert_genesis_object(&self, object: Object) -> SuiResult {
+            fn insert_genesis_object(&self, object: Object) -> IotaResult {
                 self.store.insert_genesis_object(object)
             }
 
-            fn bulk_insert_genesis_objects(&self, objects: &[Object]) -> SuiResult {
+            fn bulk_insert_genesis_objects(&self, objects: &[Object]) -> IotaResult {
                 self.store.bulk_insert_genesis_objects(objects)
             }
 
-            fn revert_state_update(&self, digest: &TransactionDigest) -> SuiResult {
+            fn revert_state_update(&self, digest: &TransactionDigest) -> IotaResult {
                 self.revert_state_update_impl(digest)
             }
 
             fn set_epoch_start_configuration(
                 &self,
                 epoch_start_config: &EpochStartConfiguration,
-            ) -> SuiResult {
+            ) -> IotaResult {
                 self.store.set_epoch_start_configuration(epoch_start_config)
             }
 
@@ -873,15 +874,15 @@ macro_rules! implement_passthrough_traits {
                 self.clear_state_end_of_epoch_impl(execution_guard)
             }
 
-            fn expensive_check_sui_conservation(
+            fn expensive_check_iota_conservation(
                 &self,
                 old_epoch_store: &AuthorityPerEpochStore,
-            ) -> SuiResult {
+            ) -> IotaResult {
                 self.store
-                    .expensive_check_sui_conservation(self, old_epoch_store)
+                    .expensive_check_iota_conservation(self, old_epoch_store)
             }
 
-            fn checkpoint_db(&self, path: &std::path::Path) -> SuiResult {
+            fn checkpoint_db(&self, path: &std::path::Path) -> IotaResult {
                 self.store.perpetual_tables.checkpoint_db(path)
             }
 
@@ -914,7 +915,7 @@ macro_rules! implement_passthrough_traits {
                 &self,
                 transaction: &VerifiedTransaction,
                 transaction_effects: &TransactionEffects,
-            ) -> SuiResult {
+            ) -> IotaResult {
                 Ok(self
                     .store
                     .insert_transaction_and_effects(transaction, transaction_effects)?)
@@ -923,7 +924,7 @@ macro_rules! implement_passthrough_traits {
             fn multi_insert_transaction_and_effects(
                 &self,
                 transactions_and_effects: &[VerifiedExecutionData],
-            ) -> SuiResult {
+            ) -> IotaResult {
                 Ok(self
                     .store
                     .multi_insert_transaction_and_effects(transactions_and_effects.iter())?)

@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::error::Result;
 use super::ObjectStore;
-use crate::base_types::{EpochId, MoveObjectType, ObjectID, SequenceNumber, SuiAddress};
+use crate::base_types::{EpochId, MoveObjectType, ObjectID, SequenceNumber, IotaAddress};
 use crate::committee::Committee;
 use crate::digests::{
     ChainIdentifier, CheckpointContentsDigest, CheckpointDigest, TransactionDigest,
@@ -662,7 +663,7 @@ pub trait RestStateReader: ObjectStore + ReadStore + Send + Sync {
 
     fn account_owned_objects_info_iter(
         &self,
-        owner: SuiAddress,
+        owner: IotaAddress,
         cursor: Option<ObjectID>,
     ) -> Result<Box<dyn Iterator<Item = AccountOwnedObjectInfo> + '_>>;
 
@@ -676,7 +677,7 @@ pub trait RestStateReader: ObjectStore + ReadStore + Send + Sync {
 }
 
 pub struct AccountOwnedObjectInfo {
-    pub owner: SuiAddress,
+    pub owner: IotaAddress,
     pub object_id: ObjectID,
     pub version: SequenceNumber,
     pub type_: MoveObjectType,

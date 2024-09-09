@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// Sui object identifiers
-module sui::object {
+/// Iota object identifiers
+module iota::object {
     use std::bcs;
-    use sui::address;
+    use iota::address;
 
     /// Allows calling `.to_address` on an `ID` to get an `address`.
     public use fun id_to_address as ID.to_address;
@@ -24,28 +25,28 @@ module sui::object {
     /// Allows calling `.to_bytes` on a `UID` to get a `vector<u8>`.
     public use fun uid_to_bytes as UID.to_bytes;
 
-    /// The hardcoded ID for the singleton Sui System State Object.
-    const SUI_SYSTEM_STATE_OBJECT_ID: address = @0x5;
+    /// The hardcoded ID for the singleton Iota System State Object.
+    const IOTA_SYSTEM_STATE_OBJECT_ID: address = @0x5;
 
     /// The hardcoded ID for the singleton Clock Object.
-    const SUI_CLOCK_OBJECT_ID: address = @0x6;
+    const IOTA_CLOCK_OBJECT_ID: address = @0x6;
 
     /// The hardcoded ID for the singleton AuthenticatorState Object.
-    const SUI_AUTHENTICATOR_STATE_ID: address = @0x7;
+    const IOTA_AUTHENTICATOR_STATE_ID: address = @0x7;
 
     /// The hardcoded ID for the singleton Random Object.
-    const SUI_RANDOM_ID: address = @0x8;
+    const IOTA_RANDOM_ID: address = @0x8;
 
     /// The hardcoded ID for the singleton DenyList.
-    const SUI_DENY_LIST_OBJECT_ID: address = @0x403;
+    const IOTA_DENY_LIST_OBJECT_ID: address = @0x403;
 
     /// The hardcoded ID for the Bridge Object.
-    const SUI_BRIDGE_ID: address = @0x9;
+    const IOTA_BRIDGE_ID: address = @0x9;
 
     /// Sender is not @0x0 the system address.
     const ENotSystemAddress: u64 = 0;
 
-    /// An object ID. This is used to reference Sui Objects.
+    /// An object ID. This is used to reference Iota Objects.
     /// This is *not* guaranteed to be globally unique--anyone can create an `ID` from a `UID` or
     /// from an object, and ID's can be freely copied and dropped.
     /// Here, the values are not globally unique because there can be multiple values of type `ID`
@@ -59,7 +60,7 @@ module sui::object {
         bytes: address
     }
 
-    /// Globally unique IDs that define an object's ID in storage. Any Sui Object, that is a struct
+    /// Globally unique IDs that define an object's ID in storage. Any Iota Object, that is a struct
     /// with the `key` ability, must have `id: UID` as its first field.
     /// These are globally unique in the sense that no two values of type `UID` are ever equal, in
     /// other words for any two values `id1: UID` and `id2: UID`, `id1` != `id2`.
@@ -94,12 +95,12 @@ module sui::object {
     // === uid ===
 
     #[allow(unused_function)]
-    /// Create the `UID` for the singleton `SuiSystemState` object.
-    /// This should only be called once from `sui_system`.
-    fun sui_system_state(ctx: &TxContext): UID {
+    /// Create the `UID` for the singleton `IotaSystemState` object.
+    /// This should only be called once from `iota_system`.
+    fun iota_system_state(ctx: &TxContext): UID {
         assert!(ctx.sender() == @0x0, ENotSystemAddress);
         UID {
-            id: ID { bytes: SUI_SYSTEM_STATE_OBJECT_ID },
+            id: ID { bytes: IOTA_SYSTEM_STATE_OBJECT_ID },
         }
     }
 
@@ -107,7 +108,7 @@ module sui::object {
     /// This should only be called once from `clock`.
     public(package) fun clock(): UID {
         UID {
-            id: ID { bytes: SUI_CLOCK_OBJECT_ID }
+            id: ID { bytes: IOTA_CLOCK_OBJECT_ID }
         }
     }
 
@@ -115,7 +116,7 @@ module sui::object {
     /// This should only be called once from `authenticator_state`.
     public(package) fun authenticator_state(): UID {
         UID {
-            id: ID { bytes: SUI_AUTHENTICATOR_STATE_ID }
+            id: ID { bytes: IOTA_AUTHENTICATOR_STATE_ID }
         }
     }
 
@@ -123,15 +124,15 @@ module sui::object {
     /// This should only be called once from `random`.
     public(package) fun randomness_state(): UID {
         UID {
-            id: ID { bytes: SUI_RANDOM_ID }
+            id: ID { bytes: IOTA_RANDOM_ID }
         }
     }
 
     /// Create the `UID` for the singleton `DenyList` object.
     /// This should only be called once from `deny_list`.
-    public(package) fun sui_deny_list_object_id(): UID {
+    public(package) fun iota_deny_list_object_id(): UID {
         UID {
-            id: ID { bytes: SUI_DENY_LIST_OBJECT_ID }
+            id: ID { bytes: IOTA_DENY_LIST_OBJECT_ID }
         }
     }
 
@@ -140,7 +141,7 @@ module sui::object {
     /// This should only be called once from `bridge`.
     fun bridge(): UID {
         UID {
-            id: ID { bytes: SUI_BRIDGE_ID }
+            id: ID { bytes: IOTA_BRIDGE_ID }
         }
     }
 
@@ -166,7 +167,7 @@ module sui::object {
 
     // === any object ===
 
-    /// Create a new object. Returns the `UID` that must be stored in a Sui object.
+    /// Create a new object. Returns the `UID` that must be stored in a Iota object.
     /// This is the only way to create `UID`s.
     public fun new(ctx: &mut TxContext): UID {
         UID {
@@ -175,10 +176,10 @@ module sui::object {
     }
 
     /// Delete the object and it's `UID`. This is the only way to eliminate a `UID`.
-    // This exists to inform Sui of object deletions. When an object
+    // This exists to inform Iota of object deletions. When an object
     // gets unpacked, the programmer will have to do something with its
     // `UID`. The implementation of this function emits a deleted
-    // system event so Sui knows to process the object deletion
+    // system event so Iota knows to process the object deletion
     public fun delete(id: UID) {
         let UID { id: ID { bytes } } = id;
         delete_impl(bytes)
@@ -205,7 +206,7 @@ module sui::object {
     }
 
     /// Get the `UID` for `obj`.
-    /// Safe because Sui has an extra bytecode verifier pass that forces every struct with
+    /// Safe because Iota has an extra bytecode verifier pass that forces every struct with
     /// the `key` ability to have a distinguished `UID` field.
     /// Cannot be made public as the access to `UID` for a given object must be privileged, and
     /// restrictable in the object's module.

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -12,7 +13,7 @@ use axum::{
     response::IntoResponse,
 };
 use std::time::{Duration, SystemTime};
-use sui_types::storage::ReadStore;
+use iota_types::storage::ReadStore;
 use tap::Pipe;
 
 pub struct HealthCheck;

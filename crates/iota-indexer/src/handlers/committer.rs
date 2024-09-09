@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, HashMap};
@@ -9,7 +10,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::instrument;
 use tracing::{error, info};
 
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 
 use crate::metrics::IndexerMetrics;
 use crate::store::IndexerStore;
@@ -22,7 +23,7 @@ pub(crate) const CHECKPOINT_COMMIT_BATCH_SIZE: usize = 100;
 pub async fn start_tx_checkpoint_commit_task<S>(
     state: S,
     metrics: IndexerMetrics,
-    tx_indexing_receiver: mysten_metrics::metered_channel::Receiver<CheckpointDataToCommit>,
+    tx_indexing_receiver: iota_metrics::metered_channel::Receiver<CheckpointDataToCommit>,
     commit_notifier: watch::Sender<Option<CheckpointSequenceNumber>>,
     mut next_checkpoint_sequence_number: CheckpointSequenceNumber,
     cancel: CancellationToken,
@@ -39,7 +40,7 @@ where
         .unwrap();
     info!("Using checkpoint commit batch size {checkpoint_commit_batch_size}");
 
-    let mut stream = mysten_metrics::metered_channel::ReceiverStream::new(tx_indexing_receiver)
+    let mut stream = iota_metrics::metered_channel::ReceiverStream::new(tx_indexing_receiver)
         .ready_chunks(checkpoint_commit_batch_size);
 
     let mut unprocessed = HashMap::new();

@@ -1,14 +1,15 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{base_types::*, error::*, SUI_BRIDGE_OBJECT_ID};
+use super::{base_types::*, error::*, IOTA_BRIDGE_OBJECT_ID};
 use crate::authenticator_state::ActiveJwk;
 use crate::committee::{Committee, EpochId, ProtocolVersion};
 use crate::crypto::{
     default_hash, AuthoritySignInfo, AuthoritySignInfoTrait, AuthoritySignature,
-    AuthorityStrongQuorumSignInfo, DefaultHash, Ed25519SuiSignature, EmptySignInfo,
-    RandomnessRound, Signature, Signer, SuiSignatureInner, ToFromBytes,
+    AuthorityStrongQuorumSignInfo, DefaultHash, Ed25519IotaSignature, EmptySignInfo,
+    RandomnessRound, Signature, Signer, IotaSignatureInner, ToFromBytes,
 };
 use crate::digests::{CertificateDigest, SenderSignedDataDigest};
 use crate::digests::{ChainIdentifier, ConsensusCommitDigest, ZKLoginInputsDigest};
@@ -26,10 +27,10 @@ use crate::signature_verification::{
     verify_sender_signed_data_message_signatures, VerifiedDigestCache,
 };
 use crate::{
-    SUI_AUTHENTICATOR_STATE_OBJECT_ID, SUI_AUTHENTICATOR_STATE_OBJECT_SHARED_VERSION,
-    SUI_CLOCK_OBJECT_ID, SUI_CLOCK_OBJECT_SHARED_VERSION, SUI_FRAMEWORK_PACKAGE_ID,
-    SUI_RANDOMNESS_STATE_OBJECT_ID, SUI_SYSTEM_STATE_OBJECT_ID,
-    SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+    IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_AUTHENTICATOR_STATE_OBJECT_SHARED_VERSION,
+    IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION, IOTA_FRAMEWORK_PACKAGE_ID,
+    IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
+    IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
 };
 use enum_dispatch::enum_dispatch;
 use fastcrypto::{encoding::Base64, hash::HashFunction};
@@ -50,7 +51,7 @@ use std::{
     iter,
 };
 use strum::IntoStaticStr;
-use sui_protocol_config::ProtocolConfig;
+use iota_protocol_config::ProtocolConfig;
 use tap::Pipe;
 use tracing::trace;
 
@@ -86,20 +87,20 @@ pub enum CallArg {
 }
 
 impl CallArg {
-    pub const SUI_SYSTEM_MUT: Self = Self::Object(ObjectArg::SUI_SYSTEM_MUT);
+    pub const IOTA_SYSTEM_MUT: Self = Self::Object(ObjectArg::IOTA_SYSTEM_MUT);
     pub const CLOCK_IMM: Self = Self::Object(ObjectArg::SharedObject {
-        id: SUI_CLOCK_OBJECT_ID,
-        initial_shared_version: SUI_CLOCK_OBJECT_SHARED_VERSION,
+        id: IOTA_CLOCK_OBJECT_ID,
+        initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
         mutable: false,
     });
     pub const CLOCK_MUT: Self = Self::Object(ObjectArg::SharedObject {
-        id: SUI_CLOCK_OBJECT_ID,
-        initial_shared_version: SUI_CLOCK_OBJECT_SHARED_VERSION,
+        id: IOTA_CLOCK_OBJECT_ID,
+        initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
         mutable: true,
     });
     pub const AUTHENTICATOR_MUT: Self = Self::Object(ObjectArg::SharedObject {
-        id: SUI_AUTHENTICATOR_STATE_OBJECT_ID,
-        initial_shared_version: SUI_AUTHENTICATOR_STATE_OBJECT_SHARED_VERSION,
+        id: IOTA_AUTHENTICATOR_STATE_OBJECT_ID,
+        initial_shared_version: IOTA_AUTHENTICATOR_STATE_OBJECT_SHARED_VERSION,
         mutable: true,
     });
 }
@@ -363,15 +364,15 @@ impl EndOfEpochTransactionKind {
         match self {
             Self::ChangeEpoch(_) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_SYSTEM_STATE_OBJECT_ID,
-                    initial_shared_version: SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+                    id: IOTA_SYSTEM_STATE_OBJECT_ID,
+                    initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
                     mutable: true,
                 }]
             }
             Self::AuthenticatorStateCreate => vec![],
             Self::AuthenticatorStateExpire(expire) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_AUTHENTICATOR_STATE_OBJECT_ID,
+                    id: IOTA_AUTHENTICATOR_STATE_OBJECT_ID,
                     initial_shared_version: expire.authenticator_obj_initial_shared_version(),
                     mutable: true,
                 }]
@@ -381,13 +382,13 @@ impl EndOfEpochTransactionKind {
             Self::BridgeStateCreate(_) => vec![],
             Self::BridgeCommitteeInit(bridge_version) => vec![
                 InputObjectKind::SharedMoveObject {
-                    id: SUI_BRIDGE_OBJECT_ID,
+                    id: IOTA_BRIDGE_OBJECT_ID,
                     initial_shared_version: *bridge_version,
                     mutable: true,
                 },
                 InputObjectKind::SharedMoveObject {
-                    id: SUI_SYSTEM_STATE_OBJECT_ID,
-                    initial_shared_version: SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+                    id: IOTA_SYSTEM_STATE_OBJECT_ID,
+                    initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
                     mutable: true,
                 },
             ],
@@ -397,11 +398,11 @@ impl EndOfEpochTransactionKind {
     fn shared_input_objects(&self) -> impl Iterator<Item = SharedInputObject> + '_ {
         match self {
             Self::ChangeEpoch(_) => {
-                Either::Left(vec![SharedInputObject::SUI_SYSTEM_OBJ].into_iter())
+                Either::Left(vec![SharedInputObject::IOTA_SYSTEM_OBJ].into_iter())
             }
             Self::AuthenticatorStateExpire(expire) => Either::Left(
                 vec![SharedInputObject {
-                    id: SUI_AUTHENTICATOR_STATE_OBJECT_ID,
+                    id: IOTA_AUTHENTICATOR_STATE_OBJECT_ID,
                     initial_shared_version: expire.authenticator_obj_initial_shared_version(),
                     mutable: true,
                 }]
@@ -414,11 +415,11 @@ impl EndOfEpochTransactionKind {
             Self::BridgeCommitteeInit(bridge_version) => Either::Left(
                 vec![
                     SharedInputObject {
-                        id: SUI_BRIDGE_OBJECT_ID,
+                        id: IOTA_BRIDGE_OBJECT_ID,
                         initial_shared_version: *bridge_version,
                         mutable: true,
                     },
-                    SharedInputObject::SUI_SYSTEM_OBJ,
+                    SharedInputObject::IOTA_SYSTEM_OBJ,
                 ]
                 .into_iter(),
             ),
@@ -593,9 +594,9 @@ impl From<ObjectRef> for CallArg {
 }
 
 impl ObjectArg {
-    pub const SUI_SYSTEM_MUT: Self = Self::SharedObject {
-        id: SUI_SYSTEM_STATE_OBJECT_ID,
-        initial_shared_version: SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+    pub const IOTA_SYSTEM_MUT: Self = Self::SharedObject {
+        id: IOTA_SYSTEM_STATE_OBJECT_ID,
+        initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
         mutable: true,
     };
 
@@ -975,7 +976,7 @@ impl ProgrammableTransaction {
         // If randomness is used, it must be enabled by protocol config.
         // A command that uses Random can only be followed by TransferObjects or MergeCoins.
         if let Some(random_index) = inputs.iter().position(|obj| {
-            matches!(obj, CallArg::Object(ObjectArg::SharedObject { id, .. }) if *id == SUI_RANDOMNESS_STATE_OBJECT_ID)
+            matches!(obj, CallArg::Object(ObjectArg::SharedObject { id, .. }) if *id == IOTA_RANDOMNESS_STATE_OBJECT_ID)
         }) {
             fp_ensure!(
                 config.random_beacon(),
@@ -1144,9 +1145,9 @@ pub struct SharedInputObject {
 }
 
 impl SharedInputObject {
-    pub const SUI_SYSTEM_OBJ: Self = Self {
-        id: SUI_SYSTEM_STATE_OBJECT_ID,
-        initial_shared_version: SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+    pub const IOTA_SYSTEM_OBJ: Self = Self {
+        id: IOTA_SYSTEM_STATE_OBJECT_ID,
+        initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
         mutable: true,
     };
 
@@ -1218,28 +1219,28 @@ impl TransactionKind {
     pub fn shared_input_objects(&self) -> impl Iterator<Item = SharedInputObject> + '_ {
         match &self {
             Self::ChangeEpoch(_) => {
-                Either::Left(Either::Left(iter::once(SharedInputObject::SUI_SYSTEM_OBJ)))
+                Either::Left(Either::Left(iter::once(SharedInputObject::IOTA_SYSTEM_OBJ)))
             }
 
             Self::ConsensusCommitPrologue(_)
             | Self::ConsensusCommitPrologueV2(_)
             | Self::ConsensusCommitPrologueV3(_) => {
                 Either::Left(Either::Left(iter::once(SharedInputObject {
-                    id: SUI_CLOCK_OBJECT_ID,
-                    initial_shared_version: SUI_CLOCK_OBJECT_SHARED_VERSION,
+                    id: IOTA_CLOCK_OBJECT_ID,
+                    initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
                     mutable: true,
                 })))
             }
             Self::AuthenticatorStateUpdate(update) => {
                 Either::Left(Either::Left(iter::once(SharedInputObject {
-                    id: SUI_AUTHENTICATOR_STATE_OBJECT_ID,
+                    id: IOTA_AUTHENTICATOR_STATE_OBJECT_ID,
                     initial_shared_version: update.authenticator_obj_initial_shared_version,
                     mutable: true,
                 })))
             }
             Self::RandomnessStateUpdate(update) => {
                 Either::Left(Either::Left(iter::once(SharedInputObject {
-                    id: SUI_RANDOMNESS_STATE_OBJECT_ID,
+                    id: IOTA_RANDOMNESS_STATE_OBJECT_ID,
                     initial_shared_version: update.randomness_obj_initial_shared_version,
                     mutable: true,
                 })))
@@ -1283,8 +1284,8 @@ impl TransactionKind {
         let input_objects = match &self {
             Self::ChangeEpoch(_) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_SYSTEM_STATE_OBJECT_ID,
-                    initial_shared_version: SUI_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+                    id: IOTA_SYSTEM_STATE_OBJECT_ID,
+                    initial_shared_version: IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
                     mutable: true,
                 }]
             }
@@ -1295,21 +1296,21 @@ impl TransactionKind {
             | Self::ConsensusCommitPrologueV2(_)
             | Self::ConsensusCommitPrologueV3(_) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_CLOCK_OBJECT_ID,
-                    initial_shared_version: SUI_CLOCK_OBJECT_SHARED_VERSION,
+                    id: IOTA_CLOCK_OBJECT_ID,
+                    initial_shared_version: IOTA_CLOCK_OBJECT_SHARED_VERSION,
                     mutable: true,
                 }]
             }
             Self::AuthenticatorStateUpdate(update) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_AUTHENTICATOR_STATE_OBJECT_ID,
+                    id: IOTA_AUTHENTICATOR_STATE_OBJECT_ID,
                     initial_shared_version: update.authenticator_obj_initial_shared_version(),
                     mutable: true,
                 }]
             }
             Self::RandomnessStateUpdate(update) => {
                 vec![InputObjectKind::SharedMoveObject {
-                    id: SUI_RANDOMNESS_STATE_OBJECT_ID,
+                    id: IOTA_RANDOMNESS_STATE_OBJECT_ID,
                     initial_shared_version: update.randomness_obj_initial_shared_version(),
                     mutable: true,
                 }]
@@ -1489,7 +1490,7 @@ impl Display for TransactionKind {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct GasData {
     pub payment: Vec<ObjectRef>,
-    pub owner: SuiAddress,
+    pub owner: IotaAddress,
     pub price: u64,
     pub budget: u64,
 }
@@ -1514,7 +1515,7 @@ pub enum TransactionData {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub struct TransactionDataV1 {
     pub kind: TransactionKind,
-    pub sender: SuiAddress,
+    pub sender: IotaAddress,
     pub gas_data: GasData,
     pub expiration: TransactionExpiration,
 }
@@ -1523,7 +1524,7 @@ impl TransactionData {
     fn new_system_transaction(kind: TransactionKind) -> Self {
         // assert transaction kind if a system transaction
         assert!(kind.is_system_tx());
-        let sender = SuiAddress::default();
+        let sender = IotaAddress::default();
         TransactionData::V1(TransactionDataV1 {
             kind,
             sender,
@@ -1539,7 +1540,7 @@ impl TransactionData {
 
     pub fn new(
         kind: TransactionKind,
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: ObjectRef,
         gas_budget: u64,
         gas_price: u64,
@@ -1559,7 +1560,7 @@ impl TransactionData {
 
     pub fn new_with_gas_coins(
         kind: TransactionKind,
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: Vec<ObjectRef>,
         gas_budget: u64,
         gas_price: u64,
@@ -1576,11 +1577,11 @@ impl TransactionData {
 
     pub fn new_with_gas_coins_allow_sponsor(
         kind: TransactionKind,
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: Vec<ObjectRef>,
         gas_budget: u64,
         gas_price: u64,
-        gas_sponsor: SuiAddress,
+        gas_sponsor: IotaAddress,
     ) -> Self {
         TransactionData::V1(TransactionDataV1 {
             kind,
@@ -1595,7 +1596,7 @@ impl TransactionData {
         })
     }
 
-    pub fn new_with_gas_data(kind: TransactionKind, sender: SuiAddress, gas_data: GasData) -> Self {
+    pub fn new_with_gas_data(kind: TransactionKind, sender: IotaAddress, gas_data: GasData) -> Self {
         TransactionData::V1(TransactionDataV1 {
             kind,
             sender,
@@ -1605,7 +1606,7 @@ impl TransactionData {
     }
 
     pub fn new_move_call(
-        sender: SuiAddress,
+        sender: IotaAddress,
         package: ObjectID,
         module: Identifier,
         function: Identifier,
@@ -1629,7 +1630,7 @@ impl TransactionData {
     }
 
     pub fn new_move_call_with_gas_coins(
-        sender: SuiAddress,
+        sender: IotaAddress,
         package: ObjectID,
         module: Identifier,
         function: Identifier,
@@ -1654,9 +1655,9 @@ impl TransactionData {
     }
 
     pub fn new_transfer(
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         object_ref: ObjectRef,
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: ObjectRef,
         gas_budget: u64,
         gas_price: u64,
@@ -1669,15 +1670,15 @@ impl TransactionData {
         Self::new_programmable(sender, vec![gas_payment], pt, gas_budget, gas_price)
     }
 
-    pub fn new_transfer_sui(
-        recipient: SuiAddress,
-        sender: SuiAddress,
+    pub fn new_transfer_iota(
+        recipient: IotaAddress,
+        sender: IotaAddress,
         amount: Option<u64>,
         gas_payment: ObjectRef,
         gas_budget: u64,
         gas_price: u64,
     ) -> Self {
-        Self::new_transfer_sui_allow_sponsor(
+        Self::new_transfer_iota_allow_sponsor(
             recipient,
             sender,
             amount,
@@ -1688,18 +1689,18 @@ impl TransactionData {
         )
     }
 
-    pub fn new_transfer_sui_allow_sponsor(
-        recipient: SuiAddress,
-        sender: SuiAddress,
+    pub fn new_transfer_iota_allow_sponsor(
+        recipient: IotaAddress,
+        sender: IotaAddress,
         amount: Option<u64>,
         gas_payment: ObjectRef,
         gas_budget: u64,
         gas_price: u64,
-        gas_sponsor: SuiAddress,
+        gas_sponsor: IotaAddress,
     ) -> Self {
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
-            builder.transfer_sui(recipient, amount);
+            builder.transfer_iota(recipient, amount);
             builder.finish()
         };
         Self::new_programmable_allow_sponsor(
@@ -1713,9 +1714,9 @@ impl TransactionData {
     }
 
     pub fn new_pay(
-        sender: SuiAddress,
+        sender: IotaAddress,
         coins: Vec<ObjectRef>,
-        recipients: Vec<SuiAddress>,
+        recipients: Vec<IotaAddress>,
         amounts: Vec<u64>,
         gas_payment: ObjectRef,
         gas_budget: u64,
@@ -1735,10 +1736,10 @@ impl TransactionData {
         ))
     }
 
-    pub fn new_pay_sui(
-        sender: SuiAddress,
+    pub fn new_pay_iota(
+        sender: IotaAddress,
         mut coins: Vec<ObjectRef>,
-        recipients: Vec<SuiAddress>,
+        recipients: Vec<IotaAddress>,
         amounts: Vec<u64>,
         gas_payment: ObjectRef,
         gas_budget: u64,
@@ -1747,7 +1748,7 @@ impl TransactionData {
         coins.insert(0, gas_payment);
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
-            builder.pay_sui(recipients, amounts)?;
+            builder.pay_iota(recipients, amounts)?;
             builder.finish()
         };
         Ok(Self::new_programmable(
@@ -1755,10 +1756,10 @@ impl TransactionData {
         ))
     }
 
-    pub fn new_pay_all_sui(
-        sender: SuiAddress,
+    pub fn new_pay_all_iota(
+        sender: IotaAddress,
         mut coins: Vec<ObjectRef>,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         gas_payment: ObjectRef,
         gas_budget: u64,
         gas_price: u64,
@@ -1766,14 +1767,14 @@ impl TransactionData {
         coins.insert(0, gas_payment);
         let pt = {
             let mut builder = ProgrammableTransactionBuilder::new();
-            builder.pay_all_sui(recipient);
+            builder.pay_all_iota(recipient);
             builder.finish()
         };
         Self::new_programmable(sender, coins, pt, gas_budget, gas_price)
     }
 
     pub fn new_module(
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: ObjectRef,
         modules: Vec<Vec<u8>>,
         dep_ids: Vec<ObjectID>,
@@ -1790,7 +1791,7 @@ impl TransactionData {
     }
 
     pub fn new_upgrade(
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: ObjectRef,
         package_id: ObjectID,
         modules: Vec<Vec<u8>>,
@@ -1827,7 +1828,7 @@ impl TransactionData {
             let upgrade_arg = builder.pure(upgrade_policy).unwrap();
             let digest_arg = builder.pure(digest).unwrap();
             let upgrade_ticket = builder.programmable_move_call(
-                SUI_FRAMEWORK_PACKAGE_ID,
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 ident_str!("package").to_owned(),
                 ident_str!("authorize_upgrade").to_owned(),
                 vec![],
@@ -1836,7 +1837,7 @@ impl TransactionData {
             let upgrade_receipt = builder.upgrade(package_id, upgrade_ticket, dep_ids, modules);
 
             builder.programmable_move_call(
-                SUI_FRAMEWORK_PACKAGE_ID,
+                IOTA_FRAMEWORK_PACKAGE_ID,
                 ident_str!("package").to_owned(),
                 ident_str!("commit_upgrade").to_owned(),
                 vec![],
@@ -1855,7 +1856,7 @@ impl TransactionData {
     }
 
     pub fn new_programmable(
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: Vec<ObjectRef>,
         pt: ProgrammableTransaction,
         gas_budget: u64,
@@ -1865,12 +1866,12 @@ impl TransactionData {
     }
 
     pub fn new_programmable_allow_sponsor(
-        sender: SuiAddress,
+        sender: IotaAddress,
         gas_payment: Vec<ObjectRef>,
         pt: ProgrammableTransaction,
         gas_budget: u64,
         gas_price: u64,
-        sponsor: SuiAddress,
+        sponsor: IotaAddress,
     ) -> Self {
         let kind = TransactionKind::ProgrammableTransaction(pt);
         Self::new_with_gas_coins_allow_sponsor(
@@ -1889,7 +1890,7 @@ impl TransactionData {
         }
     }
 
-    pub fn execution_parts(&self) -> (TransactionKind, SuiAddress, Vec<ObjectRef>) {
+    pub fn execution_parts(&self) -> (TransactionKind, IotaAddress, Vec<ObjectRef>) {
         (
             self.kind().clone(),
             self.sender(),
@@ -1900,7 +1901,7 @@ impl TransactionData {
     pub fn uses_randomness(&self) -> bool {
         self.shared_input_objects()
             .iter()
-            .any(|obj| obj.id() == SUI_RANDOMNESS_STATE_OBJECT_ID)
+            .any(|obj| obj.id() == IOTA_RANDOMNESS_STATE_OBJECT_ID)
     }
 
     pub fn digest(&self) -> TransactionDigest {
@@ -1910,7 +1911,7 @@ impl TransactionData {
 
 #[enum_dispatch]
 pub trait TransactionDataAPI {
-    fn sender(&self) -> SuiAddress;
+    fn sender(&self) -> IotaAddress;
 
     // Note: this implies that SingleTransactionKind itself must be versioned, so that it can be
     // shared across versions. This will be easy to do since it is already an enum.
@@ -1923,11 +1924,11 @@ pub trait TransactionDataAPI {
     fn into_kind(self) -> TransactionKind;
 
     /// Transaction signer and Gas owner
-    fn signers(&self) -> NonEmpty<SuiAddress>;
+    fn signers(&self) -> NonEmpty<IotaAddress>;
 
     fn gas_data(&self) -> &GasData;
 
-    fn gas_owner(&self) -> SuiAddress;
+    fn gas_owner(&self) -> IotaAddress;
 
     fn gas(&self) -> &[ObjectRef];
 
@@ -1964,7 +1965,7 @@ pub trait TransactionDataAPI {
     /// Check if the transaction is sponsored (namely gas owner != sender)
     fn is_sponsored_tx(&self) -> bool;
 
-    fn sender_mut_for_testing(&mut self) -> &mut SuiAddress;
+    fn sender_mut_for_testing(&mut self) -> &mut IotaAddress;
 
     fn gas_data_mut(&mut self) -> &mut GasData;
 
@@ -1973,7 +1974,7 @@ pub trait TransactionDataAPI {
 }
 
 impl TransactionDataAPI for TransactionDataV1 {
-    fn sender(&self) -> SuiAddress {
+    fn sender(&self) -> IotaAddress {
         self.sender
     }
 
@@ -1990,7 +1991,7 @@ impl TransactionDataAPI for TransactionDataV1 {
     }
 
     /// Transaction signer and Gas owner
-    fn signers(&self) -> NonEmpty<SuiAddress> {
+    fn signers(&self) -> NonEmpty<IotaAddress> {
         let mut signers = nonempty![self.sender];
         if self.gas_owner() != self.sender {
             signers.push(self.gas_owner());
@@ -2002,7 +2003,7 @@ impl TransactionDataAPI for TransactionDataV1 {
         &self.gas_data
     }
 
-    fn gas_owner(&self) -> SuiAddress {
+    fn gas_owner(&self) -> IotaAddress {
         self.gas_data.owner
     }
 
@@ -2102,7 +2103,7 @@ impl TransactionDataAPI for TransactionDataV1 {
         matches!(self.kind, TransactionKind::Genesis(_))
     }
 
-    fn sender_mut_for_testing(&mut self) -> &mut SuiAddress {
+    fn sender_mut_for_testing(&mut self) -> &mut IotaAddress {
         &mut self.sender
     }
 
@@ -2141,7 +2142,7 @@ impl Serialize for SenderSignedTransaction {
             tx_signatures: &'a Vec<GenericSignature>,
         }
 
-        if self.intent_message().intent != Intent::sui_transaction() {
+        if self.intent_message().intent != Intent::iota_transaction() {
             return Err(serde::ser::Error::custom("invalid Intent for Transaction"));
         }
 
@@ -2170,7 +2171,7 @@ impl<'de> Deserialize<'de> for SenderSignedTransaction {
             tx_signatures,
         } = Deserialize::deserialize(deserializer)?;
 
-        if intent_message.intent != Intent::sui_transaction() {
+        if intent_message.intent != Intent::iota_transaction() {
             return Err(serde::de::Error::custom("invalid Intent for Transaction"));
         }
 
@@ -2185,13 +2186,13 @@ impl SenderSignedTransaction {
     pub(crate) fn get_signer_sig_mapping(
         &self,
         verify_legacy_zklogin_address: bool,
-    ) -> SuiResult<BTreeMap<SuiAddress, &GenericSignature>> {
+    ) -> IotaResult<BTreeMap<IotaAddress, &GenericSignature>> {
         let mut mapping = BTreeMap::new();
         for sig in &self.tx_signatures {
             if verify_legacy_zklogin_address {
                 // Try deriving the address from the legacy padded way.
                 if let GenericSignature::ZkLoginAuthenticator(z) = sig {
-                    mapping.insert(SuiAddress::try_from_padded(&z.inputs)?, sig);
+                    mapping.insert(IotaAddress::try_from_padded(&z.inputs)?, sig);
                 };
             }
             let address = sig.try_into()?;
@@ -2208,14 +2209,14 @@ impl SenderSignedTransaction {
 impl SenderSignedData {
     pub fn new(tx_data: TransactionData, tx_signatures: Vec<GenericSignature>) -> Self {
         Self(SizeOneVec::new(SenderSignedTransaction {
-            intent_message: IntentMessage::new(Intent::sui_transaction(), tx_data),
+            intent_message: IntentMessage::new(Intent::iota_transaction(), tx_data),
             tx_signatures,
         }))
     }
 
     pub fn new_from_sender_signature(tx_data: TransactionData, tx_signature: Signature) -> Self {
         Self(SizeOneVec::new(SenderSignedTransaction {
-            intent_message: IntentMessage::new(Intent::sui_transaction(), tx_data),
+            intent_message: IntentMessage::new(Intent::iota_transaction(), tx_data),
             tx_signatures: vec![tx_signature.into()],
         }))
     }
@@ -2241,7 +2242,7 @@ impl SenderSignedData {
     pub(crate) fn get_signer_sig_mapping(
         &self,
         verify_legacy_zklogin_address: bool,
-    ) -> SuiResult<BTreeMap<SuiAddress, &GenericSignature>> {
+    ) -> IotaResult<BTreeMap<IotaAddress, &GenericSignature>> {
         self.inner()
             .get_signer_sig_mapping(verify_legacy_zklogin_address)
     }
@@ -2285,18 +2286,18 @@ impl SenderSignedData {
         SenderSignedDataDigest::new(hash.into())
     }
 
-    pub fn serialized_size(&self) -> SuiResult<usize> {
-        bcs::serialized_size(self).map_err(|e| SuiError::TransactionSerializationError {
+    pub fn serialized_size(&self) -> IotaResult<usize> {
+        bcs::serialized_size(self).map_err(|e| IotaError::TransactionSerializationError {
             error: e.to_string(),
         })
     }
 
-    fn check_user_signature_protocol_compatibility(&self, config: &ProtocolConfig) -> SuiResult {
+    fn check_user_signature_protocol_compatibility(&self, config: &ProtocolConfig) -> IotaResult {
         for sig in &self.inner().tx_signatures {
             match sig {
                 GenericSignature::MultiSig(_) => {
                     if !config.supports_upgraded_multisig() {
-                        return Err(SuiError::UserInputError {
+                        return Err(IotaError::UserInputError {
                             error: UserInputError::Unsupported(
                                 "upgraded multisig format not enabled on this network".to_string(),
                             ),
@@ -2305,7 +2306,7 @@ impl SenderSignedData {
                 }
                 GenericSignature::ZkLoginAuthenticator(_) => {
                     if !config.zklogin_auth() {
-                        return Err(SuiError::UserInputError {
+                        return Err(IotaError::UserInputError {
                             error: UserInputError::Unsupported(
                                 "zklogin is not enabled on this network".to_string(),
                             ),
@@ -2314,7 +2315,7 @@ impl SenderSignedData {
                 }
                 GenericSignature::PasskeyAuthenticator(_) => {
                     if !config.passkey_auth() {
-                        return Err(SuiError::UserInputError {
+                        return Err(IotaError::UserInputError {
                             error: UserInputError::Unsupported(
                                 "passkey is not enabled on this network".to_string(),
                             ),
@@ -2329,7 +2330,7 @@ impl SenderSignedData {
     }
 
     /// Validate untrusted user transaction, including its size, input count, command count, etc.
-    pub fn validity_check(&self, config: &ProtocolConfig, epoch: EpochId) -> SuiResult {
+    pub fn validity_check(&self, config: &ProtocolConfig, epoch: EpochId) -> IotaResult {
         // Check that the features used by the user signatures are enabled on the network.
         self.check_user_signature_protocol_compatibility(config)?;
 
@@ -2338,7 +2339,7 @@ impl SenderSignedData {
         let tx_data = &self.transaction_data();
         fp_ensure!(
             !tx_data.is_system_tx(),
-            SuiError::UserInputError {
+            IotaError::UserInputError {
                 error: UserInputError::Unsupported(
                     "SenderSignedData must not contain system transaction".to_string()
                 )
@@ -2350,7 +2351,7 @@ impl SenderSignedData {
             TransactionExpiration::None => false,
             TransactionExpiration::Epoch(exp_poch) => *exp_poch < epoch,
         } {
-            return Err(SuiError::TransactionExpired);
+            return Err(IotaError::TransactionExpired);
         }
 
         // Enforce overall transaction size limit.
@@ -2358,7 +2359,7 @@ impl SenderSignedData {
         let max_tx_size_bytes = config.max_tx_size_bytes();
         fp_ensure!(
             tx_size as u64 <= max_tx_size_bytes,
-            SuiError::UserInputError {
+            IotaError::UserInputError {
                 error: UserInputError::SizeLimitExceeded {
                     limit: format!(
                         "serialized transaction size exceeded maximum of {max_tx_size_bytes}"
@@ -2370,7 +2371,7 @@ impl SenderSignedData {
 
         tx_data
             .validity_check(config)
-            .map_err(Into::<SuiError>::into)?;
+            .map_err(Into::<IotaError>::into)?;
 
         Ok(())
     }
@@ -2387,7 +2388,7 @@ impl Message for SenderSignedData {
 }
 
 impl<S> Envelope<SenderSignedData, S> {
-    pub fn sender_address(&self) -> SuiAddress {
+    pub fn sender_address(&self) -> IotaAddress {
         self.data().intent_message().value.sender()
     }
 
@@ -2447,7 +2448,7 @@ impl Transaction {
         signers: Vec<&dyn Signer<Signature>>,
     ) -> Self {
         let signatures = {
-            let intent_msg = IntentMessage::new(Intent::sui_transaction(), &data);
+            let intent_msg = IntentMessage::new(Intent::iota_transaction(), &data);
             signers
                 .into_iter()
                 .map(|s| Signature::new_secure(&intent_msg, s))
@@ -2615,7 +2616,7 @@ impl VerifiedTransaction {
             .pipe(|data| {
                 SenderSignedData::new_from_sender_signature(
                     data,
-                    Ed25519SuiSignature::from_bytes(&[0; Ed25519SuiSignature::LENGTH])
+                    Ed25519IotaSignature::from_bytes(&[0; Ed25519IotaSignature::LENGTH])
                         .unwrap()
                         .into(),
                 )
@@ -2656,7 +2657,7 @@ impl Transaction {
         &self,
         current_epoch: EpochId,
         verify_params: &VerifyParams,
-    ) -> SuiResult {
+    ) -> IotaResult {
         verify_sender_signed_data_message_signatures(
             self.data(),
             current_epoch,
@@ -2669,7 +2670,7 @@ impl Transaction {
         self,
         current_epoch: EpochId,
         verify_params: &VerifyParams,
-    ) -> SuiResult<VerifiedTransaction> {
+    ) -> IotaResult<VerifiedTransaction> {
         self.verify_signature_for_testing(current_epoch, verify_params)?;
         Ok(VerifiedTransaction::new_from_verified(self))
     }
@@ -2680,7 +2681,7 @@ impl SignedTransaction {
         &self,
         committee: &Committee,
         verify_params: &VerifyParams,
-    ) -> SuiResult {
+    ) -> IotaResult {
         verify_sender_signed_data_message_signatures(
             self.data(),
             committee.epoch(),
@@ -2690,7 +2691,7 @@ impl SignedTransaction {
 
         self.auth_sig().verify_secure(
             self.data(),
-            Intent::sui_app(IntentScope::SenderSignedTransaction),
+            Intent::iota_app(IntentScope::SenderSignedTransaction),
             committee,
         )
     }
@@ -2699,7 +2700,7 @@ impl SignedTransaction {
         self,
         committee: &Committee,
         verify_params: &VerifyParams,
-    ) -> SuiResult<VerifiedSignedTransaction> {
+    ) -> IotaResult<VerifiedSignedTransaction> {
         self.verify_signatures_authenticated_for_testing(committee, verify_params)?;
         Ok(VerifiedSignedTransaction::new_from_verified(self))
     }
@@ -2726,7 +2727,7 @@ impl CertifiedTransaction {
         committee: &Committee,
         verify_params: &VerifyParams,
         zklogin_inputs_cache: Arc<VerifiedDigestCache<ZKLoginInputsDigest>>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         verify_sender_signed_data_message_signatures(
             self.data(),
             committee.epoch(),
@@ -2735,7 +2736,7 @@ impl CertifiedTransaction {
         )?;
         self.auth_sig().verify_secure(
             self.data(),
-            Intent::sui_app(IntentScope::SenderSignedTransaction),
+            Intent::iota_app(IntentScope::SenderSignedTransaction),
             committee,
         )
     }
@@ -2744,7 +2745,7 @@ impl CertifiedTransaction {
         self,
         committee: &Committee,
         verify_params: &VerifyParams,
-    ) -> SuiResult<VerifiedCertificate> {
+    ) -> IotaResult<VerifiedCertificate> {
         self.verify_signatures_authenticated(
             committee,
             verify_params,
@@ -2753,10 +2754,10 @@ impl CertifiedTransaction {
         Ok(VerifiedCertificate::new_from_verified(self))
     }
 
-    pub fn verify_committee_sigs_only(&self, committee: &Committee) -> SuiResult {
+    pub fn verify_committee_sigs_only(&self, committee: &Committee) -> IotaResult {
         self.auth_sig().verify_secure(
             self.data(),
-            Intent::sui_app(IntentScope::SenderSignedTransaction),
+            Intent::iota_app(IntentScope::SenderSignedTransaction),
             committee,
         )
     }
@@ -2988,17 +2989,17 @@ pub struct InputObjects {
     objects: Vec<ObjectReadResult>,
 }
 
-// An InputObjects new-type that has been verified by sui-transaction-checks, and can be
+// An InputObjects new-type that has been verified by iota-transaction-checks, and can be
 // safely passed to execution.
 pub struct CheckedInputObjects(InputObjects);
 
-// DO NOT CALL outside of sui-transaction-checks, genesis, or replay.
+// DO NOT CALL outside of iota-transaction-checks, genesis, or replay.
 //
-// CheckedInputObjects should really be defined in sui-transaction-checks so that we can
+// CheckedInputObjects should really be defined in iota-transaction-checks so that we can
 // make public construction impossible. But we can't do that because it would result in circular
 // dependencies.
 impl CheckedInputObjects {
-    // Only called by sui-transaction-checks.
+    // Only called by iota-transaction-checks.
     pub fn new_with_checked_transaction_inputs(inputs: InputObjects) -> Self {
         Self(inputs)
     }

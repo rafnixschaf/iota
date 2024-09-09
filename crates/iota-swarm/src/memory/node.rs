@@ -1,20 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
 use anyhow::Result;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
-use sui_config::NodeConfig;
-use sui_node::SuiNodeHandle;
-use sui_types::base_types::AuthorityName;
-use sui_types::base_types::ConciseableName;
+use iota_config::NodeConfig;
+use iota_node::IotaNodeHandle;
+use iota_types::base_types::AuthorityName;
+use iota_types::base_types::ConciseableName;
 use tap::TapFallible;
 use tracing::{error, info};
 
 use super::container::Container;
 
-/// A handle to an in-memory Sui Node.
+/// A handle to an in-memory Iota Node.
 ///
 /// Each Node is attempted to run in isolation from each other by running them in their own tokio
 /// runtime in a separate thread. By doing this we can ensure that all asynchronous tasks
@@ -33,7 +34,7 @@ impl Node {
     /// The Node is returned without being started. See [`Node::spawn`] or [`Node::start`] for how to
     /// start the node.
     ///
-    /// [`NodeConfig`]: sui_config::NodeConfig
+    /// [`NodeConfig`]: iota_config::NodeConfig
     pub fn new(config: NodeConfig) -> Self {
         Self {
             container: Default::default(),
@@ -84,7 +85,7 @@ impl Node {
             .map_or(false, |c| c.is_alive())
     }
 
-    pub fn get_node_handle(&self) -> Option<SuiNodeHandle> {
+    pub fn get_node_handle(&self) -> Option<IotaNodeHandle> {
         self.container
             .lock()
             .unwrap()
@@ -106,7 +107,7 @@ impl Node {
 
         if is_validator {
             let network_address = self.config().network_address().clone();
-            let channel = mysten_network::client::connect(&network_address)
+            let channel = iota_network_stack::client::connect(&network_address)
                 .await
                 .map_err(|err| anyhow!(err.to_string()))
                 .map_err(HealthCheckError::Failure)

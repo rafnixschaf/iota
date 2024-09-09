@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(clippy::inconsistent_digit_grouping)]
@@ -9,7 +10,7 @@ use crate::{
     metrics::BridgeMetrics,
     server::handler::{BridgeRequestHandler, BridgeRequestHandlerTrait},
     types::{
-        AddTokensOnEvmAction, AddTokensOnSuiAction, AssetPriceUpdateAction,
+        AddTokensOnEvmAction, AddTokensOnIotaAction, AssetPriceUpdateAction,
         BlocklistCommitteeAction, BlocklistType, BridgeAction, EmergencyAction,
         EmergencyActionType, EvmContractUpgradeAction, LimitUpdateAction, SignedBridgeAction,
     },
@@ -26,7 +27,7 @@ use fastcrypto::{
 };
 use std::sync::Arc;
 use std::{net::SocketAddr, str::FromStr};
-use sui_types::{bridge::BridgeChainId, TypeTag};
+use iota_types::{bridge::BridgeChainId, TypeTag};
 use tracing::{info, instrument};
 
 pub mod governance_verifier;
@@ -40,8 +41,8 @@ pub const APPLICATION_JSON: &str = "application/json";
 pub const PING_PATH: &str = "/ping";
 
 // Important: for BridgeActions, the paths need to match the ones in bridge_client.rs
-pub const ETH_TO_SUI_TX_PATH: &str = "/sign/bridge_tx/eth/sui/:tx_hash/:event_index";
-pub const SUI_TO_ETH_TX_PATH: &str = "/sign/bridge_tx/sui/eth/:tx_digest/:event_index";
+pub const ETH_TO_IOTA_TX_PATH: &str = "/sign/bridge_tx/eth/iota/:tx_hash/:event_index";
+pub const IOTA_TO_ETH_TX_PATH: &str = "/sign/bridge_tx/iota/eth/:tx_digest/:event_index";
 pub const COMMITTEE_BLOCKLIST_UPDATE_PATH: &str =
     "/sign/update_committee_blocklist/:chain_id/:nonce/:type/:keys";
 pub const EMERGENCY_BUTTON_PATH: &str = "/sign/emergency_button/:chain_id/:nonce/:type";
@@ -53,10 +54,10 @@ pub const EVM_CONTRACT_UPGRADE_PATH_WITH_CALLDATA: &str =
     "/sign/upgrade_evm_contract/:chain_id/:nonce/:proxy_address/:new_impl_address/:calldata";
 pub const EVM_CONTRACT_UPGRADE_PATH: &str =
     "/sign/upgrade_evm_contract/:chain_id/:nonce/:proxy_address/:new_impl_address";
-pub const ADD_TOKENS_ON_SUI_PATH: &str =
-    "/sign/add_tokens_on_sui/:chain_id/:nonce/:native/:token_ids/:token_type_names/:token_prices";
+pub const ADD_TOKENS_ON_IOTA_PATH: &str =
+    "/sign/add_tokens_on_iota/:chain_id/:nonce/:native/:token_ids/:token_type_names/:token_prices";
 pub const ADD_TOKENS_ON_EVM_PATH: &str =
-    "/sign/add_tokens_on_evm/:chain_id/:nonce/:native/:token_ids/:token_addresses/:token_sui_decimals/:token_prices";
+    "/sign/add_tokens_on_evm/:chain_id/:nonce/:native/:token_ids/:token_addresses/:token_iota_decimals/:token_prices";
 
 /// BridgeNode's public metadata that is acceesible via the `/ping` endpoint.
 // Be careful with what to put here, as it is public.
@@ -103,8 +104,8 @@ pub(crate) fn make_router(
     Router::new()
         .route("/", get(health_check))
         .route(PING_PATH, get(ping))
-        .route(ETH_TO_SUI_TX_PATH, get(handle_eth_tx_hash))
-        .route(SUI_TO_ETH_TX_PATH, get(handle_sui_tx_digest))
+        .route(ETH_TO_IOTA_TX_PATH, get(handle_eth_tx_hash))
+        .route(IOTA_TO_ETH_TX_PATH, get(handle_iota_tx_digest))
         .route(
             COMMITTEE_BLOCKLIST_UPDATE_PATH,
             get(handle_update_committee_blocklist_action),
@@ -120,7 +121,7 @@ pub(crate) fn make_router(
             EVM_CONTRACT_UPGRADE_PATH_WITH_CALLDATA,
             get(handle_evm_contract_upgrade_with_calldata),
         )
-        .route(ADD_TOKENS_ON_SUI_PATH, get(handle_add_tokens_on_sui))
+        .route(ADD_TOKENS_ON_IOTA_PATH, get(handle_add_tokens_on_iota))
         .route(ADD_TOKENS_ON_EVM_PATH, get(handle_add_tokens_on_evm))
         .with_state((handler, metrics, metadata))
 }
@@ -176,7 +177,7 @@ async fn handle_eth_tx_hash(
 }
 
 #[instrument(level = "error", skip_all, fields(tx_digest_base58=tx_digest_base58, event_idx=event_idx))]
-async fn handle_sui_tx_digest(
+async fn handle_iota_tx_digest(
     Path((tx_digest_base58, event_idx)): Path<(String, u16)>,
     State((handler, metrics, _metadata)): State<(
         Arc<impl BridgeRequestHandlerTrait + Sync + Send>,
@@ -186,11 +187,11 @@ async fn handle_sui_tx_digest(
 ) -> Result<Json<SignedBridgeAction>, BridgeError> {
     let future = async {
         let sig: Json<SignedBridgeAction> = handler
-            .handle_sui_tx_digest(tx_digest_base58, event_idx)
+            .handle_iota_tx_digest(tx_digest_base58, event_idx)
             .await?;
         Ok(sig)
     };
-    with_metrics!(metrics.clone(), "handle_sui_tx_digest", future).await
+    with_metrics!(metrics.clone(), "handle_iota_tx_digest", future).await
 }
 
 #[instrument(level = "error", skip_all, fields(chain_id=chain_id, nonce=nonce, blocklist_type=blocklist_type, keys=keys))]
@@ -399,7 +400,7 @@ async fn handle_evm_contract_upgrade(
 }
 
 #[instrument(level = "error", skip_all, fields(chain_id=chain_id, nonce=nonce, native=native, token_ids=token_ids, token_type_names=token_type_names, token_prices=token_prices))]
-async fn handle_add_tokens_on_sui(
+async fn handle_add_tokens_on_iota(
     Path((chain_id, nonce, native, token_ids, token_type_names, token_prices)): Path<(
         u8,
         u64,
@@ -419,9 +420,9 @@ async fn handle_add_tokens_on_sui(
             BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
         })?;
 
-        if !chain_id.is_sui_chain() {
+        if !chain_id.is_iota_chain() {
             return Err(BridgeError::InvalidBridgeClientRequest(
-                "handle_add_tokens_on_sui only expects Sui chain id".to_string(),
+                "handle_add_tokens_on_iota only expects Iota chain id".to_string(),
             ));
         }
 
@@ -465,7 +466,7 @@ async fn handle_add_tokens_on_sui(
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let action = BridgeAction::AddTokensOnSuiAction(AddTokensOnSuiAction {
+        let action = BridgeAction::AddTokensOnIotaAction(AddTokensOnIotaAction {
             chain_id,
             nonce,
             native,
@@ -476,12 +477,12 @@ async fn handle_add_tokens_on_sui(
         let sig: Json<SignedBridgeAction> = handler.handle_governance_action(action).await?;
         Ok(sig)
     };
-    with_metrics!(metrics.clone(), "handle_add_tokens_on_sui", future).await
+    with_metrics!(metrics.clone(), "handle_add_tokens_on_iota", future).await
 }
 
-#[instrument(level = "error", skip_all, fields(chain_id=chain_id, nonce=nonce, native=native, token_ids=token_ids, token_addresses=token_addresses, token_sui_decimals=token_sui_decimals, token_prices=token_prices))]
+#[instrument(level = "error", skip_all, fields(chain_id=chain_id, nonce=nonce, native=native, token_ids=token_ids, token_addresses=token_addresses, token_iota_decimals=token_iota_decimals, token_prices=token_prices))]
 async fn handle_add_tokens_on_evm(
-    Path((chain_id, nonce, native, token_ids, token_addresses, token_sui_decimals, token_prices)): Path<(
+    Path((chain_id, nonce, native, token_ids, token_addresses, token_iota_decimals, token_prices)): Path<(
         u8,
         u64,
         u8,
@@ -500,9 +501,9 @@ async fn handle_add_tokens_on_evm(
         let chain_id = BridgeChainId::try_from(chain_id).map_err(|err| {
             BridgeError::InvalidBridgeClientRequest(format!("Invalid chain id: {:?}", err))
         })?;
-        if chain_id.is_sui_chain() {
+        if chain_id.is_iota_chain() {
             return Err(BridgeError::InvalidBridgeClientRequest(
-                "handle_add_tokens_on_evm does not expect Sui chain id".to_string(),
+                "handle_add_tokens_on_evm does not expect Iota chain id".to_string(),
             ));
         }
 
@@ -535,12 +536,12 @@ async fn handle_add_tokens_on_evm(
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let token_sui_decimals = token_sui_decimals
+        let token_iota_decimals = token_iota_decimals
             .split(',')
             .map(|s| {
                 s.parse::<u8>().map_err(|err| {
                     BridgeError::InvalidBridgeClientRequest(format!(
-                        "Invalid token sui decimals: {:?}",
+                        "Invalid token iota decimals: {:?}",
                         err
                     ))
                 })
@@ -563,7 +564,7 @@ async fn handle_add_tokens_on_evm(
             native,
             token_ids,
             token_addresses,
-            token_sui_decimals,
+            token_iota_decimals,
             token_prices,
         });
         let sig: Json<SignedBridgeAction> = handler.handle_governance_action(action).await?;
@@ -610,7 +611,7 @@ macro_rules! with_metrics {
 
 #[cfg(test)]
 mod tests {
-    use sui_types::bridge::TOKEN_ID_BTC;
+    use iota_types::bridge::TOKEN_ID_BTC;
 
     use super::*;
     use crate::client::bridge_client::BridgeClient;
@@ -629,7 +630,7 @@ mod tests {
         .unwrap();
         let action = BridgeAction::BlocklistCommitteeAction(BlocklistCommitteeAction {
             nonce: 129,
-            chain_id: BridgeChainId::SuiCustom,
+            chain_id: BridgeChainId::IotaCustom,
             blocklist_type: BlocklistType::Blocklist,
             members_to_update: vec![pub_key_bytes.clone()],
         });
@@ -642,7 +643,7 @@ mod tests {
 
         let action = BridgeAction::EmergencyAction(EmergencyAction {
             nonce: 55,
-            chain_id: BridgeChainId::SuiCustom,
+            chain_id: BridgeChainId::IotaCustom,
             action_type: EmergencyActionType::Pause,
         });
         client.request_sign_bridge_action(action).await.unwrap();
@@ -654,7 +655,7 @@ mod tests {
 
         let action = BridgeAction::LimitUpdateAction(LimitUpdateAction {
             nonce: 15,
-            chain_id: BridgeChainId::SuiCustom,
+            chain_id: BridgeChainId::IotaCustom,
             sending_chain_id: BridgeChainId::EthCustom,
             new_usd_limit: 1_000_000_0000, // $1M USD
         });
@@ -667,7 +668,7 @@ mod tests {
 
         let action = BridgeAction::AssetPriceUpdateAction(AssetPriceUpdateAction {
             nonce: 266,
-            chain_id: BridgeChainId::SuiCustom,
+            chain_id: BridgeChainId::IotaCustom,
             token_id: TOKEN_ID_BTC,
             new_usd_price: 100_000_0000, // $100k USD
         });
@@ -698,12 +699,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_bridge_server_handle_add_tokens_on_sui_action_path() {
+    async fn test_bridge_server_handle_add_tokens_on_iota_action_path() {
         let client = setup();
 
-        let action = BridgeAction::AddTokensOnSuiAction(AddTokensOnSuiAction {
+        let action = BridgeAction::AddTokensOnIotaAction(AddTokensOnIotaAction {
             nonce: 266,
-            chain_id: BridgeChainId::SuiCustom,
+            chain_id: BridgeChainId::IotaCustom,
             native: false,
             token_ids: vec![100, 101, 102],
             token_type_names: vec![
@@ -730,7 +731,7 @@ mod tests {
                 EthAddress::repeat_byte(2),
                 EthAddress::repeat_byte(3),
             ],
-            token_sui_decimals: vec![5, 6, 7],
+            token_iota_decimals: vec![5, 6, 7],
             token_prices: vec![1_000_000_000, 2_000_000_000, 3_000_000_000],
         });
         client.request_sign_bridge_action(action).await.unwrap();

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::client::LocalNarwhalClient;
@@ -7,10 +8,10 @@ use crate::TransactionValidator;
 use async_trait::async_trait;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use mysten_metrics::metered_channel::Sender;
-use mysten_metrics::{monitored_scope, spawn_logged_monitored_task};
-use mysten_network::server::Server;
-use mysten_network::Multiaddr;
+use iota_metrics::metered_channel::Sender;
+use iota_metrics::{monitored_scope, spawn_logged_monitored_task};
+use iota_network_stack::server::Server;
+use iota_network_stack::Multiaddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::task::JoinHandle;
@@ -72,7 +73,7 @@ impl<V: TransactionValidator> TxServer<V> {
         let mut server: Server;
 
         loop {
-            match mysten_network::config::Config::new()
+            match iota_network_stack::config::Config::new()
                 .server_builder_with_metrics(self.endpoint_metrics.clone())
                 .add_service(TransactionsServer::new(tx_handler.clone()))
                 .bind(&self.address)

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This analysis flags freezing instances of structs containing (transitively or not) other structs
@@ -27,20 +28,20 @@ use move_symbol_pool::Symbol;
 
 use super::{
     base_type, LinterDiagnosticCategory, LinterDiagnosticCode, FREEZE_FUN, LINT_WARNING_PREFIX,
-    PUBLIC_FREEZE_FUN, SUI_PKG_NAME, TRANSFER_MOD_NAME,
+    PUBLIC_FREEZE_FUN, IOTA_PKG_NAME, TRANSFER_MOD_NAME,
 };
 
 const FREEZE_WRAPPING_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::FreezeWrapped as u8,
     "attempting to freeze wrapped objects",
 );
 
 const FREEZE_FUNCTIONS: &[(&str, &str, &str)] = &[
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_FREEZE_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_FREEZE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
 ];
 
 /// Information about a field that wraps other objects.

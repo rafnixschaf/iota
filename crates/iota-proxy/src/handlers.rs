@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use crate::admin::{Labels, ReqwestClient};
 use crate::consumer::{convert_to_remote_write, populate_labels, NodeMetric};
 use crate::histogram_relay::HistogramRelay;
 use crate::middleware::LenDelimProtobuf;
-use crate::peers::SuiPeer;
+use crate::peers::IotaPeer;
 use axum::{
     extract::{ConnectInfo, Extension},
     http::StatusCode,
@@ -45,9 +46,9 @@ pub async fn publish_metrics(
     Extension(labels): Extension<Labels>,
     Extension(client): Extension<ReqwestClient>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    Extension(SuiPeer {
+    Extension(IotaPeer {
         name, public_key, ..
-    }): Extension<SuiPeer>,
+    }): Extension<IotaPeer>,
     Extension(relay): Extension<HistogramRelay>,
     LenDelimProtobuf(data): LenDelimProtobuf,
 ) -> (StatusCode, &'static str) {

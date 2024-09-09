@@ -1,4 +1,4 @@
-# @mysten/suins-toolkit
+# @iota/iotans-toolkit
 
 ## 0.5.16
 
@@ -9,14 +9,14 @@
 - Updated dependencies [4019dd7]
 - Updated dependencies [4019dd7]
 - Updated dependencies [00a974d]
-  - @mysten/sui@1.7.0
+  - @iota/iota@1.7.0
 
 ## 0.5.15
 
 ### Patch Changes
 
 - Updated dependencies [a3e32fe]
-  - @mysten/sui@1.6.0
+  - @iota/iota@1.6.0
 
 ## 0.5.14
 
@@ -24,21 +24,21 @@
 
 - Updated dependencies [0851b31]
 - Updated dependencies [f37b3c2]
-  - @mysten/sui@1.5.0
+  - @iota/iota@1.5.0
 
 ## 0.5.13
 
 ### Patch Changes
 
 - Updated dependencies [4419234]
-  - @mysten/sui@1.4.0
+  - @iota/iota@1.4.0
 
 ## 0.5.12
 
 ### Patch Changes
 
 - Updated dependencies [a45f461]
-  - @mysten/sui@1.3.1
+  - @iota/iota@1.3.1
 
 ## 0.5.11
 
@@ -51,7 +51,7 @@
 - Updated dependencies [cdedf69]
 - Updated dependencies [0f27a97]
 - Updated dependencies [beed646]
-  - @mysten/sui@1.3.0
+  - @iota/iota@1.3.0
 
 ## 0.5.10
 
@@ -60,92 +60,92 @@
 - Updated dependencies [06a900c1ab]
 - Updated dependencies [45877014d1]
 - Updated dependencies [87d6f75403]
-  - @mysten/sui@1.2.1
+  - @iota/iota@1.2.1
 
 ## 0.5.9
 
 ### Patch Changes
 
 - Updated dependencies [fef99d377f]
-  - @mysten/sui@1.2.0
+  - @iota/iota@1.2.0
 
 ## 0.5.8
 
 ### Patch Changes
 
 - Updated dependencies [0dfff33b95]
-  - @mysten/sui@1.1.2
+  - @iota/iota@1.1.2
 
 ## 0.5.7
 
 ### Patch Changes
 
 - Updated dependencies [101f1ff4b8]
-  - @mysten/sui@1.1.1
+  - @iota/iota@1.1.1
 
 ## 0.5.6
 
 ### Patch Changes
 
 - Updated dependencies [bae8f9683c]
-  - @mysten/sui@1.1.0
+  - @iota/iota@1.1.0
 
 ## 0.5.5
 
 ### Patch Changes
 
 - Updated dependencies [369b924343]
-  - @mysten/sui@1.0.5
+  - @iota/iota@1.0.5
 
 ## 0.5.4
 
 ### Patch Changes
 
 - Updated dependencies [f1e828f557]
-  - @mysten/sui@1.0.4
+  - @iota/iota@1.0.4
 
 ## 0.5.3
 
 ### Patch Changes
 
 - Updated dependencies [1f20580841]
-  - @mysten/sui@1.0.3
+  - @iota/iota@1.0.3
 
 ## 0.5.2
 
 ### Patch Changes
 
 - Updated dependencies [f0a839f874]
-  - @mysten/sui@1.0.2
+  - @iota/iota@1.0.2
 
 ## 0.5.1
 
 ### Patch Changes
 
 - Updated dependencies [6fc6235984]
-  - @mysten/sui@1.0.1
+  - @iota/iota@1.0.1
 
 ## 0.5.0
 
 ### Minor Changes
 
-- a92b03de42: The Typescript SDK has been renamed to `@mysten/sui` and includes many new features
+- a92b03de42: The Typescript SDK has been renamed to `@iota/iota` and includes many new features
   and breaking changes. See the
-  [full migration guide](https://sdk.mystenlabs.com/typescript/migrations/sui-1.0) for details on
+  [full migration guide](https://wiki.iota.org/references/ts-sdk/typescript/migrations/iota-1.0) for details on
   how to upgrade.
 
 ### Patch Changes
 
 - Updated dependencies [ebdfe7cf21]
 - Updated dependencies [a92b03de42]
-  - @mysten/sui@1.0.0
+  - @iota/iota@1.0.0
 
 ## 0.4.10
 
 ### Patch Changes
 
 - Updated dependencies [99b112178c]
-  - @mysten/sui.js@0.54.1
+  - @iota/iota-sdk@0.54.1
 
 ## 0.4.9
 
@@ -153,42 +153,42 @@
 
 - Updated dependencies [b7f673dbd9]
 - Updated dependencies [123b42c75c]
-  - @mysten/sui.js@0.54.0
+  - @iota/iota-sdk@0.54.0
 
 ## 0.4.8
 
 ### Patch Changes
 
 - Updated dependencies [774bfb41a8]
-  - @mysten/sui.js@0.53.0
+  - @iota/iota-sdk@0.53.0
 
 ## 0.4.7
 
 ### Patch Changes
 
 - Updated dependencies [929db4976a]
-  - @mysten/sui.js@0.52.0
+  - @iota/iota-sdk@0.52.0
 
 ## 0.4.6
 
 ### Patch Changes
 
 - Updated dependencies [b4ecdb5860]
-  - @mysten/sui.js@0.51.2
+  - @iota/iota-sdk@0.51.2
 
 ## 0.4.5
 
 ### Patch Changes
 
 - Updated dependencies [6984dd1e38]
-  - @mysten/sui.js@0.51.1
+  - @iota/iota-sdk@0.51.1
 
 ## 0.4.4
 
 ### Patch Changes
 
 - Updated dependencies [0cafa94027]
-  - @mysten/sui.js@0.51.0
+  - @iota/iota-sdk@0.51.0
 
 ## 0.4.3
 
@@ -196,7 +196,7 @@
 
 - 4830361fa4: Updated typescript version
 - Updated dependencies [4830361fa4]
-  - @mysten/sui.js@0.50.1
+  - @iota/iota-sdk@0.50.1
 
 ## 0.4.2
 
@@ -208,7 +208,7 @@
 - Updated dependencies [13e922d9b1]
 - Updated dependencies [a34f1cb67d]
 - Updated dependencies [220a766d86]
-  - @mysten/sui.js@0.50.0
+  - @iota/iota-sdk@0.50.0
 
 ## 0.4.1
 
@@ -216,7 +216,7 @@
 
 - 9ac0a4ec01: Add extensions to all sdk import paths
 - Updated dependencies [9ac0a4ec01]
-  - @mysten/sui.js@0.49.1
+  - @iota/iota-sdk@0.49.1
 
 ## 0.4.0
 
@@ -227,21 +227,21 @@
 ### Patch Changes
 
 - Updated dependencies [e5f9e3ba21]
-  - @mysten/sui.js@0.49.0
+  - @iota/iota-sdk@0.49.0
 
 ## 0.3.18
 
 ### Patch Changes
 
 - Updated dependencies [dd362ec1d6]
-  - @mysten/sui.js@0.48.1
+  - @iota/iota-sdk@0.48.1
 
 ## 0.3.17
 
 ### Patch Changes
 
 - Updated dependencies [cdcfa76c43]
-  - @mysten/sui.js@0.48.0
+  - @iota/iota-sdk@0.48.0
 
 ## 0.3.16
 
@@ -251,14 +251,14 @@
 - Updated dependencies [9ac7e2f3d]
 - Updated dependencies [0259aec82]
 - Updated dependencies [64d45ba27]
-  - @mysten/sui.js@0.47.0
+  - @iota/iota-sdk@0.47.0
 
 ## 0.3.15
 
 ### Patch Changes
 
 - Updated dependencies [652bcdd92]
-  - @mysten/sui.js@0.46.1
+  - @iota/iota-sdk@0.46.1
 
 ## 0.3.14
 
@@ -269,21 +269,21 @@
 - Updated dependencies [8d1e74e52]
 - Updated dependencies [093554a0d]
 - Updated dependencies [3718a230b]
-  - @mysten/sui.js@0.46.0
+  - @iota/iota-sdk@0.46.0
 
 ## 0.3.13
 
 ### Patch Changes
 
 - Updated dependencies [30b47b758]
-  - @mysten/sui.js@0.45.1
+  - @iota/iota-sdk@0.45.1
 
 ## 0.3.12
 
 ### Patch Changes
 
 - Updated dependencies [b9afb5567]
-  - @mysten/sui.js@0.45.0
+  - @iota/iota-sdk@0.45.0
 
 ## 0.3.11
 
@@ -291,21 +291,21 @@
 
 - Updated dependencies [b48289346]
 - Updated dependencies [11cf4e68b]
-  - @mysten/sui.js@0.44.0
+  - @iota/iota-sdk@0.44.0
 
 ## 0.3.10
 
 ### Patch Changes
 
 - Updated dependencies [004fb1991]
-  - @mysten/sui.js@0.43.3
+  - @iota/iota-sdk@0.43.3
 
 ## 0.3.9
 
 ### Patch Changes
 
 - Updated dependencies [9b052166d]
-  - @mysten/sui.js@0.43.2
+  - @iota/iota-sdk@0.43.2
 
 ## 0.3.8
 
@@ -313,7 +313,7 @@
 
 - Updated dependencies [faa13ded9]
 - Updated dependencies [c5684bb52]
-  - @mysten/sui.js@0.43.1
+  - @iota/iota-sdk@0.43.1
 
 ## 0.3.7
 
@@ -324,27 +324,27 @@
 - Updated dependencies [e4484852b]
 - Updated dependencies [71e0a3197]
 - Updated dependencies [1bc430161]
-  - @mysten/sui.js@0.43.0
+  - @iota/iota-sdk@0.43.0
 
 ## 0.3.6
 
 ### Patch Changes
 
 - Updated dependencies [fd8589806]
-  - @mysten/sui.js@0.42.0
+  - @iota/iota-sdk@0.42.0
 
 ## 0.3.5
 
 ### Patch Changes
 
-- @mysten/sui.js@0.41.2
+- @iota/iota-sdk@0.41.2
 
 ## 0.3.4
 
 ### Patch Changes
 
 - Updated dependencies [24c21e1f0]
-  - @mysten/sui.js@0.41.1
+  - @iota/iota-sdk@0.41.1
 
 ## 0.3.3
 
@@ -352,7 +352,7 @@
 
 - Updated dependencies [ba8e3b857]
 - Updated dependencies [f4b7b3474]
-  - @mysten/sui.js@0.41.0
+  - @iota/iota-sdk@0.41.0
 
 ## 0.3.2
 
@@ -360,23 +360,23 @@
 
 - Updated dependencies [a503cad34]
 - Updated dependencies [8281e3d25]
-  - @mysten/sui.js@0.40.0
+  - @iota/iota-sdk@0.40.0
 
 ## 0.3.1
 
 ### Patch Changes
 
 - Updated dependencies [47ea5ec7c]
-  - @mysten/sui.js@0.39.0
+  - @iota/iota-sdk@0.39.0
 
 ## 0.3.0
 
 ### Minor Changes
 
-- cc6441f46: Updated types and imports to use new modular exports from the `@mysten/sui.js` refactor
-- 6d41059c7: Update to use modular imports from @mysten/sui.js
+- cc6441f46: Updated types and imports to use new modular exports from the `@iota/iota-sdk` refactor
+- 6d41059c7: Update to use modular imports from @iota/iota-sdk
 
-  Some methods now accept a `SuiClient` imported from `@mysten/sui.js/client` rather than a
+  Some methods now accept a `IotaClient` imported from `@iota/iota-sdk/client` rather than a
   `JsonRpcProvider`
 
 ### Patch Changes
@@ -392,14 +392,14 @@
 - Updated dependencies [6d41059c7]
 - Updated dependencies [cc6441f46]
 - Updated dependencies [001148443]
-  - @mysten/sui.js@0.38.0
+  - @iota/iota-sdk@0.38.0
 
 ## 0.2.3
 
 ### Patch Changes
 
 - Updated dependencies [34cc7d610]
-  - @mysten/sui.js@0.37.1
+  - @iota/iota-sdk@0.37.1
 
 ## 0.2.2
 
@@ -412,7 +412,7 @@
 - Updated dependencies [a17d3678a]
 - Updated dependencies [2f37537d5]
 - Updated dependencies [00484bcc3]
-  - @mysten/sui.js@0.37.0
+  - @iota/iota-sdk@0.37.0
 
 ## 0.2.1
 
@@ -422,15 +422,15 @@
 - Updated dependencies [1cfb1c9da3]
 - Updated dependencies [1cfb1c9da3]
 - Updated dependencies [fb3bb9118a]
-  - @mysten/sui.js@0.36.0
+  - @iota/iota-sdk@0.36.0
 
 ## 0.2.0
 
 ### Minor Changes
 
-- 09d77325a9: Add new SuiNS Toolkit package.
+- 09d77325a9: Add new IotaNS Toolkit package.
 
 ### Patch Changes
 
 - Updated dependencies [09d77325a9]
-  - @mysten/sui.js@0.35.1
+  - @iota/iota-sdk@0.35.1

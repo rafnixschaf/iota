@@ -4,7 +4,7 @@ CREATE TABLE events
     event_sequence_number       BIGINT       NOT NULL,
     transaction_digest          BLOB         NOT NULL,
     checkpoint_sequence_number  BIGINT       NOT NULL,
-    -- array of SuiAddress in bytes. All signers of the transaction.
+    -- array of IotaAddress in bytes. All signers of the transaction.
     senders                     JSON         NOT NULL,
     -- bytes of the entry package ID. Notice that the package and module here
     -- are the package and module of the function that emitted the event, diffrent

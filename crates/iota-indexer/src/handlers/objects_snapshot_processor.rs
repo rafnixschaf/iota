@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
 use diesel::r2d2::R2D2Connection;
 use futures::StreamExt;
-use mysten_metrics::get_metrics;
-use mysten_metrics::metered_channel::{Receiver, Sender};
-use mysten_metrics::spawn_monitored_task;
-use sui_data_ingestion_core::Worker;
-use sui_package_resolver::{PackageStoreWithLruCache, Resolver};
-use sui_rest_api::CheckpointData;
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_metrics::get_metrics;
+use iota_metrics::metered_channel::{Receiver, Sender};
+use iota_metrics::spawn_monitored_task;
+use iota_data_ingestion_core::Worker;
+use iota_package_resolver::{PackageStoreWithLruCache, Resolver};
+use iota_rest_api::CheckpointData;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
 use tracing::info;
@@ -141,7 +142,7 @@ where
 
     let global_metrics = get_metrics().unwrap();
     // Channel for actually communicating indexed object changes between the ingestion pipeline and the committer.
-    let (indexed_obj_sender, indexed_obj_receiver) = mysten_metrics::metered_channel::channel(
+    let (indexed_obj_sender, indexed_obj_receiver) = iota_metrics::metered_channel::channel(
         // TODO: placeholder for now
         600,
         &global_metrics
@@ -216,7 +217,7 @@ where
         cancel: CancellationToken,
     ) -> IndexerResult<()> {
         let batch_size = 100;
-        let mut stream = mysten_metrics::metered_channel::ReceiverStream::new(indexed_obj_receiver)
+        let mut stream = iota_metrics::metered_channel::ReceiverStream::new(indexed_obj_receiver)
             .ready_chunks(batch_size);
 
         let mut start_cp = watermark;

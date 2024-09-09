@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::indexer_test_utils::{InMemoryPersistent, NoopDataMapper, TestDatasource};
 use prometheus::Registry;
-use sui_indexer_builder::indexer_builder::{
+use iota_indexer_builder::indexer_builder::{
     BackfillStrategy, IndexerBuilder, IndexerProgressStore,
 };
-use sui_indexer_builder::Task;
+use iota_indexer_builder::Task;
 
 mod indexer_test_utils;
 
@@ -14,7 +15,7 @@ mod indexer_test_utils;
 async fn indexer_simple_backfill_task_test() {
     telemetry_subscribers::init_for_testing();
     let registry = Registry::new();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     let data = (0..=10u64).collect::<Vec<_>>();
     let datasource = TestDatasource { data: data.clone() };
@@ -47,7 +48,7 @@ async fn indexer_simple_backfill_task_test() {
 async fn indexer_partitioned_backfill_task_test() {
     telemetry_subscribers::init_for_testing();
     let registry = Registry::new();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     let data = (0..=50u64).collect::<Vec<_>>();
     let datasource = TestDatasource { data: data.clone() };
@@ -82,7 +83,7 @@ async fn indexer_partitioned_backfill_task_test() {
 async fn indexer_partitioned_task_with_data_already_in_db_test() {
     telemetry_subscribers::init_for_testing();
     let registry = Registry::new();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     let data = (0..=50u64).collect::<Vec<_>>();
     let datasource = TestDatasource { data: data.clone() };
@@ -118,7 +119,7 @@ async fn indexer_partitioned_task_with_data_already_in_db_test() {
 async fn indexer_partitioned_task_with_data_already_in_db_test2() {
     telemetry_subscribers::init_for_testing();
     let registry = Registry::new();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     let data = (0..=50u64).collect::<Vec<_>>();
     let datasource = TestDatasource { data: data.clone() };
@@ -159,7 +160,7 @@ async fn indexer_partitioned_task_with_data_already_in_db_test2() {
 async fn resume_test() {
     telemetry_subscribers::init_for_testing();
     let registry = Registry::new();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
 
     let data = (0..=50u64).collect::<Vec<_>>();
     let datasource = TestDatasource { data: data.clone() };

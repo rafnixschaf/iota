@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anemo::types::PeerInfo;
@@ -10,8 +11,8 @@ use std::{
     sync::{Arc, RwLock},
     time::Duration,
 };
-use sui_config::p2p::{AccessType, DiscoveryConfig, P2pConfig, SeedPeer};
-use sui_types::multiaddr::Multiaddr;
+use iota_config::p2p::{AccessType, DiscoveryConfig, P2pConfig, SeedPeer};
+use iota_types::multiaddr::Multiaddr;
 use tap::{Pipe, TapFallible};
 use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::watch;
@@ -25,7 +26,7 @@ const TIMEOUT: Duration = Duration::from_secs(1);
 const ONE_DAY_MILLISECONDS: u64 = 24 * 60 * 60 * 1_000;
 
 mod generated {
-    include!(concat!(env!("OUT_DIR"), "/sui.Discovery.rs"));
+    include!(concat!(env!("OUT_DIR"), "/iota.Discovery.rs"));
 }
 mod builder;
 mod metrics;

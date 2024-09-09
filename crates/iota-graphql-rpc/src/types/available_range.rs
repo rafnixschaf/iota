@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::data::{Conn, Db, DbConnection, QueryExecutor};
@@ -7,7 +8,7 @@ use crate::error::Error;
 use super::checkpoint::{Checkpoint, CheckpointId};
 use async_graphql::*;
 use diesel::{CombineDsl, ExpressionMethods, QueryDsl, QueryResult};
-use sui_indexer::schema::{checkpoints, objects_snapshot};
+use iota_indexer::schema::{checkpoints, objects_snapshot};
 
 #[derive(Clone, Debug, PartialEq, Eq, Copy)]
 pub(crate) struct AvailableRange {

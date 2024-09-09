@@ -35,9 +35,9 @@ COPY --from=zlib . /
 # NOTE: Necessary for `cargo fetch`, but CA trust is not relied upon
 COPY --from=ca-certificates . /
 
-COPY . /sui
+COPY . /iota
 
-WORKDIR sui
+WORKDIR iota
 
 RUN cargo fetch
 
@@ -51,7 +51,7 @@ COPY --from=llvm . /
 COPY --from=make . /
 COPY --from=musl . /
 
-# Sui build deps
+# Iota build deps
 
 COPY --from=clang . /
 COPY --from=linux-headers . /
@@ -64,7 +64,7 @@ ENV RUSTFLAGS='-C target-feature=+crt-static -C codegen-units=1'
 ENV GIT_REVISION=${GIT_REVISION}
 ENV PROFILE=${PROFILE}
 
-RUN --network=none cargo build --target x86_64-unknown-linux-musl --frozen --profile ${PROFILE} --bin sui-node
+RUN --network=none cargo build --target x86_64-unknown-linux-musl --frozen --profile ${PROFILE} --bin iota-node
 
 FROM scratch AS install
 
@@ -76,9 +76,9 @@ COPY --from=gcc . /rootfs
 COPY --from=musl . /rootfs
 
 # support current + legacy paths
-RUN mkdir -p /rootfs/opt/sui/bin
+RUN mkdir -p /rootfs/opt/iota/bin
 RUN mkdir -p /rootfs/usr/local/bin
-COPY --from=build sui/target/x86_64-unknown-linux-musl/release/sui-node /rootfs/opt/sui/bin/sui-node
+COPY --from=build iota/target/x86_64-unknown-linux-musl/release/iota-node /rootfs/opt/iota/bin/iota-node
 
 
 RUN --network=none find /rootfs -exec touch -hcd "@0" "{}" +
@@ -93,5 +93,5 @@ LABEL git-revision=${GIT_REVISION}
 
 COPY --from=install /rootfs /
 
-RUN ln -s /opt/sui/bin/sui-node /usr/local/bin/sui-node
+RUN ln -s /opt/iota/bin/iota-node /usr/local/bin/iota-node
 

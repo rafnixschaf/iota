@@ -1,15 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[defines_primitive(address)]
-module sui::address {
-    use sui::hex;
+module iota::address {
+    use iota::hex;
     use std::ascii;
     use std::bcs;
     use std::string;
 
     /// Allows calling `.to_id()` on an address to get its `ID`.
-    public use fun sui::object::id_from_address as address.to_id;
+    public use fun iota::object::id_from_address as address.to_id;
 
     /// The length of an address, in bytes
     const LENGTH: u64 = 32;
@@ -74,7 +75,7 @@ module sui::address {
         else abort EAddressParseError
     }
 
-    /// Length of a Sui address in bytes
+    /// Length of a Iota address in bytes
     public fun length(): u64 {
         LENGTH
     }

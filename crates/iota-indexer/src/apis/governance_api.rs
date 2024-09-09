@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::BTreeMap;
@@ -9,18 +10,18 @@ use jsonrpsee::{core::RpcResult, RpcModule};
 
 use cached::{proc_macro::cached, SizedCache};
 use diesel::r2d2::R2D2Connection;
-use sui_json_rpc::{governance_api::ValidatorExchangeRates, SuiRpcModule};
-use sui_json_rpc_api::GovernanceReadApiServer;
-use sui_json_rpc_types::{
-    DelegatedStake, EpochInfo, StakeStatus, SuiCommittee, SuiObjectDataFilter, ValidatorApys,
+use iota_json_rpc::{governance_api::ValidatorExchangeRates, IotaRpcModule};
+use iota_json_rpc_api::GovernanceReadApiServer;
+use iota_json_rpc_types::{
+    DelegatedStake, EpochInfo, StakeStatus, IotaCommittee, IotaObjectDataFilter, ValidatorApys,
 };
-use sui_open_rpc::Module;
-use sui_types::{
-    base_types::{MoveObjectType, ObjectID, SuiAddress},
+use iota_open_rpc::Module;
+use iota_types::{
+    base_types::{MoveObjectType, ObjectID, IotaAddress},
     committee::EpochId,
-    governance::StakedSui,
-    sui_serde::BigInt,
-    sui_system_state::{sui_system_state_summary::SuiSystemStateSummary, PoolTokenExchangeRate},
+    governance::StakedIota,
+    iota_serde::BigInt,
+    iota_system_state::{iota_system_state_summary::IotaSystemStateSummary, PoolTokenExchangeRate},
 };
 
 #[derive(Clone)]
@@ -47,9 +48,9 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
         }
     }
 
-    async fn get_latest_sui_system_state(&self) -> Result<SuiSystemStateSummary, IndexerError> {
+    async fn get_latest_iota_system_state(&self) -> Result<IotaSystemStateSummary, IndexerError> {
         self.inner
-            .spawn_blocking(|this| this.get_latest_sui_system_state())
+            .spawn_blocking(|this| this.get_latest_iota_system_state())
             .await
     }
 
@@ -59,8 +60,8 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
     ) -> Result<Vec<DelegatedStake>, IndexerError> {
         let mut stakes = vec![];
         for stored_object in self.inner.multi_get_objects_in_blocking_task(ids).await? {
-            let object = sui_types::object::Object::try_from(stored_object)?;
-            let stake_object = StakedSui::try_from(&object)?;
+            let object = iota_types::object::Object::try_from(stored_object)?;
+            let stake_object = StakedIota::try_from(&object)?;
             stakes.push(stake_object);
         }
 
@@ -69,15 +70,15 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
 
     async fn get_staked_by_owner(
         &self,
-        owner: SuiAddress,
+        owner: IotaAddress,
     ) -> Result<Vec<DelegatedStake>, IndexerError> {
         let mut stakes = vec![];
         for stored_object in self
             .inner
             .get_owned_objects_in_blocking_task(
                 owner,
-                Some(SuiObjectDataFilter::StructType(
-                    MoveObjectType::staked_sui().into(),
+                Some(IotaObjectDataFilter::StructType(
+                    MoveObjectType::staked_iota().into(),
                 )),
                 None,
                 // Allow querying for up to 1000 staked objects
@@ -85,8 +86,8 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
             )
             .await?
         {
-            let object = sui_types::object::Object::try_from(stored_object)?;
-            let stake_object = StakedSui::try_from(&object)?;
+            let object = iota_types::object::Object::try_from(stored_object)?;
+            let stake_object = StakedIota::try_from(&object)?;
             stakes.push(stake_object);
         }
 
@@ -95,7 +96,7 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
 
     pub async fn get_delegated_stakes(
         &self,
-        stakes: Vec<StakedSui>,
+        stakes: Vec<StakedIota>,
     ) -> Result<Vec<DelegatedStake>, IndexerError> {
         let pools = stakes
             .into_iter()
@@ -104,7 +105,7 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
                 pools
             });
 
-        let system_state_summary = self.get_latest_sui_system_state().await?;
+        let system_state_summary = self.get_latest_iota_system_state().await?;
         let epoch = system_state_summary.epoch;
 
         let rates = exchange_rates(self, &system_state_summary)
@@ -148,8 +149,8 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
                 } else {
                     StakeStatus::Pending
                 };
-                delegations.push(sui_json_rpc_types::Stake {
-                    staked_sui_id: stake.id(),
+                delegations.push(iota_json_rpc_types::Stake {
+                    staked_iota_id: stake.id(),
                     // TODO: this might change when we implement warm up period.
                     stake_request_epoch: stake.activation_epoch().saturating_sub(1),
                     stake_active_epoch: stake.activation_epoch(),
@@ -177,14 +178,14 @@ impl<T: R2D2Connection + 'static> GovernanceReadApi<T> {
 )]
 pub async fn exchange_rates(
     state: &GovernanceReadApi<impl R2D2Connection>,
-    system_state_summary: &SuiSystemStateSummary,
+    system_state_summary: &IotaSystemStateSummary,
 ) -> Result<Vec<ValidatorExchangeRates>, IndexerError> {
     // Get validator rate tables
     let mut tables = vec![];
 
     for validator in &system_state_summary.active_validators {
         tables.push((
-            validator.sui_address,
+            validator.iota_address,
             validator.staking_pool_id,
             validator.exchange_rates_id,
             validator.exchange_rates_size,
@@ -202,8 +203,8 @@ pub async fn exchange_rates(
         )
         .await?
     {
-        let pool_id: sui_types::id::ID = bcs::from_bytes(&df.bcs_name).map_err(|e| {
-            sui_types::error::SuiError::ObjectDeserializationError {
+        let pool_id: iota_types::id::ID = bcs::from_bytes(&df.bcs_name).map_err(|e| {
+            iota_types::error::IotaError::ObjectDeserializationError {
                 error: e.to_string(),
             }
         })?;
@@ -211,7 +212,7 @@ pub async fn exchange_rates(
         let validator = state
             .inner
             .spawn_blocking(move |this| {
-                sui_types::sui_system_state::get_validator_from_table(
+                iota_types::iota_system_state::get_validator_from_table(
                     &this,
                     inactive_pools_id,
                     &pool_id,
@@ -219,7 +220,7 @@ pub async fn exchange_rates(
             })
             .await?;
         tables.push((
-            validator.sui_address,
+            validator.iota_address,
             validator.staking_pool_id,
             validator.exchange_rates_id,
             validator.exchange_rates_size,
@@ -242,7 +243,7 @@ pub async fn exchange_rates(
         {
             let dynamic_field = df
                 .to_dynamic_field::<EpochId, PoolTokenExchangeRate>()
-                .ok_or_else(|| sui_types::error::SuiError::ObjectDeserializationError {
+                .ok_or_else(|| iota_types::error::IotaError::ObjectDeserializationError {
                     error: "dynamic field malformed".to_owned(),
                 })?;
 
@@ -265,24 +266,24 @@ pub async fn exchange_rates(
 impl<T: R2D2Connection + 'static> GovernanceReadApiServer for GovernanceReadApi<T> {
     async fn get_stakes_by_ids(
         &self,
-        staked_sui_ids: Vec<ObjectID>,
+        staked_iota_ids: Vec<ObjectID>,
     ) -> RpcResult<Vec<DelegatedStake>> {
-        self.get_stakes_by_ids(staked_sui_ids)
+        self.get_stakes_by_ids(staked_iota_ids)
             .await
             .map_err(Into::into)
     }
 
-    async fn get_stakes(&self, owner: SuiAddress) -> RpcResult<Vec<DelegatedStake>> {
+    async fn get_stakes(&self, owner: IotaAddress) -> RpcResult<Vec<DelegatedStake>> {
         self.get_staked_by_owner(owner).await.map_err(Into::into)
     }
 
-    async fn get_committee_info(&self, epoch: Option<BigInt<u64>>) -> RpcResult<SuiCommittee> {
+    async fn get_committee_info(&self, epoch: Option<BigInt<u64>>) -> RpcResult<IotaCommittee> {
         let epoch = self.get_epoch_info(epoch.as_deref().copied()).await?;
         Ok(epoch.committee().map_err(IndexerError::from)?.into())
     }
 
-    async fn get_latest_sui_system_state(&self) -> RpcResult<SuiSystemStateSummary> {
-        self.get_latest_sui_system_state().await.map_err(Into::into)
+    async fn get_latest_iota_system_state(&self) -> RpcResult<IotaSystemStateSummary> {
+        self.get_latest_iota_system_state().await.map_err(Into::into)
     }
 
     async fn get_reference_gas_price(&self) -> RpcResult<BigInt<u64>> {
@@ -301,12 +302,12 @@ impl<T: R2D2Connection + 'static> GovernanceReadApiServer for GovernanceReadApi<
     }
 }
 
-impl<T: R2D2Connection> SuiRpcModule for GovernanceReadApi<T> {
+impl<T: R2D2Connection> IotaRpcModule for GovernanceReadApi<T> {
     fn rpc(self) -> RpcModule<Self> {
         self.into_rpc()
     }
 
     fn rpc_doc_module() -> Module {
-        sui_json_rpc_api::GovernanceReadApiOpenRpc::module_doc()
+        iota_json_rpc_api::GovernanceReadApiOpenRpc::module_doc()
     }
 }

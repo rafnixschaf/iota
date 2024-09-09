@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! CheckpointExecutor is a Node component that executes all checkpoints for the
@@ -28,22 +29,22 @@ use std::{
 use either::Either;
 use futures::stream::FuturesOrdered;
 use itertools::izip;
-use mysten_metrics::spawn_monitored_task;
-use sui_config::node::{CheckpointExecutorConfig, RunWithRange};
-use sui_macros::{fail_point, fail_point_async};
-use sui_types::accumulator::Accumulator;
-use sui_types::crypto::RandomnessRound;
-use sui_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use sui_types::executable_transaction::VerifiedExecutableTransaction;
-use sui_types::inner_temporary_store::PackageStoreWithFallback;
-use sui_types::message_envelope::Message;
-use sui_types::transaction::TransactionKind;
-use sui_types::{
+use iota_metrics::spawn_monitored_task;
+use iota_config::node::{CheckpointExecutorConfig, RunWithRange};
+use iota_macros::{fail_point, fail_point_async};
+use iota_types::accumulator::Accumulator;
+use iota_types::crypto::RandomnessRound;
+use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
+use iota_types::executable_transaction::VerifiedExecutableTransaction;
+use iota_types::inner_temporary_store::PackageStoreWithFallback;
+use iota_types::message_envelope::Message;
+use iota_types::transaction::TransactionKind;
+use iota_types::{
     base_types::{ExecutionDigests, TransactionDigest, TransactionEffectsDigest},
     messages_checkpoint::{CheckpointSequenceNumber, VerifiedCheckpoint},
     transaction::VerifiedTransaction,
 };
-use sui_types::{error::SuiResult, transaction::TransactionDataAPI};
+use iota_types::{error::IotaResult, transaction::TransactionDataAPI};
 use tap::{TapFallible, TapOptional};
 use tokio::{
     sync::broadcast::{self, error::RecvError},
@@ -721,7 +722,7 @@ async fn execute_checkpoint(
     local_execution_timeout_sec: u64,
     metrics: &Arc<CheckpointExecutorMetrics>,
     data_ingestion_dir: Option<PathBuf>,
-) -> SuiResult<(Vec<TransactionDigest>, Option<Accumulator>)> {
+) -> IotaResult<(Vec<TransactionDigest>, Option<Accumulator>)> {
     debug!("Preparing checkpoint for execution",);
     let prepare_start = Instant::now();
 
@@ -1197,7 +1198,7 @@ async fn execute_transactions(
     metrics: &Arc<CheckpointExecutorMetrics>,
     prepare_start: Instant,
     data_ingestion_dir: Option<PathBuf>,
-) -> SuiResult<Option<Accumulator>> {
+) -> IotaResult<Option<Accumulator>> {
     let effects_digests: HashMap<_, _> = execution_digests
         .iter()
         .map(|digest| (digest.transaction, digest.effects))
@@ -1295,7 +1296,7 @@ async fn finalize_checkpoint(
     accumulator: Arc<StateAccumulator>,
     effects: Vec<TransactionEffects>,
     data_ingestion_dir: Option<PathBuf>,
-) -> SuiResult<Accumulator> {
+) -> IotaResult<Accumulator> {
     debug!("finalizing checkpoint");
     epoch_store.insert_finalized_transactions(tx_digests, checkpoint.sequence_number)?;
 

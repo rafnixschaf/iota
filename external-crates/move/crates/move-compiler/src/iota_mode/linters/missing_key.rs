@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This linter rule checks for structs with an `id` field of type `UID` without the `key` ability.
@@ -24,7 +25,7 @@ use crate::{
 const MISSING_KEY_ABILITY_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::MissingKey as u8,
     "struct with id but missing key ability",
 );
@@ -59,7 +60,7 @@ impl TypingVisitorContext for Context<'_> {
     ) -> bool {
         if first_field_has_id_field_of_type_uid(sdef) && lacks_key_ability(sdef) {
             let uid_msg =
-                "Struct's first field has an 'id' field of type 'sui::object::UID' but is missing the 'key' ability.";
+                "Struct's first field has an 'id' field of type 'iota::object::UID' but is missing the 'key' ability.";
             let diagnostic = diag!(MISSING_KEY_ABILITY_DIAG, (sdef.loc, uid_msg));
             self.env.add_diag(diagnostic);
         }
@@ -70,7 +71,7 @@ impl TypingVisitorContext for Context<'_> {
 fn first_field_has_id_field_of_type_uid(sdef: &StructDefinition) -> bool {
     match &sdef.fields {
         StructFields::Defined(_, fields) => fields.iter().any(|(_, symbol, (idx, ty))| {
-            *idx == 0 && symbol == &symbol!("id") && ty.value.is("sui", "object", "UID")
+            *idx == 0 && symbol == &symbol!("id") && ty.value.is("iota", "object", "UID")
         }),
         StructFields::Native(_) => false,
     }

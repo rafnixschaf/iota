@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 mod metrics;
@@ -12,10 +13,10 @@ use std::fmt::{Debug, Formatter};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use sui_types::base_types::{AuthorityName, ObjectRef, TransactionDigest};
-use sui_types::committee::{Committee, EpochId, StakeUnit};
-use sui_types::messages_grpc::HandleCertificateRequestV3;
-use sui_types::quorum_driver_types::{
+use iota_types::base_types::{AuthorityName, ObjectRef, TransactionDigest};
+use iota_types::committee::{Committee, EpochId, StakeUnit};
+use iota_types::messages_grpc::HandleCertificateRequestV3;
+use iota_types::quorum_driver_types::{
     ExecuteTransactionRequestV3, QuorumDriverEffectsQueueResult, QuorumDriverError,
     QuorumDriverResponse, QuorumDriverResult,
 };
@@ -32,15 +33,15 @@ use crate::authority_aggregator::{
     ProcessTransactionResult,
 };
 use crate::authority_client::AuthorityAPI;
-use mysten_common::sync::notify_read::{NotifyRead, Registration};
-use mysten_metrics::{
+use iota_common::sync::notify_read::{NotifyRead, Registration};
+use iota_metrics::{
     spawn_monitored_task, GaugeGuard, TX_TYPE_SHARED_OBJ_TX, TX_TYPE_SINGLE_WRITER_TX,
 };
 use std::fmt::Write;
-use sui_macros::fail_point;
-use sui_types::error::{SuiError, SuiResult};
-use sui_types::messages_safe_client::PlainTransactionInfoResponse;
-use sui_types::transaction::{CertifiedTransaction, Transaction};
+use iota_macros::fail_point;
+use iota_types::error::{IotaError, IotaResult};
+use iota_types::messages_safe_client::PlainTransactionInfoResponse;
+use iota_types::transaction::{CertifiedTransaction, Transaction};
 
 use self::reconfig_observer::ReconfigObserver;
 
@@ -112,7 +113,7 @@ impl<A: Clone> QuorumDriver<A> {
         self.validators.load().committee.epoch
     }
 
-    async fn enqueue_task(&self, task: QuorumDriverTask) -> SuiResult<()> {
+    async fn enqueue_task(&self, task: QuorumDriverTask) -> IotaResult<()> {
         self.task_sender
             .send(task.clone())
             .await
@@ -130,7 +131,7 @@ impl<A: Clone> QuorumDriver<A> {
                         .report(task.retry_times as u64);
                 }
             })
-            .map_err(|e| SuiError::QuorumDriverCommunicationError {
+            .map_err(|e| IotaError::QuorumDriverCommunicationError {
                 error: e.to_string(),
             })
     }
@@ -143,7 +144,7 @@ impl<A: Clone> QuorumDriver<A> {
         tx_cert: Option<CertifiedTransaction>,
         old_retry_times: u32,
         client_addr: Option<SocketAddr>,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         if old_retry_times >= self.max_retry_times {
             // max out the retry times, notify failure
             info!(tx_digest=?request.transaction.digest(), "Failed to reach finality after attempting for {} times", old_retry_times+1);
@@ -171,7 +172,7 @@ impl<A: Clone> QuorumDriver<A> {
         old_retry_times: u32,
         client_addr: Option<SocketAddr>,
         min_backoff_duration: Option<Duration>,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         let next_retry_after = Instant::now()
             + Duration::from_millis(200 * u64::pow(2, old_retry_times))
                 .max(min_backoff_duration.unwrap_or(Duration::from_secs(0)));
@@ -242,7 +243,7 @@ where
     pub async fn submit_transaction(
         &self,
         request: ExecuteTransactionRequestV3,
-    ) -> SuiResult<Registration<TransactionDigest, QuorumDriverResult>> {
+    ) -> IotaResult<Registration<TransactionDigest, QuorumDriverResult>> {
         let tx_digest = request.transaction.digest();
         debug!(?tx_digest, "Received transaction execution request.");
         self.metrics.total_requests.inc();
@@ -267,7 +268,7 @@ where
         &self,
         request: ExecuteTransactionRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         let tx_digest = request.transaction.digest();
         debug!(
             ?tx_digest,
@@ -529,7 +530,7 @@ where
         original_tx_digest: &TransactionDigest,
         validators: BTreeSet<AuthorityName>,
         client_addr: Option<SocketAddr>,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         let response = self
             .validators
             .load()
@@ -677,7 +678,7 @@ where
         &self,
         request: ExecuteTransactionRequestV3,
         client_addr: Option<SocketAddr>,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         self.quorum_driver
             .submit_transaction_no_ticket(request, client_addr)
             .await
@@ -686,7 +687,7 @@ where
     pub async fn submit_transaction(
         &self,
         request: ExecuteTransactionRequestV3,
-    ) -> SuiResult<Registration<TransactionDigest, QuorumDriverResult>> {
+    ) -> IotaResult<Registration<TransactionDigest, QuorumDriverResult>> {
         self.quorum_driver.submit_transaction(request).await
     }
 

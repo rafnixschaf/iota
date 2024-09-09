@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -12,18 +13,18 @@ use crate::{
     orchestrator::BridgeOrchestrator,
     server::{handler::BridgeRequestHandler, run_server, BridgeNodePublicMetadata},
     storage::BridgeOrchestratorTables,
-    sui_syncer::SuiSyncer,
+    iota_syncer::IotaSyncer,
 };
 use arc_swap::ArcSwap;
 use ethers::types::Address as EthAddress;
-use mysten_metrics::spawn_logged_monitored_task;
+use iota_metrics::spawn_logged_monitored_task;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     sync::Arc,
     time::Duration,
 };
-use sui_types::{
+use iota_types::{
     bridge::{
         BRIDGE_COMMITTEE_MODULE_NAME, BRIDGE_LIMITER_MODULE_NAME, BRIDGE_MODULE_NAME,
         BRIDGE_TREASURY_MODULE_NAME,
@@ -59,7 +60,7 @@ pub async fn run_bridge_node(
         &socket_address,
         BridgeRequestHandler::new(
             server_config.key,
-            server_config.sui_client,
+            server_config.iota_client,
             server_config.eth_client,
             server_config.approved_governance_actions,
             metrics.clone(),
@@ -76,9 +77,9 @@ async fn start_client_components(
 ) -> anyhow::Result<Vec<JoinHandle<()>>> {
     let store: std::sync::Arc<BridgeOrchestratorTables> =
         BridgeOrchestratorTables::new(&client_config.db_path.join("client"));
-    let sui_modules_to_watch = get_sui_modules_to_watch(
+    let iota_modules_to_watch = get_iota_modules_to_watch(
         &store,
-        client_config.sui_bridge_module_last_processed_event_id_override,
+        client_config.iota_bridge_module_last_processed_event_id_override,
     );
     let eth_contracts_to_watch = get_eth_contracts_to_watch(
         &store,
@@ -87,7 +88,7 @@ async fn start_client_components(
         client_config.eth_contracts_start_block_override,
     );
 
-    let sui_client = client_config.sui_client.clone();
+    let iota_client = client_config.iota_client.clone();
 
     let mut all_handles = vec![];
     let (task_handles, eth_events_rx, _) =
@@ -97,15 +98,15 @@ async fn start_client_components(
             .expect("Failed to start eth syncer");
     all_handles.extend(task_handles);
 
-    let (task_handles, sui_events_rx) =
-        SuiSyncer::new(client_config.sui_client, sui_modules_to_watch)
+    let (task_handles, iota_events_rx) =
+        IotaSyncer::new(client_config.iota_client, iota_modules_to_watch)
             .run(Duration::from_secs(2))
             .await
-            .expect("Failed to start sui syncer");
+            .expect("Failed to start iota syncer");
     all_handles.extend(task_handles);
 
     let committee = Arc::new(
-        sui_client
+        iota_client
             .get_bridge_committee()
             .await
             .expect("Failed to get committee"),
@@ -114,44 +115,44 @@ async fn start_client_components(
         committee,
     ))));
     // TODO: should we use one query instead of two?
-    let sui_token_type_tags = sui_client.get_token_id_map().await.unwrap();
-    let is_bridge_paused = sui_client.is_bridge_paused().await.unwrap();
+    let iota_token_type_tags = iota_client.get_token_id_map().await.unwrap();
+    let is_bridge_paused = iota_client.is_bridge_paused().await.unwrap();
 
     let (bridge_pause_tx, bridge_pause_rx) = tokio::sync::watch::channel(is_bridge_paused);
 
-    let (monitor_tx, monitor_rx) = mysten_metrics::metered_channel::channel(
+    let (monitor_tx, monitor_rx) = iota_metrics::metered_channel::channel(
         10000,
-        &mysten_metrics::get_metrics()
+        &iota_metrics::get_metrics()
             .unwrap()
             .channel_inflight
             .with_label_values(&["monitor_queue"]),
     );
-    let sui_token_type_tags = Arc::new(ArcSwap::from(Arc::new(sui_token_type_tags)));
+    let iota_token_type_tags = Arc::new(ArcSwap::from(Arc::new(iota_token_type_tags)));
     let bridge_action_executor = BridgeActionExecutor::new(
-        sui_client.clone(),
+        iota_client.clone(),
         bridge_auth_agg.clone(),
         store.clone(),
         client_config.key,
-        client_config.sui_address,
+        client_config.iota_address,
         client_config.gas_object_ref.0,
-        sui_token_type_tags.clone(),
+        iota_token_type_tags.clone(),
         bridge_pause_rx,
         metrics.clone(),
     )
     .await;
 
     let monitor = BridgeMonitor::new(
-        sui_client.clone(),
+        iota_client.clone(),
         monitor_rx,
         bridge_auth_agg.clone(),
         bridge_pause_tx,
-        sui_token_type_tags,
+        iota_token_type_tags,
     );
     all_handles.push(spawn_logged_monitored_task!(monitor.run()));
 
     let orchestrator = BridgeOrchestrator::new(
-        sui_client,
-        sui_events_rx,
+        iota_client,
+        iota_events_rx,
         eth_events_rx,
         store.clone(),
         monitor_tx,
@@ -162,42 +163,42 @@ async fn start_client_components(
     Ok(all_handles)
 }
 
-fn get_sui_modules_to_watch(
+fn get_iota_modules_to_watch(
     store: &std::sync::Arc<BridgeOrchestratorTables>,
-    sui_bridge_module_last_processed_event_id_override: Option<EventID>,
+    iota_bridge_module_last_processed_event_id_override: Option<EventID>,
 ) -> HashMap<Identifier, Option<EventID>> {
-    let sui_bridge_modules = vec![
+    let iota_bridge_modules = vec![
         BRIDGE_MODULE_NAME.to_owned(),
         BRIDGE_COMMITTEE_MODULE_NAME.to_owned(),
         BRIDGE_TREASURY_MODULE_NAME.to_owned(),
         BRIDGE_LIMITER_MODULE_NAME.to_owned(),
     ];
-    if let Some(cursor) = sui_bridge_module_last_processed_event_id_override {
-        info!("Overriding cursor for sui bridge modules to {:?}", cursor);
+    if let Some(cursor) = iota_bridge_module_last_processed_event_id_override {
+        info!("Overriding cursor for iota bridge modules to {:?}", cursor);
         return HashMap::from_iter(
-            sui_bridge_modules
+            iota_bridge_modules
                 .iter()
                 .map(|module| (module.clone(), Some(cursor))),
         );
     }
 
-    let sui_bridge_module_stored_cursor = store
-        .get_sui_event_cursors(&sui_bridge_modules)
-        .expect("Failed to get eth sui event cursors from storage");
-    let mut sui_modules_to_watch = HashMap::new();
-    for (module_identifier, cursor) in sui_bridge_modules
+    let iota_bridge_module_stored_cursor = store
+        .get_iota_event_cursors(&iota_bridge_modules)
+        .expect("Failed to get eth iota event cursors from storage");
+    let mut iota_modules_to_watch = HashMap::new();
+    for (module_identifier, cursor) in iota_bridge_modules
         .iter()
-        .zip(sui_bridge_module_stored_cursor)
+        .zip(iota_bridge_module_stored_cursor)
     {
         if cursor.is_none() {
             info!(
-                "No cursor found for sui bridge module {} in storage or config override, query start from the beginning.",
+                "No cursor found for iota bridge module {} in storage or config override, query start from the beginning.",
                 module_identifier
             );
         }
-        sui_modules_to_watch.insert(module_identifier.clone(), cursor);
+        iota_modules_to_watch.insert(module_identifier.clone(), cursor);
     }
-    sui_modules_to_watch
+    iota_modules_to_watch
 }
 
 fn get_eth_contracts_to_watch(
@@ -242,20 +243,20 @@ mod tests {
     use super::*;
     use crate::config::BridgeNodeConfig;
     use crate::config::EthConfig;
-    use crate::config::SuiConfig;
+    use crate::config::IotaConfig;
     use crate::e2e_tests::test_utils::BridgeTestCluster;
     use crate::e2e_tests::test_utils::BridgeTestClusterBuilder;
     use crate::utils::wait_for_server_to_be_up;
     use fastcrypto::secp256k1::Secp256k1KeyPair;
-    use sui_config::local_ip_utils::get_available_port;
-    use sui_types::base_types::SuiAddress;
-    use sui_types::bridge::BridgeChainId;
-    use sui_types::crypto::get_key_pair;
-    use sui_types::crypto::EncodeDecodeBase64;
-    use sui_types::crypto::KeypairTraits;
-    use sui_types::crypto::SuiKeyPair;
-    use sui_types::digests::TransactionDigest;
-    use sui_types::event::EventID;
+    use iota_config::local_ip_utils::get_available_port;
+    use iota_types::base_types::IotaAddress;
+    use iota_types::bridge::BridgeChainId;
+    use iota_types::crypto::get_key_pair;
+    use iota_types::crypto::EncodeDecodeBase64;
+    use iota_types::crypto::KeypairTraits;
+    use iota_types::crypto::IotaKeyPair;
+    use iota_types::digests::TransactionDigest;
+    use iota_types::event::EventID;
     use tempfile::tempdir;
 
     #[tokio::test]
@@ -313,7 +314,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_sui_modules_to_watch() {
+    async fn test_get_iota_modules_to_watch() {
         telemetry_subscribers::init_for_testing();
         let temp_dir = tempfile::tempdir().unwrap();
 
@@ -323,9 +324,9 @@ mod tests {
         let treasury_module = BRIDGE_TREASURY_MODULE_NAME.to_owned();
         let limiter_module = BRIDGE_LIMITER_MODULE_NAME.to_owned();
         // No override, no stored watermark, use None
-        let sui_modules_to_watch = get_sui_modules_to_watch(&store, None);
+        let iota_modules_to_watch = get_iota_modules_to_watch(&store, None);
         assert_eq!(
-            sui_modules_to_watch,
+            iota_modules_to_watch,
             vec![
                 (bridge_module.clone(), None),
                 (committee_module.clone(), None),
@@ -341,9 +342,9 @@ mod tests {
             tx_digest: TransactionDigest::random(),
             event_seq: 42,
         };
-        let sui_modules_to_watch = get_sui_modules_to_watch(&store, Some(override_cursor));
+        let iota_modules_to_watch = get_iota_modules_to_watch(&store, Some(override_cursor));
         assert_eq!(
-            sui_modules_to_watch,
+            iota_modules_to_watch,
             vec![
                 (bridge_module.clone(), Some(override_cursor)),
                 (committee_module.clone(), Some(override_cursor)),
@@ -361,11 +362,11 @@ mod tests {
             event_seq: 100,
         };
         store
-            .update_sui_event_cursor(bridge_module.clone(), stored_cursor)
+            .update_iota_event_cursor(bridge_module.clone(), stored_cursor)
             .unwrap();
-        let sui_modules_to_watch = get_sui_modules_to_watch(&store, None);
+        let iota_modules_to_watch = get_iota_modules_to_watch(&store, None);
         assert_eq!(
-            sui_modules_to_watch,
+            iota_modules_to_watch,
             vec![
                 (bridge_module.clone(), Some(stored_cursor)),
                 (committee_module.clone(), None),
@@ -382,11 +383,11 @@ mod tests {
             event_seq: 100,
         };
         store
-            .update_sui_event_cursor(committee_module.clone(), stored_cursor)
+            .update_iota_event_cursor(committee_module.clone(), stored_cursor)
             .unwrap();
-        let sui_modules_to_watch = get_sui_modules_to_watch(&store, Some(override_cursor));
+        let iota_modules_to_watch = get_iota_modules_to_watch(&store, Some(override_cursor));
         assert_eq!(
-            sui_modules_to_watch,
+            iota_modules_to_watch,
             vec![
                 (bridge_module.clone(), Some(override_cursor)),
                 (committee_module.clone(), Some(override_cursor)),
@@ -415,16 +416,16 @@ mod tests {
             server_listen_port,
             metrics_port: get_available_port("127.0.0.1"),
             bridge_authority_key_path: tmp_dir.join(authority_key_path),
-            sui: SuiConfig {
-                sui_rpc_url: bridge_test_cluster.sui_rpc_url(),
-                sui_bridge_chain_id: BridgeChainId::SuiCustom as u8,
+            iota: IotaConfig {
+                iota_rpc_url: bridge_test_cluster.iota_rpc_url(),
+                iota_bridge_chain_id: BridgeChainId::IotaCustom as u8,
                 bridge_client_key_path: None,
                 bridge_client_gas_object: None,
-                sui_bridge_module_last_processed_event_id_override: None,
+                iota_bridge_module_last_processed_event_id_override: None,
             },
             eth: EthConfig {
                 eth_rpc_url: bridge_test_cluster.eth_rpc_url(),
-                eth_bridge_proxy_address: bridge_test_cluster.sui_bridge_address(),
+                eth_bridge_proxy_address: bridge_test_cluster.iota_bridge_address(),
                 eth_bridge_chain_id: BridgeChainId::EthCustom as u8,
                 eth_contracts_start_block_fallback: None,
                 eth_contracts_start_block_override: None,
@@ -463,31 +464,31 @@ mod tests {
         let base64_encoded = kp.encode_base64();
         std::fs::write(tmp_dir.join(authority_key_path), base64_encoded).unwrap();
 
-        let client_sui_address = SuiAddress::from(kp.public());
-        let sender_address = bridge_test_cluster.sui_user_address();
+        let client_iota_address = IotaAddress::from(kp.public());
+        let sender_address = bridge_test_cluster.iota_user_address();
         // send some gas to this address
         bridge_test_cluster
             .test_cluster
-            .transfer_sui_must_exceed(sender_address, client_sui_address, 1000000000)
+            .transfer_iota_must_exceed(sender_address, client_iota_address, 1000000000)
             .await;
 
         let config = BridgeNodeConfig {
             server_listen_port,
             metrics_port: get_available_port("127.0.0.1"),
             bridge_authority_key_path: tmp_dir.join(authority_key_path),
-            sui: SuiConfig {
-                sui_rpc_url: bridge_test_cluster.sui_rpc_url(),
-                sui_bridge_chain_id: BridgeChainId::SuiCustom as u8,
+            iota: IotaConfig {
+                iota_rpc_url: bridge_test_cluster.iota_rpc_url(),
+                iota_bridge_chain_id: BridgeChainId::IotaCustom as u8,
                 bridge_client_key_path: None,
                 bridge_client_gas_object: None,
-                sui_bridge_module_last_processed_event_id_override: Some(EventID {
+                iota_bridge_module_last_processed_event_id_override: Some(EventID {
                     tx_digest: TransactionDigest::random(),
                     event_seq: 0,
                 }),
             },
             eth: EthConfig {
                 eth_rpc_url: bridge_test_cluster.eth_rpc_url(),
-                eth_bridge_proxy_address: bridge_test_cluster.sui_bridge_address(),
+                eth_bridge_proxy_address: bridge_test_cluster.iota_bridge_address(),
                 eth_bridge_chain_id: BridgeChainId::EthCustom as u8,
                 eth_contracts_start_block_fallback: Some(0),
                 eth_contracts_start_block_override: None,
@@ -533,35 +534,35 @@ mod tests {
 
         // prepare bridge client key
         let (_, kp): (_, Secp256k1KeyPair) = get_key_pair();
-        let kp = SuiKeyPair::from(kp);
+        let kp = IotaKeyPair::from(kp);
         let client_key_path =
             "test_starting_bridge_node_with_client_and_separate_client_key_bridge_client_key";
         std::fs::write(tmp_dir.join(client_key_path), kp.encode_base64()).unwrap();
-        let client_sui_address = SuiAddress::from(&kp.public());
-        let sender_address = bridge_test_cluster.sui_user_address();
+        let client_iota_address = IotaAddress::from(&kp.public());
+        let sender_address = bridge_test_cluster.iota_user_address();
         // send some gas to this address
         let gas_obj = bridge_test_cluster
             .test_cluster
-            .transfer_sui_must_exceed(sender_address, client_sui_address, 1000000000)
+            .transfer_iota_must_exceed(sender_address, client_iota_address, 1000000000)
             .await;
 
         let config = BridgeNodeConfig {
             server_listen_port,
             metrics_port: get_available_port("127.0.0.1"),
             bridge_authority_key_path: tmp_dir.join(authority_key_path),
-            sui: SuiConfig {
-                sui_rpc_url: bridge_test_cluster.sui_rpc_url(),
-                sui_bridge_chain_id: BridgeChainId::SuiCustom as u8,
+            iota: IotaConfig {
+                iota_rpc_url: bridge_test_cluster.iota_rpc_url(),
+                iota_bridge_chain_id: BridgeChainId::IotaCustom as u8,
                 bridge_client_key_path: Some(tmp_dir.join(client_key_path)),
                 bridge_client_gas_object: Some(gas_obj),
-                sui_bridge_module_last_processed_event_id_override: Some(EventID {
+                iota_bridge_module_last_processed_event_id_override: Some(EventID {
                     tx_digest: TransactionDigest::random(),
                     event_seq: 0,
                 }),
             },
             eth: EthConfig {
                 eth_rpc_url: bridge_test_cluster.eth_rpc_url(),
-                eth_bridge_proxy_address: bridge_test_cluster.sui_bridge_address(),
+                eth_bridge_proxy_address: bridge_test_cluster.iota_bridge_address(),
                 eth_bridge_chain_id: BridgeChainId::EthCustom as u8,
                 eth_contracts_start_block_fallback: Some(0),
                 eth_contracts_start_block_override: Some(0),

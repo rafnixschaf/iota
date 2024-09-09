@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
 use async_trait::async_trait;
 use move_core_types::account_address::AccountAddress;
-use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
+use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
 
-use sui_rest_api::{CheckpointData, Client};
-use sui_types::{
+use iota_rest_api::{CheckpointData, Client};
+use iota_types::{
     base_types::ObjectID,
     committee::Committee,
     crypto::AuthorityQuorumSignInfo,
@@ -18,18 +19,18 @@ use sui_types::{
     object::{Data, Object},
 };
 
-use sui_config::genesis::Genesis;
+use iota_config::genesis::Genesis;
 
-use sui_json::SuiJsonValue;
-use sui_package_resolver::Result as ResolverResult;
-use sui_package_resolver::{Package, PackageStore, Resolver};
-use sui_sdk::SuiClientBuilder;
+use iota_json::IotaJsonValue;
+use iota_package_resolver::Result as ResolverResult;
+use iota_package_resolver::{Package, PackageStore, Resolver};
+use iota_sdk::IotaClientBuilder;
 
 use clap::{Parser, Subcommand};
 use std::{fs, io::Write, path::PathBuf, str::FromStr};
 use std::{io::Read, sync::Arc};
 
-/// A light client for the Sui blockchain
+/// A light client for the Iota blockchain
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -363,16 +364,16 @@ async fn get_verified_effects_and_events(
     config: &Config,
     tid: TransactionDigest,
 ) -> anyhow::Result<(TransactionEffects, Option<TransactionEvents>)> {
-    let sui_mainnet: Arc<sui_sdk::SuiClient> = Arc::new(
-        SuiClientBuilder::default()
+    let iota_mainnet: Arc<iota_sdk::IotaClient> = Arc::new(
+        IotaClientBuilder::default()
             .build(config.full_node_url.as_str())
             .await
             .unwrap(),
     );
-    let read_api = sui_mainnet.read_api();
+    let read_api = iota_mainnet.read_api();
 
     // Lookup the transaction id and get the checkpoint sequence number
-    let options = SuiTransactionBlockResponseOptions::new();
+    let options = IotaTransactionBlockResponseOptions::new();
     let seq = read_api
         .get_transaction_with_options(tid, options)
         .await?
@@ -486,7 +487,7 @@ pub async fn main() {
                     .unwrap();
 
                 let json_val =
-                    SuiJsonValue::from_bcs_bytes(Some(&type_layout), &event.contents).unwrap();
+                    IotaJsonValue::from_bcs_bytes(Some(&type_layout), &event.contents).unwrap();
 
                 println!(
                     "Event:\n - Package: {}\n - Module: {}\n - Sender: {}\n - Type: {}\n{}",
@@ -511,7 +512,7 @@ pub async fn main() {
                     .unwrap();
 
                 let json_val =
-                    SuiJsonValue::from_bcs_bytes(Some(&type_layout), move_object.contents())
+                    IotaJsonValue::from_bcs_bytes(Some(&type_layout), move_object.contents())
                         .unwrap();
 
                 let (oid, version, hash) = object.compute_object_reference();
@@ -539,7 +540,7 @@ pub async fn main() {
 // Make a test namespace
 #[cfg(test)]
 mod tests {
-    use sui_types::messages_checkpoint::FullCheckpointContents;
+    use iota_types::messages_checkpoint::FullCheckpointContents;
 
     use super::*;
     use std::path::{Path, PathBuf};

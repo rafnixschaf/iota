@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
-module sui::test_scenario {
-    use sui::vec_map::VecMap;
+module iota::test_scenario {
+    use iota::vec_map::VecMap;
 
     #[allow(unused_const)]
     /// the transaction failed when generating these effects. For example, a circular ownership
@@ -40,7 +41,7 @@ module sui::test_scenario {
     /// Unable to deallocate the receiving ticket
     const EUnableToDeallocateReceivingTicket: u64 = 7;
 
-    /// Utility for mocking a multi-transaction Sui execution in a single Move procedure.
+    /// Utility for mocking a multi-transaction Iota execution in a single Move procedure.
     /// A `Scenario` maintains a view of the global object pool built up by the execution.
     /// These objects can be accessed via functions like `take_from_sender`, which gives the
     /// transaction sender access to objects in (only) their inventory.
@@ -258,7 +259,7 @@ module sui::test_scenario {
     public fun return_to_address<T: key>(account: address, t: T) {
         let id = object::id(&t);
         assert!(was_taken_from_address(account, id), ECantReturnObject);
-        sui::transfer::transfer_impl(t, account)
+        iota::transfer::transfer_impl(t, account)
     }
 
     /// Returns true if the object with `ID` id was in the inventory for `account`
@@ -327,7 +328,7 @@ module sui::test_scenario {
     public fun return_immutable<T: key>(t: T) {
         let id = object::id(&t);
         assert!(was_taken_immutable(id), ECantReturnObject);
-        sui::transfer::freeze_object_impl(t)
+        iota::transfer::freeze_object_impl(t)
     }
 
     /// Returns true if the object with `ID` id was an immutable object in the global inventory
@@ -359,7 +360,7 @@ module sui::test_scenario {
     public fun return_shared<T: key>(t: T) {
         let id = object::id(&t);
         assert!(was_taken_shared(id), ECantReturnObject);
-        sui::transfer::share_object_impl(t)
+        iota::transfer::share_object_impl(t)
     }
 
     /// Return the IDs of the receivalbe objects that `object` owns.
@@ -371,7 +372,7 @@ module sui::test_scenario {
     /// object of type `T` that is owned by the `owner` object ID.
     public fun most_recent_receiving_ticket<T: key>(
         owner: &ID
-    ): sui::transfer::Receiving<T> {
+    ): iota::transfer::Receiving<T> {
         let id_opt = most_recent_id_for_address<T>(object::id_to_address(owner));
         assert!(option::is_some(&id_opt), EEmptyInventory);
         let id = option::destroy_some(id_opt);
@@ -382,16 +383,16 @@ module sui::test_scenario {
     /// `T` with the given `object_id`.
     public fun receiving_ticket_by_id<T: key>(
         object_id: ID
-    ): sui::transfer::Receiving<T> {
+    ): iota::transfer::Receiving<T> {
         let version = allocate_receiving_ticket_for_object<T>(object_id);
-        sui::transfer::make_receiver(object_id, version)
+        iota::transfer::make_receiver(object_id, version)
     }
 
     /// Deallocate a `Receiving<T>` receiving ticket. This must be done in
     /// order to use the object further (unless the object was received) in a
     /// test scenario.
-    public fun return_receiving_ticket<T: key>(ticket: sui::transfer::Receiving<T>) {
-        let id = sui::transfer::receiving_id(&ticket);
+    public fun return_receiving_ticket<T: key>(ticket: iota::transfer::Receiving<T>) {
+        let id = iota::transfer::receiving_id(&ticket);
         deallocate_receiving_ticket_for_object(id);
     }
 

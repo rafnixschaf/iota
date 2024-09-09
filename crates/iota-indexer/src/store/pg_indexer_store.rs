@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::any::Any as StdAny;
@@ -20,8 +21,8 @@ use itertools::Itertools;
 use tap::TapFallible;
 use tracing::info;
 
-use sui_protocol_config::ProtocolConfig;
-use sui_types::base_types::ObjectID;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::base_types::ObjectID;
 
 use crate::db::ConnectionPool;
 use crate::errors::{Context, IndexerError};
@@ -63,7 +64,7 @@ use super::ObjectChangeToCommit;
 
 #[cfg(feature = "postgres-feature")]
 use diesel::upsert::excluded;
-use sui_types::digests::{ChainIdentifier, CheckpointDigest};
+use iota_types::digests::{ChainIdentifier, CheckpointDigest};
 
 #[macro_export]
 macro_rules! chunk {

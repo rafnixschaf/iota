@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::compatibility_check::check_all_tables;
@@ -29,7 +30,7 @@ use crate::{
         timeout::Timeout,
     },
     server::version::{check_version_middleware, set_version_middleware},
-    types::query::{Query, SuiGraphQLSchema},
+    types::query::{Query, IotaGraphQLSchema},
 };
 use async_graphql::extensions::ApolloTracing;
 use async_graphql::extensions::Tracing;
@@ -47,16 +48,16 @@ use axum::Extension;
 use axum::Router;
 use chrono::Utc;
 use http::{HeaderValue, Method, Request};
-use mysten_metrics::spawn_monitored_task;
-use mysten_network::callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler};
+use iota_metrics::spawn_monitored_task;
+use iota_network_stack::callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler};
 use std::convert::Infallible;
 use std::net::TcpStream;
 use std::sync::Arc;
 use std::time::Duration;
 use std::{any::Any, net::SocketAddr, time::Instant};
-use sui_graphql_rpc_headers::LIMITS_HEADER;
-use sui_package_resolver::{PackageStoreWithLruCache, Resolver};
-use sui_sdk::SuiClientBuilder;
+use iota_graphql_rpc_headers::LIMITS_HEADER;
+use iota_package_resolver::{PackageStoreWithLruCache, Resolver};
+use iota_sdk::IotaClientBuilder;
 use tokio::join;
 use tokio::sync::OnceCell;
 use tokio_util::sync::CancellationToken;
@@ -386,11 +387,11 @@ impl ServerBuilder {
             ))
         })?;
 
-        let registry_service = mysten_metrics::start_prometheus_server(prom_addr);
+        let registry_service = iota_metrics::start_prometheus_server(prom_addr);
         info!("Starting Prometheus HTTP endpoint at {}", prom_addr);
         let registry = registry_service.default_registry();
         registry
-            .register(mysten_metrics::uptime_metric(
+            .register(iota_metrics::uptime_metric(
                 "graphql",
                 version.full,
                 "unknown",
@@ -439,14 +440,14 @@ impl ServerBuilder {
 
         // SDK for talking to fullnode. Used for executing transactions only
         // TODO: fail fast if no url, once we enable mutations fully
-        let sui_sdk_client = if let Some(url) = &config.tx_exec_full_node.node_rpc_url {
+        let iota_sdk_client = if let Some(url) = &config.tx_exec_full_node.node_rpc_url {
             Some(
-                SuiClientBuilder::default()
+                IotaClientBuilder::default()
                     .request_timeout(RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD)
                     .max_concurrent_requests(MAX_CONCURRENT_REQUESTS)
                     .build(url)
                     .await
-                    .map_err(|e| Error::Internal(format!("Failed to create SuiClient: {}", e)))?,
+                    .map_err(|e| Error::Internal(format!("Failed to create IotaClient: {}", e)))?,
             )
         } else {
             warn!("No fullnode url found in config. `dryRunTransactionBlock` and `executeTransactionBlock` will not work");
@@ -459,7 +460,7 @@ impl ServerBuilder {
             .context_data(db)
             .context_data(pg_conn_pool)
             .context_data(resolver)
-            .context_data(sui_sdk_client)
+            .context_data(iota_sdk_client)
             .context_data(name_service_config)
             .context_data(zklogin_config)
             .context_data(metrics.clone())
@@ -517,7 +518,7 @@ pub fn export_schema() -> String {
 /// if set in the request headers, and the watermark as set by the background task.
 async fn graphql_handler(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    schema: Extension<SuiGraphQLSchema>,
+    schema: Extension<IotaGraphQLSchema>,
     Extension(watermark_lock): Extension<WatermarkLock>,
     headers: HeaderMap,
     req: GraphQLRequest,
@@ -677,8 +678,8 @@ pub mod tests {
     };
     use std::sync::Arc;
     use std::time::Duration;
-    use sui_sdk::{wallet_context::WalletContext, SuiClient};
-    use sui_types::transaction::TransactionData;
+    use iota_sdk::{wallet_context::WalletContext, IotaClient};
+    use iota_types::transaction::TransactionData;
     use uuid::Uuid;
 
     /// Prepares a schema for tests dealing with extensions. Returns a `ServerBuilder` that can be
@@ -730,7 +731,7 @@ pub mod tests {
 
     fn metrics() -> Metrics {
         let binding_address: SocketAddr = "0.0.0.0:9185".parse().unwrap();
-        let registry = mysten_metrics::start_prometheus_server(binding_address).default_registry();
+        let registry = iota_metrics::start_prometheus_server(binding_address).default_registry();
         Metrics::new(&registry)
     }
 
@@ -773,14 +774,14 @@ pub mod tests {
             delay: Duration,
             timeout: Duration,
             query: &str,
-            sui_client: &SuiClient,
+            iota_client: &IotaClient,
         ) -> Response {
             let mut cfg = ServiceConfig::default();
             cfg.limits.request_timeout_ms = timeout.as_millis() as u32;
             cfg.limits.mutation_timeout_ms = timeout.as_millis() as u32;
 
             let schema = prep_schema(None, Some(cfg))
-                .context_data(Some(sui_client.clone()))
+                .context_data(Some(iota_client.clone()))
                 .extension(Timeout)
                 .extension(TimedExecuteExt {
                     min_req_delay: delay,
@@ -793,15 +794,15 @@ pub mod tests {
         let query = "{ chainIdentifier }";
         let timeout = Duration::from_millis(1000);
         let delay = Duration::from_millis(100);
-        let sui_client = wallet.get_client().await.unwrap();
+        let iota_client = wallet.get_client().await.unwrap();
 
-        test_timeout(delay, timeout, query, &sui_client)
+        test_timeout(delay, timeout, query, &iota_client)
             .await
             .into_result()
             .expect("Should complete successfully");
 
         // Should timeout
-        let errs: Vec<_> = test_timeout(delay, delay, query, &sui_client)
+        let errs: Vec<_> = test_timeout(delay, delay, query, &iota_client)
             .await
             .into_result()
             .unwrap_err()
@@ -819,7 +820,7 @@ pub mod tests {
             .get_one_gas_object_owned_by_address(addresses[0])
             .await
             .unwrap();
-        let tx_data = TransactionData::new_transfer_sui(
+        let tx_data = TransactionData::new_transfer_iota(
             addresses[1],
             addresses[0],
             Some(1000),
@@ -844,7 +845,7 @@ pub mod tests {
             tx_bytes.encoded(),
             signature_base64.encoded()
         );
-        let errs: Vec<_> = test_timeout(delay, delay, &query, &sui_client)
+        let errs: Vec<_> = test_timeout(delay, delay, &query, &iota_client)
             .await
             .into_result()
             .unwrap_err()

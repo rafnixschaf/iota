@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCurrentAccount, useSignTransaction, useSuiClientContext } from '@mysten/dapp-kit';
-import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount, useSignTransaction, useIotaClientContext } from '@iota/dapp-kit';
+import { getFullnodeUrl, IotaClient } from '@iota/iota/client';
+import { Transaction } from '@iota/iota/transactions';
 import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, Terminal } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -21,7 +22,7 @@ export default function OfflineSigner() {
 
 	const [dryRunNetwork, setDryRunNetwork] = useState<Network>('mainnet');
 
-	const { selectNetwork } = useSuiClientContext();
+	const { selectNetwork } = useIotaClientContext();
 
 	const { mutateAsync: signTransaction } = useSignTransaction();
 	const [tab, setTab] = useState<'transaction' | 'signature'>('transaction');
@@ -58,7 +59,7 @@ export default function OfflineSigner() {
 	} = useMutation({
 		mutationKey: [dryRunNetwork, 'dry-run'],
 		mutationFn: async () => {
-			const dryRunClient = new SuiClient({
+			const dryRunClient = new IotaClient({
 				url: getFullnodeUrl(dryRunNetwork),
 			});
 			const transaction = Transaction.from(bytes);

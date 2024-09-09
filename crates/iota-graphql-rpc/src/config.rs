@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::functional_group::FunctionalGroup;
@@ -6,8 +7,8 @@ use async_graphql::*;
 use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, fmt::Display, time::Duration};
-use sui_graphql_config::GraphQLConfig;
-use sui_json_rpc::name_service::NameServiceConfig;
+use iota_graphql_config::GraphQLConfig;
+use iota_json_rpc::name_service::NameServiceConfig;
 
 pub(crate) const RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD: Duration = Duration::from_millis(10_000);
 pub(crate) const MAX_CONCURRENT_REQUESTS: usize = 1_000;
@@ -326,7 +327,7 @@ impl ConnectionConfig {
 
     pub fn ci_integration_test_cfg() -> Self {
         Self {
-            db_url: "postgres://postgres:postgrespw@localhost:5432/sui_graphql_rpc_e2e_tests"
+            db_url: "postgres://postgres:postgrespw@localhost:5432/iota_graphql_rpc_e2e_tests"
                 .to_string(),
             ..Default::default()
         }
@@ -380,8 +381,8 @@ impl ServiceConfig {
 
 impl Limits {
     /// Extract limits for the package resolver.
-    pub fn package_resolver_limits(&self) -> sui_package_resolver::Limits {
-        sui_package_resolver::Limits {
+    pub fn package_resolver_limits(&self) -> iota_package_resolver::Limits {
+        iota_package_resolver::Limits {
             max_type_argument_depth: self.max_type_argument_depth as usize,
             max_type_argument_width: self.max_type_argument_width as usize,
             max_type_nodes: self.max_type_nodes as usize,
@@ -421,7 +422,7 @@ impl Default for Versions {
 impl Default for Ide {
     fn default() -> Self {
         Self {
-            ide_title: "Sui GraphQL IDE".to_string(),
+            ide_title: "Iota GraphQL IDE".to_string(),
         }
     }
 }
@@ -431,7 +432,7 @@ impl Default for ConnectionConfig {
         Self {
             port: 8000,
             host: "127.0.0.1".to_string(),
-            db_url: "postgres://postgres:postgrespw@localhost:5432/sui_indexer".to_string(),
+            db_url: "postgres://postgres:postgrespw@localhost:5432/iota_indexer".to_string(),
             db_pool_size: 10,
             prom_url: "0.0.0.0".to_string(),
             prom_port: 9184,
@@ -452,19 +453,19 @@ impl Default for Limits {
             default_page_size: 20,
             max_page_size: 50,
             // This default was picked as the sum of pre- and post- quorum timeouts from
-            // [`sui_core::authority_aggregator::TimeoutConfig`], with a 10% buffer.
+            // [`iota_core::authority_aggregator::TimeoutConfig`], with a 10% buffer.
             //
-            // <https://github.com/MystenLabs/sui/blob/eaf05fe5d293c06e3a2dfc22c87ba2aef419d8ea/crates/sui-core/src/authority_aggregator.rs#L84-L85>
+            // <https://github.com/iotaledger/iota/blob/eaf05fe5d293c06e3a2dfc22c87ba2aef419d8ea/crates/iota-core/src/authority_aggregator.rs#L84-L85>
             mutation_timeout_ms: 74_000,
             request_timeout_ms: 40_000,
             // The following limits reflect the max values set in ProtocolConfig, at time of writing.
-            // <https://github.com/MystenLabs/sui/blob/333f87061f0656607b1928aba423fa14ca16899e/crates/sui-protocol-config/src/lib.rs#L1580>
+            // <https://github.com/iotaledger/iota/blob/333f87061f0656607b1928aba423fa14ca16899e/crates/iota-protocol-config/src/lib.rs#L1580>
             max_type_argument_depth: 16,
-            // <https://github.com/MystenLabs/sui/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/sui-protocol-config/src/lib.rs#L1618>
+            // <https://github.com/iotaledger/iota/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/iota-protocol-config/src/lib.rs#L1618>
             max_type_argument_width: 32,
-            // <https://github.com/MystenLabs/sui/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/sui-protocol-config/src/lib.rs#L1622>
+            // <https://github.com/iotaledger/iota/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/iota-protocol-config/src/lib.rs#L1622>
             max_type_nodes: 256,
-            // <https://github.com/MystenLabs/sui/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/sui-protocol-config/src/lib.rs#L1988>
+            // <https://github.com/iotaledger/iota/blob/4b934f87acae862cecbcbefb3da34cabb79805aa/crates/iota-protocol-config/src/lib.rs#L1988>
             max_move_value_depth: 128,
             // Filter-specific limits, such as the number of transaction ids that can be specified
             // for the `TransactionBlockFilter`.

@@ -84,7 +84,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
         with:
-          channel-id: 'build-failures-sui'
+          channel-id: 'build-failures-iota'
           payload: |
             {
               "text": "Workflow *${{ github.workflow }}* failed",

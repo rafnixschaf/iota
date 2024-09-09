@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
@@ -11,16 +12,16 @@ use object_store::ObjectStore;
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 use std::ops::Range;
-use sui_archival::{
+use iota_archival::{
     create_file_metadata_from_bytes, finalize_manifest, read_manifest_from_bytes, FileType,
     Manifest, CHECKPOINT_FILE_MAGIC, SUMMARY_FILE_MAGIC,
 };
-use sui_data_ingestion_core::{create_remote_store_client, Worker};
-use sui_storage::blob::{Blob, BlobEncoding};
-use sui_storage::{compress, FileCompression, StorageFormat};
-use sui_types::base_types::{EpochId, ExecutionData};
-use sui_types::full_checkpoint_content::CheckpointData;
-use sui_types::messages_checkpoint::{CheckpointSequenceNumber, FullCheckpointContents};
+use iota_data_ingestion_core::{create_remote_store_client, Worker};
+use iota_storage::blob::{Blob, BlobEncoding};
+use iota_storage::{compress, FileCompression, StorageFormat};
+use iota_types::base_types::{EpochId, ExecutionData};
+use iota_types::full_checkpoint_content::CheckpointData;
+use iota_types::messages_checkpoint::{CheckpointSequenceNumber, FullCheckpointContents};
 use tokio::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -1,15 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[test_only]
 module elgamal::tests {
-    use sui::bls12381::{Self, Scalar, G1};
-    use sui::group_ops::Element;
-    use sui::random;
+    use iota::bls12381::{Self, Scalar, G1};
+    use iota::group_ops::Element;
+    use iota::random;
 
     use elgamal::example;
 
-    use sui::test_utils::assert_eq;
+    use iota::test_utils::assert_eq;
 
     #[test]
     fun test_elgamal_equality() {

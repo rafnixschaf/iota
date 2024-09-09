@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 mod execution;
@@ -9,9 +10,9 @@ pub use execution::TransactionExecutionResponse;
 
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
-use sui_sdk2::types::CheckpointSequenceNumber;
-use sui_sdk2::types::Transaction;
-use sui_sdk2::types::{TransactionDigest, TransactionEffects, TransactionEvents, UserSignature};
+use iota_sdk2::types::CheckpointSequenceNumber;
+use iota_sdk2::types::Transaction;
+use iota_sdk2::types::{TransactionDigest, TransactionEffects, TransactionEvents, UserSignature};
 use tap::Pipe;
 
 use crate::openapi::ApiEndpoint;
@@ -84,12 +85,12 @@ pub struct TransactionResponse {
     pub effects: TransactionEffects,
     pub events: Option<TransactionEvents>,
     #[serde_as(
-        as = "Option<sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>>"
+        as = "Option<iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>>"
     )]
     #[schemars(with = "Option<crate::_schemars::U64>")]
     pub checkpoint: Option<u64>,
     #[serde_as(
-        as = "Option<sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>>"
+        as = "Option<iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>>"
     )]
     #[schemars(with = "Option<crate::_schemars::U64>")]
     pub timestamp_ms: Option<u64>,
@@ -136,7 +137,7 @@ impl ApiEndpoint<RestService> for ListTransactions {
                 ResponseBuilder::new()
                     .json_content::<Vec<TransactionResponse>>(generator)
                     .bcs_content()
-                    .header::<String>(crate::types::X_SUI_CURSOR, generator)
+                    .header::<String>(crate::types::X_IOTA_CURSOR, generator)
                     .build(),
             )
             .response(410, ResponseBuilder::new().build())

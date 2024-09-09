@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use arc_swap::{ArcSwap, ArcSwapOption};
@@ -30,9 +31,9 @@ use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Instant;
-use sui_types::base_types::TransactionDigest;
-use sui_types::committee::Committee;
-use sui_types::error::{SuiError, SuiResult};
+use iota_types::base_types::TransactionDigest;
+use iota_types::committee::Committee;
+use iota_types::error::{IotaError, IotaResult};
 
 use tap::prelude::*;
 use tokio::sync::{Semaphore, SemaphorePermit};
@@ -44,14 +45,14 @@ use crate::consensus_handler::{classify, SequencedConsensusTransactionKey};
 use crate::consensus_throughput_calculator::{ConsensusThroughputProfiler, Level};
 use crate::epoch::reconfiguration::{ReconfigState, ReconfigurationInitiator};
 use crate::metrics::LatencyObserver;
-use mysten_metrics::{spawn_monitored_task, GaugeGuard, GaugeGuardFutureExt};
-use sui_protocol_config::ProtocolConfig;
-use sui_simulator::anemo::PeerId;
-use sui_simulator::narwhal_network::connectivity::ConnectionStatus;
-use sui_types::base_types::AuthorityName;
-use sui_types::fp_ensure;
-use sui_types::messages_consensus::ConsensusTransaction;
-use sui_types::messages_consensus::ConsensusTransactionKind;
+use iota_metrics::{spawn_monitored_task, GaugeGuard, GaugeGuardFutureExt};
+use iota_protocol_config::ProtocolConfig;
+use iota_simulator::anemo::PeerId;
+use iota_simulator::narwhal_network::connectivity::ConnectionStatus;
+use iota_types::base_types::AuthorityName;
+use iota_types::fp_ensure;
+use iota_types::messages_consensus::ConsensusTransaction;
+use iota_types::messages_consensus::ConsensusTransactionKind;
 use tokio::time::Duration;
 use tracing::{debug, info, warn};
 
@@ -74,7 +75,7 @@ pub struct ConsensusAdapterMetrics {
     pub sequencing_certificate_success: IntCounterVec,
     pub sequencing_certificate_failures: IntCounterVec,
     pub sequencing_certificate_inflight: IntGaugeVec,
-    pub sequencing_acknowledge_latency: mysten_metrics::histogram::HistogramVec,
+    pub sequencing_acknowledge_latency: iota_metrics::histogram::HistogramVec,
     pub sequencing_certificate_latency: HistogramVec,
     pub sequencing_certificate_authority_position: Histogram,
     pub sequencing_certificate_positions_moved: Histogram,
@@ -116,7 +117,7 @@ impl ConsensusAdapterMetrics {
                 registry,
             )
                 .unwrap(),
-            sequencing_acknowledge_latency: mysten_metrics::histogram::HistogramVec::new_in_registry(
+            sequencing_acknowledge_latency: iota_metrics::histogram::HistogramVec::new_in_registry(
                 "sequencing_acknowledge_latency",
                 "The latency for acknowledgement from sequencing engine. The overall sequencing latency is measured by the sequencing_certificate_latency metric",
                 &["retry", "tx_type"],
@@ -186,16 +187,16 @@ pub trait SubmitToConsensus: Sync + Send + 'static {
         &self,
         transactions: &[ConsensusTransaction],
         epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult;
+    ) -> IotaResult;
 }
 
 #[async_trait::async_trait]
-impl SubmitToConsensus for TransactionsClient<sui_network::tonic::transport::Channel> {
+impl SubmitToConsensus for TransactionsClient<iota_network::tonic::transport::Channel> {
     async fn submit_to_consensus(
         &self,
         transactions: &[ConsensusTransaction],
         _epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let transactions_bytes = transactions
             .iter()
             .map(|t| {
@@ -209,7 +210,7 @@ impl SubmitToConsensus for TransactionsClient<sui_network::tonic::transport::Cha
                 transactions: transactions_bytes,
             })
             .await
-            .map_err(|e| SuiError::ConsensusConnectionBroken(format!("{:?}", e)))
+            .map_err(|e| IotaError::ConsensusConnectionBroken(format!("{:?}", e)))
             .tap_err(|r| {
                 // Will be logged by caller as well.
                 warn!("Submit transaction failed with: {:?}", r);
@@ -224,7 +225,7 @@ impl SubmitToConsensus for LazyNarwhalClient {
         &self,
         transactions: &[ConsensusTransaction],
         _epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let transactions = transactions
             .iter()
             .map(|t| bcs::to_bytes(t).expect("Serializing consensus transaction cannot fail"))
@@ -244,7 +245,7 @@ impl SubmitToConsensus for LazyNarwhalClient {
         client
             .submit_transactions(transactions)
             .await
-            .map_err(|e| SuiError::FailedToSubmitToConsensus(format!("{:?}", e)))
+            .map_err(|e| IotaError::FailedToSubmitToConsensus(format!("{:?}", e)))
             .tap_err(|r| {
                 // Will be logged by caller as well.
                 warn!("Submit transaction failed with: {:?}", r);
@@ -253,7 +254,7 @@ impl SubmitToConsensus for LazyNarwhalClient {
     }
 }
 
-/// Submit Sui certificates to the consensus.
+/// Submit Iota certificates to the consensus.
 pub struct ConsensusAdapter {
     /// The network client connecting to the consensus node of this authority.
     consensus_client: Arc<dyn SubmitToConsensus>,
@@ -596,7 +597,7 @@ impl ConsensusAdapter {
         transaction: ConsensusTransaction,
         lock: Option<&RwLockReadGuard<ReconfigState>>,
         epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult<JoinHandle<()>> {
+    ) -> IotaResult<JoinHandle<()>> {
         self.submit_batch(&[transaction], lock, epoch_store)
     }
 
@@ -605,7 +606,7 @@ impl ConsensusAdapter {
         transactions: &[ConsensusTransaction],
         lock: Option<&RwLockReadGuard<ReconfigState>>,
         epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult<JoinHandle<()>> {
+    ) -> IotaResult<JoinHandle<()>> {
         if transactions.len() > 1 {
             // In soft bundle, we need to check if all transactions are of UserTransaction kind.
             // The check is required because we assume this in submit_and_wait_inner.
@@ -615,7 +616,7 @@ impl ConsensusAdapter {
                         transaction.kind,
                         ConsensusTransactionKind::UserTransaction(_)
                     ),
-                    SuiError::InvalidTxKindInSoftBundle
+                    IotaError::InvalidTxKindInSoftBundle
                 );
             }
         }
@@ -637,10 +638,10 @@ impl ConsensusAdapter {
         self.submit_semaphore.available_permits() > 0
     }
 
-    pub(crate) fn check_consensus_overload(&self) -> SuiResult {
+    pub(crate) fn check_consensus_overload(&self) -> IotaResult {
         fp_ensure!(
             self.check_limits(),
-            SuiError::TooManyTransactionsPendingConsensus
+            IotaError::TooManyTransactionsPendingConsensus
         );
         Ok(())
     }
@@ -1113,7 +1114,7 @@ impl SubmitToConsensus for Arc<ConsensusAdapter> {
         &self,
         transactions: &[ConsensusTransaction],
         epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.submit_batch(transactions, None, epoch_store)
             .map(|_| ())
     }
@@ -1140,7 +1141,7 @@ mod adapter_tests {
     use rand::{rngs::StdRng, SeedableRng};
     use std::sync::Arc;
     use std::time::Duration;
-    use sui_types::{
+    use iota_types::{
         base_types::TransactionDigest,
         committee::Committee,
         crypto::{get_key_pair_from_rng, AuthorityKeyPair, AuthorityPublicKeyBytes},
@@ -1181,7 +1182,7 @@ mod adapter_tests {
             Some(1),
             Some(Duration::from_secs(2)),
             ConsensusAdapterMetrics::new_test(),
-            sui_protocol_config::ProtocolConfig::get_for_max_version_UNSAFE(),
+            iota_protocol_config::ProtocolConfig::get_for_max_version_UNSAFE(),
         );
 
         // transaction to submit
@@ -1213,7 +1214,7 @@ mod adapter_tests {
             None,
             None,
             ConsensusAdapterMetrics::new_test(),
-            sui_protocol_config::ProtocolConfig::get_for_max_version_UNSAFE(),
+            iota_protocol_config::ProtocolConfig::get_for_max_version_UNSAFE(),
         );
 
         let (delay_step, position, positions_moved, _) =

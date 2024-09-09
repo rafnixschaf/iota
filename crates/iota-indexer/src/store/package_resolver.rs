@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::{Arc, Mutex};
@@ -10,9 +11,9 @@ use diesel::OptionalExtension;
 use diesel::{QueryDsl, RunQueryDsl};
 
 use move_core_types::account_address::AccountAddress;
-use sui_package_resolver::{error::Error as PackageResolverError, Package, PackageStore};
-use sui_types::base_types::ObjectID;
-use sui_types::object::Object;
+use iota_package_resolver::{error::Error as PackageResolverError, Package, PackageStore};
+use iota_types::base_types::ObjectID;
+use iota_types::object::Object;
 
 use crate::db::ConnectionPool;
 use crate::errors::IndexerError;

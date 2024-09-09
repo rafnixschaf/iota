@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use clap::Parser;
 use tracing::{info, warn};
 
-use sui_indexer::errors::IndexerError;
-use sui_indexer::metrics::start_prometheus_server;
-use sui_indexer::IndexerConfig;
+use iota_indexer::errors::IndexerError;
+use iota_indexer::metrics::start_prometheus_server;
+use iota_indexer::IndexerConfig;
 
 #[tokio::main]
 async fn main() -> Result<(), IndexerError> {
@@ -14,14 +15,14 @@ async fn main() -> Result<(), IndexerError> {
     let _guard = telemetry_subscribers::TelemetryConfig::new()
         .with_env()
         .init();
-    warn!("WARNING: Sui indexer is still experimental and we expect occasional breaking changes that require backfills.");
+    warn!("WARNING: Iota indexer is still experimental and we expect occasional breaking changes that require backfills.");
 
     let mut indexer_config = IndexerConfig::parse();
     // TODO: remove. Temporary safeguard to migrate to `rpc_client_url` usage
     if indexer_config.rpc_client_url.contains("testnet") {
-        indexer_config.remote_store_url = Some("https://checkpoints.testnet.sui.io".to_string());
+        indexer_config.remote_store_url = Some("https://checkpoints.testnet.iota.io".to_string());
     } else if indexer_config.rpc_client_url.contains("mainnet") {
-        indexer_config.remote_store_url = Some("https://checkpoints.mainnet.sui.io".to_string());
+        indexer_config.remote_store_url = Some("https://checkpoints.mainnet.iota.io".to_string());
     }
     info!("Parsed indexer config: {:#?}", indexer_config);
     let (_registry_service, registry) = start_prometheus_server(
@@ -36,10 +37,10 @@ async fn main() -> Result<(), IndexerError> {
         indexer_config.rpc_client_url.as_str(),
     )?;
     #[cfg(feature = "postgres-feature")]
-    sui_indexer::db::setup_postgres::setup(indexer_config.clone(), registry.clone()).await?;
+    iota_indexer::db::setup_postgres::setup(indexer_config.clone(), registry.clone()).await?;
 
     #[cfg(feature = "mysql-feature")]
     #[cfg(not(feature = "postgres-feature"))]
-    sui_indexer::db::setup_mysql::setup(indexer_config, registry).await?;
+    iota_indexer::db::setup_mysql::setup(indexer_config, registry).await?;
     Ok(())
 }

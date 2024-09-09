@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// This example demonstrates a basic use of a shared object.
@@ -57,7 +58,7 @@ module basics::counter {
 
 #[test_only]
 module basics::counter_test {
-    use sui::test_scenario as ts;
+    use iota::test_scenario as ts;
     use basics::counter::{Self, Counter};
 
     #[test]

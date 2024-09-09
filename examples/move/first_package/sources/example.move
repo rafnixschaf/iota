@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 // docs::#first
 module my_first_package::example {
 
     // Part 1: These imports are provided by default
-    // use sui::object::{Self, UID};
-    // use sui::transfer;
-    // use sui::tx_context::{Self, TxContext};
+    // use iota::object::{Self, UID};
+    // use iota::transfer;
+    // use iota::tx_context::{Self, TxContext};
 
     // Part 2: struct definitions
     public struct Sword has key, store {
@@ -100,7 +101,7 @@ module my_first_package::example {
 
     #[test]
     fun test_sword_transactions() {
-        use sui::test_scenario;
+        use iota::test_scenario;
 
         // Create test addresses representing users
         let initial_owner = @0xCAFE;
@@ -138,7 +139,7 @@ module my_first_package::example {
 
     #[test]
     fun test_module_init() {
-        use sui::test_scenario;
+        use iota::test_scenario;
 
         // Create test addresses representing users
         let admin = @0xAD;

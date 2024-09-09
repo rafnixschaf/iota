@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{HashMap, HashSet};
@@ -11,20 +12,20 @@ use async_trait::async_trait;
 use ethers::prelude::Transaction;
 use ethers::providers::{Http, Middleware, Provider, StreamExt, Ws};
 use ethers::types::{Address as EthAddress, Block, Filter, H256};
-use sui_bridge::error::BridgeError;
-use sui_bridge::eth_client::EthClient;
-use sui_bridge::metered_eth_provider::MeteredEthHttpProvier;
-use sui_bridge::retry_with_max_elapsed_time;
+use iota_bridge::error::BridgeError;
+use iota_bridge::eth_client::EthClient;
+use iota_bridge::metered_eth_provider::MeteredEthHttpProvier;
+use iota_bridge::retry_with_max_elapsed_time;
 use tokio::task::JoinHandle;
 use tracing::info;
 
-use mysten_metrics::spawn_monitored_task;
-use sui_bridge::abi::{EthBridgeEvent, EthSuiBridgeEvents};
+use iota_metrics::spawn_monitored_task;
+use iota_bridge::abi::{EthBridgeEvent, EthIotaBridgeEvents};
 
 use crate::metrics::BridgeIndexerMetrics;
-use sui_bridge::metrics::BridgeMetrics;
-use sui_bridge::types::{EthEvent, RawEthLog};
-use sui_indexer_builder::indexer_builder::{DataMapper, DataSender, Datasource};
+use iota_bridge::metrics::BridgeMetrics;
+use iota_bridge::types::{EthEvent, RawEthLog};
+use iota_indexer_builder::indexer_builder::{DataMapper, DataSender, Datasource};
 
 use crate::{
     BridgeDataSource, ProcessedTxnData, TokenTransfer, TokenTransferData, TokenTransferStatus,
@@ -40,11 +41,11 @@ pub struct EthSubscriptionDatasource {
 
 impl EthSubscriptionDatasource {
     pub fn new(
-        eth_sui_bridge_contract_address: String,
+        eth_iota_bridge_contract_address: String,
         eth_ws_url: String,
         indexer_metrics: BridgeIndexerMetrics,
     ) -> Result<Self, anyhow::Error> {
-        let bridge_address = EthAddress::from_str(&eth_sui_bridge_contract_address)?;
+        let bridge_address = EthAddress::from_str(&eth_iota_bridge_contract_address)?;
         Ok(Self {
             bridge_address,
             eth_ws_url,
@@ -139,12 +140,12 @@ pub struct EthSyncDatasource {
 
 impl EthSyncDatasource {
     pub fn new(
-        eth_sui_bridge_contract_address: String,
+        eth_iota_bridge_contract_address: String,
         eth_http_url: String,
         indexer_metrics: BridgeIndexerMetrics,
         bridge_metrics: Arc<BridgeMetrics>,
     ) -> Result<Self, anyhow::Error> {
-        let bridge_address = EthAddress::from_str(&eth_sui_bridge_contract_address)?;
+        let bridge_address = EthAddress::from_str(&eth_iota_bridge_contract_address)?;
         Ok(Self {
             bridge_address,
             eth_http_url,
@@ -259,8 +260,8 @@ impl<E: EthEvent> DataMapper<(E, Block<H256>, Transaction), ProcessedTxnData> fo
         let gas = transaction.gas;
 
         let transfer = match bridge_event {
-            EthBridgeEvent::EthSuiBridgeEvents(bridge_event) => match bridge_event {
-                EthSuiBridgeEvents::TokensDepositedFilter(bridge_event) => {
+            EthBridgeEvent::EthIotaBridgeEvents(bridge_event) => match bridge_event {
+                EthIotaBridgeEvents::TokensDepositedFilter(bridge_event) => {
                     info!("Observed Eth Deposit at block: {}", log.block_number());
                     self.metrics.total_eth_token_deposited.inc();
                     ProcessedTxnData::TokenTransfer(TokenTransfer {
@@ -278,11 +279,11 @@ impl<E: EthEvent> DataMapper<(E, Block<H256>, Transaction), ProcessedTxnData> fo
                             destination_chain: bridge_event.destination_chain_id,
                             recipient_address: bridge_event.recipient_address.to_vec(),
                             token_id: bridge_event.token_id,
-                            amount: bridge_event.sui_adjusted_amount,
+                            amount: bridge_event.iota_adjusted_amount,
                         }),
                     })
                 }
-                EthSuiBridgeEvents::TokensClaimedFilter(bridge_event) => {
+                EthIotaBridgeEvents::TokensClaimedFilter(bridge_event) => {
                     info!("Observed Eth Claim at block: {}", log.block_number());
                     self.metrics.total_eth_token_transfer_claimed.inc();
                     ProcessedTxnData::TokenTransfer(TokenTransfer {
@@ -298,10 +299,10 @@ impl<E: EthEvent> DataMapper<(E, Block<H256>, Transaction), ProcessedTxnData> fo
                         data: None,
                     })
                 }
-                EthSuiBridgeEvents::PausedFilter(_)
-                | EthSuiBridgeEvents::UnpausedFilter(_)
-                | EthSuiBridgeEvents::UpgradedFilter(_)
-                | EthSuiBridgeEvents::InitializedFilter(_) => {
+                EthIotaBridgeEvents::PausedFilter(_)
+                | EthIotaBridgeEvents::UnpausedFilter(_)
+                | EthIotaBridgeEvents::UpgradedFilter(_)
+                | EthIotaBridgeEvents::InitializedFilter(_) => {
                     // TODO: handle these events
                     self.metrics.total_eth_bridge_txn_other.inc();
                     return Ok(vec![]);

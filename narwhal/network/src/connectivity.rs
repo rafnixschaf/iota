@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::metrics::NetworkConnectionMetrics;
@@ -6,7 +7,7 @@ use anemo::types::PeerEvent;
 use anemo::PeerId;
 use dashmap::DashMap;
 use futures::future;
-use mysten_metrics::spawn_logged_monitored_task;
+use iota_metrics::spawn_logged_monitored_task;
 use quinn_proto::ConnectionStats;
 use std::collections::HashMap;
 use std::sync::Arc;

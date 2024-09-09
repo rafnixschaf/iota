@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::execution_cache::ObjectCacheRead;
@@ -6,9 +7,9 @@ use itertools::izip;
 use once_cell::unsync::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
-use sui_types::{
+use iota_types::{
     base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber, TransactionDigest},
-    error::{SuiError, SuiResult, UserInputError},
+    error::{IotaError, IotaResult, UserInputError},
     storage::{GetSharedLocks, ObjectKey},
     transaction::{
         InputObjectKind, InputObjects, ObjectReadResult, ObjectReadResultKind,
@@ -40,7 +41,7 @@ impl TransactionInputLoader {
         input_object_kinds: &[InputObjectKind],
         receiving_objects: &[ObjectRef],
         epoch_id: EpochId,
-    ) -> SuiResult<(InputObjects, ReceivingObjects)> {
+    ) -> IotaResult<(InputObjects, ReceivingObjects)> {
         // Length of input_object_kinds have been checked via validity_check() for ProgrammableTransaction.
         let mut input_results = vec![None; input_object_kinds.len()];
         let mut object_refs = Vec::with_capacity(input_object_kinds.len());
@@ -51,7 +52,7 @@ impl TransactionInputLoader {
                 // Packages are loaded one at a time via the cache
                 InputObjectKind::MovePackage(id) => {
                     let Some(package) = self.cache.get_package_object(id)?.map(|o| o.into()) else {
-                        return Err(SuiError::from(kind.object_not_found_error()));
+                        return Err(IotaError::from(kind.object_not_found_error()));
                     };
                     input_results[i] = Some(ObjectReadResult {
                         input_object_kind: *kind,
@@ -72,7 +73,7 @@ impl TransactionInputLoader {
                                 object: ObjectReadResultKind::DeletedSharedObject(version, digest),
                             });
                         } else {
-                            return Err(SuiError::from(kind.object_not_found_error()));
+                            return Err(IotaError::from(kind.object_not_found_error()));
                         }
                     }
                 },
@@ -128,7 +129,7 @@ impl TransactionInputLoader {
         tx_key: &TransactionKey,
         input_object_kinds: &[InputObjectKind],
         epoch_id: EpochId,
-    ) -> SuiResult<InputObjects> {
+    ) -> IotaResult<InputObjects> {
         let shared_locks_cell: OnceCell<HashMap<_, _>> = OnceCell::new();
 
         let mut results = vec![None; input_object_kinds.len()];
@@ -154,7 +155,7 @@ impl TransactionInputLoader {
                 }
                 InputObjectKind::SharedMoveObject { id, .. } => {
                     let shared_locks = shared_locks_cell.get_or_try_init(|| {
-                        Ok::<HashMap<ObjectID, SequenceNumber>, SuiError>(
+                        Ok::<HashMap<ObjectID, SequenceNumber>, IotaError>(
                             shared_lock_store
                                 .get_shared_locks(tx_key)?
                                 .into_iter()
@@ -228,7 +229,7 @@ impl TransactionInputLoader {
         &self,
         receiving_objects: &[ObjectRef],
         epoch_id: EpochId,
-    ) -> SuiResult<ReceivingObjects> {
+    ) -> IotaResult<ReceivingObjects> {
         let mut receiving_results = Vec::with_capacity(receiving_objects.len());
         for objref in receiving_objects {
             // Note: the digest is checked later in check_transaction_input

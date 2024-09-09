@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! MemoryCache is a cache for the transaction execution which delays writes to the database until
@@ -39,7 +40,7 @@
 
 use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
 use crate::authority::authority_store::{
-    ExecutionLockWriteGuard, LockDetailsDeprecated, ObjectLockStatus, SuiLockResult,
+    ExecutionLockWriteGuard, LockDetailsDeprecated, ObjectLockStatus, IotaLockResult,
 };
 use crate::authority::authority_store_tables::LiveObject;
 use crate::authority::epoch_start_configuration::{EpochFlag, EpochStartConfiguration};
@@ -51,28 +52,28 @@ use dashmap::mapref::entry::Entry as DashMapEntry;
 use dashmap::DashMap;
 use futures::{future::BoxFuture, FutureExt};
 use moka::sync::Cache as MokaCache;
-use mysten_common::sync::notify_read::NotifyRead;
+use iota_common::sync::notify_read::NotifyRead;
 use parking_lot::Mutex;
 use prometheus::Registry;
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::sync::Arc;
-use sui_macros::fail_point_async;
-use sui_protocol_config::ProtocolVersion;
-use sui_types::accumulator::Accumulator;
-use sui_types::base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber, VerifiedExecutionData};
-use sui_types::bridge::{get_bridge, Bridge};
-use sui_types::digests::{
+use iota_macros::fail_point_async;
+use iota_protocol_config::ProtocolVersion;
+use iota_types::accumulator::Accumulator;
+use iota_types::base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber, VerifiedExecutionData};
+use iota_types::bridge::{get_bridge, Bridge};
+use iota_types::digests::{
     ObjectDigest, TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest,
 };
-use sui_types::effects::{TransactionEffects, TransactionEvents};
-use sui_types::error::{SuiError, SuiResult, UserInputError};
-use sui_types::message_envelope::Message;
-use sui_types::messages_checkpoint::CheckpointSequenceNumber;
-use sui_types::object::Object;
-use sui_types::storage::{MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore, PackageObject};
-use sui_types::sui_system_state::{get_sui_system_state, SuiSystemState};
-use sui_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
+use iota_types::effects::{TransactionEffects, TransactionEvents};
+use iota_types::error::{IotaError, IotaResult, UserInputError};
+use iota_types::message_envelope::Message;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::object::Object;
+use iota_types::storage::{MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore, PackageObject};
+use iota_types::iota_system_state::{get_iota_system_state, IotaSystemState};
+use iota_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
 use tap::TapOptional;
 use tracing::{debug, info, instrument, trace, warn};
 
@@ -713,7 +714,7 @@ impl WritebackCache {
         &self,
         request_type: &'static str,
         id: &ObjectID,
-    ) -> SuiResult<Option<Object>> {
+    ) -> IotaResult<Option<Object>> {
         match self.get_object_by_id_cache_only(request_type, id) {
             CacheResult::Hit((_, object)) => Ok(Some(object)),
             CacheResult::NegativeHit => Ok(None),
@@ -748,7 +749,7 @@ impl WritebackCache {
         &self,
         epoch_id: EpochId,
         tx_outputs: Arc<TransactionOutputs>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         trace!(digest = ?tx_outputs.transaction.digest(), "writing transaction outputs to cache");
 
         let TransactionOutputs {
@@ -853,7 +854,7 @@ impl WritebackCache {
         &self,
         epoch: EpochId,
         digests: &[TransactionDigest],
-    ) -> SuiResult {
+    ) -> IotaResult {
         fail_point_async!("writeback-cache-commit");
         trace!(?digests);
 
@@ -998,7 +999,7 @@ impl WritebackCache {
         }
     }
 
-    async fn persist_transactions(&self, digests: &[TransactionDigest]) -> SuiResult {
+    async fn persist_transactions(&self, digests: &[TransactionDigest]) -> IotaResult {
         let mut txns = Vec::with_capacity(digests.len());
         for tx_digest in digests {
             let Some(tx) = self
@@ -1123,7 +1124,7 @@ impl WritebackCache {
         self.object_locks.clear();
     }
 
-    fn revert_state_update_impl(&self, tx: &TransactionDigest) -> SuiResult {
+    fn revert_state_update_impl(&self, tx: &TransactionDigest) -> IotaResult {
         // TODO: remove revert_state_update_impl entirely, and simply drop all dirty
         // state when clear_state_end_of_epoch_impl is called.
         // Futher, once we do this, we can delay the insertion of the transaction into
@@ -1171,20 +1172,20 @@ impl ExecutionCacheCommit for WritebackCache {
         &'a self,
         epoch: EpochId,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult> {
+    ) -> BoxFuture<'a, IotaResult> {
         WritebackCache::commit_transaction_outputs(self, epoch, digests).boxed()
     }
 
     fn persist_transactions<'a>(
         &'a self,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult> {
+    ) -> BoxFuture<'a, IotaResult> {
         WritebackCache::persist_transactions(self, digests).boxed()
     }
 }
 
 impl ObjectCacheRead for WritebackCache {
-    fn get_package_object(&self, package_id: &ObjectID) -> SuiResult<Option<PackageObject>> {
+    fn get_package_object(&self, package_id: &ObjectID) -> IotaResult<Option<PackageObject>> {
         self.metrics
             .record_cache_request("package", "package_cache");
         if let Some(p) = self.packages.get(package_id) {
@@ -1218,7 +1219,7 @@ impl ObjectCacheRead for WritebackCache {
                 self.packages.insert(*package_id, p.clone());
                 Ok(Some(p))
             } else {
-                Err(SuiError::UserInputError {
+                Err(IotaError::UserInputError {
                     error: UserInputError::MoveObjectAsPackage {
                         object_id: *package_id,
                     },
@@ -1236,7 +1237,7 @@ impl ObjectCacheRead for WritebackCache {
 
     // get_object and variants.
 
-    fn get_object(&self, id: &ObjectID) -> SuiResult<Option<Object>> {
+    fn get_object(&self, id: &ObjectID) -> IotaResult<Option<Object>> {
         self.get_object_impl("object_latest", id)
     }
 
@@ -1244,7 +1245,7 @@ impl ObjectCacheRead for WritebackCache {
         &self,
         object_id: &ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<Option<Object>> {
+    ) -> IotaResult<Option<Object>> {
         match self.get_object_by_key_cache_only(object_id, version) {
             CacheResult::Hit(object) => Ok(Some(object)),
             CacheResult::NegativeHit => Ok(None),
@@ -1257,7 +1258,7 @@ impl ObjectCacheRead for WritebackCache {
     fn multi_get_objects_by_key(
         &self,
         object_keys: &[ObjectKey],
-    ) -> Result<Vec<Option<Object>>, SuiError> {
+    ) -> Result<Vec<Option<Object>>, IotaError> {
         do_fallback_lookup(
             object_keys,
             |key| {
@@ -1279,7 +1280,7 @@ impl ObjectCacheRead for WritebackCache {
         &self,
         object_id: &ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         match self.get_object_by_key_cache_only(object_id, version) {
             CacheResult::Hit(_) => Ok(true),
             CacheResult::NegativeHit => Ok(false),
@@ -1289,7 +1290,7 @@ impl ObjectCacheRead for WritebackCache {
         }
     }
 
-    fn multi_object_exists_by_key(&self, object_keys: &[ObjectKey]) -> SuiResult<Vec<bool>> {
+    fn multi_object_exists_by_key(&self, object_keys: &[ObjectKey]) -> IotaResult<Vec<bool>> {
         do_fallback_lookup(
             object_keys,
             |key| {
@@ -1309,7 +1310,7 @@ impl ObjectCacheRead for WritebackCache {
     fn get_latest_object_ref_or_tombstone(
         &self,
         object_id: ObjectID,
-    ) -> SuiResult<Option<ObjectRef>> {
+    ) -> IotaResult<Option<ObjectRef>> {
         match self.get_object_entry_by_id_cache_only("latest_objref_or_tombstone", &object_id) {
             CacheResult::Hit((version, entry)) => Ok(Some(match entry {
                 ObjectEntry::Object(object) => object.compute_object_reference(),
@@ -1326,7 +1327,7 @@ impl ObjectCacheRead for WritebackCache {
     fn get_latest_object_or_tombstone(
         &self,
         object_id: ObjectID,
-    ) -> Result<Option<(ObjectKey, ObjectOrTombstone)>, SuiError> {
+    ) -> Result<Option<(ObjectKey, ObjectOrTombstone)>, IotaError> {
         match self.get_object_entry_by_id_cache_only("latest_object_or_tombstone", &object_id) {
             CacheResult::Hit((version, entry)) => {
                 let key = ObjectKey(object_id, version);
@@ -1362,7 +1363,7 @@ impl ObjectCacheRead for WritebackCache {
         &self,
         object_id: ObjectID,
         version_bound: SequenceNumber,
-    ) -> SuiResult<Option<Object>> {
+    ) -> IotaResult<Option<Object>> {
         macro_rules! check_cache_entry {
             ($level: expr, $objects: expr) => {
                 self.metrics
@@ -1502,11 +1503,11 @@ impl ObjectCacheRead for WritebackCache {
         )
     }
 
-    fn get_sui_system_state_object_unsafe(&self) -> SuiResult<SuiSystemState> {
-        get_sui_system_state(self)
+    fn get_iota_system_state_object_unsafe(&self) -> IotaResult<IotaSystemState> {
+        get_iota_system_state(self)
     }
 
-    fn get_bridge_object_unsafe(&self) -> SuiResult<Bridge> {
+    fn get_bridge_object_unsafe(&self) -> IotaResult<Bridge> {
         get_bridge(self)
     }
 
@@ -1515,7 +1516,7 @@ impl ObjectCacheRead for WritebackCache {
         object_id: &ObjectID,
         version: SequenceNumber,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<MarkerValue>> {
+    ) -> IotaResult<Option<MarkerValue>> {
         match self.get_marker_value_cache_only(object_id, version, epoch_id) {
             CacheResult::Hit(marker) => Ok(Some(marker)),
             CacheResult::NegativeHit => Ok(None),
@@ -1529,7 +1530,7 @@ impl ObjectCacheRead for WritebackCache {
         &self,
         object_id: &ObjectID,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<(SequenceNumber, MarkerValue)>> {
+    ) -> IotaResult<Option<(SequenceNumber, MarkerValue)>> {
         match self.get_latest_marker_value_cache_only(object_id, epoch_id) {
             CacheResult::Hit((v, marker)) => Ok(Some((v, marker))),
             CacheResult::NegativeHit => {
@@ -1541,7 +1542,7 @@ impl ObjectCacheRead for WritebackCache {
         }
     }
 
-    fn get_lock(&self, obj_ref: ObjectRef, epoch_store: &AuthorityPerEpochStore) -> SuiLockResult {
+    fn get_lock(&self, obj_ref: ObjectRef, epoch_store: &AuthorityPerEpochStore) -> IotaLockResult {
         let cur_epoch = epoch_store.epoch();
         match self.get_object_by_id_cache_only("lock", &obj_ref.0) {
             CacheResult::Hit((_, obj)) => {
@@ -1569,7 +1570,7 @@ impl ObjectCacheRead for WritebackCache {
                 }
             }
             CacheResult::NegativeHit => {
-                Err(SuiError::from(UserInputError::ObjectNotFound {
+                Err(IotaError::from(UserInputError::ObjectNotFound {
                     object_id: obj_ref.0,
                     // even though we know the requested version, we leave it as None to indicate
                     // that the object does not exist at any version
@@ -1580,7 +1581,7 @@ impl ObjectCacheRead for WritebackCache {
         }
     }
 
-    fn _get_live_objref(&self, object_id: ObjectID) -> SuiResult<ObjectRef> {
+    fn _get_live_objref(&self, object_id: ObjectID) -> IotaResult<ObjectRef> {
         let obj = self.get_object_impl("live_objref", &object_id)?.ok_or(
             UserInputError::ObjectNotFound {
                 object_id,
@@ -1590,7 +1591,7 @@ impl ObjectCacheRead for WritebackCache {
         Ok(obj.compute_object_reference())
     }
 
-    fn check_owned_objects_are_live(&self, owned_object_refs: &[ObjectRef]) -> SuiResult {
+    fn check_owned_objects_are_live(&self, owned_object_refs: &[ObjectRef]) -> IotaResult {
         do_fallback_lookup(
             owned_object_refs,
             |obj_ref| match self.get_object_by_id_cache_only("object_is_live", &obj_ref.0) {
@@ -1621,7 +1622,7 @@ impl ObjectCacheRead for WritebackCache {
         Ok(())
     }
 
-    fn get_highest_pruned_checkpoint(&self) -> SuiResult<CheckpointSequenceNumber> {
+    fn get_highest_pruned_checkpoint(&self) -> IotaResult<CheckpointSequenceNumber> {
         self.store.perpetual_tables.get_highest_pruned_checkpoint()
     }
 }
@@ -1630,7 +1631,7 @@ impl TransactionCacheRead for WritebackCache {
     fn multi_get_transaction_blocks(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<Arc<VerifiedTransaction>>>> {
+    ) -> IotaResult<Vec<Option<Arc<VerifiedTransaction>>>> {
         do_fallback_lookup(
             digests,
             |digest| {
@@ -1667,7 +1668,7 @@ impl TransactionCacheRead for WritebackCache {
     fn multi_get_executed_effects_digests(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<TransactionEffectsDigest>>> {
+    ) -> IotaResult<Vec<Option<TransactionEffectsDigest>>> {
         do_fallback_lookup(
             digests,
             |digest| {
@@ -1703,7 +1704,7 @@ impl TransactionCacheRead for WritebackCache {
     fn multi_get_effects(
         &self,
         digests: &[TransactionEffectsDigest],
-    ) -> SuiResult<Vec<Option<TransactionEffects>>> {
+    ) -> IotaResult<Vec<Option<TransactionEffects>>> {
         do_fallback_lookup(
             digests,
             |digest| {
@@ -1739,7 +1740,7 @@ impl TransactionCacheRead for WritebackCache {
     fn notify_read_executed_effects_digests<'a>(
         &'a self,
         digests: &'a [TransactionDigest],
-    ) -> BoxFuture<'a, SuiResult<Vec<TransactionEffectsDigest>>> {
+    ) -> BoxFuture<'a, IotaResult<Vec<TransactionEffectsDigest>>> {
         self.executed_effects_digests_notify_read
             .read(digests, |digests| {
                 self.multi_get_executed_effects_digests(digests)
@@ -1750,7 +1751,7 @@ impl TransactionCacheRead for WritebackCache {
     fn multi_get_events(
         &self,
         event_digests: &[TransactionEventsDigest],
-    ) -> SuiResult<Vec<Option<TransactionEvents>>> {
+    ) -> IotaResult<Vec<Option<TransactionEvents>>> {
         fn map_events(events: TransactionEvents) -> Option<TransactionEvents> {
             if events.data.is_empty() {
                 None
@@ -1807,7 +1808,7 @@ impl ExecutionCacheWrite for WritebackCache {
         epoch_store: &'a AuthorityPerEpochStore,
         owned_input_objects: &'a [ObjectRef],
         transaction: VerifiedSignedTransaction,
-    ) -> BoxFuture<'a, SuiResult> {
+    ) -> BoxFuture<'a, IotaResult> {
         self.object_locks
             .acquire_transaction_locks(self, epoch_store, owned_input_objects, transaction)
             .boxed()
@@ -1817,7 +1818,7 @@ impl ExecutionCacheWrite for WritebackCache {
         &self,
         epoch_id: EpochId,
         tx_outputs: Arc<TransactionOutputs>,
-    ) -> BoxFuture<'_, SuiResult> {
+    ) -> BoxFuture<'_, IotaResult> {
         WritebackCache::write_transaction_outputs(self, epoch_id, tx_outputs).boxed()
     }
 }
@@ -1831,9 +1832,9 @@ impl ExecutionCacheWrite for WritebackCache {
 /// via the get_cached_key and multiget_fallback functions.
 fn do_fallback_lookup<K: Copy, V: Default + Clone>(
     keys: &[K],
-    get_cached_key: impl Fn(&K) -> SuiResult<CacheResult<V>>,
-    multiget_fallback: impl Fn(&[K]) -> SuiResult<Vec<V>>,
-) -> SuiResult<Vec<V>> {
+    get_cached_key: impl Fn(&K) -> IotaResult<CacheResult<V>>,
+    multiget_fallback: impl Fn(&[K]) -> IotaResult<Vec<V>>,
+) -> IotaResult<Vec<V>> {
     let mut results = vec![V::default(); keys.len()];
     let mut fallback_keys = Vec::with_capacity(keys.len());
     let mut fallback_indices = Vec::with_capacity(keys.len());
@@ -1871,7 +1872,7 @@ impl AccumulatorStore for WritebackCache {
         &self,
         object_id: &ObjectID,
         version: SequenceNumber,
-    ) -> SuiResult<Option<ObjectRef>> {
+    ) -> IotaResult<Option<ObjectRef>> {
         // There is probably a more efficient way to implement this, but since this is only used by
         // old protocol versions, it is better to do the simple thing that is obviously correct.
         // In this case we previous version from all sources and choose the highest
@@ -1922,13 +1923,13 @@ impl AccumulatorStore for WritebackCache {
     fn get_root_state_accumulator_for_epoch(
         &self,
         epoch: EpochId,
-    ) -> SuiResult<Option<(CheckpointSequenceNumber, Accumulator)>> {
+    ) -> IotaResult<Option<(CheckpointSequenceNumber, Accumulator)>> {
         self.store.get_root_state_accumulator_for_epoch(epoch)
     }
 
     fn get_root_state_accumulator_for_highest_epoch(
         &self,
-    ) -> SuiResult<Option<(EpochId, (CheckpointSequenceNumber, Accumulator))>> {
+    ) -> IotaResult<Option<(EpochId, (CheckpointSequenceNumber, Accumulator))>> {
         self.store.get_root_state_accumulator_for_highest_epoch()
     }
 
@@ -1937,7 +1938,7 @@ impl AccumulatorStore for WritebackCache {
         epoch: EpochId,
         checkpoint_seq_num: &CheckpointSequenceNumber,
         acc: &Accumulator,
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.store
             .insert_state_accumulator_for_epoch(epoch, checkpoint_seq_num, acc)
     }

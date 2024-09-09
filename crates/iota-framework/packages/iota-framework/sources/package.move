@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Functions for operating on Move packages from within Move:
 /// - Creating proof-of-publish objects from one-time witnesses
 /// - Administering package upgrades through upgrade policies.
-module sui::package {
+module iota::package {
     use std::ascii::String;
     use std::type_name;
-    use sui::types;
+    use iota::types;
 
     /// Allows calling `.burn` to destroy a `Publisher`.
     public use fun burn_publisher as Publisher.burn;
@@ -150,7 +151,7 @@ module sui::package {
     /// Since this function can only be called in the module initializer,
     /// the sender is the publisher.
     public fun claim_and_keep<OTW: drop>(otw: OTW, ctx: &mut TxContext) {
-        sui::transfer::public_transfer(claim(otw, ctx), ctx.sender())
+        iota::transfer::public_transfer(claim(otw, ctx), ctx.sender())
     }
 
     /// Destroy a Publisher object effectively removing all privileges
@@ -344,7 +345,7 @@ module sui::package {
         // hashing the existing package and cap ID.
         let mut data = cap.to_bytes();
         data.append(package.to_bytes());
-        let package = object::id_from_bytes(sui::hash::blake2b256(&data));
+        let package = object::id_from_bytes(iota::hash::blake2b256(&data));
 
         UpgradeReceipt {
             cap, package

@@ -1,29 +1,30 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::errors::IndexerError;
 use move_core_types::language_storage::StructTag;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sui_json_rpc_types::{
-    ObjectChange, SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
+use iota_json_rpc_types::{
+    ObjectChange, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
-use sui_types::base_types::{ObjectDigest, SequenceNumber};
-use sui_types::base_types::{ObjectID, SuiAddress};
-use sui_types::crypto::AggregateAuthoritySignature;
-use sui_types::digests::TransactionDigest;
-use sui_types::dynamic_field::DynamicFieldInfo;
-use sui_types::effects::TransactionEffects;
-use sui_types::event::SystemEpochInfoEvent;
-use sui_types::messages_checkpoint::{
+use iota_types::base_types::{ObjectDigest, SequenceNumber};
+use iota_types::base_types::{ObjectID, IotaAddress};
+use iota_types::crypto::AggregateAuthoritySignature;
+use iota_types::digests::TransactionDigest;
+use iota_types::dynamic_field::DynamicFieldInfo;
+use iota_types::effects::TransactionEffects;
+use iota_types::event::SystemEpochInfoEvent;
+use iota_types::messages_checkpoint::{
     CertifiedCheckpointSummary, CheckpointCommitment, CheckpointDigest, CheckpointSequenceNumber,
     EndOfEpochData,
 };
-use sui_types::move_package::MovePackage;
-use sui_types::object::{Object, Owner};
-use sui_types::sui_serde::SuiStructTag;
-use sui_types::sui_system_state::sui_system_state_summary::SuiSystemStateSummary;
-use sui_types::transaction::SenderSignedData;
+use iota_types::move_package::MovePackage;
+use iota_types::object::{Object, Owner};
+use iota_types::iota_serde::IotaStructTag;
+use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
+use iota_types::transaction::SenderSignedData;
 
 pub type IndexerResult<T> = Result<T, IndexerError>;
 
@@ -51,9 +52,9 @@ pub struct IndexedCheckpoint {
 }
 
 impl IndexedCheckpoint {
-    pub fn from_sui_checkpoint(
-        checkpoint: &sui_types::messages_checkpoint::CertifiedCheckpointSummary,
-        contents: &sui_types::messages_checkpoint::CheckpointContents,
+    pub fn from_iota_checkpoint(
+        checkpoint: &iota_types::messages_checkpoint::CertifiedCheckpointSummary,
+        contents: &iota_types::messages_checkpoint::CheckpointContents,
         successful_tx_num: usize,
     ) -> Self {
         let total_gas_cost = checkpoint.epoch_rolling_gas_cost_summary.computation_cost as i64
@@ -117,7 +118,7 @@ pub struct IndexedEpochInfo {
 
 impl IndexedEpochInfo {
     pub fn from_new_system_state_summary(
-        new_system_state_summary: SuiSystemStateSummary,
+        new_system_state_summary: IotaSystemStateSummary,
         first_checkpoint_id: u64,
         event: Option<&SystemEpochInfoEvent>,
     ) -> IndexedEpochInfo {
@@ -141,7 +142,7 @@ impl IndexedEpochInfo {
     /// `network_total_tx_num_at_last_epoch_end` is needed to determine the number of transactions
     /// that occurred in the epoch X-1.
     pub fn from_end_of_epoch_data(
-        system_state_summary: &SuiSystemStateSummary,
+        system_state_summary: &IotaSystemStateSummary,
         last_checkpoint_summary: &CertifiedCheckpointSummary,
         event: &SystemEpochInfoEvent,
         network_total_tx_num_at_last_epoch_end: u64,
@@ -184,7 +185,7 @@ pub struct IndexedEvent {
     pub event_sequence_number: u64,
     pub checkpoint_sequence_number: u64,
     pub transaction_digest: TransactionDigest,
-    pub senders: Vec<SuiAddress>,
+    pub senders: Vec<IotaAddress>,
     pub package: ObjectID,
     pub module: String,
     pub event_type: String,
@@ -202,7 +203,7 @@ impl IndexedEvent {
         event_sequence_number: u64,
         checkpoint_sequence_number: u64,
         transaction_digest: TransactionDigest,
-        event: &sui_types::event::Event,
+        event: &iota_types::event::Event,
         timestamp_ms: u64,
     ) -> Self {
         Self {
@@ -227,7 +228,7 @@ impl IndexedEvent {
 pub struct EventIndex {
     pub tx_sequence_number: u64,
     pub event_sequence_number: u64,
-    pub sender: SuiAddress,
+    pub sender: IotaAddress,
     pub emit_package: ObjectID,
     pub emit_module: String,
     pub type_package: ObjectID,
@@ -242,7 +243,7 @@ impl EventIndex {
     pub fn from_event(
         tx_sequence_number: u64,
         event_sequence_number: u64,
-        event: &sui_types::event::Event,
+        event: &iota_types::event::Event,
     ) -> Self {
         let type_instantiation = event
             .type_
@@ -312,7 +313,7 @@ impl TryFrom<i16> for OwnerType {
 }
 
 // Returns owner_type, owner_address
-pub fn owner_to_owner_info(owner: &Owner) -> (OwnerType, Option<SuiAddress>) {
+pub fn owner_to_owner_info(owner: &Owner) -> (OwnerType, Option<IotaAddress>) {
     match owner {
         Owner::AddressOwner(address) => (OwnerType::Address, Some(*address)),
         Owner::ObjectOwner(address) => (OwnerType::Object, Some(*address)),
@@ -377,8 +378,8 @@ pub struct IndexedTransaction {
     pub checkpoint_sequence_number: u64,
     pub timestamp_ms: u64,
     pub object_changes: Vec<IndexedObjectChange>,
-    pub balance_change: Vec<sui_json_rpc_types::BalanceChange>,
-    pub events: Vec<sui_types::event::Event>,
+    pub balance_change: Vec<iota_json_rpc_types::BalanceChange>,
+    pub events: Vec<iota_types::event::Event>,
     pub transaction_kind: TransactionKind,
     pub successful_tx_num: u64,
 }
@@ -391,9 +392,9 @@ pub struct TxIndex {
     pub checkpoint_sequence_number: u64,
     pub input_objects: Vec<ObjectID>,
     pub changed_objects: Vec<ObjectID>,
-    pub payers: Vec<SuiAddress>,
-    pub sender: SuiAddress,
-    pub recipients: Vec<SuiAddress>,
+    pub payers: Vec<IotaAddress>,
+    pub sender: IotaAddress,
+    pub recipients: Vec<IotaAddress>,
     pub move_calls: Vec<(ObjectID, String, String)>,
 }
 
@@ -408,9 +409,9 @@ pub enum IndexedObjectChange {
         modules: Vec<String>,
     },
     Transferred {
-        sender: SuiAddress,
+        sender: IotaAddress,
         recipient: Owner,
-        #[serde_as(as = "SuiStructTag")]
+        #[serde_as(as = "IotaStructTag")]
         object_type: StructTag,
         object_id: ObjectID,
         version: SequenceNumber,
@@ -418,9 +419,9 @@ pub enum IndexedObjectChange {
     },
     /// Object mutated.
     Mutated {
-        sender: SuiAddress,
+        sender: IotaAddress,
         owner: Owner,
-        #[serde_as(as = "SuiStructTag")]
+        #[serde_as(as = "IotaStructTag")]
         object_type: StructTag,
         object_id: ObjectID,
         version: SequenceNumber,
@@ -429,25 +430,25 @@ pub enum IndexedObjectChange {
     },
     /// Delete object
     Deleted {
-        sender: SuiAddress,
-        #[serde_as(as = "SuiStructTag")]
+        sender: IotaAddress,
+        #[serde_as(as = "IotaStructTag")]
         object_type: StructTag,
         object_id: ObjectID,
         version: SequenceNumber,
     },
     /// Wrapped object
     Wrapped {
-        sender: SuiAddress,
-        #[serde_as(as = "SuiStructTag")]
+        sender: IotaAddress,
+        #[serde_as(as = "IotaStructTag")]
         object_type: StructTag,
         object_id: ObjectID,
         version: SequenceNumber,
     },
     /// New object creation
     Created {
-        sender: SuiAddress,
+        sender: IotaAddress,
         owner: Owner,
-        #[serde_as(as = "SuiStructTag")]
+        #[serde_as(as = "IotaStructTag")]
         object_type: StructTag,
         object_id: ObjectID,
         version: SequenceNumber,
@@ -629,17 +630,17 @@ impl From<IndexedObjectChange> for ObjectChange {
     }
 }
 
-// SuiTransactionBlockResponseWithOptions is only used on the reading path
-pub struct SuiTransactionBlockResponseWithOptions {
-    pub response: SuiTransactionBlockResponse,
-    pub options: SuiTransactionBlockResponseOptions,
+// IotaTransactionBlockResponseWithOptions is only used on the reading path
+pub struct IotaTransactionBlockResponseWithOptions {
+    pub response: IotaTransactionBlockResponse,
+    pub options: IotaTransactionBlockResponseOptions,
 }
 
-impl From<SuiTransactionBlockResponseWithOptions> for SuiTransactionBlockResponse {
-    fn from(value: SuiTransactionBlockResponseWithOptions) -> Self {
-        let SuiTransactionBlockResponseWithOptions { response, options } = value;
+impl From<IotaTransactionBlockResponseWithOptions> for IotaTransactionBlockResponse {
+    fn from(value: IotaTransactionBlockResponseWithOptions) -> Self {
+        let IotaTransactionBlockResponseWithOptions { response, options } = value;
 
-        SuiTransactionBlockResponse {
+        IotaTransactionBlockResponse {
             digest: response.digest,
             transaction: options.show_input.then_some(response.transaction).flatten(),
             raw_transaction: options

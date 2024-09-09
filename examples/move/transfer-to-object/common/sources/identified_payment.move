@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 #[lint_allow(coin_field)]
 module common::identified_payment {
-    use sui::sui::SUI;
-    use sui::coin::{Self, Coin};
-    use sui::transfer::Receiving;
-    use sui::event;
-    use sui::dynamic_field;
+    use iota::iota::IOTA;
+    use iota::coin::{Self, Coin};
+    use iota::transfer::Receiving;
+    use iota::event;
+    use iota::dynamic_field;
 
     const ENotEarmarkedForSender: u64 = 0;
 
@@ -20,7 +21,7 @@ module common::identified_payment {
     public struct IdentifiedPayment has key, store {
         id: UID,
         payment_id: u64,
-        coin: Coin<SUI>,
+        coin: Coin<IOTA>,
     }
 
     /// An `EarmarkedPayment` payment is an `IdentifiedPayment` that is
@@ -55,7 +56,7 @@ module common::identified_payment {
     /// Make a payment with the given payment ID to the provided `to` address.
     /// Will create an `IdentifiedPayment` object that can be unpacked by the
     /// recipient, and also emits an event.
-    public fun make_payment(payment_id: u64, coin: Coin<SUI>, to: address, ctx: &mut TxContext) {
+    public fun make_payment(payment_id: u64, coin: Coin<IOTA>, to: address, ctx: &mut TxContext) {
         let payment_amount = coin::value(&coin);
         let identified_payment = IdentifiedPayment {
             id: object::new(ctx),
@@ -72,7 +73,7 @@ module common::identified_payment {
     }
 
     /// Only needed for the non transfer-to-object-based cash register.
-    public fun make_shared_payment(register_uid: &mut UID, payment_id: u64, coin: Coin<SUI>, ctx: &mut TxContext) {
+    public fun make_shared_payment(register_uid: &mut UID, payment_id: u64, coin: Coin<IOTA>, ctx: &mut TxContext) {
         let payment_amount = coin::value(&coin);
         let identified_payment = IdentifiedPayment {
             id: object::new(ctx),
@@ -90,7 +91,7 @@ module common::identified_payment {
 
     /// Process an `IdentifiedPayment` payment returning back the payments ID,
     /// along with the coin that was sent in the payment.
-    public fun unpack(identified_payment: IdentifiedPayment): (u64, Coin<SUI>) {
+    public fun unpack(identified_payment: IdentifiedPayment): (u64, Coin<IOTA>) {
         let IdentifiedPayment { id, payment_id, coin } = identified_payment;
         object::delete(id);
         event::emit(ProcessedPaymentEvent {
@@ -111,7 +112,7 @@ module common::identified_payment {
 
     /// An example of a custom receiving rule -- this behaves in a similar manner
     /// to custom transfer rules: if the object is `key` only , the
-    /// `sui::transfer::receive` function can only be called on the object from
+    /// `iota::transfer::receive` function can only be called on the object from
     /// within the same module that defined that object.
     ///
     /// In this case `EarmarkedPayment` is defined with `key` only, so this is

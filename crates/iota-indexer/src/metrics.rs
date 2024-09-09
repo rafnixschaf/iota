@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
@@ -13,7 +14,7 @@ use prometheus::{Registry, TextEncoder};
 use regex::Regex;
 use tracing::{info, warn};
 
-use mysten_metrics::RegistryService;
+use iota_metrics::RegistryService;
 
 const METRICS_ROUTE: &str = "/metrics";
 

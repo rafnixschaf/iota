@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// An implementation of Tic Tac Toe, using owned objects.
@@ -18,8 +19,8 @@
 /// expensive, however the implementation is more straightforward and each move
 /// only requires one transaction.
 module tic_tac_toe::owned {
-    use sui::event;
-    use sui::transfer::Receiving;
+    use iota::event;
+    use iota::transfer::Receiving;
 
     // === Object Types ===
 

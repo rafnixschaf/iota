@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 pub mod admin;
 pub mod config;
@@ -39,7 +40,7 @@ mod tests {
     use crate::histogram_relay::HistogramRelay;
     use crate::prom_to_mimir::tests::*;
 
-    use crate::{admin::CertKeyPair, config::RemoteWriteConfig, peers::SuiNodeProvider};
+    use crate::{admin::CertKeyPair, config::RemoteWriteConfig, peers::IotaNodeProvider};
     use axum::http::StatusCode;
     use axum::routing::post;
     use axum::Router;
@@ -49,7 +50,7 @@ mod tests {
     use protobuf::RepeatedField;
     use std::net::TcpListener;
     use std::time::Duration;
-    use sui_tls::{ClientCertVerifier, TlsAcceptor};
+    use iota_tls::{ClientCertVerifier, TlsAcceptor};
 
     async fn run_dummy_remote_write(listener: TcpListener) {
         /// i accept everything, send me the trash
@@ -67,13 +68,13 @@ mod tests {
     }
 
     /// axum_acceptor is a basic e2e test that creates a mock remote_write post endpoint and has a simple
-    /// sui-node client that posts data to the proxy using the protobuf format.  The server processes this
+    /// iota-node client that posts data to the proxy using the protobuf format.  The server processes this
     /// data and sends it to the mock remote_write which accepts everything.  Future work is to make this more
     /// robust and expand the scope of coverage, probabaly moving this test elsewhere and renaming it.
     #[tokio::test]
     async fn axum_acceptor() {
         // generate self-signed certificates
-        let CertKeyPair(client_priv_cert, client_pub_key) = admin::generate_self_cert("sui".into());
+        let CertKeyPair(client_priv_cert, client_pub_key) = admin::generate_self_cert("iota".into());
         let CertKeyPair(server_priv_cert, _) = admin::generate_self_cert("localhost".into());
 
         // create a fake rpc server
@@ -88,10 +89,10 @@ mod tests {
             tokio::spawn(async move { run_dummy_remote_write(dummy_remote_write_listener).await });
 
         // init the tls config and allower
-        let mut allower = SuiNodeProvider::new("".into(), Duration::from_secs(30), vec![]);
+        let mut allower = IotaNodeProvider::new("".into(), Duration::from_secs(30), vec![]);
         let tls_config = ClientCertVerifier::new(
             allower.clone(),
-            sui_tls::SUI_VALIDATOR_SERVER_NAME.to_string(),
+            iota_tls::IOTA_VALIDATOR_SERVER_NAME.to_string(),
         )
         .rustls_server_config(
             vec![server_priv_cert.rustls_certificate()],
@@ -145,7 +146,7 @@ mod tests {
         // Insert the client's public key into the allowlist and verify the request is successful
         allower.get_mut().write().unwrap().insert(
             client_pub_key.to_owned(),
-            peers::SuiPeer {
+            peers::IotaPeer {
                 name: "some-node".into(),
                 p2p_address: Multiaddr::empty(),
                 public_key: client_pub_key.to_owned(),

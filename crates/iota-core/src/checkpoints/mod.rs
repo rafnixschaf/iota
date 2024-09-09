@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 mod causal_order;
@@ -21,15 +22,15 @@ use diffy::create_patch;
 use futures::future::{select, Either};
 use futures::FutureExt;
 use itertools::Itertools;
-use mysten_metrics::{monitored_scope, spawn_monitored_task, MonitoredFutureExt};
+use iota_metrics::{monitored_scope, spawn_monitored_task, MonitoredFutureExt};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use sui_macros::fail_point;
-use sui_network::default_mysten_network_config;
-use sui_types::base_types::ConciseableName;
-use sui_types::executable_transaction::VerifiedExecutableTransaction;
-use sui_types::messages_checkpoint::CheckpointCommitment;
-use sui_types::sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait;
+use iota_macros::fail_point;
+use iota_network::default_iota_network_config;
+use iota_types::base_types::ConciseableName;
+use iota_types::executable_transaction::VerifiedExecutableTransaction;
+use iota_types::messages_checkpoint::CheckpointCommitment;
+use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
 
 use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
 use crate::consensus_handler::SequencedConsensusTransactionKey;
@@ -43,26 +44,26 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::Weak;
 use std::time::Duration;
-use sui_protocol_config::ProtocolVersion;
-use sui_types::base_types::{AuthorityName, EpochId, TransactionDigest};
-use sui_types::committee::StakeUnit;
-use sui_types::crypto::AuthorityStrongQuorumSignInfo;
-use sui_types::digests::{CheckpointContentsDigest, CheckpointDigest};
-use sui_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use sui_types::error::{SuiError, SuiResult};
-use sui_types::gas::GasCostSummary;
-use sui_types::message_envelope::Message;
-use sui_types::messages_checkpoint::{
+use iota_protocol_config::ProtocolVersion;
+use iota_types::base_types::{AuthorityName, EpochId, TransactionDigest};
+use iota_types::committee::StakeUnit;
+use iota_types::crypto::AuthorityStrongQuorumSignInfo;
+use iota_types::digests::{CheckpointContentsDigest, CheckpointDigest};
+use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
+use iota_types::error::{IotaError, IotaResult};
+use iota_types::gas::GasCostSummary;
+use iota_types::message_envelope::Message;
+use iota_types::messages_checkpoint::{
     CertifiedCheckpointSummary, CheckpointContents, CheckpointResponseV2, CheckpointSequenceNumber,
     CheckpointSignatureMessage, CheckpointSummary, CheckpointSummaryResponse, CheckpointTimestamp,
     EndOfEpochData, FullCheckpointContents, TrustedCheckpoint, VerifiedCheckpoint,
     VerifiedCheckpointContents,
 };
-use sui_types::messages_checkpoint::{CheckpointRequestV2, SignedCheckpointSummary};
-use sui_types::messages_consensus::ConsensusTransactionKey;
-use sui_types::signature::GenericSignature;
-use sui_types::sui_system_state::{SuiSystemState, SuiSystemStateTrait};
-use sui_types::transaction::{TransactionDataAPI, TransactionKey, TransactionKind};
+use iota_types::messages_checkpoint::{CheckpointRequestV2, SignedCheckpointSummary};
+use iota_types::messages_consensus::ConsensusTransactionKey;
+use iota_types::signature::GenericSignature;
+use iota_types::iota_system_state::{IotaSystemState, IotaSystemStateTrait};
+use iota_types::transaction::{TransactionDataAPI, TransactionKey, TransactionKind};
 use tokio::{
     sync::{watch, Notify},
     time::timeout,
@@ -398,7 +399,7 @@ impl CheckpointStore {
         self.full_checkpoint_content.get(&seq)
     }
 
-    fn prune_local_summaries(&self) -> SuiResult {
+    fn prune_local_summaries(&self) -> IotaResult {
         if let Some((last_local_summary, _)) = self
             .locally_computed_checkpoints
             .unbounded_iter()
@@ -658,7 +659,7 @@ impl CheckpointStore {
     pub fn get_epoch_last_checkpoint(
         &self,
         epoch_id: EpochId,
-    ) -> SuiResult<Option<VerifiedCheckpoint>> {
+    ) -> IotaResult<Option<VerifiedCheckpoint>> {
         let seq = self.epoch_last_checkpoint_map.get(&epoch_id)?;
         let checkpoint = match seq {
             Some(seq) => self.get_checkpoint_by_sequence_number(seq)?,
@@ -671,7 +672,7 @@ impl CheckpointStore {
         &self,
         epoch_id: EpochId,
         checkpoint: &VerifiedCheckpoint,
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.epoch_last_checkpoint_map
             .insert(&epoch_id, checkpoint.sequence_number())?;
         Ok(())
@@ -680,7 +681,7 @@ impl CheckpointStore {
     pub fn get_epoch_state_commitments(
         &self,
         epoch: EpochId,
-    ) -> SuiResult<Option<Vec<CheckpointCommitment>>> {
+    ) -> IotaResult<Option<Vec<CheckpointCommitment>>> {
         let commitments = self.get_epoch_last_checkpoint(epoch)?.map(|checkpoint| {
             checkpoint
                 .end_of_epoch_data
@@ -718,7 +719,7 @@ impl CheckpointStore {
         })
     }
 
-    pub fn checkpoint_db(&self, path: &Path) -> SuiResult {
+    pub fn checkpoint_db(&self, path: &Path) -> IotaResult {
         // This checkpoints the entire db and not one column family
         self.checkpoint_content
             .checkpoint_db(path)
@@ -735,7 +736,7 @@ impl CheckpointStore {
         Ok(())
     }
 
-    pub fn reset_db_for_execution_since_genesis(&self) -> SuiResult {
+    pub fn reset_db_for_execution_since_genesis(&self) -> IotaResult {
         self.delete_highest_executed_checkpoint_test_only()?;
         self.watermarks.rocksdb.flush()?;
         Ok(())
@@ -1050,7 +1051,7 @@ impl CheckpointBuilder {
         &self,
         roots: Vec<TransactionKey>,
         effects_in_current_checkpoint: &mut BTreeSet<TransactionDigest>,
-    ) -> SuiResult<Vec<TransactionEffects>> {
+    ) -> IotaResult<Vec<TransactionEffects>> {
         self.metrics
             .checkpoint_roots_count
             .inc_by(roots.len() as u64);
@@ -1132,7 +1133,7 @@ impl CheckpointBuilder {
         &self,
         root_digests: &[TransactionDigest],
         root_effects: &[TransactionEffects],
-    ) -> SuiResult<Option<(TransactionDigest, TransactionEffects)>> {
+    ) -> IotaResult<Option<(TransactionDigest, TransactionEffects)>> {
         let _scope = monitored_scope("CheckpointBuilder::extract_consensus_commit_prologue");
         if root_digests.is_empty() {
             return Ok(None);
@@ -1164,7 +1165,7 @@ impl CheckpointBuilder {
         &self,
         height: CheckpointHeight,
         new_checkpoints: Vec<(CheckpointSummary, CheckpointContents)>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let _scope = monitored_scope("CheckpointBuilder::write_checkpoints");
         let mut batch = self.tables.checkpoint_content.batch();
         let mut all_tx_digests =
@@ -1560,8 +1561,8 @@ impl CheckpointBuilder {
         checkpoint_effects: &mut Vec<TransactionEffects>,
         signatures: &mut Vec<Vec<GenericSignature>>,
         checkpoint: CheckpointSequenceNumber,
-        // TODO: Check whether we must use anyhow::Result or can we use SuiResult.
-    ) -> anyhow::Result<SuiSystemState> {
+        // TODO: Check whether we must use anyhow::Result or can we use IotaResult.
+    ) -> anyhow::Result<IotaSystemState> {
         let (system_state, effects) = self
             .state
             .create_and_execute_advance_epoch_tx(
@@ -1587,7 +1588,7 @@ impl CheckpointBuilder {
         &self,
         mut roots: Vec<TransactionEffects>,
         existing_tx_digests_in_checkpoint: &mut BTreeSet<TransactionDigest>,
-    ) -> SuiResult<Vec<TransactionEffects>> {
+    ) -> IotaResult<Vec<TransactionEffects>> {
         let _scope = monitored_scope("CheckpointBuilder::complete_checkpoint_effects");
         let mut results = vec![];
         let mut seen = HashSet::new();
@@ -1805,7 +1806,7 @@ impl CheckpointAggregator {
         }
     }
 
-    async fn run_and_notify(&mut self) -> SuiResult {
+    async fn run_and_notify(&mut self) -> IotaResult {
         let summaries = self.run_inner()?;
         for summary in summaries {
             self.output.certified_checkpoint_created(&summary).await?;
@@ -1813,7 +1814,7 @@ impl CheckpointAggregator {
         Ok(())
     }
 
-    fn run_inner(&mut self) -> SuiResult<Vec<CertifiedCheckpointSummary>> {
+    fn run_inner(&mut self) -> IotaResult<Vec<CertifiedCheckpointSummary>> {
         let _scope = monitored_scope("CheckpointAggregator");
         let mut result = vec![];
         'outer: loop {
@@ -1933,7 +1934,7 @@ impl CheckpointSignatureAggregator {
             // ignore repeated signatures
             InsertResult::Failed {
                 error:
-                    SuiError::StakeAggregatorRepeatedSigner {
+                    IotaError::StakeAggregatorRepeatedSigner {
                         conflicting_sig: false,
                         ..
                     },
@@ -2055,8 +2056,8 @@ async fn diagnose_split_brain(
     let epoch_store = state.load_epoch_store_one_call_per_task();
     let committee = epoch_store
         .epoch_start_state()
-        .get_sui_committee_with_network_metadata();
-    let network_config = default_mysten_network_config();
+        .get_iota_committee_with_network_metadata();
+    let network_config = default_iota_network_config();
     let network_clients =
         make_network_authority_clients_with_network_config(&committee, &network_config);
 
@@ -2203,12 +2204,12 @@ pub trait CheckpointServiceNotify {
         &self,
         epoch_store: &AuthorityPerEpochStore,
         info: &CheckpointSignatureMessage,
-    ) -> SuiResult;
+    ) -> IotaResult;
 
-    fn notify_checkpoint(&self) -> SuiResult;
+    fn notify_checkpoint(&self) -> IotaResult;
 }
 
-/// This is a service used to communicate with other pieces of sui(for ex. authority)
+/// This is a service used to communicate with other pieces of iota(for ex. authority)
 pub struct CheckpointService {
     tables: Arc<CheckpointStore>,
     notify_builder: Arc<Notify>,
@@ -2287,7 +2288,7 @@ impl CheckpointService {
         &self,
         epoch_store: &AuthorityPerEpochStore,
         checkpoint: PendingCheckpointV2,
-    ) -> SuiResult {
+    ) -> IotaResult {
         use crate::authority::authority_per_epoch_store::ConsensusCommitOutput;
 
         let mut output = ConsensusCommitOutput::new();
@@ -2305,7 +2306,7 @@ impl CheckpointServiceNotify for CheckpointService {
         &self,
         epoch_store: &AuthorityPerEpochStore,
         info: &CheckpointSignatureMessage,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let sequence = info.summary.sequence_number;
         let signer = info.summary.auth_sig().authority.concise();
 
@@ -2344,7 +2345,7 @@ impl CheckpointServiceNotify for CheckpointService {
         Ok(())
     }
 
-    fn notify_checkpoint(&self) -> SuiResult {
+    fn notify_checkpoint(&self) -> IotaResult {
         self.notify_builder.notify_one();
         Ok(())
     }
@@ -2357,11 +2358,11 @@ impl CheckpointServiceNotify for CheckpointServiceNoop {
         &self,
         _: &AuthorityPerEpochStore,
         _: &CheckpointSignatureMessage,
-    ) -> SuiResult {
+    ) -> IotaResult {
         Ok(())
     }
 
-    fn notify_checkpoint(&self) -> SuiResult {
+    fn notify_checkpoint(&self) -> IotaResult {
         Ok(())
     }
 }
@@ -2395,16 +2396,16 @@ mod tests {
     use shared_crypto::intent::{Intent, IntentScope};
     use std::collections::{BTreeMap, HashMap};
     use std::ops::Deref;
-    use sui_macros::sim_test;
-    use sui_protocol_config::{Chain, ProtocolConfig};
-    use sui_types::base_types::{ObjectID, SequenceNumber, TransactionEffectsDigest};
-    use sui_types::crypto::{AuthoritySignInfo, Signature};
-    use sui_types::digests::TransactionEventsDigest;
-    use sui_types::effects::{TransactionEffects, TransactionEvents};
-    use sui_types::messages_checkpoint::SignedCheckpointSummary;
-    use sui_types::move_package::MovePackage;
-    use sui_types::object;
-    use sui_types::transaction::{GenesisObject, VerifiedTransaction};
+    use iota_macros::sim_test;
+    use iota_protocol_config::{Chain, ProtocolConfig};
+    use iota_types::base_types::{ObjectID, SequenceNumber, TransactionEffectsDigest};
+    use iota_types::crypto::{AuthoritySignInfo, Signature};
+    use iota_types::digests::TransactionEventsDigest;
+    use iota_types::effects::{TransactionEffects, TransactionEvents};
+    use iota_types::messages_checkpoint::SignedCheckpointSummary;
+    use iota_types::move_package::MovePackage;
+    use iota_types::object;
+    use iota_types::transaction::{GenesisObject, VerifiedTransaction};
     use tokio::sync::mpsc;
 
     #[sim_test]
@@ -2503,7 +2504,7 @@ mod tests {
         }
         let all_digests: Vec<_> = store.keys().copied().collect();
         for digest in all_digests {
-            let signature = Signature::Ed25519SuiSignature(Default::default()).into();
+            let signature = Signature::Ed25519IotaSignature(Default::default()).into();
             state
                 .epoch_store_for_testing()
                 .test_insert_user_signature(digest, vec![signature]);
@@ -2636,7 +2637,7 @@ mod tests {
         fn notify_read_executed_effects(
             &self,
             digests: &[TransactionDigest],
-        ) -> BoxFuture<'_, SuiResult<Vec<TransactionEffects>>> {
+        ) -> BoxFuture<'_, IotaResult<Vec<TransactionEffects>>> {
             std::future::ready(Ok(digests
                 .iter()
                 .map(|d| self.get(d).expect("effects not found").clone())
@@ -2647,7 +2648,7 @@ mod tests {
         fn notify_read_executed_effects_digests(
             &self,
             digests: &[TransactionDigest],
-        ) -> BoxFuture<'_, SuiResult<Vec<TransactionEffectsDigest>>> {
+        ) -> BoxFuture<'_, IotaResult<Vec<TransactionEffectsDigest>>> {
             std::future::ready(Ok(digests
                 .iter()
                 .map(|d| {
@@ -2662,7 +2663,7 @@ mod tests {
         fn multi_get_executed_effects(
             &self,
             digests: &[TransactionDigest],
-        ) -> SuiResult<Vec<Option<TransactionEffects>>> {
+        ) -> IotaResult<Vec<Option<TransactionEffects>>> {
             Ok(digests.iter().map(|d| self.get(d).cloned()).collect())
         }
 
@@ -2674,28 +2675,28 @@ mod tests {
         fn multi_get_transaction_blocks(
             &self,
             _: &[TransactionDigest],
-        ) -> SuiResult<Vec<Option<Arc<VerifiedTransaction>>>> {
+        ) -> IotaResult<Vec<Option<Arc<VerifiedTransaction>>>> {
             unimplemented!()
         }
 
         fn multi_get_executed_effects_digests(
             &self,
             _: &[TransactionDigest],
-        ) -> SuiResult<Vec<Option<TransactionEffectsDigest>>> {
+        ) -> IotaResult<Vec<Option<TransactionEffectsDigest>>> {
             unimplemented!()
         }
 
         fn multi_get_effects(
             &self,
             _: &[TransactionEffectsDigest],
-        ) -> SuiResult<Vec<Option<TransactionEffects>>> {
+        ) -> IotaResult<Vec<Option<TransactionEffects>>> {
             unimplemented!()
         }
 
         fn multi_get_events(
             &self,
             _: &[TransactionEventsDigest],
-        ) -> SuiResult<Vec<Option<TransactionEvents>>> {
+        ) -> IotaResult<Vec<Option<TransactionEvents>>> {
             unimplemented!()
         }
     }
@@ -2708,7 +2709,7 @@ mod tests {
             contents: &CheckpointContents,
             _epoch_store: &Arc<AuthorityPerEpochStore>,
             _checkpoint_store: &Arc<CheckpointStore>,
-        ) -> SuiResult {
+        ) -> IotaResult {
             self.try_send((contents.clone(), summary.clone())).unwrap();
             Ok(())
         }
@@ -2719,7 +2720,7 @@ mod tests {
         async fn certified_checkpoint_created(
             &self,
             summary: &CertifiedCheckpointSummary,
-        ) -> SuiResult {
+        ) -> IotaResult {
             self.try_send(summary.clone()).unwrap();
             Ok(())
         }
@@ -2775,7 +2776,7 @@ mod tests {
                 Some(&AuthoritySignInfo::new(
                     epoch_store.epoch(),
                     &effects,
-                    Intent::sui_app(IntentScope::TransactionEffects),
+                    Intent::iota_app(IntentScope::TransactionEffects),
                     state.name,
                     &*state.secret,
                 )),

@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
-use mysten_metrics::histogram::Histogram;
+use iota_metrics::histogram::Histogram;
 
 pub use bridge::BridgeReadApiClient;
 pub use bridge::BridgeReadApiOpenRpc;
@@ -101,11 +102,11 @@ pub struct JsonRpcMetrics {
     pub query_events_result_size: Histogram,
     pub query_events_result_size_total: IntCounter,
 
-    pub get_stake_sui_result_size: Histogram,
-    pub get_stake_sui_result_size_total: IntCounter,
+    pub get_stake_iota_result_size: Histogram,
+    pub get_stake_iota_result_size_total: IntCounter,
 
-    pub get_stake_sui_latency: Histogram,
-    pub get_delegated_sui_latency: Histogram,
+    pub get_stake_iota_latency: Histogram,
+    pub get_delegated_iota_latency: Histogram,
 
     pub orchestrator_latency_ms: Histogram,
     pub post_orchestrator_latency_ms: Histogram,
@@ -242,25 +243,25 @@ impl JsonRpcMetrics {
                 registry
             )
             .unwrap(),
-            get_stake_sui_result_size: Histogram::new_in_registry(
-                "json_rpc_get_stake_sui_result_size",
-                "The return size for get_stake_sui",
+            get_stake_iota_result_size: Histogram::new_in_registry(
+                "json_rpc_get_stake_iota_result_size",
+                "The return size for get_stake_iota",
                 registry,
             ),
-            get_stake_sui_result_size_total: register_int_counter_with_registry!(
-                "json_rpc_get_stake_sui_result_size_total",
-                "The total return size for get_stake_sui",
+            get_stake_iota_result_size_total: register_int_counter_with_registry!(
+                "json_rpc_get_stake_iota_result_size_total",
+                "The total return size for get_stake_iota",
                 registry
             )
             .unwrap(),
-            get_stake_sui_latency: Histogram::new_in_registry(
-                "get_stake_sui_latency",
-                "The latency of get stake sui, in ms",
+            get_stake_iota_latency: Histogram::new_in_registry(
+                "get_stake_iota_latency",
+                "The latency of get stake iota, in ms",
                 registry,
             ),
-            get_delegated_sui_latency: Histogram::new_in_registry(
-                "get_delegated_sui_latency",
-                "The latency of get delegated sui, in ms",
+            get_delegated_iota_latency: Histogram::new_in_registry(
+                "get_delegated_iota_latency",
+                "The latency of get delegated iota, in ms",
                 registry,
             ),
             orchestrator_latency_ms: Histogram::new_in_registry(

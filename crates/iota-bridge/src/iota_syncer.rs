@@ -1,43 +1,44 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! The SuiSyncer module is responsible for synchronizing Events emitted
-//! on Sui blockchain from concerned modules of bridge package 0x9.
+//! The IotaSyncer module is responsible for synchronizing Events emitted
+//! on Iota blockchain from concerned modules of bridge package 0x9.
 
 use crate::{
     error::BridgeResult,
     retry_with_max_elapsed_time,
-    sui_client::{SuiClient, SuiClientInner},
+    iota_client::{IotaClient, IotaClientInner},
 };
-use mysten_metrics::spawn_logged_monitored_task;
+use iota_metrics::spawn_logged_monitored_task;
 use std::{collections::HashMap, sync::Arc};
-use sui_json_rpc_types::SuiEvent;
-use sui_types::BRIDGE_PACKAGE_ID;
-use sui_types::{event::EventID, Identifier};
+use iota_json_rpc_types::IotaEvent;
+use iota_types::BRIDGE_PACKAGE_ID;
+use iota_types::{event::EventID, Identifier};
 use tokio::{
     task::JoinHandle,
     time::{self, Duration},
 };
 
-const SUI_EVENTS_CHANNEL_SIZE: usize = 1000;
+const IOTA_EVENTS_CHANNEL_SIZE: usize = 1000;
 
 /// Map from contract address to their start cursor (exclusive)
-pub type SuiTargetModules = HashMap<Identifier, Option<EventID>>;
+pub type IotaTargetModules = HashMap<Identifier, Option<EventID>>;
 
-pub struct SuiSyncer<C> {
-    sui_client: Arc<SuiClient<C>>,
+pub struct IotaSyncer<C> {
+    iota_client: Arc<IotaClient<C>>,
     // The last transaction that the syncer has fully processed.
     // Syncer will resume post this transaction (i.e. exclusive), when it starts.
-    cursors: SuiTargetModules,
+    cursors: IotaTargetModules,
 }
 
-impl<C> SuiSyncer<C>
+impl<C> IotaSyncer<C>
 where
-    C: SuiClientInner + 'static,
+    C: IotaClientInner + 'static,
 {
-    pub fn new(sui_client: Arc<SuiClient<C>>, cursors: SuiTargetModules) -> Self {
+    pub fn new(iota_client: Arc<IotaClient<C>>, cursors: IotaTargetModules) -> Self {
         Self {
-            sui_client,
+            iota_client,
             cursors,
         }
     }
@@ -47,29 +48,29 @@ where
         query_interval: Duration,
     ) -> BridgeResult<(
         Vec<JoinHandle<()>>,
-        mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
+        iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
     )> {
-        let (events_tx, events_rx) = mysten_metrics::metered_channel::channel(
-            SUI_EVENTS_CHANNEL_SIZE,
-            &mysten_metrics::get_metrics()
+        let (events_tx, events_rx) = iota_metrics::metered_channel::channel(
+            IOTA_EVENTS_CHANNEL_SIZE,
+            &iota_metrics::get_metrics()
                 .unwrap()
                 .channel_inflight
-                .with_label_values(&["sui_events_queue"]),
+                .with_label_values(&["iota_events_queue"]),
         );
 
         let mut task_handles = vec![];
         for (module, cursor) in self.cursors {
-            let events_rx_clone: mysten_metrics::metered_channel::Sender<(
+            let events_rx_clone: iota_metrics::metered_channel::Sender<(
                 Identifier,
-                Vec<SuiEvent>,
+                Vec<IotaEvent>,
             )> = events_tx.clone();
-            let sui_client_clone = self.sui_client.clone();
+            let iota_client_clone = self.iota_client.clone();
             task_handles.push(spawn_logged_monitored_task!(
                 Self::run_event_listening_task(
                     module,
                     cursor,
                     events_rx_clone,
-                    sui_client_clone,
+                    iota_client_clone,
                     query_interval
                 )
             ));
@@ -82,20 +83,20 @@ where
         // Moudle is always of bridge package 0x9.
         module: Identifier,
         mut cursor: Option<EventID>,
-        events_sender: mysten_metrics::metered_channel::Sender<(Identifier, Vec<SuiEvent>)>,
-        sui_client: Arc<SuiClient<C>>,
+        events_sender: iota_metrics::metered_channel::Sender<(Identifier, Vec<IotaEvent>)>,
+        iota_client: Arc<IotaClient<C>>,
         query_interval: Duration,
     ) {
-        tracing::info!(?module, ?cursor, "Starting sui events listening task");
+        tracing::info!(?module, ?cursor, "Starting iota events listening task");
         let mut interval = time::interval(query_interval);
         interval.set_missed_tick_behavior(time::MissedTickBehavior::Skip);
         loop {
             interval.tick().await;
             let Ok(Ok(events)) = retry_with_max_elapsed_time!(
-                sui_client.query_events_by_module(BRIDGE_PACKAGE_ID, module.clone(), cursor),
+                iota_client.query_events_by_module(BRIDGE_PACKAGE_ID, module.clone(), cursor),
                 Duration::from_secs(120)
             ) else {
-                tracing::error!("Failed to query events from sui client after retry");
+                tracing::error!("Failed to query events from iota client after retry");
                 continue;
             };
 
@@ -104,11 +105,11 @@ where
                 events_sender
                     .send((module.clone(), events.data))
                     .await
-                    .expect("All Sui event channel receivers are closed");
+                    .expect("All Iota event channel receivers are closed");
                 if let Some(next) = events.next_cursor {
                     cursor = Some(next);
                 }
-                tracing::info!(?module, ?cursor, "Observed {len} new Sui events");
+                tracing::info!(?module, ?cursor, "Observed {len} new Iota events");
             }
         }
     }
@@ -118,20 +119,20 @@ where
 mod tests {
     use super::*;
 
-    use crate::{sui_client::SuiClient, sui_mock_client::SuiMockClient};
+    use crate::{iota_client::IotaClient, iota_mock_client::IotaMockClient};
     use prometheus::Registry;
-    use sui_json_rpc_types::EventPage;
-    use sui_types::{digests::TransactionDigest, event::EventID, Identifier};
+    use iota_json_rpc_types::EventPage;
+    use iota_types::{digests::TransactionDigest, event::EventID, Identifier};
     use tokio::time::timeout;
 
     #[tokio::test]
-    async fn test_sui_syncer_basic() -> anyhow::Result<()> {
+    async fn test_iota_syncer_basic() -> anyhow::Result<()> {
         telemetry_subscribers::init_for_testing();
         let registry = Registry::new();
-        mysten_metrics::init_metrics(&registry);
+        iota_metrics::init_metrics(&registry);
 
-        let mock = SuiMockClient::default();
-        let client = Arc::new(SuiClient::new_for_testing(mock.clone()));
+        let mock = IotaMockClient::default();
+        let client = Arc::new(IotaClient::new_for_testing(mock.clone()));
         let module_foo = Identifier::new("Foo").unwrap();
         let module_bar = Identifier::new("Bar").unwrap();
         let empty_events = EventPage::empty();
@@ -147,7 +148,7 @@ mod tests {
             (module_bar.clone(), Some(cursor)),
         ]);
         let interval = Duration::from_millis(200);
-        let (_handles, mut events_rx) = SuiSyncer::new(client, target_modules)
+        let (_handles, mut events_rx) = IotaSyncer::new(client, target_modules)
             .run(interval)
             .await
             .unwrap();
@@ -156,11 +157,11 @@ mod tests {
         assert_no_more_events(interval, &mut events_rx).await;
 
         // Module Foo has new events
-        let mut event_1: SuiEvent = SuiEvent::random_for_testing();
+        let mut event_1: IotaEvent = IotaEvent::random_for_testing();
         let package_id = BRIDGE_PACKAGE_ID;
         event_1.type_.address = package_id.into();
         event_1.type_.module = module_foo.clone();
-        let module_foo_events_1: sui_json_rpc_types::Page<SuiEvent, EventID> = EventPage {
+        let module_foo_events_1: iota_json_rpc_types::Page<IotaEvent, EventID> = EventPage {
             data: vec![event_1.clone(), event_1.clone()],
             next_cursor: Some(event_1.id),
             has_next_page: false,
@@ -182,7 +183,7 @@ mod tests {
         assert_no_more_events(interval, &mut events_rx).await;
 
         // Module Bar has new events
-        let mut event_2: SuiEvent = SuiEvent::random_for_testing();
+        let mut event_2: IotaEvent = IotaEvent::random_for_testing();
         event_2.type_.address = package_id.into();
         event_2.type_.module = module_bar.clone();
         let module_bar_events_1 = EventPage {
@@ -206,7 +207,7 @@ mod tests {
 
     async fn assert_no_more_events(
         interval: Duration,
-        events_rx: &mut mysten_metrics::metered_channel::Receiver<(Identifier, Vec<SuiEvent>)>,
+        events_rx: &mut iota_metrics::metered_channel::Receiver<(Identifier, Vec<IotaEvent>)>,
     ) {
         match timeout(interval * 2, events_rx.recv()).await {
             Err(_e) => (),
@@ -215,7 +216,7 @@ mod tests {
     }
 
     fn add_event_response(
-        mock: &SuiMockClient,
+        mock: &IotaMockClient,
         module: Identifier,
         cursor: EventID,
         events: EventPage,

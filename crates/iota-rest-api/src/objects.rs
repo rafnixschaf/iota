@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -11,9 +12,9 @@ use crate::{
 use axum::extract::Query;
 use axum::extract::{Path, State};
 use serde::{Deserialize, Serialize};
-use sui_sdk2::types::{Object, ObjectId, TypeTag, Version};
-use sui_types::storage::{DynamicFieldIndexInfo, DynamicFieldKey};
-use sui_types::sui_sdk2_conversions::type_tag_core_to_sdk;
+use iota_sdk2::types::{Object, ObjectId, TypeTag, Version};
+use iota_types::storage::{DynamicFieldIndexInfo, DynamicFieldKey};
+use iota_types::iota_sdk2_conversions::type_tag_core_to_sdk;
 use tap::Pipe;
 
 pub struct GetObject;
@@ -185,7 +186,7 @@ impl ApiEndpoint<RestService> for ListDynamicFields {
                 200,
                 ResponseBuilder::new()
                     .json_content::<Vec<DynamicFieldInfo>>(generator)
-                    .header::<String>(crate::types::X_SUI_CURSOR, generator)
+                    .header::<String>(crate::types::X_IOTA_CURSOR, generator)
                     .build(),
             )
             .build()
@@ -253,7 +254,7 @@ impl ListDynamicFieldsQueryParameters {
             .unwrap_or(crate::DEFAULT_PAGE_SIZE)
     }
 
-    pub fn start(&self) -> Option<sui_types::base_types::ObjectID> {
+    pub fn start(&self) -> Option<iota_types::base_types::ObjectID> {
         self.start.map(Into::into)
     }
 }
@@ -301,11 +302,11 @@ pub enum DynamicFieldType {
     Object,
 }
 
-impl From<sui_types::dynamic_field::DynamicFieldType> for DynamicFieldType {
-    fn from(value: sui_types::dynamic_field::DynamicFieldType) -> Self {
+impl From<iota_types::dynamic_field::DynamicFieldType> for DynamicFieldType {
+    fn from(value: iota_types::dynamic_field::DynamicFieldType) -> Self {
         match value {
-            sui_types::dynamic_field::DynamicFieldType::DynamicField => Self::Field,
-            sui_types::dynamic_field::DynamicFieldType::DynamicObject => Self::Object,
+            iota_types::dynamic_field::DynamicFieldType::DynamicField => Self::Field,
+            iota_types::dynamic_field::DynamicFieldType::DynamicObject => Self::Object,
         }
     }
 }

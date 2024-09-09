@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::cli::lib::utils::validate_project_name;
@@ -23,9 +24,9 @@ const KEYRING: &str = "pulumi-kms-automation-f22939d";
 
 impl ProjectType {
     pub fn create_project(&self, use_kms: &bool, project_name: Option<String>) -> Result<()> {
-        // make sure we're in suiops
-        let suiops_path = ensure_in_suiops_repo()?;
-        info!("suipop path: {}", suiops_path);
+        // make sure we're in iotaops
+        let iotaops_path = ensure_in_iotaops_repo()?;
+        info!("iotaop path: {}", iotaops_path);
         // inquire params from user
         let mut project_name = project_name
             .unwrap_or_else(|| {
@@ -56,7 +57,7 @@ impl ProjectType {
             Self::App | Self::CronJob => "apps".to_owned(),
             Self::Service => "services".to_owned(),
             Self::Basic => Text::new("project subdir:")
-                .with_initial_value(&format!("{}/pulumi/", suiops_path))
+                .with_initial_value(&format!("{}/pulumi/", iotaops_path))
                 .with_autocomplete(FilePathCompleter::default())
                 .prompt()
                 .expect("couldn't get subdir")
@@ -81,7 +82,7 @@ impl ProjectType {
             match self {
                 Self::App | Self::Service => {
                     info!("creating k8s containerized application/service");
-                    create_mysten_k8s_project(
+                    create_iota_k8s_project(
                         &project_name,
                         &project_dir,
                         Self::App,
@@ -94,7 +95,7 @@ impl ProjectType {
                 }
                 Self::CronJob => {
                     info!("creating k8s cronjob project");
-                    create_mysten_k8s_project(
+                    create_iota_k8s_project(
                         &project_name,
                         &project_dir,
                         Self::CronJob,
@@ -108,18 +109,18 @@ impl ProjectType {
     }
 }
 
-fn ensure_in_suiops_repo() -> Result<String> {
+fn ensure_in_iotaops_repo() -> Result<String> {
     let remote_stdout = run_cmd(
         vec!["git", "config", "--get", "remote.origin.url"],
         Some(CommandOptions::new(false, false)),
     )
-    .context("run this command within the sui-operations repository")?
+    .context("run this command within the iota-operations repository")?
     .stdout;
     let raw_path = String::from_utf8_lossy(&remote_stdout);
-    let in_suiops = raw_path.trim().contains("sui-operations");
-    if !in_suiops {
+    let in_iotaops = raw_path.trim().contains("iota-operations");
+    if !in_iotaops {
         Err(anyhow!(
-            "please run this command from within the sui-operations repository"
+            "please run this command from within the iota-operations repository"
         ))
     } else {
         info!("raw path: {}", raw_path.trim());
@@ -130,14 +131,14 @@ fn ensure_in_suiops_repo() -> Result<String> {
 }
 
 fn get_pulumi_dir() -> Result<PathBuf> {
-    let suiops_dir_stdout = run_cmd(
+    let iotaops_dir_stdout = run_cmd(
         vec!["git", "rev-parse", "--show-toplevel"],
         Some(CommandOptions::new(false, false)),
     )
-    .context("run this command from within the sui-operations repository")?
+    .context("run this command from within the iota-operations repository")?
     .stdout;
-    let suiops_dir = PathBuf::from(String::from_utf8_lossy(&suiops_dir_stdout).trim());
-    Ok(suiops_dir.join("pulumi"))
+    let iotaops_dir = PathBuf::from(String::from_utf8_lossy(&iotaops_dir_stdout).trim());
+    Ok(iotaops_dir.join("pulumi"))
 }
 
 fn run_pulumi_new(
@@ -156,7 +157,7 @@ fn run_pulumi_new(
             "bash",
             "-c",
             &format!(
-                r#"pulumi new go --dir {0} -d "pulumi project for {1}" --name "{1}"  --stack mysten/dev --yes {2}"#,
+                r#"pulumi new go --dir {0} -d "pulumi project for {1}" --name "{1}"  --stack iotaledger/dev --yes {2}"#,
                 project_dir_str, project_name, opts
             ),
         ],
@@ -183,7 +184,7 @@ fn run_pulumi_new_from_template(
     let opts = project_opts.join(" ");
     info!("extra pulumi options added: {}", &opts.bright_purple());
     let cmd = &format!(
-        r#"pulumi new {3}/templates/{2} --dir {0} -d "pulumi project for {1}" --name "{1}"  --stack mysten/dev {4}"#,
+        r#"pulumi new {3}/templates/{2} --dir {0} -d "pulumi project for {1}" --name "{1}"  --stack iotaledger/dev {4}"#,
         project_dir_str,
         project_name,
         template_dir,
@@ -298,7 +299,7 @@ fn create_basic_project(
     run_pulumi_new(project_name, project_dir_str, project_opts).map_err(|e| {
         remove_project_dir(project_dir).unwrap();
         let backend = get_current_backend().unwrap();
-        remove_stack(&backend, project_name, "mysten/dev").unwrap();
+        remove_stack(&backend, project_name, "iotaledger/dev").unwrap();
         e
     })?;
     // run go mod tidy to make sure all dependencies are installed
@@ -309,7 +310,7 @@ fn create_basic_project(
     run_pulumi_preview(project_dir_str)
 }
 
-fn create_mysten_k8s_project(
+fn create_iota_k8s_project(
     project_name: &str,
     project_dir: &PathBuf,
     project_type: ProjectType,
@@ -326,7 +327,7 @@ fn create_mysten_k8s_project(
         .map_err(|e| {
             remove_project_dir(project_dir).unwrap();
             let backend = get_current_backend().unwrap();
-            remove_stack(&backend, project_name, "mysten/dev").unwrap();
+            remove_stack(&backend, project_name, "iotaledger/dev").unwrap();
             e
         })?;
     // run go mod tidy to make sure all dependencies are installed

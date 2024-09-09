@@ -1,7 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Implements lint to warn against freezing capability-like types in Sui, identifying function calls that may incorrectly freeze such types.
+//! Implements lint to warn against freezing capability-like types in Iota, identifying function calls that may incorrectly freeze such types.
 //! The lint checks for specific freezing functions defined in constants and inspects their type arguments for capability-like type names.
 
 use super::{LinterDiagnosticCategory, LinterDiagnosticCode, LINT_WARNING_PREFIX};
@@ -13,7 +14,7 @@ use crate::{
     },
     naming::ast::TypeName_,
     shared::{CompilationEnv, Identifier},
-    sui_mode::linters::{FREEZE_FUN, PUBLIC_FREEZE_FUN, SUI_PKG_NAME, TRANSFER_MOD_NAME},
+    iota_mode::linters::{FREEZE_FUN, PUBLIC_FREEZE_FUN, IOTA_PKG_NAME, TRANSFER_MOD_NAME},
     typing::{
         ast as T, core,
         visitor::{TypingVisitorConstructor, TypingVisitorContext},
@@ -26,14 +27,14 @@ use regex::Regex;
 const FREEZE_CAPABILITY_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
-    LinterDiagnosticCategory::Sui as u8,
+    LinterDiagnosticCategory::Iota as u8,
     LinterDiagnosticCode::FreezingCapability as u8,
     "freezing potential capability",
 );
 
 const FREEZE_FUNCTIONS: &[(&str, &str, &str)] = &[
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_FREEZE_FUN),
-    (SUI_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, PUBLIC_FREEZE_FUN),
+    (IOTA_PKG_NAME, TRANSFER_MOD_NAME, FREEZE_FUN),
 ];
 
 pub struct WarnFreezeCapability;

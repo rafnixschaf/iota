@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeSet, fmt::Debug, sync::Arc};
 
 use async_trait::async_trait;
-use mysten_metrics::{
+use iota_metrics::{
     monitored_mpsc::{channel, Receiver, Sender, WeakSender},
     monitored_scope, spawn_logged_monitored_task,
 };
@@ -295,7 +296,7 @@ impl CoreThreadDispatcher for MockCoreThreadDispatcher {
 
 #[cfg(test)]
 mod test {
-    use mysten_metrics::monitored_mpsc::unbounded_channel;
+    use iota_metrics::monitored_mpsc::unbounded_channel;
     use parking_lot::RwLock;
 
     use super::*;

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ApprovalRequest } from '_payloads/transactions/ApprovalRequest';
@@ -10,9 +11,9 @@ import {
 	type WalletSigner,
 } from '_src/ui/app/WalletSigner';
 import type { AppThunkConfig } from '_store/thunk-extras';
-import { type SuiTransactionBlockResponse } from '@mysten/sui/client';
-import { Transaction } from '@mysten/sui/transactions';
-import { fromB64 } from '@mysten/sui/utils';
+import { type IotaTransactionBlockResponse } from '@iota/iota/client';
+import { Transaction } from '@iota/iota/transactions';
+import { fromB64 } from '@iota/iota/utils';
 import { createAsyncThunk, createEntityAdapter, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
@@ -28,7 +29,7 @@ export const respondToTransactionRequest = createAsyncThunk<
 	{
 		txRequestID: string;
 		approved: boolean;
-		txResponse: SuiTransactionBlockResponse | null;
+		txResponse: IotaTransactionBlockResponse | null;
 	},
 	{
 		txRequestID: string;
@@ -49,7 +50,7 @@ export const respondToTransactionRequest = createAsyncThunk<
 			throw new Error(`TransactionRequest ${txRequestID} not found`);
 		}
 		let txSigned: SignedTransaction | undefined = undefined;
-		let txResult: SuiTransactionBlockResponse | SignedMessage | undefined = undefined;
+		let txResult: IotaTransactionBlockResponse | SignedMessage | undefined = undefined;
 		let txResultError: string | undefined;
 		if (approved) {
 			try {

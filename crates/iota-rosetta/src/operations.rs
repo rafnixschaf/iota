@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
@@ -13,21 +14,21 @@ use move_core_types::resolver::ModuleResolver;
 use serde::Deserialize;
 use serde::Serialize;
 
-use sui_json_rpc_types::SuiProgrammableMoveCall;
-use sui_json_rpc_types::SuiProgrammableTransactionBlock;
-use sui_json_rpc_types::{BalanceChange, SuiArgument};
-use sui_json_rpc_types::{SuiCallArg, SuiCommand};
-use sui_sdk::rpc_types::{
-    SuiTransactionBlockData, SuiTransactionBlockDataAPI, SuiTransactionBlockEffectsAPI,
-    SuiTransactionBlockKind, SuiTransactionBlockResponse,
+use iota_json_rpc_types::IotaProgrammableMoveCall;
+use iota_json_rpc_types::IotaProgrammableTransactionBlock;
+use iota_json_rpc_types::{BalanceChange, IotaArgument};
+use iota_json_rpc_types::{IotaCallArg, IotaCommand};
+use iota_sdk::rpc_types::{
+    IotaTransactionBlockData, IotaTransactionBlockDataAPI, IotaTransactionBlockEffectsAPI,
+    IotaTransactionBlockKind, IotaTransactionBlockResponse,
 };
-use sui_types::base_types::{ObjectID, SequenceNumber, SuiAddress};
-use sui_types::gas_coin::{GasCoin, GAS};
-use sui_types::governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME};
-use sui_types::object::Owner;
-use sui_types::sui_system_state::SUI_SYSTEM_MODULE_NAME;
-use sui_types::transaction::TransactionData;
-use sui_types::{SUI_SYSTEM_ADDRESS, SUI_SYSTEM_PACKAGE_ID};
+use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
+use iota_types::gas_coin::{GasCoin, GAS};
+use iota_types::governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME};
+use iota_types::object::Owner;
+use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
+use iota_types::transaction::TransactionData;
+use iota_types::{IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_PACKAGE_ID};
 
 use crate::types::{
     AccountIdentifier, Amount, CoinAction, CoinChange, CoinID, CoinIdentifier, InternalOperation,
@@ -100,14 +101,14 @@ impl Operations {
             .type_()
             .ok_or_else(|| Error::MissingInput("Operation type".into()))?;
         match type_ {
-            OperationType::PaySui => self.pay_sui_ops_to_internal(),
+            OperationType::PayIota => self.pay_iota_ops_to_internal(),
             OperationType::Stake => self.stake_ops_to_internal(),
             OperationType::WithdrawStake => self.withdraw_stake_ops_to_internal(),
             op => Err(Error::UnsupportedOperation(op)),
         }
     }
 
-    fn pay_sui_ops_to_internal(self) -> Result<InternalOperation, Error> {
+    fn pay_iota_ops_to_internal(self) -> Result<InternalOperation, Error> {
         let mut recipients = vec![];
         let mut amounts = vec![];
         let mut sender = None;
@@ -128,7 +129,7 @@ impl Operations {
             }
         }
         let sender = sender.ok_or_else(|| Error::MissingInput("Sender address".to_string()))?;
-        Ok(InternalOperation::PaySui {
+        Ok(InternalOperation::PayIota {
             sender,
             recipients,
             amounts,
@@ -156,7 +157,7 @@ impl Operations {
             .metadata
             .ok_or_else(|| Error::MissingInput("Stake metadata".to_string()))?;
 
-        // Total issued SUi is less than u64, safe to cast.
+        // Total issued Iota is less than u64, safe to cast.
         let amount = if let Some(amount) = op.amount {
             if amount.value.is_positive() {
                 return Err(Error::MalformedOperationError(
@@ -214,12 +215,12 @@ impl Operations {
     }
 
     fn from_transaction(
-        tx: SuiTransactionBlockKind,
-        sender: SuiAddress,
+        tx: IotaTransactionBlockKind,
+        sender: IotaAddress,
         status: Option<OperationStatus>,
     ) -> Result<Vec<Operation>, Error> {
         Ok(match tx {
-            SuiTransactionBlockKind::ProgrammableTransaction(pt) => {
+            IotaTransactionBlockKind::ProgrammableTransaction(pt) => {
                 Self::parse_programmable_transaction(sender, status, pt)?
             }
             _ => vec![Operation::generic_op(status, sender, tx)],
@@ -227,9 +228,9 @@ impl Operations {
     }
 
     fn parse_programmable_transaction(
-        sender: SuiAddress,
+        sender: IotaAddress,
         status: Option<OperationStatus>,
-        pt: SuiProgrammableTransactionBlock,
+        pt: IotaProgrammableTransactionBlock,
     ) -> Result<Vec<Operation>, Error> {
         #[derive(Debug)]
         enum KnownValue {
@@ -245,33 +246,33 @@ impl Operations {
                 .and_then(|inner| inner.get(j as usize))
         }
         fn split_coins(
-            inputs: &[SuiCallArg],
+            inputs: &[IotaCallArg],
             known_results: &[Vec<KnownValue>],
-            coin: SuiArgument,
-            amounts: &[SuiArgument],
+            coin: IotaArgument,
+            amounts: &[IotaArgument],
         ) -> Option<Vec<KnownValue>> {
             match coin {
-                SuiArgument::Result(i) => {
+                IotaArgument::Result(i) => {
                     let KnownValue::GasCoin(_) = resolve_result(known_results, i, 0)?;
                 }
-                SuiArgument::NestedResult(i, j) => {
+                IotaArgument::NestedResult(i, j) => {
                     let KnownValue::GasCoin(_) = resolve_result(known_results, i, j)?;
                 }
-                SuiArgument::GasCoin => (),
-                // Might not be a SUI coin
-                SuiArgument::Input(_) => return None,
+                IotaArgument::GasCoin => (),
+                // Might not be a IOTA coin
+                IotaArgument::Input(_) => return None,
             };
             let amounts = amounts
                 .iter()
                 .map(|amount| {
                     let value: u64 = match *amount {
-                        SuiArgument::Input(i) => {
+                        IotaArgument::Input(i) => {
                             u64::from_str(inputs[i as usize].pure()?.to_json_value().as_str()?)
                                 .ok()?
                         }
-                        SuiArgument::GasCoin
-                        | SuiArgument::Result(_)
-                        | SuiArgument::NestedResult(_, _) => return None,
+                        IotaArgument::GasCoin
+                        | IotaArgument::Result(_)
+                        | IotaArgument::NestedResult(_, _) => return None,
                     };
                     Some(KnownValue::GasCoin(value))
                 })
@@ -279,29 +280,29 @@ impl Operations {
             Some(amounts)
         }
         fn transfer_object(
-            aggregated_recipients: &mut HashMap<SuiAddress, u64>,
-            inputs: &[SuiCallArg],
+            aggregated_recipients: &mut HashMap<IotaAddress, u64>,
+            inputs: &[IotaCallArg],
             known_results: &[Vec<KnownValue>],
-            objs: &[SuiArgument],
-            recipient: SuiArgument,
+            objs: &[IotaArgument],
+            recipient: IotaArgument,
         ) -> Option<Vec<KnownValue>> {
             let addr = match recipient {
-                SuiArgument::Input(i) => inputs[i as usize].pure()?.to_sui_address().ok()?,
-                SuiArgument::GasCoin | SuiArgument::Result(_) | SuiArgument::NestedResult(_, _) => {
+                IotaArgument::Input(i) => inputs[i as usize].pure()?.to_iota_address().ok()?,
+                IotaArgument::GasCoin | IotaArgument::Result(_) | IotaArgument::NestedResult(_, _) => {
                     return None
                 }
             };
             for obj in objs {
                 let value = match *obj {
-                    SuiArgument::Result(i) => {
+                    IotaArgument::Result(i) => {
                         let KnownValue::GasCoin(value) = resolve_result(known_results, i, 0)?;
                         value
                     }
-                    SuiArgument::NestedResult(i, j) => {
+                    IotaArgument::NestedResult(i, j) => {
                         let KnownValue::GasCoin(value) = resolve_result(known_results, i, j)?;
                         value
                     }
-                    SuiArgument::GasCoin | SuiArgument::Input(_) => return None,
+                    IotaArgument::GasCoin | IotaArgument::Input(_) => return None,
                 };
                 let aggregate = aggregated_recipients.entry(addr).or_default();
                 *aggregate += value;
@@ -309,15 +310,15 @@ impl Operations {
             Some(vec![])
         }
         fn stake_call(
-            inputs: &[SuiCallArg],
+            inputs: &[IotaCallArg],
             known_results: &[Vec<KnownValue>],
-            call: &SuiProgrammableMoveCall,
-        ) -> Result<Option<(Option<u64>, SuiAddress)>, Error> {
-            let SuiProgrammableMoveCall { arguments, .. } = call;
+            call: &IotaProgrammableMoveCall,
+        ) -> Result<Option<(Option<u64>, IotaAddress)>, Error> {
+            let IotaProgrammableMoveCall { arguments, .. } = call;
             let (amount, validator) = match &arguments[..] {
                 [_, coin, validator] => {
                     let amount = match coin {
-                        SuiArgument::Result(i) =>{
+                        IotaArgument::Result(i) =>{
                             let KnownValue::GasCoin(value) = resolve_result(known_results, *i, 0).ok_or_else(||anyhow!("Cannot resolve Gas coin value at Result({i})"))?;
                             value
                         },
@@ -328,7 +329,7 @@ impl Operations {
                         // We use the position of the validator arg as a indicator of if the rosetta stake
                         // transaction is staking the whole wallet or not, if staking whole wallet,
                         // we have to omit the amount value in the final operation output.
-                        SuiArgument::Input(i) => (*i==1, inputs[*i as usize].pure().map(|v|v.to_sui_address()).transpose()),
+                        IotaArgument::Input(i) => (*i==1, inputs[*i as usize].pure().map(|v|v.to_iota_address()).transpose()),
                         _=> return Ok(None),
                     };
                     (some_amount.then_some(*amount), validator)
@@ -339,14 +340,14 @@ impl Operations {
         }
 
         fn unstake_call(
-            inputs: &[SuiCallArg],
-            call: &SuiProgrammableMoveCall,
+            inputs: &[IotaCallArg],
+            call: &IotaProgrammableMoveCall,
         ) -> Result<Option<ObjectID>, Error> {
-            let SuiProgrammableMoveCall { arguments, .. } = call;
+            let IotaProgrammableMoveCall { arguments, .. } = call;
             let id = match &arguments[..] {
                 [_, stake_id] => {
                     match stake_id {
-                        SuiArgument::Input(i) => {
+                        IotaArgument::Input(i) => {
                             let id = inputs[*i as usize].object().ok_or_else(|| anyhow!("Cannot find stake id from input args."))?;
                             // [WORKAROUND] - this is a hack to work out if the withdraw stake ops is for a selected stake or None (all stakes).
                             // this hack is similar to the one in stake_call.
@@ -360,25 +361,25 @@ impl Operations {
             };
             Ok(id.cloned())
         }
-        let SuiProgrammableTransactionBlock { inputs, commands } = &pt;
+        let IotaProgrammableTransactionBlock { inputs, commands } = &pt;
         let mut known_results: Vec<Vec<KnownValue>> = vec![];
-        let mut aggregated_recipients: HashMap<SuiAddress, u64> = HashMap::new();
+        let mut aggregated_recipients: HashMap<IotaAddress, u64> = HashMap::new();
         let mut needs_generic = false;
         let mut operations = vec![];
         let mut stake_ids = vec![];
         for command in commands {
             let result = match command {
-                SuiCommand::SplitCoins(coin, amounts) => {
+                IotaCommand::SplitCoins(coin, amounts) => {
                     split_coins(inputs, &known_results, *coin, amounts)
                 }
-                SuiCommand::TransferObjects(objs, addr) => transfer_object(
+                IotaCommand::TransferObjects(objs, addr) => transfer_object(
                     &mut aggregated_recipients,
                     inputs,
                     &known_results,
                     objs,
                     *addr,
                 ),
-                SuiCommand::MoveCall(m) if Self::is_stake_call(m) => {
+                IotaCommand::MoveCall(m) if Self::is_stake_call(m) => {
                     stake_call(inputs, &known_results, m)?.map(|(amount, validator)| {
                         let amount = amount.map(|amount| Amount::new(-(amount as i128)));
                         operations.push(Operation {
@@ -393,7 +394,7 @@ impl Operations {
                         vec![]
                     })
                 }
-                SuiCommand::MoveCall(m) if Self::is_unstake_call(m) => {
+                IotaCommand::MoveCall(m) if Self::is_unstake_call(m) => {
                     let stake_id = unstake_call(inputs, m)?;
                     stake_ids.push(stake_id);
                     Some(vec![])
@@ -414,10 +415,10 @@ impl Operations {
                 aggregated_recipients
                     .into_iter()
                     .map(|(recipient, amount)| {
-                        Operation::pay_sui(status, recipient, amount.into())
+                        Operation::pay_iota(status, recipient, amount.into())
                     }),
             );
-            operations.push(Operation::pay_sui(status, sender, -(total_paid as i128)));
+            operations.push(Operation::pay_iota(status, sender, -(total_paid as i128)));
         } else if !stake_ids.is_empty() {
             let stake_ids = stake_ids.into_iter().flatten().collect::<Vec<_>>();
             let metadata = stake_ids
@@ -437,30 +438,30 @@ impl Operations {
             operations.push(Operation::generic_op(
                 status,
                 sender,
-                SuiTransactionBlockKind::ProgrammableTransaction(pt),
+                IotaTransactionBlockKind::ProgrammableTransaction(pt),
             ))
         }
         Ok(operations)
     }
 
-    fn is_stake_call(tx: &SuiProgrammableMoveCall) -> bool {
-        tx.package == SUI_SYSTEM_PACKAGE_ID
-            && tx.module == SUI_SYSTEM_MODULE_NAME.as_str()
+    fn is_stake_call(tx: &IotaProgrammableMoveCall) -> bool {
+        tx.package == IOTA_SYSTEM_PACKAGE_ID
+            && tx.module == IOTA_SYSTEM_MODULE_NAME.as_str()
             && tx.function == ADD_STAKE_FUN_NAME.as_str()
     }
 
-    fn is_unstake_call(tx: &SuiProgrammableMoveCall) -> bool {
-        tx.package == SUI_SYSTEM_PACKAGE_ID
-            && tx.module == SUI_SYSTEM_MODULE_NAME.as_str()
+    fn is_unstake_call(tx: &IotaProgrammableMoveCall) -> bool {
+        tx.package == IOTA_SYSTEM_PACKAGE_ID
+            && tx.module == IOTA_SYSTEM_MODULE_NAME.as_str()
             && tx.function == WITHDRAW_STAKE_FUN_NAME.as_str()
     }
 
     fn process_balance_change(
-        gas_owner: SuiAddress,
+        gas_owner: IotaAddress,
         gas_used: i128,
         balance_changes: &[BalanceChange],
         status: Option<OperationStatus>,
-        balances: HashMap<SuiAddress, i128>,
+        balances: HashMap<IotaAddress, i128>,
     ) -> impl Iterator<Item = Operation> {
         let mut balances = balance_changes
             .iter()
@@ -491,9 +492,9 @@ impl Operations {
     }
 }
 
-impl TryFrom<SuiTransactionBlockData> for Operations {
+impl TryFrom<IotaTransactionBlockData> for Operations {
     type Error = Error;
-    fn try_from(data: SuiTransactionBlockData) -> Result<Self, Self::Error> {
+    fn try_from(data: IotaTransactionBlockData) -> Result<Self, Self::Error> {
         let sender = *data.sender();
         Ok(Self::new(Self::from_transaction(
             data.transaction().clone(),
@@ -503,9 +504,9 @@ impl TryFrom<SuiTransactionBlockData> for Operations {
     }
 }
 
-impl TryFrom<SuiTransactionBlockResponse> for Operations {
+impl TryFrom<IotaTransactionBlockResponse> for Operations {
     type Error = Error;
-    fn try_from(response: SuiTransactionBlockResponse) -> Result<Self, Self::Error> {
+    fn try_from(response: IotaTransactionBlockResponse) -> Result<Self, Self::Error> {
         let tx = response
             .transaction
             .ok_or_else(|| anyhow!("Response input should not be empty"))?;
@@ -594,7 +595,7 @@ impl TryFrom<SuiTransactionBlockResponse> for Operations {
 }
 
 fn is_unstake_event(tag: &StructTag) -> bool {
-    tag.address == SUI_SYSTEM_ADDRESS
+    tag.address == IOTA_SYSTEM_ADDRESS
         && tag.module.as_ident_str() == ident_str!("validator")
         && tag.name.as_ident_str() == ident_str!("UnstakingRequestEvent")
 }
@@ -610,7 +611,7 @@ impl TryFrom<TransactionData> for Operations {
             }
         }
         // Rosetta don't need the call args to be parsed into readable format
-        SuiTransactionBlockData::try_from(data, &&mut NoOpsModuleResolver)?.try_into()
+        IotaTransactionBlockData::try_from(data, &&mut NoOpsModuleResolver)?.try_into()
     }
 }
 
@@ -644,16 +645,16 @@ impl PartialEq for Operation {
 
 #[derive(Deserialize, Serialize, Clone, Debug, Eq, PartialEq)]
 pub enum OperationMetadata {
-    GenericTransaction(SuiTransactionBlockKind),
-    Stake { validator: SuiAddress },
+    GenericTransaction(IotaTransactionBlockKind),
+    Stake { validator: IotaAddress },
     WithdrawStake { stake_ids: Vec<ObjectID> },
 }
 
 impl Operation {
     fn generic_op(
         status: Option<OperationStatus>,
-        sender: SuiAddress,
-        tx: SuiTransactionBlockKind,
+        sender: IotaAddress,
+        tx: IotaTransactionBlockKind,
     ) -> Self {
         Operation {
             operation_identifier: Default::default(),
@@ -666,7 +667,7 @@ impl Operation {
         }
     }
 
-    pub fn genesis(index: u64, sender: SuiAddress, coin: GasCoin) -> Self {
+    pub fn genesis(index: u64, sender: IotaAddress, coin: GasCoin) -> Self {
         Operation {
             operation_identifier: index.into(),
             type_: OperationType::Genesis,
@@ -686,10 +687,10 @@ impl Operation {
         }
     }
 
-    fn pay_sui(status: Option<OperationStatus>, address: SuiAddress, amount: i128) -> Self {
+    fn pay_iota(status: Option<OperationStatus>, address: IotaAddress, amount: i128) -> Self {
         Operation {
             operation_identifier: Default::default(),
-            type_: OperationType::PaySui,
+            type_: OperationType::PayIota,
             status,
             account: Some(address.into()),
             amount: Some(Amount::new(amount)),
@@ -698,10 +699,10 @@ impl Operation {
         }
     }
 
-    fn balance_change(status: Option<OperationStatus>, addr: SuiAddress, amount: i128) -> Self {
+    fn balance_change(status: Option<OperationStatus>, addr: IotaAddress, amount: i128) -> Self {
         Self {
             operation_identifier: Default::default(),
-            type_: OperationType::SuiBalanceChange,
+            type_: OperationType::IotaBalanceChange,
             status,
             account: Some(addr.into()),
             amount: Some(Amount::new(amount)),
@@ -709,7 +710,7 @@ impl Operation {
             metadata: None,
         }
     }
-    fn gas(addr: SuiAddress, amount: i128) -> Self {
+    fn gas(addr: IotaAddress, amount: i128) -> Self {
         Self {
             operation_identifier: Default::default(),
             type_: OperationType::Gas,
@@ -720,7 +721,7 @@ impl Operation {
             metadata: None,
         }
     }
-    fn stake_reward(status: Option<OperationStatus>, addr: SuiAddress, amount: i128) -> Self {
+    fn stake_reward(status: Option<OperationStatus>, addr: IotaAddress, amount: i128) -> Self {
         Self {
             operation_identifier: Default::default(),
             type_: OperationType::StakeReward,
@@ -731,7 +732,7 @@ impl Operation {
             metadata: None,
         }
     }
-    fn stake_principle(status: Option<OperationStatus>, addr: SuiAddress, amount: i128) -> Self {
+    fn stake_principle(status: Option<OperationStatus>, addr: IotaAddress, amount: i128) -> Self {
         Self {
             operation_identifier: Default::default(),
             type_: OperationType::StakePrinciple,

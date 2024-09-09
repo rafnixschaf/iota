@@ -1,4 +1,4 @@
-name: Create Sui Release with Release Notes
+name: Create Iota Release with Release Notes
 
 concurrency: ${{ github.workflow }}-${{ inputs.release_tag }}
 
@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Sui Release Tag'
+        description: 'Iota Release Tag'
         type: string
         required: true
       previous_branch:
-        description: 'Previous Release Branch (Ex: releases/sui-vX.XX.X-release)'
+        description: 'Previous Release Branch (Ex: releases/iota-vX.XX.X-release)'
         type: string
         required: true
       current_branch:
-        description: 'Current Release Branch (Ex: releases/sui-vX.XX.X-release)'
+        description: 'Current Release Branch (Ex: releases/iota-vX.XX.X-release)'
         type: string
         required: true
 
@@ -31,8 +31,8 @@ jobs:
         shell: bash
         working-directory: ./
         run: |
-          echo "previous_commit=$(curl https://api.github.com/repos/MystenLabs/sui/commits/${{ inputs.previous_branch }} | jq .sha)" >> $GITHUB_ENV
-          echo "current_commit=$(curl https://api.github.com/repos/MystenLabs/sui/commits/${{ inputs.current_branch }} | jq .sha)" >> $GITHUB_ENV
+          echo "previous_commit=$(curl https://api.github.com/repos/iotaledger/iota/commits/${{ inputs.previous_branch }} | jq .sha)" >> $GITHUB_ENV
+          echo "current_commit=$(curl https://api.github.com/repos/iotaledger/iota/commits/${{ inputs.current_branch }} | jq .sha)" >> $GITHUB_ENV
 
       - name: Checkout main
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # Pin v4.1.1
@@ -51,7 +51,7 @@ jobs:
         run: |
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} python ./scripts/release_notes.py generate ${{ env.previous_commit }} ${{ env.current_commit }} | tee -a ${{ env.RELEASE_NOTES_FILE }}
           echo "---" >> ${{ env.RELEASE_NOTES_FILE }}
-          echo "#### Full Log: https://github.com/MystenLabs/sui/commits/${{ inputs.release_tag }}" >> ${{ env.RELEASE_NOTES_FILE }}
+          echo "#### Full Log: https://github.com/iotaledger/iota/commits/${{ inputs.release_tag }}" >> ${{ env.RELEASE_NOTES_FILE }}
 
           if [[ ${{ inputs.release_tag }} == devnet* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV

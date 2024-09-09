@@ -1,21 +1,22 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
 use async_trait::async_trait;
 use diesel::{dsl::sql, BoolExpressionMethods, Connection, ExpressionMethods, RunQueryDsl};
-use mysten_service::metrics::start_basic_prometheus_server;
+use iota_service::metrics::start_basic_prometheus_server;
 use prometheus::Registry;
 use std::path::PathBuf;
-use sui_data_ingestion_core::{
+use iota_data_ingestion_core::{
     DataIngestionMetrics, FileProgressStore, IndexerExecutor, ReaderOptions, Worker, WorkerPool,
 };
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_types::full_checkpoint_content::CheckpointData;
 use tracing::info;
 
-use suins_indexer::{
+use iotans_indexer::{
     get_connection_pool,
-    indexer::{format_update_field_query, format_update_subdomain_wrapper_query, SuinsIndexer},
+    indexer::{format_update_field_query, format_update_subdomain_wrapper_query, IotaNSIndexer},
     models::VerifiedDomain,
     schema::domains,
     PgConnectionPool,
@@ -25,12 +26,12 @@ use dotenvy::dotenv;
 use std::env;
 use tokio::sync::oneshot;
 
-struct SuinsIndexerWorker {
+struct IotaNSIndexerWorker {
     pg_pool: PgConnectionPool,
-    indexer: SuinsIndexer,
+    indexer: IotaNSIndexer,
 }
 
-impl SuinsIndexerWorker {
+impl IotaNSIndexerWorker {
     /// Creates a transcation that upserts the given name record updates,
     /// and deletes the given name record deletions.
     ///
@@ -99,7 +100,7 @@ impl SuinsIndexerWorker {
 }
 
 #[async_trait]
-impl Worker for SuinsIndexerWorker {
+impl Worker for IotaNSIndexerWorker {
     async fn process_checkpoint(&self, checkpoint: CheckpointData) -> Result<()> {
         let checkpoint_seq_number = checkpoint.checkpoint_summary.sequence_number;
         let (updates, removals) = self.indexer.process_checkpoint(&checkpoint);
@@ -133,7 +134,7 @@ async fn main() -> Result<()> {
     let progress_store = FileProgressStore::new(PathBuf::from(backfill_progress_file_path));
 
     let registry: Registry = start_basic_prometheus_server();
-    mysten_metrics::init_metrics(&registry);
+    iota_metrics::init_metrics(&registry);
     let metrics = DataIngestionMetrics::new(&registry);
     let mut executor = IndexerExecutor::new(progress_store, 1, metrics);
 
@@ -141,17 +142,17 @@ async fn main() -> Result<()> {
         if let (Some(registry_id), Some(subdomain_wrapper_type), Some(name_record_type)) =
             (registry_id, subdomain_wrapper_type, name_record_type)
         {
-            SuinsIndexer::new(registry_id, subdomain_wrapper_type, name_record_type)
+            IotaNSIndexer::new(registry_id, subdomain_wrapper_type, name_record_type)
         } else {
-            SuinsIndexer::default()
+            IotaNSIndexer::default()
         };
 
     let worker_pool = WorkerPool::new(
-        SuinsIndexerWorker {
+        IotaNSIndexerWorker {
             pg_pool: get_connection_pool(),
             indexer: indexer_setup,
         },
-        "suins_indexing".to_string(), /* task name used as a key in the progress store */
+        "iotans_indexing".to_string(), /* task name used as a key in the progress store */
         100,                          /* concurrency */
     );
     executor.register(worker_pool).await?;

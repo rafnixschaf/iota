@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::BTreeSet;
@@ -14,9 +15,9 @@ pub(crate) fn create_rustls_server_config(
     network_keypair: NetworkKeyPair,
 ) -> ServerConfig {
     let allower = AllowedPublicKeys::new(context);
-    let verifier = sui_tls::ClientCertVerifier::new(allower, certificate_server_name(context));
+    let verifier = iota_tls::ClientCertVerifier::new(allower, certificate_server_name(context));
     // TODO: refactor to use key bytes
-    let self_signed_cert = sui_tls::SelfSignedCertificate::new(
+    let self_signed_cert = iota_tls::SelfSignedCertificate::new(
         network_keypair.private_key().into_inner(),
         &certificate_server_name(context),
     );
@@ -40,14 +41,14 @@ pub(crate) fn create_rustls_client_config(
         .network_key
         .clone()
         .into_inner();
-    let self_signed_cert = sui_tls::SelfSignedCertificate::new(
+    let self_signed_cert = iota_tls::SelfSignedCertificate::new(
         network_keypair.private_key().into_inner(),
         &certificate_server_name(context),
     );
     let tls_cert = self_signed_cert.rustls_certificate();
     let tls_private_key = self_signed_cert.rustls_private_key();
     let mut tls_config =
-        sui_tls::ServerCertVerifier::new(target_public_key, certificate_server_name(context))
+        iota_tls::ServerCertVerifier::new(target_public_key, certificate_server_name(context))
             .rustls_client_config(vec![tls_cert], tls_private_key)
             .unwrap_or_else(|e| panic!("Failed to create TLS client config: {:?}", e));
     // ServerCertVerifier sets alpn for completeness, but alpn cannot be predefined when
@@ -74,7 +75,7 @@ impl AllowedPublicKeys {
     }
 }
 
-impl sui_tls::Allower for AllowedPublicKeys {
+impl iota_tls::Allower for AllowedPublicKeys {
     fn allowed(&self, key: &Ed25519PublicKey) -> bool {
         self.keys.contains(key)
     }

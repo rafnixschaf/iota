@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
@@ -7,13 +8,13 @@ use async_trait::async_trait;
 use consensus_config::{Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
 use consensus_core::{CommitConsumer, CommitIndex, ConsensusAuthority};
 use fastcrypto::ed25519;
-use mysten_metrics::{monitored_mpsc::unbounded_channel, RegistryID, RegistryService};
+use iota_metrics::{monitored_mpsc::unbounded_channel, RegistryID, RegistryService};
 use narwhal_executor::ExecutionState;
 use prometheus::Registry;
-use sui_config::NodeConfig;
-use sui_protocol_config::ConsensusNetwork;
-use sui_types::{
-    committee::EpochId, sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait,
+use iota_config::NodeConfig;
+use iota_protocol_config::ConsensusNetwork;
+use iota_types::{
+    committee::EpochId, iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
 };
 use tokio::sync::Mutex;
 use tracing::info;
@@ -24,7 +25,7 @@ use crate::{
     consensus_manager::{
         ConsensusManagerMetrics, ConsensusManagerTrait, Running, RunningLockGuard,
     },
-    consensus_validator::SuiTxValidator,
+    consensus_validator::IotaTxValidator,
     mysticeti_adapter::LazyMysticetiClient,
 };
 
@@ -104,7 +105,7 @@ impl ConsensusManagerTrait for MysticetiManager {
         config: &NodeConfig,
         epoch_store: Arc<AuthorityPerEpochStore>,
         consensus_handler_initializer: ConsensusHandlerInitializer,
-        tx_validator: SuiTxValidator,
+        tx_validator: IotaTxValidator,
     ) {
         let system_state = epoch_store.epoch_start_state();
         let committee: Committee = system_state.get_mysticeti_committee();
@@ -133,7 +134,7 @@ impl ConsensusManagerTrait for MysticetiManager {
         };
 
         // Disable the automated last known block sync for mainnet for now
-        if epoch_store.get_chain_identifier().chain() == sui_protocol_config::Chain::Mainnet {
+        if epoch_store.get_chain_identifier().chain() == iota_protocol_config::Chain::Mainnet {
             parameters.sync_last_known_own_block_timeout = Duration::ZERO;
         };
 

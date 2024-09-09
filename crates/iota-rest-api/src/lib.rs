@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use axum::{response::Redirect, routing::get, Router};
-use mysten_network::callback::CallbackLayer;
+use iota_network_stack::callback::CallbackLayer;
 use openapi::ApiEndpoint;
 use reader::StateReader;
 use std::sync::Arc;
-use sui_types::storage::RestStateReader;
-use sui_types::transaction_executor::TransactionExecutor;
+use iota_types::storage::RestStateReader;
+use iota_types::transaction_executor::TransactionExecutor;
 use tap::Pipe;
 
 pub mod accept;
@@ -32,7 +33,7 @@ pub mod types;
 pub use client::Client;
 pub use error::{RestError, Result};
 pub use metrics::RestMetrics;
-pub use sui_types::full_checkpoint_content::{CheckpointData, CheckpointTransaction};
+pub use iota_types::full_checkpoint_content::{CheckpointData, CheckpointTransaction};
 pub use transactions::ExecuteTransactionQueryParameters;
 
 pub const TEXT_PLAIN_UTF_8: &str = "text/plain; charset=utf-8";
@@ -59,7 +60,7 @@ impl<T: serde::Serialize, C: std::fmt::Display> axum::response::IntoResponse for
     fn into_response(self) -> axum::response::Response {
         let cursor = self
             .cursor
-            .map(|cursor| [(crate::types::X_SUI_CURSOR, cursor.to_string())]);
+            .map(|cursor| [(crate::types::X_IOTA_CURSOR, cursor.to_string())]);
 
         (cursor, self.entries).into_response()
     }
@@ -91,7 +92,7 @@ const ENDPOINTS: &[&dyn ApiEndpoint<RestService>] = &[
 pub struct RestService {
     reader: StateReader,
     executor: Option<Arc<dyn TransactionExecutor>>,
-    chain_id: sui_types::digests::ChainIdentifier,
+    chain_id: iota_types::digests::ChainIdentifier,
     software_version: &'static str,
     metrics: Option<Arc<RestMetrics>>,
 }
@@ -132,7 +133,7 @@ impl RestService {
         self.metrics = Some(Arc::new(metrics));
     }
 
-    pub fn chain_id(&self) -> sui_types::digests::ChainIdentifier {
+    pub fn chain_id(&self) -> iota_types::digests::ChainIdentifier {
         self.chain_id
     }
 
@@ -181,11 +182,11 @@ fn info() -> openapiv3::v3_1::Info {
     use openapiv3::v3_1::License;
 
     openapiv3::v3_1::Info {
-        title: "Sui Node Api".to_owned(),
-        description: Some("REST Api for interacting with the Sui Blockchain".to_owned()),
+        title: "Iota Node Api".to_owned(),
+        description: Some("REST Api for interacting with the Iota Blockchain".to_owned()),
         contact: Some(Contact {
-            name: Some("Mysten Labs".to_owned()),
-            url: Some("https://github.com/MystenLabs/sui".to_owned()),
+            name: Some("IOTA Foundation".to_owned()),
+            url: Some("https://github.com/iotaledger/iota".to_owned()),
             ..Default::default()
         }),
         license: Some(License {

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -28,8 +29,8 @@ use std::{
     collections::{BTreeMap, BTreeSet, VecDeque},
     sync::RwLock,
 };
-use sui_types::{
-    base_types::{ObjectID, SequenceNumber, SuiAddress},
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber, IotaAddress},
     config,
     digests::{ObjectDigest, TransactionDigest},
     dynamic_field::DynamicFieldInfo,
@@ -62,7 +63,7 @@ impl ChildObjectResolver for InMemoryTestStore {
         parent: &ObjectID,
         child: &ObjectID,
         child_version_upper_bound: SequenceNumber,
-    ) -> sui_types::error::SuiResult<Option<Object>> {
+    ) -> iota_types::error::IotaResult<Option<Object>> {
         self.0
             .read()
             .unwrap()
@@ -74,8 +75,8 @@ impl ChildObjectResolver for InMemoryTestStore {
         owner: &ObjectID,
         receiving_object_id: &ObjectID,
         receive_object_at_version: SequenceNumber,
-        epoch_id: sui_types::committee::EpochId,
-    ) -> sui_types::error::SuiResult<Option<Object>> {
+        epoch_id: iota_types::committee::EpochId,
+    ) -> iota_types::error::IotaResult<Option<Object>> {
         self.0.read().unwrap().get_object_received_at_version(
             owner,
             receiving_object_id,
@@ -331,7 +332,7 @@ pub fn take_from_address_by_id(
 ) -> PartialVMResult<NativeResult> {
     let specified_ty = get_specified_ty(ty_args);
     let id = pop_id(&mut args)?;
-    let account: SuiAddress = pop_arg!(args, AccountAddress).into();
+    let account: IotaAddress = pop_arg!(args, AccountAddress).into();
     pop_arg!(args, StructRef);
     assert!(args.is_empty());
     let object_runtime: &mut ObjectRuntime = context.extensions_mut().get_mut();
@@ -364,7 +365,7 @@ pub fn ids_for_address(
     mut args: VecDeque<Value>,
 ) -> PartialVMResult<NativeResult> {
     let specified_ty = get_specified_ty(ty_args);
-    let account: SuiAddress = pop_arg!(args, AccountAddress).into();
+    let account: IotaAddress = pop_arg!(args, AccountAddress).into();
     assert!(args.is_empty());
     let object_runtime: &mut ObjectRuntime = context.extensions_mut().get_mut();
     let inventories = &mut object_runtime.test_inventories;
@@ -385,7 +386,7 @@ pub fn most_recent_id_for_address(
     mut args: VecDeque<Value>,
 ) -> PartialVMResult<NativeResult> {
     let specified_ty = get_specified_ty(ty_args);
-    let account: SuiAddress = pop_arg!(args, AccountAddress).into();
+    let account: IotaAddress = pop_arg!(args, AccountAddress).into();
     assert!(args.is_empty());
     let object_runtime: &mut ObjectRuntime = context.extensions_mut().get_mut();
     let inventories = &mut object_runtime.test_inventories;
@@ -407,7 +408,7 @@ pub fn was_taken_from_address(
 ) -> PartialVMResult<NativeResult> {
     assert!(ty_args.is_empty());
     let id = pop_id(&mut args)?;
-    let account: SuiAddress = pop_arg!(args, AccountAddress).into();
+    let account: IotaAddress = pop_arg!(args, AccountAddress).into();
     assert!(args.is_empty());
     let object_runtime: &mut ObjectRuntime = context.extensions_mut().get_mut();
     let inventories = &mut object_runtime.test_inventories;

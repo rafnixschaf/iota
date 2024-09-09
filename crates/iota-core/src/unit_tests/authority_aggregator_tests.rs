@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::test_utils::make_transfer_object_transaction;
-use crate::test_utils::make_transfer_sui_transaction;
+use crate::test_utils::make_transfer_iota_transaction;
 use move_core_types::{account_address::AccountAddress, ident_str};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -12,16 +13,16 @@ use std::collections::HashSet;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use sui_authority_aggregation::quorum_map_then_reduce_with_timeout;
-use sui_macros::sim_test;
-use sui_move_build::BuildConfig;
-use sui_types::crypto::get_key_pair_from_rng;
-use sui_types::crypto::{get_key_pair, AccountKeyPair, AuthorityKeyPair};
-use sui_types::crypto::{AuthoritySignature, Signer};
-use sui_types::crypto::{KeypairTraits, Signature};
-use sui_types::object::Object;
-use sui_types::transaction::*;
-use sui_types::utils::create_fake_transaction;
+use iota_authority_aggregation::quorum_map_then_reduce_with_timeout;
+use iota_macros::sim_test;
+use iota_move_build::BuildConfig;
+use iota_types::crypto::get_key_pair_from_rng;
+use iota_types::crypto::{get_key_pair, AccountKeyPair, AuthorityKeyPair};
+use iota_types::crypto::{AuthoritySignature, Signer};
+use iota_types::crypto::{KeypairTraits, Signature};
+use iota_types::object::Object;
+use iota_types::transaction::*;
+use iota_types::utils::create_fake_transaction;
 
 use super::*;
 use crate::authority_client::AuthorityAPI;
@@ -30,17 +31,17 @@ use crate::test_authority_clients::{
     MockAuthorityApi,
 };
 use crate::test_utils::init_local_authorities;
-use sui_framework::BuiltInFramework;
-use sui_types::utils::to_sender_signed_transaction;
+use iota_framework::BuiltInFramework;
+use iota_types::utils::to_sender_signed_transaction;
 use tokio::time::Instant;
 
 #[cfg(msim)]
-use sui_simulator::configs::constant_latency_ms;
-use sui_types::effects::{
+use iota_simulator::configs::constant_latency_ms;
+use iota_types::effects::{
     TestEffectsBuilder, TransactionEffects, TransactionEffectsAPI, TransactionEvents,
 };
-use sui_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use sui_types::messages_grpc::{
+use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
+use iota_types::messages_grpc::{
     HandleTransactionResponse, TransactionStatus, VerifiedObjectInfoResponse,
 };
 
@@ -80,9 +81,9 @@ pub fn set_local_client_config(
 }
 
 pub fn create_object_move_transaction(
-    src: SuiAddress,
+    src: IotaAddress,
     secret: &dyn Signer<Signature>,
-    dest: SuiAddress,
+    dest: IotaAddress,
     value: u64,
     package_id: ObjectID,
     gas_object_ref: ObjectRef,
@@ -112,7 +113,7 @@ pub fn create_object_move_transaction(
 }
 
 pub fn delete_object_move_transaction(
-    src: SuiAddress,
+    src: IotaAddress,
     secret: &dyn Signer<Signature>,
     object_ref: ObjectRef,
     framework_obj_id: ObjectID,
@@ -137,7 +138,7 @@ pub fn delete_object_move_transaction(
 }
 
 pub fn set_object_move_transaction(
-    src: SuiAddress,
+    src: IotaAddress,
     secret: &dyn Signer<Signature>,
     object_ref: ObjectRef,
     value: u64,
@@ -420,7 +421,7 @@ async fn test_map_reducer() {
         0usize,
         |_name, _client| {
             Box::pin(async move {
-                let res: Result<usize, SuiError> = Err(SuiError::TooManyIncorrectAuthorities {
+                let res: Result<usize, IotaError> = Err(IotaError::TooManyIncorrectAuthorities {
                     errors: vec![],
                     action: "".to_string(),
                 });
@@ -431,7 +432,7 @@ async fn test_map_reducer() {
             Box::pin(async move {
                 assert!(matches!(
                     result,
-                    Err(SuiError::TooManyIncorrectAuthorities { .. })
+                    Err(IotaError::TooManyIncorrectAuthorities { .. })
                 ));
                 accumulated_state += 1;
                 ReduceOutput::Continue(accumulated_state)
@@ -616,7 +617,7 @@ async fn test_quorum_once_with_timeout() {
                     match res {
                         Ok(_) => Ok(()),
                         // Treat transaction not found OK just to test timeout functionality.
-                        Err(SuiError::TransactionNotFound { .. }) => Ok(()),
+                        Err(IotaError::TransactionNotFound { .. }) => Ok(()),
                         Err(err) => Err(err),
                     }
                 })
@@ -734,9 +735,9 @@ async fn test_handle_transaction_fork() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let tx = make_transfer_sui_transaction(
+    let tx = make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
@@ -806,9 +807,9 @@ async fn test_handle_certificate_response() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let tx = VerifiedTransaction::new_unchecked(make_transfer_sui_transaction(
+    let tx = VerifiedTransaction::new_unchecked(make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
@@ -837,7 +838,7 @@ async fn test_handle_certificate_response() {
     agg.committee = Arc::new(committee_1.clone());
 
     assert_resp_err(&agg, tx.clone().into(), |e| matches!(e, AggregatorProcessTransactionError::RetryableTransaction { .. }),
-        |e| matches!(e, SuiError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
+        |e| matches!(e, IotaError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
     ).await;
 
     set_cert_response_with_certified_tx(&mut clients, &authority_keys, &cert_epoch_0, 0);
@@ -862,7 +863,7 @@ async fn test_handle_certificate_response() {
         err,
         AggregatorProcessCertificateError::RetryableExecuteCertificate {
             retryable_errors, ..
-        } if retryable_errors.iter().any(|(error, _, _)| matches!(error, SuiError::WrongEpoch {
+        } if retryable_errors.iter().any(|(error, _, _)| matches!(error, IotaError::WrongEpoch {
             expected_epoch: 1, actual_epoch: 0
         }))
     );
@@ -875,28 +876,28 @@ async fn test_handle_transaction_response() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let tx = VerifiedTransaction::new_unchecked(make_transfer_sui_transaction(
+    let tx = VerifiedTransaction::new_unchecked(make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     ));
-    let tx2 = VerifiedTransaction::new_unchecked(make_transfer_sui_transaction(
+    let tx2 = VerifiedTransaction::new_unchecked(make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         Some(1),
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     ));
-    let package_not_found_error = SuiError::UserInputError {
+    let package_not_found_error = IotaError::UserInputError {
         error: UserInputError::DependentPackageNotFound {
             package_id: gas_object.0,
         },
     };
-    let object_not_found_error = SuiError::UserInputError {
+    let object_not_found_error = IotaError::UserInputError {
         error: UserInputError::ObjectNotFound {
             object_id: gas_object.0,
             version: Some(gas_object.1),
@@ -916,7 +917,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::Unknown(..)),
+        |e| matches!(e, IotaError::Unknown(..)),
     )
     .await;
 
@@ -944,7 +945,7 @@ async fn test_handle_transaction_response() {
     agg.committee = Arc::new(committee_1);
 
     assert_resp_err(&agg, tx.clone().into(), |e| matches!(e, AggregatorProcessTransactionError::RetryableTransaction { .. }),
-        |e| matches!(e, SuiError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
+        |e| matches!(e, IotaError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
     ).await;
 
     println!("Case 3 - Successful Cert Transaction");
@@ -989,7 +990,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::MissingCommitteeAtEpoch(e) if *e == 1),
+        |e| matches!(e, IotaError::MissingCommitteeAtEpoch(e) if *e == 1),
     )
     .await;
 
@@ -1022,7 +1023,7 @@ async fn test_handle_transaction_response() {
 
     // Err because either cert or signed effects is in epoch 0
     assert_resp_err(&agg, tx.clone().into(), |e| matches!(e, AggregatorProcessTransactionError::RetryableTransaction { .. }),
-        |e| matches!(e, SuiError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
+        |e| matches!(e, IotaError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 1 && *actual_epoch == 0)
     ).await;
 
     set_tx_info_response_with_cert_and_effects(
@@ -1070,8 +1071,8 @@ async fn test_handle_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
-                    | SuiError::RpcError(..)
+                IotaError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
+                    | IotaError::RpcError(..)
             )
         },
     )
@@ -1145,8 +1146,8 @@ async fn test_handle_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
-                    | SuiError::RpcError(..)
+                IotaError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
+                    | IotaError::RpcError(..)
             )
         },
     )
@@ -1231,9 +1232,9 @@ async fn test_handle_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
-                    | SuiError::RpcError(..)
-                    | SuiError::ByzantineAuthoritySuspicion { .. }
+                IotaError::QuorumFailedToGetEffectsQuorumWhenProcessingTransaction { .. }
+                    | IotaError::RpcError(..)
+                    | IotaError::ByzantineAuthoritySuspicion { .. }
             )
         },
     )
@@ -1260,7 +1261,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::MissingCommitteeAtEpoch(e) if *e == 1),
+        |e| matches!(e, IotaError::MissingCommitteeAtEpoch(e) if *e == 1),
     )
     .await;
 
@@ -1274,7 +1275,7 @@ async fn test_handle_transaction_response() {
     assert_resp_err(
         &agg,
         tx.clone().into(), |e| matches!(e, AggregatorProcessTransactionError::RetryableTransaction { .. }),
-        |e| matches!(e, SuiError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 0 && *actual_epoch == 1)
+        |e| matches!(e, IotaError::WrongEpoch { expected_epoch, actual_epoch } if *expected_epoch == 0 && *actual_epoch == 1)
     )
     .await;
 
@@ -1304,7 +1305,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 
@@ -1327,7 +1328,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 
@@ -1351,7 +1352,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 
@@ -1374,7 +1375,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 
@@ -1397,7 +1398,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 
@@ -1425,7 +1426,7 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::UserInputError { .. } | SuiError::RpcError(..)),
+        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
     )
     .await;
 }
@@ -1436,32 +1437,32 @@ async fn test_handle_conflicting_transaction_response() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let conflicting_object = random_object_ref();
-    let tx1 = VerifiedTransaction::new_unchecked(make_transfer_sui_transaction(
+    let tx1 = VerifiedTransaction::new_unchecked(make_transfer_iota_transaction(
         conflicting_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         Some(1),
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     ));
-    let conflicting_tx2 = VerifiedTransaction::new_unchecked(make_transfer_sui_transaction(
+    let conflicting_tx2 = VerifiedTransaction::new_unchecked(make_transfer_iota_transaction(
         conflicting_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         Some(2),
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     ));
-    let conflicting_error = SuiError::ObjectLockConflict {
+    let conflicting_error = IotaError::ObjectLockConflict {
         obj_ref: conflicting_object,
         pending_transaction: *conflicting_tx2.digest(),
     };
-    let retryable_error = SuiError::RpcError("RPC".into(), "Error".into());
-    let non_retryable_error = SuiError::ByzantineAuthoritySuspicion {
+    let retryable_error = IotaError::RpcError("RPC".into(), "Error".into());
+    let non_retryable_error = IotaError::ByzantineAuthoritySuspicion {
         authority: authority_keys[0].0,
         reason: "Faulty".into(),
     };
-    let object_not_found_error = SuiError::UserInputError {
+    let object_not_found_error = IotaError::UserInputError {
         error: UserInputError::ObjectNotFound {
             object_id: conflicting_object.0,
             version: Some(conflicting_object.1),
@@ -1497,7 +1498,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. } | SuiError::RpcError(..)
+                IotaError::ObjectLockConflict { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -1530,7 +1531,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. } | SuiError::RpcError(..)
+                IotaError::ObjectLockConflict { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -1562,7 +1563,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. } | SuiError::RpcError(..)
+                IotaError::ObjectLockConflict { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -1588,7 +1589,7 @@ async fn test_handle_conflicting_transaction_response() {
                 AggregatorProcessTransactionError::FatalConflictingTransaction { .. }
             )
         },
-        |e| matches!(e, SuiError::ObjectLockConflict { .. }),
+        |e| matches!(e, IotaError::ObjectLockConflict { .. }),
     )
     .await;
 
@@ -1601,15 +1602,15 @@ async fn test_handle_conflicting_transaction_response() {
         .unwrap()
         .set_tx_info_response_error(conflicting_error.clone());
     // Validator 3 returns a conflicting tx3
-    let conflicting_tx3 = make_transfer_sui_transaction(
+    let conflicting_tx3 = make_transfer_iota_transaction(
         conflicting_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         Some(3),
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     );
-    let conflicting_error_2 = SuiError::ObjectLockConflict {
+    let conflicting_error_2 = IotaError::ObjectLockConflict {
         obj_ref: conflicting_object,
         pending_transaction: *conflicting_tx3.digest(),
     };
@@ -1636,7 +1637,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. } | SuiError::ByzantineAuthoritySuspicion { .. }
+                IotaError::ObjectLockConflict { .. } | IotaError::ByzantineAuthoritySuspicion { .. }
             )
         },
     )
@@ -1651,15 +1652,15 @@ async fn test_handle_conflicting_transaction_response() {
         .unwrap()
         .set_tx_info_response_error(conflicting_error.clone());
     // Validator 3 returns a conflicting tx3
-    let conflicting_tx3 = make_transfer_sui_transaction(
+    let conflicting_tx3 = make_transfer_iota_transaction(
         conflicting_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         Some(3),
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     );
-    let conflicting_error_2 = SuiError::ObjectLockConflict {
+    let conflicting_error_2 = IotaError::ObjectLockConflict {
         obj_ref: conflicting_object,
         pending_transaction: *conflicting_tx3.digest(),
     };
@@ -1686,7 +1687,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. } | SuiError::UserInputError { .. }
+                IotaError::ObjectLockConflict { .. } | IotaError::UserInputError { .. }
             )
         },
     )
@@ -1726,9 +1727,9 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ObjectLockConflict { .. }
-                    | SuiError::UserInputError { .. }
-                    | SuiError::ByzantineAuthoritySuspicion { .. }
+                IotaError::ObjectLockConflict { .. }
+                    | IotaError::UserInputError { .. }
+                    | IotaError::ByzantineAuthoritySuspicion { .. }
             )
         },
     )
@@ -1821,7 +1822,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::MissingCommitteeAtEpoch(..) | SuiError::ObjectLockConflict { .. }
+                IotaError::MissingCommitteeAtEpoch(..) | IotaError::ObjectLockConflict { .. }
             )
         },
     )
@@ -1846,7 +1847,7 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                SuiError::WrongEpoch { .. } | SuiError::ObjectLockConflict { .. }
+                IotaError::WrongEpoch { .. } | IotaError::ObjectLockConflict { .. }
             )
         },
     )
@@ -1866,20 +1867,20 @@ async fn test_handle_overload_response() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let txn = make_transfer_sui_transaction(
+    let txn = make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     );
 
-    let overload_error = SuiError::TooManyTransactionsPendingExecution {
+    let overload_error = IotaError::TooManyTransactionsPendingExecution {
         queue_len: 100,
         threshold: 100,
     };
-    let rpc_error = SuiError::RpcError("RPC".into(), "Error".into());
+    let rpc_error = IotaError::RpcError("RPC".into(), "Error".into());
 
     // Have 2f + 1 validators return the overload error and we should get the `SystemOverload` error.
     set_retryable_tx_info_response_error(&mut clients, &authority_keys);
@@ -1901,7 +1902,7 @@ async fn test_handle_overload_response() {
         |e| {
             matches!(
                 e,
-                SuiError::TooManyTransactionsPendingExecution { .. } | SuiError::RpcError(..)
+                IotaError::TooManyTransactionsPendingExecution { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -1928,14 +1929,14 @@ async fn test_handle_overload_response() {
         |e| {
             matches!(
                 e,
-                SuiError::TooManyTransactionsPendingExecution { .. } | SuiError::RpcError(..)
+                IotaError::TooManyTransactionsPendingExecution { .. } | IotaError::RpcError(..)
             )
         },
     )
     .await;
 }
 
-// Tests that authority aggregator can aggregate SuiError::ValidatorOverloadedRetryAfter into
+// Tests that authority aggregator can aggregate IotaError::ValidatorOverloadedRetryAfter into
 // AggregatorProcessTransactionError::SystemOverloadRetryAfter.
 #[tokio::test]
 async fn test_handle_overload_retry_response() {
@@ -1943,22 +1944,22 @@ async fn test_handle_overload_retry_response() {
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let txn = make_transfer_sui_transaction(
+    let txn = make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
         666, // this is a dummy value which does not matter
     );
 
-    let rpc_error = SuiError::RpcError("RPC".into(), "Error".into());
+    let rpc_error = IotaError::RpcError("RPC".into(), "Error".into());
 
     // Have all validators return the overload error and we should get the `SystemOverload` error.
     // Uses different retry_after_secs for each validator.
     for (index, (name, _)) in authority_keys.iter().enumerate() {
         clients.get_mut(name).unwrap().set_tx_info_response_error(
-            SuiError::ValidatorOverloadedRetryAfter {
+            IotaError::ValidatorOverloadedRetryAfter {
                 retry_after_secs: index as u64,
             },
         );
@@ -1981,7 +1982,7 @@ async fn test_handle_overload_retry_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ValidatorOverloadedRetryAfter { .. } | SuiError::RpcError(..)
+                IotaError::ValidatorOverloadedRetryAfter { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -2010,7 +2011,7 @@ async fn test_handle_overload_retry_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ValidatorOverloadedRetryAfter { .. } | SuiError::RpcError(..)
+                IotaError::ValidatorOverloadedRetryAfter { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -2035,7 +2036,7 @@ async fn test_handle_overload_retry_response() {
         |e| {
             matches!(
                 e,
-                SuiError::ValidatorOverloadedRetryAfter { .. } | SuiError::RpcError(..)
+                IotaError::ValidatorOverloadedRetryAfter { .. } | IotaError::RpcError(..)
             )
         },
     )
@@ -2047,9 +2048,9 @@ async fn test_early_exit_with_too_many_conflicts() {
     let (authorities, mut clients, authority_keys) = make_fake_authorities();
 
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
-    let txn = make_transfer_sui_transaction(
+    let txn = make_transfer_iota_transaction(
         random_object_ref(),
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
@@ -2061,7 +2062,7 @@ async fn test_early_exit_with_too_many_conflicts() {
     set_tx_info_response_with_error(
         &mut clients,
         authority_keys.iter().take(1),
-        SuiError::ObjectLockConflict {
+        IotaError::ObjectLockConflict {
             obj_ref: random_object_ref(),
             pending_transaction: TransactionDigest::random(),
         },
@@ -2069,7 +2070,7 @@ async fn test_early_exit_with_too_many_conflicts() {
     set_tx_info_response_with_error(
         &mut clients,
         authority_keys.iter().skip(1).take(1),
-        SuiError::ObjectLockConflict {
+        IotaError::ObjectLockConflict {
             obj_ref: random_object_ref(),
             pending_transaction: TransactionDigest::random(),
         },
@@ -2077,7 +2078,7 @@ async fn test_early_exit_with_too_many_conflicts() {
     set_tx_info_response_with_error(
         &mut clients,
         authority_keys.iter().skip(2).take(1),
-        SuiError::ObjectLockConflict {
+        IotaError::ObjectLockConflict {
             obj_ref: random_object_ref(),
             pending_transaction: TransactionDigest::random(),
         },
@@ -2085,7 +2086,7 @@ async fn test_early_exit_with_too_many_conflicts() {
     set_tx_info_response_with_error(
         &mut clients,
         authority_keys.iter().skip(3).take(1),
-        SuiError::TooManyTransactionsPendingExecution {
+        IotaError::TooManyTransactionsPendingExecution {
             queue_len: 100,
             threshold: 100,
         },
@@ -2171,9 +2172,9 @@ async fn test_process_transaction_again() {
     let (authorities, clients, authority_keys) = make_fake_authorities();
     let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
     let gas_object = random_object_ref();
-    let tx = make_transfer_sui_transaction(
+    let tx = make_transfer_iota_transaction(
         gas_object,
-        SuiAddress::default(),
+        IotaAddress::default(),
         None,
         sender,
         &sender_kp,
@@ -2286,7 +2287,7 @@ async fn run_aggregator(
             AuthoritySignInfo::new(
                 0,
                 tx.clone().data(),
-                Intent::sui_app(IntentScope::ProofOfPossession), // bad intent
+                Intent::iota_app(IntentScope::ProofOfPossession), // bad intent
                 *name,
                 secret,
             )
@@ -2295,7 +2296,7 @@ async fn run_aggregator(
             AuthoritySignInfo::new(
                 0,
                 tx.clone().data(),
-                Intent::sui_app(IntentScope::SenderSignedTransaction),
+                Intent::iota_app(IntentScope::SenderSignedTransaction),
                 *name,
                 secret,
             )
@@ -2366,7 +2367,7 @@ async fn process_with_cert(
             AuthoritySignInfo::new(
                 0,
                 &effects.clone(),
-                Intent::sui_app(IntentScope::ProofOfPossession), // bad intent
+                Intent::iota_app(IntentScope::ProofOfPossession), // bad intent
                 *name,
                 secret,
             )
@@ -2375,7 +2376,7 @@ async fn process_with_cert(
             AuthoritySignInfo::new(
                 0,
                 &effects.clone(),
-                Intent::sui_app(IntentScope::TransactionEffects),
+                Intent::iota_app(IntentScope::TransactionEffects),
                 *name,
                 secret,
             )
@@ -2400,10 +2401,10 @@ async fn assert_resp_err<E, F>(
     agg: &AuthorityAggregator<HandleTransactionTestAuthorityClient>,
     tx: Transaction,
     agg_err_checker: E,
-    sui_err_checker: F,
+    iota_err_checker: F,
 ) where
     E: Fn(&AggregatorProcessTransactionError) -> bool,
-    F: Fn(&SuiError) -> bool,
+    F: Fn(&IotaError) -> bool,
 {
     match agg.process_transaction(tx, Some(make_socket_addr())).await {
         Err(received_agg_err) if agg_err_checker(&received_agg_err) => match received_agg_err {
@@ -2413,7 +2414,7 @@ async fn assert_resp_err<E, F>(
                 conflicting_tx_digests,
             } => {
                 assert!(!conflicting_tx_digests.is_empty());
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
             AggregatorProcessTransactionError::TxAlreadyFinalizedWithDifferentUserSignatures => (),
             AggregatorProcessTransactionError::FatalConflictingTransaction {
@@ -2421,23 +2422,23 @@ async fn assert_resp_err<E, F>(
                 conflicting_tx_digests,
             } => {
                 assert!(!conflicting_tx_digests.is_empty());
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
 
             AggregatorProcessTransactionError::RetryableTransaction { errors } => {
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
 
             AggregatorProcessTransactionError::FatalTransaction { errors } => {
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
 
             AggregatorProcessTransactionError::SystemOverload { errors, .. } => {
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
 
             AggregatorProcessTransactionError::SystemOverloadRetryAfter { errors, .. } => {
-                assert!(errors.iter().map(|e| &e.0).all(sui_err_checker));
+                assert!(errors.iter().map(|e| &e.0).all(iota_err_checker));
             }
         },
         Err(received_agg_err) => {
@@ -2495,7 +2496,7 @@ fn set_cert_response_with_certified_tx(
 ) {
     let effects = effects_with_tx(*cert.digest());
     for (name, secret) in authority_keys {
-        let resp = sui_types::messages_grpc::HandleCertificateResponseV2 {
+        let resp = iota_types::messages_grpc::HandleCertificateResponseV2 {
             signed_effects: sign_tx_effects(effects.clone(), epoch, *name, secret),
             events: TransactionEvents::default(),
             fastpath_input_objects: vec![],
@@ -2508,14 +2509,14 @@ fn set_retryable_tx_info_response_error(
     clients: &mut BTreeMap<AuthorityName, HandleTransactionTestAuthorityClient>,
     authority_keys: &[(AuthorityName, AuthorityKeyPair)],
 ) {
-    let error = SuiError::RpcError("RPC".into(), "Error".into());
+    let error = IotaError::RpcError("RPC".into(), "Error".into());
     set_tx_info_response_with_error(clients, authority_keys.iter(), error);
 }
 
 fn set_tx_info_response_with_error<'a>(
     clients: &mut BTreeMap<AuthorityName, HandleTransactionTestAuthorityClient>,
     authority_keys: impl Iterator<Item = &'a (AuthorityName, AuthorityKeyPair)>,
-    error: SuiError,
+    error: IotaError,
 ) {
     for (name, _) in authority_keys {
         clients

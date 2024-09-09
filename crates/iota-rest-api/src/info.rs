@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::borrow::Cow;
@@ -7,7 +8,7 @@ use crate::openapi::{ApiEndpoint, OperationBuilder, ResponseBuilder, RouteHandle
 use crate::{RestService, Result};
 use axum::extract::State;
 use axum::Json;
-use sui_sdk2::types::CheckpointDigest;
+use iota_sdk2::types::CheckpointDigest;
 use tap::Pipe;
 
 pub struct GetNodeInfo;
@@ -69,19 +70,19 @@ async fn get_node_info(State(state): State<RestService>) -> Result<Json<NodeInfo
 pub struct NodeInfo {
     pub chain_id: CheckpointDigest,
     pub chain: Cow<'static, str>,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     #[schemars(with = "crate::_schemars::U64")]
     pub epoch: u64,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     #[schemars(with = "crate::_schemars::U64")]
     pub checkpoint_height: u64,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     #[schemars(with = "crate::_schemars::U64")]
     pub timestamp_ms: u64,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     #[schemars(with = "crate::_schemars::U64")]
     pub lowest_available_checkpoint: u64,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     #[schemars(with = "crate::_schemars::U64")]
     pub lowest_available_checkpoint_objects: u64,
     pub software_version: Cow<'static, str>,

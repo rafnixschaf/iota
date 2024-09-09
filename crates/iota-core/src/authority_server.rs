@@ -1,11 +1,12 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
 use async_trait::async_trait;
-use mysten_metrics::histogram::Histogram as MystenHistogram;
-use mysten_metrics::spawn_monitored_task;
+use iota_metrics::histogram::Histogram as IotaHistogram;
+use iota_metrics::spawn_monitored_task;
 use narwhal_worker::LazyNarwhalClient;
 use prometheus::{
     register_int_counter_vec_with_registry, register_int_counter_with_registry, IntCounter,
@@ -17,25 +18,25 @@ use std::{
     sync::Arc,
     time::SystemTime,
 };
-use sui_network::{
+use iota_network::{
     api::{Validator, ValidatorServer},
     tonic,
 };
-use sui_types::effects::TransactionEffectsAPI;
-use sui_types::messages_consensus::ConsensusTransaction;
-use sui_types::messages_grpc::{HandleCertificateRequestV3, HandleCertificateResponseV3};
-use sui_types::messages_grpc::{
+use iota_types::effects::TransactionEffectsAPI;
+use iota_types::messages_consensus::ConsensusTransaction;
+use iota_types::messages_grpc::{HandleCertificateRequestV3, HandleCertificateResponseV3};
+use iota_types::messages_grpc::{
     HandleCertificateResponseV2, HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse,
     SubmitCertificateResponse, SystemStateRequest, TransactionInfoRequest, TransactionInfoResponse,
 };
-use sui_types::messages_grpc::{
+use iota_types::messages_grpc::{
     HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
 };
-use sui_types::multiaddr::Multiaddr;
-use sui_types::sui_system_state::SuiSystemState;
-use sui_types::traffic_control::{ClientIdSource, PolicyConfig, RemoteFirewallConfig, Weight};
-use sui_types::{error::*, transaction::*};
-use sui_types::{
+use iota_types::multiaddr::Multiaddr;
+use iota_types::iota_system_state::IotaSystemState;
+use iota_types::traffic_control::{ClientIdSource, PolicyConfig, RemoteFirewallConfig, Weight};
+use iota_types::{error::*, transaction::*};
+use iota_types::{
     fp_ensure,
     messages_checkpoint::{
         CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
@@ -58,7 +59,7 @@ use crate::{
     traffic_controller::metrics::TrafficControllerMetrics,
 };
 use nonempty::{nonempty, NonEmpty};
-use sui_config::local_ip_utils::new_local_tcp_address_for_testing;
+use iota_config::local_ip_utils::new_local_tcp_address_for_testing;
 use tonic::transport::server::TcpConnectInfo;
 
 #[cfg(test)]
@@ -143,7 +144,7 @@ impl AuthorityServer {
         self,
         address: Multiaddr,
     ) -> Result<AuthorityServerHandle, io::Error> {
-        let mut server = mysten_network::config::Config::new()
+        let mut server = iota_network_stack::config::Config::new()
             .server_builder()
             .add_service(ValidatorServer::new(ValidatorService::new_for_tests(
                 self.state,
@@ -166,14 +167,14 @@ impl AuthorityServer {
 
 pub struct ValidatorServiceMetrics {
     pub signature_errors: IntCounter,
-    pub tx_verification_latency: MystenHistogram,
-    pub cert_verification_latency: MystenHistogram,
-    pub consensus_latency: MystenHistogram,
-    pub handle_transaction_latency: MystenHistogram,
-    pub submit_certificate_consensus_latency: MystenHistogram,
-    pub handle_certificate_consensus_latency: MystenHistogram,
-    pub handle_certificate_non_consensus_latency: MystenHistogram,
-    pub handle_soft_bundle_certificates_consensus_latency: MystenHistogram,
+    pub tx_verification_latency: IotaHistogram,
+    pub cert_verification_latency: IotaHistogram,
+    pub consensus_latency: IotaHistogram,
+    pub handle_transaction_latency: IotaHistogram,
+    pub submit_certificate_consensus_latency: IotaHistogram,
+    pub handle_certificate_consensus_latency: IotaHistogram,
+    pub handle_certificate_non_consensus_latency: IotaHistogram,
+    pub handle_soft_bundle_certificates_consensus_latency: IotaHistogram,
 
     num_rejected_tx_in_epoch_boundary: IntCounter,
     num_rejected_cert_in_epoch_boundary: IntCounter,
@@ -194,42 +195,42 @@ impl ValidatorServiceMetrics {
                 registry,
             )
             .unwrap(),
-            tx_verification_latency: MystenHistogram::new_in_registry(
+            tx_verification_latency: IotaHistogram::new_in_registry(
                 "validator_service_tx_verification_latency",
                 "Latency of verifying a transaction",
                 registry,
             ),
-            cert_verification_latency: MystenHistogram::new_in_registry(
+            cert_verification_latency: IotaHistogram::new_in_registry(
                 "validator_service_cert_verification_latency",
                 "Latency of verifying a certificate",
                 registry,
             ),
-            consensus_latency: MystenHistogram::new_in_registry(
+            consensus_latency: IotaHistogram::new_in_registry(
                 "validator_service_consensus_latency",
                 "Time spent between submitting a shared obj txn to consensus and getting result",
                 registry,
             ),
-            handle_transaction_latency: MystenHistogram::new_in_registry(
+            handle_transaction_latency: IotaHistogram::new_in_registry(
                 "validator_service_handle_transaction_latency",
                 "Latency of handling a transaction",
                 registry,
             ),
-            handle_certificate_consensus_latency: MystenHistogram::new_in_registry(
+            handle_certificate_consensus_latency: IotaHistogram::new_in_registry(
                 "validator_service_handle_certificate_consensus_latency",
                 "Latency of handling a consensus transaction certificate",
                 registry,
             ),
-            submit_certificate_consensus_latency: MystenHistogram::new_in_registry(
+            submit_certificate_consensus_latency: IotaHistogram::new_in_registry(
                 "validator_service_submit_certificate_consensus_latency",
                 "Latency of submit_certificate RPC handler",
                 registry,
             ),
-            handle_certificate_non_consensus_latency: MystenHistogram::new_in_registry(
+            handle_certificate_non_consensus_latency: IotaHistogram::new_in_registry(
                 "validator_service_handle_certificate_non_consensus_latency",
                 "Latency of handling a non-consensus transaction certificate",
                 registry,
             ),
-            handle_soft_bundle_certificates_consensus_latency: MystenHistogram::new_in_registry(
+            handle_soft_bundle_certificates_consensus_latency: IotaHistogram::new_in_registry(
                 "validator_service_handle_soft_bundle_certificates_consensus_latency",
                 "Latency of handling a consensus soft bundle",
                 registry,
@@ -396,7 +397,7 @@ impl ValidatorService {
                 .inc();
             // TODO: consider change the behavior for other types of overload errors.
             match error {
-                SuiError::ValidatorOverloadedRetryAfter { .. } => {
+                IotaError::ValidatorOverloadedRetryAfter { .. } => {
                     validator_pushback_error = Some(error)
                 }
                 _ => return Err(error.into()),
@@ -421,7 +422,7 @@ impl ValidatorService {
             .instrument(span)
             .await
             .tap_err(|e| {
-                if let SuiError::ValidatorHaltedAtEpochEnd = e {
+                if let IotaError::ValidatorHaltedAtEpochEnd = e {
                     metrics.num_rejected_tx_in_epoch_boundary.inc();
                 }
             })?;
@@ -454,7 +455,7 @@ impl ValidatorService {
         // Fullnode does not serve handle_certificate call.
         fp_ensure!(
             !self.state.is_fullnode(epoch_store),
-            SuiError::FullNodeCantHandleCertificate.into()
+            IotaError::FullNodeCantHandleCertificate.into()
         );
 
         let shared_object_tx = certificates
@@ -545,7 +546,7 @@ impl ValidatorService {
             let reconfiguration_lock = epoch_store.get_reconfig_state_read_lock_guard();
             if !reconfiguration_lock.should_accept_user_certs() {
                 self.metrics.num_rejected_cert_in_epoch_boundary.inc();
-                return Err(SuiError::ValidatorHaltedAtEpochEnd.into());
+                return Err(IotaError::ValidatorHaltedAtEpochEnd.into());
             }
 
             // 3) All certificates are sent to consensus (at least by some authorities)
@@ -625,7 +626,7 @@ impl ValidatorService {
                 let signed_effects = self.state.sign_effects(effects, epoch_store)?;
                 epoch_store.insert_tx_cert_sig(certificate.digest(), certificate.auth_sig())?;
 
-                Ok::<_, SuiError>(HandleCertificateResponseV3 {
+                Ok::<_, IotaError>(HandleCertificateResponseV3 {
                     effects: signed_effects.into_inner(),
                     events,
                     input_objects,
@@ -764,7 +765,7 @@ impl ValidatorService {
         // without having to upgrade the entire network.
         fp_ensure!(
             protocol_config.soft_bundle() && node_config.enable_soft_bundle,
-            SuiError::UnsupportedFeatureError {
+            IotaError::UnsupportedFeatureError {
                 error: "Soft Bundle".to_string()
             }
             .into()
@@ -777,7 +778,7 @@ impl ValidatorService {
         // - Number of certs must not exceed the max allowed.
         fp_ensure!(
             certificates.len() as u64 <= protocol_config.max_soft_bundle_size(),
-            SuiError::UserInputError {
+            IotaError::UserInputError {
                 error: UserInputError::TooManyTransactionsInSoftBundle {
                     limit: protocol_config.max_soft_bundle_size()
                 }
@@ -789,14 +790,14 @@ impl ValidatorService {
             let tx_digest = *certificate.digest();
             fp_ensure!(
                 certificate.contains_shared_object(),
-                SuiError::UserInputError {
+                IotaError::UserInputError {
                     error: UserInputError::NoSharedObjectError { digest: tx_digest }
                 }
                 .into()
             );
             fp_ensure!(
                 !self.state.is_tx_already_executed(&tx_digest)?,
-                SuiError::UserInputError {
+                IotaError::UserInputError {
                     error: UserInputError::AlreadyExecutedError { digest: tx_digest }
                 }
                 .into()
@@ -804,7 +805,7 @@ impl ValidatorService {
             if let Some(gas) = gas_price {
                 fp_ensure!(
                     gas == certificate.gas_price(),
-                    SuiError::UserInputError {
+                    IotaError::UserInputError {
                         error: UserInputError::GasPriceMismatchError {
                             digest: tx_digest,
                             expected: gas,
@@ -824,7 +825,7 @@ impl ValidatorService {
         // already being processed by another actor, and we could not know it.
         fp_ensure!(
             !epoch_store.is_any_tx_certs_consensus_message_processed(certificates.iter())?,
-            SuiError::UserInputError {
+            IotaError::UserInputError {
                 error: UserInputError::CeritificateAlreadyProcessed
             }
             .into()
@@ -846,7 +847,7 @@ impl ValidatorService {
         let request = request.into_inner();
 
         let certificates = NonEmpty::from_vec(request.certificates)
-            .ok_or_else(|| SuiError::NoCertificateProvidedError)?;
+            .ok_or_else(|| IotaError::NoCertificateProvidedError)?;
         for certificate in &certificates {
             // We need to check this first because we haven't verified the cert signature.
             certificate.validity_check(epoch_store.protocol_config(), epoch_store.epoch())?;
@@ -929,11 +930,11 @@ impl ValidatorService {
     async fn get_system_state_object_impl(
         &self,
         _request: tonic::Request<SystemStateRequest>,
-    ) -> WrappedServiceResponse<SuiSystemState> {
+    ) -> WrappedServiceResponse<IotaSystemState> {
         let response = self
             .state
             .get_object_cache_reader()
-            .get_sui_system_state_object_unsafe()?;
+            .get_iota_system_state_object_unsafe()?;
         Ok((tonic::Response::new(response), Weight::one()))
     }
 
@@ -1033,7 +1034,7 @@ impl ValidatorService {
         if let Some(traffic_controller) = &self.traffic_controller {
             if !traffic_controller.check(&client, &None).await {
                 // Entity in blocklist
-                Err(tonic::Status::from_error(SuiError::TooManyRequests.into()))
+                Err(tonic::Status::from_error(IotaError::TooManyRequests.into()))
             } else {
                 Ok(())
             }
@@ -1050,7 +1051,7 @@ impl ValidatorService {
         let (error, spam_weight, unwrapped_response) = match wrapped_response {
             Ok((result, spam_weight)) => (None, spam_weight.clone(), Ok(result)),
             Err(status) => (
-                Some(SuiError::from(status.clone())),
+                Some(IotaError::from(status.clone())),
                 Weight::zero(),
                 Err(status.clone()),
             ),
@@ -1082,15 +1083,15 @@ fn make_tonic_request_for_testing<T>(message: T) -> tonic::Request<T> {
 }
 
 // TODO: refine error matching here
-fn normalize(err: SuiError) -> Weight {
+fn normalize(err: IotaError) -> Weight {
     match err {
-        SuiError::UserInputError { .. }
-        | SuiError::InvalidSignature { .. }
-        | SuiError::SignerSignatureAbsent { .. }
-        | SuiError::SignerSignatureNumberMismatch { .. }
-        | SuiError::IncorrectSigner { .. }
-        | SuiError::UnknownSigner { .. }
-        | SuiError::WrongEpoch { .. } => Weight::one(),
+        IotaError::UserInputError { .. }
+        | IotaError::InvalidSignature { .. }
+        | IotaError::SignerSignatureAbsent { .. }
+        | IotaError::SignerSignatureNumberMismatch { .. }
+        | IotaError::IncorrectSigner { .. }
+        | IotaError::UnknownSigner { .. }
+        | IotaError::WrongEpoch { .. } => Weight::one(),
         _ => Weight::zero(),
     }
 }
@@ -1204,7 +1205,7 @@ impl Validator for ValidatorService {
     async fn get_system_state_object(
         &self,
         request: tonic::Request<SystemStateRequest>,
-    ) -> Result<tonic::Response<SuiSystemState>, tonic::Status> {
+    ) -> Result<tonic::Response<IotaSystemState>, tonic::Status> {
         handle_with_decoration!(self, get_system_state_object_impl, request)
     }
 }

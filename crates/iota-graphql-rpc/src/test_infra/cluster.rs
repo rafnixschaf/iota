@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::ConnectionConfig;
@@ -10,16 +11,16 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
-use sui_graphql_rpc_client::simple_client::SimpleClient;
-use sui_indexer::errors::IndexerError;
-pub use sui_indexer::handlers::objects_snapshot_processor::SnapshotLagConfig;
-use sui_indexer::store::indexer_store::IndexerStore;
-use sui_indexer::store::PgIndexerStore;
-use sui_indexer::test_utils::force_delete_database;
-use sui_indexer::test_utils::start_test_indexer_impl;
-use sui_indexer::test_utils::ReaderWriterConfig;
-use sui_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
-use sui_types::storage::RestStateReader;
+use iota_graphql_rpc_client::simple_client::SimpleClient;
+use iota_indexer::errors::IndexerError;
+pub use iota_indexer::handlers::objects_snapshot_processor::SnapshotLagConfig;
+use iota_indexer::store::indexer_store::IndexerStore;
+use iota_indexer::store::PgIndexerStore;
+use iota_indexer::test_utils::force_delete_database;
+use iota_indexer::test_utils::start_test_indexer_impl;
+use iota_indexer::test_utils::ReaderWriterConfig;
+use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
+use iota_types::storage::RestStateReader;
 use test_cluster::TestCluster;
 use test_cluster::TestClusterBuilder;
 use tokio::join;
@@ -107,7 +108,7 @@ pub async fn start_cluster(
     }
 }
 
-/// Takes in a simulated instantiation of a Sui blockchain and builds a cluster around it. This
+/// Takes in a simulated instantiation of a Iota blockchain and builds a cluster around it. This
 /// cluster is typically used in e2e tests to emulate and test behaviors.
 pub async fn serve_executor(
     graphql_connection_config: ConnectionConfig,
@@ -126,7 +127,7 @@ pub async fn serve_executor(
         .unwrap();
 
     let executor_server_handle = tokio::spawn(async move {
-        sui_rest_api::RestService::new_without_version(executor)
+        iota_rest_api::RestService::new_without_version(executor)
             .start_service(executor_server_url)
             .await;
     });
