@@ -1,26 +1,29 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::Path;
 
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    transaction::TransactionData,
+};
 use serde::{Deserialize, Serialize};
-use sui_types::base_types::SuiAddress;
-use sui_types::{base_types::ObjectID, transaction::TransactionData};
-use typed_store::traits::{TableSummary, TypedStoreDebug};
-use typed_store::Map;
-use typed_store::{rocks::DBMap, TypedStoreError};
-
 use tracing::info;
-use typed_store_derive::DBMapUtils;
+use typed_store::{
+    rocks::DBMap,
+    traits::{TableSummary, TypedStoreDebug},
+    DBMapUtils, Map, TypedStoreError,
+};
 use uuid::Uuid;
 
-/// Persistent log of transactions paying out sui from the faucet, keyed by the coin serving the
-/// request.  Transactions are expected to be written to the log before they are sent to full-node,
-/// and removed after receiving a response back, before the coin becomes available for subsequent
-/// writes.
+/// Persistent log of transactions paying out iota from the faucet, keyed by the
+/// coin serving the request.  Transactions are expected to be written to the
+/// log before they are sent to full-node, and removed after receiving a
+/// response back, before the coin becomes available for subsequent writes.
 ///
-/// This allows the faucet to go down and back up, and not forget which requests were in-flight that
-/// it needs to confirm succeeded or failed.
+/// This allows the faucet to go down and back up, and not forget which requests
+/// were in-flight that it needs to confirm succeeded or failed.
 #[derive(DBMapUtils, Clone)]
 pub struct WriteAheadLog {
     pub log: DBMap<ObjectID, Entry>,
@@ -30,7 +33,7 @@ pub struct WriteAheadLog {
 pub struct Entry {
     pub uuid: uuid::Bytes,
     // TODO (jian): remove recipient
-    pub recipient: SuiAddress,
+    pub recipient: IotaAddress,
     pub tx: TransactionData,
     pub retry_count: u64,
     pub in_flight: bool,
@@ -46,13 +49,14 @@ impl WriteAheadLog {
         )
     }
 
-    /// Mark `coin` as reserved for transaction `tx` sending coin to `recipient`. Fails if `coin` is
-    /// already in the WAL pointing to an existing transaction.
+    /// Mark `coin` as reserved for transaction `tx` sending coin to
+    /// `recipient`. Fails if `coin` is already in the WAL pointing to an
+    /// existing transaction.
     pub(crate) fn reserve(
         &mut self,
         uuid: Uuid,
         coin: ObjectID,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         tx: TransactionData,
     ) -> Result<(), TypedStoreError> {
         if self.log.contains_key(&coin)? {
@@ -76,15 +80,16 @@ impl WriteAheadLog {
         )
     }
 
-    /// Check whether `coin` has a pending transaction in the WAL.  Returns `Ok(Some(entry))` if a
-    /// pending transaction exists, `Ok(None)` if not, and `Err(_)` if there was an internal error
-    /// accessing the WAL.
+    /// Check whether `coin` has a pending transaction in the WAL.  Returns
+    /// `Ok(Some(entry))` if a pending transaction exists, `Ok(None)` if
+    /// not, and `Err(_)` if there was an internal error accessing the WAL.
     pub(crate) fn reclaim(&self, coin: ObjectID) -> Result<Option<Entry>, TypedStoreError> {
         match self.log.get(&coin) {
             Ok(entry) => Ok(entry),
             Err(TypedStoreError::SerializationError(_)) => {
-                // Remove bad log from the store, so we don't crash on start up, this can happen if we update the
-                // WAL Entry and have some leftover Entry from the WAL.
+                // Remove bad log from the store, so we don't crash on start up, this can happen
+                // if we update the WAL Entry and have some leftover Entry from
+                // the WAL.
                 self.log
                     .remove(&coin)
                     .expect("Coin: {coin:?} unable to be removed from log.");
@@ -94,8 +99,8 @@ impl WriteAheadLog {
         }
     }
 
-    /// Indicate that the transaction in flight for `coin` has landed, and the entry in the WAL can
-    /// be removed.
+    /// Indicate that the transaction in flight for `coin` has landed, and the
+    /// entry in the WAL can be removed.
     pub(crate) fn commit(&mut self, coin: ObjectID) -> Result<(), TypedStoreError> {
         self.log.remove(&coin)
     }
@@ -132,7 +137,7 @@ impl WriteAheadLog {
 
 #[cfg(test)]
 mod tests {
-    use sui_types::{
+    use iota_types::{
         base_types::{random_object_ref, ObjectRef},
         transaction::TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
     };
@@ -252,13 +257,13 @@ mod tests {
         wal.reserve(uuid, coin.0, recv1, tx1).unwrap();
     }
 
-    fn random_request(coin: ObjectRef) -> (SuiAddress, TransactionData) {
+    fn random_request(coin: ObjectRef) -> (IotaAddress, TransactionData) {
         let gas_price = 1;
-        let send = SuiAddress::random_for_testing_only();
-        let recv = SuiAddress::random_for_testing_only();
+        let send = IotaAddress::random_for_testing_only();
+        let recv = IotaAddress::random_for_testing_only();
         (
             recv,
-            TransactionData::new_pay_sui(
+            TransactionData::new_pay_iota(
                 send,
                 vec![coin],
                 vec![recv],

@@ -1,5 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
+use std::{
+    borrow::Cow,
+    net::{IpAddr, SocketAddr},
+    path::PathBuf,
+    sync::Arc,
+    time::Duration,
+};
 
 use axum::{
     error_handling::HandleErrorLayer,
@@ -9,84 +18,40 @@ use axum::{
     routing::{get, post},
     BoxError, Extension, Json, Router,
 };
-use clap::Parser;
 use http::Method;
-use mysten_metrics::spawn_monitored_task;
-use std::env;
-use std::{
-    borrow::Cow,
-    net::{IpAddr, SocketAddr},
-    sync::Arc,
-    time::Duration,
-};
-use sui_config::{sui_config_dir, SUI_CLIENT_CONFIG};
-use sui_faucet::{
-    BatchFaucetResponse, BatchStatusFaucetResponse, Faucet, FaucetConfig, FaucetError,
-    FaucetRequest, FaucetResponse, RequestMetricsLayer, SimpleFaucet,
-};
-use sui_sdk::wallet_context::WalletContext;
+use iota_config::IOTA_CLIENT_CONFIG;
+use iota_metrics::spawn_monitored_task;
+use iota_sdk::wallet_context::WalletContext;
+use prometheus::Registry;
 use tower::{limit::RateLimitLayer, ServiceBuilder};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, warn};
 use uuid::Uuid;
 
-const CONCURRENCY_LIMIT: usize = 30;
+use crate::{
+    faucet::Faucet, AppState, BatchFaucetResponse, BatchStatusFaucetResponse, FaucetConfig,
+    FaucetError, FaucetRequest, FaucetResponse, RequestMetricsLayer,
+};
 
-struct AppState<F = Arc<SimpleFaucet>> {
-    faucet: F,
-    config: FaucetConfig,
-}
-
-const PROM_PORT_ADDR: &str = "0.0.0.0:9184";
-
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    // initialize tracing
-    let _guard = telemetry_subscribers::TelemetryConfig::new()
-        .with_env()
-        .init();
-
-    let max_concurrency = match env::var("MAX_CONCURRENCY") {
-        Ok(val) => val.parse::<usize>().unwrap(),
-        _ => CONCURRENCY_LIMIT,
-    };
-    info!("Max concurrency: {max_concurrency}.");
-
-    let config: FaucetConfig = FaucetConfig::parse();
-    let FaucetConfig {
-        port,
-        host_ip,
-        request_buffer_size,
-        max_request_per_second,
-        wallet_client_timeout_secs,
-        ref write_ahead_log,
-        wal_retry_interval,
-        ..
-    } = config;
-
-    let context = create_wallet_context(wallet_client_timeout_secs)?;
-
-    let prom_binding = PROM_PORT_ADDR.parse().unwrap();
-    info!("Starting Prometheus HTTP endpoint at {}", prom_binding);
-    let registry_service = mysten_metrics::start_prometheus_server(prom_binding);
-    let prometheus_registry = registry_service.default_registry();
-    let app_state = Arc::new(AppState {
-        faucet: SimpleFaucet::new(
-            context,
-            &prometheus_registry,
-            write_ahead_log,
-            config.clone(),
-        )
-        .await
-        .unwrap(),
-        config,
-    });
-
+pub async fn start_faucet(
+    app_state: Arc<AppState>,
+    concurrency_limit: usize,
+    prometheus_registry: &Registry,
+) -> Result<(), anyhow::Error> {
     // TODO: restrict access if needed
     let cors = CorsLayer::new()
         .allow_methods(vec![Method::GET, Method::POST])
         .allow_headers(Any)
         .allow_origin(Any);
+
+    let FaucetConfig {
+        port,
+        host_ip,
+        request_buffer_size,
+        max_request_per_second,
+        wal_retry_interval,
+        ..
+    } = app_state.config;
 
     let app = Router::new()
         .route("/", get(health))
@@ -96,7 +61,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(
             ServiceBuilder::new()
                 .layer(HandleErrorLayer::new(handle_error))
-                .layer(RequestMetricsLayer::new(&prometheus_registry))
+                .layer(RequestMetricsLayer::new(prometheus_registry))
                 .layer(cors)
                 .load_shed()
                 .buffer(request_buffer_size)
@@ -104,7 +69,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     max_request_per_second,
                     Duration::from_secs(1),
                 ))
-                .concurrency_limit(max_concurrency)
+                .concurrency_limit(concurrency_limit)
                 .layer(Extension(app_state.clone()))
                 .into_inner(),
         );
@@ -112,7 +77,8 @@ async fn main() -> Result<(), anyhow::Error> {
     spawn_monitored_task!(async move {
         info!("Starting task to clear WAL.");
         loop {
-            // Every config.wal_retry_interval (Default: 300 seconds) we try to clear the wal coins
+            // Every config.wal_retry_interval (Default: 300 seconds) we try to clear the
+            // wal coins
             tokio::time::sleep(Duration::from_secs(wal_retry_interval)).await;
             app_state.faucet.retry_wal_coins().await.unwrap();
         }
@@ -120,9 +86,8 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let addr = SocketAddr::new(IpAddr::V4(host_ip), port);
     info!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await?;
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await?;
     Ok(())
 }
 
@@ -177,7 +142,8 @@ async fn batch_request_gas(
             }
         }
     } else {
-        // TODO (jian): remove this feature gate when batch has proven to be baked long enough
+        // TODO (jian): remove this feature gate when batch has proven to be baked long
+        // enough
         info!(uuid = ?id, "Falling back to v1 implementation");
         let result = spawn_monitored_task!(async move {
             state
@@ -267,7 +233,7 @@ async fn request_gas(
                 Json(FaucetResponse::from(FaucetError::Internal(
                     "Input Error.".to_string(),
                 ))),
-            )
+            );
         }
     };
     match result {
@@ -285,8 +251,11 @@ async fn request_gas(
     }
 }
 
-fn create_wallet_context(timeout_secs: u64) -> Result<WalletContext, anyhow::Error> {
-    let wallet_conf = sui_config_dir()?.join(SUI_CLIENT_CONFIG);
+pub fn create_wallet_context(
+    timeout_secs: u64,
+    config_dir: PathBuf,
+) -> Result<WalletContext, anyhow::Error> {
+    let wallet_conf = config_dir.join(IOTA_CLIENT_CONFIG);
     info!("Initialize wallet from config path: {:?}", wallet_conf);
     WalletContext::new(
         &wallet_conf,

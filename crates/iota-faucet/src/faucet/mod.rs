@@ -1,16 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::FaucetError;
 use async_trait::async_trait;
+use iota_types::base_types::{IotaAddress, ObjectID, TransactionDigest};
 use serde::{Deserialize, Serialize};
-use sui_types::base_types::{ObjectID, SuiAddress, TransactionDigest};
 use uuid::Uuid;
+
+use crate::FaucetError;
 
 mod simple_faucet;
 mod write_ahead_log;
-pub use self::simple_faucet::SimpleFaucet;
+use std::{net::Ipv4Addr, path::PathBuf, sync::Arc};
+
 use clap::Parser;
-use std::{net::Ipv4Addr, path::PathBuf};
+
+pub use self::simple_faucet::SimpleFaucet;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FaucetReceipt {
@@ -44,21 +48,33 @@ pub enum BatchSendStatusType {
     DISCARDED,
 }
 
+pub struct AppState<F = Arc<SimpleFaucet>> {
+    pub faucet: F,
+    pub config: FaucetConfig,
+}
+
+impl<F> AppState<F> {
+    pub fn new(faucet: F, config: FaucetConfig) -> Self {
+        Self { faucet, config }
+    }
+}
+
 #[async_trait]
 pub trait Faucet {
-    /// Send `Coin<SUI>` of the specified amount to the recipient
+    /// Send `Coin<IOTA>` of the specified amount to the recipient
     async fn send(
         &self,
         id: Uuid,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         amounts: &[u64],
     ) -> Result<FaucetReceipt, FaucetError>;
 
-    /// Send `Coin<SUI>` of the specified amount to the recipient in a batch request
+    /// Send `Coin<IOTA>` of the specified amount to the recipient in a batch
+    /// request
     async fn batch_send(
         &self,
         id: Uuid,
-        recipient: SuiAddress,
+        recipient: IotaAddress,
         amounts: &[u64],
     ) -> Result<BatchFaucetReceipt, FaucetError>;
 
@@ -71,8 +87,8 @@ pub const DEFAULT_NUM_OF_COINS: usize = 1;
 
 #[derive(Parser, Clone)]
 #[clap(
-    name = "Sui Faucet",
-    about = "Faucet for requesting test tokens on Sui",
+    name = "Iota Faucet",
+    about = "Faucet for requesting test tokens on Iota",
     rename_all = "kebab-case"
 )]
 pub struct FaucetConfig {
