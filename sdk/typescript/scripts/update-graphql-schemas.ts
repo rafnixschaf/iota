@@ -8,58 +8,58 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const result = execSync(`git branch --remote --list "origin/releases/iota-graphql-rpc-v*"`)
-	.toString()
-	.trim()
-	.split('\n')
-	.map((ref) => {
-		const branch = ref.trim().replace('origin/', '');
-		const match = branch.match(/^releases\/iota-graphql-rpc-v([\d.]+)-release$/);
+    .toString()
+    .trim()
+    .split('\n')
+    .map((ref) => {
+        const branch = ref.trim().replace('origin/', '');
+        const match = branch.match(/^releases\/iota-graphql-rpc-v([\d.]+)-release$/);
 
-		if (!match) {
-			return null;
-		}
+        if (!match) {
+            return null;
+        }
 
-		const version = match[1];
-		const [major, minor, patch] = version ? version.split('.') : [0, 0, 0];
+        const version = match[1];
+        const [major, minor, patch] = version ? version.split('.') : [0, 0, 0];
 
-		return match
-			? {
-					version: match[1],
-					minorVersion: `${major}.${minor}`,
-					major,
-					minor,
-					patch,
-					branch,
-					schema: `https://raw.githubusercontent.com/iotaledger/iota/${branch}/crates/iota-graphql-rpc/schema.graphql`,
-				}
-			: null;
-	})
-	.filter((x): x is NonNullable<typeof x> => x !== null);
+        return match
+            ? {
+                  version: match[1],
+                  minorVersion: `${major}.${minor}`,
+                  major,
+                  minor,
+                  patch,
+                  branch,
+                  schema: `https://raw.githubusercontent.com/iotaledger/iota/${branch}/crates/iota-graphql-rpc/schema.graphql`,
+              }
+            : null;
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
 
 const releasesByVersion = new Map<string, (typeof result)[number]>();
 for (const release of result) {
-	const { minorVersion } = release;
-	const existing = releasesByVersion.get(minorVersion);
-	if (!existing || existing.patch < release.patch) {
-		releasesByVersion.set(minorVersion, release);
-	}
+    const { minorVersion } = release;
+    const existing = releasesByVersion.get(minorVersion);
+    if (!existing || existing.patch < release.patch) {
+        releasesByVersion.set(minorVersion, release);
+    }
 }
 
 for (const { minorVersion, schema } of releasesByVersion.values()) {
-	const res = await fetch(schema);
-	const schemaContent = await res.text();
+    const res = await fetch(schema);
+    const schemaContent = await res.text();
 
-	const filePath = resolve(
-		import.meta.url.slice(5),
-		`../../src/graphql/generated/${minorVersion}/schema.graphql`,
-	);
+    const filePath = resolve(
+        import.meta.url.slice(5),
+        `../../src/graphql/generated/${minorVersion}/schema.graphql`,
+    );
 
-	await mkdir(resolve(filePath, '..'), { recursive: true });
-	await writeFile(filePath, schemaContent);
+    await mkdir(resolve(filePath, '..'), { recursive: true });
+    await writeFile(filePath, schemaContent);
 
-	await writeFile(
-		resolve(filePath, '..', 'tsconfig.tada.json'),
-		`
+    await writeFile(
+        resolve(filePath, '..', 'tsconfig.tada.json'),
+        `
 {
     "compilerOptions": {
         "plugins": [
@@ -72,14 +72,14 @@ for (const { minorVersion, schema } of releasesByVersion.values()) {
     }
 }
 `.trimStart(),
-	);
+    );
 
-	execSync(`pnpm run generate-schema -c ${resolve(filePath, '..', 'tsconfig.tada.json')}`);
+    execSync(`pnpm run generate-schema -c ${resolve(filePath, '..', 'tsconfig.tada.json')}`);
 
-	await mkdir(resolve(filePath, '../../../schemas', minorVersion), { recursive: true });
-	await writeFile(
-		resolve(filePath, `../../../schemas/${minorVersion}/index.ts`),
-		`
+    await mkdir(resolve(filePath, '../../../schemas', minorVersion), { recursive: true });
+    await writeFile(
+        resolve(filePath, `../../../schemas/${minorVersion}/index.ts`),
+        `
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
@@ -99,21 +99,21 @@ export const graphql = initGraphQLTada<{
 	scalars: CustomScalars;
 }>();
 `.trimStart(),
-	);
+    );
 }
 
 await addExportsToPackageJson(Array.from(releasesByVersion.keys()));
 
 async function addExportsToPackageJson(versions: string[]) {
-	const packageJsonPath = resolve(import.meta.url.slice(5), '../../package.json');
-	const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
+    const packageJsonPath = resolve(import.meta.url.slice(5), '../../package.json');
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
 
-	for (const version of versions) {
-		packageJson.exports[`./graphql/schemas/${version}`] = {
-			import: `./dist/esm/graphql/schemas/${version}/index.js`,
-			require: `./dist/cjs/graphql/schemas/${version}/index.js`,
-		};
-	}
+    for (const version of versions) {
+        packageJson.exports[`./graphql/schemas/${version}`] = {
+            import: `./dist/esm/graphql/schemas/${version}/index.js`,
+            require: `./dist/cjs/graphql/schemas/${version}/index.js`,
+        };
+    }
 
-	await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, '\t')}\n`);
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, '\t')}\n`);
 }

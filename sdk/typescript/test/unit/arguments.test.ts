@@ -8,39 +8,39 @@ import { describe, expect, it } from 'vitest';
 import { Arguments, Transaction } from '../../src/transactions';
 
 describe('Arguments helpers', () => {
-	it('can use Arguments for building a transaction', async () => {
-		const args = [
-			Arguments.object('0x123'),
-			Arguments.receivingRef({
-				objectId: '1',
-				version: '123',
-				digest: toB58(new Uint8Array(32).fill(0x1)),
-			}),
-			Arguments.sharedObjectRef({
-				objectId: '2',
-				mutable: true,
-				initialSharedVersion: '123',
-			}),
-			Arguments.objectRef({
-				objectId: '3',
-				version: '123',
-				digest: toB58(new Uint8Array(32).fill(0x1)),
-			}),
-			Arguments.pure.address('0x2'),
-			Arguments.object.system(),
-			Arguments.object.clock(),
-			Arguments.object.random(),
-			Arguments.object.denyList(),
-		];
+    it('can use Arguments for building a transaction', async () => {
+        const args = [
+            Arguments.object('0x123'),
+            Arguments.receivingRef({
+                objectId: '1',
+                version: '123',
+                digest: toB58(new Uint8Array(32).fill(0x1)),
+            }),
+            Arguments.sharedObjectRef({
+                objectId: '2',
+                mutable: true,
+                initialSharedVersion: '123',
+            }),
+            Arguments.objectRef({
+                objectId: '3',
+                version: '123',
+                digest: toB58(new Uint8Array(32).fill(0x1)),
+            }),
+            Arguments.pure.address('0x2'),
+            Arguments.object.system(),
+            Arguments.object.clock(),
+            Arguments.object.random(),
+            Arguments.object.denyList(),
+        ];
 
-		const tx = new Transaction();
+        const tx = new Transaction();
 
-		tx.moveCall({
-			target: '0x2::foo::bar',
-			arguments: args,
-		});
+        tx.moveCall({
+            target: '0x2::foo::bar',
+            arguments: args,
+        });
 
-		expect(tx.getData()).toMatchInlineSnapshot(`
+        expect(tx.getData()).toMatchInlineSnapshot(`
 			{
 			  "commands": [
 			    {
@@ -182,5 +182,5 @@ describe('Arguments helpers', () => {
 			  "version": 2,
 			}
 		`);
-	});
+    });
 });
