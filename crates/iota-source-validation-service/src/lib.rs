@@ -1,57 +1,59 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::middleware::{self, Next};
-use std::collections::BTreeMap;
-use std::fmt;
-use std::net::TcpListener;
-use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
-use std::time::Duration;
-use std::{ffi::OsString, fs, path::Path, process::Command};
-use tokio::sync::oneshot::Sender;
+use std::{
+    collections::BTreeMap,
+    ffi::OsString,
+    fmt, fs,
+    net::TcpListener,
+    path::{Path, PathBuf},
+    process::Command,
+    sync::{Arc, RwLock},
+    time::Duration,
+};
 
 use anyhow::{anyhow, bail};
-use axum::extract::{Query, State};
-use axum::response::{IntoResponse, Response};
-use axum::routing::{get, IntoMakeService};
-use axum::Extension;
-use axum::{Json, Router, Server};
-use hyper::http::{HeaderName, HeaderValue, Method};
-use hyper::server::conn::AddrIncoming;
-use hyper::{HeaderMap, StatusCode};
-use jsonrpsee::core::client::{Subscription, SubscriptionClientT};
-use jsonrpsee::core::params::ArrayParams;
-use jsonrpsee::ws_client::{WsClient, WsClientBuilder};
-use mysten_metrics::RegistryService;
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
-use serde::{Deserialize, Serialize};
-use tower::ServiceBuilder;
-use tracing::{debug, error, info};
-use url::Url;
-
+use axum::{
+    extract::{Query, State},
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
+    routing::get,
+    Extension, Json, Router,
+};
+use hyper::{
+    http::{HeaderName, HeaderValue, Method},
+    HeaderMap, StatusCode,
+};
+use iota_metrics::RegistryService;
+use iota_move::manage_package::resolve_lock_file_path;
+use iota_move_build::{BuildConfig, IotaPackageHooks};
+use iota_sdk::{
+    rpc_types::IotaTransactionBlockEffects, types::base_types::ObjectID, IotaClientBuilder,
+};
+use iota_source_validation::{BytecodeSourceVerifier, ValidationMode};
 use move_core_types::account_address::AccountAddress;
 use move_package::{BuildConfig as MoveBuildConfig, LintFlag};
 use move_symbol_pool::Symbol;
-use sui_move::build::resolve_lock_file_path;
-use sui_move_build::{BuildConfig, SuiPackageHooks};
-use sui_sdk::rpc_types::{SuiTransactionBlockEffects, TransactionFilter};
-use sui_sdk::types::base_types::ObjectID;
-use sui_sdk::SuiClientBuilder;
-use sui_source_validation::{BytecodeSourceVerifier, SourceMode};
+use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
+use serde::{Deserialize, Serialize};
+use tokio::sync::oneshot::Sender;
+use tower::ServiceBuilder;
+use tracing::{debug, info};
+use url::Url;
 
 pub const HOST_PORT_ENV: &str = "HOST_PORT";
-pub const SUI_SOURCE_VALIDATION_VERSION_HEADER: &str = "x-sui-source-validation-version";
-pub const SUI_SOURCE_VALIDATION_VERSION: &str = "0.1";
+pub const IOTA_SOURCE_VALIDATION_VERSION_HEADER: &str = "x-iota-source-validation-version";
+pub const IOTA_SOURCE_VALIDATION_VERSION: &str = "0.1";
 
-pub const MAINNET_URL: &str = "https://fullnode.mainnet.sui.io:443";
-pub const TESTNET_URL: &str = "https://fullnode.testnet.sui.io:443";
-pub const DEVNET_URL: &str = "https://fullnode.devnet.sui.io:443";
+pub const MAINNET_URL: &str = "https://fullnode.mainnet.iota.io:443";
+pub const TESTNET_URL: &str = "https://fullnode.testnet.iota.io:443";
+pub const DEVNET_URL: &str = "https://fullnode.devnet.iota.io:443";
 pub const LOCALNET_URL: &str = "http://127.0.0.1:9000";
 
-pub const MAINNET_WS_URL: &str = "wss://rpc.mainnet.sui.io:443";
-pub const TESTNET_WS_URL: &str = "wss://rpc.testnet.sui.io:443";
-pub const DEVNET_WS_URL: &str = "wss://rpc.devnet.sui.io:443";
+pub const MAINNET_WS_URL: &str = "wss://rpc.mainnet.iota.io:443";
+pub const TESTNET_WS_URL: &str = "wss://rpc.testnet.iota.io:443";
+pub const DEVNET_WS_URL: &str = "wss://rpc.devnet.iota.io:443";
 pub const LOCALNET_WS_URL: &str = "ws://127.0.0.1:9000";
 
 pub const WS_PING_INTERVAL: Duration = Duration::from_millis(20_000);
@@ -100,8 +102,9 @@ pub struct DirectorySource {
 #[derive(Clone, Deserialize, Debug)]
 pub struct Package {
     pub path: String,
-    /// Optional object ID to watch for upgrades. For framework packages, this is an address like 0x2.
-    /// For non-framework packages this is an upgrade cap (possibly wrapped).
+    /// Optional object ID to watch for upgrades. For framework packages, this
+    /// is an address like 0x2. For non-framework packages this is an
+    /// upgrade cap (possibly wrapped).
     pub watch: Option<ObjectID>,
 }
 
@@ -146,40 +149,38 @@ impl fmt::Display for Network {
 pub type SourceLookup = BTreeMap<Symbol, SourceInfo>;
 /// Map addresses to module names and sources.
 pub type AddressLookup = BTreeMap<AccountAddress, SourceLookup>;
-/// Top-level lookup that maps network to sources for corresponding on-chain networks.
+/// Top-level lookup that maps network to sources for corresponding on-chain
+/// networks.
 pub type NetworkLookup = BTreeMap<Network, AddressLookup>;
 
 pub async fn verify_package(
     network: &Network,
     package_path: impl AsRef<Path>,
 ) -> anyhow::Result<(Network, AddressLookup)> {
-    move_package::package_hooks::register_package_hooks(Box::new(SuiPackageHooks));
-    let mut config = resolve_lock_file_path(
-        MoveBuildConfig::default(),
-        Some(package_path.as_ref().to_path_buf()),
-    )?;
-    config.lint_flag = LintFlag::LEVEL_NONE;
-    config.silence_warnings = true;
-    let build_config = BuildConfig {
-        config,
-        run_bytecode_verifier: false, /* no need to run verifier if code is on-chain */
-        print_diags_to_stderr: false,
-    };
-    let compiled_package = build_config.build(package_path.as_ref().to_path_buf())?;
-
+    move_package::package_hooks::register_package_hooks(Box::new(IotaPackageHooks));
+    // TODO(rvantonder): use config RPC URL instead of hardcoded URLs
     let network_url = match network {
         Network::Mainnet => MAINNET_URL,
         Network::Testnet => TESTNET_URL,
         Network::Devnet => DEVNET_URL,
         Network::Localnet => LOCALNET_URL,
     };
-    let client = SuiClientBuilder::default().build(network_url).await?;
+    let client = IotaClientBuilder::default().build(network_url).await?;
+    let chain_id = client.read_api().get_chain_identifier().await?;
+    let mut config =
+        resolve_lock_file_path(MoveBuildConfig::default(), Some(package_path.as_ref()))?;
+    config.lint_flag = LintFlag::LEVEL_NONE;
+    config.silence_warnings = true;
+    let build_config = BuildConfig {
+        config,
+        run_bytecode_verifier: false, // no need to run verifier if code is on-chain
+        print_diags_to_stderr: false,
+        chain_id: Some(chain_id),
+    };
+    let compiled_package = build_config.build(package_path.as_ref())?;
+
     BytecodeSourceVerifier::new(client.read_api())
-        .verify_package(
-            &compiled_package,
-            /* verify_deps */ false,
-            SourceMode::Verify,
-        )
+        .verify(&compiled_package, ValidationMode::root())
         .await
         .map_err(|e| anyhow!("Network {network}: {e}"))?;
 
@@ -222,7 +223,8 @@ pub fn repo_name_from_url(url: &str) -> anyhow::Result<String> {
 }
 
 #[derive(Debug)]
-/// Represents a sequence of git commands to clone a repository and sparsely checkout Move packages within.
+/// Represents a sequence of git commands to clone a repository and sparsely
+/// checkout Move packages within.
 pub struct CloneCommand {
     /// git args
     args: Vec<Vec<OsString>>,
@@ -308,7 +310,8 @@ impl CloneCommand {
     }
 }
 
-/// Clones repositories and checks out packages as per `config` at the directory `dir`.
+/// Clones repositories and checks out packages as per `config` at the directory
+/// `dir`.
 pub async fn clone_repositories(repos: Vec<&RepositorySource>, dir: &Path) -> anyhow::Result<()> {
     let mut tasks = vec![];
     for p in &repos {
@@ -339,7 +342,7 @@ pub async fn initialize(
     for s in &config.packages {
         match s {
             PackageSource::Repository(r) => repos.push(r),
-            PackageSource::Directory(_) => (), /* skip cloning */
+            PackageSource::Directory(_) => (), // skip cloning
         }
     }
     clone_repositories(repos, dir).await?;
@@ -427,88 +430,22 @@ pub async fn verify_packages(config: &Config, dir: &Path) -> anyhow::Result<Netw
     Ok(lookup)
 }
 
-// A thread that monitors on-chain transactions for package upgrades. `config` specifies which packages
-// to watch. `app_state` contains the map of sources returned by the server. In particular, `watch_for_upgrades`
-// invalidates (i.e., clears) the sources returned by the serve when we observe a package upgrade, so that we do not
-// falsely report outdated sources for a package. Pass an optional `channel` to observe the upgrade transaction(s).
+// A thread that monitors on-chain transactions for package upgrades. `config`
+// specifies which packages to watch. `app_state` contains the map of sources
+// returned by the server. In particular, `watch_for_upgrades` invalidates
+// (i.e., clears) the sources returned by the serve when we observe a package
+// upgrade, so that we do not falsely report outdated sources for a package.
+// Pass an optional `channel` to observe the upgrade transaction(s).
 // The `channel` parameter exists for testing.
 pub async fn watch_for_upgrades(
-    packages: Vec<PackageSource>,
-    app_state: Arc<RwLock<AppState>>,
-    network: Network,
-    channel: Option<Sender<SuiTransactionBlockEffects>>,
+    _packages: Vec<PackageSource>,
+    _app_state: Arc<RwLock<AppState>>,
+    _network: Network,
+    _channel: Option<Sender<IotaTransactionBlockEffects>>,
 ) -> anyhow::Result<()> {
-    let mut watch_ids = ArrayParams::new();
-    let mut num_packages = 0;
-    for s in packages {
-        let branches = match s {
-            PackageSource::Repository(RepositorySource { branches, .. }) => branches,
-            PackageSource::Directory(DirectorySource { paths, .. }) => vec![Branch {
-                branch: "".into(), // Unused.
-                paths,
-            }],
-        };
-        for b in branches {
-            for p in b.paths {
-                if let Some(id) = p.watch {
-                    num_packages += 1;
-                    watch_ids.insert(TransactionFilter::ChangedObject(id))?
-                }
-            }
-        }
-    }
-
-    let websocket_url = match network {
-        Network::Mainnet => MAINNET_WS_URL,
-        Network::Testnet => TESTNET_WS_URL,
-        Network::Devnet => DEVNET_WS_URL,
-        Network::Localnet => LOCALNET_WS_URL,
-    };
-
-    let client: WsClient = WsClientBuilder::default()
-        .ping_interval(WS_PING_INTERVAL)
-        .build(websocket_url)
-        .await?;
-    let mut subscription: Subscription<SuiTransactionBlockEffects> = client
-        .subscribe(
-            "suix_subscribeTransaction",
-            watch_ids,
-            "suix_unsubscribeTransaction",
-        )
-        .await
-        .map_err(|e| anyhow!("Failed to open websocket connection for {}: {}", network, e))?;
-
-    info!("Listening for upgrades on {num_packages} package(s) on {websocket_url}...");
-    loop {
-        let result: Option<Result<SuiTransactionBlockEffects, _>> = subscription.next().await;
-        match result {
-            Some(Ok(result)) => {
-                // We see an upgrade transaction. Clear all sources since all of part of these may now be invalid.
-                // Currently we need to restart the server within some time delta of this observation to resume
-                // returning source. Restarting revalidates the latest release sources per repositories in the config file.
-                // Restarting is a manual side-effect outside of this server because we need to ensure that sources in the
-                // repositories _actually contain_ the latest source corresponding to on-chain data (which is subject to
-                // manual syncing itself currently).
-                info!("Saw upgrade txn: {:?}", result);
-                let mut app_state = app_state.write().unwrap();
-                app_state.sources = NetworkLookup::new(); // Clear all sources.
-                app_state.sources_list = NetworkLookup::new(); // Clear all listed sources.
-                if let Some(channel) = channel {
-                    channel.send(result).unwrap();
-                    break Ok(());
-                }
-                info!("Shutting down server (resync performed on restart)");
-                std::process::exit(1)
-            }
-            Some(_) => {
-                info!("Saw failed transaction when listening to upgrades.")
-            }
-            None => {
-                error!("Fatal: WebSocket connection lost while listening for upgrades. Shutting down server.");
-                std::process::exit(1)
-            }
-        }
-    }
+    Err(anyhow!(
+        "Fatal: JsonRPC Subscriptions no longer supported. Reimplement without using subscriptions."
+    ))
 }
 
 pub struct AppState {
@@ -517,9 +454,7 @@ pub struct AppState {
     pub sources_list: NetworkLookup,
 }
 
-pub fn serve(
-    app_state: Arc<RwLock<AppState>>,
-) -> anyhow::Result<Server<AddrIncoming, IntoMakeService<Router>>> {
+pub async fn serve(app_state: Arc<RwLock<AppState>>) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/api", get(api_route))
         .route("/api/list", get(list_route))
@@ -534,7 +469,10 @@ pub fn serve(
         )
         .with_state(app_state);
     let listener = TcpListener::bind(host_port())?;
-    Ok(Server::from_tcp(listener)?.serve(app.into_make_service()))
+    listener.set_nonblocking(true).unwrap();
+    let listener = tokio::net::TcpListener::from_std(listener)?;
+    axum::serve(listener, app).await?;
+    Ok(())
 }
 
 #[derive(Deserialize)]
@@ -607,27 +545,27 @@ async fn api_route(
     }
 }
 
-async fn check_version_header<B>(
+async fn check_version_header(
     headers: HeaderMap,
-    req: hyper::Request<B>,
-    next: Next<B>,
+    req: hyper::Request<axum::body::Body>,
+    next: Next,
 ) -> Response {
     let version = headers
-        .get(SUI_SOURCE_VALIDATION_VERSION_HEADER)
+        .get(IOTA_SOURCE_VALIDATION_VERSION_HEADER)
         .as_ref()
         .and_then(|h| h.to_str().ok())
         .map(|s| s.to_string());
 
     match version {
-        Some(v) if v != SUI_SOURCE_VALIDATION_VERSION => {
+        Some(v) if v != IOTA_SOURCE_VALIDATION_VERSION => {
             let error = format!(
                 "Unsupported version '{v}' specified in header \
-		 {SUI_SOURCE_VALIDATION_VERSION_HEADER}"
+		 {IOTA_SOURCE_VALIDATION_VERSION_HEADER}"
             );
             let mut headers = HeaderMap::new();
             headers.insert(
-                HeaderName::from_static(SUI_SOURCE_VALIDATION_VERSION_HEADER),
-                HeaderValue::from_static(SUI_SOURCE_VALIDATION_VERSION),
+                HeaderName::from_static(IOTA_SOURCE_VALIDATION_VERSION_HEADER),
+                HeaderValue::from_static(IOTA_SOURCE_VALIDATION_VERSION),
             );
             return (
                 StatusCode::BAD_REQUEST,
@@ -640,8 +578,8 @@ async fn check_version_header<B>(
     }
     let mut response = next.run(req).await;
     response.headers_mut().insert(
-        HeaderName::from_static(SUI_SOURCE_VALIDATION_VERSION_HEADER),
-        HeaderValue::from_static(SUI_SOURCE_VALIDATION_VERSION),
+        HeaderName::from_static(IOTA_SOURCE_VALIDATION_VERSION_HEADER),
+        HeaderValue::from_static(IOTA_SOURCE_VALIDATION_VERSION),
     );
     response
 }
@@ -671,21 +609,19 @@ impl SourceServiceMetrics {
     }
 }
 
-pub fn start_prometheus_server(addr: TcpListener) -> RegistryService {
+pub fn start_prometheus_server(listener: TcpListener) -> RegistryService {
     let registry = Registry::new();
 
     let registry_service = RegistryService::new(registry);
 
     let app = Router::new()
-        .route(METRICS_ROUTE, get(mysten_metrics::metrics))
+        .route(METRICS_ROUTE, get(iota_metrics::metrics))
         .layer(Extension(registry_service.clone()));
 
     tokio::spawn(async move {
-        axum::Server::from_tcp(addr)
-            .unwrap()
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let listener = tokio::net::TcpListener::from_std(listener).unwrap();
+        axum::serve(listener, app).await.unwrap();
     });
 
     registry_service
