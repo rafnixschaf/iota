@@ -46,11 +46,11 @@ jobs:
       - name: Build Wallet
         run: pnpm wallet build
       - name: Create extension zip
-        # run: pnpm wallet pack:zip
-        run: zip -r wallet_extension.zip ./apps/wallet/dist
+        run:  pnpm --filter iota-wallet pack:zip
+        # run: zip -r wallet_extension.zip ./apps/wallet/dist
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.artifact_name }}
           path: |
-            ./apps/wallet/wallet_extension.zip
+            ./apps/wallet/web-ext-artifacts/*
