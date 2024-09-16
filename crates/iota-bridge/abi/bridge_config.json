@@ -67,18 +67,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address[]",
-        "name": "updatedMembers",
-        "type": "address[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isBlocklisted",
-        "type": "bool"
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
       }
     ],
-    "name": "BlocklistUpdated",
+    "name": "Initialized",
     "type": "event"
   },
   {
@@ -86,12 +80,49 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "iotaDecimal",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
         "internalType": "uint64",
-        "name": "version",
+        "name": "tokenPrice",
         "type": "uint64"
       }
     ],
-    "name": "Initialized",
+    "name": "TokenAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "tokenPrice",
+        "type": "uint64"
+      }
+    ],
+    "name": "TokenPriceUpdated",
     "type": "event"
   },
   {
@@ -115,157 +146,6 @@
         "internalType": "string",
         "name": "",
         "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "committeeMember",
-        "type": "address"
-      }
-    ],
-    "name": "blocklist",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "isBlocklisted",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "committee",
-    "outputs": [
-      {
-        "internalType": "contract IBridgeCommittee",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "committeeMember",
-        "type": "address"
-      }
-    ],
-    "name": "committeeIndex",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "index",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "committeeMember",
-        "type": "address"
-      }
-    ],
-    "name": "committeeStake",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "stakeAmount",
-        "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "config",
-    "outputs": [
-      {
-        "internalType": "contract IBridgeConfig",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "committee",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint16[]",
-        "name": "stake",
-        "type": "uint16[]"
-      },
-      {
-        "internalType": "uint16",
-        "name": "minStakeRequired",
-        "type": "uint16"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_config",
-        "type": "address"
-      }
-    ],
-    "name": "initializeConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "messageType",
-        "type": "uint8"
-      }
-    ],
-    "name": "nonces",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "nonce",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -311,7 +191,305 @@
         "type": "tuple"
       }
     ],
-    "name": "updateBlocklistWithSignatures",
+    "name": "addTokensWithSignatures",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "chainID",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "committee",
+    "outputs": [
+      {
+        "internalType": "contract IBridgeCommittee",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_committee",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_chainID",
+        "type": "uint8"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_supportedTokens",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "_tokenPrices",
+        "type": "uint64[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "_supportedChains",
+        "type": "uint8[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "chainId",
+        "type": "uint8"
+      }
+    ],
+    "name": "isChainSupported",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "isTokenSupported",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "messageType",
+        "type": "uint8"
+      }
+    ],
+    "name": "nonces",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "proxiableUUID",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "chainId",
+        "type": "uint8"
+      }
+    ],
+    "name": "supportedChains",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isSupported",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "supportedTokens",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "iotaDecimal",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "native",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "tokenAddressOf",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "tokenPriceOf",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "tokenPrices",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "tokenPrice",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "tokenID",
+        "type": "uint8"
+      }
+    ],
+    "name": "tokenIotaDecimalOf",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "signatures",
+        "type": "bytes[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "messageType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "version",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint8",
+            "name": "chainID",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes",
+            "name": "payload",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct BridgeUtils.Message",
+        "name": "message",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateTokenPriceWithSignatures",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -377,51 +555,6 @@
     "name": "upgradeWithSignatures",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes[]",
-        "name": "signatures",
-        "type": "bytes[]"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint8",
-            "name": "messageType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
-            "name": "version",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint8",
-            "name": "chainID",
-            "type": "uint8"
-          },
-          {
-            "internalType": "bytes",
-            "name": "payload",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct BridgeUtils.Message",
-        "name": "message",
-        "type": "tuple"
-      }
-    ],
-    "name": "verifySignatures",
-    "outputs": [],
-    "stateMutability": "view",
     "type": "function"
   }
 ]
