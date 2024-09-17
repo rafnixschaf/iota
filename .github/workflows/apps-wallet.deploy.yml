@@ -48,9 +48,12 @@ jobs:
       - name: Create extension zip
         run:  pnpm --filter iota-wallet pack:zip
         # run: zip -r wallet_extension.zip ./apps/wallet/dist
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.artifact_name }}
-          path: |
-            ./apps/wallet/web-ext-artifacts/*
+
+      - name: Fetch and Filter PRs
+        run: |
+          npm install @octokit/rest
+          node fetch_prs.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
