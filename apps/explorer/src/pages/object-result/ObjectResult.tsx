@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useGetObject } from '@iota/core';
-import { ObjectDetailsHeader } from '@iota/icons';
 import { LoadingIndicator } from '@iota/ui';
 import { useParams } from 'react-router-dom';
 import { ErrorBoundary, PageLayout } from '~/components';
@@ -41,13 +40,8 @@ export function ObjectResult(): JSX.Element {
             content={
                 <div className="flex flex-col gap-y-2xl">
                     {!isPackage && !isPageError && (
-                        <div>
-                            <PageHeader
-                                type="Object"
-                                title={resp?.id ?? ''}
-                                before={<ObjectDetailsHeader className="h-6 w-6" />}
-                            />
-
+                        <div className="flex flex-col gap-y-2xl">
+                            <PageHeader type="Object" title={resp?.id ?? ''} />
                             <ErrorBoundary>{data && <ObjectView data={data} />}</ErrorBoundary>
                         </div>
                     )}
