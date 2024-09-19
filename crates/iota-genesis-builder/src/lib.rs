@@ -316,15 +316,20 @@ impl Builder {
                 .into_iter()
                 .map(|(id, _, _)| id),
         );
-        let mut objects = self.migration_objects.take_objects();
-        objects.extend(self.objects.values().cloned());
+        let mut timelock_objects = self.migration_objects.take_timelock_objects(
+            self.genesis_stake
+                .take_timelocks_to_burn()
+                .into_iter()
+                .map(|(id, _, _)| id),
+        );
+        timelock_objects.extend(self.objects.values().cloned());
 
         // Finally build the genesis data
         self.built_genesis = Some(build_unsigned_genesis_data(
             &self.parameters,
             &token_distribution_schedule,
             self.validators.values(),
-            objects,
+            timelock_objects,
             &mut self.genesis_stake,
         ));
 
