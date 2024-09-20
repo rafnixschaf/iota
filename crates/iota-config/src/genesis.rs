@@ -16,7 +16,7 @@ use fastcrypto::{
 };
 use iota_types::{
     authenticator_state::{get_authenticator_state, AuthenticatorStateInner},
-    base_types::{IotaAddress, ObjectID},
+    base_types::{IotaAddress, ObjectID, ObjectRef},
     clock::Clock,
     committee::{Committee, CommitteeWithNetworkMetadata, EpochId, ProtocolVersion},
     crypto::DefaultHash,
@@ -46,6 +46,9 @@ pub struct Genesis {
     effects: TransactionEffects,
     events: TransactionEvents,
     objects: Vec<Object>,
+    migrated_object_refs: Vec<ObjectRef>,
+    migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
+    migrated_objects_ref_to_burn: Vec<ObjectRef>,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -56,6 +59,9 @@ pub struct UnsignedGenesis {
     pub effects: TransactionEffects,
     pub events: TransactionEvents,
     pub objects: Vec<Object>,
+    pub migrated_object_refs: Vec<ObjectRef>,
+    pub migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
+    pub migrated_objects_ref_to_burn: Vec<ObjectRef>,
 }
 
 // Hand implement PartialEq in order to get around the fact that AuthSigs don't
@@ -88,6 +94,9 @@ impl Genesis {
         effects: TransactionEffects,
         events: TransactionEvents,
         objects: Vec<Object>,
+        migrated_object_refs: Vec<ObjectRef>,
+        migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
+        migrated_objects_ref_to_burn: Vec<ObjectRef>,
     ) -> Self {
         Self {
             checkpoint,
@@ -96,6 +105,9 @@ impl Genesis {
             effects,
             events,
             objects,
+            migrated_object_refs,
+            migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn,
         }
     }
 
@@ -226,6 +238,9 @@ impl Serialize for Genesis {
             effects: &'a TransactionEffects,
             events: &'a TransactionEvents,
             objects: &'a [Object],
+            migrated_object_refs: &'a Vec<ObjectRef>,
+            migrated_objects_ref_to_split: &'a Vec<(ObjectRef, u64, IotaAddress)>,
+            migrated_objects_ref_to_burn: &'a Vec<ObjectRef>,
         }
 
         let raw_genesis = RawGenesis {
@@ -235,6 +250,9 @@ impl Serialize for Genesis {
             effects: &self.effects,
             events: &self.events,
             objects: &self.objects,
+            migrated_object_refs: &self.migrated_object_refs,
+            migrated_objects_ref_to_split: &self.migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn: &self.migrated_objects_ref_to_burn,
         };
 
         if serializer.is_human_readable() {
@@ -262,6 +280,9 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: TransactionEffects,
             events: TransactionEvents,
             objects: Vec<Object>,
+            migrated_object_refs: Vec<ObjectRef>,
+            migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
+            migrated_objects_ref_to_burn: Vec<ObjectRef>,
         }
 
         let raw_genesis = if deserializer.is_human_readable() {
@@ -279,6 +300,9 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: raw_genesis.effects,
             events: raw_genesis.events,
             objects: raw_genesis.objects,
+            migrated_object_refs: raw_genesis.migrated_object_refs,
+            migrated_objects_ref_to_split: raw_genesis.migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn: raw_genesis.migrated_objects_ref_to_burn,
         })
     }
 }

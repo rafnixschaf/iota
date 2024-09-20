@@ -323,6 +323,11 @@ impl MigrationObjects {
         std::mem::take(&mut self.inner)
     }
 
+    /// Take the inner migration objects by ref
+    pub fn objects(&mut self) -> &Vec<Object> {
+        &self.inner
+    }
+
     /// Take timelock objects.
     pub fn take_timelock_objects(
         &mut self,
@@ -332,7 +337,7 @@ impl MigrationObjects {
         let (timelocks_result, remaining): (Vec<Object>, Vec<Object>) = self
             .inner
             .drain(..)
-            .partition(|object| timelocks.contains(&object.id()));
+            .partition(|obj| timelocks.contains(&obj.id()));
         self.inner = remaining;
         timelocks_result
     }

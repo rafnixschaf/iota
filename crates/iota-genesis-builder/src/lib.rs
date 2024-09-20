@@ -318,11 +318,23 @@ impl Builder {
         );
         let mut timelock_objects = self.migration_objects.take_timelock_objects(
             self.genesis_stake
-                .take_timelocks_to_burn()
+                .take_timelocks_to_burn_by_ref()
                 .into_iter()
-                .map(|(id, _, _)| id),
+                .map(|(id, _, _)| id.clone()),
         );
         timelock_objects.extend(self.objects.values().cloned());
+
+        let migrated_object_refs: Vec<ObjectRef> = self
+            .migration_objects
+            .objects()
+            .iter()
+            .map(|obj| obj.compute_object_reference())
+            .collect();
+
+        let migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)> =
+            self.genesis_stake.take_timelocks_to_split_by_ref().to_vec();
+        let migrated_objects_ref_to_burn: Vec<ObjectRef> =
+            self.genesis_stake.take_timelocks_to_split_by_ref().to_vec();
 
         // Finally build the genesis data
         self.built_genesis = Some(build_unsigned_genesis_data(
@@ -331,6 +343,9 @@ impl Builder {
             self.validators.values(),
             timelock_objects,
             &mut self.genesis_stake,
+            migrated_object_refs,
+            migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn,
         ));
 
         self.token_distribution_schedule = Some(token_distribution_schedule);
@@ -370,6 +385,9 @@ impl Builder {
             effects,
             events,
             objects,
+            migrated_object_refs,
+            migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn,
         } = self
             .built_genesis
             .take()
@@ -390,6 +408,9 @@ impl Builder {
             effects,
             events,
             objects,
+            migrated_object_refs,
+            migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn,
         )
     }
 
@@ -921,6 +942,9 @@ fn build_unsigned_genesis_data<'info>(
     validators: impl Iterator<Item = &'info GenesisValidatorInfo>,
     objects: Vec<Object>,
     genesis_stake: &mut GenesisStake,
+    migrated_object_refs: Vec<ObjectRef>,
+    migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
+    migrated_objects_ref_to_burn: Vec<ObjectRef>,
 ) -> UnsignedGenesis {
     if !parameters.allow_insertion_of_extra_objects && !objects.is_empty() {
         panic!(
@@ -980,6 +1004,9 @@ fn build_unsigned_genesis_data<'info>(
         effects: genesis_effects,
         events: genesis_events,
         objects,
+        migrated_object_refs,
+        migrated_objects_ref_to_split,
+        migrated_objects_ref_to_burn,
     }
 }
 

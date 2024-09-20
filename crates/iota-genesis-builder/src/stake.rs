@@ -40,11 +40,21 @@ impl GenesisStake {
         std::mem::take(&mut self.timelocks_to_burn)
     }
 
+    /// Take the inner timelock objects that must be burned by ref.
+    pub fn take_timelocks_to_burn_by_ref(&self) -> &Vec<ObjectRef> {
+        &self.timelocks_to_burn
+    }
+
     /// Take the inner timelock objects that must be split.
     ///
     /// This follows the semantics of [`std::mem::take`].
     pub fn take_timelocks_to_split(&mut self) -> Vec<(ObjectRef, u64, IotaAddress)> {
         std::mem::take(&mut self.timelocks_to_split)
+    }
+
+    /// Take the inner timelock objects that must be split by ref.
+    pub fn take_timelocks_to_split_by_ref(&self) -> &Vec<(ObjectRef, u64, IotaAddress)> {
+        &self.timelocks_to_split
     }
 
     pub fn is_empty(&self) -> bool {
