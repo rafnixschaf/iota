@@ -1,79 +1,127 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { PublicKey } from '@mysten/sui.js/cryptography';
-import type { ZkLoginSignatureInputs } from '@mysten/sui.js/zklogin';
+import type { PublicKey } from '@iota/iota-sdk/cryptography';
+import type { ZkLoginSignatureInputs } from '@iota/iota-sdk/zklogin';
 
 import type { AuthProvider } from '../EnokiFlow.js';
 
 export type EnokiNetwork = 'mainnet' | 'testnet' | 'devnet';
+export type EnokiDomainNetwork = 'mainnet' | 'testnet';
+export type EnokiSubanameStatus = 'PENDING' | 'ACTIVE';
 
 export interface GetAppApiInput {}
 export interface GetAppApiResponse {
-	authenticationProviders: {
-		providerType: AuthProvider;
-		clientId: string;
-	}[];
+    allowedOrigins: string[];
+    authenticationProviders: {
+        providerType: AuthProvider;
+        clientId: string;
+    }[];
+    domains: {
+        nftId: string;
+        name: string;
+        network: EnokiDomainNetwork;
+    }[];
 }
 
 export interface GetZkLoginApiInput {
-	jwt: string;
+    jwt: string;
 }
 export interface GetZkLoginApiResponse {
-	address: string;
-	salt: string;
+    address: string;
+    salt: string;
 }
 
 export interface CreateZkLoginNonceApiInput {
-	network?: EnokiNetwork;
-	ephemeralPublicKey: PublicKey;
-	additionalEpochs?: number;
+    network?: EnokiNetwork;
+    ephemeralPublicKey: PublicKey;
+    additionalEpochs?: number;
 }
 export interface CreateZkLoginNonceApiResponse {
-	nonce: string;
-	randomness: string;
-	epoch: number;
-	maxEpoch: number;
-	estimatedExpiration: number;
+    nonce: string;
+    randomness: string;
+    epoch: number;
+    maxEpoch: number;
+    estimatedExpiration: number;
 }
 
 export interface CreateZkLoginZkpApiInput {
-	network?: EnokiNetwork;
-	jwt: string;
-	ephemeralPublicKey: PublicKey;
-	randomness: string;
-	maxEpoch: number;
+    network?: EnokiNetwork;
+    jwt: string;
+    ephemeralPublicKey: PublicKey;
+    randomness: string;
+    maxEpoch: number;
 }
 export interface CreateZkLoginZkpApiResponse extends ZkLoginSignatureInputs {}
 
-export type CreateSponsoredTransactionBlockApiInput = {
-	network?: EnokiNetwork;
-	transactionBlockKindBytes: string;
+export type CreateSponsoredTransactionApiInput = {
+    network?: EnokiNetwork;
+    transactionKindBytes: string;
 } & (
-	| {
-			jwt: string;
-			sender?: never;
-			allowedAddresses?: never;
-			allowedMoveCallTargets?: never;
-	  }
-	| {
-			sender: string;
-			allowedAddresses?: string[];
-			allowedMoveCallTargets?: string[];
-			jwt?: never;
-	  }
+    | {
+          jwt: string;
+          sender?: never;
+          allowedAddresses?: never;
+          allowedMoveCallTargets?: never;
+      }
+    | {
+          sender: string;
+          allowedAddresses?: string[];
+          allowedMoveCallTargets?: string[];
+          jwt?: never;
+      }
 );
 
-export interface CreateSponsoredTransactionBlockApiResponse {
-	bytes: string;
-	digest: string;
+export interface CreateSponsoredTransactionApiResponse {
+    bytes: string;
+    digest: string;
 }
 
-export interface ExecuteSponsoredTransactionBlockApiInput {
-	digest: string;
-	signature: string;
+export interface ExecuteSponsoredTransactionApiInput {
+    digest: string;
+    signature: string;
 }
 
-export interface ExecuteSponsoredTransactionBlockApiResponse {
-	digest: string;
+export interface ExecuteSponsoredTransactionApiResponse {
+    digest: string;
+}
+
+export interface GetSubnamesApiInput {
+    address?: string;
+    network?: EnokiDomainNetwork;
+    domain?: string;
+}
+export interface GetSubnamesApiResponse {
+    subnames: {
+        name: string;
+        status: EnokiSubanameStatus;
+    }[];
+}
+
+export type CreateSubnameApiInput = {
+    domain: string;
+    network?: EnokiDomainNetwork;
+    subname: string;
+} & (
+    | {
+          jwt: string;
+          targetAddress?: never;
+      }
+    | {
+          targetAddress: string;
+          jwt?: never;
+      }
+);
+export interface CreateSubnameApiResponse {
+    name: string;
+}
+
+export interface DeleteSubnameApiInput {
+    domain: string;
+    network?: EnokiDomainNetwork;
+    subname: string;
+}
+export interface DeleteSubnameApiResponse {
+    name: string;
 }

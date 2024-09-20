@@ -1,192 +1,214 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import type {
-	ObjectOwner,
-	SuiObjectChange,
-	SuiTransactionBlockResponse,
-} from '@mysten/sui.js/client';
-import type { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, parseStructTag } from '@mysten/sui.js/utils';
+    ObjectOwner,
+    IotaObjectChange,
+    IotaTransactionBlockResponse,
+} from '@iota/iota-sdk/client';
+import type { Transaction } from '@iota/iota-sdk/transactions';
+import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/iota-sdk/utils';
 
 // eslint-disable-next-line import/no-cycle
 
 export interface LinkAssets {
-	balances: {
-		coinType: string;
-		amount: bigint;
-	}[];
+    balances: {
+        coinType: string;
+        amount: bigint;
+    }[];
 
-	nfts: {
-		objectId: string;
-		type: string;
-		version: string;
-		digest: string;
-	}[];
+    nfts: {
+        objectId: string;
+        type: string;
+        version: string;
+        digest: string;
+    }[];
 
-	coins: {
-		objectId: string;
-		type: string;
-		version: string;
-		digest: string;
-	}[];
+    coins: {
+        objectId: string;
+        type: string;
+        version: string;
+        digest: string;
+    }[];
 }
 
 export function isClaimTransaction(
-	txb: TransactionBlock,
-	options: {
-		packageId: string;
-	},
+    tx: Transaction,
+    options: {
+        packageId: string;
+    },
 ) {
-	let transfers = 0;
+    let transfers = 0;
 
-	for (const tx of txb.blockData.transactions) {
-		switch (tx.kind) {
-			case 'TransferObjects':
-				// Ensure that we are only transferring results of a claim
-				if (!tx.objects.every((o) => o.kind === 'Result' || o.kind === 'NestedResult')) {
-					return false;
-				}
-				transfers++;
-				break;
-			case 'MoveCall':
-				const [packageId, module, fn] = tx.target.split('::');
+    for (const command of tx.getData().commands) {
+        switch (command.$kind) {
+            case 'TransferObjects':
+                // Ensure that we are only transferring results of a claim
+                if (
+                    !command.TransferObjects.objects.every(
+                        (o) => o.$kind === 'Result' || o.$kind === 'NestedResult',
+                    )
+                ) {
+                    return false;
+                }
+                transfers++;
+                break;
+            case 'MoveCall':
+                if (command.MoveCall.package !== options.packageId) {
+                    return false;
+                }
 
-				if (packageId !== options.packageId) {
-					return false;
-				}
+                if (command.MoveCall.module !== 'zk_bag') {
+                    return false;
+                }
+                const fn = command.MoveCall.function;
+                if (
+                    fn !== 'init_claim' &&
+                    fn !== 'reclaim' &&
+                    fn !== 'claim' &&
+                    fn !== 'finalize'
+                ) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+    }
 
-				if (module !== 'zk_bag') {
-					return false;
-				}
-
-				if (fn !== 'init_claim' && fn !== 'reclaim' && fn !== 'claim' && fn !== 'finalize') {
-					return false;
-				}
-				break;
-			default:
-				return false;
-		}
-	}
-
-	return transfers === 1;
+    return transfers === 1;
 }
 
-export function getAssetsFromTxnBlock({
-	transactionBlock,
-	address,
-	isSent,
+export function getAssetsFromTransaction({
+    transaction,
+    address,
+    isSent,
 }: {
-	transactionBlock: SuiTransactionBlockResponse;
-	address: string;
-	isSent: boolean;
+    transaction: IotaTransactionBlockResponse;
+    address: string;
+    isSent: boolean;
 }): LinkAssets {
-	const normalizedAddress = normalizeSuiAddress(address);
-	const balances: {
-		coinType: string;
-		amount: bigint;
-	}[] = [];
+    const normalizedAddress = normalizeIotaAddress(address);
+    const balances: {
+        coinType: string;
+        amount: bigint;
+    }[] = [];
 
-	const nfts: {
-		objectId: string;
-		type: string;
-		version: string;
-		digest: string;
-	}[] = [];
+    const nfts: {
+        objectId: string;
+        type: string;
+        version: string;
+        digest: string;
+    }[] = [];
 
-	const coins: {
-		objectId: string;
-		type: string;
-		version: string;
-		digest: string;
-	}[] = [];
+    const coins: {
+        objectId: string;
+        type: string;
+        version: string;
+        digest: string;
+    }[] = [];
 
-	transactionBlock.balanceChanges?.forEach((change) => {
-		const validAmountChange = isSent ? BigInt(change.amount) < 0n : BigInt(change.amount) > 0n;
-		if (validAmountChange && isOwner(change.owner, normalizedAddress)) {
-			balances.push({
-				coinType: normalizeStructTag(change.coinType),
-				amount: BigInt(change.amount),
-			});
-		}
-	});
+    transaction.balanceChanges?.forEach((change) => {
+        const validAmountChange = isSent ? BigInt(change.amount) < 0n : BigInt(change.amount) > 0n;
+        if (validAmountChange && isOwner(change.owner, normalizedAddress)) {
+            balances.push({
+                coinType: normalizeStructTag(change.coinType),
+                amount: BigInt(change.amount),
+            });
+        }
+    });
 
-	transactionBlock.objectChanges?.forEach((change) => {
-		if ('objectType' in change) {
-			const type = parseStructTag(change.objectType);
+    transaction.objectChanges?.forEach((change) => {
+        if (!isObjectOwner(change, normalizedAddress, isSent)) {
+            return;
+        }
 
-			if (
-				type.address === normalizeSuiAddress('0x2') &&
-				type.module === 'coin' &&
-				type.name === 'Coin'
-			) {
-				if (
-					change.type === 'created' ||
-					change.type === 'transferred' ||
-					change.type === 'mutated'
-				) {
-					coins.push(change);
-				}
-				return;
-			}
-		}
+        if ('objectType' in change) {
+            const type = parseStructTag(change.objectType);
 
-		if (
-			isObjectOwner(change, normalizedAddress, isSent) &&
-			(change.type === 'created' || change.type === 'transferred' || change.type === 'mutated')
-		) {
-			nfts.push(change);
-		}
-	});
+            if (
+                type.address === normalizeIotaAddress('0x2') &&
+                type.module === 'coin' &&
+                type.name === 'Coin'
+            ) {
+                if (
+                    change.type === 'created' ||
+                    change.type === 'transferred' ||
+                    change.type === 'mutated'
+                ) {
+                    coins.push({
+                        ...change,
+                        type: change.objectType,
+                    });
+                }
+                return;
+            }
+        }
 
-	return {
-		balances,
-		nfts,
-		coins,
-	};
+        if (
+            isObjectOwner(change, normalizedAddress, isSent) &&
+            (change.type === 'created' ||
+                change.type === 'transferred' ||
+                change.type === 'mutated')
+        ) {
+            nfts.push({
+                objectId: change.objectId,
+                type: change.objectType,
+                version: change.version,
+                digest: change.digest,
+            });
+        }
+    });
+
+    return {
+        balances,
+        nfts,
+        coins,
+    };
 }
 
-function getObjectOwnerFromObjectChange(objectChange: SuiObjectChange, isSent: boolean) {
-	if (isSent) {
-		return 'owner' in objectChange ? objectChange.owner : null;
-	}
+function getObjectOwnerFromObjectChange(objectChange: IotaObjectChange, isSent: boolean) {
+    if (isSent) {
+        return 'owner' in objectChange ? objectChange.owner : null;
+    }
 
-	return 'recipient' in objectChange ? objectChange.recipient : null;
+    return 'recipient' in objectChange ? objectChange.recipient : null;
 }
 
-function isObjectOwner(objectChange: SuiObjectChange, address: string, isSent: boolean) {
-	const owner = getObjectOwnerFromObjectChange(objectChange, isSent);
+function isObjectOwner(objectChange: IotaObjectChange, address: string, isSent: boolean) {
+    const owner = getObjectOwnerFromObjectChange(objectChange, isSent);
 
-	if (isSent) {
-		return owner && typeof owner === 'object' && 'AddressOwner' in owner;
-	}
+    if (isSent) {
+        return owner && typeof owner === 'object' && 'AddressOwner' in owner;
+    }
 
-	return ownedAfterChange(objectChange, address);
+    return ownedAfterChange(objectChange, address);
 }
 
 export function ownedAfterChange(
-	objectChange: SuiObjectChange,
-	address: string,
-): objectChange is Extract<SuiObjectChange, { type: 'created' | 'transferred' | 'mutated' }> {
-	if (objectChange.type === 'transferred' && isOwner(objectChange.recipient, address)) {
-		return true;
-	}
+    objectChange: IotaObjectChange,
+    address: string,
+): objectChange is Extract<IotaObjectChange, { type: 'created' | 'transferred' | 'mutated' }> {
+    if (objectChange.type === 'transferred' && isOwner(objectChange.recipient, address)) {
+        return true;
+    }
 
-	if (
-		(objectChange.type === 'created' || objectChange.type === 'mutated') &&
-		isOwner(objectChange.owner, address)
-	) {
-		return true;
-	}
+    if (
+        (objectChange.type === 'created' || objectChange.type === 'mutated') &&
+        isOwner(objectChange.owner, address)
+    ) {
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 export function isOwner(owner: ObjectOwner, address: string): owner is { AddressOwner: string } {
-	return (
-		owner &&
-		typeof owner === 'object' &&
-		'AddressOwner' in owner &&
-		normalizeSuiAddress(owner.AddressOwner) === address
-	);
+    return (
+        owner &&
+        typeof owner === 'object' &&
+        'AddressOwner' in owner &&
+        normalizeIotaAddress(owner.AddressOwner) === address
+    );
 }
