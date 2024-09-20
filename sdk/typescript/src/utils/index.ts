@@ -1,41 +1,30 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { formatAddress, formatDigest } from './format.js';
-import {
-	isValidSuiAddress,
-	isValidSuiObjectId,
-	isValidTransactionDigest,
-	normalizeStructTag,
-	normalizeSuiAddress,
-	normalizeSuiObjectId,
-	parseStructTag,
-	SUI_ADDRESS_LENGTH,
-} from './sui-types.js';
+export { formatAddress, formatDigest } from './format.js';
+export {
+    isValidIotaAddress,
+    isValidIotaObjectId,
+    isValidTransactionDigest,
+    normalizeStructTag,
+    normalizeIotaAddress,
+    normalizeIotaObjectId,
+    parseStructTag,
+    IOTA_ADDRESS_LENGTH,
+} from './iota-types.js';
 
-export { fromB64, toB64, fromHEX, toHEX } from '@mysten/bcs';
-export { is, assert } from 'superstruct';
+export { fromB64, toB64, fromHEX, toHEX } from '@iota/bcs';
+export { isValidIotaNSName, normalizeIotaNSName } from './iotans.js';
 
 export {
-	formatAddress,
-	formatDigest,
-	isValidSuiAddress,
-	isValidSuiObjectId,
-	isValidTransactionDigest,
-	normalizeStructTag,
-	normalizeSuiAddress,
-	normalizeSuiObjectId,
-	parseStructTag,
-	SUI_ADDRESS_LENGTH,
-};
-
-export const SUI_DECIMALS = 9;
-export const MIST_PER_SUI = BigInt(1000000000);
-
-export const MOVE_STDLIB_ADDRESS = '0x1';
-export const SUI_FRAMEWORK_ADDRESS = '0x2';
-export const SUI_SYSTEM_ADDRESS = '0x3';
-export const SUI_CLOCK_OBJECT_ID = normalizeSuiObjectId('0x6');
-export const SUI_SYSTEM_MODULE_NAME = 'sui_system';
-export const SUI_TYPE_ARG = `${SUI_FRAMEWORK_ADDRESS}::sui::SUI`;
-export const SUI_SYSTEM_STATE_OBJECT_ID: string = normalizeSuiObjectId('0x5');
+    IOTA_DECIMALS,
+    NANOS_PER_IOTA,
+    MOVE_STDLIB_ADDRESS,
+    IOTA_FRAMEWORK_ADDRESS,
+    IOTA_SYSTEM_ADDRESS,
+    IOTA_CLOCK_OBJECT_ID,
+    IOTA_SYSTEM_MODULE_NAME,
+    IOTA_TYPE_ARG,
+    IOTA_SYSTEM_STATE_OBJECT_ID,
+} from './constants.js';

@@ -1,412 +1,459 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { getFullnodeUrl, SuiClient } from '@mysten/sui.js/client';
-import type { CoinStruct } from '@mysten/sui.js/client';
-import { decodeSuiPrivateKey } from '@mysten/sui.js/cryptography';
-import type { Keypair, Signer } from '@mysten/sui.js/cryptography';
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+import type { CoinStruct } from '@iota/iota-sdk/client';
+import { decodeIotaPrivateKey } from '@iota/iota-sdk/cryptography';
+import type { Keypair, Signer } from '@iota/iota-sdk/cryptography';
+import { Ed25519Keypair } from '@iota/iota-sdk/keypairs/ed25519';
 import type {
-	TransactionObjectArgument,
-	TransactionObjectInput,
-} from '@mysten/sui.js/transactions';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
-import { normalizeStructTag, normalizeSuiAddress, SUI_TYPE_ARG, toB64 } from '@mysten/sui.js/utils';
+    TransactionObjectArgument,
+    TransactionObjectInput,
+} from '@iota/iota-sdk/transactions';
+import { Transaction } from '@iota/iota-sdk/transactions';
+import {
+    normalizeStructTag,
+    normalizeIotaAddress,
+    IOTA_TYPE_ARG,
+    toB64,
+} from '@iota/iota-sdk/utils';
 
 import type { ZkBagContractOptions } from './zk-bag.js';
 import { MAINNET_CONTRACT_IDS, ZkBag } from './zk-bag.js';
 
 interface ZkSendLinkRedirect {
-	url: string;
-	name?: string;
+    url: string;
+    name?: string;
 }
 
 export interface ZkSendLinkBuilderOptions {
-	host?: string;
-	path?: string;
-	keypair?: Keypair;
-	network?: 'mainnet' | 'testnet';
-	client?: SuiClient;
-	sender: string;
-	redirect?: ZkSendLinkRedirect;
-	contract?: ZkBagContractOptions | null;
+    host?: string;
+    path?: string;
+    keypair?: Keypair;
+    network?: 'mainnet' | 'testnet';
+    client?: IotaClient;
+    sender: string;
+    redirect?: ZkSendLinkRedirect;
+    contract?: ZkBagContractOptions | null;
 }
 
 const DEFAULT_ZK_SEND_LINK_OPTIONS = {
-	host: 'https://zksend.com',
-	path: '/claim',
-	network: 'mainnet' as const,
+    host: 'https://zksend.com',
+    path: '/claim',
+    network: 'mainnet' as const,
 };
 
-const SUI_COIN_TYPE = normalizeStructTag(SUI_TYPE_ARG);
+const IOTA_COIN_TYPE = normalizeStructTag(IOTA_TYPE_ARG);
 
 export interface CreateZkSendLinkOptions {
-	transactionBlock?: TransactionBlock;
-	calculateGas?: (options: {
-		balances: Map<string, bigint>;
-		objects: TransactionObjectInput[];
-		gasEstimateFromDryRun: bigint;
-	}) => Promise<bigint> | bigint;
+    transaction?: Transaction;
+    calculateGas?: (options: {
+        balances: Map<string, bigint>;
+        objects: TransactionObjectInput[];
+        gasEstimateFromDryRun: bigint;
+    }) => Promise<bigint> | bigint;
 }
 
 export class ZkSendLinkBuilder {
-	objectIds = new Set<string>();
-	balances = new Map<string, bigint>();
-	sender: string;
-	#host: string;
-	#path: string;
-	keypair: Keypair;
-	#client: SuiClient;
-	#redirect?: ZkSendLinkRedirect;
-	#coinsByType = new Map<string, CoinStruct[]>();
-	#contract?: ZkBag<ZkBagContractOptions>;
+    objectIds = new Set<string>();
+    objectRefs: {
+        ref: TransactionObjectArgument;
+        type: string;
+    }[] = [];
+    balances = new Map<string, bigint>();
+    sender: string;
+    #host: string;
+    #path: string;
+    keypair: Keypair;
+    #client: IotaClient;
+    #redirect?: ZkSendLinkRedirect;
+    #coinsByType = new Map<string, CoinStruct[]>();
+    #contract?: ZkBag<ZkBagContractOptions>;
 
-	constructor({
-		host = DEFAULT_ZK_SEND_LINK_OPTIONS.host,
-		path = DEFAULT_ZK_SEND_LINK_OPTIONS.path,
-		keypair = new Ed25519Keypair(),
-		network = DEFAULT_ZK_SEND_LINK_OPTIONS.network,
-		client = new SuiClient({ url: getFullnodeUrl(network) }),
-		sender,
-		redirect,
-		contract = network === 'mainnet' ? MAINNET_CONTRACT_IDS : undefined,
-	}: ZkSendLinkBuilderOptions) {
-		this.#host = host;
-		this.#path = path;
-		this.#redirect = redirect;
-		this.keypair = keypair;
-		this.#client = client;
-		this.sender = normalizeSuiAddress(sender);
+    constructor({
+        host = DEFAULT_ZK_SEND_LINK_OPTIONS.host,
+        path = DEFAULT_ZK_SEND_LINK_OPTIONS.path,
+        keypair = new Ed25519Keypair(),
+        network = DEFAULT_ZK_SEND_LINK_OPTIONS.network,
+        client = new IotaClient({ url: getFullnodeUrl(network) }),
+        sender,
+        redirect,
+        contract = network === 'mainnet' ? MAINNET_CONTRACT_IDS : undefined,
+    }: ZkSendLinkBuilderOptions) {
+        this.#host = host;
+        this.#path = path;
+        this.#redirect = redirect;
+        this.keypair = keypair;
+        this.#client = client;
+        this.sender = normalizeIotaAddress(sender);
 
-		if (contract) {
-			this.#contract = new ZkBag(contract.packageId, contract);
-		}
-	}
+        if (contract) {
+            this.#contract = new ZkBag(contract.packageId, contract);
+        }
+    }
 
-	addClaimableMist(amount: bigint) {
-		this.addClaimableBalance(SUI_COIN_TYPE, amount);
-	}
+    addClaimableNanos(amount: bigint) {
+        this.addClaimableBalance(IOTA_COIN_TYPE, amount);
+    }
 
-	addClaimableBalance(coinType: string, amount: bigint) {
-		const normalizedType = normalizeStructTag(coinType);
-		this.balances.set(normalizedType, (this.balances.get(normalizedType) ?? 0n) + amount);
-	}
+    addClaimableBalance(coinType: string, amount: bigint) {
+        const normalizedType = normalizeStructTag(coinType);
+        this.balances.set(normalizedType, (this.balances.get(normalizedType) ?? 0n) + amount);
+    }
 
-	addClaimableObject(id: string) {
-		this.objectIds.add(id);
-	}
+    addClaimableObject(id: string) {
+        this.objectIds.add(id);
+    }
 
-	getLink(): string {
-		const link = new URL(this.#host);
-		link.pathname = this.#path;
-		link.hash = `${this.#contract ? '$' : ''}${toB64(
-			decodeSuiPrivateKey(this.keypair.getSecretKey()).secretKey,
-		)}`;
+    addClaimableObjectRef(ref: TransactionObjectArgument, type: string) {
+        this.objectRefs.push({ ref, type });
+    }
 
-		if (this.#redirect) {
-			link.searchParams.set('redirect_url', this.#redirect.url);
-			if (this.#redirect.name) {
-				link.searchParams.set('name', this.#redirect.name);
-			}
-		}
+    getLink(): string {
+        const link = new URL(this.#host);
+        link.pathname = this.#path;
+        link.hash = `${this.#contract ? '$' : ''}${toB64(
+            decodeIotaPrivateKey(this.keypair.getSecretKey()).secretKey,
+        )}`;
 
-		return link.toString();
-	}
+        if (this.#redirect) {
+            link.searchParams.set('redirect_url', this.#redirect.url);
+            if (this.#redirect.name) {
+                link.searchParams.set('name', this.#redirect.name);
+            }
+        }
 
-	async create({
-		signer,
-		...options
-	}: CreateZkSendLinkOptions & {
-		signer: Signer;
-		waitForTransactionBlock?: boolean;
-	}) {
-		const txb = await this.createSendTransaction(options);
+        return link.toString();
+    }
 
-		const result = await this.#client.signAndExecuteTransactionBlock({
-			transactionBlock: await txb.build({ client: this.#client }),
-			signer,
-		});
+    async create({
+        signer,
+        ...options
+    }: CreateZkSendLinkOptions & {
+        signer: Signer;
+        waitForTransaction?: boolean;
+    }) {
+        const tx = await this.createSendTransaction(options);
 
-		if (options.waitForTransactionBlock) {
-			await this.#client.waitForTransactionBlock({ digest: result.digest });
-		}
+        const result = await this.#client.signAndExecuteTransaction({
+            transaction: await tx.build({ client: this.#client }),
+            signer,
+        });
 
-		return result;
-	}
-	async createSendTransaction({
-		transactionBlock = new TransactionBlock(),
-		calculateGas,
-	}: CreateZkSendLinkOptions = {}) {
-		if (!this.#contract) {
-			return this.#createSendTransactionWithoutContract({ transactionBlock, calculateGas });
-		}
+        if (options.waitForTransaction) {
+            await this.#client.waitForTransaction({ digest: result.digest });
+        }
 
-		transactionBlock.setSenderIfNotSet(this.sender);
+        return result;
+    }
+    async createSendTransaction({
+        transaction = new Transaction(),
+        calculateGas,
+    }: CreateZkSendLinkOptions = {}) {
+        if (!this.#contract) {
+            return this.#createSendTransactionWithoutContract({ transaction, calculateGas });
+        }
 
-		return ZkSendLinkBuilder.createLinks({
-			transactionBlock,
-			client: this.#client,
-			contract: this.#contract.ids,
-			links: [this],
-		});
-	}
+        transaction.setSenderIfNotSet(this.sender);
 
-	async #objectsToTransfer(txb: TransactionBlock) {
-		const objectIDs = [...this.objectIds];
-		const refsWithType: {
-			ref: TransactionObjectArgument;
-			type: string;
-		}[] = (
-			await this.#client.multiGetObjects({
-				ids: objectIDs,
-				options: {
-					showType: true,
-				},
-			})
-		).map((res, i) => {
-			if (!res.data || res.error) {
-				throw new Error(`Failed to load object ${objectIDs[i]} (${res.error?.code})`);
-			}
+        return ZkSendLinkBuilder.createLinks({
+            transaction,
+            client: this.#client,
+            contract: this.#contract.ids,
+            links: [this],
+        });
+    }
 
-			return {
-				ref: txb.objectRef({
-					version: res.data.version,
-					digest: res.data.digest,
-					objectId: res.data.objectId,
-				}),
-				type: res.data.type!,
-			};
-		});
+    async createSendToAddressTransaction({
+        transaction = new Transaction(),
+        address,
+    }: CreateZkSendLinkOptions & {
+        address: string;
+    }) {
+        const objectsToTransfer = (await this.#objectsToTransfer(transaction)).map(
+            (obj) => obj.ref,
+        );
 
-		txb.setSenderIfNotSet(this.sender);
+        transaction.setSenderIfNotSet(this.sender);
+        transaction.transferObjects(objectsToTransfer, address);
 
-		for (const [coinType, amount] of this.balances) {
-			if (coinType === SUI_COIN_TYPE) {
-				const [sui] = txb.splitCoins(txb.gas, [amount]);
-				refsWithType.push({
-					ref: sui,
-					type: `0x2::coin::Coin<${coinType}>`,
-				} as never);
-			} else {
-				const coins = (await this.#getCoinsByType(coinType)).map((coin) => coin.coinObjectId);
+        return transaction;
+    }
 
-				if (coins.length > 1) {
-					txb.mergeCoins(coins[0], coins.slice(1));
-				}
-				const [split] = txb.splitCoins(coins[0], [amount]);
-				refsWithType.push({
-					ref: split,
-					type: `0x2::coin:Coin<${coinType}>`,
-				});
-			}
-		}
+    async #objectsToTransfer(tx: Transaction) {
+        const objectIDs = [...this.objectIds];
+        const refsWithType = this.objectRefs.concat(
+            (objectIDs.length > 0
+                ? await this.#client.multiGetObjects({
+                      ids: objectIDs,
+                      options: {
+                          showType: true,
+                      },
+                  })
+                : []
+            ).map((res, i) => {
+                if (!res.data || res.error) {
+                    throw new Error(`Failed to load object ${objectIDs[i]} (${res.error?.code})`);
+                }
 
-		return refsWithType;
-	}
+                return {
+                    ref: tx.objectRef({
+                        version: res.data.version,
+                        digest: res.data.digest,
+                        objectId: res.data.objectId,
+                    }),
+                    type: res.data.type!,
+                };
+            }),
+        );
 
-	async #createSendTransactionWithoutContract({
-		transactionBlock: txb = new TransactionBlock(),
-		calculateGas,
-	}: CreateZkSendLinkOptions = {}) {
-		const gasEstimateFromDryRun = await this.#estimateClaimGasFee();
-		const baseGasAmount = calculateGas
-			? await calculateGas({
-					balances: this.balances,
-					objects: [...this.objectIds],
-					gasEstimateFromDryRun,
-			  })
-			: gasEstimateFromDryRun * 2n;
+        for (const [coinType, amount] of this.balances) {
+            if (coinType === IOTA_COIN_TYPE) {
+                const [iota] = tx.splitCoins(tx.gas, [amount]);
+                refsWithType.push({
+                    ref: iota,
+                    type: `0x2::coin::Coin<${coinType}>`,
+                } as never);
+            } else {
+                const coins = (await this.#getCoinsByType(coinType)).map(
+                    (coin) => coin.coinObjectId,
+                );
 
-		// Ensure that rounded gas is not less than the calculated gas
-		const gasWithBuffer = baseGasAmount + 1013n;
-		// Ensure that gas amount ends in 987
-		const roundedGasAmount = gasWithBuffer - (gasWithBuffer % 1000n) - 13n;
+                if (coins.length > 1) {
+                    tx.mergeCoins(coins[0], coins.slice(1));
+                }
+                const [split] = tx.splitCoins(coins[0], [amount]);
+                refsWithType.push({
+                    ref: split,
+                    type: `0x2::coin::Coin<${coinType}>`,
+                });
+            }
+        }
 
-		const address = this.keypair.toSuiAddress();
-		const objectsToTransfer = (await this.#objectsToTransfer(txb)).map((obj) => obj.ref);
-		const [gas] = txb.splitCoins(txb.gas, [roundedGasAmount]);
-		objectsToTransfer.push(gas);
+        return refsWithType;
+    }
 
-		txb.setSenderIfNotSet(this.sender);
-		txb.transferObjects(objectsToTransfer, address);
+    async #createSendTransactionWithoutContract({
+        transaction: tx = new Transaction(),
+        calculateGas,
+    }: CreateZkSendLinkOptions = {}) {
+        const gasEstimateFromDryRun = await this.#estimateClaimGasFee();
+        const baseGasAmount = calculateGas
+            ? await calculateGas({
+                  balances: this.balances,
+                  objects: [...this.objectIds],
+                  gasEstimateFromDryRun,
+              })
+            : gasEstimateFromDryRun * 2n;
 
-		return txb;
-	}
+        // Ensure that rounded gas is not less than the calculated gas
+        const gasWithBuffer = baseGasAmount + 1013n;
+        // Ensure that gas amount ends in 987
+        const roundedGasAmount = gasWithBuffer - (gasWithBuffer % 1000n) - 13n;
 
-	async #estimateClaimGasFee(): Promise<bigint> {
-		const txb = new TransactionBlock();
-		txb.setSender(this.sender);
-		txb.setGasPayment([]);
-		txb.transferObjects([txb.gas], this.keypair.toSuiAddress());
+        const address = this.keypair.toIotaAddress();
+        const objectsToTransfer = (await this.#objectsToTransfer(tx)).map((obj) => obj.ref);
+        const [gas] = tx.splitCoins(tx.gas, [roundedGasAmount]);
+        objectsToTransfer.push(gas);
 
-		const idsToTransfer = [...this.objectIds];
+        tx.setSenderIfNotSet(this.sender);
+        tx.transferObjects(objectsToTransfer, address);
 
-		for (const [coinType] of this.balances) {
-			const coins = await this.#getCoinsByType(coinType);
+        return tx;
+    }
 
-			if (!coins.length) {
-				throw new Error(`Sending account does not contain any coins of type ${coinType}`);
-			}
+    async #estimateClaimGasFee(): Promise<bigint> {
+        const tx = new Transaction();
+        tx.setSender(this.sender);
+        tx.setGasPayment([]);
+        tx.transferObjects([tx.gas], this.keypair.toIotaAddress());
 
-			idsToTransfer.push(coins[0].coinObjectId);
-		}
+        const idsToTransfer = [...this.objectIds];
 
-		if (idsToTransfer.length > 0) {
-			txb.transferObjects(
-				idsToTransfer.map((id) => txb.object(id)),
-				this.keypair.toSuiAddress(),
-			);
-		}
+        for (const [coinType] of this.balances) {
+            const coins = await this.#getCoinsByType(coinType);
 
-		const result = await this.#client.dryRunTransactionBlock({
-			transactionBlock: await txb.build({ client: this.#client }),
-		});
+            if (!coins.length) {
+                throw new Error(`Sending account does not contain any coins of type ${coinType}`);
+            }
 
-		return (
-			BigInt(result.effects.gasUsed.computationCost) +
-			BigInt(result.effects.gasUsed.storageCost) -
-			BigInt(result.effects.gasUsed.storageRebate)
-		);
-	}
+            idsToTransfer.push(coins[0].coinObjectId);
+        }
 
-	async #getCoinsByType(coinType: string) {
-		if (this.#coinsByType.has(coinType)) {
-			return this.#coinsByType.get(coinType)!;
-		}
+        if (idsToTransfer.length > 0) {
+            tx.transferObjects(
+                idsToTransfer.map((id) => tx.object(id)),
+                this.keypair.toIotaAddress(),
+            );
+        }
 
-		const coins = await this.#client.getCoins({
-			coinType,
-			owner: this.sender,
-		});
+        const result = await this.#client.dryRunTransactionBlock({
+            transactionBlock: await tx.build({ client: this.#client }),
+        });
 
-		this.#coinsByType.set(coinType, coins.data);
+        return (
+            BigInt(result.effects.gasUsed.computationCost) +
+            BigInt(result.effects.gasUsed.storageCost) -
+            BigInt(result.effects.gasUsed.storageRebate)
+        );
+    }
 
-		return coins.data;
-	}
+    async #getCoinsByType(coinType: string) {
+        if (this.#coinsByType.has(coinType)) {
+            return this.#coinsByType.get(coinType)!;
+        }
 
-	static async createLinks({
-		links,
-		network = 'mainnet',
-		client = new SuiClient({ url: getFullnodeUrl(network) }),
-		transactionBlock = new TransactionBlock(),
-		contract: contractIds = MAINNET_CONTRACT_IDS,
-	}: {
-		transactionBlock?: TransactionBlock;
-		client?: SuiClient;
-		network?: 'mainnet' | 'testnet';
-		links: ZkSendLinkBuilder[];
-		contract: ZkBagContractOptions;
-	}) {
-		const contract = new ZkBag(contractIds.packageId, contractIds);
-		const store = transactionBlock.object(contract.ids.bagStoreId);
+        const coins = await this.#client.getCoins({
+            coinType,
+            owner: this.sender,
+        });
 
-		const coinsByType = new Map<string, CoinStruct[]>();
-		const allIds = links.flatMap((link) => [...link.objectIds]);
+        this.#coinsByType.set(coinType, coins.data);
 
-		await Promise.all(
-			[...new Set(links.flatMap((link) => [...link.balances.keys()]))].map(async (coinType) => {
-				const coins = await client.getCoins({
-					coinType,
-					owner: links[0].sender,
-				});
+        return coins.data;
+    }
 
-				coinsByType.set(
-					coinType,
-					coins.data.filter((coin) => !allIds.includes(coin.coinObjectId)),
-				);
-			}),
-		);
+    static async createLinks({
+        links,
+        network = 'mainnet',
+        client = new IotaClient({ url: getFullnodeUrl(network) }),
+        transaction = new Transaction(),
+        contract: contractIds = MAINNET_CONTRACT_IDS,
+    }: {
+        transaction?: Transaction;
+        client?: IotaClient;
+        network?: 'mainnet' | 'testnet';
+        links: ZkSendLinkBuilder[];
+        contract?: ZkBagContractOptions;
+    }) {
+        const contract = new ZkBag(contractIds.packageId, contractIds);
+        const store = transaction.object(contract.ids.bagStoreId);
 
-		const objectRefs = new Map<
-			string,
-			{
-				ref: TransactionObjectArgument;
-				type: string;
-			}
-		>();
+        const coinsByType = new Map<string, CoinStruct[]>();
+        const allIds = links.flatMap((link) => [...link.objectIds]);
+        const sender = links[0].sender;
+        transaction.setSenderIfNotSet(sender);
 
-		const pageSize = 50;
-		let offset = 0;
-		while (offset < allIds.length) {
-			let chunk = allIds.slice(offset, offset + pageSize);
-			offset += pageSize;
+        await Promise.all(
+            [...new Set(links.flatMap((link) => [...link.balances.keys()]))].map(
+                async (coinType) => {
+                    const coins = await client.getCoins({
+                        coinType,
+                        owner: sender,
+                    });
 
-			const objects = await client.multiGetObjects({
-				ids: chunk,
-				options: {
-					showType: true,
-				},
-			});
+                    coinsByType.set(
+                        coinType,
+                        coins.data.filter((coin) => !allIds.includes(coin.coinObjectId)),
+                    );
+                },
+            ),
+        );
 
-			for (const [i, res] of objects.entries()) {
-				if (!res.data || res.error) {
-					throw new Error(`Failed to load object ${chunk[i]} (${res.error?.code})`);
-				}
-				objectRefs.set(chunk[i], {
-					ref: transactionBlock.objectRef({
-						version: res.data.version,
-						digest: res.data.digest,
-						objectId: res.data.objectId,
-					}),
-					type: res.data.type!,
-				});
-			}
-		}
+        const objectRefs = new Map<
+            string,
+            {
+                ref: TransactionObjectArgument;
+                type: string;
+            }
+        >();
 
-		const mergedCoins = new Map<string, TransactionObjectArgument>([
-			[SUI_COIN_TYPE, transactionBlock.gas],
-		]);
+        const pageSize = 50;
+        let offset = 0;
+        while (offset < allIds.length) {
+            let chunk = allIds.slice(offset, offset + pageSize);
+            offset += pageSize;
 
-		for (const [coinType, coins] of coinsByType) {
-			if (coinType === SUI_COIN_TYPE) {
-				continue;
-			}
+            const objects = await client.multiGetObjects({
+                ids: chunk,
+                options: {
+                    showType: true,
+                },
+            });
 
-			const [first, ...rest] = coins.map((coin) =>
-				transactionBlock.objectRef({
-					objectId: coin.coinObjectId,
-					version: coin.version,
-					digest: coin.digest,
-				}),
-			);
-			if (rest.length > 0) {
-				transactionBlock.mergeCoins(first, rest);
-			}
-			mergedCoins.set(coinType, transactionBlock.object(first));
-		}
+            for (const [i, res] of objects.entries()) {
+                if (!res.data || res.error) {
+                    throw new Error(`Failed to load object ${chunk[i]} (${res.error?.code})`);
+                }
+                objectRefs.set(chunk[i], {
+                    ref: transaction.objectRef({
+                        version: res.data.version,
+                        digest: res.data.digest,
+                        objectId: res.data.objectId,
+                    }),
+                    type: res.data.type!,
+                });
+            }
+        }
 
-		for (const link of links) {
-			const receiver = link.keypair.toSuiAddress();
-			contract.new(transactionBlock, { arguments: [store, receiver] });
+        const mergedCoins = new Map<string, TransactionObjectArgument>([
+            [IOTA_COIN_TYPE, transaction.gas],
+        ]);
 
-			link.objectIds.forEach((id) => {
-				const object = objectRefs.get(id);
-				if (!object) {
-					throw new Error(`Object ${id} not found`);
-				}
-				contract.add(transactionBlock, {
-					arguments: [store, receiver, object.ref],
-					typeArguments: [object.type],
-				});
-			});
-		}
+        for (const [coinType, coins] of coinsByType) {
+            if (coinType === IOTA_COIN_TYPE) {
+                continue;
+            }
 
-		for (const [coinType, merged] of mergedCoins) {
-			const linksWithCoin = links.filter((link) => link.balances.has(coinType));
-			if (linksWithCoin.length === 0) {
-				continue;
-			}
+            const [first, ...rest] = coins.map((coin) =>
+                transaction.objectRef({
+                    objectId: coin.coinObjectId,
+                    version: coin.version,
+                    digest: coin.digest,
+                }),
+            );
+            if (rest.length > 0) {
+                transaction.mergeCoins(first, rest);
+            }
+            mergedCoins.set(coinType, transaction.object(first));
+        }
 
-			const balances = linksWithCoin.map((link) => link.balances.get(coinType)!);
-			const splits = transactionBlock.splitCoins(merged, balances);
-			for (const [i, link] of linksWithCoin.entries()) {
-				contract.add(transactionBlock, {
-					arguments: [store, link.keypair.toSuiAddress(), splits[i]],
-					typeArguments: [`0x2::coin::Coin<${coinType}>`],
-				});
-			}
-		}
+        for (const link of links) {
+            const receiver = link.keypair.toIotaAddress();
+            transaction.add(contract.new({ arguments: [store, receiver] }));
 
-		return transactionBlock;
-	}
+            link.objectRefs.forEach(({ ref, type }) => {
+                transaction.add(
+                    contract.add({
+                        arguments: [store, receiver, ref],
+                        typeArguments: [type],
+                    }),
+                );
+            });
+
+            link.objectIds.forEach((id) => {
+                const object = objectRefs.get(id);
+                if (!object) {
+                    throw new Error(`Object ${id} not found`);
+                }
+                transaction.add(
+                    contract.add({
+                        arguments: [store, receiver, object.ref],
+                        typeArguments: [object.type],
+                    }),
+                );
+            });
+        }
+
+        for (const [coinType, merged] of mergedCoins) {
+            const linksWithCoin = links.filter((link) => link.balances.has(coinType));
+            if (linksWithCoin.length === 0) {
+                continue;
+            }
+
+            const balances = linksWithCoin.map((link) => link.balances.get(coinType)!);
+            const splits = transaction.splitCoins(merged, balances);
+            for (const [i, link] of linksWithCoin.entries()) {
+                transaction.add(
+                    contract.add({
+                        arguments: [store, link.keypair.toIotaAddress(), splits[i]],
+                        typeArguments: [`0x2::coin::Coin<${coinType}>`],
+                    }),
+                );
+            }
+        }
+
+        return transaction;
+    }
 }
