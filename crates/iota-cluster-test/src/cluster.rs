@@ -2,14 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{net::SocketAddr, path::Path};
+use std::{
+    fs::File,
+    io::{prelude::Read, BufReader},
+    net::SocketAddr,
+    path::Path,
+};
 
 use async_trait::async_trait;
+use flate2::bufread::GzDecoder;
 use iota_config::{
     genesis::Genesis, Config, PersistedConfig, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME,
     IOTA_NETWORK_CONFIG,
 };
-use iota_genesis_builder::SnapshotSource;
+use iota_genesis_builder::{stardust::migration::MigrationObjects, SnapshotSource, SnapshotUrl};
 use iota_graphql_rpc::{
     config::ConnectionConfig, test_infra::cluster::start_graphql_server_with_fn_rpc,
 };
@@ -184,8 +190,9 @@ impl Cluster for LocalNewCluster {
             addr.parse::<SocketAddr>()
                 .expect("Unable to parse indexer address")
         });
-
+        let mut migrated_objects = load_migrated_objects(options)?;
         let mut cluster_builder = TestClusterBuilder::new().enable_fullnode_events();
+        cluster_builder = cluster_builder.with_objects(migrated_objects.take_objects());
 
         // Check if we already have a config directory that is passed
         if let Some(config_dir) = options.config_dir.clone() {
@@ -218,17 +225,7 @@ impl Cluster for LocalNewCluster {
             // Let the faucet account hold 1000 gas objects on genesis
             let mut genesis_config = GenesisConfig::custom_genesis(1, 100);
             // Add any migration sources
-            let local_snapshots = options
-                .local_migration_snapshots
-                .iter()
-                .cloned()
-                .map(SnapshotSource::Local);
-            let remote_snapshots = options
-                .remote_migration_snapshots
-                .iter()
-                .cloned()
-                .map(SnapshotSource::S3);
-            genesis_config.migration_sources = local_snapshots.chain(remote_snapshots).collect();
+            genesis_config.migration_sources = load_migrated_source(options);
             // Custom genesis should be build here where we add the extra accounts
             cluster_builder = cluster_builder.set_genesis_config(genesis_config);
 
@@ -242,7 +239,6 @@ impl Cluster for LocalNewCluster {
         }
 
         let mut test_cluster = cluster_builder.build().await;
-
         // Use the wealthy account for faucet
         let faucet_key = test_cluster.swarm.config_mut().account_keys.swap_remove(0);
         let faucet_address = IotaAddress::from(faucet_key.public());
@@ -359,6 +355,42 @@ impl Cluster for Box<dyn Cluster + Send + Sync> {
     fn config_directory(&self) -> &Path {
         (**self).config_directory()
     }
+}
+
+fn load_migrated_source(options: &ClusterTestOpt) -> Vec<SnapshotSource> {
+    let local_snapshots = options
+        .local_migration_snapshots
+        .iter()
+        .cloned()
+        .map(SnapshotSource::Local);
+    let remote_snapshots = options
+        .remote_migration_snapshots
+        .iter()
+        .cloned()
+        .map(SnapshotSource::S3);
+
+    local_snapshots.chain(remote_snapshots).collect()
+}
+
+pub fn load_migrated_objects(options: &ClusterTestOpt) -> anyhow::Result<MigrationObjects> {
+    fn to_reader_source(snapshot_source: &SnapshotSource) -> anyhow::Result<Box<dyn Read>> {
+        Ok(match snapshot_source {
+            SnapshotSource::Local(path) => Box::new(BufReader::new(File::open(path)?)),
+            SnapshotSource::S3(snapshot_url) => Box::new(to_reader_url(snapshot_url)?),
+        })
+    }
+    fn to_reader_url(snapshot_url: &SnapshotUrl) -> anyhow::Result<impl Read> {
+        Ok(GzDecoder::new(BufReader::new(reqwest::blocking::get(
+            snapshot_url.to_url(),
+        )?)))
+    }
+
+    let migration_sources = load_migrated_source(options);
+    let mut objects: MigrationObjects = MigrationObjects::default();
+    for source in &migration_sources {
+        objects.extend(bcs::from_reader::<Vec<_>>(to_reader_source(source)?)?);
+    }
+    Ok(objects)
 }
 
 pub fn new_wallet_context_from_cluster(

@@ -9,9 +9,11 @@ publish = false
 [dependencies]
 anyhow = { workspace = true, features = ["backtrace"] }
 async-trait.workspace = true
+bcs.workspace = true
 clap.workspace = true
 derivative.workspace = true
 fastcrypto.workspace = true
+flate2.workspace = true
 futures.workspace = true
 jsonrpsee.workspace = true
 prometheus.workspace = true

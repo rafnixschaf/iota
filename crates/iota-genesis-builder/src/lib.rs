@@ -334,7 +334,7 @@ impl Builder {
         let migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)> =
             self.genesis_stake.take_timelocks_to_split_by_ref().to_vec();
         let migrated_objects_ref_to_burn: Vec<ObjectRef> =
-            self.genesis_stake.take_timelocks_to_split_by_ref().to_vec();
+            self.genesis_stake.take_timelocks_to_burn_by_ref().to_vec();
 
         // Finally build the genesis data
         self.built_genesis = Some(build_unsigned_genesis_data(
