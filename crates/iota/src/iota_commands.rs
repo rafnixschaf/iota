@@ -13,11 +13,14 @@ use anyhow::{anyhow, bail};
 use clap::*;
 use fastcrypto::traits::KeyPair;
 use iota_config::{
-    iota_config_dir, node::Genesis, p2p::SeedPeer, Config, PersistedConfig, FULL_NODE_DB_PATH,
-    IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME, IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG,
-    IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
+    iota_config_dir,
+    node::Genesis,
+    p2p::SeedPeer,
+    snapshot::{SnapshotSource, SnapshotUrl},
+    Config, PersistedConfig, FULL_NODE_DB_PATH, IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME,
+    IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME,
+    IOTA_NETWORK_CONFIG,
 };
-use iota_genesis_builder::{SnapshotSource, SnapshotUrl};
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
 use iota_move::{self, execute_move_command};
 use iota_move_build::IotaPackageHooks;

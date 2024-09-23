@@ -5,24 +5,25 @@
 use std::{
     collections::{BTreeMap, HashSet},
     fs::{self, File},
-    io::{prelude::Read, BufReader, BufWriter},
-    path::{Path, PathBuf},
-    str::FromStr,
+    io::{BufReader, BufWriter},
+    path::Path,
     sync::Arc,
 };
 
 use anyhow::{bail, Context};
 use camino::Utf8Path;
 use fastcrypto::{hash::HashFunction, traits::KeyPair};
-use flate2::bufread::GzDecoder;
-use iota_config::genesis::{
-    Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
-    UnsignedGenesis,
+use iota_config::{
+    genesis::{
+        Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
+        UnsignedGenesis,
+    },
+    snapshot::SnapshotSource,
 };
 use iota_execution::{self, Executor};
 use iota_framework::{BuiltInFramework, SystemPackage};
 use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_sdk::{types::block::address::Address, Url};
+use iota_sdk::types::block::address::Address;
 use iota_types::{
     balance::{Balance, BALANCE_MODULE_NAME},
     base_types::{
@@ -63,7 +64,6 @@ use iota_types::{
 };
 use move_binary_format::CompiledModule;
 use move_core_types::ident_str;
-use serde::{Deserialize, Serialize};
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
 use stake::{delegate_genesis_stake, GenesisStake};
 use stardust::migration::MigrationObjects;
@@ -86,8 +86,6 @@ const GENESIS_BUILDER_UNSIGNED_GENESIS_FILE: &str = "unsigned-genesis";
 const GENESIS_BUILDER_MIGRATION_SOURCES_FILE: &str = "migration-sources";
 
 pub const OBJECT_SNAPSHOT_FILE_PATH: &str = "stardust_object_snapshot.bin";
-pub const IOTA_OBJECT_SNAPSHOT_URL: &str = "https://stardust-objects.s3.eu-central-1.amazonaws.com/iota/alphanet/latest/stardust_object_snapshot.bin.gz";
-pub const SHIMMER_OBJECT_SNAPSHOT_URL: &str = "https://stardust-objects.s3.eu-central-1.amazonaws.com/shimmer/alphanet/latest/stardust_object_snapshot.bin.gz";
 
 pub struct Builder {
     parameters: GenesisCeremonyParameters,
@@ -346,6 +344,7 @@ impl Builder {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
+            std::mem::take(&mut self.migration_sources),
         ));
 
         self.token_distribution_schedule = Some(token_distribution_schedule);
@@ -388,6 +387,7 @@ impl Builder {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
+            migration_sources,
         } = self
             .built_genesis
             .take()
@@ -411,6 +411,7 @@ impl Builder {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
+            migration_sources,
         )
     }
 
@@ -945,6 +946,7 @@ fn build_unsigned_genesis_data<'info>(
     migrated_object_refs: Vec<ObjectRef>,
     migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     migrated_objects_ref_to_burn: Vec<ObjectRef>,
+    migration_sources: Vec<SnapshotSource>,
 ) -> UnsignedGenesis {
     if !parameters.allow_insertion_of_extra_objects && !objects.is_empty() {
         panic!(
@@ -1007,6 +1009,7 @@ fn build_unsigned_genesis_data<'info>(
         migrated_object_refs,
         migrated_objects_ref_to_split,
         migrated_objects_ref_to_burn,
+        migration_sources,
     }
 }
 
@@ -1477,82 +1480,6 @@ pub fn split_timelocks(
     store.finish(written);
 
     Ok(())
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub enum SnapshotSource {
-    /// Local uncompressed file.
-    Local(PathBuf),
-    /// Remote file (S3) with gzip compressed file
-    S3(SnapshotUrl),
-}
-
-impl SnapshotSource {
-    /// Convert to a reader.
-    pub fn to_reader(&self) -> anyhow::Result<Box<dyn Read>> {
-        Ok(match self {
-            SnapshotSource::Local(path) => Box::new(BufReader::new(File::open(path)?)),
-            SnapshotSource::S3(snapshot_url) => Box::new(snapshot_url.to_reader()?),
-        })
-    }
-}
-
-impl From<SnapshotUrl> for SnapshotSource {
-    fn from(value: SnapshotUrl) -> Self {
-        Self::S3(value)
-    }
-}
-
-/// The URLs to download Iota or Shimmer object snapshots.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum SnapshotUrl {
-    Iota,
-    Shimmer,
-    /// Custom migration snapshot for testing purposes.
-    Test(Url),
-}
-
-impl std::fmt::Display for SnapshotUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SnapshotUrl::Iota => "iota".fmt(f),
-            SnapshotUrl::Shimmer => "smr".fmt(f),
-            SnapshotUrl::Test(url) => url.as_str().fmt(f),
-        }
-    }
-}
-
-impl FromStr for SnapshotUrl {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Ok(url) = reqwest::Url::from_str(s) {
-            return Ok(Self::Test(url));
-        }
-        Ok(match s.to_lowercase().as_str() {
-            "iota" => Self::Iota,
-            "smr" | "shimmer" => Self::Shimmer,
-            e => bail!("unsupported snapshot url: {e}"),
-        })
-    }
-}
-
-impl SnapshotUrl {
-    /// Returns the Iota or Shimmer object snapshot download URL.
-    pub fn to_url(&self) -> Url {
-        match self {
-            Self::Iota => Url::parse(IOTA_OBJECT_SNAPSHOT_URL).expect("should be valid URL"),
-            Self::Shimmer => Url::parse(SHIMMER_OBJECT_SNAPSHOT_URL).expect("should be valid URL"),
-            Self::Test(url) => url.clone(),
-        }
-    }
-
-    /// Convert a gzip decoder to read the compressed object snapshot from S3.
-    pub fn to_reader(&self) -> anyhow::Result<impl Read> {
-        Ok(GzDecoder::new(BufReader::new(reqwest::blocking::get(
-            self.to_url(),
-        )?)))
-    }
 }
 
 #[cfg(test)]

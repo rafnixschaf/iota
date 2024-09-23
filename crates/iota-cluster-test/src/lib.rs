@@ -47,7 +47,7 @@ pub mod helper;
 pub mod test_case;
 pub mod wallet_client;
 
-pub use iota_genesis_builder::SnapshotUrl as MigrationSnapshotUrl;
+pub use iota_config::snapshot::SnapshotUrl as MigrationSnapshotUrl;
 
 #[allow(unused)]
 pub struct TestContext {

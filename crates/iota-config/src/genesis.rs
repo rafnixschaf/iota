@@ -38,6 +38,8 @@ use iota_types::{
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tracing::trace;
 
+use crate::snapshot::SnapshotSource;
+
 #[derive(Clone, Debug)]
 pub struct Genesis {
     checkpoint: CertifiedCheckpointSummary,
@@ -49,6 +51,7 @@ pub struct Genesis {
     migrated_object_refs: Vec<ObjectRef>,
     migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     migrated_objects_ref_to_burn: Vec<ObjectRef>,
+    migration_sources: Vec<SnapshotSource>,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -62,6 +65,7 @@ pub struct UnsignedGenesis {
     pub migrated_object_refs: Vec<ObjectRef>,
     pub migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     pub migrated_objects_ref_to_burn: Vec<ObjectRef>,
+    pub migration_sources: Vec<SnapshotSource>,
 }
 
 // Hand implement PartialEq in order to get around the fact that AuthSigs don't
@@ -81,6 +85,7 @@ impl PartialEq for Genesis {
             && self.transaction == other.transaction
             && self.effects == other.effects
             && self.objects == other.objects
+            && self.migration_sources == other.migration_sources
     }
 }
 
@@ -97,6 +102,7 @@ impl Genesis {
         migrated_object_refs: Vec<ObjectRef>,
         migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
         migrated_objects_ref_to_burn: Vec<ObjectRef>,
+        migration_sources: Vec<SnapshotSource>,
     ) -> Self {
         Self {
             checkpoint,
@@ -108,6 +114,7 @@ impl Genesis {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
+            migration_sources,
         }
     }
 
@@ -283,6 +290,7 @@ impl<'de> Deserialize<'de> for Genesis {
             migrated_object_refs: Vec<ObjectRef>,
             migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
             migrated_objects_ref_to_burn: Vec<ObjectRef>,
+            migration_sources: Vec<SnapshotSource>,
         }
 
         let raw_genesis = if deserializer.is_human_readable() {
@@ -303,6 +311,7 @@ impl<'de> Deserialize<'de> for Genesis {
             migrated_object_refs: raw_genesis.migrated_object_refs,
             migrated_objects_ref_to_split: raw_genesis.migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn: raw_genesis.migrated_objects_ref_to_burn,
+            migration_sources: raw_genesis.migration_sources,
         })
     }
 }

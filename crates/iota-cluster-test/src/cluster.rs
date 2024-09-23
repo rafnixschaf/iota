@@ -12,10 +12,10 @@ use std::{
 use async_trait::async_trait;
 use flate2::bufread::GzDecoder;
 use iota_config::{
-    genesis::Genesis, Config, PersistedConfig, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME,
-    IOTA_NETWORK_CONFIG,
+    genesis::Genesis, snapshot::{SnapshotSource, SnapshotUrl}, Config, PersistedConfig, IOTA_GENESIS_FILENAME,
+    IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
 };
-use iota_genesis_builder::{stardust::migration::MigrationObjects, SnapshotSource, SnapshotUrl};
+use iota_genesis_builder::stardust::migration::MigrationObjects;
 use iota_graphql_rpc::{
     config::ConnectionConfig, test_infra::cluster::start_graphql_server_with_fn_rpc,
 };

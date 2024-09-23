@@ -5,7 +5,7 @@
 use std::{fmt, path::PathBuf};
 
 use clap::*;
-use iota_genesis_builder::SnapshotUrl;
+use iota_config::snapshot::SnapshotUrl;
 use regex::Regex;
 
 #[derive(Parser, Clone, ValueEnum, Debug)]

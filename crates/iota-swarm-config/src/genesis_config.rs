@@ -10,12 +10,10 @@ use iota_config::{
     genesis::{GenesisCeremonyParameters, TokenAllocation},
     local_ip_utils,
     node::{DEFAULT_COMMISSION_RATE, DEFAULT_VALIDATOR_GAS_PRICE},
+    snapshot::SnapshotSource,
     Config,
 };
-use iota_genesis_builder::{
-    validator_info::{GenesisValidatorInfo, ValidatorInfo},
-    SnapshotSource,
-};
+use iota_genesis_builder::validator_info::{GenesisValidatorInfo, ValidatorInfo};
 use iota_types::{
     base_types::IotaAddress,
     crypto::{
