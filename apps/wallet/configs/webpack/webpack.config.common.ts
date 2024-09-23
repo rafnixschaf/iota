@@ -16,24 +16,8 @@ import type { Configuration } from 'webpack';
 
 import packageJson from '../../package.json';
 
-function generateDateVersion(patch: number) {
-    const sha = gitRevSync.short();
-    const date = new Date();
-    const version = [
-        String(date.getUTCFullYear()).slice(2),
-        String(date.getUTCMonth() + 1),
-        String(date.getUTCDate()),
-        patch,
-    ].join('.');
-
-    return {
-        version,
-        version_name: `${version} (${sha})`,
-    };
-}
-
-const WALLET_BETA = process.env.WALLET_BETA === 'true';
-const PATCH_VERSION = Number(process.env.PATCH_VERSION) || 0;
+const WALLET_RC = process.env.WALLET_RC === 'true';
+const RC_VERSION = WALLET_RC ? Number(process.env.RC_VERSION) || 0 : undefined;
 
 const SDK_ROOT = resolve(__dirname, '..', '..', '..', '..', 'sdk');
 const PROJECT_ROOT = resolve(__dirname, '..', '..');
@@ -44,11 +28,25 @@ const TS_CONFIGS_ROOT = resolve(CONFIGS_ROOT, 'ts');
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_PROD = process.env.NODE_ENV === 'production';
 const TS_CONFIG_FILE = resolve(TS_CONFIGS_ROOT, `tsconfig.${IS_DEV ? 'dev' : 'prod'}.json`);
-const APP_NAME = WALLET_BETA ? 'IOTA Wallet (BETA)' : IS_DEV ? 'IOTA Wallet (DEV)' : 'IOTA Wallet';
+const APP_NAME = WALLET_RC ? 'IOTA Wallet (RC)' : IS_DEV ? 'IOTA Wallet (DEV)' : 'IOTA Wallet';
 
 dotenv.config({
     path: [resolve(SDK_ROOT, '.env'), resolve(SDK_ROOT, '.env.defaults')],
 });
+
+// From package.json: x.y.z
+// App version (production): x.y.z
+// App version (rc): x.y.z.n
+function generateVersion(n: number | undefined) {
+    const sha = gitRevSync.short();
+    const packageVersion = packageJson.version;
+    const version = n !== undefined ? `${packageVersion}.${n}` : packageVersion;
+    const improved_version = n !== undefined ? `${packageVersion}-rc.${n}` : packageVersion;
+    return {
+        version,
+        version_name: `${improved_version} (${sha})`,
+    };
+}
 
 function loadTsConfig(tsConfigFilePath: string) {
     return new Promise<string>((res, rej) => {
@@ -99,7 +97,7 @@ async function generateAliasFromTs() {
 
 const commonConfig: () => Promise<Configuration> = async () => {
     const alias = await generateAliasFromTs();
-    const walletVersionDetails = generateDateVersion(PATCH_VERSION);
+    const walletVersionDetails = generateVersion(RC_VERSION);
     const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
     return {
         context: SRC_ROOT,
@@ -218,7 +216,7 @@ const commonConfig: () => Promise<Configuration> = async () => {
                 'process.env.WALLET_KEYRING_PASSWORD': JSON.stringify(
                     IS_DEV ? 'DEV_PASS' : Buffer.from(randomBytes(64)).toString('hex'),
                 ),
-                'process.env.WALLET_BETA': WALLET_BETA,
+                'process.env.WALLET_RC': WALLET_RC,
                 'process.env.APP_NAME': JSON.stringify(APP_NAME),
                 'process.env.DEFAULT_NETWORK': JSON.stringify(process.env.DEFAULT_NETWORK),
                 'process.env.IOTA_NETWORKS': JSON.stringify(process.env.IOTA_NETWORKS),
