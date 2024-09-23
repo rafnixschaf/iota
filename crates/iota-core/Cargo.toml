@@ -20,6 +20,7 @@ diffy = { version = "0.3", default-features = false }
 either.workspace = true
 enum_dispatch.workspace = true
 eyre.workspace = true
+flate2.workspace = true
 futures.workspace = true
 im.workspace = true
 indexmap.workspace = true
@@ -32,6 +33,7 @@ once_cell.workspace = true
 parking_lot.workspace = true
 prometheus.workspace = true
 rand.workspace = true
+reqwest.workspace = true
 roaring.workspace = true
 rocksdb.workspace = true
 scopeguard.workspace = true

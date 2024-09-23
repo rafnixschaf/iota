@@ -2,12 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{cmp::Ordering, iter, mem, ops::Not, sync::Arc, thread};
+use std::{
+    cmp::Ordering,
+    io::{BufReader, Read},
+    iter, mem,
+    ops::Not,
+    sync::Arc,
+    thread,
+};
 
 use either::Either;
 use fastcrypto::hash::{HashFunction, MultisetHash, Sha3_256};
+use flate2::bufread::GzDecoder;
 use futures::stream::FuturesUnordered;
 use iota_common::sync::notify_read::NotifyRead;
+use iota_config::snapshot::{SnapshotSource, SnapshotUrl};
+use iota_genesis_builder::stardust::migration::MigrationObjects;
 use iota_macros::fail_point_arg;
 use iota_storage::mutex_table::{MutexGuard, MutexTable, RwLockGuard, RwLockTable};
 use iota_types::{
@@ -142,6 +152,27 @@ pub type ExecutionLockReadGuard<'a> = RwLockReadGuard<'a, EpochId>;
 pub type ExecutionLockWriteGuard<'a> = RwLockWriteGuard<'a, EpochId>;
 
 impl AuthorityStore {
+    pub async fn load_migrated_objects(genesis: &Genesis) -> anyhow::Result<MigrationObjects> {
+        fn to_reader_source(snapshot_source: &SnapshotSource) -> anyhow::Result<Box<dyn Read>> {
+            Ok(match snapshot_source {
+                SnapshotSource::Local(path) => Box::new(BufReader::new(File::open(path)?)),
+                SnapshotSource::S3(snapshot_url) => Box::new(to_reader_url(snapshot_url)?),
+            })
+        }
+        fn to_reader_url(snapshot_url: &SnapshotUrl) -> anyhow::Result<impl Read> {
+            Ok(GzDecoder::new(BufReader::new(reqwest::blocking::get(
+                snapshot_url.to_url(),
+            )?)))
+        }
+
+        let migration_sources = genesis.migration_sources();
+        let mut objects: MigrationObjects = MigrationObjects::default();
+        for source in migration_sources {
+            objects.extend(bcs::from_reader::<Vec<_>>(to_reader_source(source)?)?);
+        }
+        Ok(objects)
+    }
+
     /// Open an authority store by directory path.
     /// If the store is empty, initialize it using genesis.
     pub async fn open(
@@ -259,14 +290,43 @@ impl AuthorityStore {
             enable_epoch_iota_conservation_check,
             metrics: AuthorityStoreMetrics::new(registry),
         });
+
         // Only initialize an empty database.
         if store
             .database_is_empty()
             .expect("Database read should not fail at init.")
         {
+            let mut migrated_objects = Self::load_migrated_objects(genesis)
+                .await
+                .expect("Cannot load migrated objects");
+            let objects = migrated_objects.take_objects();
+            println!("MIGRATED OBJ LENGTH - {}", objects.len());
+            let mut obj_hash_map: HashMap<ObjectID, Object> =
+                objects.into_iter().map(|obj| (obj.id(), obj)).collect();
+            let mut objects_batch = vec![];
+            for (obj_id, _, obj_ref_digest) in genesis.migrated_object_refs().iter().chain(
+                genesis.migrated_objects_ref_to_burn().iter().chain(
+                    genesis
+                        .migrated_objects_ref_to_split()
+                        .iter()
+                        .map(|(obj_ref, _, _)| obj_ref),
+                ),
+            ) {
+                if let Some(obj) = obj_hash_map.remove(&obj_id) {
+                    if &obj.digest() == obj_ref_digest {
+                        objects_batch.push(obj);
+                    }
+                }
+            }
+            println!("MIGRATED OBJ BATCH LENGTH - {}", objects_batch.len());
             store
                 .bulk_insert_genesis_objects(genesis.objects())
                 .expect("Cannot bulk insert genesis objects");
+
+            // TODO: fn name can be different
+            store
+                .bulk_insert_genesis_objects(&objects_batch)
+                .expect("Cannot bulk insert migrated objects");
 
             // insert txn and effects of genesis
             let transaction = VerifiedTransaction::new_unchecked(genesis.transaction().clone());

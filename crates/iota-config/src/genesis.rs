@@ -126,6 +126,22 @@ impl Genesis {
         &self.objects
     }
 
+    pub fn migration_sources(&self) -> &[SnapshotSource] {
+        &self.migration_sources
+    }
+
+    pub fn migrated_object_refs(&self) -> &Vec<ObjectRef> {
+        &self.migrated_object_refs
+    }
+
+    pub fn migrated_objects_ref_to_split(&self) -> &Vec<(ObjectRef, u64, IotaAddress)> {
+        &self.migrated_objects_ref_to_split
+    }
+    
+    pub fn migrated_objects_ref_to_burn(&self) -> &Vec<ObjectRef> {
+        &self.migrated_objects_ref_to_burn
+    }
+
     pub fn object(&self, id: ObjectID) -> Option<Object> {
         self.objects.iter().find(|o| o.id() == id).cloned()
     }
@@ -248,6 +264,7 @@ impl Serialize for Genesis {
             migrated_object_refs: &'a Vec<ObjectRef>,
             migrated_objects_ref_to_split: &'a Vec<(ObjectRef, u64, IotaAddress)>,
             migrated_objects_ref_to_burn: &'a Vec<ObjectRef>,
+            migration_sources: &'a Vec<SnapshotSource>,
         }
 
         let raw_genesis = RawGenesis {
@@ -260,6 +277,7 @@ impl Serialize for Genesis {
             migrated_object_refs: &self.migrated_object_refs,
             migrated_objects_ref_to_split: &self.migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn: &self.migrated_objects_ref_to_burn,
+            migration_sources: &self.migration_sources,
         };
 
         if serializer.is_human_readable() {
