@@ -137,7 +137,7 @@ impl Genesis {
     pub fn migrated_objects_ref_to_split(&self) -> &Vec<(ObjectRef, u64, IotaAddress)> {
         &self.migrated_objects_ref_to_split
     }
-    
+
     pub fn migrated_objects_ref_to_burn(&self) -> &Vec<ObjectRef> {
         &self.migrated_objects_ref_to_burn
     }

@@ -2,21 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    cmp::Ordering,
-    io::{BufReader, Read},
-    iter, mem,
-    ops::Not,
-    sync::Arc,
-    thread,
-};
+use std::{cmp::Ordering, iter, mem, ops::Not, sync::Arc, thread};
 
+use async_compression::futures::bufread::GzipDecoder;
+use async_fs::File;
 use either::Either;
 use fastcrypto::hash::{HashFunction, MultisetHash, Sha3_256};
-use flate2::bufread::GzDecoder;
-use futures::stream::FuturesUnordered;
+use futures::{
+    io::{self, BufReader, ErrorKind},
+    prelude::*,
+};
 use iota_common::sync::notify_read::NotifyRead;
-use iota_config::snapshot::{SnapshotSource, SnapshotUrl};
+use iota_config::snapshot::SnapshotSource;
 use iota_genesis_builder::stardust::migration::MigrationObjects;
 use iota_macros::fail_point_arg;
 use iota_storage::mutex_table::{MutexGuard, MutexTable, RwLockGuard, RwLockTable};
@@ -37,6 +34,7 @@ use iota_types::{
 use itertools::izip;
 use move_core_types::resolver::ModuleResolver;
 use serde::{Deserialize, Serialize};
+use stream::FuturesUnordered;
 use tokio::{
     sync::{RwLockReadGuard, RwLockWriteGuard},
     time::Instant,
@@ -153,23 +151,38 @@ pub type ExecutionLockWriteGuard<'a> = RwLockWriteGuard<'a, EpochId>;
 
 impl AuthorityStore {
     pub async fn load_migrated_objects(genesis: &Genesis) -> anyhow::Result<MigrationObjects> {
-        fn to_reader_source(snapshot_source: &SnapshotSource) -> anyhow::Result<Box<dyn Read>> {
-            Ok(match snapshot_source {
-                SnapshotSource::Local(path) => Box::new(BufReader::new(File::open(path)?)),
-                SnapshotSource::S3(snapshot_url) => Box::new(to_reader_url(snapshot_url)?),
-            })
-        }
-        fn to_reader_url(snapshot_url: &SnapshotUrl) -> anyhow::Result<impl Read> {
-            Ok(GzDecoder::new(BufReader::new(reqwest::blocking::get(
-                snapshot_url.to_url(),
-            )?)))
+        async fn to_reader(
+            snapshot_source: &SnapshotSource,
+        ) -> anyhow::Result<Box<dyn AsyncRead + Unpin>> {
+            match snapshot_source {
+                SnapshotSource::Local(path) => {
+                    let file = File::open(path).await?;
+                    Ok(Box::new(BufReader::new(file)) as Box<dyn AsyncRead + Unpin>)
+                }
+                SnapshotSource::S3(snapshot_url) => {
+                    let resp = reqwest::get(snapshot_url.to_url()).await?;
+                    let stream = resp
+                        .bytes_stream()
+                        .map_err(|e| io::Error::new(ErrorKind::Other, e))
+                        .into_async_read();
+                    Ok(Box::new(GzipDecoder::new(BufReader::new(stream)))
+                        as Box<dyn AsyncRead + Unpin>)
+                }
+            }
         }
 
         let migration_sources = genesis.migration_sources();
         let mut objects: MigrationObjects = MigrationObjects::default();
+
         for source in migration_sources {
-            objects.extend(bcs::from_reader::<Vec<_>>(to_reader_source(source)?)?);
+            let mut reader = to_reader(source).await?;
+
+            let mut buffer = Vec::new();
+            reader.read_to_end(&mut buffer).await?;
+
+            objects.extend(bcs::from_bytes::<Vec<_>>(&buffer)?);
         }
+
         Ok(objects)
     }
 
