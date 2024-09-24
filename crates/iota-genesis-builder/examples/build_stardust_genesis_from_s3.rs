@@ -3,7 +3,8 @@
 
 //! Creating a genesis blob out of a remote stardust objects snapshots.
 
-use iota_genesis_builder::{Builder, SnapshotUrl};
+use iota_config::snapshot::SnapshotUrl;
+use iota_genesis_builder::Builder;
 use iota_swarm_config::genesis_config::ValidatorGenesisConfigBuilder;
 use rand::rngs::OsRng;
 use tracing::{info, Level};

@@ -38,8 +38,6 @@ use iota_types::{
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tracing::trace;
 
-use crate::snapshot::SnapshotSource;
-
 #[derive(Clone, Debug)]
 pub struct Genesis {
     checkpoint: CertifiedCheckpointSummary,
@@ -48,10 +46,11 @@ pub struct Genesis {
     effects: TransactionEffects,
     events: TransactionEvents,
     objects: Vec<Object>,
+    // TODO: remove - migrated_object_refs, migrated_objects_ref_to_split, migrated_objects_ref_to_burn
     migrated_object_refs: Vec<ObjectRef>,
     migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     migrated_objects_ref_to_burn: Vec<ObjectRef>,
-    migration_sources: Vec<SnapshotSource>,
+    migration_transactions: Vec<TransactionEffects>,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -62,10 +61,11 @@ pub struct UnsignedGenesis {
     pub effects: TransactionEffects,
     pub events: TransactionEvents,
     pub objects: Vec<Object>,
+    // TODO: remove - migrated_object_refs, migrated_objects_ref_to_split, migrated_objects_ref_to_burn
     pub migrated_object_refs: Vec<ObjectRef>,
     pub migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     pub migrated_objects_ref_to_burn: Vec<ObjectRef>,
-    pub migration_sources: Vec<SnapshotSource>,
+    pub migration_transactions: Vec<TransactionEffects>,
 }
 
 // Hand implement PartialEq in order to get around the fact that AuthSigs don't
@@ -85,7 +85,7 @@ impl PartialEq for Genesis {
             && self.transaction == other.transaction
             && self.effects == other.effects
             && self.objects == other.objects
-            && self.migration_sources == other.migration_sources
+            && self.migration_transactions == other.migration_transactions
     }
 }
 
@@ -102,7 +102,7 @@ impl Genesis {
         migrated_object_refs: Vec<ObjectRef>,
         migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
         migrated_objects_ref_to_burn: Vec<ObjectRef>,
-        migration_sources: Vec<SnapshotSource>,
+        migration_transactions: Vec<TransactionEffects>,
     ) -> Self {
         Self {
             checkpoint,
@@ -114,7 +114,7 @@ impl Genesis {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
-            migration_sources,
+            migration_transactions,
         }
     }
 
@@ -126,8 +126,8 @@ impl Genesis {
         &self.objects
     }
 
-    pub fn migration_sources(&self) -> &[SnapshotSource] {
-        &self.migration_sources
+    pub fn migration_transactions(&self) -> &[TransactionEffects] {
+        &self.migration_transactions
     }
 
     pub fn migrated_object_refs(&self) -> &Vec<ObjectRef> {
@@ -264,7 +264,7 @@ impl Serialize for Genesis {
             migrated_object_refs: &'a Vec<ObjectRef>,
             migrated_objects_ref_to_split: &'a Vec<(ObjectRef, u64, IotaAddress)>,
             migrated_objects_ref_to_burn: &'a Vec<ObjectRef>,
-            migration_sources: &'a Vec<SnapshotSource>,
+            migration_transactions: &'a Vec<TransactionEffects>,
         }
 
         let raw_genesis = RawGenesis {
@@ -277,7 +277,7 @@ impl Serialize for Genesis {
             migrated_object_refs: &self.migrated_object_refs,
             migrated_objects_ref_to_split: &self.migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn: &self.migrated_objects_ref_to_burn,
-            migration_sources: &self.migration_sources,
+            migration_transactions: &self.migration_transactions,
         };
 
         if serializer.is_human_readable() {
@@ -308,7 +308,7 @@ impl<'de> Deserialize<'de> for Genesis {
             migrated_object_refs: Vec<ObjectRef>,
             migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
             migrated_objects_ref_to_burn: Vec<ObjectRef>,
-            migration_sources: Vec<SnapshotSource>,
+            migration_transactions: Vec<TransactionEffects>,
         }
 
         let raw_genesis = if deserializer.is_human_readable() {
@@ -329,7 +329,7 @@ impl<'de> Deserialize<'de> for Genesis {
             migrated_object_refs: raw_genesis.migrated_object_refs,
             migrated_objects_ref_to_split: raw_genesis.migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn: raw_genesis.migrated_objects_ref_to_burn,
-            migration_sources: raw_genesis.migration_sources,
+            migration_transactions: raw_genesis.migration_transactions,
         })
     }
 }

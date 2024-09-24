@@ -13,8 +13,10 @@ use async_trait::async_trait;
 use flate2::bufread::GzDecoder;
 use iota_config::{
     genesis::Genesis,
+    migration_transaction_data::MigrationTransactions,
     snapshot::{SnapshotSource, SnapshotUrl},
-    Config, PersistedConfig, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
+    Config, PersistedConfig, IOTA_GENESIS_FILENAME, IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
+    IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
 };
 use iota_genesis_builder::stardust::migration::MigrationObjects;
 use iota_graphql_rpc::{
@@ -214,10 +216,13 @@ impl Cluster for LocalNewCluster {
             // Add genesis objects
             let genesis_path = config_dir.join(IOTA_GENESIS_FILENAME);
             let genesis = Genesis::load(genesis_path)?;
+            let migration_tx_data_path = config_dir.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
+            let migration_tx_data = MigrationTransactions::load(migration_tx_data_path)?;
             let network_config = NetworkConfig {
                 validator_configs,
                 account_keys,
                 genesis,
+                migration_tx_data,
             };
             cluster_builder = cluster_builder.set_network_config(network_config);
 

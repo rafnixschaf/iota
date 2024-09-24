@@ -18,6 +18,7 @@ use iota_config::{
         Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
         UnsignedGenesis,
     },
+    migration_transaction_data::MigrationTransactions,
     snapshot::SnapshotSource,
 };
 use iota_execution::{self, Executor};
@@ -58,12 +59,14 @@ use iota_types::{
     },
     transaction::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,
-        Transaction,
+        Transaction, TransactionKey,
     },
     IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_ADDRESS,
 };
+use itertools::Itertools;
 use move_binary_format::CompiledModule;
 use move_core_types::ident_str;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
 use stake::{delegate_genesis_stake, GenesisStake};
 use stardust::migration::MigrationObjects;
@@ -84,6 +87,7 @@ const GENESIS_BUILDER_TOKEN_DISTRIBUTION_SCHEDULE_FILE: &str = "token-distributi
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 const GENESIS_BUILDER_UNSIGNED_GENESIS_FILE: &str = "unsigned-genesis";
 const GENESIS_BUILDER_MIGRATION_SOURCES_FILE: &str = "migration-sources";
+const GENESIS_BUILDER_MIGRATION_TX_DATA_FILE: &str = "migration-tx-data";
 
 pub const OBJECT_SNAPSHOT_FILE_PATH: &str = "stardust_object_snapshot.bin";
 
@@ -98,6 +102,7 @@ pub struct Builder {
     migration_objects: MigrationObjects,
     genesis_stake: GenesisStake,
     migration_sources: Vec<SnapshotSource>,
+    migration_objects_by_transaction: MigrationTransactions,
 }
 
 impl Default for Builder {
@@ -118,6 +123,7 @@ impl Builder {
             migration_objects: Default::default(),
             genesis_stake: Default::default(),
             migration_sources: Default::default(),
+            migration_objects_by_transaction: Default::default(),
         }
     }
 
@@ -334,19 +340,20 @@ impl Builder {
         let migrated_objects_ref_to_burn: Vec<ObjectRef> =
             self.genesis_stake.take_timelocks_to_burn_by_ref().to_vec();
 
-        // Finally build the genesis data
-        self.built_genesis = Some(build_unsigned_genesis_data(
+        let (unsigned_genesis, migration_tx_data) = build_unsigned_genesis_data(
             &self.parameters,
             &token_distribution_schedule,
             self.validators.values(),
             timelock_objects,
+            self.migration_objects.take_objects(),
             &mut self.genesis_stake,
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
-            std::mem::take(&mut self.migration_sources),
-        ));
-
+        );
+        // Finally build the genesis data
+        self.built_genesis = Some(unsigned_genesis);
+        self.migration_objects_by_transaction = MigrationTransactions::new(migration_tx_data);
         self.token_distribution_schedule = Some(token_distribution_schedule);
     }
 
@@ -369,7 +376,7 @@ impl Builder {
         self.parameters.protocol_version
     }
 
-    pub fn build(mut self) -> Genesis {
+    pub fn build(mut self) -> (Genesis, MigrationTransactions) {
         if self.built_genesis.is_none() {
             self.build_and_cache_unsigned_genesis();
         }
@@ -387,7 +394,7 @@ impl Builder {
             migrated_object_refs,
             migrated_objects_ref_to_split,
             migrated_objects_ref_to_burn,
-            migration_sources,
+            migration_transactions,
         } = self
             .built_genesis
             .take()
@@ -401,17 +408,20 @@ impl Builder {
             CertifiedCheckpointSummary::new(checkpoint, signatures, &committee).unwrap()
         };
 
-        Genesis::new(
-            checkpoint,
-            checkpoint_contents,
-            transaction,
-            effects,
-            events,
-            objects,
-            migrated_object_refs,
-            migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn,
-            migration_sources,
+        (
+            Genesis::new(
+                checkpoint,
+                checkpoint_contents,
+                transaction,
+                effects,
+                events,
+                objects,
+                migrated_object_refs,
+                migrated_objects_ref_to_split,
+                migrated_objects_ref_to_burn,
+                migration_transactions,
+            ),
+            self.migration_objects_by_transaction,
         )
     }
 
@@ -803,6 +813,14 @@ impl Builder {
             signatures.insert(sigs.authority, sigs);
         }
 
+        // Load migration tx data
+        let migration_tx_data_file = path.join(GENESIS_BUILDER_MIGRATION_TX_DATA_FILE);
+        let migration_tx_data =
+            serde_json::from_slice(&fs::read(&migration_tx_data_file).context(format!(
+                "unable to read genesis migration transaction data file {migration_tx_data_file}"
+            ))?)
+            .context("unable to deserialize genesis migration transaction data")?;
+
         let mut builder = Self {
             parameters,
             token_distribution_schedule,
@@ -813,6 +831,7 @@ impl Builder {
             migration_objects: Default::default(),
             genesis_stake: Default::default(),
             migration_sources,
+            migration_objects_by_transaction: migration_tx_data,
         };
 
         let unsigned_genesis_file = path.join(GENESIS_BUILDER_UNSIGNED_GENESIS_FILE);
@@ -894,6 +913,13 @@ impl Builder {
             fs::write(file, serde_json::to_string(&self.migration_sources)?)?;
         }
 
+        // Write migration transations data
+        let file = path.join(GENESIS_BUILDER_MIGRATION_TX_DATA_FILE);
+        fs::write(
+            file,
+            serde_json::to_string(&self.migration_objects_by_transaction)?,
+        )?;
+
         Ok(())
     }
 }
@@ -942,12 +968,15 @@ fn build_unsigned_genesis_data<'info>(
     token_distribution_schedule: &TokenDistributionSchedule,
     validators: impl Iterator<Item = &'info GenesisValidatorInfo>,
     objects: Vec<Object>,
+    migrated_objects: Vec<Object>,
     genesis_stake: &mut GenesisStake,
     migrated_object_refs: Vec<ObjectRef>,
     migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
     migrated_objects_ref_to_burn: Vec<ObjectRef>,
-    migration_sources: Vec<SnapshotSource>,
-) -> UnsignedGenesis {
+) -> (
+    UnsignedGenesis,
+    BTreeMap<TransactionKey, (Transaction, TransactionEvents, Vec<Object>)>,
+) {
     if !parameters.allow_insertion_of_extra_objects && !objects.is_empty() {
         panic!(
             "insertion of extra objects at genesis time is prohibited due to 'allow_insertion_of_extra_objects' parameter"
@@ -995,22 +1024,61 @@ fn build_unsigned_genesis_data<'info>(
     let protocol_config = get_genesis_protocol_config(parameters.protocol_version);
 
     let (genesis_transaction, genesis_effects, genesis_events, objects) =
-        create_genesis_transaction(objects, events, &protocol_config, metrics, &epoch_data);
+        create_genesis_transaction(
+            objects,
+            events,
+            &protocol_config,
+            metrics.clone(),
+            &epoch_data,
+        );
+
+    let mut migration_transactions = vec![];
+    let chunk_size = 10000;
+    let mut migration_tx_data: BTreeMap<
+        TransactionKey,
+        (Transaction, TransactionEvents, Vec<Object>),
+    > = BTreeMap::new();
+    for obj_chunk in &migrated_objects.into_iter().chunks(chunk_size) {
+        let mut store = InMemoryStorage::new(Vec::new());
+        for obj in obj_chunk {
+            store.insert_object(obj);
+        }
+
+        let intermediate_store: Vec<Object> = store.into_inner().into_values().collect();
+
+        let (migration_transaction, migration_effects, migration_events, objects) =
+            create_genesis_transaction(
+                intermediate_store,
+                vec![],
+                &protocol_config,
+                metrics.clone(),
+                &epoch_data,
+            );
+        migration_transactions.push(migration_effects);
+        migration_tx_data.insert(
+            migration_transaction.key(),
+            (migration_transaction, migration_events, objects),
+        );
+    }
+
     let (checkpoint, checkpoint_contents) =
         create_genesis_checkpoint(parameters, &genesis_transaction, &genesis_effects);
 
-    UnsignedGenesis {
-        checkpoint,
-        checkpoint_contents,
-        transaction: genesis_transaction,
-        effects: genesis_effects,
-        events: genesis_events,
-        objects,
-        migrated_object_refs,
-        migrated_objects_ref_to_split,
-        migrated_objects_ref_to_burn,
-        migration_sources,
-    }
+    (
+        UnsignedGenesis {
+            checkpoint,
+            checkpoint_contents,
+            transaction: genesis_transaction,
+            effects: genesis_effects,
+            events: genesis_events,
+            objects,
+            migrated_object_refs,
+            migrated_objects_ref_to_split,
+            migrated_objects_ref_to_burn,
+            migration_transactions,
+        },
+        migration_tx_data,
+    )
 }
 
 fn create_genesis_checkpoint(

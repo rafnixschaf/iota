@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use iota_genesis_builder::{Builder as GenesisBuilder, SnapshotSource, SnapshotUrl};
+use iota_config::snapshot::{SnapshotSource, SnapshotUrl};
+use iota_genesis_builder::Builder as GenesisBuilder;
 use iota_indexer::{
     db::{self, reset_database},
     errors::IndexerError,

@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{cmp::Ordering, iter, mem, ops::Not, sync::Arc, thread};
+use std::{cmp::Ordering, iter, mem, ops::Not, str::FromStr, sync::Arc, thread};
 
 use async_compression::futures::bufread::GzipDecoder;
 use async_fs::File;
@@ -13,7 +13,10 @@ use futures::{
     prelude::*,
 };
 use iota_common::sync::notify_read::NotifyRead;
-use iota_config::snapshot::SnapshotSource;
+use iota_config::{
+    migration_transaction_data::MigrationTransactions, snapshot::SnapshotSource,
+    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
+};
 use iota_genesis_builder::stardust::migration::MigrationObjects;
 use iota_macros::fail_point_arg;
 use iota_storage::mutex_table::{MutexGuard, MutexTable, RwLockGuard, RwLockTable};
@@ -150,40 +153,17 @@ pub type ExecutionLockReadGuard<'a> = RwLockReadGuard<'a, EpochId>;
 pub type ExecutionLockWriteGuard<'a> = RwLockWriteGuard<'a, EpochId>;
 
 impl AuthorityStore {
-    pub async fn load_migrated_objects(genesis: &Genesis) -> anyhow::Result<MigrationObjects> {
-        async fn to_reader(
-            snapshot_source: &SnapshotSource,
-        ) -> anyhow::Result<Box<dyn AsyncRead + Unpin>> {
-            match snapshot_source {
-                SnapshotSource::Local(path) => {
-                    let file = File::open(path).await?;
-                    Ok(Box::new(BufReader::new(file)) as Box<dyn AsyncRead + Unpin>)
-                }
-                SnapshotSource::S3(snapshot_url) => {
-                    let resp = reqwest::get(snapshot_url.to_url()).await?;
-                    let stream = resp
-                        .bytes_stream()
-                        .map_err(|e| io::Error::new(ErrorKind::Other, e))
-                        .into_async_read();
-                    Ok(Box::new(GzipDecoder::new(BufReader::new(stream)))
-                        as Box<dyn AsyncRead + Unpin>)
-                }
-            }
-        }
+    pub fn load_migration_tx_data(
+        migration_tx_data_path: PathBuf,
+    ) -> anyhow::Result<MigrationTransactions> {
+        let migration_tx_data_path =
+            migration_tx_data_path.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
+        let migration_tx_data =
+            iota_config::migration_transaction_data::MigrationTransactions::load(
+                migration_tx_data_path,
+            )?;
 
-        let migration_sources = genesis.migration_sources();
-        let mut objects: MigrationObjects = MigrationObjects::default();
-
-        for source in migration_sources {
-            let mut reader = to_reader(source).await?;
-
-            let mut buffer = Vec::new();
-            reader.read_to_end(&mut buffer).await?;
-
-            objects.extend(bcs::from_bytes::<Vec<_>>(&buffer)?);
-        }
-
-        Ok(objects)
+        Ok(migration_tx_data)
     }
 
     /// Open an authority store by directory path.
@@ -309,39 +289,62 @@ impl AuthorityStore {
             .database_is_empty()
             .expect("Database read should not fail at init.")
         {
-            let mut migrated_objects = Self::load_migrated_objects(genesis)
-                .await
-                .expect("Cannot load migrated objects");
-            let objects = migrated_objects.take_objects();
-            println!("MIGRATED OBJ LENGTH - {}", objects.len());
-            let mut obj_hash_map: HashMap<ObjectID, Object> =
-                objects.into_iter().map(|obj| (obj.id(), obj)).collect();
-            let mut objects_batch = vec![];
-            for (obj_id, _, obj_ref_digest) in genesis.migrated_object_refs().iter().chain(
-                genesis.migrated_objects_ref_to_burn().iter().chain(
-                    genesis
-                        .migrated_objects_ref_to_split()
+            let migration_tx_effects = genesis.migration_transactions();
+            // TODO: pass relative path
+            let migration_tx_data = Self::load_migration_tx_data(
+                PathBuf::from_str("/Users/pk/repos/kinesis/test_iota_config").unwrap(),
+            )
+            .unwrap();
+
+            let data = migration_tx_data.data();
+            let genesis_migrated_transactions: HashMap<TransactionDigest, TransactionEffects> =
+                migration_tx_effects
+                    .into_iter()
+                    .map(|tx| (tx.transaction_digest().clone(), tx.clone()))
+                    .collect();
+
+            // TODO: remove
+            println!("MIGRATION TX DATA LENGTH - {}", data.len());
+            println!(
+                "genesis_migrated_transactions LENGTH - {}",
+                genesis_migrated_transactions.len()
+            );
+
+            // TODO: possibly optimize
+            for (tx_key, (tx, events, objects)) in data {
+                if let Some(tx_effects) = genesis_migrated_transactions.get(tx_key.unwrap_digest())
+                {
+                    let transaction = VerifiedTransaction::new_unchecked(tx.clone());
+
+                    store
+                        .bulk_insert_genesis_objects(&objects)
+                        .expect("Cannot bulk insert migrated objects");
+
+                    store
+                        .perpetual_tables
+                        .transactions
+                        .insert(transaction.digest(), transaction.serializable_ref())
+                        .unwrap();
+
+                    store
+                        .perpetual_tables
+                        .effects
+                        .insert(&tx_effects.digest(), tx_effects)
+                        .unwrap();
+
+                    let events = events
+                        .data
                         .iter()
-                        .map(|(obj_ref, _, _)| obj_ref),
-                ),
-            ) {
-                if let Some(obj) = obj_hash_map.remove(&obj_id) {
-                    if &obj.digest() == obj_ref_digest {
-                        objects_batch.push(obj);
-                    }
+                        .enumerate()
+                        .map(|(i, e)| ((events.digest(), i), e));
+                    store.perpetual_tables.events.multi_insert(events).unwrap();
                 }
             }
-            println!("MIGRATED OBJ BATCH LENGTH - {}", objects_batch.len());
+
             store
                 .bulk_insert_genesis_objects(genesis.objects())
                 .expect("Cannot bulk insert genesis objects");
 
-            // TODO: fn name can be different
-            store
-                .bulk_insert_genesis_objects(&objects_batch)
-                .expect("Cannot bulk insert migrated objects");
-
-            // insert txn and effects of genesis
             let transaction = VerifiedTransaction::new_unchecked(genesis.transaction().clone());
 
             store

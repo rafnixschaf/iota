@@ -6,8 +6,8 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use iota_config::genesis::TokenDistributionScheduleBuilder;
-use iota_genesis_builder::{Builder, SnapshotSource, OBJECT_SNAPSHOT_FILE_PATH};
+use iota_config::{genesis::TokenDistributionScheduleBuilder, snapshot::SnapshotSource};
+use iota_genesis_builder::{Builder, OBJECT_SNAPSHOT_FILE_PATH};
 use iota_swarm_config::genesis_config::ValidatorGenesisConfigBuilder;
 use rand::rngs::OsRng;
 
@@ -56,6 +56,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     // Save to file
-    builder.build().save("genesis.blob")?;
+    builder.build().0.save("genesis.blob")?;
     Ok(())
 }
