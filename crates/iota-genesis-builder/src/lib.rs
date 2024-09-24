@@ -328,18 +328,6 @@ impl Builder {
         );
         timelock_objects.extend(self.objects.values().cloned());
 
-        let migrated_object_refs: Vec<ObjectRef> = self
-            .migration_objects
-            .objects()
-            .iter()
-            .map(|obj| obj.compute_object_reference())
-            .collect();
-
-        let migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)> =
-            self.genesis_stake.take_timelocks_to_split_by_ref().to_vec();
-        let migrated_objects_ref_to_burn: Vec<ObjectRef> =
-            self.genesis_stake.take_timelocks_to_burn_by_ref().to_vec();
-
         let (unsigned_genesis, migration_tx_data) = build_unsigned_genesis_data(
             &self.parameters,
             &token_distribution_schedule,
@@ -347,9 +335,6 @@ impl Builder {
             timelock_objects,
             self.migration_objects.take_objects(),
             &mut self.genesis_stake,
-            migrated_object_refs,
-            migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn,
         );
         // Finally build the genesis data
         self.built_genesis = Some(unsigned_genesis);
@@ -391,9 +376,6 @@ impl Builder {
             effects,
             events,
             objects,
-            migrated_object_refs,
-            migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn,
             migration_transactions,
         } = self
             .built_genesis
@@ -416,9 +398,6 @@ impl Builder {
                 effects,
                 events,
                 objects,
-                migrated_object_refs,
-                migrated_objects_ref_to_split,
-                migrated_objects_ref_to_burn,
                 migration_transactions,
             ),
             self.migration_objects_by_transaction,
@@ -970,9 +949,6 @@ fn build_unsigned_genesis_data<'info>(
     objects: Vec<Object>,
     migrated_objects: Vec<Object>,
     genesis_stake: &mut GenesisStake,
-    migrated_object_refs: Vec<ObjectRef>,
-    migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
-    migrated_objects_ref_to_burn: Vec<ObjectRef>,
 ) -> (
     UnsignedGenesis,
     BTreeMap<TransactionKey, (Transaction, TransactionEvents, Vec<Object>)>,
@@ -1072,9 +1048,6 @@ fn build_unsigned_genesis_data<'info>(
             effects: genesis_effects,
             events: genesis_events,
             objects,
-            migrated_object_refs,
-            migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn,
             migration_transactions,
         },
         migration_tx_data,

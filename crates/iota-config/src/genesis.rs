@@ -46,10 +46,6 @@ pub struct Genesis {
     effects: TransactionEffects,
     events: TransactionEvents,
     objects: Vec<Object>,
-    // TODO: remove - migrated_object_refs, migrated_objects_ref_to_split, migrated_objects_ref_to_burn
-    migrated_object_refs: Vec<ObjectRef>,
-    migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
-    migrated_objects_ref_to_burn: Vec<ObjectRef>,
     migration_transactions: Vec<TransactionEffects>,
 }
 
@@ -61,10 +57,6 @@ pub struct UnsignedGenesis {
     pub effects: TransactionEffects,
     pub events: TransactionEvents,
     pub objects: Vec<Object>,
-    // TODO: remove - migrated_object_refs, migrated_objects_ref_to_split, migrated_objects_ref_to_burn
-    pub migrated_object_refs: Vec<ObjectRef>,
-    pub migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
-    pub migrated_objects_ref_to_burn: Vec<ObjectRef>,
     pub migration_transactions: Vec<TransactionEffects>,
 }
 
@@ -99,9 +91,6 @@ impl Genesis {
         effects: TransactionEffects,
         events: TransactionEvents,
         objects: Vec<Object>,
-        migrated_object_refs: Vec<ObjectRef>,
-        migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
-        migrated_objects_ref_to_burn: Vec<ObjectRef>,
         migration_transactions: Vec<TransactionEffects>,
     ) -> Self {
         Self {
@@ -111,9 +100,6 @@ impl Genesis {
             effects,
             events,
             objects,
-            migrated_object_refs,
-            migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn,
             migration_transactions,
         }
     }
@@ -128,18 +114,6 @@ impl Genesis {
 
     pub fn migration_transactions(&self) -> &[TransactionEffects] {
         &self.migration_transactions
-    }
-
-    pub fn migrated_object_refs(&self) -> &Vec<ObjectRef> {
-        &self.migrated_object_refs
-    }
-
-    pub fn migrated_objects_ref_to_split(&self) -> &Vec<(ObjectRef, u64, IotaAddress)> {
-        &self.migrated_objects_ref_to_split
-    }
-
-    pub fn migrated_objects_ref_to_burn(&self) -> &Vec<ObjectRef> {
-        &self.migrated_objects_ref_to_burn
     }
 
     pub fn object(&self, id: ObjectID) -> Option<Object> {
@@ -261,9 +235,6 @@ impl Serialize for Genesis {
             effects: &'a TransactionEffects,
             events: &'a TransactionEvents,
             objects: &'a [Object],
-            migrated_object_refs: &'a Vec<ObjectRef>,
-            migrated_objects_ref_to_split: &'a Vec<(ObjectRef, u64, IotaAddress)>,
-            migrated_objects_ref_to_burn: &'a Vec<ObjectRef>,
             migration_transactions: &'a Vec<TransactionEffects>,
         }
 
@@ -274,9 +245,6 @@ impl Serialize for Genesis {
             effects: &self.effects,
             events: &self.events,
             objects: &self.objects,
-            migrated_object_refs: &self.migrated_object_refs,
-            migrated_objects_ref_to_split: &self.migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn: &self.migrated_objects_ref_to_burn,
             migration_transactions: &self.migration_transactions,
         };
 
@@ -305,9 +273,6 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: TransactionEffects,
             events: TransactionEvents,
             objects: Vec<Object>,
-            migrated_object_refs: Vec<ObjectRef>,
-            migrated_objects_ref_to_split: Vec<(ObjectRef, u64, IotaAddress)>,
-            migrated_objects_ref_to_burn: Vec<ObjectRef>,
             migration_transactions: Vec<TransactionEffects>,
         }
 
@@ -326,9 +291,6 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: raw_genesis.effects,
             events: raw_genesis.events,
             objects: raw_genesis.objects,
-            migrated_object_refs: raw_genesis.migrated_object_refs,
-            migrated_objects_ref_to_split: raw_genesis.migrated_objects_ref_to_split,
-            migrated_objects_ref_to_burn: raw_genesis.migrated_objects_ref_to_burn,
             migration_transactions: raw_genesis.migration_transactions,
         })
     }
