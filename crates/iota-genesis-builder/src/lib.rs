@@ -1009,7 +1009,7 @@ fn build_unsigned_genesis_data<'info>(
         );
 
     let mut migration_transactions = vec![];
-    let chunk_size = 10000;
+    let chunk_size = 1000;
     let mut migration_tx_data: BTreeMap<
         TransactionKey,
         (Transaction, TransactionEvents, Vec<Object>),
@@ -1038,7 +1038,7 @@ fn build_unsigned_genesis_data<'info>(
     }
 
     let (checkpoint, checkpoint_contents) =
-        create_genesis_checkpoint(parameters, &genesis_transaction, &genesis_effects);
+        create_genesis_checkpoint(parameters, &genesis_transaction, &genesis_effects, &migration_transactions);
 
     (
         UnsignedGenesis {
@@ -1058,13 +1058,19 @@ fn create_genesis_checkpoint(
     parameters: &GenesisCeremonyParameters,
     transaction: &Transaction,
     effects: &TransactionEffects,
+    migration_effects: &[TransactionEffects],
 ) -> (CheckpointSummary, CheckpointContents) {
+   
     let execution_digests = ExecutionDigests {
         transaction: *transaction.digest(),
         effects: effects.digest(),
     };
+    let mut effects_digest = vec![execution_digests];
+    let migration_effects_exec_digests: Vec<ExecutionDigests> = migration_effects.into_iter().map(|effect| effect.execution_digests()).collect();
+    effects_digest.extend(migration_effects_exec_digests);
+    let effects_digest_len = effects_digest.len();
     let contents =
-        CheckpointContents::new_with_digests_and_signatures([execution_digests], vec![vec![]]);
+        CheckpointContents::new_with_digests_and_signatures(effects_digest, vec![Vec::new(); effects_digest_len]);
     let checkpoint = CheckpointSummary {
         epoch: 0,
         sequence_number: 0,
