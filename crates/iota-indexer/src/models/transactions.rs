@@ -260,6 +260,7 @@ impl StoredTransaction {
             let tx_block = IotaTransactionBlock::try_from_with_package_resolver(
                 sender_signed_data,
                 package_resolver.clone(),
+                tx_digest,
             )
             .await?;
             Some(tx_block)

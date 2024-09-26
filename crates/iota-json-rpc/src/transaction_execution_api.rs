@@ -109,6 +109,7 @@ impl TransactionExecutionApi {
             Some(IotaTransactionBlock::try_from(
                 txn.data().clone(),
                 epoch_store.module_cache(),
+                *txn.digest(),
             )?)
         } else {
             None

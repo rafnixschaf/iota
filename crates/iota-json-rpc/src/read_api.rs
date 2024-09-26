@@ -1349,8 +1349,11 @@ fn convert_to_response(
     }
 
     if opts.show_input && cache.transaction.is_some() {
-        let tx_block =
-            IotaTransactionBlock::try_from(cache.transaction.unwrap().into_data(), module_cache)?;
+        let tx_block = IotaTransactionBlock::try_from(
+            cache.transaction.unwrap().into_data(),
+            module_cache,
+            cache.digest,
+        )?;
         response.transaction = Some(tx_block);
     }
 
