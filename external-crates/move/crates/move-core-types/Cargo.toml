@@ -40,3 +40,6 @@ serde_json.workspace = true
 [features]
 default = []
 fuzzing = ["proptest", "proptest-derive", "arbitrary"]
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["enum-compat-util"]
