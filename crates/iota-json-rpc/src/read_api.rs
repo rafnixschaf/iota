@@ -463,6 +463,7 @@ impl ReadApi {
         }
 
         let epoch_store = self.state.load_epoch_store_one_call_per_task();
+
         let converted_tx_block_resps = temp_response
             .into_iter()
             .map(|c| convert_to_response(c.1, &opts, epoch_store.module_cache()))
@@ -884,6 +885,7 @@ impl ReadApiServer for ReadApi {
                 }
             }
             let epoch_store = self.state.load_epoch_store_one_call_per_task();
+
             convert_to_response(temp_response, &opts, epoch_store.module_cache())
         }
         .trace()

@@ -418,7 +418,12 @@ impl TransactionBlock {
             );
         }
 
+        let pool = db.inner.get_pool();
         for stored in transactions {
+            if stored.is_genesis() {
+                stored = stored.set_genesis_large_object_as_inner_data(&pool)?;
+            }
+
             let cursor = stored.cursor(checkpoint_viewed_at).encode_cursor();
             let inner = TransactionBlockInner::try_from(stored)?;
             let transaction = TransactionBlock {

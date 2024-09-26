@@ -13,7 +13,7 @@ use iota_types::{
 };
 
 use crate::{
-    consistency::ConsistentIndexCursor,
+    consistency::{CheckpointViewedAt, ConsistentIndexCursor},
     types::{
         cursor::{JsonCursor, Page},
         event::Event,
