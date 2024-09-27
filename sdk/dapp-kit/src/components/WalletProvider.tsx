@@ -15,8 +15,6 @@ import {
 } from '../constants/walletDefaults.js';
 import { WalletContext } from '../contexts/walletContext.js';
 import { useAutoConnectWallet } from '../hooks/wallet/useAutoConnectWallet.js';
-import type { StashedWalletConfig } from '../hooks/wallet/useStashedWallet.js';
-import { useStashedWallet } from '../hooks/wallet/useStashedWallet.js';
 import { useUnsafeBurnerWallet } from '../hooks/wallet/useUnsafeBurnerWallet.js';
 import { useWalletPropertiesChanged } from '../hooks/wallet/useWalletPropertiesChanged.js';
 import { useWalletsChanged } from '../hooks/wallet/useWalletsChanged.js';
@@ -40,9 +38,6 @@ export type WalletProviderProps = {
     /** Enables automatically reconnecting to the most recently used wallet account upon mounting. */
     autoConnect?: boolean;
 
-    /** Enables the Stashed wallet */
-    stashedWallet?: StashedWalletConfig;
-
     /** Configures how the most recently connected to wallet account is stored. Set to `null` to disable persisting state entirely. Defaults to using localStorage if it is available. */
     storage?: StateStorage | null;
 
@@ -64,7 +59,6 @@ export function WalletProvider({
     storageKey = DEFAULT_STORAGE_KEY,
     enableUnsafeBurner = false,
     autoConnect = false,
-    stashedWallet,
     theme = lightTheme,
     children,
 }: WalletProviderProps) {
@@ -83,7 +77,6 @@ export function WalletProvider({
                 preferredWallets={preferredWallets}
                 walletFilter={walletFilter}
                 enableUnsafeBurner={enableUnsafeBurner}
-                stashedWallet={stashedWallet}
             >
                 {/* TODO: We ideally don't want to inject styles if people aren't using the UI components */}
                 {theme ? <InjectedThemeStyles theme={theme} /> : null}
@@ -95,19 +88,17 @@ export function WalletProvider({
 
 type WalletConnectionManagerProps = Pick<
     WalletProviderProps,
-    'preferredWallets' | 'walletFilter' | 'enableUnsafeBurner' | 'stashedWallet' | 'children'
+    'preferredWallets' | 'walletFilter' | 'enableUnsafeBurner' | 'children'
 >;
 
 function WalletConnectionManager({
     preferredWallets = DEFAULT_PREFERRED_WALLETS,
     walletFilter = DEFAULT_WALLET_FILTER,
     enableUnsafeBurner = false,
-    stashedWallet,
     children,
 }: WalletConnectionManagerProps) {
     useWalletsChanged(preferredWallets, walletFilter);
     useWalletPropertiesChanged();
-    useStashedWallet(stashedWallet);
     useUnsafeBurnerWallet(enableUnsafeBurner);
     useAutoConnectWallet();
 
