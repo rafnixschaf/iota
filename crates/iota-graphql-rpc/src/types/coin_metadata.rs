@@ -391,7 +391,7 @@ impl CoinMetadata {
 
             state.iota_total_supply
         } else {
-            let cap_type = TreasuryCap::type_(*coin_struct).into();
+            let cap_type = TreasuryCap::type_(*coin_struct);
 
             let db = ctx.data_unchecked();
 
