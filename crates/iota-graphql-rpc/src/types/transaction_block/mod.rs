@@ -419,7 +419,7 @@ impl TransactionBlock {
         }
 
         let pool = db.inner.get_pool();
-        for stored in transactions {
+        for mut stored in transactions {
             if stored.is_genesis() {
                 stored = stored.set_genesis_large_object_as_inner_data(&pool)?;
             }
