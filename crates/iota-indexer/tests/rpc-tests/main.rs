@@ -5,7 +5,7 @@
 #[path = "../common/mod.rs"]
 mod common;
 
-#[cfg(feature = "pg_integration")]
+#[cfg(feature = "shared_test_runtime")]
 mod extended_api;
 
 #[cfg(feature = "shared_test_runtime")]

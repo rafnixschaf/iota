@@ -259,6 +259,7 @@ impl Cluster for LocalNewCluster {
                 Some(pg_address.clone()),
                 fullnode_url.clone(),
                 ReaderWriterConfig::writer_mode(None),
+                None,
             )
             .await;
 
@@ -267,6 +268,7 @@ impl Cluster for LocalNewCluster {
                 Some(pg_address),
                 fullnode_url.clone(),
                 ReaderWriterConfig::reader_mode(indexer_address.to_string()),
+                None,
             )
             .await;
         }

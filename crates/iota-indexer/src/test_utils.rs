@@ -42,8 +42,9 @@ pub async fn start_test_indexer(
     db_url: Option<String>,
     rpc_url: String,
     reader_writer_config: ReaderWriterConfig,
+    new_database: Option<String>,
 ) -> (PgIndexerStore, JoinHandle<Result<(), IndexerError>>) {
-    start_test_indexer_impl(db_url, rpc_url, reader_writer_config, None).await
+    start_test_indexer_impl(db_url, rpc_url, reader_writer_config, new_database).await
 }
 
 pub async fn start_test_indexer_impl(
