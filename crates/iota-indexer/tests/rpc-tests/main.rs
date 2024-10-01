@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "pg_integration")]
+#[allow(dead_code)]
 #[path = "../common/mod.rs"]
 mod common;
 
@@ -11,5 +11,5 @@ mod extended_api;
 #[cfg(feature = "pg_integration")]
 mod indexer_api;
 
-#[cfg(feature = "pg_integration")]
+#[cfg(feature = "shared_test_runtime")]
 mod read_api;
