@@ -4,8 +4,8 @@
         "questionText": "How do validators on the IOTA network get their voting power?",
         "answerOptions": [
           { "answerText": "By mining.", "isCorrect": false },
-          { "answerText": "By holding IOTA tokens.", "isCorrect": false },
-          { "answerText": "From IOTA token holders who delegate their stakes.", "isCorrect": true },
+          { "answerText": "By holding their own IOTA tokens.", "isCorrect": false },
+          { "answerText": "From IOTA token holders who delegate their stakes to them.", "isCorrect": true },
           { "answerText": "From other validators.", "isCorrect": false }
         ]
       },
