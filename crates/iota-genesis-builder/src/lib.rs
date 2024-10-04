@@ -324,7 +324,7 @@ impl Builder {
             &mut self.genesis_stake,
             &mut self.migration_objects,
         );
-        self.migration_tx_data = if !unsigned_genesis.migration_txs_effects.is_empty() {
+        self.migration_tx_data = if !migration_tx_data.is_empty() {
             Some(migration_tx_data)
         } else {
             None
@@ -367,7 +367,6 @@ impl Builder {
             effects,
             events,
             objects,
-            migration_txs_effects,
         } = self
             .built_genesis
             .take()
@@ -389,7 +388,6 @@ impl Builder {
                 effects,
                 events,
                 objects,
-                migration_txs_effects,
             ),
             self.migration_tx_data,
         )
@@ -972,7 +970,6 @@ fn build_unsigned_genesis_data<'info>(
     // Use a throwaway metrics registry for genesis transaction execution.
     let registry = prometheus::Registry::new();
     let metrics = Arc::new(LimitsMetrics::new(&registry));
-    let mut migration_txs_effects = vec![];
     let mut txs_data: TransactionsData = BTreeMap::new();
     let protocol_config = get_genesis_protocol_config(parameters.protocol_version);
 
@@ -996,7 +993,6 @@ fn build_unsigned_genesis_data<'info>(
             metrics.clone(),
         );
         extract_migration_transactions_data(
-            &mut migration_txs_effects,
             &mut txs_data,
             migration_objects,
             &protocol_config,
@@ -1018,7 +1014,7 @@ fn build_unsigned_genesis_data<'info>(
         parameters,
         &genesis_transaction,
         &genesis_effects,
-        &migration_txs_effects,
+        &txs_data,
     );
 
     (
@@ -1029,14 +1025,12 @@ fn build_unsigned_genesis_data<'info>(
             effects: genesis_effects,
             events: genesis_events,
             objects: genesis_objects,
-            migration_txs_effects,
         },
         MigrationTxData::new(txs_data),
     )
 }
 
 fn extract_migration_transactions_data(
-    migration_txs_effects: &mut Vec<TransactionEffects>,
     txs_data: &mut TransactionsData,
     migration_objects: Vec<Object>,
     protocol_config: &ProtocolConfig,
@@ -1062,15 +1056,19 @@ fn extract_migration_transactions_data(
             create_genesis_transaction(
                 objects_per_chunk.to_vec(),
                 vec![],
-                &protocol_config,
+                protocol_config,
                 metrics.clone(),
-                &epoch_data,
+                epoch_data,
             );
 
-        migration_txs_effects.push(migration_effects);
         txs_data.insert(
-            migration_transaction.key(),
-            (migration_transaction, migration_events, objects),
+            *migration_transaction.digest(),
+            (
+                migration_transaction,
+                migration_effects,
+                migration_events,
+                objects,
+            ),
         );
         start_idx += chunk;
     }
@@ -1080,7 +1078,7 @@ fn create_genesis_checkpoint(
     parameters: &GenesisCeremonyParameters,
     transaction: &Transaction,
     effects: &TransactionEffects,
-    migration_txs_effects: &[TransactionEffects],
+    txs_data: &TransactionsData,
 ) -> (CheckpointSummary, CheckpointContents) {
     let execution_digests = ExecutionDigests {
         transaction: *transaction.digest(),
@@ -1089,12 +1087,12 @@ fn create_genesis_checkpoint(
 
     let mut effects_digests = vec![execution_digests];
 
-    let migration_effects_exec_digests: Vec<ExecutionDigests> = migration_txs_effects
-        .into_iter()
-        .map(|effect| effect.execution_digests())
-        .collect();
+    for digest in txs_data.keys() {
+        if let Some((_, effects, _, _)) = txs_data.get(digest) {
+            effects_digests.push(effects.execution_digests());
+        }
+    }
 
-    effects_digests.extend(migration_effects_exec_digests);
     let effects_digests_len = effects_digests.len();
 
     let contents = CheckpointContents::new_with_digests_and_signatures(
@@ -1485,13 +1483,13 @@ pub fn generate_genesis_system_object(
 fn create_migration_objects(
     genesis_ctx: &mut TxContext,
     input_objects: Vec<Object>,
-    genesis_objects: &Vec<Object>,
+    genesis_objects: &[Object],
     parameters: &GenesisChainParameters,
     genesis_stake: &mut GenesisStake,
     metrics: Arc<LimitsMetrics>,
 ) -> Vec<Object> {
     // create the temporary store and the executor
-    let mut store = InMemoryStorage::new(genesis_objects.clone());
+    let mut store = InMemoryStorage::new(genesis_objects.to_owned());
     let protocol_config = ProtocolConfig::get_for_version(
         ProtocolVersion::new(parameters.protocol_version),
         Chain::Unknown,
@@ -1532,7 +1530,7 @@ fn create_migration_objects(
     }
 
     // Clean the intermediate store from objects already present in genesis_objects
-    for genesis_object in genesis_objects.into_iter() {
+    for genesis_object in genesis_objects.iter() {
         intermediate_store.remove(&genesis_object.id());
     }
 

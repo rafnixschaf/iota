@@ -46,7 +46,6 @@ pub struct Genesis {
     effects: TransactionEffects,
     events: TransactionEvents,
     objects: Vec<Object>,
-    migration_txs_effects: Vec<TransactionEffects>,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -57,7 +56,6 @@ pub struct UnsignedGenesis {
     pub effects: TransactionEffects,
     pub events: TransactionEvents,
     pub objects: Vec<Object>,
-    pub migration_txs_effects: Vec<TransactionEffects>,
 }
 
 // Hand implement PartialEq in order to get around the fact that AuthSigs don't
@@ -77,7 +75,6 @@ impl PartialEq for Genesis {
             && self.transaction == other.transaction
             && self.effects == other.effects
             && self.objects == other.objects
-            && self.migration_txs_effects == other.migration_txs_effects
     }
 }
 
@@ -91,7 +88,6 @@ impl Genesis {
         effects: TransactionEffects,
         events: TransactionEvents,
         objects: Vec<Object>,
-        migration_txs_effects: Vec<TransactionEffects>,
     ) -> Self {
         Self {
             checkpoint,
@@ -100,12 +96,7 @@ impl Genesis {
             effects,
             events,
             objects,
-            migration_txs_effects,
         }
-    }
-
-    pub fn migration_txs_effects(&self) -> &[TransactionEffects] {
-        &self.migration_txs_effects
     }
 
     pub fn into_objects(self) -> Vec<Object> {
@@ -169,6 +160,10 @@ impl Genesis {
     pub fn iota_system_wrapper_object(&self) -> IotaSystemStateWrapper {
         get_iota_system_state_wrapper(&self.objects())
             .expect("Iota System State Wrapper object must always exist")
+    }
+
+    pub fn is_vanilla(&self) -> bool {
+        self.checkpoint_contents.size() == 1
     }
 
     pub fn iota_system_object(&self) -> IotaSystemState {
@@ -235,7 +230,6 @@ impl Serialize for Genesis {
             effects: &'a TransactionEffects,
             events: &'a TransactionEvents,
             objects: &'a [Object],
-            migration_txs_effects: &'a [TransactionEffects],
         }
 
         let raw_genesis = RawGenesis {
@@ -245,7 +239,6 @@ impl Serialize for Genesis {
             effects: &self.effects,
             events: &self.events,
             objects: &self.objects,
-            migration_txs_effects: &self.migration_txs_effects,
         };
 
         if serializer.is_human_readable() {
@@ -273,7 +266,6 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: TransactionEffects,
             events: TransactionEvents,
             objects: Vec<Object>,
-            migration_txs_effects: Vec<TransactionEffects>,
         }
 
         let raw_genesis = if deserializer.is_human_readable() {
@@ -291,7 +283,6 @@ impl<'de> Deserialize<'de> for Genesis {
             effects: raw_genesis.effects,
             events: raw_genesis.events,
             objects: raw_genesis.objects,
-            migration_txs_effects: raw_genesis.migration_txs_effects,
         })
     }
 }

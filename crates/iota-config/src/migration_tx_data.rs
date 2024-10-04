@@ -10,14 +10,23 @@ use std::{
 
 use anyhow::{Context, Result};
 use iota_types::{
-    effects::TransactionEvents,
+    digests::TransactionDigest,
+    effects::{TransactionEffects, TransactionEvents},
     object::Object,
-    transaction::{Transaction, TransactionKey},
+    transaction::Transaction,
 };
 use serde::{Deserialize, Serialize};
 use tracing::trace;
 
-pub type TransactionsData = BTreeMap<TransactionKey, (Transaction, TransactionEvents, Vec<Object>)>;
+pub type TransactionsData = BTreeMap<
+    TransactionDigest,
+    (
+        Transaction,
+        TransactionEffects,
+        TransactionEvents,
+        Vec<Object>,
+    ),
+>;
 #[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize, Default)]
 pub struct MigrationTxData {
     inner: TransactionsData,
@@ -30,6 +39,10 @@ impl MigrationTxData {
 
     pub fn txs_data(&self) -> &TransactionsData {
         &self.inner
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
