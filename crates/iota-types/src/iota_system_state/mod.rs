@@ -21,10 +21,7 @@ use crate::{
     dynamic_field::{Field, get_dynamic_field_from_store, get_dynamic_field_object_from_store},
     error::IotaError,
     id::UID,
-    iota_system_state::{
-        epoch_start_iota_system_state::EpochStartSystemState,
-        iota_system_state_inner_v2::IotaSystemStateInnerV2,
-    },
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemState,
     object::{MoveObject, Object},
     storage::ObjectStore,
     versioned::Versioned,
@@ -32,7 +29,6 @@ use crate::{
 
 pub mod epoch_start_iota_system_state;
 pub mod iota_system_state_inner_v1;
-pub mod iota_system_state_inner_v2;
 pub mod iota_system_state_summary;
 
 #[cfg(msim)]
@@ -101,13 +97,6 @@ impl IotaSystemStateWrapper {
         match self.version {
             1 => {
                 Self::advance_epoch_safe_mode_impl::<IotaSystemStateInnerV1>(
-                    move_object,
-                    params,
-                    protocol_config,
-                );
-            }
-            2 => {
-                Self::advance_epoch_safe_mode_impl::<IotaSystemStateInnerV2>(
                     move_object,
                     params,
                     protocol_config,
@@ -201,7 +190,6 @@ pub trait IotaSystemStateTrait {
 #[enum_dispatch(IotaSystemStateTrait)]
 pub enum IotaSystemState {
     V1(IotaSystemStateInnerV1),
-    V2(IotaSystemStateInnerV2),
     #[cfg(msim)]
     SimTestV1(SimTestIotaSystemStateInnerV1),
     #[cfg(msim)]
@@ -266,18 +254,6 @@ pub fn get_iota_system_state(object_store: &dyn ObjectStore) -> Result<IotaSyste
                     },
                 )?;
             Ok(IotaSystemState::V1(result))
-        }
-        2 => {
-            let result: IotaSystemStateInnerV2 =
-                get_dynamic_field_from_store(object_store, id, &wrapper.version).map_err(
-                    |err| {
-                        IotaError::DynamicFieldRead(format!(
-                            "Failed to load iota system state inner object with ID {:?} and version {:?}: {:?}",
-                            id, wrapper.version, err
-                        ))
-                    },
-                )?;
-            Ok(IotaSystemState::V2(result))
         }
         #[cfg(msim)]
         IOTA_SYSTEM_STATE_SIM_TEST_V1 => {

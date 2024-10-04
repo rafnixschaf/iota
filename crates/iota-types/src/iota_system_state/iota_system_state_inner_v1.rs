@@ -45,6 +45,9 @@ pub struct SystemParametersV1 {
     /// The duration of an epoch, in milliseconds.
     pub epoch_duration_ms: u64,
 
+    /// Minimum number of active validators at any moment.
+    pub min_validator_count: u64,
+
     /// Maximum number of active validators at any moment.
     /// We do not allow the number of validators in any epoch to go above this.
     pub max_validator_count: u64,
@@ -552,7 +555,7 @@ impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
         let table_id = self.validators.pending_active_validators.contents.id;
         let table_size = self.validators.pending_active_validators.contents.size;
         let validators: Vec<ValidatorV1> =
-            get_validators_from_table_vec(object_store, table_id, table_size)?;
+            get_validators_from_table_vec(&object_store, table_id, table_size)?;
         Ok(validators
             .into_iter()
             .map(|v| v.into_iota_validator_summary())
@@ -637,6 +640,7 @@ impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
             parameters:
                 SystemParametersV1 {
                     epoch_duration_ms,
+                    min_validator_count: _, // TODO: Add it to RPC layer in the future.
                     max_validator_count,
                     min_validator_joining_stake,
                     validator_low_stake_threshold,

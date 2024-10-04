@@ -1434,6 +1434,7 @@ mod tests {
                 },
                 parameters: SystemParametersV1 {
                     epoch_duration_ms: Default::default(),
+                    min_validator_count: Default::default(),
                     max_validator_count: Default::default(),
                     min_validator_joining_stake: Default::default(),
                     validator_low_stake_threshold: Default::default(),
