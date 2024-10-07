@@ -1,6 +1,6 @@
 [
     {
-        "questionText": "What method can you use to transfer all IOTA from an address?",
+        "questionText": "Which method can you use to transfer all IOTA tokens from an address?",
         "answerOptions": [
           { "answerText": "unsafe_transferObject", "isCorrect": false },
           { "answerText": "iotax_getBalance", "isCorrect": false },
