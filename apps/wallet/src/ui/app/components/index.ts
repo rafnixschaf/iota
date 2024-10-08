@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './DAppInfoCard';
-export * from './DAppPermissionsList';
+export * from './DAppPermissionList';
 export * from './HideShowDisplayBox';
 export * from './IconButton';
-export * from './LabelValueItem';
-export * from './LabelValuesContainer';
 export * from './NoData';
 export * from './Overlay';
 export * from './PageTemplate';
@@ -36,8 +34,8 @@ export * from './network-selector';
 export * from './nft-display';
 export * from './nft-display/NftImage';
 export * from './number-input';
+export * from './QR';
 export * from './receipt-card';
-export * from './receipt-card/TxnAddress';
 export * from './receipt-card/TxnAmount';
 export * from './transactions-card';
 export * from './user-approve-container';

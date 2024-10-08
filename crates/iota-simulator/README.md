@@ -33,7 +33,7 @@ It has the following main components:
    - Most facilities from `tokio::runtime` and `tokio::time` are delegated back to the simulator runtime.
    - Custom implementations of the `tokio::net::Tcp*` structs are provided to interface with the network simulator.
    - Most other pieces of tokio (e.g. `sync`) did not need to be re-implemented because they don't interface with the runtime or the network. These are simply re-exported as is.
-   - A minimal [fork of tokio](https://github.com/iotaledger/tokio-madsim-fork) is required in order to expose certain internals to the simulator. This fork has very few modifications, which were written to be easily rebaseable when new tokio releases come out.
+   - A minimal [fork of tokio](https://github.com/mystenmark/tokio-madsim-fork) is required in order to expose certain internals to the simulator. This fork has very few modifications, which were written to be easily rebaseable when new tokio releases come out.
 
 1. A library of interceptor functions which intercept various posix API calls in order to enforce determinism throughout the test. These include:
    - `getrandom()`, `getentropy()` - intercepted and delegated to the simulator PRNG.
@@ -97,7 +97,7 @@ Simulation tests are declared in one of the following two ways:
 
 The `#[sim_test]` proc macro also takes a number of arguments, described below.
 
-The easiest way to write tests that run in the simulation testing framework is to use [SwarmBuilder](https://github.com/iotaledger/iota/blob/main/crates/iota-swarm/src/memory/swarm.rs#L47) to start your validators.
+The easiest way to write tests that run in the simulation testing framework is to use [SwarmBuilder](https://github.com/iotaledger/iota/blob/develop/crates/iota-swarm/src/memory/swarm.rs#L47) to start your validators.
 This is most often called indirectly via `start_test_network` in the test-utils crate.
 Swarm will create one simulator node (i.e. a simulated machine) per validator, and each validator will have its own unique IP address.
 
@@ -109,7 +109,7 @@ However, the fact that the validators are running on unique simulator nodes mean
 Swarm assumes a level of encapsulation that reflects what client code would actually experience in production.
 In other words, the only way to communicate with the validators when using Swarm is via the network.
 However, we have many tests that create validators and manipulate them more directly.
-https://github.com/iotaledger/iota/blob/main/crates/iota/tests/checkpoints_tests.rs is a good example of this.
+https://github.com/iotaledger/iota/blob/develop/crates/iota/tests/checkpoints_tests.rs is a good example of this.
 
 In these tests, the test code is able to break the simulator abstraction and directly manipulate the state of remote validators.
 Yet, the validators are still running on simulated nodes.
@@ -191,9 +191,9 @@ For instance, you might do:
 
 Documentation of network configuration is not finished yet, but reading the code for the [NetworkConfig](https://github.com/iotaledger/iota-sim/blob/main/msim/src/sim/net/config.rs#L221) should be very instructive.
 
-There is a small but growing library of functions for building network configs in [iota_simulator::configs](https://github.com/iotaledger/iota/blob/main/crates/iota-simulator/src/lib.rs).
+There is a small but growing library of functions for building network configs in [iota_simulator::configs](https://github.com/iotaledger/iota/blob/develop/crates/iota-simulator/src/lib.rs).
 
-There are also some examples of network configuration at https://github.com/iotaledger/iota/blob/main/crates/iota-benchmark/tests/simtest.rs#L52.
+There are also some examples of network configuration at https://github.com/iotaledger/iota/blob/develop/crates/iota-benchmark/tests/simtest.rs#L52.
 
 ### The `nondeterministic!` macro
 
