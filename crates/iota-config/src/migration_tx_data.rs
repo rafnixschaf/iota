@@ -44,6 +44,14 @@ impl MigrationTxData {
         self.inner.is_empty()
     }
 
+    pub fn get_objects(&self) -> impl Iterator<Item = Object> + '_ {
+        self.inner.values().flat_map(|(tx, _, _)| {
+            self.objects_by_tx_digest(*tx.digest())
+                .expect("the migration data is corrupted")
+                .into_iter()
+        })
+    }
+
     pub fn objects_by_tx_digest(&self, digest: TransactionDigest) -> Option<Vec<Object>> {
         let (tx, _, _) = self.inner.get(&digest)?;
         let TransactionKind::Genesis(GenesisTransaction { objects, .. }) =
@@ -129,16 +137,16 @@ impl MigrationTxData {
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
         let path = path.as_ref();
-        trace!("Reading Migration transaction data from {}", path.display());
+        trace!("reading Migration transaction data from {}", path.display());
         let read = File::open(path).with_context(|| {
             format!(
-                "Unable to load Migration transaction data from {}",
+                "unable to load Migration transaction data from {}",
                 path.display()
             )
         })?;
         bcs::from_reader(BufReader::new(read)).with_context(|| {
             format!(
-                "Unable to parse Migration transaction data from {}",
+                "unable to parse Migration transaction data from {}",
                 path.display()
             )
         })
@@ -146,11 +154,11 @@ impl MigrationTxData {
 
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), anyhow::Error> {
         let path = path.as_ref();
-        trace!("Writing Migration transaction data to {}", path.display());
+        trace!("writing Migration transaction data to {}", path.display());
         let mut write = BufWriter::new(File::create(path)?);
         bcs::serialize_into(&mut write, &self).with_context(|| {
             format!(
-                "Unable to save Migration transaction data to {}",
+                "unable to save Migration transaction data to {}",
                 path.display()
             )
         })?;

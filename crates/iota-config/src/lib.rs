@@ -46,7 +46,7 @@ pub fn iota_config_dir() -> Result<PathBuf, anyhow::Error> {
         Some(config_env) => Ok(config_env.into()),
         None => match dirs::home_dir() {
             Some(v) => Ok(v.join(IOTA_DIR).join(IOTA_CONFIG_DIR)),
-            None => anyhow::bail!("Cannot obtain home directory path"),
+            None => anyhow::bail!("cannot obtain home directory path"),
         },
     }
     .and_then(|dir| {
@@ -106,7 +106,7 @@ where
         let path = path.as_ref();
         trace!("Reading config from {}", path.display());
         let reader = fs::File::open(path)
-            .with_context(|| format!("Unable to load config from {}", path.display()))?;
+            .with_context(|| format!("unable to load config from {}", path.display()))?;
         Ok(serde_yaml::from_reader(reader)?)
     }
 
@@ -115,7 +115,7 @@ where
         trace!("Writing config to {}", path.display());
         let mut write = BufWriter::new(fs::File::create(path)?);
         serde_yaml::to_writer(&mut write, &self)
-            .with_context(|| format!("Unable to save config to {}", path.display()))?;
+            .with_context(|| format!("unable to save config to {}", path.display()))?;
         Ok(())
     }
 }
