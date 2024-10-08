@@ -15,37 +15,13 @@ export type ToasterProps = {
     bottomNavEnabled?: boolean;
 };
 
-function getBottomSpace(pathname: string, isMenuVisible: boolean, isBottomNavSpace: boolean) {
-    if (isMenuVisible) {
-        return '!bottom-28';
-    }
-
-    const overlayWithActionButton = [
-        '/auto-lock',
-        '/manage/accounts-finder',
-        '/accounts/import-ledger-accounts',
-        '/send',
-        '/accounts/forgot-password/recover-many',
-        '/accounts/manage',
-    ].includes(pathname);
-
-    if (overlayWithActionButton || isBottomNavSpace) {
-        return '!bottom-16';
-    }
-
-    return '';
-}
-
 export function Toaster({ bottomNavEnabled = false }: ToasterProps) {
     const { pathname } = useLocation();
-
+    const isExtraNavTabsVisible = ['/apps', '/nfts'].includes(pathname);
     const menuVisible = useMenuIsOpen();
     const isBottomNavVisible = useAppSelector(getNavIsVisible);
-    const bottomSpace = getBottomSpace(
-        pathname,
-        menuVisible,
-        isBottomNavVisible && bottomNavEnabled,
-    );
+    const includeBottomNavSpace = !menuVisible && isBottomNavVisible && bottomNavEnabled;
+    const includeExtraBottomNavSpace = includeBottomNavSpace && isExtraNavTabsVisible;
 
     function getSnackbarType(type: ToastType): SnackbarType {
         switch (type) {
@@ -63,7 +39,11 @@ export function Toaster({ bottomNavEnabled = false }: ToasterProps) {
     return (
         <Portal containerId="toaster-portal-container">
             <ToasterLib
-                containerClassName={cl('!absolute !z-[99999] transition-all', bottomSpace)}
+                containerClassName={cl(
+                    '!absolute !z-[99999] transition-all',
+                    includeBottomNavSpace && 'mb-nav-height',
+                    includeExtraBottomNavSpace && '!bottom-10',
+                )}
                 position="bottom-right"
             >
                 {(t) => (

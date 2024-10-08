@@ -6,16 +6,11 @@ use std::sync::Arc;
 
 use consensus_core::{TransactionVerifier, ValidationError};
 use eyre::WrapErr;
-use fastcrypto_tbls::dkg;
 use iota_metrics::monitored_scope;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::{
-    error::IotaError,
-    messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
-};
+use iota_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKind};
 use narwhal_types::BatchAPI;
 use narwhal_worker::TransactionValidator;
-use prometheus::{IntCounter, Registry, register_int_counter_with_registry};
+use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
 use tap::TapFallible;
 use tracing::{info, warn};
 
@@ -76,25 +71,12 @@ impl IotaTxValidator {
                     ckpt_messages.push(signature.clone());
                     ckpt_batch.push(signature.summary);
                 }
-                ConsensusTransactionKind::RandomnessDkgMessage(_, bytes) => {
-                    if bytes.len() > dkg::DKG_MESSAGES_MAX_SIZE {
-                        warn!("batch verification error: DKG Message too large");
-                        return Err(IotaError::InvalidDkgMessageSize.into());
-                    }
-                }
-                ConsensusTransactionKind::RandomnessDkgConfirmation(_, bytes) => {
-                    if bytes.len() > dkg::DKG_MESSAGES_MAX_SIZE {
-                        warn!("batch verification error: DKG Confirmation too large");
-                        return Err(IotaError::InvalidDkgMessageSize.into());
-                    }
-                }
-
-                ConsensusTransactionKind::CapabilityNotification(_) => {}
-
                 ConsensusTransactionKind::EndOfPublish(_)
+                | ConsensusTransactionKind::CapabilityNotification(_)
                 | ConsensusTransactionKind::NewJWKFetched(_, _, _)
-                | ConsensusTransactionKind::CapabilityNotificationV2(_)
-                | ConsensusTransactionKind::RandomnessStateUpdate(_, _) => {}
+                | ConsensusTransactionKind::RandomnessStateUpdate(_, _)
+                | ConsensusTransactionKind::RandomnessDkgMessage(_, _)
+                | ConsensusTransactionKind::RandomnessDkgConfirmation(_, _) => {}
             }
         }
 
@@ -128,7 +110,7 @@ impl IotaTxValidator {
         // valid signatures, schedule them for execution prior to sequencing
         // which is unnecessary for owned object transactions.
         // It is unnecessary to write to pending_certificates table because the
-        // certs will be written via consensus output.
+        // certs will be written via Narwhal output.
         // self.transaction_manager
         //     .enqueue_certificates(owned_tx_certs, &self.epoch_store)
         //     .wrap_err("Failed to schedule certificates for execution")
@@ -163,13 +145,7 @@ impl TransactionValidator for IotaTxValidator {
 }
 
 impl TransactionVerifier for IotaTxValidator {
-    fn verify_batch(
-        &self,
-        _protocol_config: &ProtocolConfig,
-        batch: &[&[u8]],
-    ) -> Result<(), ValidationError> {
-        let _scope = monitored_scope("ValidateBatch");
-
+    fn verify_batch(&self, batch: &[&[u8]]) -> Result<(), ValidationError> {
         let txs = batch
             .iter()
             .map(|tx| {
@@ -194,13 +170,13 @@ impl IotaTxValidatorMetrics {
         Arc::new(Self {
             certificate_signatures_verified: register_int_counter_with_registry!(
                 "certificate_signatures_verified",
-                "Number of certificates verified in consensus batch verifier",
+                "Number of certificates verified in narwhal batch verifier",
                 registry
             )
             .unwrap(),
             checkpoint_signatures_verified: register_int_counter_with_registry!(
                 "checkpoint_signatures_verified",
-                "Number of checkpoint verified in consensus batch verifier",
+                "Number of checkpoint verified in narwhal batch verifier",
                 registry
             )
             .unwrap(),
@@ -232,8 +208,7 @@ mod tests {
         // Initialize an authority with a (owned) gas object and a shared object; then
         // make a test certificate.
         let mut objects = test_gas_objects();
-        let shared_object = Object::shared_for_testing();
-        objects.push(shared_object.clone());
+        objects.push(Object::shared_for_testing());
 
         let network_config =
             iota_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
@@ -241,11 +216,11 @@ mod tests {
                 .build();
 
         let state = TestAuthorityBuilder::new()
-            .with_network_config(&network_config, 0)
+            .with_network_config(&network_config)
             .build()
             .await;
         let name1 = state.name;
-        let certificates = test_certificates(&state, shared_object).await;
+        let certificates = test_certificates(&state).await;
 
         let first_transaction = certificates[0].clone();
         let first_transaction_bytes: Vec<u8> = bcs::to_bytes(

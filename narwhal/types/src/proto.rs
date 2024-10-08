@@ -1,18 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
 mod narwhal {
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct Transaction {
-        #[prost(bytes = "bytes", repeated, tag = "1")]
-        pub transactions: ::prost::alloc::vec::Vec<::prost::bytes::Bytes>,
-    }
-    /// Empty message for when we don't have anything to return
-    #[derive(Clone, Copy, PartialEq, ::prost::Message)]
-    pub struct Empty {}
-
-    include!(concat!(env!("OUT_DIR"), "/narwhal.Transactions.rs"));
+    #![allow(clippy::derive_partial_eq_without_eq)]
+    tonic::include_proto!("narwhal");
 
     include!(concat!(env!("OUT_DIR"), "/narwhal.PrimaryToPrimary.rs"));
     include!(concat!(env!("OUT_DIR"), "/narwhal.PrimaryToWorker.rs"));
@@ -22,7 +13,6 @@ mod narwhal {
 
 use bytes::Bytes;
 pub use narwhal::{
-    Empty, Transaction as TransactionProto,
     primary_to_primary_client::PrimaryToPrimaryClient,
     primary_to_primary_server::{MockPrimaryToPrimary, PrimaryToPrimary, PrimaryToPrimaryServer},
     primary_to_worker_client::PrimaryToWorkerClient,
@@ -33,6 +23,7 @@ pub use narwhal::{
     worker_to_primary_server::{MockWorkerToPrimary, WorkerToPrimary, WorkerToPrimaryServer},
     worker_to_worker_client::WorkerToWorkerClient,
     worker_to_worker_server::{MockWorkerToWorker, WorkerToWorker, WorkerToWorkerServer},
+    Empty, Transaction as TransactionProto,
 };
 
 use crate::Transaction;
@@ -40,15 +31,13 @@ use crate::Transaction;
 impl From<Transaction> for TransactionProto {
     fn from(transaction: Transaction) -> Self {
         TransactionProto {
-            transactions: vec![Bytes::from(transaction)],
+            transaction: Bytes::from(transaction),
         }
     }
 }
 
-impl From<Vec<Transaction>> for TransactionProto {
-    fn from(transactions: Vec<Transaction>) -> Self {
-        TransactionProto {
-            transactions: transactions.into_iter().map(Bytes::from).collect(),
-        }
+impl From<TransactionProto> for Transaction {
+    fn from(transaction: TransactionProto) -> Self {
+        transaction.transaction.to_vec()
     }
 }

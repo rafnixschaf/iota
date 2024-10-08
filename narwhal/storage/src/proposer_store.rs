@@ -4,8 +4,9 @@
 
 use iota_macros::fail_point;
 use store::{
-    Map, reopen,
-    rocks::{DBMap, MetricConf, ReadWriteOptions, open_cf},
+    reopen,
+    rocks::{open_cf, DBMap, MetricConf, ReadWriteOptions},
+    Map,
 };
 use types::Header;
 
@@ -60,10 +61,10 @@ impl ProposerStore {
 #[cfg(test)]
 mod test {
     use store::Map;
-    use test_utils::{CommitteeFixture, fixture_batch_with_transactions};
+    use test_utils::{fixture_batch_with_transactions, CommitteeFixture};
     use types::{CertificateDigest, Header, Round};
 
-    use crate::{LAST_PROPOSAL_KEY, ProposerStore};
+    use crate::{ProposerStore, LAST_PROPOSAL_KEY};
 
     pub fn create_header_for_round(round: Round) -> Header {
         let builder = types::HeaderV1Builder::default();

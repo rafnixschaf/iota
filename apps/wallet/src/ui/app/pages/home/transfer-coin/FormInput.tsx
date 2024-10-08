@@ -23,18 +23,13 @@ export function FormInput({
 
     const isActionButtonDisabled =
         isInputDisabled || meta?.initialValue === meta?.value || !!meta?.error;
-    const errorMessage = meta?.error ? meta.error : undefined;
+    const errorMessage = meta?.error && meta.touched ? meta.error : undefined;
 
     const isNumericFormat = props.type === InputType.NumericFormat;
     const numericPropsOnly: Partial<NumericFormatInputProps> = {
         decimalScale: decimals ? undefined : 0,
         thousandSeparator: true,
-        onValueChange: (values) => {
-            form.setFieldValue(props.name, values.value);
-            setTimeout(() => {
-                form.validateField(props.name);
-            }, 0);
-        },
+        onValueChange: (values) => form.setFieldValue(props.name, values.value),
     };
 
     return (

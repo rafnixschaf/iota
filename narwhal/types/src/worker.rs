@@ -38,7 +38,7 @@ pub type TxResponse = tokio::sync::oneshot::Sender<BatchDigest>;
 #[non_exhaustive]
 pub enum DigestError {
     #[error("Invalid argument: invalid byte at {0}")]
-    InvalidArgument(usize),
+    InvalidArgumentError(usize),
     #[error("Invalid length")]
-    InvalidLength,
+    InvalidLengthError,
 }

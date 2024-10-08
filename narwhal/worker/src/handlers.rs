@@ -5,22 +5,22 @@
 
 use std::{collections::HashSet, time::Duration};
 
-use anemo::{Network, types::response::StatusCode};
+use anemo::{types::response::StatusCode, Network};
 use anyhow::Result;
 use async_trait::async_trait;
 use config::{AuthorityIdentifier, Committee, WorkerCache, WorkerId};
 use fastcrypto::hash::Hash;
 use itertools::Itertools;
-use network::{WorkerToPrimaryClient, client::NetworkClient};
-use store::{Map, rocks::DBMap};
+use network::{client::NetworkClient, WorkerToPrimaryClient};
+use store::{rocks::DBMap, Map};
 use tracing::{debug, trace};
 use types::{
-    Batch, BatchAPI, BatchDigest, FetchBatchesRequest, FetchBatchesResponse, MetadataAPI,
+    now, Batch, BatchAPI, BatchDigest, FetchBatchesRequest, FetchBatchesResponse, MetadataAPI,
     PrimaryToWorker, RequestBatchesRequest, RequestBatchesResponse, WorkerBatchMessage,
-    WorkerOthersBatchMessage, WorkerSynchronizeMessage, WorkerToWorker, WorkerToWorkerClient, now,
+    WorkerOthersBatchMessage, WorkerSynchronizeMessage, WorkerToWorker, WorkerToWorkerClient,
 };
 
-use crate::{TransactionValidator, batch_fetcher::BatchFetcher};
+use crate::{batch_fetcher::BatchFetcher, TransactionValidator};
 
 #[cfg(test)]
 #[path = "tests/handlers_tests.rs"]
@@ -110,7 +110,7 @@ impl<V: TransactionValidator> WorkerToWorker for WorkerReceiverHandler<V> {
 /// Defines how the network receiver handles incoming primary messages.
 pub struct PrimaryReceiverHandler<V> {
     // The id of this authority.
-    #[allow(unused)]
+    #[allow(dead_code)]
     pub authority_id: AuthorityIdentifier,
     // The id of this worker.
     pub id: WorkerId,
@@ -123,7 +123,7 @@ pub struct PrimaryReceiverHandler<V> {
     // Timeout on RequestBatches RPC.
     pub request_batches_timeout: Duration,
     // Number of random nodes to query when retrying batch requests.
-    #[allow(unused)]
+    #[allow(dead_code)]
     pub request_batches_retry_nodes: usize,
     // Synchronize header payloads from other workers.
     pub network: Option<Network>,

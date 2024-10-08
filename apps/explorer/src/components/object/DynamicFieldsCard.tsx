@@ -7,8 +7,9 @@ import { type DynamicFieldInfo } from '@iota/iota-sdk/client';
 import { LoadingIndicator } from '@iota/ui';
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { UnderlyingObjectCard } from './UnderlyingObjectCard';
+import { FieldCollapsible } from '~/components';
 import { ObjectLink } from '~/components/ui';
-import { Accordion, AccordionHeader, AccordionContent, Panel } from '@iota/apps-ui-kit';
+import { Panel } from '@iota/apps-ui-kit';
 
 interface DynamicFieldRowProps {
     id: string;
@@ -20,8 +21,10 @@ function DynamicFieldRow({ id, result, defaultOpen }: DynamicFieldRowProps): JSX
     const [open, onOpenChange] = useState(defaultOpen);
 
     return (
-        <Accordion>
-            <AccordionHeader isExpanded={open} onToggle={() => onOpenChange(!open)}>
+        <FieldCollapsible
+            open={open}
+            onOpenChange={onOpenChange}
+            render={({ isOpen }) => (
                 <div className="flex items-center gap-xs truncate break-words pl-md--rs text-body-md text-neutral-40">
                     <div className="block w-full truncate break-words">
                         {typeof result.name?.value === 'object' ? (
@@ -32,17 +35,16 @@ function DynamicFieldRow({ id, result, defaultOpen }: DynamicFieldRowProps): JSX
                     </div>
                     <ObjectLink objectId={result.objectId} />
                 </div>
-            </AccordionHeader>
-            <AccordionContent isExpanded={open}>
-                <div className="p-md--rs">
-                    <UnderlyingObjectCard
-                        parentId={id}
-                        name={result.name}
-                        dynamicFieldType={result.type}
-                    />
-                </div>
-            </AccordionContent>
-        </Accordion>
+            )}
+        >
+            <div className="p-md--rs">
+                <UnderlyingObjectCard
+                    parentId={id}
+                    name={result.name}
+                    dynamicFieldType={result.type}
+                />
+            </div>
+        </FieldCollapsible>
     );
 }
 

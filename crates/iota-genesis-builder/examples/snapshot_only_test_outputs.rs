@@ -8,11 +8,11 @@ use std::{fs::File, path::Path};
 
 use clap::{Parser, Subcommand};
 use iota_genesis_builder::{
-    IF_STARDUST_ADDRESS,
     stardust::{
         parse::HornetSnapshotParser,
-        test_outputs::{STARDUST_TOTAL_SUPPLY_SHIMMER_MICRO, add_snapshot_test_outputs, to_nanos},
+        test_outputs::{add_snapshot_test_outputs, to_nanos, STARDUST_TOTAL_SUPPLY_SHIMMER_MICRO},
     },
+    IF_STARDUST_ADDRESS,
 };
 use iota_sdk::types::block::address::Address;
 use iota_types::{gas_coin::STARDUST_TOTAL_SUPPLY_IOTA, stardust::coin_type::CoinType};

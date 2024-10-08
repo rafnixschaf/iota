@@ -5,8 +5,8 @@
 use std::collections::{BTreeMap, HashMap};
 
 use anemo::{
-    PeerId,
     types::{PeerAffinity, PeerInfo},
+    PeerId,
 };
 use consensus_config::{
     Authority, AuthorityPublicKey, Committee as ConsensusCommittee, NetworkPublicKey,
@@ -82,21 +82,6 @@ impl EpochStartSystemState {
     pub fn new_for_testing_with_epoch(epoch: EpochId) -> Self {
         Self::V1(EpochStartSystemStateV1::new_for_testing_with_epoch(epoch))
     }
-
-    pub fn new_at_next_epoch_for_testing(&self) -> Self {
-        // Only need to support the latest version for testing.
-        match self {
-            Self::V1(state) => Self::V1(EpochStartSystemStateV1 {
-                epoch: state.epoch + 1,
-                protocol_version: state.protocol_version,
-                reference_gas_price: state.reference_gas_price,
-                safe_mode: state.safe_mode,
-                epoch_start_timestamp_ms: state.epoch_start_timestamp_ms,
-                epoch_duration_ms: state.epoch_duration_ms,
-                active_validators: state.active_validators.clone(),
-            }),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -161,21 +146,27 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
     }
 
     fn get_iota_committee_with_network_metadata(&self) -> CommitteeWithNetworkMetadata {
-        let validators = self
+        let (voting_rights, network_metadata) = self
             .active_validators
             .iter()
             .map(|validator| {
                 (
-                    validator.authority_name(),
-                    (validator.voting_power, NetworkMetadata {
-                        network_address: validator.iota_net_address.clone(),
-                        narwhal_primary_address: validator.narwhal_primary_address.clone(),
-                    }),
+                    (validator.authority_name(), validator.voting_power),
+                    (
+                        validator.authority_name(),
+                        NetworkMetadata {
+                            network_address: validator.iota_net_address.clone(),
+                            narwhal_primary_address: validator.narwhal_primary_address.clone(),
+                        },
+                    ),
                 )
             })
-            .collect();
+            .unzip();
 
-        CommitteeWithNetworkMetadata::new(self.epoch, validators)
+        CommitteeWithNetworkMetadata {
+            committee: Committee::new(self.epoch, voting_rights),
+            network_metadata,
+        }
     }
 
     fn get_iota_committee(&self) -> Committee {
@@ -294,11 +285,14 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
             .active_validators
             .iter()
             .map(|validator| {
-                let workers = [(0, narwhal_config::WorkerInfo {
-                    name: validator.narwhal_worker_pubkey.clone(),
-                    transactions: transactions_address.clone(),
-                    worker_address: validator.narwhal_worker_address.clone(),
-                })]
+                let workers = [(
+                    0,
+                    narwhal_config::WorkerInfo {
+                        name: validator.narwhal_worker_pubkey.clone(),
+                        transactions: transactions_address.clone(),
+                        worker_address: validator.narwhal_worker_address.clone(),
+                    },
+                )]
                 .into_iter()
                 .collect();
                 let worker_index = WorkerIndex(workers);
@@ -313,7 +307,7 @@ impl EpochStartSystemStateTrait for EpochStartSystemStateV1 {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct EpochStartValidatorInfoV1 {
     pub iota_address: IotaAddress,
     pub protocol_pubkey: narwhal_crypto::PublicKey,
@@ -344,7 +338,7 @@ mod test {
     use crate::{
         base_types::IotaAddress,
         committee::CommitteeTrait,
-        crypto::{AuthorityKeyPair, get_key_pair},
+        crypto::{get_key_pair, AuthorityKeyPair},
         iota_system_state::epoch_start_iota_system_state::{
             EpochStartSystemStateTrait, EpochStartSystemStateV1, EpochStartValidatorInfoV1,
         },

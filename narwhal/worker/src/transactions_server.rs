@@ -5,9 +5,9 @@
 use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
-use futures::{StreamExt, stream::FuturesUnordered};
+use futures::{stream::FuturesUnordered, StreamExt};
 use iota_metrics::{metered_channel::Sender, monitored_scope, spawn_logged_monitored_task};
-use iota_network_stack::{Multiaddr, server::Server};
+use iota_network_stack::{server::Server, Multiaddr};
 use tokio::{
     task::JoinHandle,
     time::{sleep, timeout},
@@ -19,7 +19,7 @@ use types::{
     TransactionsServer, TxResponse,
 };
 
-use crate::{TransactionValidator, client::LocalNarwhalClient, metrics::WorkerEndpointMetrics};
+use crate::{client::LocalNarwhalClient, metrics::WorkerEndpointMetrics, TransactionValidator};
 
 pub struct TxServer<V: TransactionValidator> {
     address: Multiaddr,
@@ -35,7 +35,7 @@ impl<V: TransactionValidator> TxServer<V> {
         address: Multiaddr,
         rx_shutdown: ConditionalBroadcastReceiver,
         endpoint_metrics: WorkerEndpointMetrics,
-        tx_batch_maker: Sender<(Vec<Transaction>, TxResponse)>,
+        tx_batch_maker: Sender<(Transaction, TxResponse)>,
         validator: V,
     ) -> JoinHandle<()> {
         // create and initialize local Narwhal client.
@@ -141,20 +141,18 @@ impl<V: TransactionValidator> Transactions for TxReceiverHandler<V> {
         request: Request<TransactionProto>,
     ) -> Result<Response<Empty>, Status> {
         let _scope = monitored_scope("SubmitTransaction");
-        let transactions = request.into_inner().transactions;
+        let transaction = request.into_inner().transaction;
 
         let validate_scope = monitored_scope("SubmitTransaction_ValidateTx");
-        for transaction in &transactions {
-            if self.validator.validate(transaction.as_ref()).is_err() {
-                return Err(Status::invalid_argument("Invalid transaction"));
-            }
+        if self.validator.validate(transaction.as_ref()).is_err() {
+            return Err(Status::invalid_argument("Invalid transaction"));
         }
         drop(validate_scope);
 
         // Send the transaction to Narwhal via the local client.
         let submit_scope = monitored_scope("SubmitTransaction_SubmitTx");
         self.local_client
-            .submit_transactions(transactions.iter().map(|x| x.to_vec()).collect())
+            .submit_transaction(transaction.to_vec())
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
         drop(submit_scope);
@@ -169,16 +167,9 @@ impl<V: TransactionValidator> Transactions for TxReceiverHandler<V> {
         let mut requests = FuturesUnordered::new();
 
         let _scope = monitored_scope("SubmitTransactionStream");
-        while let Some(Ok(request)) = transactions.next().await {
-            let num_txns = request.transactions.len();
-            if num_txns != 1 {
-                return Err(Status::invalid_argument(format!(
-                    "Stream contains an invalid number of transactions: {num_txns}"
-                )));
-            }
-            let txn = &request.transactions[0];
+        while let Some(Ok(txn)) = transactions.next().await {
             let validate_scope = monitored_scope("SubmitTransactionStream_ValidateTx");
-            if let Err(err) = self.validator.validate(txn.as_ref()) {
+            if let Err(err) = self.validator.validate(txn.transaction.as_ref()) {
                 // If the transaction is invalid (often cryptographically), better to drop the
                 // client
                 return Err(Status::invalid_argument(format!(
@@ -191,7 +182,10 @@ impl<V: TransactionValidator> Transactions for TxReceiverHandler<V> {
             // mean that we process only a single message from this stream at a
             // time. Instead we gather them and resolve them once the stream is over.
             let submit_scope = monitored_scope("SubmitTransactionStream_SubmitTx");
-            requests.push(self.local_client.submit_transactions(vec![txn.to_vec()]));
+            requests.push(
+                self.local_client
+                    .submit_transaction(txn.transaction.to_vec()),
+            );
             drop(submit_scope);
         }
 

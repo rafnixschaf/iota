@@ -16,11 +16,11 @@ use node::{
     execution_state::SimpleExecutionState, metrics::worker_metrics_registry,
     primary_node::PrimaryNode, worker_node::WorkerNode,
 };
-use prometheus::{Registry, proto::Metric};
+use prometheus::{proto::Metric, Registry};
 use storage::NodeStorage;
 use telemetry_subscribers::TelemetryGuards;
 use tokio::{
-    sync::{RwLock, RwLockWriteGuard, broadcast::Sender, mpsc::channel},
+    sync::{broadcast::Sender, mpsc::channel, RwLock, RwLockWriteGuard},
     task::JoinHandle,
 };
 use tonic::transport::Channel;
@@ -28,7 +28,7 @@ use tracing::info;
 use types::TransactionsClient;
 use worker::TrivialTransactionValidator;
 
-use crate::{CommitteeFixture, latest_protocol_version, temp_dir};
+use crate::{latest_protocol_version, temp_dir, CommitteeFixture};
 
 #[cfg(test)]
 #[path = "tests/cluster_tests.rs"]
@@ -181,8 +181,8 @@ impl Cluster {
     }
 
     /// Returns all the running authorities. Any authority that:
-    ///     * has been started ever
-    ///     * or has been stopped
+    /// * has been started ever
+    /// * or has been stopped
     /// will not be returned by this method.
     pub async fn authorities(&self) -> Vec<AuthorityDetails> {
         let mut result = Vec::new();

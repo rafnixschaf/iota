@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    Accordion,
-    AccordionContent,
     Card,
     CardAction,
     CardActionType,
@@ -24,9 +22,7 @@ import {
 import { RecognizedBadge } from '@iota/ui-icons';
 import clsx from 'clsx';
 import { useMemo } from 'react';
-import { CoinIcon } from '~/components';
-import { AddressLink, CollapsibleCard } from '~/components/ui';
-import { BREAK_POINT, useMediaQuery } from '~/hooks';
+import { AddressLink, Coin, CollapsibleCard, CollapsibleSection } from '~/components/ui';
 
 interface BalanceChangesProps {
     changes: BalanceChangeSummary;
@@ -34,11 +30,7 @@ interface BalanceChangesProps {
 
 function BalanceChangeEntry({ change }: { change: BalanceChange }): JSX.Element | null {
     const { amount, coinType, recipient, unRecognizedToken } = change;
-    const isMdScreen = useMediaQuery(
-        `(min-width: ${BREAK_POINT.md}px) and (max-width: ${BREAK_POINT.lg - 1}px)`,
-    );
-    const coinFormat = isMdScreen ? CoinFormat.ROUNDED : CoinFormat.FULL;
-    const [formatted, symbol] = useFormatCoin(amount, coinType, coinFormat);
+    const [formatted, symbol] = useFormatCoin(amount, coinType, CoinFormat.FULL);
     const { data: coinMetaData } = useCoinMetadata(coinType);
     const isPositive = BigInt(amount) > 0n;
 
@@ -50,7 +42,7 @@ function BalanceChangeEntry({ change }: { change: BalanceChange }): JSX.Element 
         <div className="flex flex-col gap-xs">
             <Card type={CardType.Filled}>
                 <CardImage type={ImageType.BgTransparent}>
-                    <CoinIcon coinType={coinType} />
+                    <Coin type={coinType} />
                 </CardImage>
                 <CardBody
                     title={coinMetaData?.name || symbol}
@@ -99,13 +91,9 @@ function BalanceChangeCard({ changes, owner }: { changes: BalanceChange[]; owner
         >
             <div className="flex flex-col gap-2">
                 {recognizedTokenChanges.map((change, index) => (
-                    <div key={index + change.coinType} className="px-md--rs pb-lg pt-xs">
-                        <Accordion>
-                            <AccordionContent isExpanded>
-                                <BalanceChangeEntry change={change} />
-                            </AccordionContent>
-                        </Accordion>
-                    </div>
+                    <CollapsibleSection key={index + change.coinType} hideBorder>
+                        <BalanceChangeEntry change={change} />
+                    </CollapsibleSection>
                 ))}
                 {unRecognizedTokenChanges.length > 0 && (
                     <div
@@ -115,13 +103,9 @@ function BalanceChangeCard({ changes, owner }: { changes: BalanceChange[]; owner
                         )}
                     >
                         {unRecognizedTokenChanges.map((change, index) => (
-                            <div key={index + change.coinType} className="px-md--rs pb-lg pt-xs">
-                                <Accordion hideBorder>
-                                    <AccordionContent isExpanded>
-                                        <BalanceChangeEntry change={change} />
-                                    </AccordionContent>
-                                </Accordion>
-                            </div>
+                            <CollapsibleSection key={index + change.coinType} hideBorder>
+                                <BalanceChangeEntry change={change} />
+                            </CollapsibleSection>
                         ))}
                     </div>
                 )}

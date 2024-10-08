@@ -13,12 +13,12 @@ use iota_network_stack::Multiaddr;
 use narwhal_node::metrics::NarwhalBenchMetrics;
 use prometheus::Registry;
 use rand::{
-    Rng, RngCore, SeedableRng,
     rngs::{SmallRng, StdRng},
+    Rng, RngCore, SeedableRng,
 };
 use tokio::{
     net::TcpStream,
-    time::{Duration, Instant, interval, sleep},
+    time::{interval, sleep, Duration, Instant},
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
@@ -32,7 +32,6 @@ use worker::LazyNarwhalClient;
 /// * the size of the transactions via the --size property
 /// * the worker address `<ADDR>` to send the transactions to. A url format is expected ex http://127.0.0.1:7000
 /// * the rate of sending transactions via the --rate parameter
-///
 /// Optionally the --nodes parameter can be passed where a list of worker
 /// addresses should be passed. The benchmarking client will first try to
 /// connect to all of those nodes before start sending any transactions. That
@@ -256,7 +255,7 @@ impl Client {
                         }
                     } else {
                         let tx_proto = TransactionProto {
-                            transactions: vec![Bytes::from(transaction)],
+                            transaction: Bytes::from(transaction),
                         };
                         if let Err(e) = grpc_client.submit_transaction(tx_proto).await {
                             submission_error = Some(eyre::Report::msg(format!("{e}")));
@@ -397,7 +396,7 @@ async fn submit_to_consensus(
     };
     let client = client.as_ref().unwrap().load();
     client
-        .submit_transactions(vec![transaction])
+        .submit_transaction(transaction)
         .await
         .map_err(|e| eyre::Report::msg(format!("Failed to submit to consensus: {:?}", e)))?;
     Ok(())

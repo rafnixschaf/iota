@@ -1,14 +1,13 @@
 # Docs site
 
-For more complete docs, visit the
-[IOTA TypeScript SDK docs](https://wiki.iota.org/references/ts-sdk/)
+For more complete docs, visit the [Iota TypeScript SDK docs]()
 
-# IOTA TypeScript SDK
+# Iota TypeScript SDK
 
-This is the IOTA TypeScript SDK built on the IOTA
+This is the Iota TypeScript SDK built on the Iota
 [JSON RPC API](https://github.com/iotaledger/iota/blob/main/docs/content/references/iota-api.mdx).
 It provides utility classes and functions for applications to sign transactions and interact with
-the IOTA network.
+the Iota network.
 
 WARNING: Note that we are still iterating on the RPC and SDK API before TestNet, therefore please
 expect frequent breaking changes in the short-term. We expect the API to stabilize after the
@@ -49,15 +48,11 @@ To get started you need to install [pnpm](https://pnpm.io/), then run the follow
 ```bash
 # Install all dependencies
 $ pnpm install
-
-# Run `build` for the TypeScript SDK if you're in the `sdk/typescript` project
-$ pnpm run build
-
-# Run `sdk build` for the TypeScript SDK if you're in the root of `iota` repo
+# Run the build for the TypeScript SDK
 $ pnpm sdk build
 ```
 
-> All `pnpm` commands below are intended to be run in the root of the IOTA repo.
+> All `pnpm` commands below are intended to be run in the root of the Iota repo.
 
 ## Type Doc
 
@@ -104,7 +99,7 @@ To run E2E tests against Devnet
 VITE_FAUCET_URL='https://faucet.devnet.iota.io:443/gas' VITE_FULLNODE_URL='https://fullnode.devnet.iota.io' pnpm --filter @iota/iota-sdk exec vitest e2e
 ```
 
-## Connecting to IOTA Network
+## Connecting to Iota Network
 
 The `IotaClient` class provides a connection to the JSON-RPC Server and should be used for all
 read-only operations. The default URLs to connect with the RPC server are:
@@ -124,9 +119,9 @@ await client.getCoins({
 });
 ```
 
-For local development, you can run `cargo run --bin --with-faucet --force-regenesis` to spin up a
-local network with a local validator, a fullnode, and a faucet server. Refer to
-[this guide](https://wiki.iota.org/build/iota-local-network) for more information.
+For local development, you can run `cargo run --bin iota-test-validator` to spin up a local network
+with a local validator, a fullnode, and a faucet server. Refer to
+[this guide](https://docs.iota.io/build/iota-local-network) for more information.
 
 ```typescript
 import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
@@ -172,7 +167,7 @@ await requestIotaFromFaucetV0({
 ## Writing APIs
 
 For a primer for building transactions, refer to
-[this guide](https://wiki.iota.org/build/prog-trans-ts-sdk).
+[this guide](https://docs.iota.io/build/prog-trans-ts-sdk).
 
 ### Transfer Object
 
@@ -199,9 +194,9 @@ const result = await client.signAndExecuteTransactionBlock({
 console.log({ result });
 ```
 
-### Transfer IOTA
+### Transfer Iota
 
-To transfer `1000` NANOS to another address:
+To transfer `1000` nano to another address:
 
 ```typescript
 import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
@@ -477,5 +472,49 @@ const client = new IotaClient({
 const events = client.queryEvents({
     query: { Sender: toolbox.address() },
     limit: 2,
+});
+```
+
+Subscribe to all events created by transactions sent by account
+`0xcc2bd176a478baea9a0de7a24cd927661cc6e860d5bacecb9a138ef20dbab231`
+
+```typescript
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+
+const client = new IotaClient({
+    url: getFullnodeUrl('testnet'),
+});
+// calls RPC method 'iotax_subscribeEvent' with params:
+// [ { Sender: '0xbff6ccc8707aa517b4f1b95750a2a8c666012df3' } ]
+const unsubscribe = await client.subscribeEvent({
+    filter: {
+        Sender: '0xcc2bd176a478baea9a0de7a24cd927661cc6e860d5bacecb9a138ef20dbab231',
+    },
+    onMessage(event) {
+        // handle subscription notification message here. This function is called once per subscription message.
+    },
+});
+
+// later, to unsubscribe:
+await unsubscribe();
+```
+
+Subscribe to all events created by a package's `nft` module
+
+```typescript
+import { getFullnodeUrl, IotaClient } from '@iota/iota-sdk/client';
+
+const client = new IotaClient({
+    url: getFullnodeUrl('testnet'),
+});
+const somePackage = '0x...';
+const devnetNftFilter = {
+    MoveModule: { package: somePackage, module: 'nft' },
+};
+const devNftSub = await client.subscribeEvent({
+    filter: devnetNftFilter,
+    onMessage(event) {
+        // handle subscription notification message here
+    },
 });
 ```

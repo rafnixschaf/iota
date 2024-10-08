@@ -5,8 +5,9 @@
 use config::AuthorityIdentifier;
 use iota_macros::fail_point;
 use store::{
-    Map, TypedStoreError, reopen,
-    rocks::{DBMap, MetricConf, ReadWriteOptions, open_cf},
+    reopen,
+    rocks::{open_cf, DBMap, MetricConf, ReadWriteOptions},
+    Map, TypedStoreError,
 };
 use types::{Vote, VoteAPI, VoteInfo};
 

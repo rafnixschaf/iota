@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anemo::{Request, Response, rpc::Status};
+use anemo::{rpc::Status, Request, Response};
 use anemo_tower::auth::AuthorizeRequest;
 use bytes::Bytes;
 
@@ -47,7 +47,7 @@ impl AuthorizeRequest for AllowedEpoch {
 
 #[cfg(test)]
 mod tests {
-    use anemo::{Request, Response, types::response::StatusCode};
+    use anemo::{types::response::StatusCode, Request, Response};
     use anemo_tower::auth::RequireAuthorizationLayer;
     use bytes::Bytes;
     use tower::{BoxError, Service, ServiceBuilder, ServiceExt};

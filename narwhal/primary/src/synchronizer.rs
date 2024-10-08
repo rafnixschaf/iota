@@ -7,45 +7,45 @@ use std::{
     cmp::min,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
     sync::{
-        Arc,
         atomic::{AtomicU64, Ordering},
+        Arc,
     },
     time::Duration,
 };
 
-use anemo::{Network, Request, Response, rpc::Status};
+use anemo::{rpc::Status, Network, Request, Response};
 use config::{AuthorityIdentifier, Committee, WorkerCache};
 use crypto::NetworkPublicKey;
 use fastcrypto::hash::Hash as _;
-use futures::{StreamExt, stream::FuturesOrdered};
+use futures::{stream::FuturesOrdered, StreamExt};
 use iota_common::sync::notify_once::NotifyOnce;
 use iota_metrics::{
-    metered_channel::{Sender, channel_with_total},
+    metered_channel::{channel_with_total, Sender},
     monitored_scope, spawn_logged_monitored_task,
 };
 use iota_network_stack::anemo_ext::{NetworkExt, WaitingPeer};
 use iota_protocol_config::ProtocolConfig;
 use itertools::Itertools;
-use network::{PrimaryToWorkerClient, RetryConfig, client::NetworkClient};
+use network::{client::NetworkClient, PrimaryToWorkerClient, RetryConfig};
 use parking_lot::Mutex;
 use storage::{CertificateStore, PayloadStore};
 use tokio::{
-    sync::{MutexGuard, broadcast, oneshot, watch},
-    task::{JoinSet, spawn_blocking},
-    time::{Instant, sleep, timeout},
+    sync::{broadcast, oneshot, watch, MutexGuard},
+    task::{spawn_blocking, JoinSet},
+    time::{sleep, timeout, Instant},
 };
 use tracing::{debug, error, instrument, trace, warn};
 use types::{
+    ensure,
+    error::{AcceptNotification, DagError, DagResult},
     Certificate, CertificateAPI, CertificateDigest, Header, HeaderAPI, PrimaryToPrimaryClient,
     Round, SendCertificateRequest, SendCertificateResponse, SignatureVerificationState,
-    WorkerSynchronizeMessage, ensure,
-    error::{AcceptNotification, DagError, DagResult},
+    WorkerSynchronizeMessage,
 };
 
 use crate::{
-    CHANNEL_CAPACITY, PrimaryChannelMetrics, aggregators::CertificatesAggregator,
-    certificate_fetcher::CertificateFetcherCommand, consensus::ConsensusRound,
-    metrics::PrimaryMetrics,
+    aggregators::CertificatesAggregator, certificate_fetcher::CertificateFetcherCommand,
+    consensus::ConsensusRound, metrics::PrimaryMetrics, PrimaryChannelMetrics, CHANNEL_CAPACITY,
 };
 
 #[cfg(test)]
@@ -345,7 +345,6 @@ impl Inner {
 /// - Validating and accepting certificates received from peers.
 /// - Triggering fetching for certificates and batches.
 /// - Broadcasting created certificates.
-///
 /// `Synchronizer` contains most of the certificate processing logic in Narwhal.
 #[derive(Clone)]
 pub struct Synchronizer {
@@ -1321,14 +1320,14 @@ impl Synchronizer {
                 let inner = inner.clone();
                 async move {
                     let result = client.synchronize(worker_name, message).await.map_err(|e| {
-                        backoff::Error::transient(DagError::Network(format!("{e:?}")))
+                        backoff::Error::transient(DagError::NetworkError(format!("{e:?}")))
                     });
                     if result.is_ok() {
                         for digest in &digests {
                             inner
                                 .payload_store
                                 .write(digest, &worker_id)
-                                .map_err(|e| backoff::Error::permanent(DagError::Store(e)))?
+                                .map_err(|e| backoff::Error::permanent(DagError::StoreError(e)))?
                         }
                     }
                     result
@@ -1344,7 +1343,7 @@ impl Synchronizer {
                 results = &mut wait_synchronize => {
                     break results
                         .map(|_| ())
-                        .map_err(|e| DagError::Network(format!("error synchronizing batches: {e:?}")))
+                        .map_err(|e| DagError::NetworkError(format!("error synchronizing batches: {e:?}")))
                 },
                 // This aborts based on consensus round and not narwhal round. When this function
                 // is used as part of handling vote requests, this may cause us to wait a bit
@@ -1500,11 +1499,14 @@ impl State {
         let notify = Arc::new(NotifyOnce::new());
         assert!(
             self.suspended
-                .insert(digest, SuspendedCertificate {
-                    certificate,
-                    missing_parents: missing_parents_map,
-                    notify: notify.clone(),
-                })
+                .insert(
+                    digest,
+                    SuspendedCertificate {
+                        certificate,
+                        missing_parents: missing_parents_map,
+                        notify: notify.clone(),
+                    }
+                )
                 .is_none()
         );
         for d in missing_parents {
@@ -1612,7 +1614,7 @@ mod tests {
     use config::Committee;
     use fastcrypto::{hash::Hash, traits::KeyPair};
     use itertools::Itertools;
-    use test_utils::{CommitteeFixture, make_optimal_signed_certificates};
+    use test_utils::{make_optimal_signed_certificates, CommitteeFixture};
     use types::{Certificate, Round};
 
     use crate::synchronizer::State;
@@ -1673,8 +1675,7 @@ mod tests {
         let ((round, certificate_digest), suspended_certificate) =
             state.run_gc_once(GC_ROUND).unwrap();
 
-        assert_eq!(certificate_digest, certificates[0].digest()); // Ensure that only the missing certificate digest of round 1 gets garbage
-        // collected.
+        assert_eq!(certificate_digest, certificates[0].digest()); // Ensure that only the missing certificate digest of round 1 gets garbage collected.
         assert_eq!(round, 1);
         assert!(suspended_certificate.is_none()); // We don't have its certificate
 

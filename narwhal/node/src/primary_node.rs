@@ -7,27 +7,27 @@ use std::{sync::Arc, time::Instant};
 use anemo::PeerId;
 use config::{AuthorityIdentifier, Committee, Parameters, WorkerCache};
 use crypto::{KeyPair, NetworkKeyPair, PublicKey};
-use executor::{ExecutionState, Executor, SubscriberResult, get_restored_consensus_output};
+use executor::{get_restored_consensus_output, ExecutionState, Executor, SubscriberResult};
 use fastcrypto::traits::{KeyPair as _, VerifyingKey};
-use iota_metrics::{RegistryID, RegistryService, metered_channel};
+use iota_metrics::{metered_channel, RegistryID, RegistryService};
 use iota_protocol_config::ProtocolConfig;
 use network::client::NetworkClient;
 use primary::{
-    NUM_SHUTDOWN_RECEIVERS, Primary, PrimaryChannelMetrics,
     consensus::{
         Bullshark, ChannelMetrics, Consensus, ConsensusMetrics, ConsensusRound, LeaderSchedule,
     },
+    Primary, PrimaryChannelMetrics, NUM_SHUTDOWN_RECEIVERS,
 };
 use prometheus::{IntGauge, Registry};
 use storage::NodeStorage;
 use tokio::{
-    sync::{RwLock, watch},
+    sync::{watch, RwLock},
     task::JoinHandle,
 };
 use tracing::{info, instrument};
 use types::{Certificate, ConditionalBroadcastReceiver, PreSubscribedBroadcastSender, Round};
 
-use crate::{FuturesUnordered, NodeError, metrics::new_registry, try_join_all};
+use crate::{metrics::new_registry, try_join_all, FuturesUnordered, NodeError};
 
 struct PrimaryNodeInner {
     // The configuration parameters.

@@ -33,10 +33,10 @@ pub enum SubscriberError {
     ClosedChannel(String),
 
     #[error("Storage failure: {0}")]
-    Store(#[from] StoreError),
+    StoreError(#[from] StoreError),
 
     #[error("Error occurred while retrieving certificate {0} payload: {1}")]
-    PayloadRetrieve(CertificateDigest, String),
+    PayloadRetrieveError(CertificateDigest, String),
 
     #[error("Consensus referenced unexpected worker id {0}")]
     UnexpectedWorkerId(WorkerId),
@@ -45,7 +45,7 @@ pub enum SubscriberError {
     ExecutorConnectionDropped,
 
     #[error("Deserialization of consensus message failed: {0}")]
-    Serialization(String),
+    SerializationError(String),
 
     #[error("Received unexpected protocol message from consensus")]
     UnexpectedProtocolMessage,
@@ -54,20 +54,20 @@ pub enum SubscriberError {
     OnlyOneConsensusClientPermitted,
 
     #[error("Execution engine failed: {0}")]
-    NodeExecution(String),
+    NodeExecutionError(String),
 
     #[error("Client transaction invalid: {0}")]
-    ClientExecution(String),
+    ClientExecutionError(String),
 }
 
 impl From<Box<bcs::Error>> for SubscriberError {
     fn from(e: Box<bcs::Error>) -> Self {
-        Self::Serialization(e.to_string())
+        Self::SerializationError(e.to_string())
     }
 }
 
 impl From<Box<bincode::ErrorKind>> for SubscriberError {
     fn from(e: Box<bincode::ErrorKind>) -> Self {
-        Self::Serialization(e.to_string())
+        Self::SerializationError(e.to_string())
     }
 }

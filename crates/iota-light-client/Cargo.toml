@@ -1,17 +1,10 @@
 [package]
 name = "iota-light-client"
-version.workspace = true
+version = "0.0.0"
 authors = ["IOTA Foundation <contact@iota.org>"]
 edition = "2021"
 license = "Apache-2.0"
 publish = false
-
-[lib]
-path = "src/lib.rs"
-
-[[bin]]
-name = "iota-light-client"
-path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true

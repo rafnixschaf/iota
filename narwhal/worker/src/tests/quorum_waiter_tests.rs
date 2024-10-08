@@ -4,11 +4,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use prometheus::Registry;
-use test_utils::{CommitteeFixture, WorkerToWorkerMockServer, batch, test_network};
+use test_utils::{batch, test_network, CommitteeFixture, WorkerToWorkerMockServer};
 use types::PreSubscribedBroadcastSender;
 
 use super::*;
-use crate::{NUM_SHUTDOWN_RECEIVERS, metrics::WorkerMetrics};
+use crate::{metrics::WorkerMetrics, NUM_SHUTDOWN_RECEIVERS};
 
 #[tokio::test]
 async fn wait_for_quorum() {

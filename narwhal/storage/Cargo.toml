@@ -13,7 +13,6 @@ fastcrypto-tbls.workspace = true
 futures.workspace = true
 iota-common.workspace = true
 iota-macros.workspace = true
-iota-metrics.workspace = true
 lru.workspace = true
 parking_lot.workspace = true
 prometheus.workspace = true

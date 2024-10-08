@@ -15,12 +15,11 @@ use network::client::NetworkClient;
 use once_cell::sync::OnceCell;
 use prometheus::Registry;
 use storage::{CertificateStore, NodeStorage};
-use test_utils::{CommitteeFixture, latest_protocol_version, temp_dir};
+use test_utils::{latest_protocol_version, temp_dir, CommitteeFixture};
 use tokio::{
     sync::{
-        Mutex,
-        mpsc::{self, Receiver, Sender, error::TryRecvError},
-        watch,
+        mpsc::{self, error::TryRecvError, Receiver, Sender},
+        watch, Mutex,
     },
     time::sleep,
 };
@@ -33,8 +32,8 @@ use types::{
 };
 
 use crate::{
-    PrimaryChannelMetrics, certificate_fetcher::CertificateFetcher, consensus::ConsensusRound,
-    metrics::PrimaryMetrics, primary::NUM_SHUTDOWN_RECEIVERS, synchronizer::Synchronizer,
+    certificate_fetcher::CertificateFetcher, consensus::ConsensusRound, metrics::PrimaryMetrics,
+    primary::NUM_SHUTDOWN_RECEIVERS, synchronizer::Synchronizer, PrimaryChannelMetrics,
 };
 
 pub struct NetworkProxy {

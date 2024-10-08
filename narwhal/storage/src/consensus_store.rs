@@ -6,8 +6,9 @@ use std::collections::HashMap;
 
 use config::AuthorityIdentifier;
 use store::{
-    Map, TypedStoreError, reopen,
-    rocks::{DBMap, MetricConf, ReadWriteOptions, open_cf},
+    reopen,
+    rocks::{open_cf, DBMap, MetricConf, ReadWriteOptions},
+    Map, TypedStoreError,
 };
 use tracing::debug;
 use types::{CommittedSubDag, ConsensusCommit, ConsensusCommitV2, Round, SequenceNumber};
@@ -165,7 +166,7 @@ mod test {
         for sequence_number in 0..10 {
             let sub_dag = CommittedSubDag::new(
                 vec![],
-                Certificate::default_for_testing(),
+                Certificate::default(),
                 sequence_number,
                 ReputationScores::new(&committee),
                 None,
@@ -194,7 +195,7 @@ mod test {
 
             let sub_dag = CommittedSubDag::new(
                 vec![],
-                Certificate::default_for_testing(),
+                Certificate::default(),
                 sequence_number,
                 scores,
                 None,

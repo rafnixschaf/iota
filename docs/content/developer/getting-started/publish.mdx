@@ -4,8 +4,6 @@ tags: [move, how-to, cli]
 ---
 
 import AddressPrefix from "../../_snippets/address-prefix.mdx";
-import Quiz from '@site/src/components/Quiz';
-import questions from '/json/developer/getting-started/publish.json';
 
 # Publish a Package
 
@@ -16,7 +14,7 @@ After you have successfully [created](create-a-package.mdx) and [tested](build-t
 To publish your package, use the IOTA client's `publish` command. Execute this command from your package's root directory, and include the `--gas-budget` parameter to set the maximum gas you're willing to spend on this transaction. If the transaction requires more gas than your budget, it will fail.
 
 ```shell
-iota client publish
+iota client publish --gas-budget 5000000
 ```
 
 Once the transaction succeeds, you will receive a response similar to the following, detailing the transaction data, effects, and any changes to objects and balances:
@@ -36,7 +34,7 @@ Once the transaction succeeds, you will receive a response similar to the follow
 │  │ PackageID: <PACKAGE-ID>                                          │
 │  │ Version: 1                                                       │
 │  │ Digest: <DIGEST-HASH>                                            │
-│  │ Modules: first_package                                               │
+│  │ Modules: my_module                                               │
 │  └──                                                                │
 ╰─────────────────────────────────────────────────────────────────────╯
 ```
@@ -71,7 +69,7 @@ iota client objects
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
 │ │ version    │  3                                                                   │ │
 │ │ digest     │  <DIGEST-HASH>                                                       │ │
-│ │ objectType │  <PACKAGE-ID>::first_package::Forge                                      │ │
+│ │ objectType │  <PACKAGE-ID>::my_module::Forge                                      │ │
 │ ╰────────────┴──────────────────────────────────────────────────────────────────────╯ │
 │ ╭────────────┬──────────────────────────────────────────────────────────────────────╮ │
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
@@ -94,16 +92,16 @@ After successfully publishing the package, you can use the `iota client call` co
 
 ```mermaid
 flowchart TB
-    first_package["first_package::new_sword(&Forge, strength, magic)"]
+    my_module["my_module::new_sword(&Forge, strength, magic)"]
     
     IOTA_client["IOTA client"]
 
     subgraph IOTA Blockchain
-	first_package
-	first_package --Sword--> address
+	my_module
+	my_module --Sword--> address
     end
     
-    IOTA_client --"PTB"--> first_package
+    IOTA_client --"PTB"--> my_module
 ```
 
 #### Programmable Transaction Example
@@ -114,7 +112,7 @@ The following example demonstrates how to call the `new_sword` function from you
 $ iota client ptb \
 	--assign forge @<FORGE-ID> \
 	--assign to_address @<TO-ADDRESS> \
-	--move-call <PACKAGE-ID>::first_package::new_sword forge 3 3 \
+	--move-call <PACKAGE-ID>::my_module::new_sword forge 3 3 \
 	--assign sword \
 	--transfer-objects "[sword]" to_address \
 	--gas-budget 100000000
@@ -136,7 +134,7 @@ After executing the transaction, verify the status of the `Sword` object using t
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
 │ │ version    │  4                                                                   │ │
 │ │ digest     │  <DIGEST-HASH>                                                       │ │
-│ │ objectType │  <PACKAGE-ID>::first_package::Forge                                      │ │
+│ │ objectType │  <PACKAGE-ID>::my_module::Forge                                      │ │
 │ ╰────────────┴──────────────────────────────────────────────────────────────────────╯ │
 │ ╭────────────┬──────────────────────────────────────────────────────────────────────╮ │
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
@@ -148,7 +146,7 @@ After executing the transaction, verify the status of the `Sword` object using t
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
 │ │ version    │  4                                                                   │ │
 │ │ digest     │  <DIGEST-HASH>                                                       │ │
-│ │ objectType │  <PACKAGE-ID>::first_package::Sword                                      │ │
+│ │ objectType │  <PACKAGE-ID>::my_module::Sword                                      │ │
 │ ╰────────────┴──────────────────────────────────────────────────────────────────────╯ │
 │ ╭────────────┬──────────────────────────────────────────────────────────────────────╮ │
 │ │ objectId   │  <OBJECT-ID>                                                         │ │
@@ -160,6 +158,3 @@ After executing the transaction, verify the status of the `Sword` object using t
 ```
 
 Congratulations! You have successfully published a package to the IOTA network and modified the blockchain state using a programmable transaction block.
-
-
-<Quiz questions={questions} />

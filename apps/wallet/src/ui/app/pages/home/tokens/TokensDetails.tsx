@@ -213,7 +213,6 @@ function TokenDetails({ coinType }: TokenDetailsProps) {
                                 icon={<Send />}
                                 size={ButtonSize.Small}
                                 disabled={activeAccount?.isLocked || !coinBalances?.length}
-                                testId="send-coin-button"
                             />
                         </div>
                     </div>
@@ -221,7 +220,10 @@ function TokenDetails({ coinType }: TokenDetailsProps) {
                         <UnlockAccountButton account={activeAccount} />
                     ) : (
                         <div className="flex w-full flex-col gap-md">
-                            <div className="flex w-full flex-col items-center gap-3 rounded-2xl">
+                            <div
+                                data-testid="coin-balance"
+                                className="flex w-full flex-col items-center gap-3 rounded-2xl"
+                            >
                                 {!accountHasIota ? (
                                     <div className="flex flex-col gap-5">
                                         <div className="flex flex-col flex-nowrap items-center justify-center px-2.5 text-center">

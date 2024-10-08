@@ -6,9 +6,9 @@ use anyhow::Result;
 use async_trait::async_trait;
 use crypto::NetworkPublicKey;
 use types::{
-    FetchBatchesRequest, FetchBatchesResponse, FetchCertificatesRequest, FetchCertificatesResponse,
-    RequestBatchesRequest, RequestBatchesResponse, WorkerOthersBatchMessage, WorkerOwnBatchMessage,
-    WorkerSynchronizeMessage, error::LocalClientError,
+    error::LocalClientError, FetchBatchesRequest, FetchBatchesResponse, FetchCertificatesRequest,
+    FetchCertificatesResponse, RequestBatchesRequest, RequestBatchesResponse,
+    WorkerOthersBatchMessage, WorkerOwnBatchMessage, WorkerSynchronizeMessage,
 };
 
 use crate::CancelOnDropHandler;

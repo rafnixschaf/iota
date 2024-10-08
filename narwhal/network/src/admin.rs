@@ -3,13 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener},
     time::Duration,
 };
 
-use axum::{Json, Router, extract::Extension, http::StatusCode, routing::get};
-use iota_metrics::spawn_logged_monitored_task;
-use tokio::{net::TcpListener, task::JoinHandle, time::sleep};
+use axum::{extract::Extension, http::StatusCode, routing::get, Json, Router};
+use iota_metrics::{spawn_logged_monitored_task, spawn_monitored_task};
+use tokio::{task::JoinHandle, time::sleep};
 use tracing::{error, info};
 use types::ConditionalBroadcastReceiver;
 
@@ -30,7 +30,15 @@ pub fn start_admin_server(
         "starting admin server"
     );
 
+    let handle = axum_server::Handle::new();
+    let shutdown_handle = handle.clone();
+
     let mut handles = Vec::new();
+    // Spawn a task to shutdown server.
+    handles.push(spawn_monitored_task!(async move {
+        _ = tr_shutdown.receiver.recv().await;
+        handle.shutdown();
+    }));
 
     handles.push(spawn_logged_monitored_task!(
         async move {
@@ -40,12 +48,11 @@ pub fn start_admin_server(
             loop {
                 total_retries -= 1;
 
-                match TcpListener::bind(socket_address).await {
+                match TcpListener::bind(socket_address) {
                     Ok(listener) => {
-                        axum::serve(listener, router)
-                            .with_graceful_shutdown(async move {
-                                _ = tr_shutdown.receiver.recv().await;
-                            })
+                        axum_server::from_tcp(listener)
+                            .handle(shutdown_handle)
+                            .serve(router.into_make_service())
                             .await
                             .unwrap_or_else(|err| {
                                 panic!("Failed to boot admin {}: {err}", socket_address)

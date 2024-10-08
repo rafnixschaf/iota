@@ -5,7 +5,7 @@
 use std::time::Duration;
 
 use bytes::Bytes;
-use test_utils::cluster::{Cluster, setup_tracing};
+use test_utils::cluster::{setup_tracing, Cluster};
 use tracing::info;
 use types::TransactionProto;
 
@@ -45,7 +45,7 @@ async fn test_restore_from_disk() {
         tokio::spawn(async move {
             let tr = bcs::to_bytes(&tx).unwrap();
             let txn = TransactionProto {
-                transactions: vec![Bytes::from(tr)],
+                transaction: Bytes::from(tr),
             };
 
             c.submit_transaction(txn).await.unwrap();

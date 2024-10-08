@@ -2,7 +2,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
 #![allow(clippy::mutable_key_type)]
 
 use std::collections::HashMap;
@@ -13,7 +12,7 @@ use config::AuthorityIdentifier;
 #[allow(unused_imports)]
 use fastcrypto::traits::KeyPair;
 use prometheus::Registry;
-use test_utils::{CommitteeFixture, latest_protocol_version};
+use test_utils::{latest_protocol_version, CommitteeFixture};
 #[allow(unused_imports)]
 use tokio::sync::mpsc::channel;
 use tokio::sync::watch;
@@ -22,8 +21,8 @@ use types::{CertificateAPI, HeaderAPI, PreSubscribedBroadcastSender};
 
 use super::*;
 use crate::consensus::{
-    Consensus, ConsensusMetrics, ConsensusRound, NUM_SHUTDOWN_RECEIVERS, NUM_SUB_DAGS_PER_SCHEDULE,
-    make_certificate_store, make_consensus_store,
+    make_certificate_store, make_consensus_store, Consensus, ConsensusMetrics, ConsensusRound,
+    NUM_SHUTDOWN_RECEIVERS, NUM_SUB_DAGS_PER_SCHEDULE,
 };
 
 #[tokio::test]
@@ -90,7 +89,7 @@ async fn commit_one_with_leader_schedule_change() {
             description: "When schedule change is enabled, then authority 0 is bad node and swapped with authority 3".to_string(),
             protocol_config: {
                 let mut config: ProtocolConfig = latest_protocol_version();
-                config.set_consensus_bad_nodes_stake_threshold_for_testing(33);
+                config.set_consensus_bad_nodes_stake_threshold(33);
                 config
             },
             rounds: 11,
@@ -182,23 +181,29 @@ async fn not_enough_support_with_leader_schedule_change() {
     // round 7 so we don't commit this leader immediately. That will basically
     // postpone the update of the leader schedule. We expect this leader to get
     // committed through its connection with a later leader.
-    leader_configs.insert(6, test_utils::TestLeaderConfiguration {
-        round: 6,
-        authority: AuthorityIdentifier(2),
-        should_omit: false,
-        support: Some(test_utils::TestLeaderSupport::Weak),
-    });
+    leader_configs.insert(
+        6,
+        test_utils::TestLeaderConfiguration {
+            round: 6,
+            authority: AuthorityIdentifier(2),
+            should_omit: false,
+            support: Some(test_utils::TestLeaderSupport::Weak),
+        },
+    );
 
     // The leader of round 8 (with the old schedule) is receiving no support at all
     // from any of the children of round 9. So again, the leader schedule update
     // will get postponed. As no certificate of round 9 refers to this leader,
     // we don't expect to get committed at all.
-    leader_configs.insert(8, test_utils::TestLeaderConfiguration {
-        round: 8,
-        authority: AuthorityIdentifier(3),
-        should_omit: false,
-        support: Some(test_utils::TestLeaderSupport::NoSupport),
-    });
+    leader_configs.insert(
+        8,
+        test_utils::TestLeaderConfiguration {
+            round: 8,
+            authority: AuthorityIdentifier(3),
+            should_omit: false,
+            support: Some(test_utils::TestLeaderSupport::NoSupport),
+        },
+    );
 
     // We expect the leader of round 10 to be the authority with id 0 (reminder: a
     // round robin schedule is used for testing) with the "old" schedule. We
@@ -209,12 +214,15 @@ async fn not_enough_support_with_leader_schedule_change() {
     // a recursive commit will take place the leader for round 10 will be
     // the authority with id 3, for which we will have a certificate present, thus
     // we should observe the leader get committed.
-    leader_configs.insert(10, test_utils::TestLeaderConfiguration {
-        round: 10,
-        authority: AuthorityIdentifier(0),
-        should_omit: false,
-        support: Some(test_utils::TestLeaderSupport::Weak),
-    });
+    leader_configs.insert(
+        10,
+        test_utils::TestLeaderConfiguration {
+            round: 10,
+            authority: AuthorityIdentifier(0),
+            should_omit: false,
+            support: Some(test_utils::TestLeaderSupport::Weak),
+        },
+    );
 
     let (out, _parents) = test_utils::make_certificates_with_leader_configuration(
         &committee,
@@ -226,7 +234,7 @@ async fn not_enough_support_with_leader_schedule_change() {
     certificates.extend(out);
 
     let mut config: ProtocolConfig = latest_protocol_version();
-    config.set_consensus_bad_nodes_stake_threshold_for_testing(33);
+    config.set_consensus_bad_nodes_stake_threshold(33);
 
     let metrics = Arc::new(ConsensusMetrics::new(&Registry::new()));
     let gc_depth = 50;
@@ -328,12 +336,15 @@ async fn test_long_period_of_asynchrony_for_leader_schedule_change() {
     // We make the leaders for the corresponding rounds receive weak support, so we
     // can't commit immediately
     for (round, authority_id) in leaders_with_weak_support {
-        leader_configs.insert(round, test_utils::TestLeaderConfiguration {
+        leader_configs.insert(
             round,
-            authority: AuthorityIdentifier(authority_id),
-            should_omit: false,
-            support: Some(test_utils::TestLeaderSupport::Weak),
-        });
+            test_utils::TestLeaderConfiguration {
+                round,
+                authority: AuthorityIdentifier(authority_id),
+                should_omit: false,
+                support: Some(test_utils::TestLeaderSupport::Weak),
+            },
+        );
     }
 
     let (out, _parents) = test_utils::make_certificates_with_leader_configuration(
@@ -346,7 +357,7 @@ async fn test_long_period_of_asynchrony_for_leader_schedule_change() {
     certificates.extend(out);
 
     let mut config: ProtocolConfig = latest_protocol_version();
-    config.set_consensus_bad_nodes_stake_threshold_for_testing(33);
+    config.set_consensus_bad_nodes_stake_threshold(33);
 
     let metrics = Arc::new(ConsensusMetrics::new(&Registry::new()));
     let gc_depth = 50;
@@ -671,7 +682,7 @@ async fn not_enough_support() {
     certificates.push_back(certificate);
     next_parents.insert(digest);
 
-    parents = next_parents.clone();
+    parents.clone_from(&next_parents);
 
     // Rounds 4: Fully connected graph. This is the where we "boost" the leader.
     let nodes: Vec<_> = ids.to_vec();
