@@ -713,6 +713,18 @@ impl Builder {
                 )
                 .expect("signature should be valid");
         }
+
+        // Validate migration content in order to avoid corrupted or malicious data
+        if let Some(migration_tx_data) = &self.migration_tx_data {
+            migration_tx_data
+                .validate_from_unsigned_genesis(&unsigned_genesis)
+                .expect("the migration data is corrupted");
+        } else {
+            assert!(
+                self.is_vanilla(),
+                "the genesis without migration data should be a vanilla version"
+            );
+        }
     }
 
     pub async fn load<P: AsRef<Path>>(path: P) -> anyhow::Result<Self, anyhow::Error> {
@@ -1052,7 +1064,7 @@ fn extract_migration_transactions_data(
             None => break,
         };
 
-        let (migration_transaction, migration_effects, migration_events, objects) =
+        let (migration_transaction, migration_effects, migration_events, _) =
             create_genesis_transaction(
                 objects_per_chunk.to_vec(),
                 vec![],
@@ -1063,12 +1075,7 @@ fn extract_migration_transactions_data(
 
         txs_data.insert(
             *migration_transaction.digest(),
-            (
-                migration_transaction,
-                migration_effects,
-                migration_events,
-                objects,
-            ),
+            (migration_transaction, migration_effects, migration_events),
         );
         start_idx += chunk;
     }
@@ -1088,7 +1095,7 @@ fn create_genesis_checkpoint(
     let mut effects_digests = vec![execution_digests];
 
     for digest in txs_data.keys() {
-        if let Some((_, effects, _, _)) = txs_data.get(digest) {
+        if let Some((_, effects, _)) = txs_data.get(digest) {
             effects_digests.push(effects.execution_digests());
         }
     }
