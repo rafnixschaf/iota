@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use fastcrypto::encoding::{Encoding, Hex};
 use iota_config::{
-    IOTA_GENESIS_FILENAME, IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
+    IOTA_GENESIS_FILENAME,
     genesis::{TokenAllocation, TokenDistributionScheduleBuilder, UnsignedGenesis},
 };
 use iota_genesis_builder::{Builder, GENESIS_BUILDER_PARAMETERS_FILE, SnapshotSource, SnapshotUrl};
