@@ -446,7 +446,7 @@ impl IotaNode {
 
         let genesis = config.genesis()?.clone();
         let migration_tx_data =
-            (!genesis.is_migratable()).then_some(config.load_migration_tx_data()?);
+            (genesis.contains_migrations()).then_some(config.load_migration_tx_data()?);
 
         let secret = Arc::pin(config.protocol_key_pair().copy());
         let genesis_committee = genesis.committee()?;
