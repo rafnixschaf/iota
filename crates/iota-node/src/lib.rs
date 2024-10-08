@@ -662,26 +662,10 @@ impl IotaNode {
                 .set_killswitch_tombstone_pruning(true);
         }
 
-        let genesis_objects = migration_tx_data.as_ref().map_or_else(
-            || genesis.objects().to_vec(),
-            |migration_tx_data| {
-                genesis
-                    .objects()
-                    .iter()
-                    .cloned()
-                    .chain(
-                        migration_tx_data
-                            .txs_data()
-                            .values()
-                            .flat_map(|(tx, _, _)| {
-                                migration_tx_data
-                                    .objects_by_tx_digest(*tx.digest())
-                                    .expect("the migration data is corrupted")
-                            }),
-                    )
-                    .collect::<Vec<_>>()
-            },
-        );
+        let mut genesis_objects = genesis.objects().to_vec();
+        if let Some(migration_tx_data) = migration_tx_data.as_ref() {
+            genesis_objects.extend(migration_tx_data.get_objects()));
+        }
 
         let authority_name = config.protocol_public_key();
         let validator_tx_finalizer =
