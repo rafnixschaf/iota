@@ -171,10 +171,6 @@ impl Builder {
         self
     }
 
-    pub fn migration_tx_data(&self) -> Option<&MigrationTxData> {
-        self.migration_tx_data.as_ref()
-    }
-
     pub fn take_migration_tx_data(&mut self) -> Option<MigrationTxData> {
         self.migration_tx_data.take()
     }
