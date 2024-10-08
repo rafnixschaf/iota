@@ -5,35 +5,36 @@
 use std::{
     collections::{BTreeMap, HashSet},
     fs::{self, File},
-    io::{prelude::Read, BufReader, BufWriter},
+    io::{BufReader, BufWriter, prelude::Read},
     path::{Path, PathBuf},
     str::FromStr,
     sync::Arc,
 };
 
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use camino::Utf8Path;
 use fastcrypto::{hash::HashFunction, traits::KeyPair};
 use flate2::bufread::GzDecoder;
 use iota_config::{
+    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
     genesis::{
         Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
         UnsignedGenesis,
     },
     migration_tx_data::{MigrationTxData, TransactionsData},
-    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
 };
 use iota_execution::{self, Executor};
 use iota_framework::{BuiltInFramework, SystemPackage};
 use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_sdk::{types::block::address::Address, Url};
+use iota_sdk::{Url, types::block::address::Address};
 use iota_types::{
-    balance::{Balance, BALANCE_MODULE_NAME},
+    BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_ADDRESS,
+    balance::{BALANCE_MODULE_NAME, Balance},
     base_types::{
         ExecutionDigests, IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest,
         TxContext,
     },
-    bridge::{BridgeChainId, BRIDGE_CREATE_FUNCTION_NAME, BRIDGE_MODULE_NAME},
+    bridge::{BRIDGE_CREATE_FUNCTION_NAME, BRIDGE_MODULE_NAME, BridgeChainId},
     committee::Committee,
     crypto::{
         AuthorityKeyPair, AuthorityPublicKeyBytes, AuthoritySignInfo, AuthoritySignInfoTrait,
@@ -45,12 +46,12 @@ use iota_types::{
     epoch_data::EpochData,
     event::Event,
     gas::IotaGasStatus,
-    gas_coin::{GasCoin, GAS},
+    gas_coin::{GAS, GasCoin},
     governance::StakedIota,
     id::UID,
     in_memory_storage::InMemoryStorage,
     inner_temporary_store::InnerTemporaryStore,
-    iota_system_state::{get_iota_system_state, IotaSystemState, IotaSystemStateTrait},
+    iota_system_state::{IotaSystemState, IotaSystemStateTrait, get_iota_system_state},
     is_system_package,
     message_envelope::Message,
     messages_checkpoint::{
@@ -69,13 +70,12 @@ use iota_types::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,
         Transaction,
     },
-    BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_ADDRESS,
 };
 use move_binary_format::CompiledModule;
 use move_core_types::ident_str;
 use serde::{Deserialize, Serialize};
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
-use stake::{delegate_genesis_stake, GenesisStake};
+use stake::{GenesisStake, delegate_genesis_stake};
 use stardust::migration::MigrationObjects;
 use tracing::trace;
 use validator_info::{GenesisValidatorInfo, GenesisValidatorMetadata, ValidatorInfo};
@@ -192,13 +192,11 @@ impl Builder {
         validator: ValidatorInfo,
         proof_of_possession: AuthoritySignature,
     ) -> Self {
-        self.validators.insert(
-            validator.protocol_key(),
-            GenesisValidatorInfo {
+        self.validators
+            .insert(validator.protocol_key(), GenesisValidatorInfo {
                 info: validator,
                 proof_of_possession,
-            },
-        );
+            });
         self
     }
 
@@ -507,9 +505,11 @@ impl Builder {
 
             // Validators should not have duplicate addresses so the result of insertion
             // should be None.
-            assert!(address_to_pool_id
-                .insert(metadata.iota_address, onchain_validator.staking_pool.id)
-                .is_none());
+            assert!(
+                address_to_pool_id
+                    .insert(metadata.iota_address, onchain_validator.staking_pool.id)
+                    .is_none()
+            );
             assert_eq!(validator.info.iota_address(), metadata.iota_address);
             assert_eq!(validator.info.protocol_key(), metadata.iota_pubkey_bytes());
             assert_eq!(validator.info.network_key, metadata.network_pubkey);
@@ -1757,12 +1757,12 @@ mod test {
     use iota_types::{
         base_types::IotaAddress,
         crypto::{
-            generate_proof_of_possession, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-            NetworkKeyPair,
+            AccountKeyPair, AuthorityKeyPair, NetworkKeyPair, generate_proof_of_possession,
+            get_key_pair_from_rng,
         },
     };
 
-    use crate::{validator_info::ValidatorInfo, Builder};
+    use crate::{Builder, validator_info::ValidatorInfo};
 
     #[test]
     fn allocation_csv() {

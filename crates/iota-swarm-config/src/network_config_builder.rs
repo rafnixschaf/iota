@@ -10,15 +10,15 @@ use std::{
 };
 
 use iota_config::{
+    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
     genesis::{TokenAllocation, TokenDistributionScheduleBuilder},
     node::AuthorityOverloadConfig,
-    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
 };
 use iota_macros::nondeterministic;
 use iota_types::{
     base_types::{AuthorityName, IotaAddress},
     committee::{Committee, ProtocolVersion},
-    crypto::{get_key_pair_from_rng, AccountKeyPair, KeypairTraits, PublicKey},
+    crypto::{AccountKeyPair, KeypairTraits, PublicKey, get_key_pair_from_rng},
     object::Object,
     supported_protocol_versions::SupportedProtocolVersions,
     traffic_control::{PolicyConfig, RemoteFirewallConfig},
@@ -27,8 +27,8 @@ use rand::rngs::OsRng;
 
 use crate::{
     genesis_config::{
-        AccountConfig, GenesisConfig, ValidatorGenesisConfig, ValidatorGenesisConfigBuilder,
-        DEFAULT_GAS_AMOUNT,
+        AccountConfig, DEFAULT_GAS_AMOUNT, GenesisConfig, ValidatorGenesisConfig,
+        ValidatorGenesisConfigBuilder,
     },
     network_config::NetworkConfig,
     node_config_builder::ValidatorConfigBuilder,
