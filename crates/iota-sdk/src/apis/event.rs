@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use futures_core::Stream;
 use iota_json_rpc_api::{IndexerApiClient, ReadApiClient};
 use iota_json_rpc_types::{EventFilter, EventPage, IotaEvent};
@@ -10,8 +10,8 @@ use iota_types::{base_types::TransactionDigest, event::EventID};
 use jsonrpsee::core::client::Subscription;
 
 use crate::{
-    error::{Error, IotaRpcResult},
     SharedRpcClient,
+    error::{Error, IotaRpcResult},
 };
 
 /// Event API provides the functionality to fetch, query, or subscribe to events

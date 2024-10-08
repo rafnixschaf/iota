@@ -2,12 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! This example uses the Read API to get owned objects of an address,
-//! the dynamic fields of an object,
-//! past objects, information about the chain
-//! and the protocol configuration,
-//! the transaction data after executing a transaction,
-//! and finally, the number of transaction blocks known to the server.
+//! This example uses the Read API to get owned objects of an address, the
+//! dynamic fields of an object, past objects, information about the chain and
+//! the protocol configuration, the transaction data after executing a
+//! transaction, and finally, the number of transaction blocks known to the
+//! server.
 //!
 //! cargo run --example read_api
 
@@ -23,8 +22,6 @@ use utils::setup_for_write;
 async fn main() -> Result<(), anyhow::Error> {
     let (client, active_address, _) = setup_for_write().await?;
 
-    // ************ READ API ************ //
-    println!("// ************ READ API ************ //\n");
     // Owned Objects
     let owned_objects = client
         .read_api()
@@ -82,6 +79,14 @@ async fn main() -> Result<(), anyhow::Error> {
     println!("{past_object:?}");
     println!(" *** Past Object ***\n");
 
+    let past_object = client
+        .read_api()
+        .try_get_object_before_version(object_id, version)
+        .await?;
+    println!(" *** Past Object *** ");
+    println!("{past_object:?}");
+    println!(" *** Past Object ***\n");
+
     let iota_get_past_object_request = past_object.clone().into_object()?;
     let multi_past_object = client
         .read_api()
@@ -117,7 +122,6 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let tx_blocks = client.read_api().get_total_transaction_blocks().await?;
     println!("Total transaction blocks {tx_blocks}");
-    // ************ END OF READ API ************ //
 
     Ok(())
 }

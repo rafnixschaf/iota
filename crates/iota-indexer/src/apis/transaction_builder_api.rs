@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
+use diesel::r2d2::R2D2Connection;
 use iota_json_rpc::transaction_builder_api::TransactionBuilderApi as IotaTransactionBuilderApi;
 use iota_json_rpc_types::{IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse};
 use iota_transaction_builder::DataReader;
@@ -15,20 +16,35 @@ use move_core_types::language_storage::StructTag;
 use super::governance_api::GovernanceReadApi;
 use crate::indexer_reader::IndexerReader;
 
-#[derive(Clone, Debug)]
-pub(crate) struct TransactionBuilderApi {
-    inner: IndexerReader,
+pub(crate) struct TransactionBuilderApi<T: R2D2Connection + 'static> {
+    inner: IndexerReader<T>,
 }
 
-impl TransactionBuilderApi {
+impl<T: R2D2Connection> Clone for TransactionBuilderApi<T> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+impl<T: R2D2Connection> core::fmt::Debug for TransactionBuilderApi<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TransactionBuilderApi")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<T: R2D2Connection> TransactionBuilderApi<T> {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(inner: IndexerReader) -> IotaTransactionBuilderApi<TransactionBuilderApi> {
+    pub fn new(inner: IndexerReader<T>) -> IotaTransactionBuilderApi<TransactionBuilderApi<T>> {
         IotaTransactionBuilderApi::new_with_data_reader(Self { inner })
     }
 }
 
 #[async_trait]
-impl DataReader for TransactionBuilderApi {
+impl<T: R2D2Connection> DataReader for TransactionBuilderApi<T> {
     async fn get_owned_objects(
         &self,
         address: IotaAddress,
