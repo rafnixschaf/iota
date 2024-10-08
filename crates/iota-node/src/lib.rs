@@ -426,11 +426,8 @@ impl IotaNode {
         iota_metrics::init_metrics(&prometheus_registry);
 
         let genesis = config.genesis()?;
-        let migration_tx_data = if !genesis.is_vanilla() {
-            Some(config.load_migration_tx_data()?)
-        } else {
-            None
-        };
+        let migration_tx_data =
+            (!genesis.is_migratable()).then_some(config.load_migration_tx_data()?);
 
         let secret = Arc::pin(config.protocol_key_pair().copy());
         let genesis_committee = genesis.committee()?;

@@ -327,7 +327,7 @@ pub async fn run(cmd: Ceremony) -> Result<()> {
 
             check_protocol_version(&builder, protocol_version)?;
 
-            let (genesis, migration_tx_data_option) = builder.build();
+            let genesis = builder.build();
             genesis.save(dir.join(IOTA_GENESIS_FILENAME))?;
 
             println!("Successfully built {IOTA_GENESIS_FILENAME}");
@@ -335,7 +335,7 @@ pub async fn run(cmd: Ceremony) -> Result<()> {
                 "{IOTA_GENESIS_FILENAME} blake2b-256: {}",
                 Hex::encode(genesis.hash())
             );
-            if let Some(migration_tx_data) = migration_tx_data_option {
+            if let Some(migration_tx_data) = builder.migration_tx_data().take() {
                 migration_tx_data.save(dir.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME))?;
                 println!("Successfully built {IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME}");
             }

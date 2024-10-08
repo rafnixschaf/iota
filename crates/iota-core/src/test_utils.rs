@@ -260,7 +260,7 @@ async fn init_genesis(
         builder = builder.add_validator_signature(key);
     }
 
-    let (genesis, _) = builder.build();
+    let genesis = builder.build();
     (genesis, key_pairs, pkg_id)
 }
 

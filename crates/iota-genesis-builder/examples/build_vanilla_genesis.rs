@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
         builder = builder.add_validator_signature(key);
     }
 
-    let (genesis, _) = builder.build();
+    let genesis = builder.build();
     // Save to file
     genesis.save("genesis-vanilla.blob")?;
     Ok(())

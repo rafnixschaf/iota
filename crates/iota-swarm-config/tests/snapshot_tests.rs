@@ -90,7 +90,7 @@ fn populated_genesis_snapshot_matches() {
         builder.build()
     };
 
-    let (genesis, _) = Builder::new()
+    let genesis = Builder::new()
         .with_token_distribution_schedule(token_distribution_schedule)
         .add_validator(validator, pop)
         .with_parameters(GenesisCeremonyParameters {

@@ -162,7 +162,7 @@ impl Genesis {
             .expect("Iota System State Wrapper object must always exist")
     }
 
-    pub fn is_vanilla(&self) -> bool {
+    pub fn is_migratable(&self) -> bool {
         self.checkpoint_contents.size() == 1
     }
 

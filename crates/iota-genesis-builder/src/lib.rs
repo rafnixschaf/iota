@@ -21,6 +21,7 @@ use iota_config::{
         UnsignedGenesis,
     },
     migration_tx_data::{MigrationTxData, TransactionsData},
+    IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
 };
 use iota_execution::{self, Executor};
 use iota_framework::{BuiltInFramework, SystemPackage};
@@ -87,7 +88,6 @@ const GENESIS_BUILDER_TOKEN_DISTRIBUTION_SCHEDULE_FILE: &str = "token-distributi
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 const GENESIS_BUILDER_UNSIGNED_GENESIS_FILE: &str = "unsigned-genesis";
 const GENESIS_BUILDER_MIGRATION_SOURCES_FILE: &str = "migration-sources";
-const GENESIS_BUILDER_MIGRATION_TX_DATA_FILE: &str = "migration-txs-data";
 
 pub const OBJECT_SNAPSHOT_FILE_PATH: &str = "stardust_object_snapshot.bin";
 pub const IOTA_OBJECT_SNAPSHOT_URL: &str = "https://stardust-objects.s3.eu-central-1.amazonaws.com/iota/alphanet/latest/stardust_object_snapshot.bin.gz";
@@ -132,7 +132,7 @@ impl Builder {
 
     /// Checks if the genesis to be built is vanilla or if it includes Stardust
     /// migration stakes
-    pub fn is_vanilla(&self) -> bool {
+    pub fn is_migratable(&self) -> bool {
         self.genesis_stake.is_empty()
     }
 
@@ -165,6 +165,9 @@ impl Builder {
         self
     }
 
+    pub fn migration_tx_data(&self) -> Option<&MigrationTxData> {
+        self.migration_tx_data.as_ref()
+    }
     pub fn add_object(mut self, object: Object) -> Self {
         self.objects.insert(object.id(), object);
         self
@@ -324,11 +327,7 @@ impl Builder {
             &mut self.genesis_stake,
             &mut self.migration_objects,
         );
-        self.migration_tx_data = if !migration_tx_data.is_empty() {
-            Some(migration_tx_data)
-        } else {
-            None
-        };
+        self.migration_tx_data = (!migration_tx_data.is_empty()).then_some(migration_tx_data);
         self.built_genesis = Some(unsigned_genesis);
         self.token_distribution_schedule = Some(token_distribution_schedule);
     }
@@ -352,7 +351,7 @@ impl Builder {
         self.parameters.protocol_version
     }
 
-    pub fn build(mut self) -> (Genesis, Option<MigrationTxData>) {
+    pub fn build(mut self) -> Genesis {
         if self.built_genesis.is_none() {
             self.build_and_cache_unsigned_genesis();
         }
@@ -380,16 +379,13 @@ impl Builder {
             CertifiedCheckpointSummary::new(checkpoint, signatures, &committee).unwrap()
         };
 
-        (
-            Genesis::new(
-                checkpoint,
-                checkpoint_contents,
-                transaction,
-                effects,
-                events,
-                objects,
-            ),
-            self.migration_tx_data,
+        Genesis::new(
+            checkpoint,
+            checkpoint_contents,
+            transaction,
+            effects,
+            events,
+            objects,
         )
     }
 
@@ -721,7 +717,7 @@ impl Builder {
                 .expect("the migration data is corrupted");
         } else {
             assert!(
-                self.is_vanilla(),
+                self.is_migratable(),
                 "the genesis without migration data should be a vanilla version"
             );
         }
@@ -794,7 +790,7 @@ impl Builder {
         }
 
         // Load migration txs data
-        let migration_tx_data_file = path.join(GENESIS_BUILDER_MIGRATION_TX_DATA_FILE);
+        let migration_tx_data_file = path.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
         let migration_tx_data: Option<MigrationTxData> = if !migration_sources.is_empty() {
             Some(MigrationTxData::load(migration_tx_data_file)?)
         } else {
@@ -893,7 +889,7 @@ impl Builder {
             fs::write(file, serde_json::to_string(&self.migration_sources)?)?;
 
             // Write migration transations data
-            let file = path.join(GENESIS_BUILDER_MIGRATION_TX_DATA_FILE);
+            let file = path.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
             self.migration_tx_data
                 .expect("migration data should exist")
                 .save(file)?;
@@ -996,7 +992,7 @@ fn build_unsigned_genesis_data<'info>(
     );
 
     if !genesis_stake.is_empty() {
-        let migration_objects = create_migration_objects(
+        let migration_objects = burn_staked_migration_objects(
             &mut genesis_ctx,
             migration_objects.take_objects(),
             &genesis_objects,
@@ -1083,21 +1079,19 @@ fn extract_migration_transactions_data(
 
 fn create_genesis_checkpoint(
     parameters: &GenesisCeremonyParameters,
-    transaction: &Transaction,
-    effects: &TransactionEffects,
-    txs_data: &TransactionsData,
+    system_genesis_transaction: &Transaction,
+    system_genesis_tx_effects: &TransactionEffects,
+    migration_tx_data: &TransactionsData,
 ) -> (CheckpointSummary, CheckpointContents) {
     let execution_digests = ExecutionDigests {
-        transaction: *transaction.digest(),
-        effects: effects.digest(),
+        transaction: *system_genesis_transaction.digest(),
+        effects: system_genesis_tx_effects.digest(),
     };
 
     let mut effects_digests = vec![execution_digests];
 
-    for digest in txs_data.keys() {
-        if let Some((_, effects, _)) = txs_data.get(digest) {
-            effects_digests.push(effects.execution_digests());
-        }
+    for (_, effects, _) in migration_tx_data.values() {
+        effects_digests.push(effects.execution_digests());
     }
 
     let effects_digests_len = effects_digests.len();
@@ -1487,9 +1481,9 @@ pub fn generate_genesis_system_object(
     Ok(())
 }
 
-fn create_migration_objects(
+fn burn_staked_migration_objects(
     genesis_ctx: &mut TxContext,
-    input_objects: Vec<Object>,
+    migration_objects: Vec<Object>,
     genesis_objects: &[Object],
     parameters: &GenesisChainParameters,
     genesis_stake: &mut GenesisStake,
@@ -1505,8 +1499,7 @@ fn create_migration_objects(
     let executor = iota_execution::executor(&protocol_config, silent, None)
         .expect("Creating an executor should not fail here");
 
-    // inputs are all the migration objects
-    for object in input_objects {
+    for object in migration_objects {
         store.insert_object(object);
     }
 
