@@ -1018,8 +1018,7 @@ fn build_unsigned_genesis_data<'info>(
             genesis_stake,
             metrics.clone(),
         );
-        extract_migration_transactions_data(
-            &mut txs_data,
+        txs_data = create_migration_tx_data(
             migration_objects,
             &protocol_config,
             metrics.clone(),
@@ -1057,28 +1056,16 @@ fn build_unsigned_genesis_data<'info>(
     )
 }
 
-fn extract_migration_transactions_data(
-    txs_data: &mut TransactionsData,
+fn create_migration_tx_data(
     migration_objects: Vec<Object>,
     protocol_config: &ProtocolConfig,
     metrics: Arc<LimitsMetrics>,
     epoch_data: &EpochData,
-) {
-    let avg_chunk_size = migration_objects.len() / MIGRATION_TX_MAX_AMOUNT;
-    let remainder = migration_objects.len() % MIGRATION_TX_MAX_AMOUNT;
+) -> TransactionsData {
+    let mut txs_data = TransactionsData::new();
+    let chunk_size = migration_objects.len() / MIGRATION_TX_MAX_AMOUNT + 1;
 
-    // For the first remainder transactions, the chunk size is chunk_size + 1.
-    // For the remaining transactions, the chunk size is just chunk_size.
-    let chunks =
-        (0..MIGRATION_TX_MAX_AMOUNT).map(|i| avg_chunk_size + if i < remainder { 1 } else { 0 });
-
-    let mut start_idx = 0;
-    for chunk in chunks {
-        let objects_per_chunk = match migration_objects.get(start_idx..start_idx + chunk) {
-            Some(chunk) => chunk.to_vec(),
-            None => break,
-        };
-
+    for objects_per_chunk in migration_objects.chunks(chunk_size) {
         let (migration_transaction, migration_effects, migration_events, _) =
             create_genesis_transaction(
                 objects_per_chunk.to_vec(),
@@ -1092,8 +1079,9 @@ fn extract_migration_transactions_data(
             *migration_transaction.digest(),
             (migration_transaction, migration_effects, migration_events),
         );
-        start_idx += chunk;
     }
+
+    txs_data
 }
 
 // Some tests provide an override of the system packages via objects to the
