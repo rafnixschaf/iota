@@ -928,6 +928,8 @@ impl IotaNode {
         }
     }
 
+    /// Creates an StateSnapshotUploader and start it if the StateSnapshotConfig
+    /// is set.
     fn start_state_snapshot(
         config: &NodeConfig,
         prometheus_registry: &Registry,
