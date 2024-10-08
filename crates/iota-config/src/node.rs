@@ -955,7 +955,7 @@ pub struct MigrationTxData {
 }
 
 impl MigrationTxData {
-    pub fn new_from_file<P: Into<PathBuf>>(path: P) -> Self {
+    pub fn new_from_file(path: impl Into<PathBuf>) -> Self {
         Self {
             location: Some(path.into()),
         }
@@ -966,10 +966,10 @@ impl MigrationTxData {
     }
 
     pub fn load(&self) -> Result<migration_tx_data::MigrationTxData> {
-        match &self.location {
-            Some(location) => Ok(migration_tx_data::MigrationTxData::load(location)?),
-            _ => anyhow::bail!("no file location set"),
-        }
+        let Some(location) = &self.location else {
+            anyhow::bail!("no file location set");
+        };
+        migration_tx_data::MigrationTxData::load(location)
     }
 }
 
