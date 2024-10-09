@@ -138,8 +138,8 @@ impl Builder {
 
     /// Checks if the genesis to be built has no migration or if it includes
     /// Stardust migration stakes
-    pub fn is_migratable(&self) -> bool {
-        self.genesis_stake.is_empty()
+    pub fn contains_migrations(&self) -> bool {
+        !self.genesis_stake.is_empty()
     }
 
     pub fn with_parameters(mut self, parameters: GenesisCeremonyParameters) -> Self {
