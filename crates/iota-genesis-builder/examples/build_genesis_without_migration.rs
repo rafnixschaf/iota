@@ -4,7 +4,7 @@
 //! Creating a genesis blob without migration.
 
 use iota_config::genesis::TokenDistributionScheduleBuilder;
-use iota_genesis_builder::Builder;
+use iota_genesis_builder::{Builder, genesis_build_effects::GenesisBuildEffects};
 use iota_swarm_config::genesis_config::ValidatorGenesisConfigBuilder;
 use rand::rngs::OsRng;
 
@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
         builder = builder.add_validator_signature(key);
     }
 
-    let genesis = builder.build();
+    let GenesisBuildEffects { genesis, .. } = builder.build();
     // Save to file
     genesis.save("genesis-without-migration.blob")?;
     Ok(())
