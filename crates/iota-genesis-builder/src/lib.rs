@@ -136,7 +136,7 @@ impl Builder {
         }
     }
 
-    /// Checks if the genesis to be built is vanilla or if it includes Stardust
+    /// Checks if the genesis to be built has no migration or if it includes Stardust
     /// migration stakes
     pub fn is_migratable(&self) -> bool {
         self.genesis_stake.is_empty()
@@ -294,7 +294,7 @@ impl Builder {
                 schedule
             } else {
                 self.genesis_stake
-                    .extend_vanilla_token_distribution_schedule(schedule)
+                    .extend_token_distribution_schedule_without_migration(schedule)
             }
         } else {
             self.genesis_stake.to_token_distribution_schedule()
@@ -311,7 +311,7 @@ impl Builder {
         self.create_and_cache_genesis_stake()
             .expect("genesis stake should be created without errors");
 
-        // Get the vanilla token distribution schedule or merge it with genesis stake
+        // Get the token distribution schedule without migration or merge it with genesis stake
         let token_distribution_schedule = self.resolve_token_distribution_schedule();
         // Verify that token distribution schedule is valid
         token_distribution_schedule.validate();
@@ -731,7 +731,7 @@ impl Builder {
         } else {
             assert!(
                 self.is_migratable(),
-                "the genesis without migration data should be a vanilla version"
+                "migratable genesis should have migration data"
             );
         }
     }

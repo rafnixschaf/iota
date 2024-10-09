@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! Creating a genesis vanilla blob.
+//! Creating a genesis blob without migration.
 
 use iota_config::genesis::TokenDistributionScheduleBuilder;
 use iota_genesis_builder::Builder;
@@ -37,6 +37,6 @@ fn main() -> anyhow::Result<()> {
 
     let genesis = builder.build();
     // Save to file
-    genesis.save("genesis-vanilla.blob")?;
+    genesis.save("genesis-without-migration.blob")?;
     Ok(())
 }
