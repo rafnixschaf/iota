@@ -304,7 +304,7 @@ pub fn get_iota_system_state(object_store: &dyn ObjectStore) -> Result<IotaSyste
 /// Given a system state type version, and the ID of the table, along with a
 /// key, retrieve the dynamic field as a Validator type. We need the version to
 /// determine which inner type to use for the Validator type. This is assuming
-/// that the validator is stored in the table as ValidatorWrapper type.
+/// that the validator is stored in the table as Validator type.
 pub fn get_validator_from_table<K>(
     object_store: &dyn ObjectStore,
     table_id: ObjectID,
@@ -313,7 +313,7 @@ pub fn get_validator_from_table<K>(
 where
     K: MoveTypeTagTrait + Serialize + DeserializeOwned + fmt::Debug,
 {
-    let field: ValidatorWrapper = get_dynamic_field_from_store(object_store, table_id, key)
+    let field: Validator = get_dynamic_field_from_store(object_store, table_id, key)
         .map_err(|err| {
             IotaError::IotaSystemStateRead(format!(
                 "Failed to load validator wrapper from table: {:?}",
@@ -425,7 +425,7 @@ impl Default for PoolTokenExchangeRate {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct ValidatorWrapper {
+pub struct Validator {
     pub inner: Versioned,
 }
 
