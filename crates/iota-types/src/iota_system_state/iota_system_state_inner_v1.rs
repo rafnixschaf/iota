@@ -713,7 +713,7 @@ impl IotaSystemStateTrait for IotaSystemStateV1 {
 /// Rust version of the Move
 /// iota_system::validator_cap::UnverifiedValidatorOperationCap type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct UnverifiedValidatorOperationCapV1 {
+pub struct UnverifiedValidatorOperationCap {
     pub id: ObjectID,
     pub authorizer_validator_address: IotaAddress,
 }
