@@ -731,8 +731,8 @@ impl Builder {
                 .expect("the migration data is corrupted");
         } else {
             assert!(
-                self.is_migratable(),
-                "migratable genesis should have migration data"
+                !self.contains_migrations(),
+                "genesis that contains migration should have migration data"
             );
         }
     }
