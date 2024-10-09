@@ -466,7 +466,7 @@ pub struct StorageFundV1 {
 
 /// Rust version of the Move iota_system::iota_system::IotaSystemStateInner type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct IotaSystemStateInnerV1 {
+pub struct IotaSystemStateV1 {
     pub epoch: u64,
     pub protocol_version: u64,
     pub system_state_version: u64,
@@ -486,7 +486,7 @@ pub struct IotaSystemStateInnerV1 {
     // TODO: Use getters instead of all pub.
 }
 
-impl IotaSystemStateTrait for IotaSystemStateInnerV1 {
+impl IotaSystemStateTrait for IotaSystemStateV1 {
     fn epoch(&self) -> u64 {
         self.epoch
     }

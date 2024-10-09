@@ -11,7 +11,7 @@ use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructT
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use self::{
-    iota_system_state_inner_v1::{IotaSystemStateInnerV1, ValidatorV1},
+    iota_system_state_inner_v1::{IotaSystemStateV1, ValidatorV1},
     iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
 };
 use crate::{
@@ -96,7 +96,7 @@ impl IotaSystemStateWrapper {
             .expect("Dynamic field object must be a Move object");
         match self.version {
             1 => {
-                Self::advance_epoch_safe_mode_impl::<IotaSystemStateInnerV1>(
+                Self::advance_epoch_safe_mode_impl::<IotaSystemStateV1>(
                     move_object,
                     params,
                     protocol_config,
@@ -189,7 +189,7 @@ pub trait IotaSystemStateTrait {
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 #[enum_dispatch(IotaSystemStateTrait)]
 pub enum IotaSystemState {
-    V1(IotaSystemStateInnerV1),
+    V1(IotaSystemStateV1),
     #[cfg(msim)]
     SimTestV1(SimTestIotaSystemStateInnerV1),
     #[cfg(msim)]
@@ -199,7 +199,7 @@ pub enum IotaSystemState {
 }
 
 /// This is the fixed type used by genesis.
-pub type IotaSystemStateInnerGenesis = IotaSystemStateInnerV1;
+pub type IotaSystemStateInnerGenesis = IotaSystemStateV1;
 pub type IotaValidatorGenesis = ValidatorV1;
 
 impl IotaSystemState {
@@ -244,7 +244,7 @@ pub fn get_iota_system_state(object_store: &dyn ObjectStore) -> Result<IotaSyste
     let id = wrapper.id.id.bytes;
     match wrapper.version {
         1 => {
-            let result: IotaSystemStateInnerV1 =
+            let result: IotaSystemStateV1 =
                 get_dynamic_field_from_store(object_store, id, &wrapper.version).map_err(
                     |err| {
                         IotaError::DynamicFieldRead(format!(
