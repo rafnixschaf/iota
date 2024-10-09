@@ -81,7 +81,7 @@ impl MigrationTxData {
         contents: &CheckpointContents,
         genesis_tx_digest: TransactionDigest,
     ) -> anyhow::Result<()> {
-        assert_eq!(checkpoint.content_digest, *contents.digest());
+        anyhow::ensure!(checkpoint.content_digest == *contents.digest(), "checkpoint's content digest is corrupted");
         let mut validation_digests_queue: HashSet<TransactionDigest> =
             self.inner.keys().copied().collect();
         for (valid_tx_digest, valid_effects_digest) in contents.iter().filter_map(|exec_digest| {
