@@ -14,6 +14,7 @@ use iota_config::{
     genesis::{TokenAllocation, TokenDistributionScheduleBuilder},
     node::AuthorityOverloadConfig,
 };
+use iota_genesis_builder::genesis_build_effects::GenesisBuildEffects;
 use iota_macros::nondeterministic;
 use iota_types::{
     base_types::{AuthorityName, IotaAddress},
@@ -423,7 +424,10 @@ impl<R: rand::RngCore + rand::CryptoRng> ConfigBuilder<R> {
             builder.build()
         };
 
-        let (genesis, migration_tx_data_option) = {
+        let GenesisBuildEffects {
+            genesis,
+            migration_tx_data,
+        } = {
             let mut builder = iota_genesis_builder::Builder::new()
                 .with_parameters(genesis_config.parameters)
                 .add_objects(self.additional_objects);
@@ -447,11 +451,10 @@ impl<R: rand::RngCore + rand::CryptoRng> ConfigBuilder<R> {
                 builder = builder.add_validator_signature(&validator.key_pair);
             }
 
-            let migration_tx_data = builder.take_migration_tx_data();
-            (builder.build(), migration_tx_data)
+            builder.build()
         };
 
-        if let Some(migration_tx_data) = migration_tx_data_option {
+        if let Some(migration_tx_data) = migration_tx_data {
             migration_tx_data
                 .save(
                     self.config_directory

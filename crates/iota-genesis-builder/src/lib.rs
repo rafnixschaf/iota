@@ -15,6 +15,7 @@ use anyhow::{Context, bail};
 use camino::Utf8Path;
 use fastcrypto::{hash::HashFunction, traits::KeyPair};
 use flate2::bufread::GzDecoder;
+use genesis_build_effects::GenesisBuildEffects;
 use iota_config::{
     IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME,
     genesis::{
@@ -80,6 +81,7 @@ use stardust::migration::MigrationObjects;
 use tracing::trace;
 use validator_info::{GenesisValidatorInfo, GenesisValidatorMetadata, ValidatorInfo};
 
+pub mod genesis_build_effects;
 mod stake;
 pub mod stardust;
 pub mod validator_info;
@@ -169,10 +171,6 @@ impl Builder {
     pub fn with_protocol_version(mut self, v: ProtocolVersion) -> Self {
         self.parameters.protocol_version = v;
         self
-    }
-
-    pub fn take_migration_tx_data(&mut self) -> Option<MigrationTxData> {
-        self.migration_tx_data.take()
     }
 
     pub fn add_object(mut self, object: Object) -> Self {
@@ -360,7 +358,7 @@ impl Builder {
         self.parameters.protocol_version
     }
 
-    pub fn build(mut self) -> Genesis {
+    pub fn build(mut self) -> GenesisBuildEffects {
         if self.built_genesis.is_none() {
             self.build_and_cache_unsigned_genesis();
         }
@@ -388,13 +386,16 @@ impl Builder {
             CertifiedCheckpointSummary::new(checkpoint, signatures, &committee).unwrap()
         };
 
-        Genesis::new(
-            checkpoint,
-            checkpoint_contents,
-            transaction,
-            effects,
-            events,
-            objects,
+        GenesisBuildEffects::new(
+            Genesis::new(
+                checkpoint,
+                checkpoint_contents,
+                transaction,
+                effects,
+                events,
+                objects,
+            ),
+            self.migration_tx_data,
         )
     }
 
