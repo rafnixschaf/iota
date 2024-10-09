@@ -301,7 +301,7 @@ impl ValidatorMetadataV1 {
     }
 }
 
-/// Rust version of the Move iota::validator::Validator type
+/// Rust version of the Move iota::validator::ValidatorV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct ValidatorV1 {
     metadata: ValidatorMetadataV1,
@@ -427,7 +427,7 @@ impl ValidatorV1 {
     }
 }
 
-/// Rust version of the Move iota_system::staking_pool::StakingPool type
+/// Rust version of the Move iota_system::staking_pool::StakingPoolV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StakingPoolV1 {
     pub id: ObjectID,
@@ -443,7 +443,7 @@ pub struct StakingPoolV1 {
     pub extra_fields: Bag,
 }
 
-/// Rust version of the Move iota_system::validator_set::ValidatorSet type
+/// Rust version of the Move iota_system::validator_set::ValidatorSetV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct ValidatorSetV1 {
     pub total_stake: u64,
@@ -457,14 +457,14 @@ pub struct ValidatorSetV1 {
     pub extra_fields: Bag,
 }
 
-/// Rust version of the Move iota_system::storage_fund::StorageFund type
+/// Rust version of the Move iota_system::storage_fund::StorageFundV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct StorageFundV1 {
     pub total_object_storage_rebates: Balance,
     pub non_refundable_balance: Balance,
 }
 
-/// Rust version of the Move iota_system::iota_system::IotaSystemStateInner type
+/// Rust version of the Move iota_system::iota_system::IotaSystemStateV1 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct IotaSystemStateV1 {
     pub epoch: u64,
