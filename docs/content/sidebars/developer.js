@@ -322,11 +322,6 @@ const developer = [
                         label: 'Output unlockable by an Alias/Nft Address',
                         id: 'developer/stardust/claiming/address-unlock-condition',
                     },
-                    {
-                        type: 'doc',
-                        label: 'Self-sponsor Shimmer Claiming',
-                        id: 'developer/stardust/claiming/self-sponsor',
-                    },
                 ],
             },
         ],
