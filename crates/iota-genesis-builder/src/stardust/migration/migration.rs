@@ -71,7 +71,7 @@ pub struct Migration {
     total_supply: u64,
     executor: Executor,
     pub(super) output_objects_map: HashMap<OutputId, CreatedObjects>,
-    /// The coin type to use in order to migrate outputs. Can be equal only
+    /// The coin type to use in order to migrate outputs. Can only be equal to
     /// `Iota` at the moment. Is fixed for the entire migration process.
     coin_type: CoinType,
 }
