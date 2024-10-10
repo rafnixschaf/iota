@@ -201,7 +201,11 @@ use iota_core::{
     consensus_handler::ConsensusHandlerInitializer, safe_client::SafeClientMetricsBase,
     validator_tx_finalizer::ValidatorTxFinalizer,
 };
-use iota_types::execution_config_utils::to_binary_config;
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber, VersionNumber},
+    execution_config_utils::to_binary_config,
+    storage::ObjectStore,
+};
 #[cfg(msim)]
 pub use simulator::set_jwk_injector;
 #[cfg(msim)]
@@ -476,6 +480,27 @@ impl IotaNode {
         )
         .await?;
 
+        let test_obj_id = ObjectID::from_str(
+            "0xac9ce2308ed262c5c9f8cf126f683efd1aa7b9872895e17239aea2f10996bfd7",
+        )?;
+
+        let obj_no_version = store.get_object(&test_obj_id)?.unwrap();
+        println!(
+            "get_object response for {:?}: {:?}",
+            &test_obj_id, obj_no_version
+        );
+
+        let version_to_query = SequenceNumber::from(1);
+
+        let obj = store
+            .get_object_by_key(&test_obj_id, version_to_query)?
+            .unwrap();
+        //
+        println!(
+            "get_object_by_key response for {:?}, {:?}: {:?}",
+            &test_obj_id, version_to_query, obj
+        );
+
         let cur_epoch = store.get_recovery_epoch_at_restart()?;
         let committee = committee_store
             .get_committee(&cur_epoch)?
@@ -702,6 +727,17 @@ impl IotaNode {
         )
         .await;
 
+        //        let test_obj_id = ObjectID::from_str(
+        // "0x553611956dd19aa14ce87d80a60d3b9af0467d9cd515966916ce4f83c9e01269",
+        // )?;
+        //
+        // let obj = state
+        // .get_object_store()
+        // .get_object_by_key(&test_obj_id, 1.into())?
+        // .unwrap();
+        //
+        // println!("Object: {:?}", obj);
+
         // ensure genesis and migration txs were executed
         if epoch_store.epoch() == 0 {
             let genesis_tx = &genesis.transaction();
@@ -730,6 +766,23 @@ impl IotaNode {
                 }
             }
         }
+
+        let obj_no_version = store.get_object(&test_obj_id)?.unwrap();
+        println!(
+            "after_get_object response for {:?}: {:?}",
+            &test_obj_id, obj_no_version
+        );
+
+        let version_to_query = SequenceNumber::from(1);
+
+        let obj = store
+            .get_object_by_key(&test_obj_id, version_to_query)?
+            .unwrap();
+        //
+        println!(
+            "after_get_object_by_key response for {:?}, {:?}: {:?}",
+            &test_obj_id, version_to_query, obj
+        );
 
         checkpoint_store
             .reexecute_local_checkpoints(&state, &epoch_store)
