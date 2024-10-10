@@ -26,6 +26,9 @@ use crate::genesis::{Genesis, UnsignedGenesis};
 
 pub type TransactionsData =
     BTreeMap<TransactionDigest, (Transaction, TransactionEffects, TransactionEvents)>;
+
+// Migration data from the Stardust network is loaded separately after genesis
+// to reduce the size of the genesis transaction.
 #[derive(Eq, PartialEq, Debug, Clone, Deserialize, Serialize, Default)]
 pub struct MigrationTxData {
     inner: TransactionsData,
