@@ -38,5 +38,30 @@ fn main() -> anyhow::Result<()> {
         compiled_package_a.package.compiled_package_info
     );
 
+    let native_token_b = NativeTokenPackageData::new(
+        "shimmer_coin".to_string(),
+        NativeTokenModuleData::new(
+            FoundryId::new([1; FoundryId::LENGTH]),
+            "smr",
+            "SMR",
+            0,
+            "SMR",
+            10_000_000_000,
+            10_000_000_000,
+            "Shimmer",
+            "Shimmy Shimmy Ya",
+            Option::None,
+            AliasAddress::new(AliasId::new([1; AliasId::LENGTH])),
+        ),
+    );
+
+    println!("SMR token: {:?}", native_token_b);
+
+    let compiled_package_b = package_builder::build_and_compile(native_token_b)?;
+    println!(
+        "Compiled package: {:?}",
+        compiled_package_b.package.compiled_package_info
+    );
+
     Ok(())
 }
