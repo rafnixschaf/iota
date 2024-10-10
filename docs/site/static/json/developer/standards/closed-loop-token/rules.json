@@ -2,17 +2,17 @@
     {
         "questionText": "What is the main purpose of a rule in the `TokenPolicy` within a Move application?",
         "answerOptions": [
-            { "answerText": "To enforce compliance and regulation for actions in the token ecosystem", "isCorrect": true },
             { "answerText": "To provide a framework for smart contract auditing", "isCorrect": false },
             { "answerText": "To optimize gas fees during transactions", "isCorrect": false },
-            { "answerText": "To simplify the interaction between different token types", "isCorrect": false }
+            { "answerText": "To simplify the interaction between different token types", "isCorrect": false },
+            { "answerText": "To enforce compliance and regulation for actions in the token ecosystem", "isCorrect": true }
         ]
     },
     {
         "questionText": "When defining a modular rule, what key function must be included in the module to verify actions?",
         "answerOptions": [
-            { "answerText": "A function that takes `TokenPolicy`, `ActionRequest`, and `TxContext` as arguments", "isCorrect": true },
             { "answerText": "A function that creates a new token instance", "isCorrect": false },
+            { "answerText": "A function that takes `TokenPolicy`, `ActionRequest`, and `TxContext` as arguments", "isCorrect": true },
             { "answerText": "A function that calculates the total supply of tokens", "isCorrect": false },
             { "answerText": "A function that returns the balance of a specific account", "isCorrect": false }
         ]

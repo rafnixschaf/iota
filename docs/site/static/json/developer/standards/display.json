@@ -2,10 +2,10 @@
     {
         "questionText": "In the context of IOTA Object Display, what is the role of the `Publisher` object?",
         "answerOptions": [
-            { "answerText": "It enables the on-chain management of off-chain representations for types.", "isCorrect": true },
             { "answerText": "It acts as a storage mechanism for all IOTA objects.", "isCorrect": false },
             { "answerText": "It is used to verify the authenticity of transactions on the IOTA network.", "isCorrect": false },
-            { "answerText": "It is necessary for creating new UIDs for objects.", "isCorrect": false }
+            { "answerText": "It is necessary for creating new UIDs for objects.", "isCorrect": false },
+            { "answerText": "It enables the on-chain management of off-chain representations for types.", "isCorrect": true }
         ]
     },
     {

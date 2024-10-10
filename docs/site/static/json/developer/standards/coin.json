@@ -11,9 +11,9 @@
     {
         "questionText": "What is the primary benefit of using the `Coin::freeze` function in a coin transfer scenario?",
         "answerOptions": [
-            { "answerText": "It locks a certain amount of the coin in an account, preventing transfers without revoking ownership", "isCorrect": true },
             { "answerText": "It optimizes the transaction to use less gas by batching operations", "isCorrect": false },
             { "answerText": "It ensures the coin’s balance is immediately burned upon freezing", "isCorrect": false },
+            { "answerText": "It locks a certain amount of the coin in an account, preventing transfers without revoking ownership", "isCorrect": true },
             { "answerText": "It allows the freezing of a coin type, preventing new coins from being minted", "isCorrect": false }
         ]
     },

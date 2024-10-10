@@ -11,8 +11,8 @@
     {
         "questionText": "What is the primary benefit of using the Coin::freeze function in a coin transfer scenario?",
         "answerOptions": [
-            { "answerText": "It locks a certain amount of the coin in an account, preventing transfers without revoking ownership", "isCorrect": true },
             { "answerText": "It optimizes the transaction to use less gas by batching operations", "isCorrect": false },
+            { "answerText": "It locks a certain amount of the coin in an account, preventing transfers without revoking ownership", "isCorrect": true },
             { "answerText": "It ensures the coin’s balance is immediately burned upon freezing", "isCorrect": false },
             { "answerText": "It allows the freezing of a coin type, preventing new coins from being minted", "isCorrect": false }
         ]
@@ -20,10 +20,10 @@
     {
         "questionText": "In the Coin module, why is it necessary to enforce the key ability for coin types?",
         "answerOptions": [
-            { "answerText": "To ensure that coin resources can be stored in global storage under an account", "isCorrect": true },
             { "answerText": "To enable coin types to be compared for equality within Move", "isCorrect": false },
             { "answerText": "To allow the coin type to be used as a module identifier", "isCorrect": false },
-            { "answerText": "To allow transfer of the coin between smart contracts", "isCorrect": false }
+            { "answerText": "To allow transfer of the coin between smart contracts", "isCorrect": false },
+            { "answerText": "To ensure that coin resources can be stored in global storage under an account", "isCorrect": true }
         ]
     },
     {

@@ -11,10 +11,10 @@
     {
         "questionText": "In the app lifecycle, what must happen before a Kiosk app can start functioning?",
         "answerOptions": [
-            { "answerText": "The kiosk owner must explicitly call the `add` function to install the app.", "isCorrect": true },
             { "answerText": "The app must automatically request permissions without owner consent.", "isCorrect": false },
             { "answerText": "The app must be deployed on a public blockchain for access.", "isCorrect": false },
-            { "answerText": "The Kiosk owner must disable all other apps first.", "isCorrect": false }
+            { "answerText": "The Kiosk owner must disable all other apps first.", "isCorrect": false },
+            { "answerText": "The kiosk owner must explicitly call the `add` function to install the app.", "isCorrect": true }
         ]
     },
     {
