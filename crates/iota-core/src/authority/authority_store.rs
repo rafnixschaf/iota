@@ -316,6 +316,8 @@ impl AuthorityStore {
                     .enumerate_transactions(&genesis.checkpoint())
                 {
                     let tx_digest = &execution_digest.transaction;
+                    // We skip the genesis transaction to process only migration transactions from
+                    // the migration.blob.
                     if tx_digest == genesis.transaction().digest() {
                         continue;
                     }

@@ -805,8 +805,8 @@ impl Builder {
         }
 
         // Load migration txs data
-        let migration_tx_data_file = path.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
         let migration_tx_data: Option<MigrationTxData> = if !migration_sources.is_empty() {
+            let migration_tx_data_file = path.join(IOTA_GENESIS_MIGRATION_TX_DATA_FILENAME);
             Some(MigrationTxData::load(migration_tx_data_file)?)
         } else {
             None
@@ -1132,22 +1132,22 @@ fn create_genesis_checkpoint(
     system_genesis_tx_effects: &TransactionEffects,
     migration_tx_data: &TransactionsData,
 ) -> (CheckpointSummary, CheckpointContents) {
-    let execution_digests = ExecutionDigests {
+    let genesis_execution_digests = ExecutionDigests {
         transaction: *system_genesis_transaction.digest(),
         effects: system_genesis_tx_effects.digest(),
     };
 
-    let mut effects_digests = vec![execution_digests];
+    let mut execution_digests = vec![genesis_execution_digests];
 
     for (_, effects, _) in migration_tx_data.values() {
-        effects_digests.push(effects.execution_digests());
+        execution_digests.push(effects.execution_digests());
     }
 
-    let effects_digests_len = effects_digests.len();
+    let execution_digests_len = execution_digests.len();
 
     let contents = CheckpointContents::new_with_digests_and_signatures(
-        effects_digests,
-        vec![vec![]; effects_digests_len],
+        execution_digests,
+        vec![vec![]; execution_digests_len],
     );
     let version_specific_data =
         match protocol_config.checkpoint_summary_version_specific_data_as_option() {

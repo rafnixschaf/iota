@@ -87,6 +87,8 @@ impl MigrationTxData {
         );
         let mut validation_digests_queue: HashSet<TransactionDigest> =
             self.inner.keys().copied().collect();
+        // We skip the genesis transaction to process only migration transactions from
+        // the migration.blob.
         for (valid_tx_digest, valid_effects_digest) in contents.iter().filter_map(|exec_digest| {
             (exec_digest.transaction != genesis_tx_digest)
                 .then_some((&exec_digest.transaction, &exec_digest.effects))
@@ -103,8 +105,8 @@ impl MigrationTxData {
                 anyhow::bail!("invalid transaction or effects data");
             }
 
-            if let Some(valid_events) = effects.events_digest() {
-                if &events.digest() != valid_events {
+            if let Some(valid_events_digest) = effects.events_digest() {
+                if &events.digest() != valid_events_digest {
                     anyhow::bail!("invalid events data");
                 }
             } else if !events.data.is_empty() {
@@ -112,7 +114,7 @@ impl MigrationTxData {
             }
             validation_digests_queue.remove(valid_tx_digest);
         }
-        assert!(
+        anyhow::ensure!(
             validation_digests_queue.is_empty(),
             "the migration data is corrupted"
         );
