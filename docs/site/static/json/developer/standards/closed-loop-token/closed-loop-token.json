@@ -16,5 +16,14 @@
             { "answerText": "Via a `TokenPolicy`, which can be used to authorize specific actions.", "isCorrect": true },
             { "answerText": "By calling the `token::destroy_zero` method to invalidate the request.", "isCorrect": false }
         ]
+    },
+    {
+        "questionText": "Which of the following is a public action available for tokens in the Closed-Loop Token system?",
+        "answerOptions": [
+            { "answerText": "`token::spend` - spend a token on a specified address", "isCorrect": false },
+            { "answerText": "`token::keep` - send a token to the transaction sender", "isCorrect": true },
+            { "answerText": "`token::transfer` - transfer a token to a specified address", "isCorrect": false },
+            { "answerText": "`token::from_coin` - convert a coin to a token", "isCorrect": false }
+        ]
     }
 ]

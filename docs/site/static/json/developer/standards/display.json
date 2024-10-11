@@ -16,5 +16,14 @@
             { "answerText": "To duplicate the current version of a `Display` object for backup purposes.", "isCorrect": false },
             { "answerText": "To validate the integrity of the data stored in the `Display` object.", "isCorrect": false }
         ]
+    },
+    {
+        "questionText": "Which of the following fields is NOT a suggested property for an IOTA Object Display template?",
+        "answerOptions": [
+            { "answerText": "name", "isCorrect": false },
+            { "answerText": "image_url", "isCorrect": false },
+            { "answerText": "thumbnail_url", "isCorrect": false },
+            { "answerText": "contract_address", "isCorrect": true }
+        ]
     }
 ]
