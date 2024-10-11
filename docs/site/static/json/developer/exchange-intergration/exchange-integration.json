@@ -2,10 +2,10 @@
     {
         "questionText": "Which method can you use to transfer all IOTA tokens from an address?",
         "answerOptions": [
-          { "answerText": "unsafe_transferObject", "isCorrect": false },
-          { "answerText": "iotax_getBalance", "isCorrect": false },
-          { "answerText": "unsafe_payAllIota", "isCorrect": true },
-          { "answerText": "unsafe_pay", "isCorrect": false }
+          { "answerText": "`unsafe_transferObject`", "isCorrect": false },
+          { "answerText": "`iotax_getBalance`", "isCorrect": false },
+          { "answerText": "`unsafe_payAllIota`", "isCorrect": true },
+          { "answerText": "`unsafe_pay`", "isCorrect": false }
         ]
     },
     {
@@ -21,7 +21,7 @@
       "questionText": "When transferring IOTA tokens, what must you ensure regarding gas fees, and how can you handle transferring all IOTA from an address?",
       "answerOptions": [
         { "answerText": "You can use the same IOTA token object for both the transfer amount and gas fees", "isCorrect": false },
-        { "answerText": "You need to ensure a separate IOTA token object is available for gas fees, and you can use the unsafe_payAllIota method to transfer all tokens", "isCorrect": true },
+        { "answerText": "You need to ensure a separate IOTA token object is available for gas fees, and you can use the `unsafe_payAllIota` method to transfer all tokens", "isCorrect": true },
         { "answerText": "There are no gas fees for transferring IOTA tokens", "isCorrect": false },
         { "answerText": "You must manually split tokens before each transaction to handle gas fees", "isCorrect": false }
       ]
