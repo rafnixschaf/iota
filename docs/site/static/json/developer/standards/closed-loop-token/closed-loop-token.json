@@ -3,7 +3,7 @@
         "questionText": "What is the primary difference between a `Coin` and a `Token` in the IOTA framework?",
         "answerOptions": [
             { "answerText": "`Coin` can only be owned by an account, while `Token` can be stored in applications.", "isCorrect": false },
-            { "answerText": "`Coin` supports wrapping, public transfers, and has `key + store` abilities, while `Token` has only the `key` ability and cannot be wrapped or freely transferred.", "isCorrect": true },
+            { "answerText": "`Coin` has `key + store` abilities, while `Token` has only the `key` ability.", "isCorrect": true },
             { "answerText": "`Token` supports both wrapping and public transfers, while `Coin` does not.", "isCorrect": false },
             { "answerText": "`Coin` has only the `key` ability, while `Token` has `key + store` abilities.", "isCorrect": false }
         ]
