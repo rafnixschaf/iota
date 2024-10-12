@@ -30,10 +30,10 @@
       {
         "questionText": "What ensures that double-spending is prevented during the certification process?",
         "answerOptions": [
-          { "answerText": "Validators reject all shared object transactions", "isCorrect": false },
-          { "answerText": "Validators use a method called quorum intersection", "isCorrect": true },
-          { "answerText": "Full nodes individually certify transactions", "isCorrect": false },
-          { "answerText": "Only the user's wallet app can sign transactions", "isCorrect": false }
+          { "answerText": "Validators reject all shared object transactions.", "isCorrect": false },
+          { "answerText": "Validators use a method called quorum intersection.", "isCorrect": true },
+          { "answerText": "Full nodes individually certify transactions.", "isCorrect": false },
+          { "answerText": "Only the user's wallet app can sign transactions.", "isCorrect": false }
         ]
       }
     ]
