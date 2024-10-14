@@ -211,7 +211,6 @@ impl IotaSystemState {
     pub fn into_genesis_version_for_tooling(self) -> IotaSystemStateInnerGenesis {
         match self {
             IotaSystemState::V1(inner) => inner,
-            _ => unreachable!(),
         }
     }
 
@@ -313,8 +312,8 @@ pub fn get_validator_from_table<K>(
 where
     K: MoveTypeTagTrait + Serialize + DeserializeOwned + fmt::Debug,
 {
-    let field: Validator = get_dynamic_field_from_store(object_store, table_id, key)
-        .map_err(|err| {
+    let field: Validator =
+        get_dynamic_field_from_store(object_store, table_id, key).map_err(|err| {
             IotaError::IotaSystemStateRead(format!(
                 "Failed to load validator wrapper from table: {:?}",
                 err
@@ -388,8 +387,8 @@ where
     Ok(validators)
 }
 
-/// This is the standard API that all inner PoolTokenExchangeRate object type should
-/// implement.
+/// This is the standard API that all inner PoolTokenExchangeRate object type
+/// should implement.
 #[enum_dispatch]
 pub trait PoolTokenExchangeRateTrait {
     fn rate(&self) -> f64;

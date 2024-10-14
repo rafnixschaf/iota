@@ -19,7 +19,10 @@ use iota_types::{
     committee::EpochId,
     governance::StakedIota,
     iota_serde::BigInt,
-    iota_system_state::{PoolTokenExchangeRate, PoolTokenExchangeRateTrait, iota_system_state_summary::IotaSystemStateSummary},
+    iota_system_state::{
+        PoolTokenExchangeRate, PoolTokenExchangeRateTrait,
+        iota_system_state_summary::IotaSystemStateSummary,
+    },
     timelock::timelocked_staked_iota::TimelockedStakedIota,
 };
 use jsonrpsee::{RpcModule, core::RpcResult};

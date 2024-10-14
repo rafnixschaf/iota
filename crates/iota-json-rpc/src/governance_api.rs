@@ -25,8 +25,8 @@ use iota_types::{
     id::ID,
     iota_serde::BigInt,
     iota_system_state::{
-        IotaSystemState, IotaSystemStateTrait, PoolTokenExchangeRate, PoolTokenExchangeRateTrait, get_validator_from_table,
-        iota_system_state_summary::IotaSystemStateSummary,
+        IotaSystemState, IotaSystemStateTrait, PoolTokenExchangeRate, PoolTokenExchangeRateTrait,
+        get_validator_from_table, iota_system_state_summary::IotaSystemStateSummary,
     },
     object::{Object, ObjectRead},
     timelock::timelocked_staked_iota::TimelockedStakedIota,
