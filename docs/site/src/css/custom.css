@@ -103,7 +103,7 @@ html[data-theme="dark"] {
   --ifm-menu-color-background-active: transparent;
   --ifm-navbar-sidebar-link-color: #f7f7f8;
   --ifm-navbar-sidebar-background-color: black;
-  --ifm-hover-overlay: var(--ifm-background-color);
+  --ifm-hover-overlay: var(--ifm-color-emphasis-100);
 }
 
 .active-scroll-spy {
