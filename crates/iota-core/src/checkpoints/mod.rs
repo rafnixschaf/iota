@@ -2430,7 +2430,7 @@ mod tests {
     use iota_protocol_config::{Chain, ProtocolConfig};
     use iota_types::{
         base_types::{ObjectID, SequenceNumber, TransactionEffectsDigest},
-        crypto::{AuthoritySignInfo, Signature},
+        crypto::Signature,
         digests::TransactionEventsDigest,
         effects::{TransactionEffects, TransactionEvents},
         messages_checkpoint::SignedCheckpointSummary,
@@ -2438,7 +2438,6 @@ mod tests {
         object,
         transaction::{GenesisObject, VerifiedTransaction},
     };
-    use shared_crypto::intent::{Intent, IntentScope};
     use tokio::sync::mpsc;
 
     use super::*;
@@ -2808,18 +2807,7 @@ mod tests {
         let effects = e(digest, dependencies, gas_used);
         store.insert(digest, effects.clone());
         epoch_store
-            .insert_tx_key_and_effects_signature(
-                &TransactionKey::Digest(digest),
-                &digest,
-                &effects.digest(),
-                Some(&AuthoritySignInfo::new(
-                    epoch_store.epoch(),
-                    &effects,
-                    Intent::iota_app(IntentScope::TransactionEffects),
-                    state.name,
-                    &*state.secret,
-                )),
-            )
+            .insert_tx_key_and_digest(&TransactionKey::Digest(digest), &digest)
             .expect("Inserting cert fx and sigs should not fail");
     }
 }
