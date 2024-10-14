@@ -1486,6 +1486,9 @@ importers:
       react-ui-scrollspy:
         specifier: ^2.3.0
         version: 2.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rehype-jargon:
+        specifier: ^3.1.0
+        version: 3.1.0
       rehype-katex:
         specifier: ^7.0.0
         version: 7.0.1
@@ -10925,6 +10928,9 @@ packages:
   hast-util-from-html-isomorphic@2.0.0:
     resolution: {integrity: sha512-zJfpXq44yff2hmE0XmwEOzdWin5xwH+QIhMLOScpX91e/NSGPsAzNCvLQDIEPyO2TXi+lBmU6hjLIhV8MwP2kw==}
 
+  hast-util-from-html@2.0.1:
+    resolution: {integrity: sha512-RXQBLMl9kjKVNkJTIO6bZyb2n+cUH8LFaSSzo82jiLT6Tfc+Pt7VQCS+/h3YwG4jaNE2TA2sdJisGWR+aJrp0g==}
+
   hast-util-from-html@2.0.3:
     resolution: {integrity: sha512-CUSRHXyKjzHov8yKsQjGOElXy/3EKpyX56ELnkHH34vDVw1N1XSQ1ZcAvTyAPtGqLTuKP/uxM+aLkSPqF/EtMw==}
 
@@ -14479,6 +14485,10 @@ packages:
   regjsparser@0.9.1:
     resolution: {integrity: sha512-dQUtn90WanSNl+7mQKcXAgZxvUe7Z0SqXlgzv0za4LwiUhyzBC58yQO3liFoUgu8GiJVInAhJjkj1N0EtQ5nkQ==}
     hasBin: true
+
+  rehype-jargon@3.1.0:
+    resolution: {integrity: sha512-DTvSVI0MPa9Gen7oiob71ROG+ztagQ2KIDbM/1vUsZvrh0f8G2YyxrNoS4AL0WQHbHwwNzg/wLz301B3u+Tq7Q==}
+    engines: {node: '>=18', npm: '>=9'}
 
   rehype-katex@7.0.1:
     resolution: {integrity: sha512-OiM2wrZ/wuhKkigASodFoo8wimG3H12LWQaH8qSPVJn9apWKFSH3YOCtbKpBorTVw/eI7cuT21XBbvwEswbIOA==}
@@ -29011,6 +29021,15 @@ snapshots:
       hast-util-from-html: 2.0.3
       unist-util-remove-position: 5.0.0
 
+  hast-util-from-html@2.0.1:
+    dependencies:
+      '@types/hast': 3.0.4
+      devlop: 1.1.0
+      hast-util-from-parse5: 8.0.1
+      parse5: 7.1.2
+      vfile: 6.0.3
+      vfile-message: 4.0.2
+
   hast-util-from-html@2.0.3:
     dependencies:
       '@types/hast': 3.0.4
@@ -33371,6 +33390,11 @@ snapshots:
   regjsparser@0.9.1:
     dependencies:
       jsesc: 0.5.0
+
+  rehype-jargon@3.1.0:
+    dependencies:
+      hast-util-from-html: 2.0.1
+      unist-util-visit: 5.0.0
 
   rehype-katex@7.0.1:
     dependencies:
