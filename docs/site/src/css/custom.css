@@ -90,7 +90,7 @@
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme="dark"] {
+html[data-theme="dark"] {
   --ifm-color-primary: #4ca2ff;
   --ifm-color-primary-dark: #2b91ff;
   --ifm-color-primary-darker: #1a88ff;
@@ -103,6 +103,7 @@
   --ifm-menu-color-background-active: transparent;
   --ifm-navbar-sidebar-link-color: #f7f7f8;
   --ifm-navbar-sidebar-background-color: black;
+  --ifm-hover-overlay: var(--ifm-background-color);
 }
 
 .active-scroll-spy {
