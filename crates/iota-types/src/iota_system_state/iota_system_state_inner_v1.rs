@@ -640,7 +640,7 @@ impl IotaSystemStateTrait for IotaSystemStateV1 {
             parameters:
                 SystemParametersV1 {
                     epoch_duration_ms,
-                    min_validator_count: _, // TODO: Add it to RPC layer in the future.
+                    min_validator_count: _, /* TODO: Add it to RPC layer in the future https://github.com/iotaledger/iota/issues/3232. */
                     max_validator_count,
                     min_validator_joining_stake,
                     validator_low_stake_threshold,
