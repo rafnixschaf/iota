@@ -14,7 +14,7 @@
         "answerOptions": [
           { "answerText": "The conflicting transactions will cause the network to halt until the issue is resolved.", "isCorrect": false },
           { "answerText": "The conflicting transactions will be ignored, and the compliant validators will finalize the correct transactions.", "isCorrect": true },
-          { "answerText": "The system will revert to a previous state, undoing recent transactions until consensus is restored.", "isCorrect": false },
+          { "answerText": "The system will revert to a previous state, undoing recent transactions until consensus is restored", "isCorrect": false },
           { "answerText": "The conflicting validators are automatically removed from the validator set, and new validators are selected to replace them.", "isCorrect": false }
         ]
       },
