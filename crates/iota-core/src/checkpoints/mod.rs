@@ -102,36 +102,36 @@ pub struct PendingCheckpointInfo {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum PendingCheckpointV2 {
+pub enum PendingCheckpoint {
     // This is an enum for future upgradability, though at the moment there is only one variant.
-    V2(PendingCheckpointV2Contents),
+    V1(PendingCheckpointContents),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PendingCheckpointV2Contents {
+pub struct PendingCheckpointContents {
     pub roots: Vec<TransactionKey>,
     pub details: PendingCheckpointInfo,
 }
 
-impl PendingCheckpointV2 {
-    pub fn as_v2(&self) -> &PendingCheckpointV2Contents {
+impl PendingCheckpoint {
+    pub fn as_v1(&self) -> &PendingCheckpointContents {
         match self {
-            PendingCheckpointV2::V2(contents) => contents,
+            PendingCheckpoint::V1(contents) => contents,
         }
     }
 
-    pub fn into_v2(self) -> PendingCheckpointV2Contents {
+    pub fn into_v1(self) -> PendingCheckpointContents {
         match self {
-            PendingCheckpointV2::V2(contents) => contents,
+            PendingCheckpoint::V1(contents) => contents,
         }
     }
 
     pub fn roots(&self) -> &Vec<TransactionKey> {
-        &self.as_v2().roots
+        &self.as_v1().roots
     }
 
     pub fn details(&self) -> &PendingCheckpointInfo {
-        &self.as_v2().details
+        &self.as_v1().details
     }
 
     pub fn height(&self) -> CheckpointHeight {
@@ -1019,7 +1019,7 @@ impl CheckpointBuilder {
     }
 
     #[instrument(level = "debug", skip_all, fields(last_height = pendings.last().unwrap().details().checkpoint_height))]
-    async fn make_checkpoint(&self, pendings: Vec<PendingCheckpointV2>) -> anyhow::Result<()> {
+    async fn make_checkpoint(&self, pendings: Vec<PendingCheckpoint>) -> anyhow::Result<()> {
         let last_details = pendings.last().unwrap().details().clone();
 
         // Keeps track of the effects that are already included in the current
@@ -1033,7 +1033,7 @@ impl CheckpointBuilder {
         // Transactions will be recorded in the checkpoint in this order.
         let mut sorted_tx_effects_included_in_checkpoint = Vec::new();
         for pending_checkpoint in pendings.into_iter() {
-            let pending = pending_checkpoint.into_v2();
+            let pending = pending_checkpoint.into_v1();
             let txn_in_checkpoint = self
                 .resolve_checkpoint_transactions(pending.roots, &mut effects_in_current_checkpoint)
                 .await?;
@@ -2299,7 +2299,7 @@ impl CheckpointService {
     fn write_and_notify_checkpoint_for_testing(
         &self,
         epoch_store: &AuthorityPerEpochStore,
-        checkpoint: PendingCheckpointV2,
+        checkpoint: PendingCheckpoint,
     ) -> IotaResult {
         use crate::authority::authority_per_epoch_store::ConsensusCommitOutput;
 
@@ -2726,8 +2726,8 @@ mod tests {
         }
     }
 
-    fn p(i: u64, t: Vec<u8>, timestamp_ms: u64) -> PendingCheckpointV2 {
-        PendingCheckpointV2::V2(PendingCheckpointV2Contents {
+    fn p(i: u64, t: Vec<u8>, timestamp_ms: u64) -> PendingCheckpoint {
+        PendingCheckpoint::V1(PendingCheckpointContents {
             roots: t
                 .into_iter()
                 .map(|t| TransactionKey::Digest(d(t)))
