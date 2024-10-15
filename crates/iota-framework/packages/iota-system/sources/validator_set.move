@@ -16,7 +16,7 @@ module iota_system::validator_set {
     use iota::event;
     use iota::table_vec::{Self, TableVec};
     use iota_system::voting_power;
-    use iota_system::validator_wrapper::ValidatorWrapper;
+    use iota_system::validator_wrapper::Validator;
     use iota_system::validator_wrapper;
     use iota::bag::Bag;
     use iota::bag;
@@ -42,14 +42,14 @@ module iota_system::validator_set {
         /// Mapping from a staking pool ID to the inactive validator that has that pool as its staking pool.
         /// When a validator is deactivated the validator is removed from `active_validators` it
         /// is added to this table so that stakers can continue to withdraw their stake from it.
-        inactive_validators: Table<ID, ValidatorWrapper>,
+        inactive_validators: Table<ID, Validator>,
 
         /// Table storing preactive/candidate validators, mapping their addresses to their `ValidatorV1 ` structs.
         /// When an address calls `request_add_validator_candidate`, they get added to this table and become a preactive
         /// validator.
         /// When the candidate has met the min stake requirement, they can call `request_add_validator` to
         /// officially add them to the active validator set `active_validators` next epoch.
-        validator_candidates: Table<address, ValidatorWrapper>,
+        validator_candidates: Table<address, Validator>,
 
         /// Table storing the number of epochs during which a validator's stake has been below the low stake threshold.
         at_risk_validators: VecMap<address, u64>,
