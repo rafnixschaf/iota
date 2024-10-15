@@ -24,8 +24,9 @@ limit the use of an `Identity`'s APIs - expecially its mutable ones - to only th
 ### Controllers and `ControllerCap`
 
 The [DID specification](https://www.w3.org/TR/did-core/) defines **DID controller** as the entity allowed to make changes to
-a DID document. Since an `Identity` may be viewed as a simple wrapper over a DID Document, we extend the definition of DID controller to be:
-_the entity allowed to make changes to an `Identity`.
+a DID document. Since an `Identity` may be viewed as a simple wrapper over a DID Document, we extend the definition of _DID controller_ to be:
+_the entity allowed to make changes to an `Identity`_.
+
 In order to allow a broader range of actors to act as an `Identity`'s controller - e.g. an `Identity` controlling another `Identity` -
 a controller is identified through its **controller capability** `ControllerCap`.
 A `ControllerCap` is a _Move_ object that acts as a blind token, allowing anyone who presents it to the corresponding `Identity` to access
