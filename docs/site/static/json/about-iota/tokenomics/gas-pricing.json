@@ -22,7 +22,7 @@
       "answerOptions": [
         { "answerText": "By allowing users to submit arbitrary gas prices.", "isCorrect": false },
         { "answerText": "By setting a fixed gas price per transaction.", "isCorrect": false },
-        { "answerText": "By surveying validators and encouraging healthy competition through incentive.", "isCorrect": true },
+        { "answerText": "By surveying validators and encouraging healthy competition through incentives.", "isCorrect": true },
         { "answerText": "By removing tips from transaction pricing.", "isCorrect": false }
       ]
     }

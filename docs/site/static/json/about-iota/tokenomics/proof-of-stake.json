@@ -9,7 +9,7 @@
       ]
     },
     {
-      "questionText": "When are IOTA tokens locked in the staking process?",
+      "questionText": "How long are IOTA tokens locked in the staking process?",
       "answerOptions": [
         { "answerText": "For a fixed period of 1 month.", "isCorrect": false },
         { "answerText": "For the entire epoch.", "isCorrect": true },

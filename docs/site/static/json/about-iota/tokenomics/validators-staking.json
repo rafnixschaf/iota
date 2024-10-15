@@ -3,8 +3,8 @@
       "questionText": "What do validators maintain in the IOTA staking system??",
       "answerOptions": [
         { "answerText": "Their own smart contracts.", "isCorrect": false },
-        { "answerText": "Their own staking pools.", "isCorrect": true },
         { "answerText": "Gas fee contracts.", "isCorrect": false },
+        { "answerText": "Their own staking pools.", "isCorrect": true },
         { "answerText": "Exchange rate tables for token transfers.", "isCorrect": false }
       ]
     },
@@ -21,16 +21,16 @@
       "questionText": "What happens when IOTA tokens are deposited into a staking pool in epoch `E`?",
       "answerOptions": [
         { "answerText": "They are locked until the next epoch.", "isCorrect": false },
-        { "answerText": "They are converted into staked tokens at the epoch `E` exchange rate.", "isCorrect": true },
         { "answerText": "They are used to pay for gas fees.", "isCorrect": false },
-        { "answerText": "They are immediately burned.", "isCorrect": false }
+        { "answerText": "They are immediately burned.", "isCorrect": false },
+        { "answerText": "They are converted into staked tokens at the epoch `E` exchange rate.", "isCorrect": true }
       ]
     },
     {
         "questionText": "What role does the global exchange rate table play in the IOTA staking pools.?",
         "answerOptions": [
-          { "answerText": "It sets gas fees for each transaction.", "isCorrect": false },
           { "answerText": "It tracks the accounting of rewards and staked tokens for all pools.", "isCorrect": true },
+          { "answerText": "It sets gas fees for each transaction.", "isCorrect": false },
           { "answerText": "It tracks IOTA tokens' prices on exchanges.", "isCorrect": false },
           { "answerText": "It locks tokens in the pool until the validator releases them.", "isCorrect": false }
         ]
