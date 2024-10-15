@@ -45,13 +45,13 @@ called blocks in DAG-based consensus literature). This process uses mempool data
 algorithm.
 
 The graph's _vertices_ are certified collections. Each valid collection, signed by its validator-author, must include a
-round number and a certificate of availability signed by a quorum (2f+1) of validator stake. Each collection must also
-contain hash pointers to a quorum of valid certificates (from validators with 2f + 1 units of stake) from the previous
+round number and a _certificate_ of availability signed by a quorum (2f+1) of validator stake. Each collection must also
+contain hash pointers to a quorum of valid _certificate_s (from validators with 2f + 1 units of stake) from the previous
 round, forming the _edges_ of the graph.
 
 Collections are formed as follows: each validator reliably broadcasts a collection for each round. Subject to specified
 validity conditions, if validators with 2f + 1 stake receive a collection, they acknowledge it with a signature.
-Signatures from 2f + 1 validators by stake form a certificate of availability, which is then shared and potentially
+Signatures from 2f + 1 validators by stake form a _certificate_ of availability, which is then shared and potentially
 included in collections at round r + 1.
 
 The following figure represents five rounds of constructing such a DAG (1 to 5), with validators A, B, C, and D
