@@ -10,7 +10,7 @@ use crate::{
     base_types::ObjectID,
     committee::EpochId,
     error::IotaError,
-    governance::StakedIota,
+    governance::{StakedIota, StakedIotaTrait},
     id::UID,
     object::{Data, Object},
 };

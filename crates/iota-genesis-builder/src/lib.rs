@@ -48,7 +48,7 @@ use iota_types::{
     epoch_data::EpochData,
     event::Event,
     gas_coin::{GAS, GasCoin},
-    governance::StakedIota,
+    governance::{StakedIota, StakedIotaTrait},
     id::UID,
     in_memory_storage::InMemoryStorage,
     inner_temporary_store::InnerTemporaryStore,

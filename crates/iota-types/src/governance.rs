@@ -2,6 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use enum_dispatch::enum_dispatch;
 use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructTag};
 use serde::{Deserialize, Serialize};
 
@@ -50,12 +51,31 @@ pub const ADD_STAKE_MUL_COIN_FUN_NAME: &IdentStr = ident_str!("request_add_stake
 pub const ADD_STAKE_FUN_NAME: &IdentStr = ident_str!("request_add_stake");
 pub const WITHDRAW_STAKE_FUN_NAME: &IdentStr = ident_str!("request_withdraw_stake");
 
+/// This is the standard API that all inner StakedIota object type
+/// should implement.
+#[enum_dispatch]
+pub trait StakedIotaTrait {
+    /// Get the TimelockedStakedIota's `id`.
+    fn id(&self) -> ObjectID;
+
+    /// Get the wrapped StakedIota's `pool_id`.
+    fn pool_id(&self) -> ObjectID;
+
+    /// Get the wrapped StakedIota's `activation_epoch`.
+    fn activation_epoch(&self) -> EpochId;
+
+    /// Get the wrapped StakedIota's `request_epoch`.
+    fn request_epoch(&self) -> EpochId;
+
+    /// Get the wrapped StakedIota's `principal`.
+    fn principal(&self) -> u64;
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-pub struct StakedIota {
-    id: UID,
-    pool_id: ID,
-    stake_activation_epoch: u64,
-    principal: Balance,
+#[enum_dispatch(StakedIotaTrait)]
+pub enum StakedIota {
+    V1(StakedIotaV1),
+    // Add other versions here
 }
 
 impl StakedIota {
@@ -74,30 +94,57 @@ impl StakedIota {
             && s.name.as_ident_str() == STAKED_IOTA_STRUCT_NAME
             && s.type_params.is_empty()
     }
+}
 
-    pub fn id(&self) -> ObjectID {
+impl TryFrom<&Object> for StakedIota {
+    type Error = IotaError;
+
+    fn try_from(object: &Object) -> Result<Self, Self::Error> {
+        // Try to convert to V1
+        if let Ok(v1) = StakedIotaV1::try_from(object) {
+            return Ok(StakedIota::V1(v1));
+        }
+
+        // Add other versions here
+
+        Err(IotaError::Type {
+            error: "Object is not a recognized TimelockedStakedIota version".to_string(),
+        })
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+pub struct StakedIotaV1 {
+    id: UID,
+    pool_id: ID,
+    stake_activation_epoch: u64,
+    principal: Balance,
+}
+
+impl StakedIotaTrait for StakedIotaV1 {
+    fn id(&self) -> ObjectID {
         self.id.id.bytes
     }
 
-    pub fn pool_id(&self) -> ObjectID {
+    fn pool_id(&self) -> ObjectID {
         self.pool_id.bytes
     }
 
-    pub fn activation_epoch(&self) -> EpochId {
+    fn activation_epoch(&self) -> EpochId {
         self.stake_activation_epoch
     }
 
-    pub fn request_epoch(&self) -> EpochId {
+    fn request_epoch(&self) -> EpochId {
         // TODO: this might change when we implement warm up period.
         self.stake_activation_epoch.saturating_sub(1)
     }
 
-    pub fn principal(&self) -> u64 {
+    fn principal(&self) -> u64 {
         self.principal.value()
     }
 }
 
-impl TryFrom<&Object> for StakedIota {
+impl TryFrom<&Object> for StakedIotaV1 {
     type Error = IotaError;
     fn try_from(object: &Object) -> Result<Self, Self::Error> {
         match &object.data {
