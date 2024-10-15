@@ -3690,7 +3690,7 @@ impl AuthorityPerEpochStore {
         // single batch. This means that upon restart we can use
         // BuilderCheckpointSummary::commit_height from the last built summary
         // to resume building checkpoints.
-        let mut batch = self.tables()?.pending_checkpoints.batch();
+        let mut batch = self.tables()?.pending_checkpoints_v2.batch();
         for (position_in_commit, (summary, transactions)) in content_info.into_iter().enumerate() {
             let sequence_number = summary.sequence_number;
             let summary = BuilderCheckpointSummary {

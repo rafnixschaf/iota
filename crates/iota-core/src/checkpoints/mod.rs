@@ -102,12 +102,6 @@ pub struct PendingCheckpointInfo {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PendingCheckpoint {
-    pub roots: Vec<TransactionDigest>,
-    pub details: PendingCheckpointInfo,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PendingCheckpointV2 {
     // This is an enum for future upgradability, though at the moment there is only one variant.
     V2(PendingCheckpointV2Contents),
@@ -129,18 +123,6 @@ impl PendingCheckpointV2 {
     pub fn into_v2(self) -> PendingCheckpointV2Contents {
         match self {
             PendingCheckpointV2::V2(contents) => contents,
-        }
-    }
-
-    pub fn expect_v1(self) -> PendingCheckpoint {
-        let v2 = self.into_v2();
-        PendingCheckpoint {
-            roots: v2
-                .roots
-                .into_iter()
-                .map(|root| *root.unwrap_digest())
-                .collect(),
-            details: v2.details,
         }
     }
 
@@ -2395,27 +2377,6 @@ impl CheckpointServiceNotify for CheckpointServiceNoop {
 
     fn notify_checkpoint(&self) -> IotaResult {
         Ok(())
-    }
-}
-
-impl PendingCheckpoint {
-    pub fn height(&self) -> CheckpointHeight {
-        self.details.checkpoint_height
-    }
-}
-
-impl PendingCheckpointV2 {}
-
-impl From<PendingCheckpoint> for PendingCheckpointV2 {
-    fn from(value: PendingCheckpoint) -> Self {
-        PendingCheckpointV2::V2(PendingCheckpointV2Contents {
-            roots: value
-                .roots
-                .into_iter()
-                .map(TransactionKey::Digest)
-                .collect(),
-            details: value.details,
-        })
     }
 }
 
