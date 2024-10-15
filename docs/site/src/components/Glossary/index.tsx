@@ -31,20 +31,16 @@ export default function Glossary() {
                         {heading && (
                             <Heading
                                 as='h2'
+                                id={char}
                                 title={char}
-                                className={clsx(
-                                    'anchor anchorWithHideOnScrollNavbar_node_modules-@docusaurus-theme-classic-lib-theme-Heading-styles-module',
-                                )}
                             >
                                 {char.toUpperCase()}
                             </Heading>
                         )}
                         <Heading
                             as='h3'
+                            id={key}
                             title={key}
-                            className={clsx(
-                                'anchor anchorWithHideOnScrollNavbar_node_modules-@docusaurus-theme-classic-lib-theme-Heading-styles-module',
-                            )}
                         >
                             {toTitleCase(key)}
                         </Heading>
