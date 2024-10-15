@@ -66,7 +66,7 @@ use iota_types::{
     stardust::stardust_to_iota_address,
     timelock::{
         stardust_upgrade_label::STARDUST_UPGRADE_LABEL_VALUE,
-        timelocked_staked_iota::TimelockedStakedIota,
+        timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
     },
     transaction::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,

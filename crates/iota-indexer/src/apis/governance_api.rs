@@ -23,7 +23,7 @@ use iota_types::{
         PoolTokenExchangeRate, PoolTokenExchangeRateTrait,
         iota_system_state_summary::IotaSystemStateSummary,
     },
-    timelock::timelocked_staked_iota::TimelockedStakedIota,
+    timelock::timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
 };
 use jsonrpsee::{RpcModule, core::RpcResult};
 
