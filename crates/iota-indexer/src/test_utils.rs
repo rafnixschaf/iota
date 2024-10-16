@@ -42,7 +42,7 @@ pub async fn start_test_indexer(
     db_url: Option<String>,
     rpc_url: String,
     reader_writer_config: ReaderWriterConfig,
-    new_database: Option<String>,
+    new_database: Option<&str>,
 ) -> (PgIndexerStore, JoinHandle<Result<(), IndexerError>>) {
     start_test_indexer_impl(db_url, rpc_url, reader_writer_config, new_database).await
 }
@@ -51,7 +51,7 @@ pub async fn start_test_indexer_impl(
     db_url: Option<String>,
     rpc_url: String,
     reader_writer_config: ReaderWriterConfig,
-    new_database: Option<String>,
+    new_database: Option<&str>,
 ) -> (PgIndexerStore, JoinHandle<Result<(), IndexerError>>) {
     let db_url = db_url.unwrap_or_else(|| {
         let pg_host = env::var("POSTGRES_HOST").unwrap_or_else(|_| "localhost".into());
@@ -124,7 +124,7 @@ pub async fn start_test_indexer_impl(
     (store, handle)
 }
 
-pub fn create_pg_store(db_url: String, new_database: Option<String>) -> PgIndexerStore {
+pub fn create_pg_store(db_url: String, new_database: Option<&str>) -> PgIndexerStore {
     // Reduce the connection pool size to 10 for testing
     // to prevent maxing out
     info!("Setting DB_POOL_SIZE to 10");
@@ -159,7 +159,7 @@ pub fn create_pg_store(db_url: String, new_database: Option<String>) -> PgIndexe
         default_conn
             .batch_execute(&format!("CREATE DATABASE {}", new_database))
             .unwrap();
-        parsed_url = replace_db_name(&parsed_url, &new_database).0;
+        parsed_url = replace_db_name(&parsed_url, new_database).0;
     }
 
     let blocking_pool =
