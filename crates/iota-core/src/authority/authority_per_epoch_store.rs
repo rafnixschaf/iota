@@ -895,6 +895,12 @@ impl AuthorityPerEpochStore {
             randomness_manager: OnceCell::new(),
             randomness_reporter: OnceCell::new(),
         });
+
+        // until randomness_state_enabled is not removed we need to make sure it is
+        // always enabled as depreciated versions of pending_checkpoints and
+        // assigned_shared_object_versions has been removed
+        assert!(s.randomness_state_enabled());
+
         s.update_buffer_stake_metric();
         s
     }
