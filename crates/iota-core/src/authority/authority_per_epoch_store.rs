@@ -97,7 +97,7 @@ use crate::{
     },
     checkpoints::{
         BuilderCheckpointSummary, CheckpointHeight, CheckpointServiceNotify, EpochStats,
-        PendingCheckpointInfo, PendingCheckpoint, PendingCheckpointContents,
+        PendingCheckpoint, PendingCheckpointContents, PendingCheckpointInfo,
     },
     consensus_handler::{
         ConsensusCommitInfo, SequencedConsensusTransaction, SequencedConsensusTransactionKey,
@@ -1618,7 +1618,7 @@ impl AuthorityPerEpochStore {
         cache_reader: &dyn ObjectCacheRead,
         certificates: &[VerifiedExecutableTransaction],
     ) -> IotaResult {
-        let mut db_batch = self.tables()?.assigned_shared_object_versions.batch();
+        let mut db_batch = self.tables()?.assigned_shared_object_versions_v2.batch();
         let assigned_versions = SharedObjVerManager::assign_versions_from_consensus(
             self,
             cache_reader,
@@ -1803,7 +1803,7 @@ impl AuthorityPerEpochStore {
             cache_reader,
         )
         .await?;
-        let mut db_batch = self.tables()?.assigned_shared_object_versions.batch();
+        let mut db_batch = self.tables()?.assigned_shared_object_versions_v2.batch();
         self.set_assigned_shared_object_versions_with_db_batch(versions, &mut db_batch)
             .await?;
         db_batch.write()?;
