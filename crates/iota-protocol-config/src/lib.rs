@@ -129,9 +129,6 @@ struct FeatureFlags {
     // If true, disallow entry modifiers on entry functions
     #[serde(skip_serializing_if = "is_false")]
     ban_entry_init: bool,
-    // If true, disallow changing struct type parameters during package upgrades
-    #[serde(skip_serializing_if = "is_false")]
-    disallow_change_struct_type_params_on_upgrade: bool,
     // If true, checks no extra bytes in a compiled module
     #[serde(skip_serializing_if = "is_false")]
     no_extraneous_module_bytes: bool,
@@ -1123,11 +1120,6 @@ impl ProtocolConfig {
         self.feature_flags.ban_entry_init
     }
 
-    pub fn disallow_change_struct_type_params_on_upgrade(&self) -> bool {
-        self.feature_flags
-            .disallow_change_struct_type_params_on_upgrade
-    }
-
     pub fn no_extraneous_module_bytes(&self) -> bool {
         self.feature_flags.no_extraneous_module_bytes
     }
@@ -1927,8 +1919,6 @@ impl ProtocolConfig {
         // Following flags are implied by the execution version.
         // Once support for earlier protocol versions is dropped, these flags can be
         // removed:
-        cfg.feature_flags
-            .disallow_change_struct_type_params_on_upgrade = true;
         cfg.feature_flags.ban_entry_init = true;
 
         // Enable consensus digest in consensus commit prologue on all networks..
