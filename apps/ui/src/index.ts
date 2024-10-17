@@ -4,6 +4,5 @@
 
 export * from './Text';
 export * from './LoadingIndicator';
-export * from './Heading';
 export * from './IconButton';
 export * from './Placeholder';
