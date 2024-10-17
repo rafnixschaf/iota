@@ -160,11 +160,6 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "is_false")]
     enable_jwk_consensus_updates: bool,
 
-    // Perform simple conservation checks keeping into account out of gas scenarios
-    // while charging for storage.
-    #[serde(skip_serializing_if = "is_false")]
-    simple_conservation_checks: bool,
-
     // If true, use the new child object format type logging
     #[serde(skip_serializing_if = "is_false")]
     loaded_child_object_format_type: bool,
@@ -1140,10 +1135,6 @@ impl ProtocolConfig {
         self.feature_flags.enable_jwk_consensus_updates
     }
 
-    pub fn simple_conservation_checks(&self) -> bool {
-        self.feature_flags.simple_conservation_checks
-    }
-
     pub fn loaded_child_object_format_type(&self) -> bool {
         self.feature_flags.loaded_child_object_format_type
     }
@@ -1857,7 +1848,6 @@ impl ProtocolConfig {
         cfg.feature_flags.simplified_unwrap_then_delete = true;
         cfg.feature_flags.loaded_child_object_format = true;
         cfg.feature_flags.loaded_child_object_format_type = true;
-        cfg.feature_flags.simple_conservation_checks = true;
         cfg.feature_flags.enable_effects_v2 = true;
 
         cfg.feature_flags.recompute_has_public_transfer_in_execution = true;
