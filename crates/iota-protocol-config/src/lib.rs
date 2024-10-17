@@ -110,10 +110,6 @@ pub struct Error(pub String);
 struct FeatureFlags {
     // Add feature flags here, e.g.:
     // new_protocol_feature: bool,
-    // Pass epoch start time to advance_epoch safe mode function.
-    #[serde(skip_serializing_if = "is_false")]
-    advance_epoch_start_time_in_safe_mode: bool,
-
     // Disables unnecessary invariant check in the Move VM when swapping the value out of a local
     #[serde(skip_serializing_if = "is_false")]
     disable_invariant_violation_check_in_swap_loc: bool,
@@ -1085,10 +1081,6 @@ impl ProtocolConfig {
         self.feature_flags.allow_receiving_object_id
     }
 
-    pub fn get_advance_epoch_start_time_in_safe_mode(&self) -> bool {
-        self.feature_flags.advance_epoch_start_time_in_safe_mode
-    }
-
     pub fn disable_invariant_violation_check_in_swap_loc(&self) -> bool {
         self.feature_flags
             .disable_invariant_violation_check_in_swap_loc
@@ -1838,7 +1830,6 @@ impl ProtocolConfig {
             // new_constant: None,
         };
 
-        cfg.feature_flags.advance_epoch_start_time_in_safe_mode = true;
         cfg.feature_flags
             .disable_invariant_violation_check_in_swap_loc = true;
         cfg.feature_flags.no_extraneous_module_bytes = true;
