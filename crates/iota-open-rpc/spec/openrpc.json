@@ -1330,7 +1330,6 @@
                 "shared_object_deletion": true,
                 "soft_bundle": true,
                 "throughput_aware_consensus_submission": false,
-                "verify_legacy_zklogin_address": true,
                 "zklogin_auth": false
               },
               "attributes": {
