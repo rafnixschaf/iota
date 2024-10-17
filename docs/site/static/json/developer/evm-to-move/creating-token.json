@@ -12,10 +12,10 @@
       {
         "questionText": "What is the purpose of the TreasuryCap in IOTA Move's token management?",
         "answerOptions": [
-          { "answerText": "It manages token ownership.", "isCorrect": false },
-          { "answerText": "It enforces token transfers.", "isCorrect": false },
-          { "answerText": "It allows minting and burning of tokens.", "isCorrect": true },
-          { "answerText": "It defines the token's metadata.", "isCorrect": false }
+          { "answerText": "It manages token ownership", "isCorrect": false },
+          { "answerText": "It enforces token transfers", "isCorrect": false },
+          { "answerText": "It allows minting and burning of tokens", "isCorrect": true },
+          { "answerText": "It defines the token's metadata", "isCorrect": false }
         ]
       },
       {
