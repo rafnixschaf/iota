@@ -10,7 +10,7 @@ import uiKitStaticPreset from '../../apps/ui-kit/src/lib/tailwind/static.preset'
 
 export default {
     presets: [preset, uiKitStaticPreset],
-    content: ['./src/**/*.{js,jsx,ts,tsx}', './../ui-kit/**/*.{js,jsx,ts,tsx}'],
+    content: ['./src/**/*.{js,jsx,ts,tsx}', './../ui-kit/src/lib/**/*.{js,jsx,ts,tsx}'],
     theme: {
         extend: {
             colors: {
