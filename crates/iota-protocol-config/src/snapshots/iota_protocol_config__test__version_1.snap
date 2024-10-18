@@ -18,7 +18,6 @@ feature_flags:
   hardened_otw_check: true
   allow_receiving_object_id: true
   enable_poseidon: true
-  enable_coin_deny_list: true
   enable_group_ops_native_functions: true
   enable_group_ops_native_function_msm: true
   reject_mutable_random_on_entry_functions: true
