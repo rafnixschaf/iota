@@ -37,7 +37,7 @@ module iota::coin {
     const EGlobalPauseNotAllowed: u64 = 3;
 
     /// The index into the deny list vector for the `iota::coin::Coin` type.
-    const DENY_LIST_COIN_INDEX: u64 = 0; // TODO public(package) const
+    const DENY_LIST_COIN_INDEX: u64 = 0;
 
     /// A coin of type `T` worth `value`. Transferable and storable
     public struct Coin<phantom T> has key, store {
