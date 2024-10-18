@@ -17,13 +17,15 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
-            "~/*": ["./src/*"]
+            "~/*": ["./src/*"],
+            "@iota/apps-ui-kit": ["./../ui-kit/src/lib"]
         }
     },
     "include": ["src", "tests"],
     "references": [
         { "path": "../../sdk/typescript/" },
         { "path": "../../sdk/kiosk/" },
-        { "path": "../../sdk/dapp-kit/" }
+        { "path": "../../sdk/dapp-kit/" },
+        { "path": "../ui-kit" }
     ]
 }
