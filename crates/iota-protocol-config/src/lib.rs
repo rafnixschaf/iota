@@ -139,10 +139,6 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "is_false")]
     enable_jwk_consensus_updates: bool,
 
-    // If true, use the new child object format type logging
-    #[serde(skip_serializing_if = "is_false")]
-    loaded_child_object_format_type: bool,
-
     // Enable bridge protocol
     #[serde(skip_serializing_if = "is_false")]
     bridge: bool,
@@ -1042,10 +1038,6 @@ impl ProtocolConfig {
         self.feature_flags.enable_jwk_consensus_updates
     }
 
-    pub fn loaded_child_object_format_type(&self) -> bool {
-        self.feature_flags.loaded_child_object_format_type
-    }
-
     pub fn recompute_has_public_transfer_in_execution(&self) -> bool {
         self.feature_flags
             .recompute_has_public_transfer_in_execution
@@ -1709,7 +1701,6 @@ impl ProtocolConfig {
         cfg.feature_flags
             .advance_to_highest_supported_protocol_version = true;
         cfg.feature_flags.consensus_transaction_ordering = ConsensusTransactionOrdering::ByGasPrice;
-        cfg.feature_flags.loaded_child_object_format_type = true;
 
         cfg.feature_flags.recompute_has_public_transfer_in_execution = true;
         cfg.feature_flags.shared_object_deletion = true;
