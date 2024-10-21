@@ -51,9 +51,11 @@
             "@iota/dapp-kit": ["../../sdk/dapp-kit/src/"],
             "@iota/ledgerjs-hw-app-iota": ["../../sdk/ledgerjs-hw-app-iota/src/Iota.ts"],
             "@iota/wallet-standard": ["../../sdk/wallet-standard/src/"],
-            "@iota/apps-ui-kit": ["../ui-kit/src/lib/"]
         }
     },
     "include": ["../../src", "../../tests"],
-    "exclude": ["../../build", "../../node_modules"]
+    "exclude": ["../../build", "../../node_modules"],
+    "references": [
+        { "path": "../ui-kit" }
+    ]
 }

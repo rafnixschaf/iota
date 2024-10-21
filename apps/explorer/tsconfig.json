@@ -18,7 +18,6 @@
         "baseUrl": ".",
         "paths": {
             "~/*": ["./src/*"],
-            "@iota/apps-ui-kit": ["./../ui-kit/src/lib"]
         }
     },
     "include": ["src", "tests"],
