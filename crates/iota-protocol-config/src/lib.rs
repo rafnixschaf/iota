@@ -130,10 +130,6 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "ConsensusTransactionOrdering::is_none")]
     consensus_transaction_ordering: ConsensusTransactionOrdering,
 
-    // If true, the ability to delete shared objects is in effect
-    #[serde(skip_serializing_if = "is_false")]
-    shared_object_deletion: bool,
-
     // A list of supported OIDC providers that can be used for zklogin.
     #[serde(skip_serializing_if = "is_empty")]
     zklogin_supported_providers: BTreeSet<String>,
@@ -1014,10 +1010,6 @@ impl ProtocolConfig {
         self.feature_flags.consensus_transaction_ordering
     }
 
-    pub fn shared_object_deletion(&self) -> bool {
-        self.feature_flags.shared_object_deletion
-    }
-
     pub fn enable_jwk_consensus_updates(&self) -> bool {
         self.feature_flags.enable_jwk_consensus_updates
     }
@@ -1667,7 +1659,6 @@ impl ProtocolConfig {
             .advance_to_highest_supported_protocol_version = true;
         cfg.feature_flags.consensus_transaction_ordering = ConsensusTransactionOrdering::ByGasPrice;
 
-        cfg.feature_flags.shared_object_deletion = true;
         cfg.feature_flags.hardened_otw_check = true;
 
         // Enable group ops and all networks (but not msm)
@@ -1826,10 +1817,6 @@ impl ProtocolConfig {
 
     pub fn set_accept_zklogin_in_multisig_for_testing(&mut self, val: bool) {
         self.feature_flags.accept_zklogin_in_multisig = val
-    }
-
-    pub fn set_shared_object_deletion_for_testing(&mut self, val: bool) {
-        self.feature_flags.shared_object_deletion = val;
     }
 
     pub fn set_per_object_congestion_control_mode_for_testing(
