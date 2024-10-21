@@ -11,7 +11,7 @@ use self::{
     randomness_state_update::RandomnessStateUpdateTransaction,
 };
 use crate::types::transaction_block_kind::{
-    authenticator_state_update::AuthenticatorStateUpdateTransaction,
+    authenticator_state_update::AuthenticatorStateUpdateV1Transaction,
     end_of_epoch::EndOfEpochTransaction, programmable::ProgrammableTransactionBlock,
 };
 
@@ -30,7 +30,7 @@ pub(crate) enum TransactionBlockKind {
     Genesis(GenesisTransaction),
     ChangeEpoch(ChangeEpochTransaction),
     Programmable(ProgrammableTransactionBlock),
-    AuthenticatorState(AuthenticatorStateUpdateTransaction),
+    AuthenticatorState(AuthenticatorStateUpdateV1Transaction),
     Randomness(RandomnessStateUpdateTransaction),
     EndOfEpoch(EndOfEpochTransaction),
 }
@@ -59,8 +59,8 @@ impl TransactionBlockKind {
                     checkpoint_viewed_at,
                 })
             }
-            K::AuthenticatorStateUpdate(asu) => {
-                T::AuthenticatorState(AuthenticatorStateUpdateTransaction {
+            K::AuthenticatorStateUpdateV1(asu) => {
+                T::AuthenticatorState(AuthenticatorStateUpdateV1Transaction {
                     native: asu,
                     checkpoint_viewed_at,
                 })

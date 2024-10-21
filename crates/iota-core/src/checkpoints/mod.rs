@@ -1376,8 +1376,9 @@ impl CheckpointBuilder {
                     .unwrap_or_else(|| panic!("Could not find executed transaction {:?}", effects));
                 match transaction.inner().transaction_data().kind() {
                     TransactionKind::ConsensusCommitPrologueV1(_)
-                    | TransactionKind::AuthenticatorStateUpdate(_) => {
-                        // ConsensusCommitPrologue and AuthenticatorStateUpdate
+                    | TransactionKind::AuthenticatorStateUpdateV1(_) => {
+                        // ConsensusCommitPrologue and
+                        // AuthenticatorStateUpdateV1
                         // are guaranteed to be
                         // processed before we reach here.
                     }
