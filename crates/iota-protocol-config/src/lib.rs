@@ -161,10 +161,6 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "is_false")]
     enable_poseidon: bool,
 
-    // If true, enable the coin deny list.
-    #[serde(skip_serializing_if = "is_false")]
-    enable_coin_deny_list: bool,
-
     // Enable native functions for group operations.
     #[serde(skip_serializing_if = "is_false")]
     enable_group_ops_native_functions: bool,
@@ -1068,10 +1064,6 @@ impl ProtocolConfig {
         self.feature_flags.enable_poseidon
     }
 
-    pub fn enable_coin_deny_list_v1(&self) -> bool {
-        self.feature_flags.enable_coin_deny_list
-    }
-
     pub fn enable_coin_deny_list_v2(&self) -> bool {
         self.feature_flags.enable_coin_deny_list_v2
     }
@@ -1677,7 +1669,6 @@ impl ProtocolConfig {
 
         cfg.feature_flags.shared_object_deletion = true;
         cfg.feature_flags.hardened_otw_check = true;
-        cfg.feature_flags.enable_coin_deny_list = true;
 
         // Enable group ops and all networks (but not msm)
         cfg.feature_flags.enable_group_ops_native_functions = true;

@@ -11,7 +11,6 @@ feature_flags:
   shared_object_deletion: true
   hardened_otw_check: true
   enable_poseidon: true
-  enable_coin_deny_list: true
   enable_group_ops_native_functions: true
   enable_group_ops_native_function_msm: true
   per_object_congestion_control_mode: TotalTxCount
