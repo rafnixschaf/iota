@@ -1698,8 +1698,6 @@ impl ProtocolConfig {
         cfg.feature_flags.shared_object_deletion = true;
         cfg.feature_flags.hardened_otw_check = true;
 
-        cfg.feature_flags.enable_coin_deny_list_v2 = true;
-
         // Enable group ops and all networks (but not msm)
         cfg.feature_flags.enable_group_ops_native_functions = true;
 
