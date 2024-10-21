@@ -258,7 +258,7 @@ pub fn get_deny_list_root_object(object_store: &dyn ObjectStore) -> Option<Objec
             None
         }
         Err(err) => {
-            error!("Failed to get deny list object: {}", err);
+            error!("Failed to get deny list object: {err}");
             None
         }
     }
