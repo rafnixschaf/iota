@@ -1312,7 +1312,6 @@
                 "mysticeti_leader_scoring_and_schedule": true,
                 "no_extraneous_module_bytes": true,
                 "passkey_auth": true,
-                "recompute_has_public_transfer_in_execution": true,
                 "rethrow_serialization_type_layout_errors": true,
                 "shared_object_deletion": true,
                 "throughput_aware_consensus_submission": false,
