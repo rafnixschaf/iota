@@ -46,10 +46,10 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@7e58f89e24a544d88f7a74c6eed8a3df3fd4c658 # pin@nextest
 
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c # pin@master
-        with:
-          swap-size-gb: 256
+      # - name: Set Swap Space
+      #   uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c # pin@master
+      #   with:
+      #     swap-size-gb: 256
 
       - name: Install Rust
         run: rustup update stable
