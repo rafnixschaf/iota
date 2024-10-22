@@ -25,15 +25,13 @@ task 4, line 32:
 //# view-object 0,0
 Owner: Account Address ( validator_0 )
 Version: 1
-Contents: iota::coin::Coin<iota::iota::IOTA> {
+Contents: iota_system::validator_cap::UnverifiedValidatorOperationCap {
     id: iota::object::UID {
         id: iota::object::ID {
             bytes: fake(0,0),
         },
     },
-    balance: iota::balance::Balance<iota::iota::IOTA> {
-        value: 300000000000000u64,
-    },
+    authorizer_validator_address: validator_0,
 }
 
 task 5, line 34:
@@ -77,7 +75,7 @@ Epoch advanced: 5
 
 task 10, line 44:
 //# view-checkpoint
-CheckpointSummary { epoch: 5, seq: 10, content_digest: F4sCj9Jh3LKYWLimZPUCZ27UQ6vttX2qFVp1z2Aqd91U,
+CheckpointSummary { epoch: 5, seq: 10, content_digest: 9Cb89vi55PwDbo8AUbCqP5CWjPk4zyBt2hdNpTQegeDL,
             epoch_rolling_gas_cost_summary: GasCostSummary { computation_cost: 0, storage_cost: 0, storage_rebate: 0, non_refundable_storage_fee: 0 }}
 
 task 11, lines 46-51:
@@ -155,8 +153,8 @@ Response: {
         "edges": [
           {
             "node": {
-              "address": "0xeae34747c03a163062ab8e42c03009f475107eaf4ca5b76075d215b57ae25c35",
-              "digest": "63catUbppoCKbYLvg8KTFt5TWYcRvt7cJ7AM2JS2gbky",
+              "address": "0x737b373012ae5cdbbfdaa1129fb5cb4cb74b6b6054d9d8881ef7815ee5aa91c6",
+              "digest": "GeyxJgQMHEzwocpUNuVBLHe67YfALLNwNQF59nBJz8ov",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -182,8 +180,8 @@ Response: {
         "edges": [
           {
             "node": {
-              "address": "0xeae34747c03a163062ab8e42c03009f475107eaf4ca5b76075d215b57ae25c35",
-              "digest": "63catUbppoCKbYLvg8KTFt5TWYcRvt7cJ7AM2JS2gbky",
+              "address": "0x737b373012ae5cdbbfdaa1129fb5cb4cb74b6b6054d9d8881ef7815ee5aa91c6",
+              "digest": "GeyxJgQMHEzwocpUNuVBLHe67YfALLNwNQF59nBJz8ov",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -197,8 +195,26 @@ Response: {
         "edges": [
           {
             "node": {
-              "address": "0x124e2b6242964e3877814a4103e50e8ca66984860c69e66b06c49e0714ca53fb",
-              "digest": "jJtPuyAfUcXveX9vZ6vZrzkejbBoJ2s4T5jJYkabAL3",
+              "address": "0x094efdcecf54f43f1fbc287cbf12c0c23fba11f15ca1e3eff04aef99803f54a2",
+              "digest": "DzW8cvuoedvZuD6tdixoCc8FmFDUUHfSqMtZrj5HyXPF",
+              "owner": {
+                "__typename": "AddressOwner"
+              }
+            }
+          },
+          {
+            "node": {
+              "address": "0x0a1950131b2a92735415780e5580ea25c0fd278cb34fb7008c11f92add031a94",
+              "digest": "H53RFar5T8L7kHET3KMSoqcyWbT83iaaQqBz4Yskk64j",
+              "owner": {
+                "__typename": "AddressOwner"
+              }
+            }
+          },
+          {
+            "node": {
+              "address": "0x22afa0a60bd07f0c03adc2363202bffa1bb8f58b2716c22c6796213b20c18a10",
+              "digest": "74EJerSWFpjboFmW93kvvQdJ3SGXwhjfWNU46VUFeDBf",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -207,16 +223,7 @@ Response: {
           {
             "node": {
               "address": "0x26bf0f03edd09bb3f862e13cec014d17c26dd739d2563d9c704aa8d206301df2",
-              "digest": "12kY4sqD1rUtiC8sxKTV6LoQgY8HcRb1nu7k1UN6jCqE",
-              "owner": {
-                "__typename": "AddressOwner"
-              }
-            }
-          },
-          {
-            "node": {
-              "address": "0x2782b1e381b830d0ce7898b67a28b6721ddcbfeb64121fc44503ed42ca68bf34",
-              "digest": "CYDbwuMjATBditxZDzuQdwa3VvwJNY71qRGH1dkPE7D6",
+              "digest": "AHTVQtfpirpWFsWRQvUS9Y9Uu43epnvKdTa6xf5Trm7S",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -225,7 +232,7 @@ Response: {
           {
             "node": {
               "address": "0x3442446f02377d1025b211e51564e4f1c9a46845ccad733beeb06180d3f66c31",
-              "digest": "B7TFUJkKJPPKmAEVwnWNKZh2yKMDzWnoUJtrPnX7qDis",
+              "digest": "EmBozvS62wRXcBG1K9zX4UHbvMKG1MTcrfVqvTq4SQAH",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -234,7 +241,16 @@ Response: {
           {
             "node": {
               "address": "0x3c88cad5799a8da0467b8456a7429a97e7c141cfcf25f02faf51aa8cb4840461",
-              "digest": "WLEaDg9UCVdAUbUrAtKAa1nWzRGZ1oezQMeVCmH8Bqm",
+              "digest": "AnbRX95d44F2mTWSZEU9EMWJEYuJz7uPMFaUdrAqzTTU",
+              "owner": {
+                "__typename": "AddressOwner"
+              }
+            }
+          },
+          {
+            "node": {
+              "address": "0x5bc5318f1ccddc15cee781116e6fcf27d594bc7d44f49c0c4e9ffca09fede100",
+              "digest": "3eRPQBkruhDx7uFrKRs63fDtkSRa4gQrm2dEJjmFhbxL",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -243,16 +259,7 @@ Response: {
           {
             "node": {
               "address": "0x847c914d647e7387d7cea4db5ad8fefeffe66773635804a991dfd4385fab6a97",
-              "digest": "Csi7A2yLMcqJRvrkHU6eZTpDVJLStd3RtnWUMSA7hkCv",
-              "owner": {
-                "__typename": "AddressOwner"
-              }
-            }
-          },
-          {
-            "node": {
-              "address": "0xa743aa27f7e5f7414f75db87d5bdee60da92f32cae8ff66606a1c6cc54ba131d",
-              "digest": "DSbA4fNHDJ57hXqv2zQHWs2QYW5WTdnWvef5ZYdAxEX2",
+              "digest": "GBVcZU2e37JCufAPtFmA4ojS1kxCZ3jETZYqqiMMQYHt",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -261,7 +268,7 @@ Response: {
           {
             "node": {
               "address": "0xa79cc544021a721176cdc4497728ec35a5311b8ff0aa293a5d29c0d32cb56056",
-              "digest": "GHhBYibbbTT3FQ6LEmr7t133s38AFUMoseZRk1DKxP4Q",
+              "digest": "BTHPK98bVBb244JhSd4b6gEpEgcppgNdKd4Xpg8EQR1e",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -270,7 +277,7 @@ Response: {
           {
             "node": {
               "address": "0xac9c2e11aebecd35b4cb15802ca6ad5e64d320204149187ba646a16d07a4934d",
-              "digest": "3b8sP2r2dZ1udngNw2FiYoSZiNQRtdSsgT9Sbdec1v3F",
+              "digest": "9HkXxtkLeRKfuxN3G3dFHW5UhU23NXP2qPdFFMkXsfk1",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -279,7 +286,7 @@ Response: {
           {
             "node": {
               "address": "0xb21c0b03871456040643740e238d03bde38de240d7b17055f4670777a19f07b8",
-              "digest": "H5adbbtiGTGdAxQxPE6fm4bQUPWWZ9T2931rVb5fewDA",
+              "digest": "BpcoKexjA3RjF1ho5rTySSE837dHg7vgvxVuTsk851Ki",
               "owner": {
                 "__typename": "AddressOwner"
               }
@@ -287,17 +294,8 @@ Response: {
           },
           {
             "node": {
-              "address": "0xc857f00075eb1e8f2652a9b4ff5db31875801c1359b9b5e80a50c3e1c4176b47",
-              "digest": "DFKoKp9VKkCZ7NwroFGrzuPDLyBDJVuoduWpXJGpuDg2",
-              "owner": {
-                "__typename": "AddressOwner"
-              }
-            }
-          },
-          {
-            "node": {
-              "address": "0xee0608c6d6fcc1e9778b8ac77f224158672c3aaee072a1566f0afcb3e0ad96c2",
-              "digest": "3ZJv8Hcjb8bfgCGocWdCnLN6mrNhFxNetxV5gaAufzrj",
+              "address": "0xe1edfbae9935af54ec7dd9a87e493b29c1a7e668b6ef7cffb42eb0fc32c30a21",
+              "digest": "3puq5RUZvuD69214uAGwnXRJsyFYBB7GitDES9z5BZQr",
               "owner": {
                 "__typename": "AddressOwner"
               }

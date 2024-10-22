@@ -41,7 +41,7 @@ Contents: iota::coin::Coin<test::regulated_coin2::REGULATED_COIN2> {
 }
 
 task 4, line 68:
-//# run iota::coin::deny_list_v2_add --args object(0x403) object(1,5) @A --type-args test::regulated_coin2::REGULATED_COIN2 --sender A
+//# run iota::coin::deny_list_v1_add --args object(0x403) object(1,5) @A --type-args test::regulated_coin2::REGULATED_COIN2 --sender A
 events: Event { package_id: iota, transaction_module: Identifier("coin"), sender: A, type_: StructTag { address: iota, module: Identifier("deny_list"), name: Identifier("PerTypeConfigCreated"), type_params: [] }, contents: [0, 0, 0, 0, 0, 0, 0, 0, 98, 99, 101, 99, 51, 97, 97, 52, 51, 57, 100, 56, 51, 57, 52, 99, 99, 56, 55, 50, 57, 52, 99, 51, 51, 100, 57, 50, 102, 98, 50, 97, 48, 56, 101, 56, 52, 99, 52, 97, 102, 49, 97, 57, 101, 56, 102, 50, 100, 98, 51, 53, 50, 97, 50, 98, 101, 49, 99, 97, 48, 51, 56, 53, 55, 58, 58, 114, 101, 103, 117, 108, 97, 116, 101, 100, 95, 99, 111, 105, 110, 50, 58, 58, 82, 69, 71, 85, 76, 65, 84, 69, 68, 95, 67, 79, 73, 78, 50, 68, 67, 246, 17, 2, 86, 76, 77, 199, 216, 47, 146, 122, 161, 14, 129, 182, 84, 62, 166, 216, 143, 196, 120, 241, 122, 102, 188, 19, 225, 140, 163] }
 created: object(4,0), object(4,1), object(4,2)
 mutated: 0x0000000000000000000000000000000000000000000000000000000000000403, object(0,0), object(1,5)
