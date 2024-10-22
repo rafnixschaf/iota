@@ -322,7 +322,7 @@ module iota::coin {
         ctx: &mut TxContext,
     ) {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_add(DENY_LIST_COIN_INDEX, ty, addr, ctx)
+        deny_list.add(DENY_LIST_COIN_INDEX, ty, addr, ctx)
     }
 
     /// Removes an address from the deny list. Similar to `deny_list_v1_add`, the effect for input
@@ -335,7 +335,7 @@ module iota::coin {
         ctx: &mut TxContext,
     ) {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_remove(DENY_LIST_COIN_INDEX, ty, addr, ctx)
+        deny_list.remove(DENY_LIST_COIN_INDEX, ty, addr, ctx)
     }
 
     /// Check if the deny list contains the given address for the current epoch. Denied addresses
@@ -346,7 +346,7 @@ module iota::coin {
         ctx: &TxContext,
     ): bool {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_contains_current_epoch(DENY_LIST_COIN_INDEX, ty, addr, ctx)
+        deny_list.contains_current_epoch(DENY_LIST_COIN_INDEX, ty, addr, ctx)
     }
 
     /// Check if the deny list contains the given address for the next epoch. Denied addresses in
@@ -357,7 +357,7 @@ module iota::coin {
         addr: address,
     ): bool {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_contains_next_epoch(DENY_LIST_COIN_INDEX, ty, addr)
+        deny_list.contains_next_epoch(DENY_LIST_COIN_INDEX, ty, addr)
     }
 
     /// Enable the global pause for the given coin type. This will immediately prevent all addresses
@@ -371,7 +371,7 @@ module iota::coin {
     ) {
         assert!(deny_cap.allow_global_pause, EGlobalPauseNotAllowed);
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_enable_global_pause(DENY_LIST_COIN_INDEX, ty, ctx)
+        deny_list.enable_global_pause(DENY_LIST_COIN_INDEX, ty, ctx)
     }
 
     /// Disable the global pause for the given coin type. This will immediately allow all addresses
@@ -385,7 +385,7 @@ module iota::coin {
     ) {
         assert!(deny_cap.allow_global_pause, EGlobalPauseNotAllowed);
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_disable_global_pause(DENY_LIST_COIN_INDEX, ty, ctx)
+        deny_list.disable_global_pause(DENY_LIST_COIN_INDEX, ty, ctx)
     }
 
     /// Check if the global pause is enabled for the given coin type in the current epoch.
@@ -394,7 +394,7 @@ module iota::coin {
         ctx: &TxContext,
     ): bool {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_is_global_pause_enabled_current_epoch(DENY_LIST_COIN_INDEX, ty, ctx)
+        deny_list.is_global_pause_enabled_current_epoch(DENY_LIST_COIN_INDEX, ty, ctx)
     }
 
     /// Check if the global pause is enabled for the given coin type in the next epoch.
@@ -402,7 +402,7 @@ module iota::coin {
         deny_list: &DenyList,
     ): bool {
         let ty = type_name::get_with_original_ids<T>().into_string().into_bytes();
-        deny_list.v1_is_global_pause_enabled_next_epoch(DENY_LIST_COIN_INDEX, ty)
+        deny_list.is_global_pause_enabled_next_epoch(DENY_LIST_COIN_INDEX, ty)
     }
 
     // === Entrypoints ===
