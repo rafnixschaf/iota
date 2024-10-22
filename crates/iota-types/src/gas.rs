@@ -72,7 +72,7 @@ pub mod checked {
             // Common checks. We may pull them into version specific status as needed, but
             // they are unlikely to change.
 
-            // gas price must be bigger or equal to reference gas price
+            // gas price must be greater than or equal to reference gas price
             if gas_price < reference_gas_price {
                 return Err(UserInputError::GasPriceUnderRGP {
                     gas_price,

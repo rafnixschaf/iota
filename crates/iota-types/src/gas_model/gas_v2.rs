@@ -187,7 +187,8 @@ mod checked {
         // and then conceptually
         // `final_computation_cost = total_computation_cost * gas_price / reference_gas_price`
         gas_price: u64,
-        // RGP as defined in the protocol config.
+        // reference gas price as defined in protocol config.
+        // if `fixed_base_fee' is enabled, this is a mandatory base fee paid to the protocol.
         reference_gas_price: u64,
         // Gas price for storage. This is a multiplier on the final charge
         // as related to the storage gas price defined in the system

@@ -220,6 +220,10 @@ struct FeatureFlags {
     // Rethrow type layout errors during serialization instead of trying to convert them.
     #[serde(skip_serializing_if = "is_false")]
     rethrow_serialization_type_layout_errors: bool,
+
+    // Enable a fixed, protocol-defined base gas price for all transactions.
+    #[serde(skip_serializing_if = "is_false")]
+    fixed_base_fee: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -625,8 +629,11 @@ pub struct ProtocolConfig {
     /// In basis point.
     reward_slashing_rate: Option<u64>,
 
-    /// Unit gas price, Nanos per internal gas unit.
+    /// Unit storage gas price, Nanos per internal gas unit.
     storage_gas_price: Option<u64>,
+
+    // Base gas price for computation gas, nanos per computation unit.
+    base_gas_price: Option<u64>,
 
     /// The number of tokens that the set of validators should receive per
     /// epoch.
@@ -1125,6 +1132,10 @@ impl ProtocolConfig {
         self.feature_flags.authority_capabilities_v2
     }
 
+    pub fn fixed_base_fee(&self) -> bool {
+        self.feature_flags.fixed_base_fee
+    }
+
     pub fn max_transaction_size_bytes(&self) -> u64 {
         // Provide a default value if protocol config version is too low.
         self.consensus_max_transaction_size_bytes
@@ -1342,6 +1353,7 @@ impl ProtocolConfig {
             object_runtime_max_num_store_entries: Some(1000),
             object_runtime_max_num_store_entries_system_tx: Some(1000 * 16),
             // min gas budget is in NANOS and an absolute value 1000 NANOS or 0.000001IOTA
+            // TODO: this implies 1 computation unit for the transaction because base gas price is 1000.
             base_tx_cost_fixed: Some(1_000),
             package_publish_cost_fixed: Some(1_000),
             base_tx_cost_per_byte: Some(0),
@@ -1357,6 +1369,8 @@ impl ProtocolConfig {
             // Change reward slashing rate to 100%.
             reward_slashing_rate: Some(10000),
             storage_gas_price: Some(76),
+            // Base gas price is 1000 Nano/computation unit.
+            base_gas_price: Some(1000),
             // The initial target reward for validators per epoch.
             // Refer to the IOTA tokenomics for the origin of this value.
             validator_target_reward: Some(767_000 * 1_000_000_000),

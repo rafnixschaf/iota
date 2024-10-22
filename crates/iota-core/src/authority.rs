@@ -874,10 +874,16 @@ impl AuthorityState {
             epoch_store.epoch(),
         )?;
 
-        let (_gas_status, checked_input_objects) =
+        // Determine what to use as reference gas price based on protocol config.
+        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
+            epoch_store.protocol_config().base_gas_price()
+        } else {
+            tx_data.gas_price()
+        };
+        let (_gas_status, checked_input_objects) = 
             iota_transaction_checks::check_transaction_input(
                 epoch_store.protocol_config(),
-                epoch_store.reference_gas_price(),
+                reference_gas_price,
                 tx_data,
                 input_objects,
                 &receiving_objects,
@@ -1614,13 +1620,19 @@ impl AuthorityState {
         let tx_data = certificate.data().transaction_data();
         tx_data.validity_check(epoch_store.protocol_config())?;
 
+        // Determine what to use as reference gas price based on protocol config.
+        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
+            epoch_store.protocol_config().base_gas_price()
+        } else {
+            tx_data.gas_price()
+        };
         // The cost of partially re-auditing a transaction before execution is
         // tolerated.
         let (gas_status, input_objects) = iota_transaction_checks::check_certificate_input(
             certificate,
             input_objects,
             epoch_store.protocol_config(),
-            epoch_store.reference_gas_price(),
+            reference_gas_price,
         )?;
 
         let owned_object_refs = input_objects.inner().filter_owned_objects();
@@ -1764,6 +1776,12 @@ impl AuthorityState {
 
         // make a gas object if one was not provided
         let mut gas_object_refs = transaction.gas().to_vec();
+        // Determine what to use as reference gas price based on protocol config.
+        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
+            epoch_store.protocol_config().base_gas_price()
+        } else {
+            transaction.gas_price()
+        };
         let ((gas_status, checked_input_objects), mock_gas) = if transaction.gas().is_empty() {
             let sender = transaction.sender();
             // use a 1B iota coin
@@ -1781,7 +1799,7 @@ impl AuthorityState {
             (
                 iota_transaction_checks::check_transaction_input_with_given_gas(
                     epoch_store.protocol_config(),
-                    epoch_store.reference_gas_price(),
+                    reference_gas_price,
                     &transaction,
                     input_objects,
                     receiving_objects,
@@ -1794,7 +1812,7 @@ impl AuthorityState {
             (
                 iota_transaction_checks::check_transaction_input(
                     epoch_store.protocol_config(),
-                    epoch_store.reference_gas_price(),
+                    reference_gas_price,
                     &transaction,
                     input_objects,
                     &receiving_objects,
@@ -1989,6 +2007,12 @@ impl AuthorityState {
         } else {
             transaction.gas().to_vec()
         };
+        // Determine what to use as reference gas price based on protocol config.
+        let reference_gas_price = if protocol_config.fixed_base_fee() {
+            protocol_config.base_gas_price()
+        } else {
+            transaction.gas_price()
+        };
 
         let (gas_status, checked_input_objects) = if skip_checks {
             // If we are skipping checks, then we call the check_dev_inspect_input function
@@ -2022,7 +2046,7 @@ impl AuthorityState {
             if transaction.gas().is_empty() {
                 iota_transaction_checks::check_transaction_input_with_given_gas(
                     epoch_store.protocol_config(),
-                    epoch_store.reference_gas_price(),
+                    reference_gas_price,
                     &transaction,
                     input_objects,
                     receiving_objects,
@@ -2032,7 +2056,7 @@ impl AuthorityState {
             } else {
                 iota_transaction_checks::check_transaction_input(
                     epoch_store.protocol_config(),
-                    epoch_store.reference_gas_price(),
+                    reference_gas_price,
                     &transaction,
                     input_objects,
                     &receiving_objects,
