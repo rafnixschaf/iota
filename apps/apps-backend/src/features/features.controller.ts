@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Controller, Get } from '@nestjs/common';
-import { Feature } from '@iota/core/constants/features.enum';
+import { Feature } from '@iota/core/dist/constants/features.enum';
 
 @Controller('/api/features')
 export class FeaturesController {

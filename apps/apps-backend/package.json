@@ -2,12 +2,13 @@
     "name": "apps-backend",
     "private": true,
     "scripts": {
-        "build": "nest build",
+        "build": "pnpm build:iota-core && nest build",
         "format": "prettier --write \"src/**/*.ts\"",
         "dev": "nest start --watch",
         "debug": "nest start --debug --watch",
         "preview": "pnpm run build && node dist/main",
-        "lint": "eslint --max-warnings=0 \"{src,apps,libs,test}/**/*.ts\""
+        "lint": "eslint --max-warnings=0 \"{src,apps,libs,test}/**/*.ts\"",
+        "build:iota-core": "cd node_modules/@iota/core && pnpm build"
     },
     "dependencies": {
         "@iota/core": "workspace:*",

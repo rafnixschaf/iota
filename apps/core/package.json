@@ -18,7 +18,8 @@
         "lint": "pnpm run eslint:check && pnpm run prettier:check",
         "lint:fix": "pnpm run eslint:fix && pnpm run prettier:fix",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "build": "tsc"
     },
     "dependencies": {
         "@amplitude/analytics-client-common": "^0.7.0",
