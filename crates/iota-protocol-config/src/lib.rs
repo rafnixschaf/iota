@@ -637,7 +637,7 @@ pub struct ProtocolConfig {
 
     /// The number of tokens that the set of validators should receive per
     /// epoch.
-    validator_target_reward: Option<u64>,
+    validator_subsidy: Option<u64>,
 
     /// === Core Protocol ===
 
@@ -1373,7 +1373,7 @@ impl ProtocolConfig {
             base_gas_price: Some(1000),
             // The initial target reward for validators per epoch.
             // Refer to the IOTA tokenomics for the origin of this value.
-            validator_target_reward: Some(767_000 * 1_000_000_000),
+            validator_subsidy: Some(767_000 * 1_000_000_000),
             max_transactions_per_checkpoint: Some(10_000),
             max_checkpoint_size_bytes: Some(30 * 1024 * 1024),
 

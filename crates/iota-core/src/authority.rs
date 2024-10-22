@@ -878,7 +878,7 @@ impl AuthorityState {
         let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
             epoch_store.protocol_config().base_gas_price()
         } else {
-            tx_data.gas_price()
+            epoch_store.reference_gas_price()
         };
         let (_gas_status, checked_input_objects) = 
             iota_transaction_checks::check_transaction_input(
@@ -1624,7 +1624,7 @@ impl AuthorityState {
         let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
             epoch_store.protocol_config().base_gas_price()
         } else {
-            tx_data.gas_price()
+            epoch_store.reference_gas_price()
         };
         // The cost of partially re-auditing a transaction before execution is
         // tolerated.
@@ -1780,7 +1780,7 @@ impl AuthorityState {
         let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
             epoch_store.protocol_config().base_gas_price()
         } else {
-            transaction.gas_price()
+            epoch_store.reference_gas_price()
         };
         let ((gas_status, checked_input_objects), mock_gas) = if transaction.gas().is_empty() {
             let sender = transaction.sender();
@@ -2011,7 +2011,7 @@ impl AuthorityState {
         let reference_gas_price = if protocol_config.fixed_base_fee() {
             protocol_config.base_gas_price()
         } else {
-            transaction.gas_price()
+            epoch_store.reference_gas_price()
         };
 
         let (gas_status, checked_input_objects) = if skip_checks {

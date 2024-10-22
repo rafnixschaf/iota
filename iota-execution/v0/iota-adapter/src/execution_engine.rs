@@ -727,14 +727,14 @@ mod checked {
                 bcs::to_bytes(&params.computation_charge).unwrap(),
             ))
             .unwrap();
-        let computation_rewards = builder.programmable_move_call(
+        let computation_charges = builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
             BALANCE_MODULE_NAME.to_owned(),
             BALANCE_CREATE_REWARDS_FUNCTION_NAME.to_owned(),
             vec![GAS::type_tag()],
             vec![computation_charge_arg],
         );
-        (storage_charges, computation_rewards)
+        (storage_charges, computation_charges)
     }
 
     pub fn construct_advance_epoch_pt(
@@ -742,15 +742,15 @@ mod checked {
         params: &AdvanceEpochParams,
     ) -> Result<ProgrammableTransaction, ExecutionError> {
         // Step 1: Create storage charges and computation rewards.
-        let (storage_charges, computation_rewards) = mint_epoch_rewards_in_pt(&mut builder, params);
+        let (storage_charges, computation_charges) = mint_epoch_rewards_in_pt(&mut builder, params);
 
         // Step 2: Advance the epoch.
         let mut arguments = vec![
             builder
-                .pure(params.validator_target_reward)
+                .pure(params.validator_subsidy)
                 .expect("bcs encoding a u64 should not fail"),
             storage_charges,
-            computation_rewards,
+            computation_charges,
         ];
         let call_arg_arguments = vec![
             CallArg::IOTA_SYSTEM_MUT,
@@ -806,7 +806,7 @@ mod checked {
         let params = AdvanceEpochParams {
             epoch: change_epoch.epoch,
             next_protocol_version: change_epoch.protocol_version,
-            validator_target_reward: protocol_config.validator_target_reward(),
+            validator_subsidy: protocol_config.validator_subsidy(),
             storage_charge: change_epoch.storage_charge,
             computation_charge: change_epoch.computation_charge,
             storage_rebate: change_epoch.storage_rebate,

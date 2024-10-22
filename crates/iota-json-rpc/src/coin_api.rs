@@ -1447,7 +1447,7 @@ mod tests {
                 },
                 safe_mode: Default::default(),
                 safe_mode_storage_charges: iota_types::balance::Balance::new(Default::default()),
-                safe_mode_computation_rewards: iota_types::balance::Balance::new(Default::default()),
+                safe_mode_computation_charges: iota_types::balance::Balance::new(Default::default()),
                 safe_mode_storage_rebates: Default::default(),
                 safe_mode_non_refundable_storage_fee: Default::default(),
                 epoch_start_timestamp_ms: Default::default(),

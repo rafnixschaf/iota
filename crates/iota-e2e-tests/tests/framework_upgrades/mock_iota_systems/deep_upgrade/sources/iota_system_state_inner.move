@@ -98,7 +98,7 @@ module iota_system::iota_system_state_inner {
         new_epoch: u64,
         next_protocol_version: u64,
         storage_charge: Balance<IOTA>,
-        computation_reward: Balance<IOTA>,
+        computation_charge: Balance<IOTA>,
         storage_rebate_amount: u64,
         epoch_start_timestamp_ms: u64,
     ) : Balance<IOTA> {
@@ -110,7 +110,7 @@ module iota_system::iota_system_state_inner {
         self.safe_mode = false;
         self.protocol_version = next_protocol_version;
 
-        balance::join(&mut self.storage_fund, computation_reward);
+        balance::join(&mut self.storage_fund, computation_charge);
         balance::join(&mut self.storage_fund, storage_charge);
         let storage_rebate = balance::split(&mut self.storage_fund, storage_rebate_amount);
         storage_rebate

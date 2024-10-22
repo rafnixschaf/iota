@@ -73,7 +73,7 @@ pub struct IotaSystemStateInnerV2 {
     pub validator_report_records: VecMap<IotaAddress, VecSet<IotaAddress>>,
     pub safe_mode: bool,
     pub safe_mode_storage_charges: Balance,
-    pub safe_mode_computation_rewards: Balance,
+    pub safe_mode_computation_charges: Balance,
     pub safe_mode_storage_rebates: u64,
     pub safe_mode_non_refundable_storage_fee: u64,
     pub epoch_start_timestamp_ms: u64,
@@ -116,7 +116,7 @@ impl IotaSystemStateTrait for IotaSystemStateInnerV2 {
         self.safe_mode_storage_charges
             .deposit_for_safe_mode(params.storage_charge);
         self.safe_mode_storage_rebates += params.storage_rebate;
-        self.safe_mode_computation_rewards
+        self.safe_mode_computation_charges
             .deposit_for_safe_mode(params.computation_charge);
         self.safe_mode_non_refundable_storage_fee += params.non_refundable_storage_fee;
         self.epoch_start_timestamp_ms = params.epoch_start_timestamp_ms;
@@ -250,7 +250,7 @@ impl IotaSystemStateTrait for IotaSystemStateInnerV2 {
                 },
             safe_mode,
             safe_mode_storage_charges,
-            safe_mode_computation_rewards,
+            safe_mode_computation_charges,
             safe_mode_storage_rebates,
             safe_mode_non_refundable_storage_fee,
             epoch_start_timestamp_ms,
@@ -269,7 +269,7 @@ impl IotaSystemStateTrait for IotaSystemStateInnerV2 {
             reference_gas_price,
             safe_mode,
             safe_mode_storage_charges: safe_mode_storage_charges.value(),
-            safe_mode_computation_rewards: safe_mode_computation_rewards.value(),
+            safe_mode_computation_charges: safe_mode_computation_charges.value(),
             safe_mode_storage_rebates,
             safe_mode_non_refundable_storage_fee,
             epoch_start_timestamp_ms,

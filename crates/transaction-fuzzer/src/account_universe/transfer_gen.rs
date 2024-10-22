@@ -426,7 +426,7 @@ impl AUTransactionGen for P2PTransferGenRandomGasRandomPriceRandomSponsorship {
             PROTOCOL_CONFIG.base_gas_price()
         } else {
             exec.get_reference_gas_price()
-        }
+        };
         let status = match run_info {
             RunInfo {
                 enough_max_gas: true,

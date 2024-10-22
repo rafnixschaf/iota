@@ -108,7 +108,7 @@ storage_rebate_rate: 10000
 reward_slashing_rate: 10000
 storage_gas_price: 76
 base_gas_price: 1000
-validator_target_reward: 767000000000000
+validator_subsidy: 767000000000000
 max_transactions_per_checkpoint: 10000
 max_checkpoint_size_bytes: 31457280
 buffer_stake_for_protocol_upgrade_bps: 5000
