@@ -29,7 +29,7 @@ use iota_types::{
         get_validator_from_table, iota_system_state_summary::IotaSystemStateSummary,
     },
     object::{Object, ObjectRead},
-    timelock::timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
+    timelock::timelocked_staked_iota::TimelockedStakedIota,
 };
 use itertools::Itertools;
 use jsonrpsee::{RpcModule, core::RpcResult};
