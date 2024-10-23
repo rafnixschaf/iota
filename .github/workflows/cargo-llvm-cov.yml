@@ -62,11 +62,13 @@ jobs:
       #   with:
       #     files: lcov.info
 
-      - name: Upload nextest coverage report to Github
+      - name: Upload coverage report (nextest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
         with:
           name: lcov.info
-          path: .
+          path: ./lcov.info
+          if-no-files-found: error
           retention-days: 30
 
       - name: Run code coverage for simtest
@@ -79,11 +81,13 @@ jobs:
       #   with:
       #     files: lcov-simtest.info
 
-      - name: Upload simtest coverage report to Github
+      - name: Upload coverage report (simtest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
         with:
           name: lcov-simtest.info
-          path: .
+          path: ./lcov-simtest.info
+          if-no-files-found: error
           retention-days: 30
 
   notify:
