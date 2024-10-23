@@ -19,7 +19,7 @@ new_from_unverified
 StakingPoolV1
 	public struct
 	0x3::staking_pool
-PoolTokenExchangeRateV1
+PoolTokenExchangeRate
 	public struct
 	0x3::staking_pool
 StakedIota

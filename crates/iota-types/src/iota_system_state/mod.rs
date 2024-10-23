@@ -387,39 +387,20 @@ where
     Ok(validators)
 }
 
-/// This is the standard API that all inner PoolTokenExchangeRate object type
-/// should implement.
-#[enum_dispatch]
-pub trait PoolTokenExchangeRateTrait {
-    fn rate(&self) -> f64;
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
-#[enum_dispatch(PoolTokenExchangeRateTrait)]
-pub enum PoolTokenExchangeRate {
-    V1(PoolTokenExchangeRateV1),
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Default)]
-pub struct PoolTokenExchangeRateV1 {
+pub struct PoolTokenExchangeRate {
     iota_amount: u64,
     pool_token_amount: u64,
 }
 
-impl PoolTokenExchangeRateTrait for PoolTokenExchangeRateV1 {
+impl PoolTokenExchangeRate {
     /// Rate of the staking pool, pool token amount : Iota amount
-    fn rate(&self) -> f64 {
+    pub fn rate(&self) -> f64 {
         if self.iota_amount == 0 {
             1_f64
         } else {
             self.pool_token_amount as f64 / self.iota_amount as f64
         }
-    }
-}
-
-impl Default for PoolTokenExchangeRate {
-    fn default() -> Self {
-        PoolTokenExchangeRate::V1(PoolTokenExchangeRateV1::default())
     }
 }
 
