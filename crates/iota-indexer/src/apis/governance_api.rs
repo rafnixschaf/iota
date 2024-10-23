@@ -17,7 +17,7 @@ use iota_open_rpc::Module;
 use iota_types::{
     base_types::{IotaAddress, MoveObjectType, ObjectID},
     committee::EpochId,
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     iota_serde::BigInt,
     iota_system_state::{
         PoolTokenExchangeRate, PoolTokenExchangeRateTrait,

@@ -4,10 +4,7 @@
 
 use async_graphql::{connection::Connection, *};
 use iota_json_rpc_types::{Stake as RpcStakedIota, StakeStatus as RpcStakeStatus};
-use iota_types::{
-    base_types::MoveObjectType,
-    governance::{StakedIota as NativeStakedIota, StakedIotaTrait},
-};
+use iota_types::{base_types::MoveObjectType, governance::StakedIota as NativeStakedIota};
 use move_core_types::language_storage::StructTag;
 
 use crate::{

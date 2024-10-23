@@ -10,7 +10,7 @@ use iota_types::{
     base_types::ObjectID,
     coin::CoinMetadata,
     gas_coin::{GasCoin, IotaTreasuryCap, NANOS_PER_IOTA},
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     iota_system_state::IotaValidatorGenesis,
     move_package::MovePackage,
     object::{MoveObject, Owner},

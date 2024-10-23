@@ -21,7 +21,7 @@ use iota_types::{
     committee::EpochId,
     dynamic_field::get_dynamic_field_from_store,
     error::{IotaError, UserInputError},
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     id::ID,
     iota_serde::BigInt,
     iota_system_state::{
