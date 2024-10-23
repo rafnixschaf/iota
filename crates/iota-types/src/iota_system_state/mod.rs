@@ -35,8 +35,8 @@ pub mod iota_system_state_summary;
 mod simtest_iota_system_state_inner;
 #[cfg(msim)]
 use self::simtest_iota_system_state_inner::{
-    SimTestIotaSystemStateDeepV1, SimTestIotaSystemStateShallowV1,
-    SimTestIotaSystemStateV1, SimTestValidatorDeepV2, SimTestValidatorV1,
+    SimTestIotaSystemStateDeepV1, SimTestIotaSystemStateShallowV1, SimTestIotaSystemStateV1,
+    SimTestValidatorDeepV2, SimTestValidatorV1,
 };
 
 const IOTA_SYSTEM_STATE_WRAPPER_STRUCT_NAME: &IdentStr = ident_str!("IotaSystemState");
