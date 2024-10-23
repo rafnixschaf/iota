@@ -4802,7 +4802,7 @@ impl AuthorityState {
             self.prepare_certificate(&execution_guard, &executable_tx, input_objects, epoch_store)?;
         let system_obj = get_iota_system_state(&temporary_store.written)
             .expect("change epoch tx must write to system object");
-        // Find the SystemEpochInfoEvent emitted by the advance_epoch transaction.
+        // Find the SystemEpochInfoEventV1 emitted by the advance_epoch transaction.
         let system_epoch_info_event = temporary_store
             .events
             .data
