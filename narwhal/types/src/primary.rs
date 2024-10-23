@@ -183,7 +183,6 @@ pub trait BatchAPI {
     fn transactions_mut(&mut self) -> &mut Vec<Transaction>;
     fn into_transactions(self) -> Vec<Transaction>;
 
-    // BatchV1 APIs
     fn versioned_metadata(&self) -> &VersionedMetadata;
     fn versioned_metadata_mut(&mut self) -> &mut VersionedMetadata;
 }
