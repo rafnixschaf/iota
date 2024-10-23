@@ -62,6 +62,13 @@ jobs:
       #   with:
       #     files: lcov.info
 
+      - name: Upload nextest coverage report to Github
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        with:
+          name: lcov.info
+          path: .
+          retention-days: 30
+
       - name: Run code coverage for simtest
         run: |
           git clean -fd
@@ -71,6 +78,13 @@ jobs:
       #   uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # pin@v4
       #   with:
       #     files: lcov-simtest.info
+
+      - name: Upload simtest coverage report to Github
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        with:
+          name: lcov-simtest.info
+          path: .
+          retention-days: 30
 
   notify:
     name: Notify
