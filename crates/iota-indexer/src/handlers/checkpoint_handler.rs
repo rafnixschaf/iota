@@ -18,7 +18,7 @@ use iota_types::{
     base_types::ObjectID,
     dynamic_field::{DynamicFieldInfo, DynamicFieldName, DynamicFieldType},
     effects::TransactionEffectsAPI,
-    event::SystemEpochInfoEvent,
+    event::SystemEpochInfoEventV1,
     iota_system_state::{
         IotaSystemStateTrait, get_iota_system_state,
         iota_system_state_summary::IotaSystemStateSummary,
@@ -239,7 +239,7 @@ where
                 )
             });
 
-        let event = bcs::from_bytes::<SystemEpochInfoEvent>(&epoch_event.contents)?;
+        let event = bcs::from_bytes::<SystemEpochInfoEventV1>(&epoch_event.contents)?;
 
         // Now we just entered epoch X, we want to calculate the diff between
         // TotalTransactionsByEndOfEpoch(X-1) and TotalTransactionsByEndOfEpoch(X-2).
