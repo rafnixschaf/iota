@@ -14,7 +14,10 @@ use iota_types::{
     error::IotaObjectResponseError,
 };
 
-use crate::common::{indexer_wait_for_checkpoint, rpc_call_error_msg_matches, ApiTestSetup};
+use crate::common::{
+    InitializedClusterEnv, get_or_init_global_test_env, indexer_wait_for_checkpoint,
+    rpc_call_error_msg_matches,
+};
 
 fn is_ascending(vec: &[u64]) -> bool {
     vec.windows(2).all(|window| window[0] <= window[1])
@@ -46,12 +49,12 @@ fn match_transaction_block_resp_options(
 }
 
 fn get_object_with_options(options: IotaObjectDataOptions) {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -80,12 +83,12 @@ fn get_object_with_options(options: IotaObjectDataOptions) {
 }
 
 fn multi_get_objects_with_options(options: IotaObjectDataOptions) {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -118,12 +121,12 @@ fn multi_get_objects_with_options(options: IotaObjectDataOptions) {
 }
 
 fn get_transaction_block_with_options(options: IotaTransactionBlockResponseOptions) {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -164,12 +167,12 @@ fn get_transaction_block_with_options(options: IotaTransactionBlockResponseOptio
 }
 
 fn multi_get_transaction_blocks_with_options(options: IotaTransactionBlockResponseOptions) {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -214,12 +217,12 @@ fn multi_get_transaction_blocks_with_options(options: IotaTransactionBlockRespon
 
 #[test]
 fn get_checkpoint_by_seq_num() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -241,12 +244,12 @@ fn get_checkpoint_by_seq_num() {
 
 #[test]
 fn get_checkpoint_by_seq_num_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -263,12 +266,12 @@ fn get_checkpoint_by_seq_num_not_found() {
 
 #[test]
 fn get_checkpoint_by_digest() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -289,12 +292,12 @@ fn get_checkpoint_by_digest() {
 
 #[test]
 fn get_checkpoint_by_digest_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -312,12 +315,12 @@ fn get_checkpoint_by_digest_not_found() {
 
 #[test]
 fn get_checkpoints_all_ascending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
@@ -336,12 +339,12 @@ fn get_checkpoints_all_ascending() {
 
 #[test]
 fn get_checkpoints_all_descending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -359,12 +362,12 @@ fn get_checkpoints_all_descending() {
 
 #[test]
 fn get_checkpoints_by_cursor_and_limit_one_descending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -386,12 +389,12 @@ fn get_checkpoints_by_cursor_and_limit_one_descending() {
 
 #[test]
 fn get_checkpoints_by_cursor_and_limit_one_ascending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -413,12 +416,12 @@ fn get_checkpoints_by_cursor_and_limit_one_ascending() {
 
 #[test]
 fn get_checkpoints_by_cursor_zero_and_limit_ascending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -440,12 +443,12 @@ fn get_checkpoints_by_cursor_zero_and_limit_ascending() {
 
 #[test]
 fn get_checkpoints_by_cursor_zero_and_limit_descending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -467,12 +470,12 @@ fn get_checkpoints_by_cursor_zero_and_limit_descending() {
 
 #[test]
 fn get_checkpoints_by_cursor_and_limit_ascending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 6).await;
 
@@ -494,12 +497,12 @@ fn get_checkpoints_by_cursor_and_limit_ascending() {
 
 #[test]
 fn get_checkpoints_by_cursor_and_limit_descending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
@@ -523,12 +526,12 @@ fn get_checkpoints_by_cursor_and_limit_descending() {
 
 #[test]
 fn get_checkpoints_invalid_limit() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
@@ -544,12 +547,12 @@ fn get_checkpoints_invalid_limit() {
 
 #[test]
 fn get_object() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
         let address = cluster.get_address_0();
@@ -572,12 +575,12 @@ fn get_object() {
 
 #[test]
 fn get_object_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -592,17 +595,14 @@ fn get_object_not_found() {
             .await
             .unwrap();
 
-        assert_eq!(
-            indexer_obj,
-            IotaObjectResponse {
-                data: None,
-                error: Some(IotaObjectResponseError::NotExists {
-                    object_id: "0x9a934a2644c4ca2decbe3d126d80720429c5e31896aa756765afa23ae2cb4b99"
-                        .parse()
-                        .unwrap()
-                })
-            }
-        )
+        assert_eq!(indexer_obj, IotaObjectResponse {
+            data: None,
+            error: Some(IotaObjectResponseError::NotExists {
+                object_id: "0x9a934a2644c4ca2decbe3d126d80720429c5e31896aa756765afa23ae2cb4b99"
+                    .parse()
+                    .unwrap()
+            })
+        })
     });
 }
 
@@ -656,12 +656,12 @@ fn get_object_with_storage_rebate() {
 
 #[test]
 fn multi_get_objects() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
         let address = cluster.get_address_0();
@@ -686,12 +686,12 @@ fn multi_get_objects() {
 
 #[test]
 fn multi_get_objects_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -708,40 +708,35 @@ fn multi_get_objects_not_found() {
 
         let indexer_objects = client.multi_get_objects(object_ids, None).await.unwrap();
 
-        assert_eq!(
-            indexer_objects,
-            vec![
-                IotaObjectResponse {
-                    data: None,
-                    error: Some(IotaObjectResponseError::NotExists {
-                        object_id:
-                            "0x9a934a2644c4ca2decbe3d126d80720429c5e31896aa756765afa23ae2cb4b99"
-                                .parse()
-                                .unwrap()
-                    })
-                },
-                IotaObjectResponse {
-                    data: None,
-                    error: Some(IotaObjectResponseError::NotExists {
-                        object_id:
-                            "0x1a934a7644c4cf2decbe3d126d80720429c5e30896aa756765afa23af3cb4b82"
-                                .parse()
-                                .unwrap()
-                    })
-                }
-            ]
-        )
+        assert_eq!(indexer_objects, vec![
+            IotaObjectResponse {
+                data: None,
+                error: Some(IotaObjectResponseError::NotExists {
+                    object_id: "0x9a934a2644c4ca2decbe3d126d80720429c5e31896aa756765afa23ae2cb4b99"
+                        .parse()
+                        .unwrap()
+                })
+            },
+            IotaObjectResponse {
+                data: None,
+                error: Some(IotaObjectResponseError::NotExists {
+                    object_id: "0x1a934a7644c4cf2decbe3d126d80720429c5e30896aa756765afa23af3cb4b82"
+                        .parse()
+                        .unwrap()
+                })
+            }
+        ])
     });
 }
 
 #[test]
 fn multi_get_objects_found_and_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
         let address = cluster.get_address_0();
@@ -837,12 +832,12 @@ fn multi_get_objects_with_storage_rebate() {
 
 #[test]
 fn get_events() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -863,12 +858,12 @@ fn get_events() {
 
 #[test]
 fn get_events_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -883,12 +878,12 @@ fn get_events_not_found() {
 
 #[test]
 fn get_transaction_block() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -908,12 +903,12 @@ fn get_transaction_block() {
 
 #[test]
 fn get_transaction_block_not_found() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -989,12 +984,12 @@ fn get_transaction_block_with_input() {
 
 #[test]
 fn multi_get_transaction_blocks() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 3).await;
 
@@ -1088,12 +1083,12 @@ fn multi_get_transaction_blocks_with_input() {
 
 #[test]
 fn get_protocol_config() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -1115,12 +1110,12 @@ fn get_protocol_config() {
 
 #[test]
 fn get_protocol_config_invalid_protocol_version() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -1137,12 +1132,12 @@ fn get_protocol_config_invalid_protocol_version() {
 
 #[test]
 fn get_chain_identifier() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -1157,12 +1152,12 @@ fn get_chain_identifier() {
 #[test]
 fn get_total_transaction_blocks() {
     let checkpoint = 5;
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         cluster,
         store,
         client,
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, checkpoint).await;
@@ -1191,12 +1186,12 @@ fn get_total_transaction_blocks() {
 #[test]
 fn get_latest_checkpoint_sequence_number() {
     let checkpoint = 5;
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, checkpoint).await;
@@ -1221,12 +1216,12 @@ fn get_latest_checkpoint_sequence_number() {
 
 #[test]
 fn try_get_past_object() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -1242,12 +1237,12 @@ fn try_get_past_object() {
 
 #[test]
 fn try_multi_get_past_objects() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 
@@ -1269,12 +1264,12 @@ fn try_multi_get_past_objects() {
 
 #[test]
 fn get_loaded_child_objects() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
 

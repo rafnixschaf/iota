@@ -12,18 +12,18 @@ use iota_json_rpc_types::{
     TransactionBlockBytes,
 };
 use iota_types::{
+    IOTA_FRAMEWORK_ADDRESS,
     base_types::{IotaAddress, ObjectID},
     gas_coin::GAS,
     quorum_driver_types::ExecuteTransactionRequestType,
     storage::ReadStore,
-    IOTA_FRAMEWORK_ADDRESS,
 };
 use simulacrum::Simulacrum;
 use test_cluster::TestCluster;
 
 use crate::common::{
-    indexer_wait_for_checkpoint, ApiTestSetup, InitializedSimulacrumEnv,
-    SimulacrumApiTestEnvDefinition,
+    InitializedClusterEnv, InitializedSimulacrumEnv, SimulacrumApiTestEnvDefinition,
+    get_or_init_global_test_env, indexer_wait_for_checkpoint,
 };
 
 static EXTENDED_API_SHARED_SIMULACRUM_INITIALIZED_ENV: OnceLock<InitializedSimulacrumEnv> =
@@ -292,12 +292,12 @@ fn get_current_epoch() {
 #[ignore = "https://github.com/iotaledger/iota/issues/2197#issuecomment-2371642744"]
 #[test]
 fn get_network_metrics() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(&store, 10).await;
@@ -311,13 +311,13 @@ fn get_network_metrics() {
 #[ignore = "https://github.com/iotaledger/iota/issues/2197#issuecomment-2371642744"]
 #[test]
 fn get_move_call_metrics() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         cluster,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         execute_move_fn(&cluster).await.unwrap();
@@ -341,12 +341,12 @@ fn get_move_call_metrics() {
 #[ignore = "https://github.com/iotaledger/iota/issues/2197#issuecomment-2371642744"]
 #[test]
 fn get_latest_address_metrics() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(&store, 10).await;
@@ -360,12 +360,12 @@ fn get_latest_address_metrics() {
 #[ignore = "https://github.com/iotaledger/iota/issues/2197#issuecomment-2371642744"]
 #[test]
 fn get_checkpoint_address_metrics() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(&store, 10).await;
@@ -379,12 +379,12 @@ fn get_checkpoint_address_metrics() {
 #[ignore = "https://github.com/iotaledger/iota/issues/2197#issuecomment-2371642744"]
 #[test]
 fn get_all_epoch_address_metrics() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(&store, 10).await;

@@ -10,16 +10,19 @@ use iota_types::{
     digests::TransactionDigest,
 };
 
-use crate::common::{indexer_wait_for_checkpoint, rpc_call_error_msg_matches, ApiTestSetup};
+use crate::common::{
+    InitializedClusterEnv, get_or_init_global_test_env, indexer_wait_for_checkpoint,
+    rpc_call_error_msg_matches,
+};
 
 #[test]
 fn query_events_no_events_descending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -45,12 +48,12 @@ fn query_events_no_events_descending() {
 
 #[test]
 fn query_events_no_events_ascending() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -76,12 +79,12 @@ fn query_events_no_events_ascending() {
 
 #[test]
 fn query_events_unsupported_events() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
@@ -131,12 +134,12 @@ fn query_events_unsupported_events() {
 
 #[test]
 fn query_events_supported_events() {
-    let ApiTestSetup {
+    let InitializedClusterEnv {
         runtime,
         store,
         client,
         ..
-    } = ApiTestSetup::get_or_init();
+    } = get_or_init_global_test_env();
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;

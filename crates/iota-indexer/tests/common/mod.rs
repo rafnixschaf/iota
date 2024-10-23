@@ -7,16 +7,13 @@ use std::{
     time::Duration,
 };
 
-use iota_config::{
-    local_ip_utils::{get_available_port, new_local_tcp_socket_for_testing},
-    node::RunWithRange,
-};
+use iota_config::local_ip_utils::{get_available_port, new_local_tcp_socket_for_testing};
 use iota_indexer::{
+    IndexerConfig,
     errors::IndexerError,
     indexer::Indexer,
-    store::{indexer_store::IndexerStore, PgIndexerStore},
-    test_utils::{start_test_indexer, ReaderWriterConfig},
-    IndexerConfig,
+    store::{PgIndexerStore, indexer_store::IndexerStore},
+    test_utils::{ReaderWriterConfig, start_test_indexer},
 };
 use iota_metrics::init_metrics;
 use iota_types::storage::ReadStore;
@@ -34,9 +31,24 @@ const DEFAULT_INDEXER_IP: &str = "127.0.0.1";
 const DEFAULT_INDEXER_PORT: u16 = 9005;
 const DEFAULT_SERVER_PORT: u16 = 3000;
 
-static GLOBAL_API_TEST_SETUP: OnceLock<ApiTestSetup> = OnceLock::new();
+static GLOBAL_API_TEST_SETUP: OnceLock<InitializedClusterEnv> = OnceLock::new();
 
-pub struct ApiTestSetup {
+pub fn get_or_init_global_test_env() -> &'static InitializedClusterEnv {
+    let global_env_definition = ApiTestClusterEnvDefinition {
+        unique_env_name: "global_shared_cluster".into(),
+        cluster_builder_modifier: Box::new(|builder| builder),
+        env_initializer: Box::new(|_cluster| ()),
+    };
+    global_env_definition.get_or_init_env(&GLOBAL_API_TEST_SETUP)
+}
+
+pub struct ApiTestClusterEnvDefinition {
+    pub unique_env_name: String,
+    pub cluster_builder_modifier: Box<dyn Fn(TestClusterBuilder) -> TestClusterBuilder>,
+    pub env_initializer: Box<dyn Fn(&mut TestCluster)>,
+}
+
+pub struct InitializedClusterEnv {
     pub runtime: Runtime,
     pub cluster: TestCluster,
     pub store: PgIndexerStore,
@@ -44,16 +56,25 @@ pub struct ApiTestSetup {
     pub client: HttpClient,
 }
 
-impl ApiTestSetup {
-    pub fn get_or_init() -> &'static ApiTestSetup {
-        GLOBAL_API_TEST_SETUP.get_or_init(|| {
+impl ApiTestClusterEnvDefinition {
+    pub fn get_or_init_env<'a>(
+        &self,
+        initialized_env_container: &'a OnceLock<InitializedClusterEnv>,
+    ) -> &'a InitializedClusterEnv {
+        initialized_env_container.get_or_init(|| {
             let runtime = tokio::runtime::Runtime::new().unwrap();
 
-            let (cluster, store, client) = runtime.block_on(
-                start_test_cluster_with_read_write_indexer(None, Some("shared_test_indexer_db")),
-            );
+            let db_name = format!("shared_cluster_env_db_{}", self.unique_env_name);
 
-            Self {
+            let (mut cluster, store, client) =
+                runtime.block_on(start_test_cluster_with_read_write_indexer(
+                    Some(&db_name),
+                    Some(|builder| (self.cluster_builder_modifier)(builder)),
+                ));
+
+            (self.env_initializer)(&mut cluster);
+
+            InitializedClusterEnv {
                 runtime,
                 cluster,
                 store,
@@ -102,18 +123,13 @@ impl SimulacrumApiTestEnvDefinition {
 /// Start a [`TestCluster`][`test_cluster::TestCluster`] with a `Read` &
 /// `Write` indexer
 pub async fn start_test_cluster_with_read_write_indexer(
-    stop_cluster_after_checkpoint_seq: Option<u64>,
     database_name: Option<&str>,
+    builder_modifier: Option<impl Fn(TestClusterBuilder) -> TestClusterBuilder>,
 ) -> (TestCluster, PgIndexerStore, HttpClient) {
     let mut builder = TestClusterBuilder::new();
-
-    // run the cluster until the declared checkpoint sequence number
-    if let Some(stop_cluster_after_checkpoint_seq) = stop_cluster_after_checkpoint_seq {
-        builder = builder.with_fullnode_run_with_range(Some(RunWithRange::Checkpoint(
-            stop_cluster_after_checkpoint_seq,
-        )));
+    if let Some(builder_modifier) = builder_modifier {
+        builder = builder_modifier(builder);
     };
-
     let cluster = builder.build().await;
 
     // start indexer in write mode
