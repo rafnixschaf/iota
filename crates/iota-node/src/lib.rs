@@ -774,7 +774,6 @@ impl IotaNode {
 
         let accumulator = Arc::new(StateAccumulator::new(
             cache_traits.accumulator_store.clone(),
-            &epoch_store,
             StateAccumulatorMetrics::new(&prometheus_registry),
         ));
 
@@ -1713,7 +1712,6 @@ impl IotaNode {
                     .metrics();
                 let new_accumulator = Arc::new(StateAccumulator::new(
                     self.state.get_accumulator_store().clone(),
-                    &new_epoch_store,
                     accumulator_metrics,
                 ));
                 let weak_accumulator = Arc::downgrade(&new_accumulator);
@@ -1765,7 +1763,6 @@ impl IotaNode {
                     .metrics();
                 let new_accumulator = Arc::new(StateAccumulator::new(
                     self.state.get_accumulator_store().clone(),
-                    &new_epoch_store,
                     accumulator_metrics,
                 ));
                 let weak_accumulator = Arc::downgrade(&new_accumulator);

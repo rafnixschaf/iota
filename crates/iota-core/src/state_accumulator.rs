@@ -155,23 +155,12 @@ fn accumulate_effects(effects: Vec<TransactionEffects>) -> Accumulator {
 }
 
 impl StateAccumulator {
-    pub fn new(
-        store: Arc<dyn AccumulatorStore>,
-        epoch_store: &Arc<AuthorityPerEpochStore>,
-        metrics: Arc<StateAccumulatorMetrics>,
-    ) -> Self {
+    pub fn new(store: Arc<dyn AccumulatorStore>, metrics: Arc<StateAccumulatorMetrics>) -> Self {
         StateAccumulator::V1(StateAccumulatorV1::new(store, metrics))
     }
 
-    pub fn new_for_tests(
-        store: Arc<dyn AccumulatorStore>,
-        epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> Self {
-        Self::new(
-            store,
-            epoch_store,
-            StateAccumulatorMetrics::new(&Registry::new()),
-        )
+    pub fn new_for_tests(store: Arc<dyn AccumulatorStore>) -> Self {
+        Self::new(store, StateAccumulatorMetrics::new(&Registry::new()))
     }
 
     pub fn metrics(&self) -> Arc<StateAccumulatorMetrics> {

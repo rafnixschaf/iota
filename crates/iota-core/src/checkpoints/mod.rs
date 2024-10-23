@@ -2561,7 +2561,6 @@ mod tests {
 
         let accumulator = Arc::new(StateAccumulator::new_for_tests(
             state.get_accumulator_store().clone(),
-            &epoch_store,
         ));
 
         let (checkpoint_service, _exit) = CheckpointService::spawn(

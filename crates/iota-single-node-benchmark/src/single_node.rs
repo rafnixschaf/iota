@@ -287,7 +287,6 @@ impl SingleValidator {
             validator.clone(),
             Arc::new(StateAccumulator::new_for_tests(
                 validator.get_accumulator_store().clone(),
-                self.get_epoch_store(),
             )),
         );
         (checkpoint_executor, ckpt_sender)
