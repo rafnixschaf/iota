@@ -90,7 +90,7 @@ use super::{
 use crate::{
     authority::{
         AuthorityMetrics, ResolverWrapper,
-        epoch_start_configuration::{EpochFlag, EpochStartConfiguration},
+        epoch_start_configuration::EpochStartConfiguration,
         shared_object_version_manager::{
             AssignedTxAndVersions, ConsensusSharedObjVerAssignment, SharedObjVerManager,
         },
@@ -976,15 +976,6 @@ impl AuthorityPerEpochStore {
         self.parent_path.clone()
     }
 
-    pub fn state_accumulator_v2_enabled(&self) -> bool {
-        let flag = match self.get_chain_identifier().chain() {
-            Chain::Unknown | Chain::Testnet => EpochFlag::StateAccumulatorV2EnabledTestnet,
-            Chain::Mainnet => EpochFlag::StateAccumulatorV2EnabledMainnet,
-        };
-
-        self.epoch_start_configuration.flags().contains(&flag)
-    }
-
     /// Returns `&Arc<EpochStartConfiguration>`
     /// User can treat this `Arc` as `&EpochStartConfiguration`, or clone the
     /// Arc to pass as owned object
@@ -1362,23 +1353,6 @@ impl AuthorityPerEpochStore {
             .safe_range_iter(from_checkpoint..=to_checkpoint)
             .collect::<Result<Vec<_>, _>>()
             .map_err(Into::into)
-    }
-
-    /// Returns future containing the state digest for the given epoch
-    /// once available.
-    /// TODO: remove once StateAccumulatorV1 is removed
-    pub async fn notify_read_checkpoint_state_digests(
-        &self,
-        checkpoints: Vec<CheckpointSequenceNumber>,
-    ) -> IotaResult<Vec<Accumulator>> {
-        self.checkpoint_state_notify_read
-            .read(&checkpoints, |checkpoints| -> IotaResult<_> {
-                Ok(self
-                    .tables()?
-                    .state_hash_by_checkpoint
-                    .multi_get(checkpoints)?)
-            })
-            .await
     }
 
     pub async fn notify_read_running_root(

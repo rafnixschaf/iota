@@ -55,26 +55,20 @@ pub trait EpochStartConfigTrait {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum EpochFlag {
     WritebackCacheEnabled = 0,
-
-    StateAccumulatorV2EnabledTestnet = 1,
-    StateAccumulatorV2EnabledMainnet = 2,
 }
 
 impl EpochFlag {
     pub fn default_flags_for_new_epoch(config: &NodeConfig) -> Vec<Self> {
-        Self::default_flags_impl(&config.execution_cache, config.state_accumulator_v2)
+        Self::default_flags_impl(&config.execution_cache)
     }
 
     /// For situations in which there is no config available (e.g. setting up a
     /// downloaded snapshot).
     pub fn default_for_no_config() -> Vec<Self> {
-        Self::default_flags_impl(&Default::default(), true)
+        Self::default_flags_impl(&Default::default())
     }
 
-    fn default_flags_impl(
-        cache_config: &ExecutionCacheConfig,
-        enable_state_accumulator_v2: bool,
-    ) -> Vec<Self> {
+    fn default_flags_impl(cache_config: &ExecutionCacheConfig) -> Vec<Self> {
         let mut new_flags = vec![];
 
         if matches!(
@@ -82,11 +76,6 @@ impl EpochFlag {
             ExecutionCacheConfigType::WritebackCache
         ) {
             new_flags.push(EpochFlag::WritebackCacheEnabled);
-        }
-
-        if enable_state_accumulator_v2 {
-            new_flags.push(EpochFlag::StateAccumulatorV2EnabledTestnet);
-            new_flags.push(EpochFlag::StateAccumulatorV2EnabledMainnet);
         }
 
         new_flags
@@ -99,12 +88,6 @@ impl fmt::Display for EpochFlag {
         // is used as metric key
         match self {
             EpochFlag::WritebackCacheEnabled => write!(f, "WritebackCacheEnabled"),
-            EpochFlag::StateAccumulatorV2EnabledTestnet => {
-                write!(f, "StateAccumulatorV2EnabledTestnet")
-            }
-            EpochFlag::StateAccumulatorV2EnabledMainnet => {
-                write!(f, "StateAccumulatorV2EnabledMainnet")
-            }
         }
     }
 }
