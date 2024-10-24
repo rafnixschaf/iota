@@ -1,38 +1,20 @@
 {
     "questions": [
       {
-        "questionText": "What is the most commonly used tool for EVM development?",
-        "answerOptions": [
-          { "answerText": "Remix", "isCorrect": false },
-          { "answerText": "Metamask", "isCorrect": false },
-          { "answerText": "Hardhat", "isCorrect": true },
-          { "answerText": "web3.js", "isCorrect": false }
-        ]
-      },
-      {
         "questionText": "Which tool in the IOTA Move ecosystem is similar to Hardhat for building, testing, and deploying smart contracts?",
         "answerOptions": [
-          { "answerText": "Move CLI", "isCorrect": true },
+          { "answerText": "IOTA Client CLI", "isCorrect": true },
           { "answerText": "Remix", "isCorrect": false },
           { "answerText": "ethers.js", "isCorrect": false },
           { "answerText": "Metamask", "isCorrect": false }
         ]
       },
       {
-        "questionText": "Which API is most commonly used within the EVM ecosystem?",
-        "answerOptions": [
-          { "answerText": "GraphQL", "isCorrect": false },
-          { "answerText": "JSON-RPC", "isCorrect": true },
-          { "answerText": "REST API", "isCorrect": false },
-          { "answerText": "Move API", "isCorrect": false }
-        ]
-      },
-      {
-        "questionText": "Which of the following is a wallet commonly used for EVM-based dApps?",
+        "questionText": "Which of the following is a wallet commonly used for IOTA Move-based dApps?",
         "answerOptions": [
           { "answerText": "Safe", "isCorrect": false },
           { "answerText": "WalletConnect", "isCorrect": false },
-          { "answerText": "Metamask", "isCorrect": true },
+          { "answerText": "IOTA Wallet", "isCorrect": true },
           { "answerText": "Gnosis", "isCorrect": false }
         ]
       }

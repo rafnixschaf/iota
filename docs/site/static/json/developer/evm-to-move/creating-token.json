@@ -26,15 +26,6 @@
           { "answerText": "It supports unlimited minting without restrictions.", "isCorrect": false },
           { "answerText": "It disables the TreasuryCap object.", "isCorrect": false }
         ]
-      },
-      {
-        "questionText": "What happens when a Coin object is transferred in IOTA Move?",
-        "answerOptions": [
-          { "answerText": "The Coin object must be split if it's a partial amount.", "isCorrect": true },
-          { "answerText": "The entire Coin is burned and a new one is minted.", "isCorrect": false },
-          { "answerText": "The Coin is moved to the system's TreasuryCap.", "isCorrect": false },
-          { "answerText": "A separate smart contract records the balance.", "isCorrect": false }
-        ]
       }
     ]
   }
