@@ -10066,7 +10066,7 @@
               "code": {
                 "type": "string",
                 "enum": [
-                  "displayError"
+                  "display"
                 ]
               },
               "error": {
@@ -11296,7 +11296,7 @@
               "kind": {
                 "type": "string",
                 "enum": [
-                  "AuthenticatorStateUpdate"
+                  "AuthenticatorStateUpdateV1"
                 ]
               },
               "new_active_jwks": {
