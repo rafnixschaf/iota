@@ -1316,7 +1316,8 @@
                 "rethrow_serialization_type_layout_errors": true,
                 "shared_object_deletion": true,
                 "throughput_aware_consensus_submission": false,
-                "zklogin_auth": false
+                "zklogin_auth": false,
+                "fixed_base_fee": true
               },
               "attributes": {
                 "address_from_bytes_cost_base": {
