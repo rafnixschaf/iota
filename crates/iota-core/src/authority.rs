@@ -65,7 +65,7 @@ use iota_types::{
         TransactionEvents, VerifiedCertifiedTransactionEffects, VerifiedSignedTransactionEffects,
     },
     error::{ExecutionError, IotaError, IotaResult, UserInputError},
-    event::{Event, EventID, SystemEpochInfoEvent},
+    event::{Event, EventID, SystemEpochInfoEventV1},
     executable_transaction::VerifiedExecutableTransaction,
     execution_config_utils::to_binary_config,
     execution_status::ExecutionStatus,
@@ -4665,7 +4665,7 @@ impl AuthorityState {
         gas_cost_summary: &GasCostSummary,
         checkpoint: CheckpointSequenceNumber,
         epoch_start_timestamp_ms: CheckpointTimestamp,
-    ) -> anyhow::Result<(IotaSystemState, SystemEpochInfoEvent, TransactionEffects)> {
+    ) -> anyhow::Result<(IotaSystemState, SystemEpochInfoEventV1, TransactionEffects)> {
         let mut txns = Vec::new();
 
         if let Some(tx) = self.create_authenticator_state_tx(epoch_store) {
@@ -4802,14 +4802,14 @@ impl AuthorityState {
             self.prepare_certificate(&execution_guard, &executable_tx, input_objects, epoch_store)?;
         let system_obj = get_iota_system_state(&temporary_store.written)
             .expect("change epoch tx must write to system object");
-        // Find the SystemEpochInfoEvent emitted by the advance_epoch transaction.
+        // Find the SystemEpochInfoEventV1 emitted by the advance_epoch transaction.
         let system_epoch_info_event = temporary_store
             .events
             .data
             .iter()
             .find(|event| event.is_system_epoch_info_event())
             .expect("end of epoch tx must emit system epoch info event");
-        let system_epoch_info_event = bcs::from_bytes::<SystemEpochInfoEvent>(
+        let system_epoch_info_event = bcs::from_bytes::<SystemEpochInfoEventV1>(
             &system_epoch_info_event.contents,
         )
         .expect("deserialization should succeed since we asserted that the event is of this type");
