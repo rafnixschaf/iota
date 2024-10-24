@@ -561,7 +561,7 @@ module iota_system::iota_system_state_inner {
     /// Update a validator's public key of authority key and proof of possession.
     /// The change will only take effects starting from the next epoch.
     public(package) fun update_validator_next_epoch_authority_pubkey(
-        self: &mut IotaSystemStateInnerV1,
+        self: &mut IotaSystemStateV1,
         authority_pubkey: vector<u8>,
         proof_of_possession: vector<u8>,
         ctx: &TxContext,
@@ -574,7 +574,7 @@ module iota_system::iota_system_state_inner {
 
     /// Update candidate validator's public key of authority key and proof of possession.
     public(package) fun update_candidate_validator_authority_pubkey(
-        self: &mut IotaSystemStateInnerV1,
+        self: &mut IotaSystemStateV1,
         authority_pubkey: vector<u8>,
         proof_of_possession: vector<u8>,
         ctx: &TxContext,
