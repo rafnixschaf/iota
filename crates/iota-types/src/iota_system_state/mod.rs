@@ -211,6 +211,11 @@ impl IotaSystemState {
     pub fn into_genesis_version_for_tooling(self) -> IotaSystemStateInnerGenesis {
         match self {
             IotaSystemState::V1(inner) => inner,
+            #[cfg(msim)]
+            _ => {
+                // Types other than V1 used in simtests should be unreachable
+                unreachable!()
+            }
         }
     }
 
