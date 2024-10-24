@@ -97,7 +97,7 @@ use crate::{
     },
     checkpoints::{
         BuilderCheckpointSummary, CheckpointHeight, CheckpointServiceNotify, EpochStats,
-        PendingCheckpoint, PendingCheckpointContents, PendingCheckpointInfo,
+        PendingCheckpoint, PendingCheckpointContentsV1, PendingCheckpointInfo,
     },
     consensus_handler::{
         ConsensusCommitInfo, SequencedConsensusTransaction, SequencedConsensusTransactionKey,
@@ -2754,7 +2754,7 @@ impl AuthorityPerEpochStore {
                 checkpoint_roots.push(consensus_commit_prologue_root);
             }
             checkpoint_roots.extend(roots.into_iter());
-            let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContents {
+            let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContentsV1 {
                 roots: checkpoint_roots,
                 details: PendingCheckpointInfo {
                     timestamp_ms: consensus_commit_info.timestamp,
@@ -2777,7 +2777,7 @@ impl AuthorityPerEpochStore {
                 ));
             }
             if randomness_round.is_some() || (dkg_failed && !randomness_roots.is_empty()) {
-                let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContents {
+                let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContentsV1 {
                     roots: randomness_roots.into_iter().collect(),
                     details: PendingCheckpointInfo {
                         timestamp_ms: consensus_commit_info.timestamp,

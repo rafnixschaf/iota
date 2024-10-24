@@ -104,23 +104,23 @@ pub struct PendingCheckpointInfo {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PendingCheckpoint {
     // This is an enum for future upgradability, though at the moment there is only one variant.
-    V1(PendingCheckpointContents),
+    V1(PendingCheckpointContentsV1),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PendingCheckpointContents {
+pub struct PendingCheckpointContentsV1 {
     pub roots: Vec<TransactionKey>,
     pub details: PendingCheckpointInfo,
 }
 
 impl PendingCheckpoint {
-    pub fn as_v1(&self) -> &PendingCheckpointContents {
+    pub fn as_v1(&self) -> &PendingCheckpointContentsV1 {
         match self {
             PendingCheckpoint::V1(contents) => contents,
         }
     }
 
-    pub fn into_v1(self) -> PendingCheckpointContents {
+    pub fn into_v1(self) -> PendingCheckpointContentsV1 {
         match self {
             PendingCheckpoint::V1(contents) => contents,
         }
@@ -2727,7 +2727,7 @@ mod tests {
     }
 
     fn p(i: u64, t: Vec<u8>, timestamp_ms: u64) -> PendingCheckpoint {
-        PendingCheckpoint::V1(PendingCheckpointContents {
+        PendingCheckpoint::V1(PendingCheckpointContentsV1 {
             roots: t
                 .into_iter()
                 .map(|t| TransactionKey::Digest(d(t)))
