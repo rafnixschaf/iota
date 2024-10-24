@@ -21,7 +21,7 @@ Response: {
     "iotaCoins": {
       "edges": [
         {
-          "cursor": "IBl9zKoHdhJEpNbtzWE5gkZxFYZO69fthxQnE5X9hvzvAQAAAAAAAAA=",
+          "cursor": "ICYbB8yabwJpJa85NV5Ml4hbZwmh+Dk5u4oYwCdRHhXHAQAAAAAAAAA=",
           "node": {
             "coinBalance": "30000000000000000",
             "contents": {
@@ -32,7 +32,7 @@ Response: {
           }
         },
         {
-          "cursor": "IC/l+VZYDcKRBWtkMEyb5Ts+u1GEyrFZA0FZGX7A9TOhAQAAAAAAAAA=",
+          "cursor": "IHqyduB7yB08AKw/UjTM5yFLXmn1y/oHU18UsF7spVl8AQAAAAAAAAA=",
           "node": {
             "coinBalance": "299999983336400",
             "contents": {
@@ -43,7 +43,7 @@ Response: {
           }
         },
         {
-          "cursor": "IMfBFhrchdL8hoi2Ltzg+5c3ir/vSxuHqFamsjl/tOHKAQAAAAAAAAA=",
+          "cursor": "IJxCLHjKRKWXWqm27erPobYKzVvMRQ7CDLAEbIXhMbSaAQAAAAAAAAA=",
           "node": {
             "coinBalance": "300000000000000",
             "contents": {
@@ -58,34 +58,34 @@ Response: {
     "fakeCoins": {
       "edges": [
         {
-          "cursor": "IBHB66ZtFCiE6s5NfOXb2IdC6eciac8XqSLHyf+RY3maAQAAAAAAAAA=",
-          "node": {
-            "coinBalance": "1",
-            "contents": {
-              "type": {
-                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0xa9dae39449ba5bda126f414a0053ca17d6f6fd564ff14013d033c2568e9db1d2::fake::FAKE>"
-              }
-            }
-          }
-        },
-        {
-          "cursor": "IMYfYiZF6PCUj0/ELq6LDI7937Yg3hmVH1YMS9+bdXqZAQAAAAAAAAA=",
+          "cursor": "IDfBTpW4Gk9r2WwLe6RXhCU3QV4gHvosomQcJvbaQ6WeAQAAAAAAAAA=",
           "node": {
             "coinBalance": "2",
             "contents": {
               "type": {
-                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0xa9dae39449ba5bda126f414a0053ca17d6f6fd564ff14013d033c2568e9db1d2::fake::FAKE>"
+                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0a47ea4347bcd024df307a10bbe264c358b63f74fab5346285ee912ba2fc89ea::fake::FAKE>"
               }
             }
           }
         },
         {
-          "cursor": "IPNrVeqtUf2eaF/q5LJ7kdL4kJpEgePa7Q7C+oMLndZdAQAAAAAAAAA=",
+          "cursor": "IHdmN4tiqKqMTphDhbKuNxyBkFvllV5nvqX1AUHP7Af/AQAAAAAAAAA=",
+          "node": {
+            "coinBalance": "1",
+            "contents": {
+              "type": {
+                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0a47ea4347bcd024df307a10bbe264c358b63f74fab5346285ee912ba2fc89ea::fake::FAKE>"
+              }
+            }
+          }
+        },
+        {
+          "cursor": "INbHCg0pGQzm8VcanOqukxcfJzpPDcf0k17AapNHLVpwAQAAAAAAAAA=",
           "node": {
             "coinBalance": "3",
             "contents": {
               "type": {
-                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0xa9dae39449ba5bda126f414a0053ca17d6f6fd564ff14013d033c2568e9db1d2::fake::FAKE>"
+                "repr": "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0a47ea4347bcd024df307a10bbe264c358b63f74fab5346285ee912ba2fc89ea::fake::FAKE>"
               }
             }
           }
@@ -96,7 +96,7 @@ Response: {
       "coins": {
         "edges": [
           {
-            "cursor": "IC/l+VZYDcKRBWtkMEyb5Ts+u1GEyrFZA0FZGX7A9TOhAQAAAAAAAAA=",
+            "cursor": "IHqyduB7yB08AKw/UjTM5yFLXmn1y/oHU18UsF7spVl8AQAAAAAAAAA=",
             "node": {
               "coinBalance": "299999983336400",
               "contents": {
@@ -121,10 +121,10 @@ Response: {
             }
           },
           {
-            "cursor": "eyJ0IjoiMHhhOWRhZTM5NDQ5YmE1YmRhMTI2ZjQxNGEwMDUzY2ExN2Q2ZjZmZDU2NGZmMTQwMTNkMDMzYzI1NjhlOWRiMWQyOjpmYWtlOjpGQUtFIiwiYyI6MX0",
+            "cursor": "eyJ0IjoiMHgwYTQ3ZWE0MzQ3YmNkMDI0ZGYzMDdhMTBiYmUyNjRjMzU4YjYzZjc0ZmFiNTM0NjI4NWVlOTEyYmEyZmM4OWVhOjpmYWtlOjpGQUtFIiwiYyI6MX0",
             "node": {
               "coinType": {
-                "repr": "0xa9dae39449ba5bda126f414a0053ca17d6f6fd564ff14013d033c2568e9db1d2::fake::FAKE"
+                "repr": "0x0a47ea4347bcd024df307a10bbe264c358b63f74fab5346285ee912ba2fc89ea::fake::FAKE"
               },
               "coinObjectCount": 3,
               "totalBalance": "6"
@@ -142,7 +142,7 @@ Response: {
       "lastBalance": {
         "edges": [
           {
-            "cursor": "eyJ0IjoiMHhhOWRhZTM5NDQ5YmE1YmRhMTI2ZjQxNGEwMDUzY2ExN2Q2ZjZmZDU2NGZmMTQwMTNkMDMzYzI1NjhlOWRiMWQyOjpmYWtlOjpGQUtFIiwiYyI6MX0"
+            "cursor": "eyJ0IjoiMHgwYTQ3ZWE0MzQ3YmNkMDI0ZGYzMDdhMTBiYmUyNjRjMzU4YjYzZjc0ZmFiNTM0NjI4NWVlOTEyYmEyZmM4OWVhOjpmYWtlOjpGQUtFIiwiYyI6MX0"
           }
         ]
       }
