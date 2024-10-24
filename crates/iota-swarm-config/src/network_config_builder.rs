@@ -67,12 +67,12 @@ pub enum ProtocolVersionsConfig {
     PerValidator(SupportedProtocolVersionsCallback),
 }
 
-pub type StateAccumulatorV1EnabledCallback = Arc<dyn Fn(usize) -> bool + Send + Sync + 'static>;
+pub type StateAccumulatorEnabledCallback = Arc<dyn Fn(usize) -> bool + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub enum StateAccumulatorV1EnabledConfig {
     Global(bool),
-    PerValidator(StateAccumulatorV1EnabledCallback),
+    PerValidator(StateAccumulatorEnabledCallback),
 }
 
 pub struct ConfigBuilder<R = OsRng> {
@@ -234,7 +234,7 @@ impl<R> ConfigBuilder<R> {
 
     pub fn with_state_accumulator_callback(
         mut self,
-        func: StateAccumulatorV1EnabledCallback,
+        func: StateAccumulatorEnabledCallback,
     ) -> Self {
         self.state_accumulator_config = Some(StateAccumulatorV1EnabledConfig::PerValidator(func));
         self

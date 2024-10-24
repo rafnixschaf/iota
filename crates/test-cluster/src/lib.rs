@@ -56,7 +56,7 @@ use iota_swarm_config::{
     genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT, GenesisConfig, ValidatorGenesisConfig},
     network_config::{NetworkConfig, NetworkConfigLight},
     network_config_builder::{
-        ProtocolVersionsConfig, StateAccumulatorV1EnabledCallback, StateAccumulatorV1EnabledConfig,
+        ProtocolVersionsConfig, StateAccumulatorEnabledCallback, StateAccumulatorV1EnabledConfig,
         SupportedProtocolVersionsCallback,
     },
     node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder},
@@ -1190,7 +1190,7 @@ impl TestClusterBuilder {
 
     pub fn with_state_accumulator_callback(
         mut self,
-        func: StateAccumulatorV1EnabledCallback,
+        func: StateAccumulatorEnabledCallback,
     ) -> Self {
         self.validator_state_accumulator_config =
             StateAccumulatorV1EnabledConfig::PerValidator(func);
