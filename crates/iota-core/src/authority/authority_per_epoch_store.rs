@@ -96,7 +96,7 @@ use crate::{
     },
     checkpoints::{
         BuilderCheckpointSummary, CheckpointHeight, CheckpointServiceNotify, EpochStats,
-        PendingCheckpointInfo, PendingCheckpointV2, PendingCheckpointV2Contents,
+        PendingCheckpoint, PendingCheckpointContentsV1, PendingCheckpointInfo,
     },
     consensus_handler::{
         ConsensusCommitInfo, SequencedConsensusTransaction, SequencedConsensusTransactionKey,
@@ -513,7 +513,7 @@ pub struct AuthorityEpochTables {
     /// with empty content(see CheckpointBuilder::write_checkpoint),
     /// the sequence number of checkpoint does not match height here.
     #[default_options_override_fn = "pending_checkpoints_table_default_config"]
-    pending_checkpoints: DBMap<CheckpointHeight, PendingCheckpointV2>,
+    pending_checkpoints: DBMap<CheckpointHeight, PendingCheckpoint>,
 
     /// Checkpoint builder maintains internal list of transactions it included
     /// in checkpoints here
@@ -887,6 +887,7 @@ impl AuthorityPerEpochStore {
             randomness_manager: OnceCell::new(),
             randomness_reporter: OnceCell::new(),
         });
+
         s.update_buffer_stake_metric();
         s
     }
@@ -2704,7 +2705,7 @@ impl AuthorityPerEpochStore {
                 checkpoint_roots.push(consensus_commit_prologue_root);
             }
             checkpoint_roots.extend(roots.into_iter());
-            let pending_checkpoint = PendingCheckpointV2::V2(PendingCheckpointV2Contents {
+            let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContentsV1 {
                 roots: checkpoint_roots,
                 details: PendingCheckpointInfo {
                     timestamp_ms: consensus_commit_info.timestamp,
@@ -2727,7 +2728,7 @@ impl AuthorityPerEpochStore {
                 ));
             }
             if randomness_round.is_some() || (dkg_failed && !randomness_roots.is_empty()) {
-                let pending_checkpoint = PendingCheckpointV2::V2(PendingCheckpointV2Contents {
+                let pending_checkpoint = PendingCheckpoint::V1(PendingCheckpointContentsV1 {
                     roots: randomness_roots.into_iter().collect(),
                     details: PendingCheckpointInfo {
                         timestamp_ms: consensus_commit_info.timestamp,
@@ -3594,7 +3595,7 @@ impl AuthorityPerEpochStore {
     pub(crate) fn write_pending_checkpoint(
         &self,
         output: &mut ConsensusCommitOutput,
-        checkpoint: &PendingCheckpointV2,
+        checkpoint: &PendingCheckpoint,
     ) -> IotaResult {
         assert!(
             self.get_pending_checkpoint(&checkpoint.height())?.is_none(),
@@ -3621,7 +3622,7 @@ impl AuthorityPerEpochStore {
     pub fn get_pending_checkpoints(
         &self,
         last: Option<CheckpointHeight>,
-    ) -> IotaResult<Vec<(CheckpointHeight, PendingCheckpointV2)>> {
+    ) -> IotaResult<Vec<(CheckpointHeight, PendingCheckpoint)>> {
         let tables = self.tables()?;
         let mut iter = tables.pending_checkpoints.unbounded_iter();
         if let Some(last_processed_height) = last {
@@ -3633,7 +3634,7 @@ impl AuthorityPerEpochStore {
     pub fn get_pending_checkpoint(
         &self,
         index: &CheckpointHeight,
-    ) -> IotaResult<Option<PendingCheckpointV2>> {
+    ) -> IotaResult<Option<PendingCheckpoint>> {
         Ok(self.tables()?.pending_checkpoints.get(index)?)
     }
 
@@ -3903,7 +3904,7 @@ pub(crate) struct ConsensusCommitOutput {
 
     // checkpoint state
     user_signatures_for_checkpoints: Vec<(TransactionDigest, Vec<GenericSignature>)>,
-    pending_checkpoints: Vec<PendingCheckpointV2>,
+    pending_checkpoints: Vec<PendingCheckpoint>,
 
     // random beacon state
     next_randomness_round: Option<(RandomnessRound, TimestampMs)>,
@@ -3977,7 +3978,7 @@ impl ConsensusCommitOutput {
             .extend(deferral_keys.iter().cloned());
     }
 
-    fn insert_pending_checkpoint(&mut self, checkpoint: PendingCheckpointV2) {
+    fn insert_pending_checkpoint(&mut self, checkpoint: PendingCheckpoint) {
         self.pending_checkpoints.push(checkpoint);
     }
 
