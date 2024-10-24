@@ -60,6 +60,8 @@ jobs:
               echo "Found artifacts"
               rm -rf ./target/llvm-cov-target
               echo "Removed"
+            else
+              echo "No artifacts found"
             fi
 
       - name: Run code coverage for nextest
@@ -82,9 +84,9 @@ jobs:
       - name: Clean up coverage artifacts
         run: |
             if [ -d "./target/llvm-cov-target" ]; then
-              echo "Found artifacts"
               rm -rf ./target/llvm-cov-target
-              echo "Removed"
+              echo "Previous Coverage artifacts removed"
+            fi
 
       - name: Run code coverage for simtest
         run: |
@@ -108,9 +110,9 @@ jobs:
       - name: Clean up coverage artifacts
         run: |
             if [ -d "./target/llvm-cov-target" ]; then
-              echo "Found artifacts"
               rm -rf ./target/llvm-cov-target
-              echo "Removed"
+              echo "Previous Coverage artifacts removed"
+            fi
 
   notify:
     name: Notify
