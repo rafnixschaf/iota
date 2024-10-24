@@ -54,6 +54,12 @@ jobs:
       - name: Install Rust
         run: rustup update stable
 
+      - name: Remove old coverage artifacts
+        run: |
+            if [ -d "./target/llvm-cov-target" ]; then
+              rm -rf ./target/llvm-cov-target
+            fi
+
       - name: Run code coverage for nextest
         run: IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --lcov --output-path lcov.info nextest
 
@@ -89,6 +95,9 @@ jobs:
           path: ./lcov-simtest.info
           if-no-files-found: error
           retention-days: 30
+
+      - name: Clean up coverage artifacts
+        run: rm -rf ./target/llvm-cov-target
 
   notify:
     name: Notify
