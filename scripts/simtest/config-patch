@@ -12,11 +12,11 @@ index cc5620ecfe..d2ad8f1dac 100644
  # 64 bit MSVC, override default 1M stack with 8M stack
  [target.x86_64-pc-windows-msvc]
 diff --git a/Cargo.toml b/Cargo.toml
-index 3ff13bd734..e7b820ba2b 100644
+index 6fd5380358..f2111d330c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -482,3 +482,5 @@ narwhal-types = { path = "narwhal/types" }
- iota-execution = { path = "iota-execution" }
+@@ -477,3 +477,5 @@ typed-store-derive = { path = "crates/typed-store-derive" }
+ typed-store-error = { path = "crates/typed-store-error" }
  
  [patch.crates-io]
 +tokio = { git = "ssh://git@github.com/iotaledger/iota-sim.git", rev = "8fe1939f4bf1e54d0638756c82aaa6c29212e2bb" }
