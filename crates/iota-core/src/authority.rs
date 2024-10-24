@@ -874,16 +874,10 @@ impl AuthorityState {
             epoch_store.epoch(),
         )?;
 
-        // Determine what to use as reference gas price based on protocol config.
-        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
-            epoch_store.protocol_config().base_gas_price()
-        } else {
-            epoch_store.reference_gas_price()
-        };
         let (_gas_status, checked_input_objects) = 
             iota_transaction_checks::check_transaction_input(
                 epoch_store.protocol_config(),
-                reference_gas_price,
+                epoch_store.reference_gas_price(),
                 tx_data,
                 input_objects,
                 &receiving_objects,

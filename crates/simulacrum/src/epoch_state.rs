@@ -119,17 +119,11 @@ impl EpochState {
             &receiving_object_refs,
         )?;
 
-        // The reference gas price to be checked depends on the feature flags enabled
-        let reference_gas_price = if self.protocol_config.fixed_base_fee() {
-            self.protocol_config.base_gas_price()
-        } else {
-            self.epoch_start_state.reference_gas_price()
-        };
         // Run the transaction input checks that would run when submitting the txn to a
         // validator for signing
         let (gas_status, checked_input_objects) = iota_transaction_checks::check_transaction_input(
             &self.protocol_config,
-            reference_gas_price,
+            self.epoch_start_state.reference_gas_price(),
             transaction.data().transaction_data(),
             input_objects,
             &receiving_objects,

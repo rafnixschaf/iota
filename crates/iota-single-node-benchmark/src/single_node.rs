@@ -208,17 +208,11 @@ impl SingleValidator {
         let executable = VerifiedExecutableTransaction::new_from_certificate(
             VerifiedCertificate::new_unchecked(transaction),
         );
-        // Determine what to use as reference gas price based on the protocol config
-        let reference_gas_price = if self.epoch_store.protocol_config().fixed_base_fee() {
-            self.epoch_store.protocol_config().base_gas_price()
-        } else {
-            self.epoch_store.reference_gas_price()
-        };
         let (gas_status, input_objects) = iota_transaction_checks::check_certificate_input(
             &executable,
             objects,
             self.epoch_store.protocol_config(),
-            reference_gas_price,
+            self.epoch_store.reference_gas_price(),
         )
         .unwrap();
         let (kind, signer, gas) = executable.transaction_data().execution_parts();
