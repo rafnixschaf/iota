@@ -8,7 +8,7 @@ module iota_system::validator_set {
     use iota::iota::IOTA;
     use iota_system::validator::{ValidatorV1, staking_pool_id, iota_address};
     use iota_system::validator_cap::{Self, UnverifiedValidatorOperationCap, ValidatorOperationCap};
-    use iota_system::staking_pool::{PoolTokenExchangeRateV1, StakedIotaV1, pool_id};
+    use iota_system::staking_pool::{PoolTokenExchangeRate, StakedIota, pool_id};
     use iota::priority_queue as pq;
     use iota::vec_map::{Self, VecMap};
     use iota::vec_set::VecSet;
@@ -69,7 +69,7 @@ module iota_system::validator_set {
         voting_power: u64,
         commission_rate: u64,
         pool_staking_reward: u64,
-        pool_token_exchange_rate: PoolTokenExchangeRateV1,
+        pool_token_exchange_rate: PoolTokenExchangeRate,
         tallying_rule_reporters: vector<address>,
         tallying_rule_global_score: u64,
     }
@@ -264,7 +264,7 @@ module iota_system::validator_set {
         validator_address: address,
         stake: Balance<IOTA>,
         ctx: &mut TxContext,
-    ) : StakedIotaV1 {
+    ) : StakedIota {
         let iota_amount = stake.value();
         assert!(iota_amount >= MIN_STAKING_THRESHOLD, EStakingBelowThreshold);
         let validator = get_candidate_or_active_validator_mut(self, validator_address);
@@ -279,7 +279,7 @@ module iota_system::validator_set {
     ///    the stake and any rewards corresponding to it will be immediately processed.
     public(package) fun request_withdraw_stake(
         self: &mut ValidatorSetV1,
-        staked_iota: StakedIotaV1,
+        staked_iota: StakedIota,
         ctx: &TxContext,
     ) : Balance<IOTA> {
         let staking_pool_id = pool_id(&staked_iota);
@@ -525,7 +525,7 @@ module iota_system::validator_set {
 
     public(package) fun pool_exchange_rates(
         self: &mut ValidatorSetV1, pool_id: &ID
-    ) : &Table<u64, PoolTokenExchangeRateV1> {
+    ) : &Table<u64, PoolTokenExchangeRate> {
         let validator =
             // If the pool id is recorded in the mapping, then it must be either candidate or active.
             if (self.staking_pool_mappings.contains(*pool_id)) {

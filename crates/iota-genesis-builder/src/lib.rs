@@ -48,7 +48,7 @@ use iota_types::{
     epoch_data::EpochData,
     event::Event,
     gas_coin::{GAS, GasCoin},
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     id::UID,
     in_memory_storage::InMemoryStorage,
     inner_temporary_store::InnerTemporaryStore,
@@ -66,7 +66,7 @@ use iota_types::{
     stardust::stardust_to_iota_address,
     timelock::{
         stardust_upgrade_label::STARDUST_UPGRADE_LABEL_VALUE,
-        timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
+        timelocked_staked_iota::TimelockedStakedIota,
     },
     transaction::{
         CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectArg, ObjectReadResult,

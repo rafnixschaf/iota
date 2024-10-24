@@ -17,13 +17,10 @@ use iota_open_rpc::Module;
 use iota_types::{
     base_types::{IotaAddress, MoveObjectType, ObjectID},
     committee::EpochId,
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     iota_serde::BigInt,
-    iota_system_state::{
-        PoolTokenExchangeRate, PoolTokenExchangeRateTrait,
-        iota_system_state_summary::IotaSystemStateSummary,
-    },
-    timelock::timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
+    iota_system_state::{PoolTokenExchangeRate, iota_system_state_summary::IotaSystemStateSummary},
+    timelock::timelocked_staked_iota::TimelockedStakedIota,
 };
 use jsonrpsee::{RpcModule, core::RpcResult};
 

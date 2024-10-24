@@ -19,10 +19,10 @@ new_from_unverified
 StakingPoolV1
 	public struct
 	0x3::staking_pool
-PoolTokenExchangeRateV1
+PoolTokenExchangeRate
 	public struct
 	0x3::staking_pool
-StakedIotaV1
+StakedIota
 	public struct
 	0x3::staking_pool
 new
@@ -931,7 +931,7 @@ validator_voting_powers
 get_total_iota_supply
 	public fun
 	0x3::iota_system
-TimelockedStakedIotaV1
+TimelockedStakedIota
 	public struct
 	0x3::timelocked_staking
 request_add_stake

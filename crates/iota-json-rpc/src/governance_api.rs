@@ -21,15 +21,15 @@ use iota_types::{
     committee::EpochId,
     dynamic_field::get_dynamic_field_from_store,
     error::{IotaError, UserInputError},
-    governance::{StakedIota, StakedIotaTrait},
+    governance::StakedIota,
     id::ID,
     iota_serde::BigInt,
     iota_system_state::{
-        IotaSystemState, IotaSystemStateTrait, PoolTokenExchangeRate, PoolTokenExchangeRateTrait,
-        get_validator_from_table, iota_system_state_summary::IotaSystemStateSummary,
+        IotaSystemState, IotaSystemStateTrait, PoolTokenExchangeRate, get_validator_from_table,
+        iota_system_state_summary::IotaSystemStateSummary,
     },
     object::{Object, ObjectRead},
-    timelock::timelocked_staked_iota::{TimelockedStakedIota, TimelockedStakedIotaTrait},
+    timelock::timelocked_staked_iota::TimelockedStakedIota,
 };
 use itertools::Itertools;
 use jsonrpsee::{RpcModule, core::RpcResult};

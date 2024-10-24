@@ -6595,7 +6595,7 @@
             "$ref": "#/components/schemas/BigInt_for_uint64"
           },
           "protocolVersion": {
-            "description": "existing fields from `SystemEpochInfoEvent` (without epoch)",
+            "description": "existing fields from `SystemEpochInfoEventV1` (without epoch)",
             "allOf": [
               {
                 "$ref": "#/components/schemas/BigInt_for_uint64"

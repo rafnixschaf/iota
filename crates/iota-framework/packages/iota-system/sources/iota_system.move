@@ -43,14 +43,14 @@ module iota_system::iota_system {
     use iota::balance::Balance;
 
     use iota::coin::Coin;
-    use iota_system::staking_pool::StakedIotaV1;
+    use iota_system::staking_pool::StakedIota;
     use iota::iota::{IOTA, IotaTreasuryCap};
     use iota::table::Table;
     use iota::timelock::SystemTimelockCap;
     use iota_system::validator::ValidatorV1;
     use iota_system::validator_cap::UnverifiedValidatorOperationCap;
     use iota_system::iota_system_state_inner::{Self, SystemParametersV1, IotaSystemStateV1};
-    use iota_system::staking_pool::PoolTokenExchangeRateV1;
+    use iota_system::staking_pool::PoolTokenExchangeRate;
     use iota::dynamic_field;
     use iota::vec_map::VecMap;
 
@@ -242,7 +242,7 @@ module iota_system::iota_system {
         stake: Coin<IOTA>,
         validator_address: address,
         ctx: &mut TxContext,
-    ): StakedIotaV1 {
+    ): StakedIota {
         let self = load_system_state_mut(wrapper);
         self.request_add_stake(stake, validator_address, ctx)
     }
@@ -263,7 +263,7 @@ module iota_system::iota_system {
     /// Withdraw stake from a validator's staking pool.
     public entry fun request_withdraw_stake(
         wrapper: &mut IotaSystemState,
-        staked_iota: StakedIotaV1,
+        staked_iota: StakedIota,
         ctx: &mut TxContext,
     ) {
         let withdrawn_stake = request_withdraw_stake_non_entry(wrapper, staked_iota, ctx);
@@ -273,7 +273,7 @@ module iota_system::iota_system {
     /// Non-entry version of `request_withdraw_stake` that returns the withdrawn IOTA instead of transferring it to the sender.
     public fun request_withdraw_stake_non_entry(
         wrapper: &mut IotaSystemState,
-        staked_iota: StakedIotaV1,
+        staked_iota: StakedIota,
         ctx: &mut TxContext,
     ) : Balance<IOTA> {
         let self = load_system_state_mut(wrapper);
@@ -514,7 +514,7 @@ module iota_system::iota_system {
     public fun pool_exchange_rates(
         wrapper: &mut IotaSystemState,
         pool_id: &ID
-    ): &Table<u64, PoolTokenExchangeRateV1>  {
+    ): &Table<u64, PoolTokenExchangeRate>  {
         let self = load_system_state_mut(wrapper);
         self.pool_exchange_rates(pool_id)
     }
