@@ -6,7 +6,6 @@ version: 1
 feature_flags:
   consensus_transaction_ordering: ByGasPrice
   enable_poseidon: true
-  enable_group_ops_native_functions: true
   enable_group_ops_native_function_msm: true
   per_object_congestion_control_mode: TotalTxCount
   zklogin_max_epoch_upper_bound_delta: 30

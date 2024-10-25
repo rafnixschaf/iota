@@ -146,10 +146,6 @@ struct FeatureFlags {
     #[serde(skip_serializing_if = "is_false")]
     enable_poseidon: bool,
 
-    // Enable native functions for group operations.
-    #[serde(skip_serializing_if = "is_false")]
-    enable_group_ops_native_functions: bool,
-
     // Enable native function for msm.
     #[serde(skip_serializing_if = "is_false")]
     enable_group_ops_native_function_msm: bool,
@@ -1029,10 +1025,6 @@ impl ProtocolConfig {
         self.feature_flags.enable_poseidon
     }
 
-    pub fn enable_group_ops_native_functions(&self) -> bool {
-        self.feature_flags.enable_group_ops_native_functions
-    }
-
     pub fn enable_group_ops_native_function_msm(&self) -> bool {
         self.feature_flags.enable_group_ops_native_function_msm
     }
@@ -1622,9 +1614,6 @@ impl ProtocolConfig {
         };
 
         cfg.feature_flags.consensus_transaction_ordering = ConsensusTransactionOrdering::ByGasPrice;
-
-        // Enable group ops and all networks (but not msm)
-        cfg.feature_flags.enable_group_ops_native_functions = true;
 
         // MoveVM related flags
         {

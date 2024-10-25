@@ -5,7 +5,6 @@ expression: "ProtocolConfig::get_for_version(cur, *chain_id)"
 version: 1
 feature_flags:
   consensus_transaction_ordering: ByGasPrice
-  enable_group_ops_native_functions: true
   per_object_congestion_control_mode: TotalTxCount
   zklogin_max_epoch_upper_bound_delta: 30
   mysticeti_leader_scoring_and_schedule: true
