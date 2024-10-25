@@ -445,6 +445,7 @@ pub struct AdvanceEpochParams {
     pub non_refundable_storage_fee: u64,
     pub reward_slashing_rate: u64,
     pub epoch_start_timestamp_ms: u64,
+    pub base_gas_price: u64,
 }
 
 #[cfg(msim)]

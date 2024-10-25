@@ -822,6 +822,7 @@ mod checked {
             CallArg::Pure(bcs::to_bytes(&params.non_refundable_storage_fee).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.reward_slashing_rate).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.epoch_start_timestamp_ms).unwrap()),
+            CallArg::Pure(bcs::to_bytes(&params.base_gas_price).unwrap()),
         ]
         .into_iter()
         .map(|a| builder.input(a))
@@ -882,6 +883,7 @@ mod checked {
             non_refundable_storage_fee: change_epoch.non_refundable_storage_fee,
             reward_slashing_rate: protocol_config.reward_slashing_rate(),
             epoch_start_timestamp_ms: change_epoch.epoch_start_timestamp_ms,
+            base_gas_price: protocol_config.base_gas_price(),
         };
         let advance_epoch_pt = construct_advance_epoch_pt(builder, &params)?;
         let result = programmable_transactions::execution::execute::<execution_mode::System>(
