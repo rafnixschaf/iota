@@ -5018,7 +5018,7 @@ export type Validator = {
   stakingPool?: Maybe<MoveObject>;
   /** The epoch at which this pool became active. */
   stakingPoolActivationEpoch?: Maybe<Scalars['UInt53']['output']>;
-  /** The ID of this validator's `0x3::staking_pool::StakingPoolV1`. */
+  /** The ID of this validator's `0x3::staking_pool::StakingPool`. */
   stakingPoolId: Scalars['IotaAddress']['output'];
   /** The total number of IOTA tokens in this pool. */
   stakingPoolIotaBalance?: Maybe<Scalars['BigInt']['output']>;
