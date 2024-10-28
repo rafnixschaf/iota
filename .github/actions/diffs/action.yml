@@ -41,6 +41,7 @@ runs:
             - "Cargo.toml"
             - "Cargo.lock"
             - ".config/nextest.toml"
+            - "rust-toolchain.toml"
           isDoc:
             - "docs/content/**"
             - "docs/site/**"
