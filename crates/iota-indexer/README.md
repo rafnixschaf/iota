@@ -100,7 +100,6 @@ The crate provides following tests currently:
 > [!NOTE]
 > rpc tests which relies on postgres for every test it applies migrations, we need to run tests sequencially to avoid errors
 
-
 ```sh
 # run tests requiring only postgres integration
 cargo nextest run --features pg_integration --test-threads 1
