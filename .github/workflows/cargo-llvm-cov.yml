@@ -1,8 +1,9 @@
 name: Code Coverage
 
 on:
-  schedule:
-    - cron: "0 9 * * *" # UTC timing is every day at 1am PST
+  # Temporarily disabled until simtest job is fixed
+  # schedule:
+  #   - cron: "0 9 * * *" # UTC timing is every day at 1am PST
   workflow_dispatch:
 
 env:
@@ -46,12 +47,7 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@7e58f89e24a544d88f7a74c6eed8a3df3fd4c658 # pin@nextest
 
-      # - name: Set Swap Space
-      #   uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c # pin@master
-      #   with:
-      #     swap-size-gb: 256
-
-      - name: Install Rust
+      - name: Update Rust toolchain
         run: rustup update stable
 
       - name: Remove old coverage artifacts
@@ -64,25 +60,22 @@ jobs:
               echo "No artifacts found"
             fi
 
-      # TEMPORARILY DISABLE TO DEBUG SIMTESTS
-      # - name: Run code coverage for nextest
-      #   run: IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --lcov --output-path lcov.info nextest
+      - name: Run code coverage for nextest
+        run: IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --lcov --output-path lcov.info nextest
 
-      # DISABLED AS LONG AS REPO IS PRIVATE
-      # - name: Upload report to Codecov for nextest
-      #   uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # pin@v4
-      #   with:
-      #     files: lcov.info
+      - name: Upload report to Codecov for nextest
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # pin@v4
+        with:
+          files: lcov.info
 
-      # TEMPORARILY DISABLE TO DEBUG SIMTESTS
-      # - name: Upload coverage report (nextest)
-      #   uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-      #   if: always()
-      #   with:
-      #     name: lcov.info
-      #     path: ./lcov.info
-      #     if-no-files-found: error
-      #     retention-days: 30
+      - name: Upload coverage report (nextest)
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
+        with:
+          name: lcov.info
+          path: ./lcov.info
+          if-no-files-found: error
+          retention-days: 30
 
       # - name: Clean up coverage artifacts
       #   run: |
@@ -91,30 +84,25 @@ jobs:
       #         echo "Previous Coverage artifacts removed"
       #       fi
 
-      - name: Run code coverage for simtest
-        run: |
-          git clean -fd
-          ./scripts/simtest/codecov.sh
+      # - name: Run code coverage for simtest
+      #   run: |
+      #     git clean -fd
+      #     ./scripts/simtest/codecov.sh
 
-      # - name: Upload report to Codecov for simtest
-      #   uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # pin@v4
+      # - name: Upload coverage report (simtest)
+      #   uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+      #   if: always()
       #   with:
-      #     files: lcov-simtest.info
-
-      - name: Upload coverage report (simtest)
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        if: always()
-        with:
-          name: lcov-simtest.info
-          path: ./lcov-simtest.info
-          if-no-files-found: error
-          retention-days: 30
+      #     name: lcov-simtest.info
+      #     path: ./lcov-simtest.info
+      #     if-no-files-found: error
+      #     retention-days: 30
 
       - name: Clean up coverage artifacts
         run: |
             if [ -d "./target/llvm-cov-target" ]; then
               rm -rf ./target/llvm-cov-target
-              echo "Previous Coverage artifacts removed"
+              echo "Cleaned up coverage artificats"
             fi
 
   notify:
