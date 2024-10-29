@@ -49,10 +49,10 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update stable
 
-      - name: Generate code coverage (from nextest) # ./target/llvm-cov/html
+      - name: Generate code coverage (nextest) # ./target/llvm-cov/html
         run: |
           cargo llvm-cov clean
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --all-features --branch --ignore-run-fail --html nextest
+          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --all-features --branch --ignore-run-fail --html nextest
 
       - name: Upload coverage report (nextest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
