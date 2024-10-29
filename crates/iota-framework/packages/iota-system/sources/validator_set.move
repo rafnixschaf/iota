@@ -928,35 +928,6 @@ module iota_system::validator_set {
         }
     }
 
-    /// Compute both the individual reward adjustments and total reward adjustment for staking rewards.
-    fun compute_reward_adjustments(
-        mut slashed_validator_indices: vector<u64>,
-        reward_slashing_rate: u64,
-        unadjusted_staking_reward_amounts: &vector<u64>,
-    ): (
-        u64, // sum of staking reward adjustments
-        VecMap<u64, u64>, // mapping of individual validator's staking reward adjustment from index -> amount
-    ) {
-        let mut total_staking_reward_adjustment = 0;
-        let mut individual_staking_reward_adjustments = vec_map::empty();
-
-        while (!slashed_validator_indices.is_empty()) {
-            let validator_index = slashed_validator_indices.pop_back();
-
-            // Use the slashing rate to compute the amount of staking rewards slashed from this punished validator.
-            let unadjusted_staking_reward = unadjusted_staking_reward_amounts[validator_index];
-            let staking_reward_adjustment_u128 =
-                unadjusted_staking_reward as u128 * (reward_slashing_rate as u128)
-                / BASIS_POINT_DENOMINATOR;
-
-            // Insert into individual mapping and record into the total adjustment sum.
-            individual_staking_reward_adjustments.insert(validator_index, staking_reward_adjustment_u128 as u64);
-            total_staking_reward_adjustment = total_staking_reward_adjustment + (staking_reward_adjustment_u128 as u64);
-        };
-
-        (total_staking_reward_adjustment, individual_staking_reward_adjustments)
-    }
-
     /// Process the validator report records of the epoch and return the addresses of the
     /// non-performant validators according to the input threshold.
     fun compute_slashed_validators(
