@@ -16,6 +16,7 @@ import { normalizeStructTag, normalizeIotaAddress, parseStructTag } from '@iota/
 import type {
     ObjectFilter,
     QueryEventsQueryVariables,
+    QueryTransactionBlocksQueryVariables,
     Rpc_Checkpoint_FieldsFragment,
     Rpc_Transaction_FieldsFragment,
 } from './generated/queries.js';
@@ -579,7 +580,7 @@ export const RPC_METHODS: {
         }));
     },
     async queryTransactionBlocks(transport, [{ filter, options }, cursor, limit = 20, descending]) {
-        const pagination = descending
+        const pagination: Partial<QueryTransactionBlocksQueryVariables> = descending
             ? {
                   last: limit,
                   before: cursor,
@@ -796,6 +797,7 @@ export const RPC_METHODS: {
             epochStartTimestampMs: String(new Date(systemState.startTimestamp).getTime()),
             inactivePoolsSize: String(systemState.validatorSet?.inactivePoolsSize),
             iotaTotalSupply: String(systemState.iotaTotalSupply),
+            iotaTreasuryCapId: String(systemState.iotaTreasuryCapId),
             maxValidatorCount: String(systemState.systemParameters?.maxValidatorCount),
             minValidatorJoiningStake: String(
                 systemState.systemParameters?.minValidatorJoiningStake,
@@ -1233,7 +1235,7 @@ export const RPC_METHODS: {
         return {
             epoch: epochId.toString(),
             validators: validatorSet?.activeValidators?.nodes.map((val) => [
-                val.credentials?.protocolPubKey!,
+                val.credentials?.authorityPubKey!,
                 String(val.votingPower),
             ])!,
         };

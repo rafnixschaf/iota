@@ -32,7 +32,6 @@ use iota_core::{
     epoch::committee_store::CommitteeStore,
     state_accumulator::WrappedObject,
 };
-use iota_protocol_config::Chain;
 use iota_storage::{
     FileCompression, SHA3_BYTES, compute_sha3_checksum, object_store::util::path_to_filesystem,
 };
@@ -59,16 +58,14 @@ use tokio::time::Instant;
 /// partitions. A partition is a smallest storage unit which holds a subset of
 /// objects in one bucket. Each partition is a single *.obj file where
 /// objects are appended to in an append-only fashion. A new partition is
-/// created once the size of current one reaches the max size i.e. 128MB.
+/// created when the current one reaches its maximum size. i.e. 128MB.
 /// Partitions allow a single hash bucket to be consumed in parallel. Partition
 /// files are optionally compressed with the zstd compression format. Partition
 /// filenames follows the format <bucket_number>_<partition_number>.obj. Object
-/// references for hash There is one single ref file per hash bucket. Object
+/// references for hash. There is one single ref file per hash bucket. Object
 /// references are written in an append-only manner as well. Finally, the
 /// MANIFEST file contains per file metadata of every file in the snapshot
-/// directory. current one reaches the max size i.e. 64MB. Partitions allow a
-/// single hash bucket to be consumed in parallel. Partition files are
-/// compressed with the zstd compression format. State Snapshot Directory Layout
+/// directory. State Snapshot Directory Layout
 ///  - snapshot/
 ///     - epoch_0/
 ///        - 1_1.obj
@@ -159,6 +156,7 @@ pub enum FileType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+/// FileMetadata holds either an object or a reference file metadata.
 pub struct FileMetadata {
     pub file_type: FileType,
     pub bucket_num: u32,
@@ -219,6 +217,8 @@ impl Manifest {
     }
 }
 
+/// Creates a FileMetadata of the provided file path, which is overwritten with
+/// compressed data of the original file.
 pub fn create_file_metadata(
     file_path: &std::path::Path,
     file_compression: FileCompression,
@@ -226,7 +226,9 @@ pub fn create_file_metadata(
     bucket_num: u32,
     part_num: u32,
 ) -> Result<FileMetadata> {
+    // Overwrites the file with compressed data of the original file.
     file_compression.compress(file_path)?;
+    // Computes the sha3 checksum of the compressed file.
     let sha3_digest = compute_sha3_checksum(file_path)?;
     let file_metadata = FileMetadata {
         file_type,
@@ -244,7 +246,6 @@ pub async fn setup_db_state(
     perpetual_db: Arc<AuthorityPerpetualTables>,
     checkpoint_store: Arc<CheckpointStore>,
     committee_store: Arc<CommitteeStore>,
-    chain: Chain,
     verify: bool,
     num_live_objects: u64,
     m: MultiProgress,
@@ -274,15 +275,7 @@ pub async fn setup_db_state(
     checkpoint_store.update_highest_executed_checkpoint(&last_checkpoint)?;
 
     if verify {
-        let simplified_unwrap_then_delete = match (chain, epoch) {
-            (Chain::Mainnet, ep) if ep >= 87 => true,
-            (Chain::Mainnet, ep) if ep < 87 => false,
-            (Chain::Testnet, ep) if ep >= 50 => true,
-            (Chain::Testnet, ep) if ep < 50 => false,
-            _ => panic!("Unsupported chain"),
-        };
-        let include_tombstones = !simplified_unwrap_then_delete;
-        let iter = perpetual_db.iter_live_object_set(include_tombstones);
+        let iter = perpetual_db.iter_live_object_set();
         let local_digest = ECMHLiveObjectSetDigest::from(
             accumulate_live_object_iter(Box::new(iter), m.clone(), num_live_objects)
                 .await

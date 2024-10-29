@@ -26,7 +26,7 @@ use iota::{
     key_identity::{KeyIdentity, get_identity_address},
 };
 use iota_config::{
-    IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME,
+    Config, IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME,
     IOTA_KEYSTORE_ALIASES_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG, PersistedConfig,
 };
 use iota_json::IotaJsonValue;
@@ -135,7 +135,6 @@ async fn test_genesis() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-#[ignore = "https://github.com/iotaledger/iota/issues/2983"]
 #[sim_test]
 async fn test_start() -> Result<(), anyhow::Error> {
     let temp_dir = tempfile::tempdir()?;
@@ -148,6 +147,7 @@ async fn test_start() -> Result<(), anyhow::Error> {
             no_full_node: false,
             force_regenesis: false,
             with_faucet: None,
+            faucet_amount: None,
             fullnode_rpc_port: 9000,
             epoch_duration_ms: None,
             #[cfg(feature = "indexer")]
@@ -166,7 +166,7 @@ async fn test_start() -> Result<(), anyhow::Error> {
     let files = read_dir(working_dir)?
         .flat_map(|r| r.map(|file| file.file_name().to_str().unwrap().to_owned()))
         .collect::<Vec<_>>();
-    assert_eq!(12, files.len());
+    assert_eq!(13, files.len());
     assert!(files.contains(&IOTA_CLIENT_CONFIG.to_string()));
     assert!(files.contains(&IOTA_NETWORK_CONFIG.to_string()));
     assert!(files.contains(&IOTA_FULLNODE_CONFIG.to_string()));
@@ -4088,4 +4088,162 @@ async fn test_parse_host_port() {
     assert!(parse_host_port(input.to_string(), 9123).is_err());
     let input = "127.9.0.1:asb";
     assert!(parse_host_port(input.to_string(), 9123).is_err());
+}
+
+#[sim_test]
+async fn test_balance() -> Result<(), anyhow::Error> {
+    let mut test_cluster = TestClusterBuilder::new().build().await;
+
+    let context = &mut test_cluster.wallet;
+
+    let balance_result = IotaClientCommands::Balance {
+        address: None,
+        coin_type: None,
+        with_coins: false,
+    }
+    .execute(context)
+    .await?;
+
+    if let IotaClientCommandResult::Balance(ordered_coins_iota_first, with_coins) = balance_result {
+        // The address has by default one coin object
+        assert_eq!(ordered_coins_iota_first.len(), 1);
+        assert!(!with_coins, "response should be without coins");
+    } else {
+        unreachable!("Invalid response");
+    }
+
+    Ok(())
+}
+
+#[sim_test]
+async fn test_faucet() -> Result<(), anyhow::Error> {
+    let test_cluster = TestClusterBuilder::new()
+        .with_fullnode_rpc_port(9000)
+        .build()
+        .await;
+
+    let context = test_cluster.wallet;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let prom_registry = prometheus::Registry::new();
+    let config = iota_faucet::FaucetConfig::default();
+
+    let prometheus_registry = prometheus::Registry::new();
+    let app_state = std::sync::Arc::new(iota_faucet::AppState {
+        faucet: iota_faucet::SimpleFaucet::new(
+            context,
+            &prometheus_registry,
+            &tmp.path().join("faucet.wal"),
+            config.clone(),
+        )
+        .await
+        .unwrap(),
+        config,
+    });
+    tokio::spawn(async move { iota_faucet::start_faucet(app_state, 10, &prom_registry).await });
+
+    // Wait for the faucet to be up
+    sleep(Duration::from_secs(1)).await;
+
+    let wallet_config = tmp.path().join("walletconfig");
+    let mut keystore = iota_keys::keystore::FileBasedKeystore::new(&tmp.path().join("keystore"))?;
+    keystore
+        .generate_and_add_new_key(SignatureScheme::ED25519, None, None, None)
+        .unwrap();
+    let mut client_config = IotaClientConfig::new(keystore.into());
+    client_config.add_env(iota_sdk::iota_client_config::IotaEnv::localnet());
+    client_config.save(&wallet_config)?;
+    let mut context = WalletContext::new(&wallet_config, None, None)?;
+
+    let faucet_result = IotaClientCommands::Faucet {
+        address: None,
+        url: Some("http://127.0.0.1:5003/gas".to_string()),
+    }
+    .execute(&mut context)
+    .await?;
+
+    if let IotaClientCommandResult::NoOutput = faucet_result {
+    } else {
+        unreachable!("Invalid response");
+    };
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_move_new() -> Result<(), anyhow::Error> {
+    let current_dir = std::env::current_dir()?;
+    let package_name = "test_move_new";
+    IotaCommand::Move {
+        package_path: None,
+        config: None,
+        build_config: move_package::BuildConfig::default(),
+        cmd: iota_move::Command::New(iota_move::new::New {
+            new: move_cli::base::new::New {
+                name: package_name.to_string(),
+            },
+        }),
+    }
+    .execute()
+    .await?;
+
+    // Get all the new file names
+    let files = read_dir(package_name)?
+        .flat_map(|r| r.map(|file| file.file_name().to_str().unwrap().to_owned()))
+        .collect::<Vec<_>>();
+
+    assert_eq!(3, files.len());
+    for name in ["sources", "tests", "Move.toml"] {
+        assert!(files.contains(&name.to_string()));
+    }
+    assert!(std::path::Path::new(&format!("{package_name}/sources/{package_name}.move")).exists());
+    assert!(
+        std::path::Path::new(&format!("{package_name}/tests/{package_name}_tests.move")).exists()
+    );
+
+    // Test if the generated files are valid to build a package
+    IotaCommand::Move {
+        package_path: Some(package_name.parse()?),
+        config: None,
+        build_config: move_package::BuildConfig::default(),
+        cmd: iota_move::Command::Build(iota_move::build::Build {
+            chain_id: None,
+            dump_bytecode_as_base64: false,
+            generate_struct_layouts: false,
+            with_unpublished_dependencies: false,
+        }),
+    }
+    .execute()
+    .await?;
+
+    // iota_move::Command::Build changes the current dir, so we have to switch back
+    // here
+    std::env::set_current_dir(&current_dir)?;
+
+    IotaCommand::Move {
+        package_path: Some(package_name.parse()?),
+        config: None,
+        build_config: move_package::BuildConfig::default(),
+        cmd: iota_move::Command::Test(iota_move::unit_test::Test {
+            test: move_cli::base::test::Test {
+                compute_coverage: false,
+                filter: None,
+                gas_limit: None,
+                list: false,
+                num_threads: 1,
+                report_statistics: None,
+                verbose_mode: false,
+                seed: None,
+                rand_num_iters: None,
+            },
+        }),
+    }
+    .execute()
+    .await?;
+
+    // iota_move::Command::Test changes the current dir, so we have to switch back
+    // here
+    std::env::set_current_dir(current_dir)?;
+    std::fs::remove_dir_all(package_name)?;
+    Ok(())
 }
