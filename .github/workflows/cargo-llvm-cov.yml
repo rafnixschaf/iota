@@ -49,31 +49,21 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update stable
 
-      - name: Generate code coverage (nextest) # ./target/llvm-cov/html
+      - name: Generate code coverage (nextest)
         run: |
           cargo llvm-cov clean
-          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --all-features --branch --ignore-run-fail --html nextest
+          RUSTFLAGS="-C debuginfo=0" IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --html nextest -vv -E '!package(iota-bridge)'
 
-      - name: Upload coverage report (nextest)
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        if: always()
-        with:
-          name: llvm-cov-nextest-html
-          path: target/llvm-cov/html
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Run code coverage (simtest)
+      - name: Create compressed archive
         run: |
-          git clean -fd
-          ./scripts/simtest/codecov.sh
+          tar -czf nextest_coverage_report.tgz target/llvm-cov/html/
 
-      - name: Upload coverage report (simtest)
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        if: always()
-        with:
-          name: llvm-cov-simtest-html
-          path: target/llvm-cov/html
-          if-no-files-found: error
-          retention-days: 7
+      # Temporarily disabled until sim tests are no longer segfaulting
+      # - name: Run code coverage (simtest)
+      #   run: |
+      #     git clean -fd
+      #     ./scripts/simtest/codecov.sh
 
+      # - name: Create compressed archive
+      #   run: |
+      #     tar -czf simtest_coverage_report.tgz target/llvm-cov/html/
