@@ -1,4 +1,4 @@
-name: Codecov
+name: Code Coverage (grcov)
 
 on:
   # Temporarily disabled
@@ -23,9 +23,8 @@ jobs:
   #     - name: Detect Changes
   #       uses: "./.github/actions/diffs"
   #       id: diff
-
-  codecov-grcov:
-    name: Generate code coverage
+  grcov:
+    name: Generate code coverage (grcov)
     # Temporarily disabled
     # needs: diff
     # Temporarily disabled
@@ -33,23 +32,29 @@ jobs:
     runs-on: [self-hosted]
     steps:
       - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # pin@v4
-      - run: rustup component add llvm-tools-preview
-      # Enable caching of the 'librocksdb-sys' crate by additionally caching the
-      # 'librocksdb-sys' src directory which is managed by cargo
-      - name: Install grcov, and cache the binary
-        uses: baptiste0928/cargo-install@1cd874a5478fdca35d868ccc74640c5aabbb8f1b # pin@v3.0.0
-        with:
-          crate: grcov
-          locked: true
+      - uses: bmwill/rust-cache@fb63fcd7a959767755b88b5af2f5cbf65fb8a127 # pin@v1
+
+      - name: Install grcov
+        uses: taiki-e/install-action@grcov # pin@nextest
+
+      - name: Install nextest
+        uses: taiki-e/install-action@7e58f89e24a544d88f7a74c6eed8a3df3fd4c658 # pin@nextest
+
+      - name: Update Rust toolchain
+        run: rustup update stable
+
+      - name: Install llvm-tools-preview
+        run: rustup component add llvm-tools-preview
 
       - name: Remove old coverage artifacts
         run: |
-            if [ -d "./target/grcov-target" ]; then
-              rm -rf ./target/grcov-target
-              echo "Removed old artifacts"
-            else
-              echo "No artifacts found"
-            fi
+          if [ -d "./target/grcov" ]; then
+            rm -rf ./target/grcov
+            echo "Removed old artifacts."
+          else
+            echo "Target directory is clean."
+          fi
+           fi
 
       - name: Build
         uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b # pin@v1.0.3
@@ -63,34 +68,20 @@ jobs:
         env:
           RUSTFLAGS: "-Cinstrument-coverage"
           RUSTDOCFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "target/grcov-target/codecov-instrumentation-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "target/grcov/codecov-instrumentation-%p-%m.profraw"
         run: |
-          mkdir target/grcov-target
+          mkdir -p target/grcov/html
           cargo test
 
       - name: Run grcov
-        run: grcov . --binary-path target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore '../**' --ignore '/*' -o target/grcov-target/coverage.lcov
-
-      - name: Create coverage report
         run: |
-          cd target/grcov-target
-          genhtml -o coverage_report coverage.lcov --verbose --ignore-errors source --synthesize-missing
-          tar -czf coverage_report.tgz coverage_report/
+          grcov . --binary-path target/debug/ -s . -t html --branch --ignore-not-existing --ignore '../**' --ignore '/*' -o target/grcov/html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         if: always()
         with:
-          name: coverage_report.tgz
-          path: ./target/grcov-target/coverage_report.tgz
+          name: grcov-html
+          path: ./target/grcov/html
           if-no-files-found: error
-          retention-days: 30
-
-      - name: Clean up coverage artifacts
-        run: |
-          if [ -d "./target/grcov-target" ]; then
-            rm -rf ./target/grcov-target
-            echo "Cleaned up coverage artifacts"
-          fi
-
- 
+          retention-days: 7

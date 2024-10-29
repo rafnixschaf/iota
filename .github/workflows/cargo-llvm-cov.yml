@@ -1,9 +1,8 @@
-name: Code Coverage
+name: Code Coverage (llvm-cov)
 
 on:
-  # Temporarily disabled until simtest job is fixed
-  # schedule:
-  #   - cron: "0 9 * * *" # UTC timing is every day at 1am PST
+  schedule:
+    - cron: "0 1 * * *" # UTC timing is every day at 1am UTC
   workflow_dispatch:
 
 env:
@@ -31,8 +30,8 @@ env:
   RUSTDOCFLAGS: -D warnings
 
 jobs:
-  cargo-llvm-cov:
-    name: Generate code coverage
+  llvm-cov:
+    name: Generate code coverage (llvm-cov)
     runs-on: [self-hosted]
     timeout-minutes: 120
     env:
@@ -50,163 +49,31 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update stable
 
-      - name: Remove old coverage artifacts
+      - name: Generate code coverage (from nextest) # ./target/llvm-cov/html
         run: |
-            if [ -d "./target/llvm-cov-target" ]; then
-              rm -rf ./target/llvm-cov-target
-              echo "Removed old artifacts"
-            else
-              echo "No artifacts found"
-            fi
-
-      - name: Run code coverage (nextest)
-        run: IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --lcov --output-path lcov.info nextest
+          cargo llvm-cov clean
+          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --all-features --branch --ignore-run-fail --html nextest
 
       - name: Upload coverage report (nextest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         if: always()
         with:
-          name: lcov.info
-          path: ./lcov.info
+          name: llvm-cov-nextest-html
+          path: target/llvm-cov/html
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
 
-      # - name: Clean up coverage artifacts
-      #   run: |
-      #       if [ -d "./target/llvm-cov-target" ]; then
-      #         rm -rf ./target/llvm-cov-target
-      #         echo "Previous Coverage artifacts removed"
-      #       fi
-
-      # - name: Run code coverage (simtest)
-      #   run: |
-      #     git clean -fd
-      #     ./scripts/simtest/codecov.sh
-
-      # - name: Upload coverage report (simtest)
-      #   uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-      #   if: always()
-      #   with:
-      #     name: lcov-simtest.info
-      #     path: ./lcov-simtest.info
-      #     if-no-files-found: error
-      #     retention-days: 30
-
-      - name: Clean up coverage artifacts
+      - name: Run code coverage (simtest)
         run: |
-            if [ -d "./target/llvm-cov-target" ]; then
-              rm -rf ./target/llvm-cov-target
-              echo "Cleaned up coverage artificats"
-            fi
+          git clean -fd
+          ./scripts/simtest/codecov.sh
 
-  notify:
-    name: Notify
-    needs: [cargo-llvm-cov]
-    runs-on: self-hosted
-    if: always() # always notify
+      - name: Upload coverage report (simtest)
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
+        with:
+          name: llvm-cov-simtest-html
+          path: target/llvm-cov/html
+          if-no-files-found: error
+          retention-days: 7
 
-    steps:
-      - uses: technote-space/workflow-conclusion-action@45ce8e0eb155657ab8ccf346ade734257fd196a5 # pin@v3
-
-      - name: Checkout iota repo develop branch
-        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # pin@v4
-
-      - name: Get iota commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          export iota_sha=$(git rev-parse HEAD)
-          echo "iota_sha=${iota_sha}" >> $GITHUB_ENV
-
-      - name: Get a branch name for a iota commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          export iota_branch_name=$(gh api -H 'Accept: application/vnd.github+json' /repos/iotaledger/iota/commits/${{ env.iota_sha }}/branches-where-head --jq '.[].name' | head -n 1)
-          # if the commit is not the head of the branch, get it's base branch
-          [[ -z $iota_branch_name ]] && export iota_branch_name=$(gh api -H 'Accept: application/vnd.github+json' /repos/iotaledger/iota/commits/${{ env.iota_sha }}/pulls --jq '.[].base.ref' | head -n 1)
-          echo "iota_branch_name=${iota_branch_name}" >> $GITHUB_ENV
-          echo "iota_branch_name_url=$(echo ${iota_branch_name} | sed 's\/\%2F\g')" >> $GITHUB_ENV
-
-      - name: Get link to logs
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh_job_link=$(gh api -X GET 'repos/iotaledger/iota/actions/runs/${{ github.run_id }}/jobs' --jq '.jobs.[0].html_url')
-          echo "gh_job_link=${gh_job_link}" >> $GITHUB_ENV
-
-      # - name: Get current oncall
-      #   run: |
-      #     export current_oncall=$(curl -s --request GET \
-      #       --url 'https://api.pagerduty.com/oncalls?schedule_ids[]=PGCQ3YS' \
-      #       --header 'Accept: application/json' \
-      #       --header 'Authorization: Token token=${{ secrets.PAGERDUTY_ACCESS_KEY }}' \
-      #       --header 'Content-Type: application/json' \
-      #       | jq '.oncalls[].user.summary' | tr -d '"')
-      #     echo "current_oncall=$(echo ${current_oncall})" >> $GITHUB_ENV
-
-      #     export oncall_name=$(curl -s --request GET \
-      #       --url 'https://api.pagerduty.com/oncalls?schedule_ids[]=PGCQ3YS' \
-      #       --header 'Accept: application/json' \
-      #       --header 'Authorization: Token token=${{ secrets.PAGERDUTY_ACCESS_KEY }}' \
-      #       --header 'Content-Type: application/json' \
-      #       | jq '.oncalls[].escalation_policy.summary' | tr -d '"')
-      #     echo "oncall_name=$(echo ${oncall_name})" >> $GITHUB_ENV
-
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-west-2
-
-      # - name: Get slack id for the oncall
-      #   run: |
-      #     export slack_id=$(aws s3 cp s3://iota-employees-dir/employees.json - | jq --arg ONCALL "${{ env.current_oncall }}" '.[] | if .name == $ONCALL then .slack_id else empty end')
-      #     echo "slack_id=$(echo ${slack_id} | tr -d '"')" >> $GITHUB_ENV
-
-      # - name: Post to slack
-      #   uses: slackapi/slack-github-action@936158bbe252e9a6062e793ea4609642c966e302 # pin@v1.21.0
-      #   env:
-      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      #     IOTA_SHA: ${{ env.iota_sha }}
-      #     IOTA_BRANCH_NAME: ${{ env.iota_branch_name }}
-      #     IOTA_BRANCH_NAME_URL: ${{ env.iota_branch_name_url }}
-      #     GH_JOB_LINK: ${{ env.gh_job_link }}
-      #     SLACK_ID: ${{ env.slack_id }}
-      #     ONCALL_NAME: ${{ env.oncall_name }}
-      #   with:
-      #     channel-id: "code-coverage"
-      #     payload: |
-      #       {
-      #         "text": "*${{ github.workflow }}* workflow status: `${{ env.WORKFLOW_CONCLUSION }}`",
-      #         "blocks": [
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "*${{ github.workflow }}* workflow status: `${{ env.WORKFLOW_CONCLUSION }}`"
-      #             }
-      #           },
-      #           {
-      #             "type": "divider"
-      #           },
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "IOTA commit: <https://github.com/iotaledger/iota/commit/${{ env.IOTA_SHA }}|${{ env.IOTA_SHA }}>\nIOTA branch: `${{ env.IOTA_BRANCH_NAME }}`\nRun: <${{ env.GH_JOB_LINK }}|${{ github.run_id }}>"
-      #             }
-      #           },
-      #           {
-      #             "type": "divider"
-      #           },
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "<@${{ env.SLACK_ID }}>, current `${{ env.ONCALL_NAME }}` oncall, please look over the code coverage <https://app.codecov.io/github/iotaledger/iota/tree/${{ env.IOTA_BRANCH_NAME_URL }}|report> for the `${{ env.IOTA_BRANCH_NAME }}` branch in IOTA repo."
-      #             }
-      #           }
-      #         ]
-      #       }
