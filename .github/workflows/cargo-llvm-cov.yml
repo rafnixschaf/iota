@@ -58,12 +58,31 @@ jobs:
         run: |
           tar -czf nextest_coverage_report.tgz target/llvm-cov/html/
 
-      # Temporarily disabled until sim tests are no longer segfaulting
-      # - name: Run code coverage (simtest)
-      #   run: |
-      #     git clean -fd
-      #     ./scripts/simtest/codecov.sh
+      # TEMP
+      - name: Upload coverage report
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
+        with:
+          name: nextest_coverage_report.tgz
+          path: .
+          if-no-files-found: error
+          retention-days: 1
 
-      # - name: Create compressed archive
-      #   run: |
-      #     tar -czf simtest_coverage_report.tgz target/llvm-cov/html/
+      - name: Run code coverage (simtest)
+        run: |
+          git clean -fd
+          ./scripts/simtest/codecov.sh
+
+      - name: Create compressed archive
+        run: |
+          tar -czf simtest_coverage_report.tgz target/llvm-cov/html/
+
+      # TEMP
+      - name: Upload coverage report
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
+        with:
+          name: simtest_coverage_report.tgz
+          path: .
+          if-no-files-found: error
+          retention-days: 1
