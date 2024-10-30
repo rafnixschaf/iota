@@ -30,9 +30,9 @@ env:
   RUSTDOCFLAGS: -D warnings
 
 jobs:
-  llvm-cov:
-    name: Generate code coverage (llvm-cov)
-    runs-on: [self-hosted]
+  llvm-cov-nextest:
+    name: Generate code coverage (nextest)
+    runs-on: self-hosted
     timeout-minutes: 120
     env:
       CARGO_TERM_COLOR: always
@@ -49,40 +49,55 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update stable
 
-      - name: Generate code coverage (nextest)
+      - name: Generate code coverage
         run: |
           cargo llvm-cov clean
           RUSTFLAGS="-C debuginfo=0" IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --html nextest -vv -E '!package(iota-bridge)'
 
-      - name: Create compressed archive
-        run: |
-          tar -czf nextest_coverage_report.tgz target/llvm-cov/html/
+  report-nextest:
+    name: Upload report (nextest)
+    needs: llvm-cov-nextest
+    runs-on: self-hosted
+    if: always()
+    steps:
+      - name: Pack report
+        run: tar -czvf nextest_coverage_report.tgz target/llvm-cov/html/
 
       # TEMP
-      - name: Upload coverage report
+      - name: Upload report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         if: always()
         with:
           name: nextest_coverage_report.tgz
-          path: .
+          path: ./nextest_coverage_report.tgz
           if-no-files-found: error
           retention-days: 1
 
-      - name: Run code coverage (simtest)
+  llvm-cov-simtest:
+    name: Generate code coverage (simtest)
+    needs: report-nextest
+    runs-on: self-hosted
+    steps:
+      - name: Generate code coverage
         run: |
           git clean -fd
           ./scripts/simtest/codecov.sh
 
-      - name: Create compressed archive
-        run: |
-          tar -czf simtest_coverage_report.tgz target/llvm-cov/html/
+  report-simtest:
+    name: Upload report (simtest)
+    needs: llvm-cov-simtest
+    runs-on: self-hosted
+    if: always()
+    steps:
+      - name: Pack report
+        run: tar -czvf simtest_coverage_report.tgz target/llvm-cov/html/
 
       # TEMP
-      - name: Upload coverage report
+      - name: Upload report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         if: always()
         with:
           name: simtest_coverage_report.tgz
-          path: .
+          path: ./simtest_coverage_report.tgz
           if-no-files-found: error
           retention-days: 1
