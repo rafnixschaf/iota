@@ -185,13 +185,12 @@ enable-validator-tx-finalizer: true
     
     seed_peers = '\n'.join(seed_peers_list)
 
-    # Add required fields from the JSON data
     return template.format(
-        protocol_key=data.get('protocol_keystore', {}).get('privateBase64Key', ''),
-        worker_key=data.get('worker_keystore', {}).get('privateBase64Key', ''),
-        account_key=data.get('account_keystore', {}).get('privateBase64Key', ''),
-        network_key=data.get('network_keystore', {}).get('privateBase64Key', ''),
-        p2p_address=data.get('p2p_address', ''),
+        protocol_key=data["protocol_keystore"]["privateBase64Key"],
+        worker_key=data["worker_keystore"]["privateBase64Key"],
+        account_key=data["account_keystore"]["privateBase64Key"],
+        network_key=data["network_keystore"]["privateBase64Key"],
+        p2p_address=data["p2p_address"],
         seed_peers=seed_peers
     )
 
