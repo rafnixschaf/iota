@@ -54,22 +54,22 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update stable
 
-      - name: Generate code coverage
-        run: |
-          cargo llvm-cov clean
-          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest -vv -E '!package(iota-bridge)'
+      # - name: Generate code coverage
+      #   run: |
+      #     cargo llvm-cov clean
+      #     IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest -vv -E '!package(iota-bridge)'
 
-      - name: Pack report
-        run: cd target/llvm-cov/html && tar -czvf ../nextest_coverage_report.tgz ./
+      # - name: Pack report
+      #   run: cd target/llvm-cov/html && tar -czvf ../nextest_coverage_report.tgz ./
 
-      # TEMP
-      - name: Upload report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        with:
-          name: nextest_coverage_report.tgz
-          path: ./target/llvm-cov/nextest_coverage_report.tgz
-          if-no-files-found: error
-          retention-days: 1
+      # # TEMP
+      # - name: Upload report
+      #   uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+      #   with:
+      #     name: nextest_coverage_report.tgz
+      #     path: ./target/llvm-cov/nextest_coverage_report.tgz
+      #     if-no-files-found: error
+      #     retention-days: 1
 
       - name: Generate code coverage (simtest)
         run: |
