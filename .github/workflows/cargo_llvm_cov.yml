@@ -46,16 +46,21 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@7e58f89e24a544d88f7a74c6eed8a3df3fd4c658 # pin@nextest
 
+      - name: Set Swap Space
+        uses: actionhippie/swap-space@v1
+        with:
+          size: 256G
+
       - name: Update Rust toolchain
         run: rustup update stable
 
       - name: Generate code coverage
         run: |
           cargo llvm-cov clean
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --html nextest -vv -E '!package(iota-bridge)'
+          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest -vv -E '!package(iota-bridge)'
 
       - name: Pack report
-        run: tar -czvf nextest_coverage_report.tgz target/llvm-cov/html/
+        run: cd target/llvm-cov && tar -czvf nextest_coverage_report.tgz ./html/
 
       # TEMP
       - name: Upload report
@@ -72,7 +77,7 @@ jobs:
           ./scripts/simtest/codecov.sh
 
       - name: Pack report (simtest)
-        run: tar -czvf simtest_coverage_report.tgz target/llvm-cov/html/
+        run: cd target/llvm-cov && tar -czvf simtest_coverage_report.tgz ./html/
 
       # TEMP
       - name: Upload report (simtest)
