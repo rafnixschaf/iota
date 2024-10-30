@@ -1,10 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
-import { CoinItem, SendCoinPopup } from '@/components';
-import { usePopups } from '@/hooks';
+import { CoinItem, SendTokenDialog } from '@/components';
 import { CoinBalance } from '@iota/iota-sdk/client';
 import {
     COINS_QUERY_REFETCH_INTERVAL,
@@ -14,9 +13,10 @@ import {
 } from '@iota/core';
 
 function MyCoins(): React.JSX.Element {
-    const { openPopup, closePopup } = usePopups();
     const account = useCurrentAccount();
     const activeAccountAddress = account?.address;
+    const [isSendTokenDialogOpen, setIsSendTokenDialogOpen] = useState(false);
+    const [selectedCoinType, setSelectedCoinType] = useState('');
 
     const { data: coinBalances } = useIotaClientQuery(
         'getAllBalances',
@@ -30,16 +30,10 @@ function MyCoins(): React.JSX.Element {
     );
     const { recognized, unrecognized } = useSortedCoinsByCategories(coinBalances ?? []);
 
-    function openSendTokenPopup(coin: CoinBalance, address: string): void {
+    function openSendTokenPopup(coin: CoinBalance): void {
         if (coinBalances) {
-            openPopup(
-                <SendCoinPopup
-                    coin={coin}
-                    senderAddress={address}
-                    onClose={closePopup}
-                    coins={coinBalances}
-                />,
-            );
+            setIsSendTokenDialogOpen(true);
+            setSelectedCoinType(coin.coinType);
         }
     }
 
@@ -52,7 +46,7 @@ function MyCoins(): React.JSX.Element {
                         key={index}
                         coinType={coin.coinType}
                         balance={BigInt(coin.totalBalance)}
-                        onClick={() => openSendTokenPopup(coin, account?.address ?? '')}
+                        onClick={() => openSendTokenPopup(coin)}
                     />
                 );
             })}
@@ -63,10 +57,16 @@ function MyCoins(): React.JSX.Element {
                         key={index}
                         coinType={coin.coinType}
                         balance={BigInt(coin.totalBalance)}
-                        onClick={() => openSendTokenPopup(coin, account?.address ?? '')}
+                        onClick={() => openSendTokenPopup(coin)}
                     />
                 );
             })}
+            <SendTokenDialog
+                coinType={selectedCoinType}
+                activeAddress={activeAccountAddress!}
+                open={isSendTokenDialogOpen}
+                setOpen={setIsSendTokenDialogOpen}
+            />
         </div>
     );
 }
