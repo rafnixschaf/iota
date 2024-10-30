@@ -1,8 +1,7 @@
-// Copyright (c) Mysten Labs, Inc.
-// Modifications Copyright (c) 2024 IOTA Stiftung
+// Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import cn from 'clsx';
 
 export enum ImageIconSize {
@@ -37,16 +36,17 @@ function FallBackAvatar({
             case ImageIconSize.Medium:
                 return 'text-label-md';
             case ImageIconSize.Large:
-                return 'text-title-md';
-            case ImageIconSize.Full:
                 return 'text-title-lg';
+            case ImageIconSize.Full:
+                return 'text-display-lg';
         }
     }
     return (
         <div
             className={cn(
-                'flex h-full w-full items-center justify-center bg-neutral-96 bg-gradient-to-r capitalize text-neutral-10 dark:bg-neutral-92 dark:text-primary-100',
-                { 'rounded-full': rounded },
+                'flex items-center justify-center bg-neutral-96 bg-gradient-to-r capitalize text-neutral-10 dark:bg-neutral-92 dark:text-primary-100',
+                { 'rounded-full': rounded, 'rounded-lg': !rounded },
+                size,
                 generateTextSize(size),
             )}
         >

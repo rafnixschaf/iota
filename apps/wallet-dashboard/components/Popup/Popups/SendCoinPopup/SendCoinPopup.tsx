@@ -120,6 +120,8 @@ function SendCoinPopup({
                     gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                     error={error?.message}
                     isPending={isPending}
+                    coinType={selectedCoin.coinType}
+                    onClose={onClose}
                 />
             )}
         </>

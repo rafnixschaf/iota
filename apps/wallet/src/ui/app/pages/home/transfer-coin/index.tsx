@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { CoinIcon, Loading, Overlay } from '_components';
+import { Loading, Overlay } from '_components';
 import { ampli } from '_src/shared/analytics/ampli';
 import { getSignerOperationErrorMessage } from '_src/ui/app/helpers/errorMessages';
 import { useActiveAccount } from '_src/ui/app/hooks/useActiveAccount';
@@ -13,6 +13,8 @@ import {
     filterAndSortTokenBalances,
     useCoinMetadata,
     useFormatCoin,
+    ImageIconSize,
+    CoinIcon,
 } from '@iota/core';
 // import * as Sentry from '@sentry/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,7 +28,6 @@ import { Select, Button, type SelectOption, ButtonType } from '@iota/apps-ui-kit
 import { useActiveAddress, useCoinsReFetchingConfig } from '_src/ui/app/hooks';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import type { CoinBalance } from '@iota/iota-sdk/client';
-import { ImageIconSize } from '_src/ui/app/shared/image-icon';
 import { Loader } from '@iota/ui-icons';
 
 function TransferCoinPage() {
