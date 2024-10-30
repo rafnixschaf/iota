@@ -8,5 +8,5 @@ if [[ "$OSTYPE" != "darwin"* && "$EUID" -ne 0 ]]; then
   exit
 fi
 
-docker compose down --remove-orphans
-rm -rf data
+docker compose down --remove-orphans -t 1
+rm -rf data configs

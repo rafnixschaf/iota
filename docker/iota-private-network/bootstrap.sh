@@ -1,97 +1,79 @@
-#!/bin/bash
-
-# Copyright (c) 2024 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-set -e
-
-TEMP_EXPORT_DIR="$(pwd)/configs/temp"
-VALIDATOR_CONFIGS_DIR="$(pwd)/configs/validators"
-GENESIS_DIR="$(pwd)/configs/genesis"
-OVERLAY_PATH="$(pwd)/configs/validator-common.yaml"
-GENESIS_TEMPLATE="$(pwd)/configs/genesis-template.yaml"
-PRIVATE_DATA_DIR="$(pwd)/data"
-
-check_docker_image_exist() {
-  if ! docker image inspect "$1" >/dev/null 2>&1; then
-    echo "Error: Docker image $1 not found."
+if ! python3 -m venv venv; then
+    echo "Failed to create virtual environment"
     exit 1
-  fi
+fi
+
+if ! source venv/bin/activate; then
+    echo "Failed to activate virtual environment" 
+    exit 1
+fi
+
+if ! pip install -r scripts/requirements.txt; then
+    echo "Failed to install requirements"
+    exit 1
+fi
+
+generate_keystores() {
+  echo "Generating keystores for nodes..."
+  rm -rf ./config/keystores
+  python scripts/generate-keystores.py
 }
 
-check_configs_exist() {
-  if [ ! -f "$1" ]; then
-    echo "Error: $(basename "$1") not found at "$1""
-    exit 1
-  fi
+generate_configs() {
+  echo "Generating config files for nodes..."
+  rm -rf ./configs/fullnodes
+  rm -rf ./configs/validators
+  rm -rf ./configs/faucet
+  python scripts/generate-configs.py
 }
 
-generate_genesis_files() {
-  mkdir "$TEMP_EXPORT_DIR"
+generate_genesis() {
+  echo "Generating genesis files for nodes..."
+  rm -rf ./configs/genesis
+  python scripts/generate-genesis.py
+}
 
-  docker run --rm \
-    -v "$(pwd):/iota" \
-    -w /iota \
-    iota-tools \
-    /usr/local/bin/iota genesis --from-config "/iota/configs/genesis-template.yaml" --working-dir "/iota/configs/temp" -f
-
-  for file in "$TEMP_EXPORT_DIR"/validator*.yaml; do
-    if [ -f "$file" ]; then
-      yq eval-all '
-        select(fileIndex == 1).validator as $overlay |
-        select(fileIndex == 0) |
-        .network-address = $overlay.network-address |
-        .metrics-address = $overlay.metrics-address |
-        .json-rpc-address = $overlay.json-rpc-address |
-        .admin-interface-port = $overlay.admin-interface-port |
-        .genesis.genesis-file-location = $overlay.genesis.genesis-file-location |
-        .db-path = $overlay.db-path |
-        .consensus-config.db-path = $overlay.consensus-config.db-path |
-        .consensus-config.narwhal-config.max_header_delay = $overlay.consensus-config.narwhal-config.max_header_delay |
-        .expensive-safety-check-config = $overlay.expensive-safety-check-config |
-        .epoch_duration_ms = $overlay.epoch_duration_ms
-      ' "$file" "$OVERLAY_PATH" >"${file}.tmp" && mv "${file}.tmp" "$file"
-    fi
-  done
-
-  for file in "$TEMP_EXPORT_DIR"/validator*; do
-    if [ -e "$file" ]; then
-      mv "$file" "$VALIDATOR_CONFIGS_DIR/"
-    fi
-  done
-
-  mv "$TEMP_EXPORT_DIR/genesis.blob" "$GENESIS_DIR/"
-
-  rm -rf "$TEMP_EXPORT_DIR"
+cleanup_genesis_folder() {
+  mkdir -p ./configs/genesis
+  mv ./configs/temp-genesis/genesis.blob ./configs/genesis/genesis.blob
+  mv ./configs/temp-genesis/migration.blob ./configs/genesis/migration.blob
+  rm -rf ./configs/temp-genesis
 }
 
 create_folder_for_postgres() {
-  mkdir -p ./data/primary ./data/replica
-  chown -R 999:999 ./data/primary ./data/replica
-  chmod 0755 ./data/primary ./data/replica
+  echo "Creating Postgres folder ..."
+  mkdir -p ./data/postgres
+  chown -R 999:999 ./data/postgres
+  chmod 0755 ./data/postgres
 }
 
-main() {
-  if [[ "$OSTYPE" != "darwin"* && "$EUID" -ne 0 ]]; then
-    echo "Please run as root or with sudo"
-    exit 1
-  fi
-  [ -d "$TEMP_EXPORT_DIR" ] && rm -rf "$TEMP_EXPORT_DIR"
-
-  [ -d "$PRIVATE_DATA_DIR" ] && ./cleanup.sh
-
-  for config_path in "$GENESIS_TEMPLATE" "$OVERLAY_PATH"; do
-    check_configs_exist "$config_path"
-  done
-
-  for image in iota-tools iota-node iota-indexer; do
-    check_docker_image_exist "$image"
-  done
-
-  generate_genesis_files
-  create_folder_for_postgres
-
-  echo "Done"
-}
-
-main
+if [ ! -d "./configs" ]; then
+    echo "Configs folder not found. Generating all required files..."
+    generate_keystores
+    generate_configs 
+    generate_genesis
+    cleanup_genesis_folder
+    create_folder_for_postgres
+else
+    read -p "Do you want to fully reset? (y/n) " reset_answer
+    if [ "$reset_answer" = "y" ]; then
+        echo "Fully resetting..."
+        ./cleanup.sh
+        generate_keystores
+        generate_configs
+        generate_genesis
+        cleanup_genesis_folder
+        create_folder_for_postgres
+    else
+        read -p "Do you want to regenerate the genesis files? (y/n) " genesis_answer
+        if [ "$genesis_answer" = "y" ]; then
+            echo "Regenerating genesis files..."
+            generate_genesis
+            cleanup_genesis_folder
+            create_folder_for_postgres
+        else
+            echo "Only creating postgres folder..."
+            create_folder_for_postgres
+        fi
+    fi
+fi
