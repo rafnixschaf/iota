@@ -59,8 +59,8 @@ jobs:
         run: |
           cargo llvm-cov clean
           set +e
-          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path target/nextest.lcov nextest
-          if [ -f "target/nextest.lcov" ]; then
+          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path target/llvm-cov/nextest.lcov nextest
+          if [ -f "target/llvm-cov/nextest.lcov" ]; then
             exit 0
           else
             echo "Fatal Error: Failed to create nextest coverage report."
@@ -73,7 +73,7 @@ jobs:
           cargo llvm-cov clean
           set +e
           ./scripts/simtest/simtest-cov.sh
-          if [ -f "target/simtest.lcov" ]; then
+          if [ -f "target/llvm-cov/simtest.lcov" ]; then
             exit 0
           else
             echo "Fatal Error: Failed to create simtest coverage report."
@@ -83,15 +83,15 @@ jobs:
       - name: Create report
         run: |
           apt install -yy lcov
-          genhtml -o target/coverage_report --branch-coverage target/nextest.lcov target/simtest.lcov
+          genhtml -o target/llvm-cov/coverage_report --branch-coverage target/llvm-cov/nextest.lcov target/llvm-cov/simtest.lcov
 
       - name: Pack report
-        run: cd target && tar -czvf coverage_report.tgz ./coverage_report
+        run: cd target/llvm-cov && tar -czvf coverage_report.tgz ./coverage_report
 
-      - name: Upload report (simtest)
+      - name: Upload report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
           name: coverage_report.tgz
-          path: ./target/coverage_report.tgz
+          path: ./target/llvm-cov/coverage_report.tgz
           if-no-files-found: error
           retention-days: 1
