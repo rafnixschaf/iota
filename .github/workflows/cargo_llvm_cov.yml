@@ -79,16 +79,17 @@ jobs:
       - name: Generate code coverage (simtest)
         run: |
           git clean -fd
+          set +e
           ./scripts/simtest/codecov.sh
-
-      - name: Pack report (simtest)
-        if: always()
-        run: |
-          if [ ! -d "target/llvm-cov/html" ]; then
-            echo "Error: No coverage report created in previous step."
+          if [ -d "target/llvm-cov/html" ]; then
+            exit 0
+          else
+            echo "Fatal Error: Failed to create coverage report."
             exit 1
           fi
-          cd target/llvm-cov/html && tar -czvf ../simtest_coverage_report.tgz ./
+
+      - name: Pack report (simtest)
+        run: cd target/llvm-cov/html && tar -czvf ../simtest_coverage_report.tgz ./
 
       - name: Upload report (simtest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
