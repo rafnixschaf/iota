@@ -12,14 +12,13 @@ import {
 } from '@iota/core';
 import { Address, Button, ButtonSize, ButtonType, Panel } from '@iota/apps-ui-kit';
 import { CoinBalance, getNetwork } from '@iota/iota-sdk/client';
-import { SendCoinPopup } from '../Popup';
-import { usePopups } from '@/hooks';
 import toast from 'react-hot-toast';
+import SendCoinDialog from '../Dialogs/SendToken/SendCoinDialog';
+import { useState } from 'react';
 
 export function AccountBalance() {
     const account = useCurrentAccount();
     const address = account?.address;
-    const { openPopup, closePopup } = usePopups();
     const { network } = useIotaClientContext();
     const { explorer } = getNetwork(network);
     const { data: coinBalance, isPending } = useBalance(address!);
@@ -35,18 +34,14 @@ export function AccountBalance() {
             select: filterAndSortTokenBalances,
         },
     );
+    const [isSendTokenDialogOpen, setIsSendTokenDialogOpen] = useState(false);
+    const [selectedCoin, setSelectedCoin] = useState<CoinBalance>();
     const explorerLink = `${explorer}/address/${address}`;
 
     function openSendTokenPopup(coin: CoinBalance, address: string): void {
         if (coinBalances) {
-            openPopup(
-                <SendCoinPopup
-                    coin={coin}
-                    senderAddress={address}
-                    onClose={closePopup}
-                    coins={coinBalances}
-                />,
-            );
+            setIsSendTokenDialogOpen(true);
+            setSelectedCoin(coin);
         }
     }
 
@@ -77,8 +72,7 @@ export function AccountBalance() {
                     <div className="flex w-full max-w-56 gap-xs">
                         <Button
                             onClick={() =>
-                                coinBalance &&
-                                openSendTokenPopup(coinBalance, account?.address ?? '')
+                                coinBalance && openSendTokenPopup(coinBalance, address ?? '')
                             }
                             text="Send"
                             size={ButtonSize.Small}
@@ -95,6 +89,14 @@ export function AccountBalance() {
                         />
                     </div>
                 </div>
+            )}
+            {selectedCoin && address && (
+                <SendCoinDialog
+                    activeAddress={address}
+                    coin={selectedCoin}
+                    open={isSendTokenDialogOpen}
+                    setOpen={setIsSendTokenDialogOpen}
+                />
             )}
         </Panel>
     );

@@ -1,62 +1,42 @@
-// Copyright (c) Mysten Labs, Inc.
-// Modifications Copyright (c) 2024 IOTA Stiftung
+// Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useActiveAddress } from '_app/hooks/useActiveAddress';
-import { Loading } from '_components';
-import { GAS_SYMBOL } from '_src/ui/app/redux/slices/iota-objects/Coin';
+import { CoinBalance, CoinStruct } from '@iota/iota-sdk/client';
+import { FormDataValues, INITIAL_VALUES } from '../SendCoinDialog';
 import {
-    useGetAllCoins,
+    AddressInput,
     CoinFormat,
-    createTokenTransferTransaction,
+    COINS_QUERY_REFETCH_INTERVAL,
+    COINS_QUERY_STALE_TIME,
+    CoinSelector,
+    filterAndSortTokenBalances,
+    parseAmount,
+    SendTokenFormInput,
     useCoinMetadata,
     useFormatCoin,
-    parseAmount,
-    AddressInput,
-    SendTokenFormInput,
+    useGetAllCoins,
 } from '@iota/core';
-import { useIotaClient } from '@iota/dapp-kit';
-import { type CoinStruct } from '@iota/iota-sdk/client';
-import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useQuery } from '@tanstack/react-query';
-import { Field, FieldInputProps, Form, Formik, useFormikContext } from 'formik';
-import { useEffect, useMemo } from 'react';
-
-import { createValidationSchemaStepOne } from './validation';
 import {
+    ButtonHtmlType,
+    ButtonType,
     InfoBox,
-    InfoBoxStyle,
     InfoBoxType,
     Button,
-    ButtonType,
-    ButtonHtmlType,
+    InfoBoxStyle,
+    LoadingIndicator,
 } from '@iota/apps-ui-kit';
+import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
+import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
+import { Field, FieldInputProps, Form, Formik } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 
-const INITIAL_VALUES = {
-    to: '',
-    amount: '',
-    isPayAllIota: false,
-    gasBudgetEst: '',
-};
-
-export type FormValues = typeof INITIAL_VALUES;
-
-export type SubmitProps = {
-    to: string;
-    amount: string;
-    isPayAllIota: boolean;
-    coinIds: string[];
-    coins: CoinStruct[];
-    gasBudgetEst: string;
-};
-
-export type SendTokenFormProps = {
-    coinType: string;
-    onSubmit: (values: SubmitProps) => void;
-    initialAmount: string;
-    initialTo: string;
-};
+interface EnterValuesFormProps {
+    coin: CoinBalance;
+    gasBudget: string;
+    setFormData: React.Dispatch<React.SetStateAction<FormDataValues>>;
+    setSelectedCoin: React.Dispatch<React.SetStateAction<CoinBalance>>;
+    onNext: () => void;
+}
 
 function totalBalance(coins: CoinStruct[]): bigint {
     return coins.reduce((partialSum, c) => partialSum + getBalanceFromCoinStruct(c), BigInt(0));
@@ -65,78 +45,35 @@ function getBalanceFromCoinStruct(coin: CoinStruct): bigint {
     return BigInt(coin.balance);
 }
 
-function useGasBudgetEstimation({
-    coinDecimals,
-    coins,
-}: {
-    coinDecimals: number;
-    coins: CoinStruct[];
-}) {
-    const activeAddress = useActiveAddress();
-    const { values, setFieldValue } = useFormikContext<FormValues>();
+function EnterValuesFormView({
+    coin,
+    gasBudget,
+    setFormData,
+    setSelectedCoin,
+    onNext,
+}: EnterValuesFormProps): JSX.Element {
+    const account = useCurrentAccount();
+    const activeAddress = account?.address;
 
-    const client = useIotaClient();
-    const { data: gasBudget } = useQuery({
-        // eslint-disable-next-line @tanstack/query/exhaustive-deps
-        queryKey: [
-            'transaction-gas-budget-estimate',
-            {
-                to: values.to,
-                amount: values.amount,
-                coins,
-                activeAddress,
-                coinDecimals,
-            },
-        ],
-        queryFn: async () => {
-            if (!values.amount || !values.to || !coins || !activeAddress) {
-                return null;
-            }
-
-            const to = values.to;
-
-            const tx = createTokenTransferTransaction({
-                to,
-                amount: values.amount,
-                coinType: IOTA_TYPE_ARG,
-                coinDecimals,
-                isPayAllIota: values.isPayAllIota,
-                coins,
-            });
-
-            tx.setSender(activeAddress);
-            await tx.build({ client });
-            return tx.blockData.gasConfig.budget;
-        },
-    });
-
-    const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-    // gasBudgetEstimation should change when the amount above changes
-
-    useEffect(() => {
-        setFieldValue('gasBudgetEst', formattedGas, false);
-    }, [formattedGas, setFieldValue, values.amount]);
-
-    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
-}
-
-// Set the initial gasEstimation from initial amount
-// base on the input amount field update the gasEstimation value
-// Separating the gasEstimation from the formik context to access the input amount value and update the gasEstimation value
-export function SendTokenForm({
-    coinType,
-    onSubmit,
-    initialAmount = '',
-    initialTo = '',
-}: SendTokenFormProps) {
-    const client = useIotaClient();
-    const activeAddress = useActiveAddress();
     // Get all coins of the type
-    const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(coinType, activeAddress!);
-
+    const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(
+        coin.coinType,
+        activeAddress!,
+    );
     const { data: iotaCoinsData, isPending: iotaCoinsIsPending } = useGetAllCoins(
         IOTA_TYPE_ARG,
         activeAddress!,
+    );
+
+    const { data: coinsBalance, isPending: coinsBalanceIsPending } = useIotaClientQuery(
+        'getAllBalances',
+        { owner: activeAddress! },
+        {
+            enabled: !!activeAddress,
+            refetchInterval: COINS_QUERY_REFETCH_INTERVAL,
+            staleTime: COINS_QUERY_STALE_TIME,
+            select: filterAndSortTokenBalances,
+        },
     );
 
     const iotaCoins = iotaCoinsData;
@@ -144,30 +81,27 @@ export function SendTokenForm({
     const coinBalance = totalBalance(coins || []);
     const iotaBalance = totalBalance(iotaCoins || []);
 
-    const coinMetadata = useCoinMetadata(coinType);
-    const coinDecimals = coinMetadata.data?.decimals ?? 0;
-
-    const gasBudgetEstimation = useGasBudgetEstimation({
-        coinDecimals: coinDecimals,
-        coins: coins ?? [],
-    });
-
     const [tokenBalance, symbol, queryResult] = useFormatCoin(
         coinBalance,
-        coinType,
+        coin.coinType,
         CoinFormat.FULL,
     );
 
-    const validationSchemaStepOne = useMemo(
-        () => createValidationSchemaStepOne(coinBalance, symbol, coinDecimals),
-        [client, coinBalance, symbol, coinDecimals],
-    );
+    const coinMetadata = useCoinMetadata(coin.coinType);
+    const coinDecimals = coinMetadata.data?.decimals ?? 0;
 
-    // remove the comma from the token balance
     const formattedTokenBalance = tokenBalance.replace(/,/g, '');
-    const initAmountBig = parseAmount(initialAmount, coinDecimals);
+    const initAmountBig = parseAmount('', coinDecimals);
 
-    async function handleFormSubmit({ to, amount, isPayAllIota, gasBudgetEst }: FormValues) {
+    if (coinsBalanceIsPending || coinsIsPending || iotaCoinsIsPending) {
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <LoadingIndicator />
+            </div>
+        );
+    }
+
+    async function handleFormSubmit({ to, amount, isPayAllIota, gasBudgetEst }: FormDataValues) {
         if (!coins || !iotaCoins) return;
         const coinsIDs = [...coins]
             .sort((a, b) => Number(b.balance) - Number(a.balance))
@@ -181,38 +115,51 @@ export function SendTokenForm({
             coinIds: coinsIDs,
             gasBudgetEst,
         };
-        onSubmit(data);
+        setFormData(data);
+        onNext();
     }
 
     return (
-        <Loading
-            loading={
-                queryResult.isPending ||
-                coinMetadata.isPending ||
-                iotaCoinsIsPending ||
-                coinsIsPending
-            }
-        >
+        <div>
+            <CoinSelector
+                activeCoinType={coin.coinType}
+                coins={coinsBalance ?? []}
+                onClick={(coinType) => {
+                    setFormData(INITIAL_VALUES);
+                    const coin = coinsBalance?.find((coin) => coin.coinType === coinType);
+                    setSelectedCoin(coin!);
+                }}
+            />
+
             <Formik
                 initialValues={{
-                    amount: initialAmount,
-                    to: initialTo,
+                    amount: '',
+                    to: '',
                     isPayAllIota:
                         !!initAmountBig &&
                         initAmountBig === coinBalance &&
-                        coinType === IOTA_TYPE_ARG,
+                        coin.coinType === IOTA_TYPE_ARG,
                     gasBudgetEst: '',
                 }}
-                validationSchema={validationSchemaStepOne}
+                // validationSchema={validationSchemaStepOne}
                 enableReinitialize
                 validateOnChange={false}
                 validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
-                {({ isValid, isSubmitting, setFieldValue, values, submitForm, handleBlur, touched, errors }) => {
+                {({
+                    isValid,
+                    isSubmitting,
+                    setFieldValue,
+                    values,
+                    submitForm,
+                    touched,
+                    errors,
+                    handleBlur,
+                }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
-                        coinType === IOTA_TYPE_ARG;
+                        coin.coinType === IOTA_TYPE_ARG;
                     if (values.isPayAllIota !== newPayIotaAll) {
                         setFieldValue('isPayAllIota', newPayIotaAll);
                     }
@@ -222,7 +169,7 @@ export function SendTokenForm({
                         iotaBalance >
                             parseAmount(values.gasBudgetEst, coinDecimals) +
                                 parseAmount(
-                                    coinType === IOTA_TYPE_ARG ? values.amount : '0',
+                                    coin.coinType === IOTA_TYPE_ARG ? values.amount : '0',
                                     coinDecimals,
                                 );
 
@@ -239,20 +186,20 @@ export function SendTokenForm({
                         <div className="flex h-full w-full flex-col">
                             <Form autoComplete="off" noValidate className="flex-1">
                                 <div className="flex h-full w-full flex-col gap-md">
-                                    {!hasEnoughBalance ? (
+                                    {!hasEnoughBalance && (
                                         <InfoBox
                                             type={InfoBoxType.Error}
                                             supportingText="Insufficient IOTA to cover transaction"
                                             style={InfoBoxStyle.Elevated}
                                             icon={<Exclamation />}
                                         />
-                                    ) : null}
+                                    )}
 
                                     <Field
                                         name="amount"
                                         render={({ field }: { field: FieldInputProps<string> }) => (
                                             <SendTokenFormInput
-                                                gasBudgetEstimation={gasBudgetEstimation}
+                                                gasBudgetEstimation={gasBudget}
                                                 symbol={symbol}
                                                 coins={coins}
                                                 values={values}
@@ -269,11 +216,14 @@ export function SendTokenForm({
                                             />
                                         )}
                                     />
+
                                     <Field
                                         component={AddressInput}
-                                        allowNegative={false}
                                         name="to"
                                         placeholder="Enter Address"
+                                        errorMessage={
+                                            touched.to && errors.to ? errors.to : undefined
+                                        }
                                     />
                                 </div>
                             </Form>
@@ -297,18 +247,8 @@ export function SendTokenForm({
                     );
                 }}
             </Formik>
-        </Loading>
+        </div>
     );
 }
 
-interface SendTokenInputProps {
-    coinDecimals: number;
-    coins?: CoinStruct[];
-    symbol: string;
-    values: {
-        amount: string;
-        isPayAllIota: boolean;
-    };
-    onActionClick: () => Promise<void>;
-    isActionButtonDisabled?: boolean | 'auto';
-}
+export default EnterValuesFormView;

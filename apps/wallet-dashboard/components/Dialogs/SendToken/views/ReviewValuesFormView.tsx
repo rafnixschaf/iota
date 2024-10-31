@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { FormDataValues } from '../SendCoinPopup';
+import { FormDataValues } from '../SendCoinDialog';
 import { Button } from '@/components';
 
 interface ReviewValuesFormProps {
@@ -15,7 +15,7 @@ interface ReviewValuesFormProps {
 }
 
 function ReviewValuesFormView({
-    formData: { amount, recipientAddress },
+    formData: { amount, to },
     senderAddress,
     gasBudget,
     error,
@@ -29,7 +29,7 @@ function ReviewValuesFormView({
             <div className="flex flex-col gap-4">
                 <p>Sending: {amount}</p>
                 <p>From: {senderAddress}</p>
-                <p>To: {recipientAddress}</p>
+                <p>To: {to}</p>
                 <p>Gas fee: {gasBudget}</p>
             </div>
             {error ? <span className="text-red-700">{error}</span> : null}

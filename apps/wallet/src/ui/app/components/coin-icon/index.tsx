@@ -28,19 +28,3 @@ function NonIotaCoin({ coinType, size = ImageIconSize.Full, rounded }: NonIotaCo
         </div>
     );
 }
-
-export interface CoinIconProps {
-    coinType: string;
-    size?: ImageIconSize;
-    rounded?: boolean;
-}
-
-export function CoinIcon({ coinType, size = ImageIconSize.Full, rounded }: CoinIconProps) {
-    return coinType === IOTA_TYPE_ARG ? (
-        <div className={cx(size)}>
-            <IotaLogoMark className="h-full w-full" />
-        </div>
-    ) : (
-        <NonIotaCoin rounded={rounded} size={size} coinType={coinType} />
-    );
-}
