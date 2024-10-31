@@ -60,7 +60,13 @@ jobs:
       #     IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest -vv
 
       # - name: Pack report
-      #   run: cd target/llvm-cov/html && tar -czvf ../nextest_coverage_report.tgz ./
+      #   if: always()
+      #   run: |
+      #     if [ ! -d "target/llvm-cov/html" ]; then
+      #       echo "Error: No coverage report created in previous step."
+      #       exit 1
+      #     fi
+      #     cd target/llvm-cov/html && tar -czvf ../nextest_coverage_report.tgz ./
 
       # - name: Upload report
       #   uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
@@ -76,7 +82,13 @@ jobs:
           ./scripts/simtest/codecov.sh
 
       - name: Pack report (simtest)
-        run: cd target/llvm-cov/html && tar -czvf ../simtest_coverage_report.tgz ./
+        if: always()
+        run: |
+          if [ ! -d "target/llvm-cov/html" ]; then
+            echo "Error: No coverage report created in previous step."
+            exit 1
+          fi
+          cd target/llvm-cov/html && tar -czvf ../simtest_coverage_report.tgz ./
 
       - name: Upload report (simtest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
