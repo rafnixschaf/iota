@@ -3,8 +3,7 @@
 
 'use client';
 
-import { AmountBox, Box, StakeCard, StakeDialog, StakeDetailsPopup, Button } from '@/components';
-import { usePopups } from '@/hooks';
+import { AmountBox, Box, StakeCard, StakeDialog, Button, StakedDetailsDialog } from '@/components';
 import {
     ExtendedDelegatedStake,
     formatDelegatedStake,
@@ -22,8 +21,7 @@ import { useState } from 'react';
 function StakingDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
     const [isDialogStakeOpen, setIsDialogStakeOpen] = useState(false);
-
-    const { openPopup, closePopup } = usePopups();
+    const [stakedDetails, setStakedDetails] = useState<ExtendedDelegatedStake | null>(null);
     const { data: delegatedStakeData } = useGetDelegatedStake({
         address: account?.address || '',
         staleTime: DELEGATED_STAKES_QUERY_STALE_TIME,
@@ -43,8 +41,12 @@ function StakingDashboardPage(): JSX.Element {
     );
 
     const viewStakeDetails = (extendedStake: ExtendedDelegatedStake) => {
-        openPopup(<StakeDetailsPopup extendedStake={extendedStake} onClose={closePopup} />);
+        setStakedDetails(extendedStake);
     };
+    function handleCloseStakedDetails() {
+        setStakedDetails(null);
+    }
+
     function handleNewStake() {
         setIsDialogStakeOpen(true);
     }
@@ -79,6 +81,12 @@ function StakingDashboardPage(): JSX.Element {
                 <Button onClick={handleNewStake}>New Stake</Button>
             </div>
             <StakeDialog isOpen={isDialogStakeOpen} setOpen={setIsDialogStakeOpen} />;
+            {!!stakedDetails && (
+                <StakedDetailsDialog
+                    stakedDetails={stakedDetails}
+                    handleClose={handleCloseStakedDetails}
+                />
+            )}
         </>
     );
 }
