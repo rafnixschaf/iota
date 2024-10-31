@@ -37,6 +37,10 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
     steps:
+      # can be removed when actions are available on the image already
+      - name: Update Rust toolchain
+        run: rustup update stable
+
       - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # pin@v4
       - uses: bmwill/rust-cache@fb63fcd7a959767755b88b5af2f5cbf65fb8a127 # pin@v1
 
@@ -51,52 +55,43 @@ jobs:
         with:
           size: 256G
 
-      - name: Update Rust toolchain
-        run: rustup update stable
-
-      - name: Generate code coverage
+      - name: Generate code coverage (nextest)
         run: |
           cargo llvm-cov clean
           set +e
-          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest
-          if [ -d "target/llvm-cov/html" ]; then
+          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path target/nextest.lcov nextest
+          if [ -f "target/nextest.lcov" ]; then
             exit 0
           else
-            echo "Fatal Error: Failed to create coverage report."
+            echo "Fatal Error: Failed to create nextest coverage report."
             exit 1
           fi
-
-      - name: Pack report
-        run: cd target/llvm-cov/html && tar -czvf ../nextest_coverage_report.tgz ./
-
-      - name: Upload report
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        with:
-          name: nextest_coverage_report.tgz
-          path: ./target/llvm-cov/nextest_coverage_report.tgz
-          if-no-files-found: error
-          retention-days: 1
 
       - name: Generate code coverage (simtest)
         run: |
           git clean -fd
           cargo llvm-cov clean
           set +e
-          ./scripts/simtest/codecov.sh
-          if [ -d "target/llvm-cov/html" ]; then
+          ./scripts/simtest/simtest-cov.sh
+          if [ -f "target/simtest.lcov" ]; then
             exit 0
           else
-            echo "Fatal Error: Failed to create coverage report."
+            echo "Fatal Error: Failed to create simtest coverage report."
             exit 1
           fi
 
-      - name: Pack report (simtest)
-        run: cd target/llvm-cov/html && tar -czvf ../simtest_coverage_report.tgz ./
+      - name: Create report
+        run: |
+          apt install -yy lcov
+          genhtml -o target/coverage_report --branch-coverage target/nextest.lcov target/simtest.lcov
+
+      - name: Pack report
+        run: cd target && tar -czvf coverage_report.tgz ./coverage_report
 
       - name: Upload report (simtest)
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
-          name: simtest_coverage_report.tgz
-          path: ./target/llvm-cov/simtest_coverage_report.tgz
+          name: coverage_report.tgz
+          path: ./target/coverage_report.tgz
           if-no-files-found: error
           retention-days: 1
