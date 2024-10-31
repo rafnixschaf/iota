@@ -30,13 +30,14 @@ COPY Cargo.toml Cargo.lock ./
 COPY consensus consensus
 COPY crates crates
 COPY iota-execution iota-execution
-COPY narwhal narwhal
 COPY external-crates external-crates
 COPY docs docs
 
+# TODO: Remove "--mount=type=ssh" when iota-sim is public https://github.com/iotaledger/iota/issues/2149
 RUN --mount=type=ssh cargo build --profile ${PROFILE} --bin iota-graphql-rpc
-RUN mv target/$(if [ $PROFILE = "dev" ]; then echo "debug"; else echo "release";fi)/iota-graphql-rpc ./
 
+# Copy the built binary to the working directory depending on the profile, so we can copy it to the runtime image
+RUN mv target/$(if [ $PROFILE = "dev" ]; then echo "debug"; else echo "release";fi)/iota-graphql-rpc ./
 
 # Production Image
 FROM debian:bullseye-slim AS runtime

@@ -185,13 +185,10 @@ impl TransactionSponsorship {
                 to_sender_signed_transaction(txn, &accounts.account_1.initial_data.account.key)
             }
             TransactionSponsorship::Good | TransactionSponsorship::WrongGasOwner => {
-                to_sender_signed_transaction_with_multi_signers(
-                    txn,
-                    vec![
-                        &accounts.account_1.initial_data.account.key,
-                        &accounts.account_3.initial_data.account.key,
-                    ],
-                )
+                to_sender_signed_transaction_with_multi_signers(txn, vec![
+                    &accounts.account_1.initial_data.account.key,
+                    &accounts.account_3.initial_data.account.key,
+                ])
             }
         }
     }
@@ -368,7 +365,7 @@ impl RunInfo {
         let gas_budget_too_low = p2p.gas < PROTOCOL_CONFIG.base_tx_cost_fixed() * p2p.gas_price;
         let not_enough_gas = p2p.gas < p2p_success_gas(p2p.gas_price);
         let gas_price_too_low = p2p.gas_price < rgp;
-        let gas_price_too_high = p2p.gas_price >= PROTOCOL_CONFIG.max_gas_price();
+        let gas_price_too_high = p2p.gas_price > PROTOCOL_CONFIG.max_gas_price();
         let gas_price_greater_than_budget = p2p.gas_price > p2p.gas;
         let gas_units_too_low = p2p.gas_price > 0
             && p2p.gas / p2p.gas_price < INSUFFICIENT_GAS_UNITS_THRESHOLD
@@ -414,16 +411,12 @@ impl AUTransactionGen for P2PTransferGenRandomGasRandomPriceRandomSponsorship {
         };
         let sender_address = sender.initial_data.account.address;
         let kind = TransactionKind::ProgrammableTransaction(txn);
-        let tx_data = TransactionData::new_with_gas_data(
-            kind,
-            sender_address,
-            GasData {
-                payment: gas_coin_refs,
-                owner: gas_payer,
-                price: self.gas_price,
-                budget: self.gas,
-            },
-        );
+        let tx_data = TransactionData::new_with_gas_data(kind, sender_address, GasData {
+            payment: gas_coin_refs,
+            owner: gas_payer,
+            price: self.gas_price,
+            budget: self.gas,
+        });
         let signed_txn = self.sponsorship.sign_transaction(&account_triple, tx_data);
         let payer = self.sponsorship.sponsor(&mut account_triple);
         // *sender.current_balances.last().unwrap();

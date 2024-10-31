@@ -1,7 +1,8 @@
-FROM rust:1.75-bullseye  AS chef
+FROM rust:bullseye AS chef
 WORKDIR iota
 ARG GIT_REVISION
 ENV GIT_REVISION=$GIT_REVISION
+
 RUN apt-get update && apt-get install -y cmake clang
 
 FROM chef AS builder
@@ -27,10 +28,10 @@ COPY Cargo.toml Cargo.lock ./
 COPY consensus consensus
 COPY crates crates
 COPY iota-execution iota-execution
-COPY narwhal narwhal
 COPY external-crates external-crates
 COPY docs docs
 
+# TODO: Remove "--mount=type=ssh" when iota-sim is public https://github.com/iotaledger/iota/issues/2149
 RUN --mount=type=ssh cargo build --release \
     --bin iota-source-validation-service
 

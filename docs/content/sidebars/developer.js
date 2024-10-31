@@ -14,7 +14,7 @@ const developer = [
         },
         items: [
             'developer/getting-started/iota-environment',
-            'developer/getting-started/iota-install',
+            'developer/getting-started/install-iota',
             'developer/getting-started/connect',
             'developer/getting-started/local-network',
             'developer/getting-started/get-address',
@@ -26,6 +26,7 @@ const developer = [
             'developer/getting-started/publish',
             'developer/getting-started/debug',
             'developer/getting-started/client-tssdk',
+            'developer/getting-started/coffee-example',
         ],
     },
     {
@@ -52,6 +53,7 @@ const developer = [
                         items: [
                             'developer/iota-101/move-overview/package-upgrades/introduction',
                             'developer/iota-101/move-overview/package-upgrades/upgrade',
+                            'developer/iota-101/move-overview/package-upgrades/automated-address-management',
                             'developer/iota-101/move-overview/package-upgrades/custom-policies',
                         ],
                     },
@@ -156,13 +158,39 @@ const developer = [
                 },
                 items: [
                     'developer/iota-101/create-coin/regulated',
+                    'developer/iota-101/create-coin/migrate-to-coin-manager',
                     'developer/iota-101/create-coin/in-game-token',
                     'developer/iota-101/create-coin/loyalty',
                 ],
             },
-            'developer/iota-101/create-nft',
+            {
+                type:'category',
+                label: 'NFT',
+                items: [
+                    'developer/iota-101/nft/create-nft',
+                    'developer/iota-101/nft/rent-nft',
+                ]
+            },
             'developer/iota-101/using-events',
             'developer/iota-101/access-time',
+        ],
+    },
+    {
+        type: 'category',
+        label: 'Capture The Flag',
+        link: {
+            type: 'doc',
+            id: 'developer/iota-move-ctf/introduction',
+        },
+        items: [
+            'developer/iota-move-ctf/challenge_1',
+            'developer/iota-move-ctf/challenge_2',
+            'developer/iota-move-ctf/challenge_3',
+            'developer/iota-move-ctf/challenge_4',
+            'developer/iota-move-ctf/challenge_5',
+            'developer/iota-move-ctf/challenge_6',
+            'developer/iota-move-ctf/challenge_7',
+            'developer/iota-move-ctf/challenge_8',
         ],
     },
     {
@@ -207,7 +235,6 @@ const developer = [
             id: 'developer/evm-to-move/evm-to-move',
         },
         items: [
-            'developer/evm-to-move/why-move',
             'developer/evm-to-move/tooling-apis',
             'developer/evm-to-move/creating-token',
             'developer/evm-to-move/creating-nft',
@@ -261,12 +288,15 @@ const developer = [
             id: 'developer/advanced',
         },
         items: [
+            'developer/advanced/iota-repository',
+            'developer/advanced/custom-indexer',
+            'developer/advanced/onchain-randomness',
             'developer/advanced/asset-tokenization',
         ],
     },
     {
         type: 'category',
-        label: 'Migrating from IOTA/Shimmer Stardust',
+        label: 'Migrating from IOTA Stardust',
         link: {
             type: 'doc',
             id: 'developer/stardust/stardust-migration',
@@ -312,7 +342,7 @@ const developer = [
                     },
                     {
                         type: 'doc',
-                        label: 'Self-sponsor Shimmer Claiming',
+                        label: 'Self-sponsor Iota Claiming',
                         id: 'developer/stardust/claiming/self-sponsor',
                     },
                 ],
