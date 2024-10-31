@@ -20,6 +20,7 @@ cargo llvm-cov clean
 
 MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest \
   --cargo-profile simulator \
+  --workspace \
   --exclude iota-e2e-tests \
   --exclude iota-json-rpc-tests \
   --exclude iota-faucet
