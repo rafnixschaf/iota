@@ -18,7 +18,11 @@ export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
 cargo llvm-cov clean
 
-MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest --cargo-profile simulator
+MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo +nightly llvm-cov --ignore-run-fail --branch --html nextest \
+  --cargo-profile simulator \
+  -vv \
+  -E '!package(iota-e2e-tests)' \
+  -E '!package(iota-json-rpc-tests)'
 
 # remove the patch
 git checkout .cargo/config Cargo.toml Cargo.lock
