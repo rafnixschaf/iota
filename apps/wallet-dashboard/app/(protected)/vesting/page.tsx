@@ -44,9 +44,7 @@ function VestingDashboardPage(): JSX.Element {
     const { data: timelockedStakedObjects } = useGetTimelockedStakedObjects(account?.address || '');
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-    const supplyIncreaseVestingEnabled = useFeature<boolean>(
-        Feature.WalletDashboardSupplyIncreaseVesting,
-    ).value;
+    const supplyIncreaseVestingEnabled = useFeature<boolean>(Feature.SupplyIncreaseVesting).value;
 
     const timelockedMapped = mapTimelockObjects(timelockedObjects || []);
     const timelockedstakedMapped = formatDelegatedTimelockedStake(timelockedStakedObjects || []);
