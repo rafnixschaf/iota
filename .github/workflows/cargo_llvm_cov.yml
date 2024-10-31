@@ -46,10 +46,10 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@7e58f89e24a544d88f7a74c6eed8a3df3fd4c658 # pin@nextest
 
-      - name: Set Swap Space
-        uses: actionhippie/swap-space@v1
-        with:
-          size: 256G
+      # - name: Set Swap Space
+      #   uses: actionhippie/swap-space@v1
+      #   with:
+      #     size: 256G
 
       - name: Update Rust toolchain
         run: rustup update stable
