@@ -442,13 +442,13 @@ impl StoredTransaction {
         } else {
             None
         };
-        
-		let raw_effects = options
+
+        let raw_effects = options
             .show_raw_effects
             .then_some(self.raw_effects)
             .unwrap_or_default();
 
-		Ok(IotaTransactionBlockResponse {
+        Ok(IotaTransactionBlockResponse {
             digest: tx_digest,
             transaction,
             raw_transaction,
