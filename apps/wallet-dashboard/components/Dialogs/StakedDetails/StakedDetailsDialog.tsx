@@ -33,7 +33,12 @@ import {
     LoadingIndicator,
 } from '@iota/apps-ui-kit';
 import { Warning } from '@iota/ui-icons';
-import { useIotaClientQuery } from '@iota/dapp-kit';
+import { useUnstakeTransaction } from '@/hooks';
+import {
+    useCurrentAccount,
+    useIotaClientQuery,
+    useSignAndExecuteTransaction,
+} from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 interface StakeDialogProps {
     stakedDetails: ExtendedDelegatedStake;
@@ -45,6 +50,7 @@ export function StakedDetailsDialog({
     stakedDetails,
     showActiveStatus,
 }: StakeDialogProps): JSX.Element {
+    const account = useCurrentAccount();
     const totalStake = BigInt(stakedDetails?.principal || 0n);
     const validatorAddress = stakedDetails?.validatorAddress;
     const {
@@ -59,6 +65,12 @@ export function StakedDetailsDialog({
     const iotaEarned = BigInt(stakedDetails?.estimatedReward || 0n);
     const [iotaEarnedFormatted, iotaEarnedSymbol] = useFormatCoin(iotaEarned, IOTA_TYPE_ARG);
     const [totalStakeFormatted, totalStakeSymbol] = useFormatCoin(totalStake, IOTA_TYPE_ARG);
+
+    const { data: unstakeData } = useUnstakeTransaction(
+        stakedDetails.stakedIotaId,
+        account?.address || '',
+    );
+    const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     // flag if the validator is at risk of being removed from the active set
     const isAtRisk = system?.atRiskValidators.some((item) => item[0] === validatorAddress);
@@ -96,8 +108,11 @@ export function StakedDetailsDialog({
         formatAddress(validatorAddress)
     );
 
-    function handleUnstake() {
-        console.log('Unstake');
+    async function handleUnstake(): Promise<void> {
+        if (!unstakeData) return;
+        await signAndExecuteTransaction({
+            transaction: unstakeData.transaction,
+        });
     }
 
     function handleAddNewStake() {
@@ -198,7 +213,7 @@ export function StakedDetailsDialog({
                                         type={ButtonType.Primary}
                                         text="Stake"
                                         onClick={handleAddNewStake}
-                                        disabled={true} // TODO add condition
+                                        disabled
                                         fullWidth
                                     />
                                 </div>
