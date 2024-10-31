@@ -30,8 +30,8 @@ env:
   RUSTDOCFLAGS: -D warnings
 
 jobs:
-  llvm-cov-nextest:
-    name: Generate code coverage (nextest)
+  llvm-cov:
+    name: Generate code coverage
     runs-on: self-hosted
     timeout-minutes: 120
     env:
