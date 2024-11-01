@@ -135,6 +135,11 @@ function StakeDialog({
         setView(StakeDialogView.SelectValidator);
     }
 
+  const title = {
+    [View.SelectValidator]: 'Select Validator',
+    [View.EnterAmount]: 'Enter Amount',
+  };
+
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
             {view === StakeDialogView.Details && stakedDetails && (
