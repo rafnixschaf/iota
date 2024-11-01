@@ -69,7 +69,6 @@ bundled-mysql = ["mysqlclient-sys?/bundled"]
 # external dependencies
 rand.workspace = true
 serde_json.workspace = true
-serial_test = "2.0"
 
 # internal dependencies
 iota-config.workspace = true

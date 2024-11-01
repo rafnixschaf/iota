@@ -6823,7 +6823,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "serial_test",
  "simulacrum",
  "tap",
  "telemetry-subscribers",
