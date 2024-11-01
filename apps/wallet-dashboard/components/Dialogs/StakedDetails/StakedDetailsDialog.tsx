@@ -75,7 +75,7 @@ export function StakedDetailsDialog({
     // flag if the validator is at risk of being removed from the active set
     const isAtRisk = system?.atRiskValidators.some((item) => item[0] === validatorAddress);
 
-    const validatorMeta = useMemo(() => {
+    const validatorSummary = useMemo(() => {
         if (!system) return null;
 
         return (
@@ -85,15 +85,10 @@ export function StakedDetailsDialog({
         );
     }, [validatorAddress, system]);
 
-    const validatorData = useMemo(() => {
-        if (!system) return null;
-        return system.activeValidators.find((av) => av.iotaAddress === validatorAddress);
-    }, [validatorAddress, system]);
-
-    const validatorName = validatorMeta?.name || '';
-    const stakingPoolActivationEpoch = Number(validatorMeta?.stakingPoolActivationEpoch || 0);
+    const validatorName = validatorSummary?.name || '';
+    const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);
     const currentEpoch = Number(system?.epoch || 0);
-    const commission = validatorData ? Number(validatorData.commissionRate) / 100 : 0;
+    const commission = validatorSummary ? Number(validatorSummary.commissionRate) / 100 : 0;
 
     // flag as new validator if the validator was activated in the last epoch
     // for genesis validators, this will be false
