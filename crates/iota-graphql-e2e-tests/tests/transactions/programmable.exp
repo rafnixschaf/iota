@@ -803,7 +803,7 @@ Response: {
                         "json": {
                           "id": "0xa4c559f7cb00c7db5a7fe8bce053d01761626dab3c83f2d60f98dfc2775c7301",
                           "balance": {
-                            "value": "2000"
+                            "value": "299999982082400"
                           }
                         }
                       }

@@ -60,7 +60,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }
@@ -121,7 +121,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }
@@ -148,7 +148,7 @@ Response: {
               "json": {
                 "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                 "balance": {
-                  "value": "200"
+                  "value": "100"
                 }
               }
             }
@@ -240,7 +240,7 @@ Response: {
                 "json": {
                   "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                   "balance": {
-                    "value": "200"
+                    "value": "100"
                   }
                 }
               }
@@ -299,7 +299,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }
@@ -360,7 +360,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }
@@ -529,7 +529,7 @@ Response: {
               "json": {
                 "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                 "balance": {
-                  "value": "200"
+                  "value": "100"
                 }
               }
             }
@@ -685,7 +685,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }
@@ -746,7 +746,7 @@ Response: {
                           "json": {
                             "id": "0x2b68d0a52cc0275756df60bf1d5bf7e91ec6847f42717b9360266fb39285bc98",
                             "balance": {
-                              "value": "200"
+                              "value": "100"
                             }
                           }
                         }

@@ -252,6 +252,18 @@ Response: {
                 "objects": {
                   "nodes": [
                     {
+                      "version": 5,
+                      "contents": {
+                        "type": {
+                          "repr": "0xe7d29ec2a367ba8efc458d29f9207d990af05eb3c7fa1f3790bdfae5c0e33033::M1::Object"
+                        },
+                        "json": {
+                          "id": "0x00a677802b0bf668b28f4832db06fddcabbec9ed15d6ec51d349edea9429570d",
+                          "value": "2"
+                        }
+                      }
+                    },
+                    {
                       "version": 6,
                       "contents": {
                         "type": {
@@ -264,7 +276,7 @@ Response: {
                       }
                     },
                     {
-                      "version": 5,
+                      "version": 3,
                       "contents": {
                         "type": {
                           "repr": "0xdba8b85775e730f7d15abfd3066668cf163cec980587f830f70a40d86b307fa0::M1::Object"
@@ -584,6 +596,18 @@ Response: {
               },
               "json": {
                 "id": "0xcbb00d35df539f6c42065d152c9482e80068279c542d32107a63e1b2c9847c74",
+                "value": "1"
+              }
+            }
+          },
+          {
+            "version": 7,
+            "contents": {
+              "type": {
+                "repr": "0xe7d29ec2a367ba8efc458d29f9207d990af05eb3c7fa1f3790bdfae5c0e33033::M1::Object"
+              },
+              "json": {
+                "id": "0xfd22e7c9edcfa513938019f7b78f4ddedfd422cd6343b0d97fa0e8d0f8e8e986",
                 "value": "1"
               }
             }

@@ -41,6 +41,20 @@ Response: {
           {
             "name": {
               "type": {
+                "repr": "u64"
+              },
+              "data": {
+                "Number": "0"
+              },
+              "bcs": "AAAAAAAAAAA="
+            },
+            "value": {
+              "__typename": "MoveObject"
+            }
+          },
+          {
+            "name": {
+              "type": {
                 "repr": "vector<u8>"
               },
               "data": {
@@ -121,6 +135,20 @@ Response: {
           {
             "name": {
               "type": {
+                "repr": "u64"
+              },
+              "data": {
+                "Number": "0"
+              },
+              "bcs": "AAAAAAAAAAA="
+            },
+            "value": {
+              "__typename": "MoveObject"
+            }
+          },
+          {
+            "name": {
+              "type": {
                 "repr": "vector<u8>"
               },
               "data": {
@@ -187,6 +215,20 @@ Response: {
     "owner": {
       "dynamicFields": {
         "nodes": [
+          {
+            "name": {
+              "type": {
+                "repr": "u64"
+              },
+              "data": {
+                "Number": "0"
+              },
+              "bcs": "AAAAAAAAAAA="
+            },
+            "value": {
+              "__typename": "MoveObject"
+            }
+          },
           {
             "name": {
               "type": {

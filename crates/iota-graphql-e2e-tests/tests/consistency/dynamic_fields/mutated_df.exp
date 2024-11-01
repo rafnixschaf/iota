@@ -81,10 +81,10 @@ Response: {
             "cursor": "ILNWmT6DXDql9qoDV/EF3YpQ36Op/EP5ELwEEwUIZqTGAQAAAAAAAAA=",
             "node": {
               "name": {
-                "bcs": "A2RmMQ=="
+                "bcs": "A2RmMw=="
               },
               "value": {
-                "json": "df1"
+                "json": "df3"
               }
             }
           },
@@ -92,10 +92,10 @@ Response: {
             "cursor": "IOgvEDt90FUbL06dw3nbP7LEQKIVvvfIJe6ACpIHz09rAQAAAAAAAAA=",
             "node": {
               "name": {
-                "bcs": "A2RmMw=="
+                "bcs": "A2RmMQ=="
               },
               "value": {
-                "json": "df3"
+                "json": "df1"
               }
             }
           },
@@ -154,7 +154,7 @@ Contents: Test::M1::Parent {
 
 task 11, line 114:
 //# run Test::M1::mutate_df1 --sender A --args object(2,0)
-mutated: object(0,0), object(2,0), object(4,0)
+mutated: object(0,0), object(2,0), object(4,2)
 gas summary: computation_cost: 1000000, storage_cost: 4484000,  storage_rebate: 4423200, non_refundable_storage_fee: 0
 
 task 12, line 116:
@@ -204,10 +204,10 @@ Response: {
             "cursor": "ILNWmT6DXDql9qoDV/EF3YpQ36Op/EP5ELwEEwUIZqTGAgAAAAAAAAA=",
             "node": {
               "name": {
-                "bcs": "A2RmMQ=="
+                "bcs": "A2RmMw=="
               },
               "value": {
-                "json": "df1_mutated"
+                "json": "df3"
               }
             }
           },
@@ -215,10 +215,10 @@ Response: {
             "cursor": "IOgvEDt90FUbL06dw3nbP7LEQKIVvvfIJe6ACpIHz09rAgAAAAAAAAA=",
             "node": {
               "name": {
-                "bcs": "A2RmMw=="
+                "bcs": "A2RmMQ=="
               },
               "value": {
-                "json": "df3"
+                "json": "df1_mutated"
               }
             }
           },
