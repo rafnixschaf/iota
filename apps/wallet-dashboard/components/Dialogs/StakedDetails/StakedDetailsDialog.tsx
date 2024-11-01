@@ -1,36 +1,35 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
-    useGetValidatorsApy,
     ExtendedDelegatedStake,
+    formatPercentageDisplay,
     ImageIcon,
     ImageIconSize,
     useFormatCoin,
-    formatPercentageDisplay,
 } from '@iota/core';
 import {
-    Dialog,
-    DialogBody,
-    DialogContent,
-    DialogPosition,
-    Header,
+    Badge,
+    BadgeType,
     Button,
     ButtonType,
     Card,
     CardBody,
     CardImage,
     CardType,
-    Panel,
-    KeyValueInfo,
-    Badge,
-    BadgeType,
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogPosition,
     Divider,
+    Header,
     InfoBox,
     InfoBoxStyle,
     InfoBoxType,
+    KeyValueInfo,
     LoadingIndicator,
+    Panel,
 } from '@iota/apps-ui-kit';
 import { Warning } from '@iota/ui-icons';
 import { useUnstakeTransaction } from '@/hooks';
@@ -40,11 +39,14 @@ import {
     useSignAndExecuteTransaction,
 } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
+import { useValidatorInfo } from '@/hooks';
+
 interface StakeDialogProps {
     stakedDetails: ExtendedDelegatedStake;
     showActiveStatus?: boolean;
     handleClose: () => void;
 }
+
 export function StakedDetailsDialog({
     handleClose,
     stakedDetails,
@@ -53,18 +55,15 @@ export function StakedDetailsDialog({
     const account = useCurrentAccount();
     const totalStake = BigInt(stakedDetails?.principal || 0n);
     const validatorAddress = stakedDetails?.validatorAddress;
-    const {
-        data: system,
-        isPending: loadingValidators,
-        isError: errorValidators,
-    } = useIotaClientQuery('getLatestIotaSystemState');
-    const { data: rollingAverageApys } = useGetValidatorsApy();
-    const { apy, isApyApproxZero } = rollingAverageApys?.[validatorAddress] ?? {
-        apy: null,
-    };
+    const { isPending: loadingValidators, isError: errorValidators } = useIotaClientQuery(
+        'getLatestIotaSystemState',
+    );
     const iotaEarned = BigInt(stakedDetails?.estimatedReward || 0n);
     const [iotaEarnedFormatted, iotaEarnedSymbol] = useFormatCoin(iotaEarned, IOTA_TYPE_ARG);
     const [totalStakeFormatted, totalStakeSymbol] = useFormatCoin(totalStake, IOTA_TYPE_ARG);
+
+    const { name, commission, newValidator, isAtRisk, apy, isApyApproxZero } =
+        useValidatorInfo(validatorAddress);
 
     const { data: unstakeData } = useUnstakeTransaction(
         stakedDetails.stakedIotaId,
@@ -72,27 +71,6 @@ export function StakedDetailsDialog({
     );
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-    // flag if the validator is at risk of being removed from the active set
-    const isAtRisk = system?.atRiskValidators.some((item) => item[0] === validatorAddress);
-
-    const validatorSummary = useMemo(() => {
-        if (!system) return null;
-
-        return (
-            system.activeValidators.find(
-                (validator) => validator.iotaAddress === validatorAddress,
-            ) || null
-        );
-    }, [validatorAddress, system]);
-
-    const validatorName = validatorSummary?.name || '';
-    const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);
-    const currentEpoch = Number(system?.epoch || 0);
-    const commission = validatorSummary ? Number(validatorSummary.commissionRate) / 100 : 0;
-
-    // flag as new validator if the validator was activated in the last epoch
-    // for genesis validators, this will be false
-    const newValidator = currentEpoch - stakingPoolActivationEpoch <= 1 && currentEpoch !== 0;
     const subtitle = showActiveStatus ? (
         <div className="flex items-center gap-1">
             {formatAddress(validatorAddress)}
@@ -153,16 +131,12 @@ export function StakedDetailsDialog({
                                     <CardImage>
                                         <ImageIcon
                                             src={null}
-                                            label={validatorName}
-                                            fallback={validatorName}
+                                            label={name}
+                                            fallback={name}
                                             size={ImageIconSize.Large}
                                         />
                                     </CardImage>
-                                    <CardBody
-                                        title={validatorName}
-                                        subtitle={subtitle}
-                                        isTextTruncated
-                                    />
+                                    <CardBody title={name} subtitle={subtitle} isTextTruncated />
                                 </Card>
                                 <Panel hasBorder>
                                     <div className="flex flex-col gap-y-sm p-md">

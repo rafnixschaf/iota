@@ -119,28 +119,37 @@ function StakeDialog({
             });
     }
 
+    const title = {
+        [Step.SelectValidator]: 'Select Validator',
+        [Step.EnterAmount]: 'Enter Amount',
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent containerId="overlay-portal-container" position={DialogPosition.Right}>
-                <Header title="Receive" onClose={() => setOpen(false)} />
-                <DialogBody>
-                    {step === Step.SelectValidator && (
-                        <SelectValidatorView
-                            validators={validators}
-                            onSelect={handleValidatorSelect}
-                        />
-                    )}
-                    {step === Step.EnterAmount && (
-                        <EnterAmountView
-                            selectedValidator={selectedValidator}
-                            amount={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            onBack={handleBack}
-                            onStake={handleStake}
-                            isStakeDisabled={!amount}
-                        />
-                    )}
-                </DialogBody>
+                <div className="flex min-h-full flex-col">
+                    <Header title={title[step]} onClose={() => setOpen(false)} />
+                    <div className="flex w-full flex-1 [&_>div]:flex [&_>div]:w-full [&_>div]:flex-1">
+                        <DialogBody>
+                            {step === Step.SelectValidator && (
+                                <SelectValidatorView
+                                    validators={validators}
+                                    onSelect={handleValidatorSelect}
+                                />
+                            )}
+                            {step === Step.EnterAmount && (
+                                <EnterAmountView
+                                    selectedValidator={selectedValidator}
+                                    amount={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    onBack={handleBack}
+                                    onStake={handleStake}
+                                    isStakeDisabled={!amount}
+                                />
+                            )}
+                        </DialogBody>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );
