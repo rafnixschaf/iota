@@ -19,9 +19,6 @@ use pretty_assertions::assert_str_eq;
 
 use crate::examples::RpcExampleProvider;
 
-// temporarily remove api ref content for indexer methods
-// use iota_json_rpc::api::ExtendedApiOpenRpc;
-
 mod examples;
 
 #[derive(Debug, Parser, Clone, Copy, ValueEnum)]
