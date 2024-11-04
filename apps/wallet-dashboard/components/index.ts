@@ -10,7 +10,6 @@ export { default as Input } from './Input';
 export { default as VirtualList } from './VirtualList';
 export { default as ExternalImage } from './ExternalImage';
 export { default as TransactionIcon } from './TransactionIcon';
-export { default as FormInput } from '@iota/core/src/components/Inputs/FormInput';
 
 export * from './account-balance/AccountBalance';
 export * from './coins';
