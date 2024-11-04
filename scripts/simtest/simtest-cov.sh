@@ -16,13 +16,13 @@ git apply ./scripts/simtest/config-patch
 root_dir=$(git rev-parse --show-toplevel)
 export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
-# MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo llvm-cov --ignore-run-fail --branch --lcov --output-path simtest.info \
-#   nextest -vv --cargo-profile simulator
+TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
+LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
 
 MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv --cargo-profile simulator
 
 find target/llvm-cov-target -name '*.profraw' | while read file; do
-  if ! "$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata" show "$file" > /dev/null 2>&1; then
+  if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
       echo "Removing corrupted file: $file"
       rm "$file"
   fi

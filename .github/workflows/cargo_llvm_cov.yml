@@ -56,8 +56,9 @@ jobs:
 
       - name: Generate code coverage report (nextest.info)
         run: |
-          rustup component add llvm-tools --toolchain stable
-          LLVM_PROFDATA="$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
+          TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
+          rustup component add llvm-tools --toolchain "$TOOLCHAIN"
+          LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
           if [[ -x "$LLVM_PROFDATA" ]]; then
             $LLVM_PROFDATA --version
           else
@@ -83,15 +84,6 @@ jobs:
             echo "Fatal Error: Failed to create nextest coverage report."
             exit 1
           fi
-
-      - name: Upload .profraw dir (temp)
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
-        if: always()
-        with:
-          name: llvm-cov-target
-          path: ./target/llvm-cov-target
-          if-no-files-found: error
-          retention-days: 1
 
       - name: Generate code coverage report (simtest.info)
         run: |
