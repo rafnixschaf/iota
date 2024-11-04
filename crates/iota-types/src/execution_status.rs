@@ -186,7 +186,7 @@ pub enum ExecutionFailureStatus {
         "Iota Move Bytecode Verification Timeout. \
         Please run the Iota Move Verifier for more information."
     )]
-    IotaMoveVerificationTimedout,
+    IotaMoveVerificationTimeout,
 
     #[error("The shared object operation is not allowed.")]
     SharedObjectOperationNotAllowed,
@@ -280,7 +280,7 @@ pub enum PackageUpgradeError {
     #[error("New package is incompatible with previous version")]
     IncompatibleUpgrade,
     #[error("Digest in upgrade ticket and computed digest disagree")]
-    DigestDoesNotMatch { digest: [u8; 32] },
+    DigestDoesNotMatch { digest: Vec<u8> },
     #[error("Upgrade policy {policy} is not a valid upgrade policy")]
     UnknownUpgradePolicy { policy: u8 },
     #[error("Package ID {package_id} does not match package ID in upgrade ticket {ticket_id}")]

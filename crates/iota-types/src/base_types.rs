@@ -114,6 +114,9 @@ impl fmt::Display for SequenceNumber {
 
 pub type VersionNumber = SequenceNumber;
 
+/// The round number.
+pub type CommitRound = u64;
+
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Hash, Default, Debug, Serialize, Deserialize)]
 pub struct UserData(pub Option<[u8; 32]>);
 
@@ -337,16 +340,10 @@ impl MoveObjectType {
             && self.name().as_str() == "RegulatedCoinMetadata"
     }
 
-    pub fn is_coin_deny_cap(&self) -> bool {
+    pub fn is_coin_deny_cap_v1(&self) -> bool {
         self.address() == IOTA_FRAMEWORK_ADDRESS
             && self.module().as_str() == "coin"
-            && self.name().as_str() == "DenyCap"
-    }
-
-    pub fn is_coin_deny_cap_v2(&self) -> bool {
-        self.address() == IOTA_FRAMEWORK_ADDRESS
-            && self.module().as_str() == "coin"
-            && self.name().as_str() == "DenyCapV2"
+            && self.name().as_str() == "DenyCapV1"
     }
 
     pub fn is_dynamic_field(&self) -> bool {
@@ -617,6 +614,10 @@ pub struct IotaAddress(
 
 impl IotaAddress {
     pub const ZERO: Self = Self([0u8; IOTA_ADDRESS_LENGTH]);
+
+    pub fn new(bytes: [u8; IOTA_ADDRESS_LENGTH]) -> Self {
+        Self(bytes)
+    }
 
     /// Convert the address to a byte buffer.
     pub fn to_vec(&self) -> Vec<u8> {
@@ -1193,7 +1194,7 @@ impl ObjectID {
     /// Parse the ObjectID from byte array or buffer.
     pub fn from_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self, ObjectIDParseError> {
         <[u8; Self::LENGTH]>::try_from(bytes.as_ref())
-            .map_err(|_| ObjectIDParseError::TryFromSliceError)
+            .map_err(|_| ObjectIDParseError::TryFromSlice)
             .map(ObjectID::new)
     }
 
@@ -1399,7 +1400,7 @@ pub enum ObjectIDParseError {
     HexLiteralPrefixMissing,
 
     #[error("Could not convert from bytes slice")]
-    TryFromSliceError,
+    TryFromSlice,
 }
 
 impl From<ObjectID> for AccountAddress {
