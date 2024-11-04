@@ -28,7 +28,7 @@ find target/llvm-cov-target -name '*.profraw' | while read file; do
   fi
 done 
 
-cargo llvm-cov --no-run --lcov --output-path target/llvm-cov/simtest.info
+cargo llvm-cov report --lcov --output-path target/llvm-cov/simtest.info
 
 # remove the patch
 git checkout .cargo/config Cargo.toml Cargo.lock
