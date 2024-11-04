@@ -3,19 +3,25 @@
 'use client';
 
 import { VirtualList } from '@/components';
-import { useGetCurrentEpochStartTimestamp } from '@/hooks';
+import MigratePopup from '@/components/Popup/Popups/MigratePopup';
+import { useGetCurrentEpochStartTimestamp, usePopups } from '@/hooks';
 import {
     STARDUST_BASIC_OUTPUT_TYPE,
     STARDUST_NFT_OUTPUT_TYPE,
 } from '@/lib/constants/migration.constants';
 import { groupStardustObjectsByMigrationStatus } from '@/lib/utils';
+import { Button } from '@iota/apps-ui-kit';
 import { useGetAllOwnedObjects } from '@iota/core';
-import { useCurrentAccount, useIotaClientContext } from '@iota/dapp-kit';
+import { useCurrentAccount, useIotaClient, useIotaClientContext } from '@iota/dapp-kit';
 import { getNetwork, IotaObjectData } from '@iota/iota-sdk/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 function MigrationDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
     const address = account?.address || '';
+    const { openPopup, closePopup } = usePopups();
+    const queryClient = useQueryClient();
+    const iotaClient = useIotaClient();
     const { network } = useIotaClientContext();
     const { explorer } = getNetwork(network);
     const { data: currentEpochMs } = useGetCurrentEpochStartTimestamp();
@@ -45,6 +51,45 @@ function MigrationDashboardPage(): JSX.Element {
             {asset.objectId}
         </a>
     );
+
+    function handleOnSuccess(digest: string): void {
+        iotaClient
+            .waitForTransaction({
+                digest,
+            })
+            .then(() => {
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'get-all-owned-objects',
+                        account?.address,
+                        {
+                            StructType: STARDUST_BASIC_OUTPUT_TYPE,
+                        },
+                    ],
+                });
+                queryClient.invalidateQueries({
+                    queryKey: [
+                        'get-all-owned-objects',
+                        account?.address,
+                        {
+                            StructType: STARDUST_NFT_OUTPUT_TYPE,
+                        },
+                    ],
+                });
+            });
+    }
+    function openMigratePopup(): void {
+        const stardustOutputObjects = [...migratableBasicOutputs, ...migratableNftOutputs];
+        if (stardustOutputObjects.length > 0) {
+            openPopup(
+                <MigratePopup
+                    stardustOutputObjects={stardustOutputObjects}
+                    closePopup={closePopup}
+                    onSuccess={handleOnSuccess}
+                />,
+            );
+        }
+    }
 
     return (
         <div className="flex h-full w-full flex-wrap items-center justify-center space-y-4">
@@ -80,6 +125,7 @@ function MigrationDashboardPage(): JSX.Element {
                     render={virtualItem}
                 />
             </div>
+            <Button text="Migrate" onClick={openMigratePopup} />
         </div>
     );
 }
