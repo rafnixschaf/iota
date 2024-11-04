@@ -14,7 +14,7 @@ use crate::{
     error::{Error, IotaRpcResult},
 };
 
-/// Event API provides the functionality to fetch, query, or subscribe to events
+/// Defines methods to fetch, query, or subscribe to events
 /// on the Iota network.
 #[derive(Clone, Debug)]
 pub struct EventApi {
@@ -26,7 +26,7 @@ impl EventApi {
         Self { api }
     }
 
-    /// Return a stream of events, or an error upon failure.
+    /// Subscribe to receive a stream of filtered events.
     ///
     /// Subscription is only possible via WebSockets.
     /// For a list of possible event filters, see [EventFilter].
@@ -71,17 +71,15 @@ impl EventApi {
         }
     }
 
-    /// Return a list of events for the given transaction digest, or an error
-    /// upon failure.
+    /// Get a list of events for the given transaction digest.
     pub async fn get_events(&self, digest: TransactionDigest) -> IotaRpcResult<Vec<IotaEvent>> {
         Ok(self.api.http.get_events(digest).await?)
     }
 
-    /// Return a paginated response with events for the given event filter, or
-    /// an error upon failure.
+    /// Get a list of filtered events. The response is paginated and can be
+    /// ordered ascending or descending.
     ///
-    /// The ordering of the events can be set with the `descending_order`
-    /// argument. For a list of possible event filters, see [EventFilter].
+    /// For a list of possible event filters, see [EventFilter].
     pub async fn query_events(
         &self,
         query: EventFilter,
@@ -96,10 +94,10 @@ impl EventApi {
             .await?)
     }
 
-    /// Return a stream of events for the given event filter.
+    /// Get a stream of filtered events which can be ordered ascending or
+    /// descending.
     ///
-    /// The ordering of the events can be set with the `descending_order`
-    /// argument. For a list of possible event filters, see [EventFilter].
+    /// For a list of possible event filters, see [EventFilter].
     pub fn get_events_stream(
         &self,
         query: EventFilter,
