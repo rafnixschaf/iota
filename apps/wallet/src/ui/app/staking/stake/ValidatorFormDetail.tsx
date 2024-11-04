@@ -10,13 +10,13 @@ import {
     DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
     DELEGATED_STAKES_QUERY_STALE_TIME,
     useFormatCoin,
+    getStakeIotaByIotaId,
+    getTokenStakeIotaForValidator,
 } from '@iota/core';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useActiveAddress } from '../../hooks/useActiveAddress';
-import { getStakeIotaByIotaId } from '../getStakeIotaByIotaId';
-import { getTokenStakeIotaForValidator } from '../getTokenStakeIotaForValidator';
 import {
     InfoBox,
     InfoBoxStyle,

@@ -128,7 +128,12 @@ function StakeDialog({
         <Dialog open={isOpen} onOpenChange={setOpen}>
             <DialogContent containerId="overlay-portal-container" position={DialogPosition.Right}>
                 <div className="flex min-h-full flex-col">
-                    <Header title={title[step]} onClose={() => setOpen(false)} />
+                    <Header
+                        title={title[step]}
+                        onClose={() => setOpen(false)}
+                        titleCentered
+                        onBack={handleBack}
+                    />
                     <div className="flex w-full flex-1 [&_>div]:flex [&_>div]:w-full [&_>div]:flex-1">
                         <DialogBody>
                             {step === Step.SelectValidator && (

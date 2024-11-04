@@ -6,3 +6,5 @@ export * from './formatDelegatedStake';
 export * from './createStakeTransaction';
 export * from './createTimelockedUnstakeTransaction';
 export * from './createTimelockedStakeTransaction';
+export * from './getStakeIotaByIotaId';
+export * from './getTokenStakeIotaForValidator';

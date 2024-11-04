@@ -8,6 +8,7 @@ import {
     ImageIcon,
     ImageIconSize,
     useFormatCoin,
+    useValidatorInfo,
 } from '@iota/core';
 import {
     Badge,
@@ -39,7 +40,6 @@ import {
     useSignAndExecuteTransaction,
 } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useValidatorInfo } from '@/hooks';
 
 interface StakeDialogProps {
     stakedDetails: ExtendedDelegatedStake;

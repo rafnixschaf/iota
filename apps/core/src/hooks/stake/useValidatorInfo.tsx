@@ -2,13 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
 import { useIotaClientQuery } from '@iota/dapp-kit';
-import { useGetValidatorsApy } from '@iota/core';
+import { useGetValidatorsApy, useGetDelegatedStake } from '../';
+import {
+    DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
+    DELEGATED_STAKES_QUERY_STALE_TIME,
+} from '../../constants';
 
 export function useValidatorInfo(validatorAddress: string) {
     const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
     const { data: rollingAverageApys } = useGetValidatorsApy();
-
-    const currentEpoch = Number(system?.epoch || 0);
+    const { data: delegatedStake } = useGetDelegatedStake({
+        address: validatorAddress || '',
+        staleTime: DELEGATED_STAKES_QUERY_STALE_TIME,
+        refetchInterval: DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
+    });
 
     const validatorSummary = useMemo(() => {
         if (!system) return null;
@@ -19,6 +26,11 @@ export function useValidatorInfo(validatorAddress: string) {
             ) || null
         );
     }, [validatorAddress, system]);
+
+    const currentEpoch = Number(system?.epoch || 0);
+
+    //TODO: verify this is the correct validator stake balance
+    const totalValidatorStake = validatorSummary?.stakingPoolIotaBalance || 0;
 
     const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);
 
@@ -34,6 +46,8 @@ export function useValidatorInfo(validatorAddress: string) {
     };
 
     return {
+        system,
+        delegatedStake,
         validatorSummary,
         name: validatorSummary?.name || '',
         stakingPoolActivationEpoch,
@@ -42,5 +56,6 @@ export function useValidatorInfo(validatorAddress: string) {
         isAtRisk,
         apy,
         isApyApproxZero,
+        totalValidatorStake,
     };
 }

@@ -9,4 +9,4 @@ export * from './useSendCoinTransaction';
 export * from './useCreateSendAssetTransaction';
 export * from './useGetCurrentEpochStartTimestamp';
 export * from './useTimelockedUnstakeTransaction';
-export * from './useValidatorInfo';
+export * from '@iota/core/src/hooks/stake/useValidatorInfo';
