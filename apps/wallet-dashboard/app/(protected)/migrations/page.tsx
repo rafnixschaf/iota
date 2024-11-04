@@ -5,14 +5,14 @@
 import { VirtualList } from '@/components';
 import MigratePopup from '@/components/Popup/Popups/MigratePopup';
 import { useGetCurrentEpochStartTimestamp, usePopups } from '@/hooks';
+import { groupStardustObjectsByMigrationStatus } from '@/lib/utils';
+import { Button } from '@iota/apps-ui-kit';
+import { useCurrentAccount, useIotaClient, useIotaClientContext } from '@iota/dapp-kit';
 import {
     STARDUST_BASIC_OUTPUT_TYPE,
     STARDUST_NFT_OUTPUT_TYPE,
-} from '@/lib/constants/migration.constants';
-import { groupStardustObjectsByMigrationStatus } from '@/lib/utils';
-import { Button } from '@iota/apps-ui-kit';
-import { useGetAllOwnedObjects } from '@iota/core';
-import { useCurrentAccount, useIotaClient, useIotaClientContext } from '@iota/dapp-kit';
+    useGetAllOwnedObjects,
+} from '@iota/core';
 import { getNetwork, IotaObjectData } from '@iota/iota-sdk/client';
 import { useQueryClient } from '@tanstack/react-query';
 
