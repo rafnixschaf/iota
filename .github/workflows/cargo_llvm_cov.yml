@@ -73,8 +73,8 @@ jobs:
                 rm "$file"
             fi
           done 
-          cargo llvm-cov report --lcov --output-path target/llvm-cov/nextest.info
-          if [ -f "target/llvm-cov/nextest.info" ]; then
+          cargo llvm-cov report --lcov --output-path target/llvm-cov-target/nextest.info
+          if [ -f "target/llvm-cov-target/nextest.info" ]; then
             echo "Nextest coverage created."
             exit 0
           else
@@ -87,7 +87,7 @@ jobs:
           git clean -fd
           set +e
           ./scripts/simtest/simtest-cov.sh
-          if [ -f "target/llvm-cov/simtest.info" ]; then
+          if [ -f "target/llvm-cov-target/simtest.info" ]; then
             echo "Simtest coverage created."
             exit 0
           else
@@ -98,7 +98,7 @@ jobs:
       - name: Merge reports and prepare for upload
         run: |
           apt install -yy lcov
-          cd target/llvm-cov
+          cd target/llvm-cov-target
           genhtml -o coverage_report nextest.info simtest.info
           tar -czvf coverage_report.tgz ./coverage_report
 
@@ -109,6 +109,6 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
           name: coverage_report
-          path: ./target/llvm-cov/coverage_report
+          path: ./target/llvm-cov-target/coverage_report
           if-no-files-found: error
           retention-days: 30
