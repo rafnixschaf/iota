@@ -2,6 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './KioskClientProvider';
-export * from './CoinSelector';
 
-export * from './Inputs';
+export * from './coin';
+export * from './input';

@@ -1,22 +1,19 @@
-import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { filterAndSortTokenBalances } from '../utils';
-import { COINS_QUERY_REFETCH_INTERVAL, COINS_QUERY_STALE_TIME } from '../constants';
-import { LoadingIndicator, Select, SelectOption } from '@iota/apps-ui-kit';
+import { Select, SelectOption } from '@iota/apps-ui-kit';
 import { CoinBalance } from '@iota/iota-sdk/client';
-import { useFormatCoin } from '../hooks';
-import { IotaLogoMark } from '@iota/ui-icons';
+import { useFormatCoin } from '../../hooks';
+import { CoinIcon } from './CoinIcon';
+import { ImageIconSize } from '../icon';
 
 export function CoinSelector({
     activeCoinType = IOTA_TYPE_ARG,
-    coins = [],
+    coins,
     onClick,
 }: {
     activeCoinType: string;
     coins: CoinBalance[];
     onClick: (coinType: string) => void;
 }) {
-
     const activeCoin = coins?.find(({ coinType }) => coinType === activeCoinType) ?? coins?.[0];
     const initialValue = activeCoin?.coinType;
     const coinsOptions: SelectOption[] =
@@ -45,8 +42,7 @@ function CoinSelectOption({ coin: { coinType, totalBalance } }: { coin: CoinBala
         <div className="flex w-full flex-row items-center justify-between">
             <div className="flex flex-row items-center gap-x-md">
                 <div className="flex h-6 w-6 items-center justify-center">
-                    {/* <CoinIcon size={ImageIconSize.Small} coinType={coinType} rounded /> */}
-                    <IotaLogoMark className="h-full w-full" />
+                    <CoinIcon size={ImageIconSize.Small} coinType={coinType} rounded />
                 </div>
                 <span className="text-body-lg text-neutral-10">
                     {isIota ? (coinMeta?.name || '').toUpperCase() : coinMeta?.name || symbol}

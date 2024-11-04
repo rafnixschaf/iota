@@ -32,7 +32,7 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "../core/src/components/Inputs/FormInput.tsx"
+        "../core/src/components/input/FormInput.tsx"
     ],
     "exclude": ["node_modules"]
 }
