@@ -57,7 +57,7 @@ jobs:
       - name: Generate code coverage report (nextest.info)
         run: |
           cargo llvm-cov clean
-          LLVM_PROFDATA="$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
+          LLVM_PROFDATA="$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
           if [[ -x "$LLVM_PROFDATA" ]]; then
             $LLVM_PROFDATA --version
           else
@@ -65,7 +65,7 @@ jobs:
             exit 1
           fi
           set +e
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
+          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --no-report nextest -vv
           find target/llvm-cov-target -name '*.profraw' | while read file; do
             if ! $LLVM_PROFDATA show "$file" > /dev/null 2>&1; then
                 echo "Removing corrupted file: $file"
