@@ -1801,6 +1801,9 @@ importers:
       '@iota/iota-sdk':
         specifier: workspace:*
         version: link:../typescript
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
     devDependencies:
       '@iota/build-scripts':
         specifier: workspace:*
