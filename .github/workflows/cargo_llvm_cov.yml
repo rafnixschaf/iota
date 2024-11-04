@@ -61,12 +61,12 @@ jobs:
           set +e
           IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
           find target/llvm-cov-target -name '*.profraw' | while read file; do
-            if ! llvm-profdata show "$file" > /dev/null 2>&1; then
+            if ! "$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata" show "$file" > /dev/null 2>&1; then
                 echo "Removing corrupted file: $file"
                 rm "$file"
             fi
           done 
-          cargo llvm-cov --no-run --lcov --output-path target/llvm-cov/nextest.info
+          cargo llvm-cov --report --lcov --output-path target/llvm-cov/nextest.info
           if [ -f "target/llvm-cov/nextest.info" ]; then
             echo "Nextest coverage created."
             exit 0
@@ -92,9 +92,10 @@ jobs:
       - name: Merge reports and prepare for upload
         run: |
           apt install -yy lcov
-          #genhtml -o target/llvm-cov/coverage_report --branch-coverage target/llvm-cov/nextest.info target/llvm-cov/simtest.info
-          genhtml -o target/llvm-cov/coverage_report target/llvm-cov/nextest.info target/llvm-cov/simtest.info
-          cd target/llvm-cov && tar -czvf coverage_report.tgz ./coverage_report
+          cd target/llvm-cov
+          #genhtml -o coverage_report --branch-coverage nextest.info simtest.info
+          genhtml -o coverage_report nextest.info simtest.info
+          tar -czvf coverage_report.tgz ./coverage_report
 
       - name: Upload
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
