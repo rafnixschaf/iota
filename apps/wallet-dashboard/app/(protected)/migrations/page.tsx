@@ -4,12 +4,12 @@
 
 import { VirtualList } from '@/components';
 import { useGetCurrentEpochStartTimestamp } from '@/hooks';
+import { groupStardustObjectsByMigrationStatus } from '@/lib/utils';
 import {
     STARDUST_BASIC_OUTPUT_TYPE,
     STARDUST_NFT_OUTPUT_TYPE,
-} from '@/lib/constants/migration.constants';
-import { groupStardustObjectsByMigrationStatus } from '@/lib/utils';
-import { useGetAllOwnedObjects } from '@iota/core';
+    useGetAllOwnedObjects,
+} from '@iota/core';
 import { useCurrentAccount, useIotaClientContext } from '@iota/dapp-kit';
 import { getNetwork, IotaObjectData } from '@iota/iota-sdk/client';
 
