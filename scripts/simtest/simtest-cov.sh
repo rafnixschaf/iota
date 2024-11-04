@@ -16,8 +16,18 @@ git apply ./scripts/simtest/config-patch
 root_dir=$(git rev-parse --show-toplevel)
 export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
-MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path target/llvm-cov/simtest.lcov \
-  nextest --cargo-profile simulator
+# MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path simtest.info \
+#   nextest -vv --cargo-profile simulator
+
+MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv --cargo-profile simulator
+
+find target/llvm-cov-target -name '*.profraw' | while read file; do
+  if ! llvm-profdata show "$file" > /dev/null 2>&1; then
+      echo "Removing corrupted file: $file"
+      rm "$file"
+  fi
+
+cargo llvm-cov --no-run --lcov --output-path target/llvm-cov/simtest.info
 
 # remove the patch
 git checkout .cargo/config Cargo.toml Cargo.lock

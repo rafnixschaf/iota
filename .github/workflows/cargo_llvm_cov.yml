@@ -55,40 +55,48 @@ jobs:
         with:
           size: 256G
 
-      - name: Generate code coverage (nextest)
+      - name: Generate code coverage report (nextest.info)
         run: |
           cargo llvm-cov clean
           set +e
-          IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov --ignore-run-fail --branch --lcov --output-path target/llvm-cov/nextest.lcov nextest
-          if [ -f "target/llvm-cov/nextest.lcov" ]; then
+          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
+          find target/llvm-cov-target -name '*.profraw' | while read file; do
+            if ! llvm-profdata show "$file" > /dev/null 2>&1; then
+                echo "Removing corrupted file: $file"
+                rm "$file"
+            fi
+          done 
+          cargo llvm-cov --no-run --lcov --output-path target/llvm-cov/nextest.info
+          if [ -f "target/llvm-cov/nextest.info" ]; then
+            echo "Nextest coverage created."
             exit 0
           else
             echo "Fatal Error: Failed to create nextest coverage report."
             exit 1
           fi
 
-      - name: Generate code coverage (simtest)
+      - name: Generate code coverage report (simtest.info)
         run: |
           git clean -fd
           cargo llvm-cov clean
           set +e
           ./scripts/simtest/simtest-cov.sh
-          if [ -f "target/llvm-cov/simtest.lcov" ]; then
+          if [ -f "target/llvm-cov/simtest.info" ]; then
+            echo "Simtest coverage created."
             exit 0
           else
             echo "Fatal Error: Failed to create simtest coverage report."
             exit 1
           fi
 
-      - name: Create report
+      - name: Merge reports and prepare for upload
         run: |
           apt install -yy lcov
-          genhtml -o target/llvm-cov/coverage_report --branch-coverage target/llvm-cov/nextest.lcov target/llvm-cov/simtest.lcov
+          #genhtml -o target/llvm-cov/coverage_report --branch-coverage target/llvm-cov/nextest.info target/llvm-cov/simtest.info
+          genhtml -o target/llvm-cov/coverage_report target/llvm-cov/nextest.info target/llvm-cov/simtest.info
+          cd target/llvm-cov && tar -czvf coverage_report.tgz ./coverage_report
 
-      - name: Pack report
-        run: cd target/llvm-cov && tar -czvf coverage_report.tgz ./coverage_report
-
-      - name: Upload report
+      - name: Upload
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
           name: coverage_report.tgz
