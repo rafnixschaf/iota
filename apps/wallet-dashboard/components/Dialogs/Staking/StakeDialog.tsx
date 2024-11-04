@@ -146,6 +146,7 @@ function StakeDialog({
                                 <EnterAmountView
                                     selectedValidator={selectedValidator}
                                     amount={amount}
+                                    gasBudget={newStakeData?.gasBudget}
                                     onChange={(e) => setAmount(e.target.value)}
                                     onBack={handleBack}
                                     onStake={handleStake}
