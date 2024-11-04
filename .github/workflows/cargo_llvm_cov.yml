@@ -56,6 +56,7 @@ jobs:
 
       - name: Generate code coverage report (nextest.info)
         run: |
+          cargo llvm-cov clean
           TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
@@ -84,6 +85,7 @@ jobs:
 
       - name: Generate code coverage report (simtest.info)
         run: |
+          cargo llvm-cov clean
           git clean -fd
           set +e
           ./scripts/simtest/simtest-cov.sh
