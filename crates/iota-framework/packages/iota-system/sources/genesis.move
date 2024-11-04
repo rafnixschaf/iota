@@ -7,6 +7,7 @@ module iota_system::genesis {
     use std::string::String;
 
     use iota::balance;
+    use iota::display::SystemDisplayCap;
     use iota::iota::{Self, IotaTreasuryCap};
     use iota::timelock::SystemTimelockCap;
     use iota_system::iota_system;
@@ -86,6 +87,7 @@ module iota_system::genesis {
         token_distribution_schedule: TokenDistributionSchedule,
         timelock_genesis_label: Option<String>,
         system_timelock_cap: SystemTimelockCap,
+        system_display_cap: SystemDisplayCap,
         ctx: &mut TxContext,
     ) {
         // Ensure this is only called at genesis
@@ -185,6 +187,7 @@ module iota_system::genesis {
             genesis_chain_parameters.chain_start_timestamp_ms,
             system_parameters,
             system_timelock_cap,
+            system_display_cap,
             ctx,
         );
     }

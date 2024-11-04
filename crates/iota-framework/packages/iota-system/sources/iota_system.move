@@ -43,6 +43,7 @@ module iota_system::iota_system {
     use iota::balance::Balance;
 
     use iota::coin::Coin;
+    use iota::display::SystemDisplayCap;
     use iota_system::staking_pool::StakedIota;
     use iota::iota::{IOTA, IotaTreasuryCap};
     use iota::table::Table;
@@ -67,6 +68,7 @@ module iota_system::iota_system {
     const EWrongInnerVersion: u64 = 1;
 
     const SYSTEM_TIMELOCK_CAP_DF_KEY: vector<u8> = b"sys_timelock_cap";
+    const SYSTEM_DISPLAY_CAP_DF_KEY: vector<u8> = b"sys_display_cap";
 
     // ==== functions that can only be called by genesis ====
 
@@ -81,6 +83,7 @@ module iota_system::iota_system {
         epoch_start_timestamp_ms: u64,
         parameters: SystemParametersV1,
         system_timelock_cap: SystemTimelockCap,
+        system_display_cap: SystemDisplayCap,
         ctx: &mut TxContext,
     ) {
         let system_state = iota_system_state_inner::create(
@@ -99,6 +102,7 @@ module iota_system::iota_system {
         };
         dynamic_field::add(&mut self.id, version, system_state);
         dynamic_field::add(&mut self.id, SYSTEM_TIMELOCK_CAP_DF_KEY, system_timelock_cap);
+        dynamic_field::add(&mut self.id, SYSTEM_DISPLAY_CAP_DF_KEY, system_display_cap);
         transfer::share_object(self);
     }
 
@@ -566,6 +570,13 @@ module iota_system::iota_system {
         dynamic_field::borrow(
             &self.id,
             SYSTEM_TIMELOCK_CAP_DF_KEY
+        )
+    }
+
+    public(package) fun load_system_display_cap(self: &IotaSystemState): &SystemDisplayCap {
+        dynamic_field::borrow(
+            &self.id,
+            SYSTEM_DISPLAY_CAP_DF_KEY
         )
     }
 

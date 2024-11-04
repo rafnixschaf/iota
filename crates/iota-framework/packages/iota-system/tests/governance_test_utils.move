@@ -6,6 +6,7 @@
 module iota_system::governance_test_utils {
     use iota::address;
     use iota::balance;
+    use iota::display;
     use iota::iota::{Self, IOTA};
     use iota::coin::{Self, Coin};
     use iota_system::staking_pool::{StakedIota, StakingPoolV1};
@@ -95,6 +96,7 @@ module iota_system::governance_test_utils {
             0,   // chain_start_timestamp_ms
             system_parameters,
             timelock::new_system_timelock_cap_for_testing(),
+            display::new_system_display_cap_for_testing(),
             ctx,
         )
     }
