@@ -9,11 +9,13 @@ import {
     COINS_QUERY_REFETCH_INTERVAL,
     COINS_QUERY_STALE_TIME,
     CoinSelector,
+    createValidationSchemaSendTokenForm,
     filterAndSortTokenBalances,
     parseAmount,
     SendTokenFormInput,
     useCoinMetadata,
     useFormatCoin,
+    useGasBudgetEstimation,
     useGetAllCoins,
 } from '@iota/core';
 import {
@@ -25,13 +27,15 @@ import {
     InfoBoxStyle,
     LoadingIndicator,
 } from '@iota/apps-ui-kit';
-import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
+import { useIotaClient, useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, FieldInputProps, Form, Formik } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
+import { useMemo } from 'react';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
+    activeAddress: string;
     gasBudget: string;
     setFormData: React.Dispatch<React.SetStateAction<FormDataValues>>;
     setSelectedCoin: React.Dispatch<React.SetStateAction<CoinBalance>>;
@@ -47,27 +51,25 @@ function getBalanceFromCoinStruct(coin: CoinStruct): bigint {
 
 function EnterValuesFormView({
     coin,
-    gasBudget,
+    activeAddress,
     setFormData,
     setSelectedCoin,
     onNext,
 }: EnterValuesFormProps): JSX.Element {
-    const account = useCurrentAccount();
-    const activeAddress = account?.address;
-
+    const client = useIotaClient();
     // Get all coins of the type
     const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(
         coin.coinType,
-        activeAddress!,
+        activeAddress,
     );
     const { data: iotaCoinsData, isPending: iotaCoinsIsPending } = useGetAllCoins(
         IOTA_TYPE_ARG,
-        activeAddress!,
+        activeAddress,
     );
 
     const { data: coinsBalance, isPending: coinsBalanceIsPending } = useIotaClientQuery(
         'getAllBalances',
-        { owner: activeAddress! },
+        { owner: activeAddress },
         {
             enabled: !!activeAddress,
             refetchInterval: COINS_QUERY_REFETCH_INTERVAL,
@@ -86,9 +88,14 @@ function EnterValuesFormView({
         coin.coinType,
         CoinFormat.FULL,
     );
-
+    
     const coinMetadata = useCoinMetadata(coin.coinType);
     const coinDecimals = coinMetadata.data?.decimals ?? 0;
+    
+    const validationSchemaStepOne = useMemo(
+        () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
+        [client, coinBalance, symbol, coinDecimals],
+    );
 
     const formattedTokenBalance = tokenBalance.replace(/,/g, '');
     const initAmountBig = parseAmount('', coinDecimals);
@@ -141,7 +148,7 @@ function EnterValuesFormView({
                         coin.coinType === IOTA_TYPE_ARG,
                     gasBudgetEst: '',
                 }}
-                // validationSchema={validationSchemaStepOne}
+                validationSchema={validationSchemaStepOne}
                 enableReinitialize
                 validateOnChange={false}
                 validateOnBlur={false}
@@ -195,27 +202,38 @@ function EnterValuesFormView({
                                         />
                                     )}
 
-                                    <Field
-                                        name="amount"
-                                        render={({ field }: { field: FieldInputProps<string> }) => (
-                                            <SendTokenFormInput
-                                                gasBudgetEstimation={gasBudget}
-                                                symbol={symbol}
-                                                coins={coins}
-                                                values={values}
-                                                onActionClick={onMaxTokenButtonClick}
-                                                isActionButtonDisabled={isMaxActionDisabled}
-                                                value={field.value}
-                                                onChange={(value) => setFieldValue('amount', value)}
-                                                onBlur={handleBlur}
-                                                errorMessage={
-                                                    touched.amount && errors.amount
-                                                        ? errors.amount
-                                                        : undefined
-                                                }
-                                            />
-                                        )}
-                                    />
+                                    <Field name="amount">
+                                        {({ field }: { field: FieldInputProps<string> }) => {
+
+                                            // TODO: needs to be updated in fields value
+                                            const gasBudgetEstimation = useGasBudgetEstimation({
+                                                coinDecimals,
+                                                coins: coins ?? [],
+                                                activeAddress,
+                                                to: values.to,
+                                                amount: values.amount,
+                                                isPayAllIota: values.isPayAllIota,
+                                            });
+
+                                            return (
+                                                <SendTokenFormInput
+                                                    gasBudgetEstimation={gasBudgetEstimation}
+                                                    symbol={symbol}
+                                                    coins={coins}
+                                                    values={values}
+                                                    onActionClick={onMaxTokenButtonClick}
+                                                    isActionButtonDisabled={isMaxActionDisabled}
+                                                    value={field.value}
+                                                    onChange={(value) => setFieldValue('amount', value)}
+                                                    onBlur={handleBlur}
+                                                    errorMessage={
+                                                        touched.amount && errors.amount
+                                                            ? errors.amount
+                                                            : undefined
+                                                    }
+                                                />
+                                        )}}
+                                    </Field>
 
                                     <Field
                                         component={AddressInput}

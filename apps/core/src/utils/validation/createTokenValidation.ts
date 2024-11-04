@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { formatBalance } from '@iota/core';
 import BigNumber from 'bignumber.js';
 import * as Yup from 'yup';
+import { formatBalance } from '../../hooks';
 
 export function createTokenValidation(coinBalance: bigint, coinSymbol: string, decimals: number) {
     return Yup.mixed<BigNumber>()

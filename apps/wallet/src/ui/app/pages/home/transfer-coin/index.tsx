@@ -167,8 +167,10 @@ function TransferCoinPage() {
                             activeCoinType={coinType}
                             coins={coinsBalance || []}
                             onClick={(coinType) => {
-                                setFormData(undefined)
-                                navigate(`/send?${new URLSearchParams({ type: coinType }).toString()}`);
+                                setFormData(undefined);
+                                navigate(
+                                    `/send?${new URLSearchParams({ type: coinType }).toString()}`,
+                                );
                             }}
                         />
 

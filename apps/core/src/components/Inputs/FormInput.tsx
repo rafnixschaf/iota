@@ -30,6 +30,7 @@ export default function FormInput({
     name,
     type,
     placeholder,
+    caption,
     amountCounter,
     label,
     suffix,
@@ -56,6 +57,7 @@ export default function FormInput({
             name={name}
             value={value}
             type={type}
+            caption={caption}
             disabled={isInputDisabled}
             placeholder={placeholder}
             onBlur={onBlur}

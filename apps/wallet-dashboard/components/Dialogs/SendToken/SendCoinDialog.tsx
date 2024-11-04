@@ -101,9 +101,10 @@ function SendCoinDialog({
                         {step === FormStep.EnterValues && (
                             <EnterValuesFormView
                                 coin={selectedCoin}
+                                activeAddress={activeAddress}
+                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                                 setSelectedCoin={setSelectedCoin}
                                 onNext={onNext}
-                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                                 setFormData={setFormData}
                             />
                         )}

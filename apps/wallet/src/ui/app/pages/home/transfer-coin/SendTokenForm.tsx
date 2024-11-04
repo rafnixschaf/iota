@@ -4,25 +4,23 @@
 
 import { useActiveAddress } from '_app/hooks/useActiveAddress';
 import { Loading } from '_components';
-import { GAS_SYMBOL } from '_src/ui/app/redux/slices/iota-objects/Coin';
 import {
     useGetAllCoins,
     CoinFormat,
-    createTokenTransferTransaction,
     useCoinMetadata,
     useFormatCoin,
     parseAmount,
     AddressInput,
     SendTokenFormInput,
+    useGasBudgetEstimation,
+    createValidationSchemaSendTokenForm,
 } from '@iota/core';
 import { useIotaClient } from '@iota/dapp-kit';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useQuery } from '@tanstack/react-query';
 import { Field, FieldInputProps, Form, Formik, useFormikContext } from 'formik';
 import { useEffect, useMemo } from 'react';
 
-import { createValidationSchemaStepOne } from './validation';
 import {
     InfoBox,
     InfoBoxStyle,
@@ -65,61 +63,6 @@ function getBalanceFromCoinStruct(coin: CoinStruct): bigint {
     return BigInt(coin.balance);
 }
 
-function useGasBudgetEstimation({
-    coinDecimals,
-    coins,
-}: {
-    coinDecimals: number;
-    coins: CoinStruct[];
-}) {
-    const activeAddress = useActiveAddress();
-    const { values, setFieldValue } = useFormikContext<FormValues>();
-
-    const client = useIotaClient();
-    const { data: gasBudget } = useQuery({
-        // eslint-disable-next-line @tanstack/query/exhaustive-deps
-        queryKey: [
-            'transaction-gas-budget-estimate',
-            {
-                to: values.to,
-                amount: values.amount,
-                coins,
-                activeAddress,
-                coinDecimals,
-            },
-        ],
-        queryFn: async () => {
-            if (!values.amount || !values.to || !coins || !activeAddress) {
-                return null;
-            }
-
-            const to = values.to;
-
-            const tx = createTokenTransferTransaction({
-                to,
-                amount: values.amount,
-                coinType: IOTA_TYPE_ARG,
-                coinDecimals,
-                isPayAllIota: values.isPayAllIota,
-                coins,
-            });
-
-            tx.setSender(activeAddress);
-            await tx.build({ client });
-            return tx.blockData.gasConfig.budget;
-        },
-    });
-
-    const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-    // gasBudgetEstimation should change when the amount above changes
-
-    useEffect(() => {
-        setFieldValue('gasBudgetEst', formattedGas, false);
-    }, [formattedGas, setFieldValue, values.amount]);
-
-    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
-}
-
 // Set the initial gasEstimation from initial amount
 // base on the input amount field update the gasEstimation value
 // Separating the gasEstimation from the formik context to access the input amount value and update the gasEstimation value
@@ -147,11 +90,6 @@ export function SendTokenForm({
     const coinMetadata = useCoinMetadata(coinType);
     const coinDecimals = coinMetadata.data?.decimals ?? 0;
 
-    const gasBudgetEstimation = useGasBudgetEstimation({
-        coinDecimals: coinDecimals,
-        coins: coins ?? [],
-    });
-
     const [tokenBalance, symbol, queryResult] = useFormatCoin(
         coinBalance,
         coinType,
@@ -159,7 +97,7 @@ export function SendTokenForm({
     );
 
     const validationSchemaStepOne = useMemo(
-        () => createValidationSchemaStepOne(coinBalance, symbol, coinDecimals),
+        () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
         [client, coinBalance, symbol, coinDecimals],
     );
 
@@ -209,7 +147,16 @@ export function SendTokenForm({
                 validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
-                {({ isValid, isSubmitting, setFieldValue, values, submitForm, handleBlur, touched, errors }) => {
+                {({
+                    isValid,
+                    isSubmitting,
+                    setFieldValue,
+                    values,
+                    submitForm,
+                    handleBlur,
+                    touched,
+                    errors,
+                }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
                         coinType === IOTA_TYPE_ARG;
@@ -248,9 +195,18 @@ export function SendTokenForm({
                                         />
                                     ) : null}
 
-                                    <Field
-                                        name="amount"
-                                        render={({ field }: { field: FieldInputProps<string> }) => (
+                                    <Field name="amount">
+                                        {({ field }: { field: FieldInputProps<string> }) => {
+                                            // TODO: needs to be updated in values
+                                            const gasBudgetEstimation = useGasBudgetEstimation({
+                                                coinDecimals: coinDecimals,
+                                                coins: coins ?? [],
+                                                activeAddress: activeAddress ?? '',
+                                                to: values.to,
+                                                amount: values.amount,
+                                                isPayAllIota: values.isPayAllIota,
+                                            });
+                                            return (
                                             <SendTokenFormInput
                                                 gasBudgetEstimation={gasBudgetEstimation}
                                                 symbol={symbol}
@@ -267,8 +223,8 @@ export function SendTokenForm({
                                                         : undefined
                                                 }
                                             />
-                                        )}
-                                    />
+                                        )}}
+                                    </Field>
                                     <Field
                                         component={AddressInput}
                                         allowNegative={false}

@@ -4,4 +4,4 @@
 export * from './KioskClientProvider';
 
 export * from './coin';
-export * from './input';
+export * from './Inputs';
