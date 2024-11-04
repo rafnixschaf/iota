@@ -67,10 +67,13 @@ jobs:
           set +e
           IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
           find target/llvm-cov-target -name '*.profraw' | while read file; do
-            if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
-                echo "Removing corrupted file: $file"
-                rm "$file"
-            fi
+            # TEMP
+            echo "Checking $file"
+            "$LLVM_PROFDATA" show "$file"
+            # if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
+            #     echo "Removing corrupted file: $file"
+            #     rm "$file"
+            # fi
           done 
           cargo llvm-cov report --lcov --output-path target/llvm-cov/nextest.info
           if [ -f "target/llvm-cov/nextest.info" ]; then
@@ -80,6 +83,15 @@ jobs:
             echo "Fatal Error: Failed to create nextest coverage report."
             exit 1
           fi
+
+      - name: Upload .profraw dir (temp)
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
+        with:
+          name: llvm-cov-target
+          path: ./target/llvm-cov-target
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Generate code coverage report (simtest.info)
         run: |
@@ -102,10 +114,13 @@ jobs:
           genhtml -o coverage_report nextest.info simtest.info
           tar -czvf coverage_report.tgz ./coverage_report
 
-      - name: Upload
+      # TODO
+      #- name: Update coverage webpage
+
+      - name: Upload backup
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
-          name: coverage_report.tgz
-          path: ./target/llvm-cov/coverage_report.tgz
+          name: coverage_report
+          path: ./target/llvm-cov/coverage_report
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 30
