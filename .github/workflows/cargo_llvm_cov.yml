@@ -97,7 +97,7 @@ jobs:
       - name: Create combined html report (report.tgz)
         run: |
           if ! command -v lcov &> /dev/null; then 
-            apt install -y lcov 
+            sudo apt-get install -y lcov 
           fi
           cd target || exit 1
           if [ -d "report" ]; then
