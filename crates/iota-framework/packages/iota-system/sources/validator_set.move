@@ -341,8 +341,7 @@ module iota_system::validator_set {
         // punished.
         let slashed_validators = compute_slashed_validators(self, *validator_report_records);
 
-        // Compute the adjusted amounts of stake each validator should get given the tallying rule
-        // reward adjustments we computed before.
+        // Compute the adjusted amounts of stake each validator should get according to the tallying rule.
         // `compute_adjusted_reward_distribution` must be called before `distribute_reward` and `adjust_stake_and_gas_price` to
         // make sure we are using the current epoch's stake information to compute reward distribution.
         let adjusted_staking_reward_amounts = compute_adjusted_reward_distribution(
