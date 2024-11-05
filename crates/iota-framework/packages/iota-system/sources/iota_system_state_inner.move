@@ -442,6 +442,31 @@ module iota_system::iota_system_state_inner {
         }
     }
 
+    /// Add an object with the specified key to the extra fields collection.
+    public(package) fun add_extra_field<K: copy + drop + store, V: store>(
+        self: &mut IotaSystemStateV1,
+        key: K,
+        value: V,
+    ) {
+        self.extra_fields.add(key, value);
+    }
+
+    /// Immutable borrows the value associated with the key in the extra fields.
+    public(package) fun borrow_extra_field<K: copy + drop + store, V: store>(
+        self: &IotaSystemStateV1,
+        key: K,
+    ): &V {
+        self.extra_fields.borrow(key)
+    }
+
+    /// Mutable borrows the value associated with the key in the extra fields.
+    public(package) fun borrow_extra_field_mut<K: copy + drop + store, V: store>(
+        self: &mut IotaSystemStateV1,
+        key: K,
+    ): &mut V {
+        self.extra_fields.borrow_mut(key)
+    }
+
     // ==== validator metadata management functions ====
 
     /// Create a new `UnverifiedValidatorOperationCap`, transfer it to the

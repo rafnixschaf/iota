@@ -500,6 +500,39 @@ module iota_system::iota_system {
         self.active_validator_addresses()
     }
 
+    /// Returns the IOTA system admin capability reference.
+    public(package) fun load_iota_system_admin_cap(self: &mut IotaSystemState): &IotaSystemAdminCap {
+        self.load_system_state().iota_system_admin_cap()
+    }
+
+    /// Add an object with the specified key to the extra fields collection.
+    public(package) fun add_extra_field<K: copy + drop + store, V: store>(
+        wrapper: &mut IotaSystemState,
+        key: K,
+        value: V,
+    ) {
+        let self = load_system_state_mut(wrapper);
+        self.add_extra_field(key, value);
+    }
+
+    /// Immutable borrows the value associated with the key in the extra fields.
+    public(package) fun borrow_extra_field<K: copy + drop + store, V: store>(
+        wrapper: &mut IotaSystemState,
+        key: K,
+    ): &V {
+        let self = load_system_state(wrapper);
+        self.borrow_extra_field(key)
+    }
+
+    /// Mutable borrows the value associated with the key in the extra fields.
+    public(package) fun borrow_extra_field_mut<K: copy + drop + store, V: store>(
+        wrapper: &mut IotaSystemState,
+        key: K,
+    ): &mut V {
+        let self = load_system_state_mut(wrapper);
+        self.borrow_extra_field_mut(key)
+    }
+
     #[allow(unused_function)]
     /// This function should be called at the end of an epoch, and advances the system to the next epoch.
     /// It does the following things:
@@ -558,10 +591,6 @@ module iota_system::iota_system {
         );
         assert!(inner.system_state_version() == self.version, EWrongInnerVersion);
         inner
-    }
-
-    public(package) fun load_iota_system_admin_cap(self: &mut IotaSystemState): &IotaSystemAdminCap {
-        self.load_system_state().iota_system_admin_cap()
     }
 
     #[allow(unused_function)]

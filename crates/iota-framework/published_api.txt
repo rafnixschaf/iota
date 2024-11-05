@@ -673,6 +673,15 @@ report_validator_impl
 undo_report_validator_impl
 	fun
 	0x3::iota_system_state_inner
+add_extra_field
+	public(package) fun
+	0x3::iota_system_state_inner
+borrow_extra_field
+	public(package) fun
+	0x3::iota_system_state_inner
+borrow_extra_field_mut
+	public(package) fun
+	0x3::iota_system_state_inner
 rotate_operation_cap
 	public(package) fun
 	0x3::iota_system_state_inner
@@ -889,6 +898,18 @@ pool_exchange_rates
 active_validator_addresses
 	public fun
 	0x3::iota_system
+load_iota_system_admin_cap
+	public(package) fun
+	0x3::iota_system
+add_extra_field
+	public(package) fun
+	0x3::iota_system
+borrow_extra_field
+	public(package) fun
+	0x3::iota_system
+borrow_extra_field_mut
+	public(package) fun
+	0x3::iota_system
 advance_epoch
 	fun
 	0x3::iota_system
@@ -900,9 +921,6 @@ load_system_state_mut
 	0x3::iota_system
 load_inner_maybe_upgrade
 	fun
-	0x3::iota_system
-load_iota_system_admin_cap
-	public(package) fun
 	0x3::iota_system
 validator_voting_powers
 	fun
@@ -1005,6 +1023,18 @@ system_new
 	0x3::iota_system_display
 system_new_with_fields
 	public(package) fun
+	0x3::iota_system_display
+add_display_object
+	public(package) fun
+	0x3::iota_system_display
+borrow_display_object
+	public(package) fun
+	0x3::iota_system_display
+borrow_display_object_mut
+	public(package) fun
+	0x3::iota_system_display
+display_object_key
+	fun
 	0x3::iota_system_display
 secp256k1_ecrecover
 	public fun
