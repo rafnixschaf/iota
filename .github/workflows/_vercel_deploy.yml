@@ -111,3 +111,5 @@ jobs:
       - wallet-dashboard-prod
       - apps-backend-preview
       - apps-backend-prod
+    steps:
+      - run: echo "Vercel Complete"
