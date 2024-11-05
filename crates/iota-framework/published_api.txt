@@ -739,6 +739,9 @@ protocol_version
 system_state_version
 	public(package) fun
 	0x3::iota_system_state_inner
+iota_system_admin_cap
+	public(package) fun
+	0x3::iota_system_state_inner
 genesis_system_state_version
 	public(package) fun
 	0x3::iota_system_state_inner
@@ -898,7 +901,7 @@ load_system_state_mut
 load_inner_maybe_upgrade
 	fun
 	0x3::iota_system
-load_system_timelock_cap
+load_iota_system_admin_cap
 	public(package) fun
 	0x3::iota_system
 validator_voting_powers
@@ -997,6 +1000,12 @@ allocate_tokens
 activate_validators
 	fun
 	0x3::genesis
+system_new
+	public(package) fun
+	0x3::iota_system_display
+system_new_with_fields
+	public(package) fun
+	0x3::iota_system_display
 secp256k1_ecrecover
 	public fun
 	0x2::ecdsa_k1
@@ -2227,6 +2236,12 @@ get_entry_by_idx_mut
 remove_entry_by_idx
 	public fun
 	0x2::vec_map
+IotaSystemAdminCap
+	public struct
+	0x2::system_admin_cap
+new_system_admin_cap
+	fun
+	0x2::system_admin_cap
 Publisher
 	public struct
 	0x2::package
@@ -2324,6 +2339,12 @@ new
 	public fun
 	0x2::display
 new_with_fields
+	public fun
+	0x2::display
+system_new
+	public fun
+	0x2::display
+system_new_with_fields
 	public fun
 	0x2::display
 create_and_keep
@@ -3067,9 +3088,6 @@ swap_remove
 TimeLock
 	public struct
 	0x2::timelock
-SystemTimelockCap
-	public struct
-	0x2::timelock
 lock
 	public fun
 	0x2::timelock
@@ -3137,9 +3155,6 @@ transfer
 	fun
 	0x2::timelock
 check_expiration_timestamp_ms
-	fun
-	0x2::timelock
-new_system_timelock_cap
 	fun
 	0x2::timelock
 Token

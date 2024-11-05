@@ -9,29 +9,29 @@ module iota_system::iota_system_display {
 
     use iota_system::iota_system::IotaSystemState;
 
-    /// Create an empty `Display` object with `SystemDisplayCap`.
+    /// Create an empty `Display` object with `IotaSystemAdminCap`.
     public(package) fun system_new<T: key>(
-        iota_system: &IotaSystemState,
+        iota_system: &mut IotaSystemState,
         ctx: &mut TxContext
     ): Display<T> {
-        // Load the `SystemDisplayCap` instance.
-        let sys_display_cap = iota_system.load_system_display_cap();
+        // Load the `IotaSystemAdminCap` instance.
+        let sys_admin_cap = iota_system.load_iota_system_admin_cap();
 
         // Create a `Display` object.
-        display::system_new<T>(sys_display_cap, ctx)
+        display::system_new<T>(sys_admin_cap, ctx)
     }
 
-    /// Create a new Display<T> object with a set of fields using `SystemDisplayCap`.
+    /// Create a new Display<T> object with a set of fields using `IotaSystemAdminCap`.
     public(package) fun system_new_with_fields<T: key>(
-        iota_system: &IotaSystemState,
+        iota_system: &mut IotaSystemState,
         fields: vector<String>,
         values: vector<String>,
         ctx: &mut TxContext
     ): Display<T> {
-        // Load the `SystemDisplayCap` instance.
-        let sys_display_cap = iota_system.load_system_display_cap();
+        // Load the `IotaSystemAdminCap` instance.
+        let sys_admin_cap = iota_system.load_iota_system_admin_cap();
 
         // Create a `Display` object with fields.
-        display::system_new_with_fields<T>(sys_display_cap, fields, values, ctx)
+        display::system_new_with_fields<T>(sys_admin_cap, fields, values, ctx)
     }
 }

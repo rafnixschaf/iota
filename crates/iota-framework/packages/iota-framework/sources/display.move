@@ -12,10 +12,12 @@
 ///
 /// More entry functions might be added in the future depending on the use cases.
 module iota::display {
-    use iota::package::Publisher;
-    use iota::vec_map::{Self, VecMap};
-    use iota::event;
     use std::string::String;
+
+    use iota::event;
+    use iota::package::Publisher;
+    use iota::system_admin_cap::IotaSystemAdminCap;
+    use iota::vec_map::{Self, VecMap};
 
     /// For when `T` does not belong to the package `Publisher`.
     const ENotOwner: u64 = 0;
@@ -26,7 +28,7 @@ module iota::display {
 
     /// The `Display<T>` object. Defines the way a `T` instance should be
     /// displayed. `Display` object can only be created and modified with
-    /// ether a `Publisher` cap or `SystemDisplayCap`, making sure that
+    /// ether a `Publisher` cap or `IotaSystemAdminCap`, making sure that
     /// the rules are set by the owner of the type or the system object.
     ///
     /// Each of the display properties should support patterns outside
@@ -71,9 +73,6 @@ module iota::display {
         fields: VecMap<String, String>,
     }
 
-    /// `SystemDisplayCap` allows to create a `Display` object.
-    public struct SystemDisplayCap has store {}
-
     // === Initializer Methods ===
 
     /// Create an empty `Display` object with `Publisher`.
@@ -91,14 +90,14 @@ module iota::display {
         display
     }
 
-    /// Create an empty `Display` object with `SystemDisplayCap`.
-    public fun system_new<T: key>(_: &SystemDisplayCap, ctx: &mut TxContext): Display<T> {
+    /// Create an empty `Display` object with `IotaSystemAdminCap`.
+    public fun system_new<T: key>(_: &IotaSystemAdminCap, ctx: &mut TxContext): Display<T> {
         create_internal(ctx)
     }
 
-    /// Create a new Display<T> object with a set of fields using `SystemDisplayCap`.
+    /// Create a new Display<T> object with a set of fields using `IotaSystemAdminCap`.
     public fun system_new_with_fields<T: key>(
-        cap: &SystemDisplayCap, fields: vector<String>, values: vector<String>, ctx: &mut TxContext
+        cap: &IotaSystemAdminCap, fields: vector<String>, values: vector<String>, ctx: &mut TxContext
     ): Display<T> {
         let mut display = system_new<T>(cap, ctx);
         add_multiple(&mut display, fields, values);
@@ -196,12 +195,6 @@ module iota::display {
     fun add_internal<T: key>(display: &mut Display<T>, name: String, value: String) {
         display.fields.insert(name, value)
     }
-
-    #[test_only]
-    /// Create a `SystemDisplayCap` for testing purposes.
-    public fun new_system_display_cap_for_testing(): SystemDisplayCap {
-        SystemDisplayCap { }
-    }
 }
 
 #[test_only]
@@ -210,6 +203,7 @@ module iota::display_tests {
 
     use iota::display;
     use iota::package;
+    use iota::system_admin_cap;
 
     use iota::test_scenario as test;
     use iota::test_utils;
@@ -246,7 +240,7 @@ module iota::display_tests {
     #[test]
     fun nft_test_sys_init() {
         let mut test = test::begin(@0x2);
-        let cap = display::new_system_display_cap_for_testing();
+        let cap = system_admin_cap::new_system_admin_cap_for_testing();
 
         // create a new display object
         let mut display = display::system_new<IotestNft>(&cap, test.ctx());
