@@ -21,6 +21,7 @@ LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-li
 
 MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv --cargo-profile simulator
 
+echo "Checking validity of generated .profraw files."
 find target/llvm-cov-target -name '*.profraw' | while read file; do
   if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
       echo "Removing corrupted file: $file"
@@ -28,6 +29,7 @@ find target/llvm-cov-target -name '*.profraw' | while read file; do
   fi
 done 
 
+echo "Creating simtest report."
 cargo llvm-cov report --lcov --output-path target/simtest.info
 
 # remove the patch

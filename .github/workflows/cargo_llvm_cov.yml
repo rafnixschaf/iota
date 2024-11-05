@@ -57,45 +57,36 @@ jobs:
           TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
-          if [[ -x "$LLVM_PROFDATA" ]]; then
+          if [ -x "$LLVM_PROFDATA" ]; then
             $LLVM_PROFDATA --version
           else
             echo "Error: llvm-profdata not found or not executable at $LLVM_PROFDATA"
             exit 1
           fi
           set +e
+          echo "Computing code coverage."
           IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
+          echo "Checking validity of generated .profraw files."
           find target/llvm-cov-target -name '*.profraw' | while read file; do
-            echo "Checking validity of: $file"
             if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
                 echo "Removing corrupted file: $file"
                 rm "$file"
             fi
           done
+          echo "Creating nextest report."
           cargo llvm-cov report --lcov --output-path target/nextest.info
-          if [ -f "target/nextest.info" ]; then
-            echo "Nextest coverage created."
-            exit 0
-          else
-            echo "Fatal Error: Failed to create nextest coverage report."
-            exit 1
-          fi
+          [ -f "target/nextest.info" ] || exit 1
 
       # - name: Compute code coverage and create report (simtest.info)
       #   run: |
       #     cargo llvm-cov clean --profraw-only
       #     git clean -fd
       #     set +e
+      #     echo "Computing code coverage."
       #     ./scripts/simtest/simtest-cov.sh
-      #     if [ -f "target/simtest.info" ]; then
-      #       echo "Simtest coverage created."
-      #       exit 0
-      #     else
-      #       echo "Fatal Error: Failed to create simtest coverage report."
-      #       exit 1
-      #     fi
+      #     [ -f "target/simtest.info" ] || exit 1
 
-      - name: Create combined html report (report.tgz)
+      - name: Create html report (report.tgz)
         run: |
           if ! command -v lcov &> /dev/null; then 
             sudo apt-get install -y lcov 
@@ -104,9 +95,13 @@ jobs:
           if [ -d "report" ]; then
             rm -rf report
           fi
+          echo "Creating html report."
           # genhtml -o report nextest.info simtest.info
           genhtml -o report nextest.info
-          tar -czvf report.tgz report
+          [ -d "report" ] || exit 1
+          echo "Packaging html report."
+          tar -czf report.tgz report
+          [ -f "report.tgz" ] || exit 1
 
       - name: Publish html report and trigger update
         run: |
@@ -116,6 +111,7 @@ jobs:
 
       - name: Backup html report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
+        if: always()
         with:
           name: report
           path: target/report.tgz
