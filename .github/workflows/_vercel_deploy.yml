@@ -24,12 +24,9 @@ on:
       isDevelop:
         type: boolean
         required: true
-      githubRef:
-        type: string
-        required: true
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.githubRef }}
+  group: vercel-deploy-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -98,18 +95,3 @@ jobs:
     secrets: inherit
     with:
       isProd: true
-
-  vercel-complete:
-    if: (!cancelled() && !failure())
-    runs-on: [self-hosted]
-    needs:
-      - explorer-preview
-      - explorer-staging
-      - ui-kit-preview
-      - ui-kit-prod
-      - wallet-dashboard-preview
-      - wallet-dashboard-prod
-      - apps-backend-preview
-      - apps-backend-prod
-    steps:
-      - run: echo "Vercel Complete"

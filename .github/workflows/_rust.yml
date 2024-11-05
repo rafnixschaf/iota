@@ -1,10 +1,6 @@
 name: Rust
 
-on:
-  workflow_call:
-    inputs:
-      isRust:
-        type: boolean
+on: workflow_call
 
 env:
   CARGO_TERM_COLOR: always
@@ -32,29 +28,21 @@ env:
 jobs:
   rust-lints:
     uses: ./.github/workflows/_rust_lints.yml
-    with:
-      isRust: ${{ inputs.isRust }}
 
   deny:
     uses: ./.github/workflows/_cargo_deny.yml
 
   rust-tests:
-    if: |
-      !cancelled() && !failure() && inputs.isRust && github.event.pull_request.draft == false
-    needs:
-      - rust-lints
+    if: github.event.pull_request.draft == false
+    needs: rust-lints
     uses: ./.github/workflows/_rust_tests.yml
 
   external-tests:
-    if: |
-      !cancelled() && !failure() && inputs.isRust && github.event.pull_request.draft == false
-    needs:
-      - rust-lints
+    if: github.event.pull_request.draft == false
+    needs: rust-lints
     uses: ./.github/workflows/_external_rust_tests.yml
 
   execution-cut:
-    if: |
-      !cancelled() && !failure() && inputs.isRust && github.event.pull_request.draft == false
-    needs:
-      - rust-lints
+    if: github.event.pull_request.draft == false
+    needs: rust-lints
     uses: ./.github/workflows/_execution_cut.yml
