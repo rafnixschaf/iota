@@ -33,7 +33,7 @@ jobs:
   llvm-cov:
     name: Generate code coverage
     runs-on: self-hosted
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       CARGO_TERM_COLOR: always
     steps:
