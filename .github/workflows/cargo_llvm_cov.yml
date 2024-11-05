@@ -54,7 +54,7 @@ jobs:
         with:
           size: 256G
 
-      - name: Generate code coverage report (nextest.info)
+      - name: Compute code coverage and create report (nextest.info)
         run: |
           cargo llvm-cov clean
           TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
@@ -74,8 +74,8 @@ jobs:
                 rm "$file"
             fi
           done
-          cargo llvm-cov report --lcov --output-path target/llvm-cov-target/nextest.info
-          if [ -f "target/llvm-cov-target/nextest.info" ]; then
+          cargo llvm-cov report --lcov --output-path target/nextest.info
+          if [ -f "target/nextest.info" ]; then
             echo "Nextest coverage created."
             exit 0
           else
@@ -83,13 +83,13 @@ jobs:
             exit 1
           fi
 
-      - name: Generate code coverage report (simtest.info)
+      - name: Compute code coverage and create report (simtest.info)
         run: |
           cargo llvm-cov clean
           git clean -fd
           set +e
           ./scripts/simtest/simtest-cov.sh
-          if [ -f "target/llvm-cov-target/simtest.info" ]; then
+          if [ -f "target/simtest.info" ]; then
             echo "Simtest coverage created."
             exit 0
           else
@@ -97,22 +97,28 @@ jobs:
             exit 1
           fi
 
-      - name: Merge reports and prepare for upload
+      - name: Create combined html report (report.tgz)
         run: |
-          apt install -yy lcov
-          cd target/llvm-cov-target
-          genhtml -o coverage_report nextest.info simtest.info
-          tar -czvf coverage_report.tgz ./coverage_report
+          if ! command -v lcov &> /dev/null; then 
+            apt install -y lcov 
+          fi
+          cd target || exit 1
+          if [ -d "report" ]; then
+            rm -rf report
+          fi
+          genhtml -o report nextest.info simtest.info
+          tar -czvf report.tgz report
 
-      - name: Upload code coverage report and trigger update
+      - name: Publish html report and trigger update
         run: |
-          rsync -av target/llvm-cov-target/coverage_report.tgz ${{ secrets.CODEGOV_REPORT_HOST }}:transfer/cargo-llvm-cov/
+          cd target || exit 1
+          rsync -av report.tgz ${{ secrets.CODEGOV_REPORT_HOST }}:transfer/cargo-llvm-cov/
           ssh ${{ secrets.CODEGOV_REPORT_HOST }}
 
-      - name: Upload backup
+      - name: Backup html report
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
-          name: coverage_report
-          path: target/llvm-cov-target/coverage_report
+          name: report
+          path: target/report.tgz
           if-no-files-found: error
           retention-days: 30
