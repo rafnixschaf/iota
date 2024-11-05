@@ -109,9 +109,6 @@ jobs:
           rsync -av coverage_report.tgz ${{ secrets.CODEGOV_REPORT_HOST }}:transfer/cargo-llvm-cov/
           ssh ${{ secrets.CODEGOV_REPORT_HOST }}
 
-      # TODO
-      #- name: Update coverage webpage
-
       - name: Upload backup
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4
         with:
