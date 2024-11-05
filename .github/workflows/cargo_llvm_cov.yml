@@ -83,19 +83,19 @@ jobs:
             exit 1
           fi
 
-      - name: Compute code coverage and create report (simtest.info)
-        run: |
-          cargo llvm-cov clean --profraw-only
-          git clean -fd
-          set +e
-          ./scripts/simtest/simtest-cov.sh
-          if [ -f "target/simtest.info" ]; then
-            echo "Simtest coverage created."
-            exit 0
-          else
-            echo "Fatal Error: Failed to create simtest coverage report."
-            exit 1
-          fi
+      # - name: Compute code coverage and create report (simtest.info)
+      #   run: |
+      #     cargo llvm-cov clean --profraw-only
+      #     git clean -fd
+      #     set +e
+      #     ./scripts/simtest/simtest-cov.sh
+      #     if [ -f "target/simtest.info" ]; then
+      #       echo "Simtest coverage created."
+      #       exit 0
+      #     else
+      #       echo "Fatal Error: Failed to create simtest coverage report."
+      #       exit 1
+      #     fi
 
       - name: Create combined html report (report.tgz)
         run: |
@@ -106,7 +106,8 @@ jobs:
           if [ -d "report" ]; then
             rm -rf report
           fi
-          genhtml -o report nextest.info simtest.info
+          # genhtml -o report nextest.info simtest.info
+          genhtml -o report nextest.info
           tar -czvf report.tgz report
 
       - name: Publish html report and trigger update
