@@ -188,6 +188,5 @@ export async function createMigrationTransaction(
     } else {
         ptb.transferObjects([...nftsFromNftOutputs], ptb.pure.address(address));
     }
-    // console.log('Migration Transaction:', ptb);
     return ptb;
 }

@@ -12,7 +12,6 @@ import {
     STARDUST_BASIC_OUTPUT_TYPE,
     STARDUST_NFT_OUTPUT_TYPE,
     useGetAllOwnedObjects,
-    useGetObject,
 } from '@iota/core';
 import { getNetwork, IotaObjectData } from '@iota/iota-sdk/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -79,15 +78,14 @@ function MigrationDashboardPage(): JSX.Element {
                 });
             });
     }
-    const basicOutput = useGetObject('0x021f5bc6771079521dbdaf93eb3d578f8e38f051d3c43af4296294ffc650f439');
-    console.log('Basic Output:', basicOutput);
+
     function openMigratePopup(): void {
         const stardustOutputObjects = [...migratableBasicOutputs, ...migratableNftOutputs];
         if (stardustOutputObjects.length > 0) {
             openPopup(
                 <MigratePopup
-                    basicOutputObjects={basicOutput?.data?.data ? [basicOutput.data.data] : []}
-                    // nftOutputObjects={}
+                    basicOutputObjects={migratableBasicOutputs}
+                    nftOutputObjects={migratableNftOutputs}
                     closePopup={closePopup}
                     onSuccess={handleOnSuccess}
                 />,

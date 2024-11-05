@@ -38,12 +38,6 @@ function MigratePopup({
         error,
     } = useMigrationTransaction(account?.address || '', basicOutputObjects, nftOutputObjects);
 
-    useEffect(() => {
-        if (migrateData) {
-            console.log('Migration data has changed:', migrateData);
-        }
-    }, [migrateData]);
-    console.log("migrateData", migrateData, isError, error?.message);
     const { network } = useIotaClientContext();
     const { explorer } = getNetwork(network);
     const { mutateAsync: signAndExecuteTransaction, isPending: isSendingTransaction } =
@@ -71,7 +65,6 @@ function MigratePopup({
                 addNotification('Migration transaction was not sent', NotificationType.Error);
             });
     }
-    console.log("basicOutputObjects", basicOutputObjects);
     const virtualItem = (asset: IotaObjectData): JSX.Element => (
         <a href={`${explorer}/object/${asset.objectId}`} target="_blank" rel="noreferrer">
             {asset.objectId}

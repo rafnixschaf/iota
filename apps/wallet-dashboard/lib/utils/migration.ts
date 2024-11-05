@@ -31,8 +31,6 @@ export function groupStardustObjectsByMigrationStatus(
         ).fields;
 
         if (outputObjectFields.expiration_uc) {
-            unmigratable.push(outputObject);
-            continue;
             const unlockableAddress =
                 outputObjectFields.expiration_uc.fields.unix_time <= epochUnix
                     ? outputObjectFields.expiration_uc.fields.return_address
