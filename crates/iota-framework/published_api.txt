@@ -508,7 +508,7 @@ find_validator
 find_validator_from_table_vec
 	fun
 	0x3::validator_set
-get_validator_indices
+get_validator_indices_set
 	fun
 	0x3::validator_set
 get_validator_mut

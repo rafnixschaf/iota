@@ -11,7 +11,7 @@ module iota_system::validator_set {
     use iota_system::staking_pool::{PoolTokenExchangeRate, StakedIota, pool_id};
     use iota::priority_queue as pq;
     use iota::vec_map::{Self, VecMap};
-    use iota::vec_set::VecSet;
+    use iota::vec_set::{Self, VecSet};
     use iota::table::{Self, Table};
     use iota::event;
     use iota::table_vec::{Self, TableVec};
@@ -341,15 +341,15 @@ module iota_system::validator_set {
         // punished.
         let slashed_validators = compute_slashed_validators(self, *validator_report_records);
 
-       // Compute the adjusted amounts of stake each validator should get given the tallying rule
-       // reward adjustments we computed before.
-       // `compute_adjusted_reward_distribution` must be called before `distribute_reward` and `adjust_stake_and_gas_price` to
-       // make sure we are using the current epoch's stake information to compute reward distribution.
+        // Compute the adjusted amounts of stake each validator should get given the tallying rule
+        // reward adjustments we computed before.
+        // `compute_adjusted_reward_distribution` must be called before `distribute_reward` and `adjust_stake_and_gas_price` to
+        // make sure we are using the current epoch's stake information to compute reward distribution.
         let adjusted_staking_reward_amounts = compute_adjusted_reward_distribution(
-           &self.active_validators,
-           unadjusted_staking_reward_amounts,
-           get_validator_indices(&self.active_validators, &slashed_validators),
-           reward_slashing_rate
+            &self.active_validators,
+            unadjusted_staking_reward_amounts,
+            get_validator_indices_set(&self.active_validators, &slashed_validators),
+            reward_slashing_rate,
         );
 
         // Distribute the rewards before adjusting stake so that we immediately start compounding
@@ -625,18 +625,17 @@ module iota_system::validator_set {
         option::none()
     }
 
-
-    /// Given a vector of validator addresses, return their indices in the validator set.
+    /// Given a vector of validator addresses, return a set of all indices of the validators.
     /// Aborts if any address isn't in the given validator set.
-    fun get_validator_indices(validators: &vector<ValidatorV1>, validator_addresses: &vector<address>): vector<u64> {
+    fun get_validator_indices_set(validators: &vector<ValidatorV1>, validator_addresses: &vector<address>): VecSet<u64> {
         let length = validator_addresses.length();
         let mut i = 0;
-        let mut res = vector[];
+        let mut res = vec_set::empty();
         while (i < length) {
             let addr = validator_addresses[i];
             let index_opt = find_validator(validators, addr);
             assert!(index_opt.is_some(), ENotAValidator);
-            res.push_back(index_opt.destroy_some());
+            res.insert(index_opt.destroy_some());
             i = i + 1;
         };
         res
@@ -980,53 +979,40 @@ module iota_system::validator_set {
     /// Returns the staking rewards each validator gets.
     /// The staking rewards are shared with the stakers.
     fun compute_adjusted_reward_distribution(
-       validators: &vector<ValidatorV1>,
-       unadjusted_staking_reward_amounts: vector<u64>,
-       mut slashed_validator_indices: vector<u64>,
-       reward_slashing_rate: u64,
+        validators: &vector<ValidatorV1>,
+        unadjusted_staking_reward_amounts: vector<u64>,
+        slashed_validator_indices_set: VecSet<u64>,
+        reward_slashing_rate: u64,
     ): vector<u64> {
-       let mut adjusted_staking_reward_amounts = vector[];
-       let mut individual_staking_reward_adjustments = vec_map::empty();
+        let mut adjusted_staking_reward_amounts = vector[];
+        
+        // Loop through each validator and adjust rewards as necessary
+        let length = validators.length();
+        let mut i = 0;
+        while (i < length) {
+            let unadjusted_staking_reward_amount = unadjusted_staking_reward_amounts[i];
+            
+            // Check if the validator is slashed
+            let adjusted_staking_reward_amount = if (slashed_validator_indices_set.contains(&i)) {
+                // Use the slashing rate to compute the amount of staking rewards slashed from this punished validator.
+                // Use u128 to avoid multiplication overflow.
+                let staking_reward_adjustment_u128 = ((unadjusted_staking_reward_amount as u128) * (reward_slashing_rate as u128)) / BASIS_POINT_DENOMINATOR;
+                unadjusted_staking_reward_amount - (staking_reward_adjustment_u128 as u64)
+            } else {
+                // Otherwise, unadjusted staking reward amount is assigned to the unslashed validators
+                unadjusted_staking_reward_amount
+            };
+            
+            adjusted_staking_reward_amounts.push_back(adjusted_staking_reward_amount);
+            
+            // Move to the next validator
+            i = i + 1;
+        };
 
-       while (!slashed_validator_indices.is_empty()) {
-           let validator_index = slashed_validator_indices.pop_back();
-
-           // Use the slashing rate to compute the amount of staking rewards slashed from this punished validator.
-           let unadjusted_staking_reward = unadjusted_staking_reward_amounts[validator_index];
-           let staking_reward_adjustment_u128 =
-               unadjusted_staking_reward as u128 * (reward_slashing_rate as u128)
-               / BASIS_POINT_DENOMINATOR;
-
-           // Insert into individual mapping.
-           individual_staking_reward_adjustments.insert(validator_index, staking_reward_adjustment_u128 as u64);
-       };
-
-       let length = validators.length();
-
-       let mut i = 0;
-       while (i < length) {
-           // Integer divisions will truncate the results.
-           // Additionally, in case some validator is slashed, the slashed reward is not redistributed to other validators. 
-           // Because of this, we expect that at the end there will be some reward remaining in `total_reward`.
-           // Use u128 to avoid multiplication overflow.
-           // Compute adjusted staking reward.
-           let unadjusted_staking_reward_amount = unadjusted_staking_reward_amounts[i];
-           let adjusted_staking_reward_amount =
-               // If the validator is one of the slashed ones, then subtract the adjustment.
-               if (individual_staking_reward_adjustments.contains(&i)) {
-                   let adjustment = individual_staking_reward_adjustments[&i];
-                   unadjusted_staking_reward_amount - adjustment
-               } else {
-                   // Otherwise, unadjusted staking reward amount is assigned to the unslashed validators
-                   unadjusted_staking_reward_amount
-               };
-           adjusted_staking_reward_amounts.push_back(adjusted_staking_reward_amount);
-
-           i = i + 1;
-       };
-
-       adjusted_staking_reward_amounts
-   }
+        // The sum of the adjusted staking rewards may not be equal to the total staking reward, 
+        // because of integer division truncation and the slashing of the rewards for the slashed validators.
+        adjusted_staking_reward_amounts
+    }
 
     fun distribute_reward(
         validators: &mut vector<ValidatorV1>,
