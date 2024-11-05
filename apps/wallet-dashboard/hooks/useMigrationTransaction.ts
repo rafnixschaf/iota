@@ -3,24 +3,31 @@
 
 import { useIotaClient } from '@iota/dapp-kit';
 import { IotaObjectData } from '@iota/iota-sdk/client';
-import { Transaction } from '@iota/iota-sdk/transactions';
 import { useQuery } from '@tanstack/react-query';
+import { createMigrationTransaction } from '@iota/core';
 
 export function useMigrationTransaction(
-    stardustOutputObjects: IotaObjectData[],
-    senderAddress: string,
+    address: string,
+    basicOutputObjects?: IotaObjectData[],
+    nftOutputObjects?: IotaObjectData[],
 ) {
     const client = useIotaClient();
     return useQuery({
         // eslint-disable-next-line @tanstack/query/exhaustive-deps
-        queryKey: ['migration-transaction', senderAddress],
+        queryKey: ['migration-transaction', address],
         queryFn: async () => {
-            const transaction = new Transaction();
-            transaction.setSender(senderAddress);
+            const transaction = await createMigrationTransaction(
+                client,
+                address,
+                basicOutputObjects,
+                nftOutputObjects,
+            );
+            // transaction.setGasBudget(1000000000);
+            transaction.setSender(address);
             await transaction.build({ client });
             return transaction;
         },
-        enabled: !!stardustOutputObjects && !!senderAddress,
+        enabled: !!address,
         gcTime: 0,
         select: (transaction) => {
             return {

@@ -9,7 +9,7 @@ import { useFeature } from '@growthbook/growthbook-react';
 
 export function Sidebar() {
     const featureFlags = {
-        Migrations: useFeature<boolean>(Feature.StardustMigration).value,
+        Migrations: true,
         Vesting: useFeature<boolean>(Feature.SupplyIncreaseVesting).value,
     };
 
