@@ -129,7 +129,6 @@ jobs:
       - typos
     if: (!cancelled() && !failure())
     uses: ./.github/workflows/_rust.yml
-    secrets: inherit
     with:
       isRust: ${{ needs.diff.outputs.isRust == 'true' }}
 
