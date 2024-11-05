@@ -1018,24 +1018,24 @@ allocate_tokens
 activate_validators
 	fun
 	0x3::genesis
-system_new
+new
 	public(package) fun
-	0x3::iota_system_display
-system_new_with_fields
+	0x3::system_display
+new_with_fields
 	public(package) fun
-	0x3::iota_system_display
+	0x3::system_display
 add_display_object
 	public(package) fun
-	0x3::iota_system_display
+	0x3::system_display
 borrow_display_object
 	public(package) fun
-	0x3::iota_system_display
+	0x3::system_display
 borrow_display_object_mut
 	public(package) fun
-	0x3::iota_system_display
+	0x3::system_display
 display_object_key
 	fun
-	0x3::iota_system_display
+	0x3::system_display
 secp256k1_ecrecover
 	public fun
 	0x2::ecdsa_k1

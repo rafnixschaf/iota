@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-module iota_system::iota_system_display {
+module iota_system::system_display {
 
     use std::string::{Self, String};
 
@@ -10,7 +10,7 @@ module iota_system::iota_system_display {
     use iota_system::iota_system::IotaSystemState;
 
     /// Create an empty `Display` object with `IotaSystemAdminCap`.
-    public(package) fun system_new<T: key>(
+    public(package) fun new<T: key>(
         iota_system: &mut IotaSystemState,
         ctx: &mut TxContext
     ): Display<T> {
@@ -22,7 +22,7 @@ module iota_system::iota_system_display {
     }
 
     /// Create a new `Display<T>` object with a set of fields using `IotaSystemAdminCap`.
-    public(package) fun system_new_with_fields<T: key>(
+    public(package) fun new_with_fields<T: key>(
         iota_system: &mut IotaSystemState,
         fields: vector<String>,
         values: vector<String>,
