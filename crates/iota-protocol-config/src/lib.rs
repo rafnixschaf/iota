@@ -1637,7 +1637,7 @@ impl ProtocolConfig {
         for cur in 2..=version.0 {
             match cur {
                 1 => unreachable!(),
-                2 => {},
+                2 => (),
 
                 // Use this template when making changes:
                 //
