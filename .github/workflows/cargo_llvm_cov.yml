@@ -77,14 +77,14 @@ jobs:
           cargo llvm-cov report --lcov --output-path target/nextest.info
           [ -f "target/nextest.info" ] || exit 1
 
-      # - name: Compute code coverage and create report (simtest.info)
-      #   run: |
-      #     cargo llvm-cov clean --profraw-only
-      #     git clean -fd
-      #     set +e
-      #     echo "Computing code coverage."
-      #     ./scripts/simtest/simtest-cov.sh
-      #     [ -f "target/simtest.info" ] || exit 1
+      - name: Compute code coverage and create report (simtest.info)
+        run: |
+          cargo llvm-cov clean --profraw-only
+          git clean -fd
+          set +e
+          echo "Computing code coverage."
+          ./scripts/simtest/simtest-cov.sh
+          [ -f "target/simtest.info" ] || exit 1
 
       - name: Create html report (report.tgz)
         run: |
@@ -96,8 +96,7 @@ jobs:
             rm -rf report
           fi
           echo "Creating html report."
-          # genhtml -o report nextest.info simtest.info
-          genhtml -o report nextest.info
+          genhtml -o report nextest.info simtest.info
           [ -d "report" ] || exit 1
           echo "Packaging html report."
           tar -czf report.tgz report
