@@ -16,7 +16,7 @@ use tracing::{info, warn};
 
 /// The minimum and maximum protocol versions supported by this build.
 const MIN_PROTOCOL_VERSION: u64 = 1;
-pub const MAX_PROTOCOL_VERSION: u64 = 1;
+pub const MAX_PROTOCOL_VERSION: u64 = 2;
 
 // Record history of protocol version allocations here:
 //
@@ -1637,6 +1637,7 @@ impl ProtocolConfig {
         for cur in 2..=version.0 {
             match cur {
                 1 => unreachable!(),
+                2 => {},
 
                 // Use this template when making changes:
                 //
@@ -1865,6 +1866,7 @@ mod test {
                 Chain::Unknown => "".to_string(),
                 _ => format!("{:?}_", chain_id),
             };
+            println!("{}", chain_str);
             for i in MIN_PROTOCOL_VERSION..=MAX_PROTOCOL_VERSION {
                 let cur = ProtocolVersion::new(i);
                 assert_yaml_snapshot!(
