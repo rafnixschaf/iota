@@ -5,56 +5,69 @@ import { IotaClient, IotaObjectData } from '@iota/iota-sdk/client';
 import { Transaction } from '@iota/iota-sdk/transactions';
 import { STARDUST_PACKAGE_ID } from '../../constants/migration.constants';
 import { IOTA_COIN_TYPE } from '../../constants/coins.constants';
+import { z } from 'zod';
 
 type NestedResultType = {
     $kind: 'NestedResult';
     NestedResult: [number, number];
 };
 
-type ExpirationUnlockCondition = {
-    owner: string;
-    return_address: string;
-    unix_time: number;
-};
-type StorageDepositReturnUnlockCondition = {
-    return_address: string;
-    return_amount: string;
-};
-type TimelockUnlockCondition = {
-    unix_time: number;
-};
+const ExpirationUnlockConditionSchema = z.object({
+    type: z.string(),
+    fields: z.object({
+        owner: z.string(),
+        return_address: z.string(),
+        unix_time: z.number(),
+    }),
+});
 
-export type CommonOutputObject = {
-    id: { id: string };
-    balance: string;
-    native_tokens: {
-        type: string;
-        fields: { id: { id: string }; size: string };
-    };
-};
+const StorageDepositReturnUnlockConditionSchema = z.object({
+    type: z.string(),
+    fields: z.object({
+        return_address: z.string(),
+        return_amount: z.string(),
+    }),
+});
 
-export interface CommonOutputObjectWithUc extends CommonOutputObject {
-    expiration_uc?: {
-        type: string;
-        fields: ExpirationUnlockCondition;
-    };
-    storage_deposit_return_uc?: {
-        type: string;
-        fields: StorageDepositReturnUnlockCondition;
-    };
-    timelock_uc?: {
-        type: string;
-        fields: TimelockUnlockCondition;
-    };
-}
+const TimelockUnlockConditionSchema = z.object({
+    type: z.string(),
+    fields: z.object({
+        unix_time: z.number(),
+    }),
+});
 
-export interface BasicOutputObject extends CommonOutputObjectWithUc {
-    metadata?: number[];
-    tag?: number[];
-    sender?: string;
-}
+const CommonOutputObjectSchema = z.object({
+    id: z.object({
+        id: z.string(),
+    }),
+    balance: z.string(),
+    native_tokens: z.object({
+        type: z.string(),
+        fields: z.object({
+            id: z.object({
+                id: z.string(),
+            }),
+            size: z.string(),
+        }),
+    }),
+});
 
-export interface NftOutputObject extends CommonOutputObjectWithUc {}
+const CommonOutputObjectWithUcSchema = CommonOutputObjectSchema.extend({
+    expiration_uc: ExpirationUnlockConditionSchema.nullable().optional(),
+    storage_deposit_return_uc: StorageDepositReturnUnlockConditionSchema.nullable().optional(),
+    timelock_uc: TimelockUnlockConditionSchema.nullable().optional(),
+});
+
+const BasicOutputObjectSchema = CommonOutputObjectWithUcSchema.extend({
+    metadata: z.array(z.number()).optional(),
+    tag: z.array(z.number()).optional(),
+    sender: z.string().optional(),
+});
+
+const NftOutputObjectSchema = CommonOutputObjectWithUcSchema;
+
+type BasicOutputObject = z.infer<typeof BasicOutputObjectSchema>;
+type NftOutputObject = z.infer<typeof NftOutputObjectSchema>;
 
 export async function getNativeTokenTypesFromBag(
     bagId: string,
@@ -71,6 +84,24 @@ export async function getNativeTokenTypesFromBag(
     return nativeTokenTypes;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function validateBasicOutputObject(outputObject: any): BasicOutputObject {
+    const result = BasicOutputObjectSchema.safeParse(outputObject.content);
+    if (!result.success) {
+        throw new Error('Invalid basic output object content');
+    }
+    return result.data;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function validateNftOutputObject(outputObject: any): NftOutputObject {
+    const result = NftOutputObjectSchema.safeParse(outputObject.content.fields);
+    if (!result.success) {
+        throw new Error('Invalid nft output object content');
+    }
+    return result.data;
+}
+
 export async function createMigrationTransaction(
     client: IotaClient,
     address: string,
@@ -81,27 +112,23 @@ export async function createMigrationTransaction(
 
     const coinsFromBasicOutputs: NestedResultType[] = [];
 
-    // Basics
+    // Basic Outputs
     for (const basicOutputObject of basicOutputs) {
-        const basicOutputObjectId = basicOutputObject.objectId;
-
-        const bagId = (basicOutputObject.content as unknown as { fields: BasicOutputObject }).fields
-            .native_tokens.fields.id.id;
-        const bagSize = (basicOutputObject.content as unknown as { fields: BasicOutputObject })
-            .fields.native_tokens.fields.size;
-        // console.log('Bag Size:', bagSize, bagId);
+        const validatedOutputObject = validateBasicOutputObject(basicOutputObject);
+        const basicOutputObjectId = validatedOutputObject.id.id;
+        const bagId = validatedOutputObject.native_tokens.fields.id.id;
+        const bagSize = validatedOutputObject.native_tokens.fields.size;
         const nativeTokenTypes: string[] =
             Number(bagSize) > 0 ? await getNativeTokenTypesFromBag(bagId, client) : [];
-        console.log('Native Token Types:', bagId, Number(bagSize), nativeTokenTypes);
+
         const migratableResult = ptb.moveCall({
             target: `${STARDUST_PACKAGE_ID}::basic_output::extract_assets`,
             typeArguments: [IOTA_COIN_TYPE],
             arguments: [ptb.object(basicOutputObjectId)],
         });
 
-        // eslint-disable-next-line prefer-const
-        let [balance, nativeTokensBag] = migratableResult;
-        // let nativeTokensBag = initialNativeTokensBag;
+        const balance = migratableResult[0];
+        let nativeTokensBag = migratableResult[1];
 
         // Convert Balance in Coin
         const [coin] = ptb.moveCall({
@@ -113,8 +140,6 @@ export async function createMigrationTransaction(
         coinsFromBasicOutputs.push(coin);
 
         for (const nativeTokenType of nativeTokenTypes) {
-            // console.log('Native Token Type:', nativeTokenType, JSON.stringify(basicOutputObject, null, 2));
-            // Convert NativeTokenBag in Native token and sent to address
             [nativeTokensBag] = ptb.moveCall({
                 target: '0x107a::utilities::extract_and_send_to',
                 typeArguments: [nativeTokenType],
@@ -123,35 +148,33 @@ export async function createMigrationTransaction(
         }
 
         ptb.moveCall({
-            target: '0x02::bag::destroy_empty', // Destroy empty native tokens
+            target: '0x02::bag::destroy_empty',
             arguments: [ptb.object(nativeTokensBag)],
         });
     }
 
+    // NFT Outputs
     const coinsFromNftOutputs: NestedResultType[] = [];
     const nftsFromNftOutputs: NestedResultType[] = [];
 
-    // NFTs
     for (const nftOutputObject of nftOutputs) {
-        const nftOutputObjectId = nftOutputObject.objectId;
-
-        const bagId = (nftOutputObject.content as unknown as { fields: NftOutputObject }).fields
-            .native_tokens.fields.id.id;
-        const bagSize = (nftOutputObject.content as unknown as { fields: BasicOutputObject }).fields
-            .native_tokens.fields.size;
-
+        const validatedOutputObject = validateNftOutputObject(nftOutputObject);
+        const nftOutputObjectId = validatedOutputObject.id.id;
+        const bagId = validatedOutputObject.native_tokens.fields.id.id;
+        const bagSize = validatedOutputObject.native_tokens.fields.size;
         const nativeTokenTypes: string[] =
             Number(bagSize) > 0 ? await getNativeTokenTypesFromBag(bagId, client) : [];
-        // console.log('Native Token Types NFT:', bagId, Number(bagSize), nativeTokenTypes);
+
         const migratableResult = ptb.moveCall({
             target: `${STARDUST_PACKAGE_ID}::nft_output::extract_assets`,
             typeArguments: [IOTA_COIN_TYPE],
             arguments: [ptb.object(nftOutputObjectId)],
         });
 
-        // eslint-disable-next-line prefer-const
-        let [balance, nativeTokensBag, nft] = migratableResult;
-        // let nativeTokensBag = initialNativeTokensBag;
+        const balance = migratableResult[0];
+        let nativeTokensBag = migratableResult[1];
+        const nft = migratableResult[2];
+
         nftsFromNftOutputs.push(nft);
 
         // Convert Balance in Coin
@@ -163,7 +186,6 @@ export async function createMigrationTransaction(
         coinsFromNftOutputs.push(coin);
 
         for (const nativeTokenType of nativeTokenTypes) {
-            // Convert NativeTokenBag in Native token and sent to address
             [nativeTokensBag] = ptb.moveCall({
                 target: '0x107a::utilities::extract_and_send_to',
                 typeArguments: [nativeTokenType],
@@ -172,21 +194,19 @@ export async function createMigrationTransaction(
         }
 
         ptb.moveCall({
-            target: '0x02::bag::destroy_empty', // Destroy empty native tokens
+            target: '0x02::bag::destroy_empty',
             arguments: [ptb.object(nativeTokensBag)],
         });
     }
 
     const coinOne = coinsFromBasicOutputs.shift() || coinsFromNftOutputs.shift();
     const remainingCoins = [...coinsFromBasicOutputs, ...coinsFromNftOutputs];
-
     if (coinOne) {
         if (remainingCoins.length > 0) {
             ptb.mergeCoins(coinOne, remainingCoins);
         }
         ptb.transferObjects([coinOne, ...nftsFromNftOutputs], ptb.pure.address(address));
-    } else {
-        ptb.transferObjects([...nftsFromNftOutputs], ptb.pure.address(address));
     }
+
     return ptb;
 }
