@@ -533,6 +533,15 @@ module iota_system::iota_system {
         self.borrow_extra_field_mut(key)
     }
 
+    /// Returns true if there is an extra field associated with the key.
+    public(package) fun contains_extra_field<K: copy + drop + store>(
+        wrapper: &mut IotaSystemState,
+        key: K,
+    ): bool {
+        let self = load_system_state_mut(wrapper);
+        self.contains_extra_field(key)
+    }
+
     #[allow(unused_function)]
     /// This function should be called at the end of an epoch, and advances the system to the next epoch.
     /// It does the following things:

@@ -65,6 +65,15 @@ module iota_system::system_display {
         iota_system.borrow_extra_field_mut(key)
     }
 
+    /// Returns true if the related display object exists.
+    public(package) fun contains_display_object<T: key>(iota_system: &mut IotaSystemState): bool {
+        // Get a display object unique key.
+        let key = display_object_key<T>();
+
+        // Check if the related display object exists.
+        iota_system.contains_extra_field(key)
+    }
+
     /// Return a fully qualified type name with the original package IDs
     /// that is used as a display object key.
     fun display_object_key<T>(): String {

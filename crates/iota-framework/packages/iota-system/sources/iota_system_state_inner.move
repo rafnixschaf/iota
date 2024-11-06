@@ -467,6 +467,14 @@ module iota_system::iota_system_state_inner {
         self.extra_fields.borrow_mut(key)
     }
 
+    /// Returns true if there is an extra field associated with the key.
+    public(package) fun contains_extra_field<K: copy + drop + store>(
+        self: &IotaSystemStateV1,
+        key: K,
+    ): bool {
+        self.extra_fields.contains(key)
+    }
+
     // ==== validator metadata management functions ====
 
     /// Create a new `UnverifiedValidatorOperationCap`, transfer it to the
