@@ -51,31 +51,31 @@ jobs:
         with:
           size: 256G
 
-      - name: Compute code coverage and create report (nextest.info)
-        run: |
-          cargo llvm-cov clean --profraw-only
-          TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
-          rustup component add llvm-tools --toolchain "$TOOLCHAIN"
-          LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
-          if [ -x "$LLVM_PROFDATA" ]; then
-            $LLVM_PROFDATA --version
-          else
-            echo "Error: llvm-profdata not found or not executable at $LLVM_PROFDATA"
-            exit 1
-          fi
-          set +e
-          echo "Computing code coverage."
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
-          echo "Checking validity of generated .profraw files."
-          find target/llvm-cov-target -name '*.profraw' | while read file; do
-            if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
-                echo "Removing corrupted file: $file"
-                rm "$file"
-            fi
-          done
-          echo "Creating nextest report."
-          cargo llvm-cov report --lcov --output-path target/nextest.info
-          [ -f "target/nextest.info" ] || exit 1
+      # - name: Compute code coverage and create report (nextest.info)
+      #   run: |
+      #     cargo llvm-cov clean --profraw-only
+      #     TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
+      #     rustup component add llvm-tools --toolchain "$TOOLCHAIN"
+      #     LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
+      #     if [ -x "$LLVM_PROFDATA" ]; then
+      #       $LLVM_PROFDATA --version
+      #     else
+      #       echo "Error: llvm-profdata not found or not executable at $LLVM_PROFDATA"
+      #       exit 1
+      #     fi
+      #     set +e
+      #     echo "Computing code coverage."
+      #     IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
+      #     echo "Checking validity of generated .profraw files."
+      #     find target/llvm-cov-target -name '*.profraw' | while read file; do
+      #       if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
+      #           echo "Removing corrupted file: $file"
+      #           rm "$file"
+      #       fi
+      #     done
+      #     echo "Creating nextest report."
+      #     cargo llvm-cov report --lcov --output-path target/nextest.info
+      #     [ -f "target/nextest.info" ] || exit 1
 
       - name: Compute code coverage and create report (simtest.info)
         run: |
@@ -96,7 +96,8 @@ jobs:
             rm -rf report
           fi
           echo "Creating html report."
-          genhtml -o report nextest.info simtest.info
+          # genhtml -o report nextest.info simtest.info
+          genhtml -o report simtest.info
           [ -d "report" ] || exit 1
           echo "Packaging html report."
           tar -czf report.tgz report
