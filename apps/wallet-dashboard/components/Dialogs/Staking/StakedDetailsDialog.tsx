@@ -47,7 +47,7 @@ interface StakeDialogProps {
     handleClose: () => void;
 }
 
-export function StakedDetailsDialog({
+export function DialogStakedDetails({
     handleClose,
     stakedDetails,
     showActiveStatus,

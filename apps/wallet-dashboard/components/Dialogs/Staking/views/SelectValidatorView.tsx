@@ -4,6 +4,7 @@
 import React from 'react';
 import { ImageIcon, ImageIconSize, formatPercentageDisplay } from '@iota/core';
 import {
+    Button,
     Card,
     CardBody,
     CardImage,
@@ -19,14 +20,26 @@ import { useValidatorInfo } from '@/hooks';
 interface SelectValidatorViewProps {
     validators: string[];
     onSelect: (validator: string) => void;
+    onNext: () => void;
+    isValidatorSelected: boolean;
 }
 
-function SelectValidatorView({ validators, onSelect }: SelectValidatorViewProps): JSX.Element {
+function SelectValidatorView({
+    validators,
+    onSelect,
+    onNext,
+    isValidatorSelected,
+}: SelectValidatorViewProps): JSX.Element {
     return (
-        <div className="flex w-full flex-col items-start gap-2">
-            {validators.map((validator) => (
-                <Validator key={validator} address={validator} onClick={onSelect} />
-            ))}
+        <div className="flex w-full flex-1 flex-col justify-between">
+            <div className="flex w-full flex-col items-start gap-md">
+                {validators.map((validator) => (
+                    <Validator key={validator} address={validator} onClick={onSelect} />
+                ))}
+            </div>
+            {isValidatorSelected && (
+                <Button fullWidth data-testid="select-validator-cta" onClick={onNext} text="Next" />
+            )}
         </div>
     );
 }

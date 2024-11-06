@@ -77,17 +77,18 @@ function StakeDialog({
 
     const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
-    function handleNext(): void {
-        setStep(Step.EnterAmount);
-    }
-
     function handleBack(): void {
         setStep(Step.SelectValidator);
     }
 
     function handleValidatorSelect(validator: string): void {
         setSelectedValidator(validator);
-        handleNext();
+    }
+
+    function handleSelectValidatorNext(): void {
+        if (selectedValidator) {
+            setStep(Step.EnterAmount);
+        }
     }
 
     function handleStake(): void {
@@ -140,6 +141,8 @@ function StakeDialog({
                                 <SelectValidatorView
                                     validators={validators}
                                     onSelect={handleValidatorSelect}
+                                    onNext={handleSelectValidatorNext}
+                                    isValidatorSelected={!!selectedValidator}
                                 />
                             )}
                             {step === Step.EnterAmount && (
