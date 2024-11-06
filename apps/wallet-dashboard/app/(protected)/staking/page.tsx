@@ -50,7 +50,6 @@ function StakingDashboardPage(): JSX.Element {
     function handleNewStake() {
         setIsDialogStakeOpen(true);
     }
-    console.log(stakedDetails);
 
     return (
         <>

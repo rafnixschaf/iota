@@ -43,7 +43,7 @@ function StakeDetailsPopup({ extendedStake, onClose }: StakeDetailsPopupProps): 
                 <Button onClick={openUnstakePopup} disabled={extendedStake.status !== 'Active'}>
                     Unstake
                 </Button>
-                <Button onClick={() => console.log('Stake more')}>Stake more</Button>
+                <Button onClick={() => {}}>Stake more</Button>
             </div>
         </div>
     );

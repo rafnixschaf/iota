@@ -142,7 +142,7 @@ function StakeDialog({
                                     validators={validators}
                                     onSelect={handleValidatorSelect}
                                     onNext={handleSelectValidatorNext}
-                                    isValidatorSelected={!!selectedValidator}
+                                    selectedValidator={selectedValidator}
                                 />
                             )}
                             {step === Step.EnterAmount && (
@@ -153,7 +153,6 @@ function StakeDialog({
                                     onChange={(e) => setAmount(e.target.value)}
                                     onBack={handleBack}
                                     onStake={handleStake}
-                                    isStakeDisabled={!amount}
                                 />
                             )}
                         </DialogBody>

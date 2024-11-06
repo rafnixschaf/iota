@@ -47,7 +47,7 @@ interface StakeDialogProps {
     handleClose: () => void;
 }
 
-export function DialogStakedDetails({
+export function StakedDetailsDialog({
     handleClose,
     stakedDetails,
     showActiveStatus,
@@ -62,8 +62,9 @@ export function DialogStakedDetails({
     const [iotaEarnedFormatted, iotaEarnedSymbol] = useFormatCoin(iotaEarned, IOTA_TYPE_ARG);
     const [totalStakeFormatted, totalStakeSymbol] = useFormatCoin(totalStake, IOTA_TYPE_ARG);
 
-    const { name, commission, newValidator, isAtRisk, apy, isApyApproxZero } =
-        useValidatorInfo(validatorAddress);
+    const { name, commission, newValidator, isAtRisk, apy, isApyApproxZero } = useValidatorInfo({
+        validatorAddress: validatorAddress,
+    });
 
     const { data: unstakeData } = useUnstakeTransaction(
         stakedDetails.stakedIotaId,
@@ -89,7 +90,7 @@ export function DialogStakedDetails({
     }
 
     function handleAddNewStake() {
-        console.log('Stake');
+        // pass
     }
 
     if (loadingValidators) {
