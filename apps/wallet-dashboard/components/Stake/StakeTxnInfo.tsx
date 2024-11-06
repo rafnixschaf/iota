@@ -6,9 +6,9 @@ import { Divider, KeyValueInfo, Panel, TooltipPosition } from '@iota/apps-ui-kit
 import {
     NUM_OF_EPOCH_BEFORE_STAKING_REWARDS_REDEEMABLE,
     NUM_OF_EPOCH_BEFORE_STAKING_REWARDS_STARTS,
-} from '_src/shared/constants';
+} from '../../components/Dialogs/Staking/hooks/useStakeTxnInfo';
 import { useGetTimeBeforeEpochNumber, useTimeAgo, TimeUnit, type GasSummaryType } from '@iota/core';
-import { GasSummary } from '../../shared/transaction-summary/cards/GasSummary';
+import { GasSummary } from '../../components/Transaction/GasSummary';
 
 interface StakeTxnInfoProps {
     apy?: string;
@@ -75,7 +75,7 @@ export function StakeTxnInfo({ apy, startEpoch, gasSummary }: StakeTxnInfoProps)
                     fullwidth
                 />
                 <Divider />
-                <GasSummary gasSummary={gasSummary} />
+                {gasSummary && <GasSummary gasSummary={gasSummary} />}
             </div>
         </Panel>
     );
