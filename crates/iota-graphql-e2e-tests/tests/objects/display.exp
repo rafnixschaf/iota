@@ -16,7 +16,7 @@ Checkpoint created: 1
 
 task 3, line 135:
 //# view-checkpoint
-CheckpointSummary { epoch: 0, seq: 1, content_digest: 7kLCsxTiWkQDELn7Z9pPWbXNrMfj2e8MLZDACViZzS7a,
+CheckpointSummary { epoch: 0, seq: 1, content_digest: 3CMJvrvCxA6AoVhADFJi48KehKBEh5raLtYP6XfQRZU5,
             epoch_rolling_gas_cost_summary: GasCostSummary { computation_cost: 1000000, computation_cost_burned: 1000000, storage_cost: 21470000, storage_rebate: 0, non_refundable_storage_fee: 0 }}
 
 task 4, line 137:
@@ -37,7 +37,7 @@ Checkpoint created: 2
 
 task 7, line 143:
 //# view-checkpoint
-CheckpointSummary { epoch: 0, seq: 2, content_digest: 8Nc9NbgSLpjhoWKJs96VNGspdotAuwn4yJkcwiduj9FA,
+CheckpointSummary { epoch: 0, seq: 2, content_digest: 7P4S9VNdfQMYeSMvL85EQcA7eMqRBSoxCWn1je6AYccy,
             epoch_rolling_gas_cost_summary: GasCostSummary { computation_cost: 3000000, computation_cost_burned: 3000000, storage_cost: 27968000, storage_rebate: 3640400, non_refundable_storage_fee: 0 }}
 
 task 8, lines 145-158:
@@ -84,7 +84,7 @@ Checkpoint created: 3
 
 task 11, line 164:
 //# view-checkpoint
-CheckpointSummary { epoch: 0, seq: 3, content_digest: 6Jbra32rwqb6rEqrMmpigDRKzuEaqP6Zqo3fBNCyLr18,
+CheckpointSummary { epoch: 0, seq: 3, content_digest: BXsfacpgNMAkMBq94dv3xydeR8dVoSExzuZi3HhSs6zC,
             epoch_rolling_gas_cost_summary: GasCostSummary { computation_cost: 4000000, computation_cost_burned: 4000000, storage_cost: 31000400, storage_rebate: 6581600, non_refundable_storage_fee: 0 }}
 
 task 12, lines 166-179:
@@ -136,7 +136,7 @@ Checkpoint created: 4
 
 task 15, line 185:
 //# view-checkpoint
-CheckpointSummary { epoch: 0, seq: 4, content_digest: 6t8frtYetoMad5s2t7vtHrkdCZuAQv16cKVKiZ5G85yc,
+CheckpointSummary { epoch: 0, seq: 4, content_digest: 3vqe9G5az7aJd5n1HkSZ4k528ga4jNYfca9j9WadCBFp,
             epoch_rolling_gas_cost_summary: GasCostSummary { computation_cost: 5000000, computation_cost_burned: 5000000, storage_cost: 36236800, storage_rebate: 9614000, non_refundable_storage_fee: 0 }}
 
 task 16, lines 187-200:
