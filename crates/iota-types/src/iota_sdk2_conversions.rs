@@ -749,6 +749,7 @@ impl From<TransactionEffects> for crate::effects::TransactionEffects {
                     executed_epoch: transaction_effects_v1.epoch,
                     gas_used: crate::gas::GasCostSummary::new(
                         transaction_effects_v1.gas_used.computation_cost,
+                        transaction_effects_v1.gas_used.computation_cost_burned,
                         transaction_effects_v1.gas_used.storage_cost,
                         transaction_effects_v1.gas_used.storage_rebate,
                         transaction_effects_v1.gas_used.non_refundable_storage_fee,
@@ -1595,6 +1596,7 @@ impl From<crate::gas::GasCostSummary> for GasCostSummary {
     fn from(value: crate::gas::GasCostSummary) -> Self {
         Self::new(
             value.computation_cost,
+            value.computation_cost_burned,
             value.storage_cost,
             value.storage_rebate,
             value.non_refundable_storage_fee,
@@ -1606,6 +1608,7 @@ impl From<GasCostSummary> for crate::gas::GasCostSummary {
     fn from(value: GasCostSummary) -> Self {
         Self::new(
             value.computation_cost,
+            value.computation_cost_burned,
             value.storage_cost,
             value.storage_rebate,
             value.non_refundable_storage_fee,

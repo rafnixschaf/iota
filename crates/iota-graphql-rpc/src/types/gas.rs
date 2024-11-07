@@ -30,6 +30,7 @@ pub(crate) struct GasInput {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct GasCostSummary {
     pub computation_cost: u64,
+    pub computation_cost_burned: u64,
     pub storage_cost: u64,
     pub storage_rebate: u64,
     pub non_refundable_storage_fee: u64,
@@ -192,6 +193,7 @@ impl From<&NativeGasCostSummary> for GasCostSummary {
     fn from(gcs: &NativeGasCostSummary) -> Self {
         Self {
             computation_cost: gcs.computation_cost,
+            computation_cost_burned: gcs.computation_cost_burned,
             storage_cost: gcs.storage_cost,
             storage_rebate: gcs.storage_rebate,
             non_refundable_storage_fee: gcs.non_refundable_storage_fee,
