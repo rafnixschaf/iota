@@ -1765,7 +1765,7 @@ impl ProtocolConfig {
 type OverrideFn = dyn Fn(ProtocolVersion, ProtocolConfig) -> ProtocolConfig + Send + Sync;
 
 thread_local! {
-    static CONFIG_OVERRIDE: RefCell<Option<Box<OverrideFn>>> = RefCell::new(None);
+    static CONFIG_OVERRIDE: RefCell<Option<Box<OverrideFn>>> = const { RefCell::new(None) };
 }
 
 #[must_use]
