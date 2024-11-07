@@ -10,30 +10,37 @@ import {
 } from '@iota/dapp-kit';
 import { getNetwork, IotaObjectData } from '@iota/iota-sdk/client';
 import { useMigrationTransaction } from '@/hooks/useMigrationTransaction';
-import { Button } from '@iota/apps-ui-kit';
+import { Button, InfoBox, InfoBoxStyle, InfoBoxType } from '@iota/apps-ui-kit';
 import { useNotifications } from '@/hooks';
 import { NotificationType } from '@/stores/notificationStore';
+import { Loader, Warning } from '@iota/ui-icons';
 
 interface MigratePopupProps {
-    stardustOutputObjects: IotaObjectData[];
+    basicOutputObjects: IotaObjectData[];
+    nftOutputObjects: IotaObjectData[];
     closePopup: () => void;
     onSuccess?: (digest: string) => void;
 }
 
 function MigratePopup({
-    stardustOutputObjects,
+    basicOutputObjects = [],
+    nftOutputObjects = [],
     closePopup,
     onSuccess,
 }: MigratePopupProps): JSX.Element {
     const account = useCurrentAccount();
     const { addNotification } = useNotifications();
-    const { data: migrateData } = useMigrationTransaction(
-        stardustOutputObjects,
-        account?.address || '',
-    );
+    const {
+        data: migrateData,
+        isPending,
+        isError,
+        error,
+    } = useMigrationTransaction(account?.address || '', basicOutputObjects, nftOutputObjects);
+
     const { network } = useIotaClientContext();
     const { explorer } = getNetwork(network);
-    const { mutateAsync: signAndExecuteTransaction, isPending } = useSignAndExecuteTransaction();
+    const { mutateAsync: signAndExecuteTransaction, isPending: isSendingTransaction } =
+        useSignAndExecuteTransaction();
 
     async function handleMigrate(): Promise<void> {
         if (!migrateData) return;
@@ -66,15 +73,40 @@ function MigratePopup({
     return (
         <div className="flex min-w-[300px] flex-col gap-2">
             <div className="flex flex-col">
-                <h1>Migratable Outputs: {stardustOutputObjects.length}</h1>
+                <h1>Migratable Basic Outputs: {basicOutputObjects?.length}</h1>
                 <VirtualList
-                    items={stardustOutputObjects}
+                    items={basicOutputObjects ?? []}
+                    estimateSize={() => 30}
+                    render={virtualItem}
+                />
+            </div>
+            <div className="flex flex-col">
+                <h1>Migratable Nft Outputs: {nftOutputObjects?.length}</h1>
+                <VirtualList
+                    items={nftOutputObjects ?? []}
                     estimateSize={() => 30}
                     render={virtualItem}
                 />
             </div>
             <p>Gas Fees: {migrateData?.gasBudget?.toString() || '--'}</p>
-            <Button text="Migrate" disabled={isPending} onClick={handleMigrate} />
+            {isError ? (
+                <InfoBox
+                    type={InfoBoxType.Error}
+                    title={error?.message || 'Error creating migration transcation'}
+                    icon={<Warning />}
+                    style={InfoBoxStyle.Elevated}
+                />
+            ) : null}
+            <Button
+                text="Migrate"
+                disabled={isPending || isError || isSendingTransaction}
+                onClick={handleMigrate}
+                icon={
+                    isPending || isSendingTransaction ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                    ) : null
+                }
+            />
         </div>
     );
 }

@@ -46,6 +46,10 @@ function MigrationDashboardPage(): JSX.Element {
             Number(currentEpochMs),
             address,
         );
+
+    const hasMigratableObjects =
+        migratableBasicOutputs.length > 0 || migratableNftOutputs.length > 0;
+
     const virtualItem = (asset: IotaObjectData): JSX.Element => (
         <a href={`${explorer}/object/${asset.objectId}`} target="_blank" rel="noreferrer">
             {asset.objectId}
@@ -61,7 +65,7 @@ function MigrationDashboardPage(): JSX.Element {
                 queryClient.invalidateQueries({
                     queryKey: [
                         'get-all-owned-objects',
-                        account?.address,
+                        address,
                         {
                             StructType: STARDUST_BASIC_OUTPUT_TYPE,
                         },
@@ -70,7 +74,7 @@ function MigrationDashboardPage(): JSX.Element {
                 queryClient.invalidateQueries({
                     queryKey: [
                         'get-all-owned-objects',
-                        account?.address,
+                        address,
                         {
                             StructType: STARDUST_NFT_OUTPUT_TYPE,
                         },
@@ -79,16 +83,14 @@ function MigrationDashboardPage(): JSX.Element {
             });
     }
     function openMigratePopup(): void {
-        const stardustOutputObjects = [...migratableBasicOutputs, ...migratableNftOutputs];
-        if (stardustOutputObjects.length > 0) {
-            openPopup(
-                <MigratePopup
-                    stardustOutputObjects={stardustOutputObjects}
-                    closePopup={closePopup}
-                    onSuccess={handleOnSuccess}
-                />,
-            );
-        }
+        openPopup(
+            <MigratePopup
+                basicOutputObjects={migratableBasicOutputs}
+                nftOutputObjects={migratableNftOutputs}
+                closePopup={closePopup}
+                onSuccess={handleOnSuccess}
+            />,
+        );
     }
 
     return (
@@ -125,7 +127,7 @@ function MigrationDashboardPage(): JSX.Element {
                     render={virtualItem}
                 />
             </div>
-            <Button text="Migrate" onClick={openMigratePopup} />
+            <Button text="Migrate" disabled={!hasMigratableObjects} onClick={openMigratePopup} />
         </div>
     );
 }
