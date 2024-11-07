@@ -66,6 +66,7 @@ const BasicOutputObjectSchema = CommonOutputObjectWithUcSchema.extend({
 
 const NftOutputObjectSchema = CommonOutputObjectWithUcSchema;
 
+export type CommonOutputObjectWithUc = z.infer<typeof CommonOutputObjectWithUcSchema>;
 type BasicOutputObject = z.infer<typeof BasicOutputObjectSchema>;
 type NftOutputObject = z.infer<typeof NftOutputObjectSchema>;
 
@@ -84,18 +85,22 @@ export async function getNativeTokenTypesFromBag(
     return nativeTokenTypes;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateBasicOutputObject(outputObject: any): BasicOutputObject {
-    const result = BasicOutputObjectSchema.safeParse(outputObject.content);
+export function validateBasicOutputObject(outputObject: IotaObjectData): BasicOutputObject {
+    if (outputObject.content?.dataType !== 'moveObject') {
+        throw new Error('Invalid basic output object');
+    }
+    const result = BasicOutputObjectSchema.safeParse(outputObject.content.fields);
     if (!result.success) {
         throw new Error('Invalid basic output object content');
     }
     return result.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateNftOutputObject(outputObject: any): NftOutputObject {
-    const result = NftOutputObjectSchema.safeParse(outputObject.content.fields);
+export function validateNftOutputObject(outputObject: IotaObjectData): NftOutputObject {
+    if (outputObject.content?.dataType !== 'moveObject') {
+        throw new Error('Invalid nft output object');
+    }
+    const result = NftOutputObjectSchema.safeParse(outputObject?.content);
     if (!result.success) {
         throw new Error('Invalid nft output object content');
     }
