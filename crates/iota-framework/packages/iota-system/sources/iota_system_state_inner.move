@@ -76,6 +76,8 @@ module iota_system::iota_system_state_inner {
         storage_fund: StorageFundV1,
         /// A list of system config parameters.
         parameters: SystemParametersV1,
+        /// A capability allows to perform privileged IOTA system operations.
+        iota_system_admin_cap: IotaSystemAdminCap,
         /// The reference gas price for the current epoch.
         reference_gas_price: u64,
         /// A map storing the records of validator reporting each other.
@@ -256,6 +258,7 @@ module iota_system::iota_system_state_inner {
             validators,
             storage_fund,
             parameters,
+            iota_system_admin_cap,
             reference_gas_price,
             validator_report_records,
             safe_mode,
@@ -274,6 +277,7 @@ module iota_system::iota_system_state_inner {
             validators: validators.v1_to_v2(),
             storage_fund,
             parameters,
+            iota_system_admin_cap,
             reference_gas_price,
             validator_report_records,
             safe_mode,
@@ -873,7 +877,7 @@ module iota_system::iota_system_state_inner {
         self.system_state_version
     }
 
-    public(package) fun iota_system_admin_cap(self: &IotaSystemStateV1): &IotaSystemAdminCap {
+    public(package) fun iota_system_admin_cap(self: &IotaSystemStateV2): &IotaSystemAdminCap {
         &self.iota_system_admin_cap
     }
 
