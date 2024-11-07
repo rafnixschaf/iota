@@ -5,31 +5,30 @@ on:
     - cron: "0 1 * * *" # every day at 1am (UTC)
   workflow_dispatch:
 
-env:
-  # Don't emit giant backtraces in the CI logs.
-  RUST_BACKTRACE: short
-  # Rustup
-  RUSTUP_MAX_RETRIES: 10
-  # Cargo
-  CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0
-  # Find a good balance between runtime performance and accurate code coverage analysis.
-  CARGO_PROFILE_TEST_OPT_LEVEL: 2
-  CARGO_PROFILE_TEST_DEBUG: true
-  CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: true
-  CARGO_PROFILE_TEST_OVERFLOW_CHECKS: false
-  CARGO_PROFILE_TEST_LTO: off
-  CARGO_PROFILE_TEST_CODEGEN_UNITS: 1
-  # Allow more retries for network requests in cargo (downloading crates) and
-  # rustup (installing toolchains). This should help to reduce flaky CI failures
-  # from transient network timeouts or other issues.
-  CARGO_NET_RETRY: 10
-
 jobs:
   llvm-cov:
     name: Generate code coverage
     runs-on: self-hosted
     timeout-minutes: 180
+    env:
+      # Don't emit giant backtraces in the CI logs.
+      RUST_BACKTRACE: short
+      # Rustup
+      RUSTUP_MAX_RETRIES: 10
+      # Cargo
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+      # Find a good balance between runtime performance and accurate code coverage analysis.
+      CARGO_PROFILE_TEST_OPT_LEVEL: 2
+      CARGO_PROFILE_TEST_DEBUG: true
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: true
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: false
+      CARGO_PROFILE_TEST_LTO: off
+      CARGO_PROFILE_TEST_CODEGEN_UNITS: 1
+      # Allow more retries for network requests in cargo (downloading crates) and
+      # rustup (installing toolchains). This should help to reduce flaky CI failures
+      # from transient network timeouts or other issues.
+      CARGO_NET_RETRY: 10
     steps:
       - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # pin@v4
       - uses: bmwill/rust-cache@fb63fcd7a959767755b88b5af2f5cbf65fb8a127 # pin@v1
@@ -48,7 +47,7 @@ jobs:
       - name: Compute code coverage and create report (nextest.info)
         run: |
           cargo llvm-cov clean --profraw-only
-          TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
+          TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
           if [ -x "$LLVM_PROFDATA" ]; then
