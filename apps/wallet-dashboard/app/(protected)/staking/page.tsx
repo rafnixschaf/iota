@@ -3,7 +3,8 @@
 
 'use client';
 
-import { AmountBox, Box, StakeCard, StakeDialog, Button, StakedDetailsDialog } from '@/components';
+import { AmountBox, Box, StakeCard, StakeDialog, Button } from '@/components';
+import { View } from '@/components/Dialogs/Staking/StakeDialog';
 import {
     ExtendedDelegatedStake,
     formatDelegatedStake,
@@ -20,6 +21,7 @@ import { useState } from 'react';
 
 function StakingDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
+    const [dialogStakeInitView, setDialogStakeInitView] = useState<View>();
     const [isDialogStakeOpen, setIsDialogStakeOpen] = useState(false);
     const [stakedDetails, setStakedDetails] = useState<ExtendedDelegatedStake | null>(null);
     const { data: delegatedStakeData } = useGetDelegatedStake({
@@ -41,10 +43,14 @@ function StakingDashboardPage(): JSX.Element {
     );
 
     const viewStakeDetails = (extendedStake: ExtendedDelegatedStake) => {
+        setIsDialogStakeOpen(true);
+        setDialogStakeInitView(View.Details);
         setStakedDetails(extendedStake);
     };
-    function handleCloseStakedDetails() {
+    function handleCloseStakeDialog() {
+        setIsDialogStakeOpen(false);
         setStakedDetails(null);
+        setDialogStakeInitView(undefined);
     }
 
     function handleNewStake() {
@@ -80,11 +86,12 @@ function StakingDashboardPage(): JSX.Element {
                 </Box>
                 <Button onClick={handleNewStake}>New Stake</Button>
             </div>
-            <StakeDialog isOpen={isDialogStakeOpen} setOpen={setIsDialogStakeOpen} />;
-            {!!stakedDetails && (
-                <StakedDetailsDialog
+            {isDialogStakeOpen && (
+                <StakeDialog
                     stakedDetails={stakedDetails}
-                    handleClose={handleCloseStakedDetails}
+                    isOpen={isDialogStakeOpen}
+                    handleClose={handleCloseStakeDialog}
+                    initView={dialogStakeInitView}
                 />
             )}
         </>

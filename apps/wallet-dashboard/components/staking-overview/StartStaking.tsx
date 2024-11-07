@@ -50,7 +50,7 @@ export function StartStaking() {
                     ></video>
                 </div>
             </div>
-            <StakeDialog isOpen={isDialogStakeOpen} setOpen={setIsDialogStakeOpen} />
+            <StakeDialog isOpen={isDialogStakeOpen} handleClose={setIsDialogStakeOpen} />
         </Panel>
     );
 }

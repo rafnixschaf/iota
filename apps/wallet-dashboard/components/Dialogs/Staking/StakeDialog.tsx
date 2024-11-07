@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState } from 'react';
-import { EnterAmountView, SelectValidatorView } from './views';
+import { EnterAmountView, SelectValidatorView, DetailsView } from './views';
 import {
     useNotifications,
     useNewStakeTransaction,
@@ -15,32 +15,41 @@ import {
     useCoinMetadata,
     useGetAllOwnedObjects,
     useGetValidatorsApy,
+    ExtendedDelegatedStake,
 } from '@iota/core';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
-import { Dialog, DialogBody, DialogContent, DialogPosition, Header } from '@iota/apps-ui-kit';
+import { Dialog } from '@iota/apps-ui-kit';
+
+export enum View {
+    Details,
+    SelectValidator,
+    EnterAmount,
+    Unstake,
+}
 
 interface StakeDialogProps {
     isTimelockedStaking?: boolean;
     onSuccess?: (digest: string) => void;
     isOpen: boolean;
-    setOpen: (bool: boolean) => void;
-}
-
-enum Step {
-    SelectValidator,
-    EnterAmount,
+    handleClose: () => void;
+    stakedDetails: ExtendedDelegatedStake | null;
+    initView?: View;
 }
 
 function StakeDialog({
     onSuccess,
     isTimelockedStaking,
     isOpen,
-    setOpen,
+    handleClose: handleClose,
+    initView,
+    stakedDetails,
 }: StakeDialogProps): JSX.Element {
-    const [step, setStep] = useState<Step>(Step.SelectValidator);
+    const [view, setView] = useState<View>(
+        initView !== undefined ? initView : View.SelectValidator,
+    );
     const [selectedValidator, setSelectedValidator] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
     const account = useCurrentAccount();
@@ -78,11 +87,11 @@ function StakeDialog({
     const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
     function handleNext(): void {
-        setStep(Step.EnterAmount);
+        setView(View.EnterAmount);
     }
 
     function handleBack(): void {
-        setStep(Step.SelectValidator);
+        setView(View.SelectValidator);
     }
 
     function handleValidatorSelect(validator: string): void {
@@ -119,29 +128,37 @@ function StakeDialog({
             });
     }
 
+    function detailsHandleUnstake() {
+        setView(View.Unstake);
+    }
+
+    function detailsHandleStake() {
+        setView(View.SelectValidator);
+    }
+
     return (
-        <Dialog open={isOpen} onOpenChange={setOpen}>
-            <DialogContent containerId="overlay-portal-container" position={DialogPosition.Right}>
-                <Header title="Receive" onClose={() => setOpen(false)} />
-                <DialogBody>
-                    {step === Step.SelectValidator && (
-                        <SelectValidatorView
-                            validators={validators}
-                            onSelect={handleValidatorSelect}
-                        />
-                    )}
-                    {step === Step.EnterAmount && (
-                        <EnterAmountView
-                            selectedValidator={selectedValidator}
-                            amount={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            onBack={handleBack}
-                            onStake={handleStake}
-                            isStakeDisabled={!amount}
-                        />
-                    )}
-                </DialogBody>
-            </DialogContent>
+        <Dialog open={isOpen} onOpenChange={() => handleClose()}>
+            {view === View.Details && stakedDetails && (
+                <DetailsView
+                    handleStake={detailsHandleStake}
+                    handleUnstake={detailsHandleUnstake}
+                    stakedDetails={stakedDetails}
+                    handleClose={handleClose}
+                />
+            )}
+            {view === View.SelectValidator && (
+                <SelectValidatorView validators={validators} onSelect={handleValidatorSelect} />
+            )}
+            {view === View.EnterAmount && (
+                <EnterAmountView
+                    selectedValidator={selectedValidator}
+                    amount={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    onBack={handleBack}
+                    onStake={handleStake}
+                    isStakeDisabled={!amount}
+                />
+            )}
         </Dialog>
     );
 }
