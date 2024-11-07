@@ -1093,7 +1093,6 @@ impl ProtocolConfig {
                 ret
             }
         })
-
     }
 
     /// Get the value ProtocolConfig that are in effect during the given
