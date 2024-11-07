@@ -4,6 +4,8 @@
 import React from 'react';
 import { ImageIcon, ImageIconSize, formatPercentageDisplay } from '@iota/core';
 import {
+    Header,
+    Button,
     Card,
     CardBody,
     CardImage,
@@ -15,19 +17,53 @@ import {
 } from '@iota/apps-ui-kit';
 import { formatAddress } from '@iota/iota-sdk/utils';
 import { useValidatorInfo } from '@/hooks';
-
+import { Layout, LayoutFooter, LayoutBody } from './Layout';
 interface SelectValidatorViewProps {
     validators: string[];
     onSelect: (validator: string) => void;
+    handleClose: () => void;
+    onNext: () => void;
+    selectedValidator: string;
 }
 
-function SelectValidatorView({ validators, onSelect }: SelectValidatorViewProps): JSX.Element {
+function SelectValidatorView({
+    validators,
+    onSelect,
+    handleClose,
+    onNext,
+    selectedValidator,
+}: SelectValidatorViewProps): JSX.Element {
     return (
-        <div className="flex w-full flex-col items-start gap-2">
-            {validators.map((validator) => (
-                <Validator key={validator} address={validator} onClick={onSelect} />
-            ))}
-        </div>
+        <Layout>
+            <Header
+                title="Select Validator"
+                onClose={handleClose}
+                onBack={handleClose}
+                titleCentered
+            />
+            <LayoutBody>
+                <div className="flex w-full flex-col gap-md">
+                    {validators.map((validator) => (
+                        <Validator
+                            key={validator}
+                            address={validator}
+                            onClick={onSelect}
+                            isSelected={selectedValidator === validator}
+                        />
+                    ))}
+                </div>
+            </LayoutBody>
+            <LayoutFooter>
+                {!!selectedValidator && (
+                    <Button
+                        fullWidth
+                        data-testid="select-validator-cta"
+                        onClick={onNext}
+                        text="Next"
+                    />
+                )}
+            </LayoutFooter>
+        </Layout>
     );
 }
 
@@ -35,7 +71,9 @@ function Validator({
     address,
     showActiveStatus,
     onClick,
+    isSelected,
 }: {
+    isSelected: boolean;
     address: string;
     showActiveStatus?: boolean;
     onClick: (address: string) => void;
@@ -51,8 +89,11 @@ function Validator({
     ) : (
         formatAddress(address)
     );
+
+    const handleClick = onClick ? () => onClick(address) : undefined;
+
     return (
-        <Card type={CardType.Default} onClick={() => onClick(address)}>
+        <Card type={isSelected ? CardType.Filled : CardType.Default} onClick={handleClick}>
             <CardImage>
                 <ImageIcon src={null} label={name} fallback={name} size={ImageIconSize.Large} />
             </CardImage>
