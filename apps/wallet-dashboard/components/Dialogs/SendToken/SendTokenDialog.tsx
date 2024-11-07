@@ -64,8 +64,8 @@ function SendTokenDialog({
     );
 
     useEffect(() => {
-        setSelectedCoin(coin)
-    }, [coin])
+        setSelectedCoin(coin);
+    }, [coin]);
 
     function handleTransfer() {
         if (!sendCoinData?.transaction) {

@@ -88,10 +88,10 @@ function EnterValuesFormView({
         coin.coinType,
         CoinFormat.FULL,
     );
-    
+
     const coinMetadata = useCoinMetadata(coin.coinType);
     const coinDecimals = coinMetadata.data?.decimals ?? 0;
-    
+
     const validationSchemaStepOne = useMemo(
         () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
         [client, coinBalance, symbol, coinDecimals],
@@ -127,7 +127,7 @@ function EnterValuesFormView({
     }
 
     return (
-        <div className='flex h-full w-full flex-col gap-md'>
+        <div className="flex h-full w-full flex-col gap-md">
             <CoinSelector
                 activeCoinType={coin.coinType}
                 coins={coinsBalance ?? []}
@@ -189,8 +189,7 @@ function EnterValuesFormView({
                         queryResult.isPending ||
                         !coinBalance;
 
-                        console.log("amount", values.amount);
-                        
+                    console.log('amount', values.amount);
 
                     return (
                         <div className="flex h-full w-full flex-col">
@@ -214,7 +213,7 @@ function EnterValuesFormView({
                                                 to: values.to,
                                                 amount: values.amount,
                                                 isPayAllIota: values.isPayAllIota,
-                                                setFieldValue
+                                                setFieldValue,
                                             });
 
                                             return (
@@ -226,7 +225,9 @@ function EnterValuesFormView({
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isActionButtonDisabled={isMaxActionDisabled}
                                                     value={field.value}
-                                                    onChange={(value) => setFieldValue('amount', value)}
+                                                    onChange={(value) =>
+                                                        setFieldValue('amount', value)
+                                                    }
                                                     onBlur={handleBlur}
                                                     errorMessage={
                                                         touched.amount && errors.amount
@@ -234,7 +235,8 @@ function EnterValuesFormView({
                                                             : undefined
                                                     }
                                                 />
-                                        )}}
+                                            );
+                                        }}
                                     </Field>
 
                                     <Field

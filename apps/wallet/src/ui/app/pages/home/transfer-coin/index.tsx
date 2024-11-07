@@ -25,7 +25,7 @@ import { PreviewTransfer } from './PreviewTransfer';
 import { SendTokenForm, type SubmitProps } from './SendTokenForm';
 import { Button, ButtonType, LoadingIndicator } from '@iota/apps-ui-kit';
 import { Loader } from '@iota/ui-icons';
-import { useIotaClientQuery } from 'node_modules/@iota/dapp-kit/src';
+import { useIotaClientQuery } from '@iota/dapp-kit';
 
 function TransferCoinPage() {
     const [searchParams] = useSearchParams();

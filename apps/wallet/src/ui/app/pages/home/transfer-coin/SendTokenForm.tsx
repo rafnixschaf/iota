@@ -18,7 +18,7 @@ import {
 import { useIotaClient } from '@iota/dapp-kit';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, FieldInputProps, Form, Formik } from 'formik';
+import { Field, type FieldInputProps, Form, Formik } from 'formik';
 import { useMemo } from 'react';
 
 import {
@@ -164,6 +164,8 @@ export function SendTokenForm({
                         setFieldValue('isPayAllIota', newPayIotaAll);
                     }
 
+                    console.log('values', values);
+
                     const hasEnoughBalance =
                         values.isPayAllIota ||
                         iotaBalance >
@@ -197,7 +199,6 @@ export function SendTokenForm({
 
                                     <Field name="amount">
                                         {({ field }: { field: FieldInputProps<string> }) => {
-                                            // TODO: needs to be updated in values
                                             const gasBudgetEstimation = useGasBudgetEstimation({
                                                 coinDecimals: coinDecimals,
                                                 coins: coins ?? [],
@@ -205,26 +206,29 @@ export function SendTokenForm({
                                                 to: values.to,
                                                 amount: values.amount,
                                                 isPayAllIota: values.isPayAllIota,
-                                                setFieldValue
+                                                setFieldValue,
                                             });
                                             return (
-                                            <SendTokenFormInput
-                                                gasBudgetEstimation={gasBudgetEstimation}
-                                                symbol={symbol}
-                                                coins={coins}
-                                                values={values}
-                                                onActionClick={onMaxTokenButtonClick}
-                                                isActionButtonDisabled={isMaxActionDisabled}
-                                                value={field.value}
-                                                onChange={(value) => setFieldValue('amount', value)}
-                                                onBlur={handleBlur}
-                                                errorMessage={
-                                                    touched.amount && errors.amount
-                                                        ? errors.amount
-                                                        : undefined
-                                                }
-                                            />
-                                        )}}
+                                                <SendTokenFormInput
+                                                    gasBudgetEstimation={gasBudgetEstimation}
+                                                    symbol={symbol}
+                                                    coins={coins}
+                                                    values={values}
+                                                    onActionClick={onMaxTokenButtonClick}
+                                                    isActionButtonDisabled={isMaxActionDisabled}
+                                                    value={field.value}
+                                                    onChange={(value) =>
+                                                        setFieldValue('amount', value)
+                                                    }
+                                                    onBlur={handleBlur}
+                                                    errorMessage={
+                                                        touched.amount && errors.amount
+                                                            ? errors.amount
+                                                            : undefined
+                                                    }
+                                                />
+                                            );
+                                        }}
                                     </Field>
                                     <Field
                                         component={AddressInput}

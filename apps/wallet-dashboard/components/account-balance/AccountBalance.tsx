@@ -3,10 +3,7 @@
 
 import { useCurrentAccount, useIotaClientContext } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import {
-    useBalance,
-    useFormatCoin,
-} from '@iota/core';
+import { useBalance, useFormatCoin } from '@iota/core';
 import { Address, Button, ButtonSize, ButtonType, Panel } from '@iota/apps-ui-kit';
 import { getNetwork } from '@iota/iota-sdk/client';
 import { ReceiveFundsDialog, SendTokenDialog } from '../Dialogs';
@@ -26,7 +23,7 @@ export function AccountBalance() {
     const explorerLink = `${explorer}/address/${address}`;
 
     function openSendTokenPopup(): void {
-            setIsSendTokenDialogOpen(true);
+        setIsSendTokenDialogOpen(true);
     }
 
     function openReceiveTokenPopup(): void {
@@ -57,7 +54,7 @@ export function AccountBalance() {
                         <span className="text-headline-lg text-neutral-10 dark:text-neutral-92">
                             {formatted} {symbol}
                         </span>
-                        <div className="max-w-56 flex w-full gap-xs">
+                        <div className="flex w-full max-w-56 gap-xs">
                             <Button
                                 onClick={openSendTokenPopup}
                                 text="Send"
