@@ -164,8 +164,6 @@ export function SendTokenForm({
                         setFieldValue('isPayAllIota', newPayIotaAll);
                     }
 
-                    console.log('values', values);
-
                     const hasEnoughBalance =
                         values.isPayAllIota ||
                         iotaBalance >
@@ -177,6 +175,11 @@ export function SendTokenForm({
 
                     async function onMaxTokenButtonClick() {
                         await setFieldValue('amount', formattedTokenBalance);
+                    }
+
+                    function handleOnChangeAmountInput(value: string, symbol: string) {
+                        const valueWithoutSuffix = value.replace(symbol, '');
+                        setFieldValue('amount', valueWithoutSuffix);
                     }
 
                     const isMaxActionDisabled =
@@ -208,6 +211,7 @@ export function SendTokenForm({
                                                 isPayAllIota: values.isPayAllIota,
                                                 setFieldValue,
                                             });
+
                                             return (
                                                 <SendTokenFormInput
                                                     gasBudgetEstimation={gasBudgetEstimation}
@@ -218,7 +222,7 @@ export function SendTokenForm({
                                                     isActionButtonDisabled={isMaxActionDisabled}
                                                     value={field.value}
                                                     onChange={(value) =>
-                                                        setFieldValue('amount', value)
+                                                        handleOnChangeAmountInput(value, symbol)
                                                     }
                                                     onBlur={handleBlur}
                                                     errorMessage={

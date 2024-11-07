@@ -184,12 +184,15 @@ function EnterValuesFormView({
                         await setFieldValue('amount', formattedTokenBalance);
                     }
 
+                    function handleOnChangeAmountInput(value: string, symbol: string) {
+                        const valueWithoutSuffix = value.replace(symbol, '');
+                        setFieldValue('amount', valueWithoutSuffix);
+                    }
+
                     const isMaxActionDisabled =
                         parseAmount(values?.amount, coinDecimals) === coinBalance ||
                         queryResult.isPending ||
                         !coinBalance;
-
-                    console.log('amount', values.amount);
 
                     return (
                         <div className="flex h-full w-full flex-col">
@@ -226,7 +229,7 @@ function EnterValuesFormView({
                                                     isActionButtonDisabled={isMaxActionDisabled}
                                                     value={field.value}
                                                     onChange={(value) =>
-                                                        setFieldValue('amount', value)
+                                                        handleOnChangeAmountInput(value, symbol)
                                                     }
                                                     onBlur={handleBlur}
                                                     errorMessage={
