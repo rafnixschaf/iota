@@ -22,7 +22,6 @@ export function useMigrationTransaction(
                 basicOutputObjects,
                 nftOutputObjects,
             );
-            // transaction.setGasBudget(1000000000);
             transaction.setSender(address);
             await transaction.build({ client });
             return transaction;

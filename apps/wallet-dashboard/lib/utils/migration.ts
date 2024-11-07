@@ -20,10 +20,6 @@ export function groupStardustObjectsByMigrationStatus(
     const epochUnix = epochTimestamp / 1000;
 
     for (const outputObject of stardustOutputObjects) {
-        if (!outputObject) {
-            unmigratable.push(outputObject);
-            continue;
-        }
         const outputObjectFields = (
             outputObject.content as unknown as {
                 fields: CommonOutputObjectWithUc;

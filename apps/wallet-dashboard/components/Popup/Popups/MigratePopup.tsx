@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useEffect } from 'react';
 import { VirtualList } from '@/components';
 import {
     useCurrentAccount,
@@ -14,18 +13,18 @@ import { useMigrationTransaction } from '@/hooks/useMigrationTransaction';
 import { Button, InfoBox, InfoBoxStyle, InfoBoxType } from '@iota/apps-ui-kit';
 import { useNotifications } from '@/hooks';
 import { NotificationType } from '@/stores/notificationStore';
-import { Warning } from '@iota/ui-icons';
+import { Loader, Warning } from '@iota/ui-icons';
 
 interface MigratePopupProps {
-    basicOutputObjects?: IotaObjectData[];
-    nftOutputObjects?: IotaObjectData[];
+    basicOutputObjects: IotaObjectData[];
+    nftOutputObjects: IotaObjectData[];
     closePopup: () => void;
     onSuccess?: (digest: string) => void;
 }
 
 function MigratePopup({
-    basicOutputObjects,
-    nftOutputObjects,
+    basicOutputObjects = [],
+    nftOutputObjects = [],
     closePopup,
     onSuccess,
 }: MigratePopupProps): JSX.Element {
@@ -101,6 +100,11 @@ function MigratePopup({
                 text="Migrate"
                 disabled={isPending || isError || isSendingTransaction}
                 onClick={handleMigrate}
+                icon={
+                    isPending || isSendingTransaction ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                    ) : null
+                }
             />
         </div>
     );
