@@ -23,6 +23,7 @@ use crate::common::{ApiTestSetup, indexer_wait_for_checkpoint, indexer_wait_for_
 
 type TxBytes = Base64;
 type Signatures = Vec<Base64>;
+
 async fn prepare_and_sign_tx(
     sender: IotaAddress,
     receiver: IotaAddress,
