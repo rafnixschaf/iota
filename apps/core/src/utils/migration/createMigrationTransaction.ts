@@ -59,9 +59,9 @@ const CommonOutputObjectWithUcSchema = CommonOutputObjectSchema.extend({
 });
 
 const BasicOutputObjectSchema = CommonOutputObjectWithUcSchema.extend({
-    metadata: z.array(z.number()).optional(),
-    tag: z.array(z.number()).optional(),
-    sender: z.string().optional(),
+    metadata: z.array(z.number()).nullable().optional(),
+    tag: z.array(z.number()).nullable().optional(),
+    sender: z.string().nullable().optional(),
 });
 
 const NftOutputObjectSchema = CommonOutputObjectWithUcSchema;
@@ -100,7 +100,7 @@ export function validateNftOutputObject(outputObject: IotaObjectData): NftOutput
     if (outputObject.content?.dataType !== 'moveObject') {
         throw new Error('Invalid nft output object');
     }
-    const result = NftOutputObjectSchema.safeParse(outputObject?.content);
+    const result = NftOutputObjectSchema.safeParse(outputObject.content.fields);
     if (!result.success) {
         throw new Error('Invalid nft output object content');
     }
