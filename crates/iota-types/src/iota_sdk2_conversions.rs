@@ -650,6 +650,7 @@ impl From<crate::effects::TransactionEffects> for TransactionEffects {
                     epoch: effects.executed_epoch,
                     gas_used: GasCostSummary::new(
                         effects.gas_used.computation_cost,
+                        effects.gas_used.computation_cost_burned,
                         effects.gas_used.storage_cost,
                         effects.gas_used.storage_rebate,
                         effects.gas_used.non_refundable_storage_fee,
