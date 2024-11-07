@@ -15,7 +15,7 @@ export interface AddressInputProps {
         onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
     };
     form: {
-        setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void;
+        setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
         errors: Record<string, string>;
         touched: Record<string, boolean>;
     };

@@ -6,7 +6,9 @@ import * as Yup from 'yup';
 import { createIotaAddressValidation } from './createIotaAdressValidation';
 import { createTokenValidation } from './createTokenValidation';
 
-export function createValidationSchemaSendTokenForm(...args: Parameters<typeof createTokenValidation>) {
+export function createValidationSchemaSendTokenForm(
+    ...args: Parameters<typeof createTokenValidation>
+) {
     return Yup.object({
         to: createIotaAddressValidation(),
         amount: createTokenValidation(...args),
