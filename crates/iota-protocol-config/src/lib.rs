@@ -1874,7 +1874,6 @@ mod test {
                 Chain::Unknown => "".to_string(),
                 _ => format!("{:?}_", chain_id),
             };
-            println!("{}", chain_str);
             for i in MIN_PROTOCOL_VERSION..=MAX_PROTOCOL_VERSION {
                 let cur = ProtocolVersion::new(i);
                 assert_yaml_snapshot!(
