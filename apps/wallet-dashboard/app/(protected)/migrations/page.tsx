@@ -82,7 +82,6 @@ function MigrationDashboardPage(): JSX.Element {
                 });
             });
     }
-
     function openMigratePopup(): void {
         openPopup(
             <MigratePopup
