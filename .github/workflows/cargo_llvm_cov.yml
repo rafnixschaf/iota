@@ -58,7 +58,11 @@ jobs:
           fi
           set +e
           echo "Computing code coverage."
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --workspace --ignore-run-fail --no-report nextest -vv
+          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov \
+            --workspace \
+            --ignore-run-fail \
+            --ignore-filename-regex 'external-crates/.*' \
+            --no-report nextest -vv
           echo "Checking validity of generated .profraw files."
           find target/llvm-cov-target -name '*.profraw' | while read file; do
             if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
