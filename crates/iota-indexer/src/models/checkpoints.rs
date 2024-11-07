@@ -203,7 +203,8 @@ impl TryFrom<StoredCheckpoint> for RpcCheckpoint {
             end_of_epoch_data,
             epoch_rolling_gas_cost_summary: GasCostSummary {
                 computation_cost: checkpoint.computation_cost as u64,
-                // TODO_FIXED_BASE_FEE: update computation cost burned in checkpoint to be used here. 
+                // TODO_FIXED_BASE_FEE: update computation cost burned in checkpoint to be used
+                // here.
                 computation_cost_burned: checkpoint.computation_cost as u64,
                 storage_cost: checkpoint.storage_cost as u64,
                 storage_rebate: checkpoint.storage_rebate as u64,

@@ -204,13 +204,13 @@ pub mod checked {
         pub fn new_from_txn_effects<'a>(
             transactions: impl Iterator<Item = &'a TransactionEffects>,
         ) -> GasCostSummary {
-            let (storage_costs, computation_costs, computation_costs_burned, storage_rebates, non_refundable_storage_fee): (
-                Vec<u64>,
-                Vec<u64>,
-                Vec<u64>,
-                Vec<u64>,
-                Vec<u64>,
-            ) = transactions
+            let (
+                storage_costs,
+                computation_costs,
+                computation_costs_burned,
+                storage_rebates,
+                non_refundable_storage_fee,
+            ): (Vec<u64>, Vec<u64>, Vec<u64>, Vec<u64>, Vec<u64>) = transactions
                 .map(|e| {
                     (
                         e.gas_cost_summary().storage_cost,

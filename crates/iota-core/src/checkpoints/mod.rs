@@ -1559,7 +1559,8 @@ impl CheckpointBuilder {
             // sum only when we are within the same epoch
             GasCostSummary::new(
                 previous_gas_costs.computation_cost + current_gas_costs.computation_cost,
-                previous_gas_costs.computation_cost_burned + current_gas_costs.computation_cost_burned,
+                previous_gas_costs.computation_cost_burned
+                    + current_gas_costs.computation_cost_burned,
                 previous_gas_costs.storage_cost + current_gas_costs.storage_cost,
                 previous_gas_costs.storage_rebate + current_gas_costs.storage_rebate,
                 previous_gas_costs.non_refundable_storage_fee
