@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EnterValuesFormView, ReviewValuesFormView } from './views';
 import { CoinBalance } from '@iota/iota-sdk/client';
 import { useSendCoinTransaction, useNotifications } from '@/hooks';
@@ -36,7 +36,7 @@ enum FormStep {
     ReviewValues,
 }
 
-function SendCoinDialog({
+function SendTokenDialog({
     coin,
     activeAddress,
     setOpen,
@@ -47,7 +47,7 @@ function SendCoinDialog({
     const [formData, setFormData] = useState<FormDataValues>(INITIAL_VALUES);
     const { addNotification } = useNotifications();
 
-    const { data: coinsData } = useGetAllCoins(selectedCoin.coinType, activeAddress);
+    const { data: coinsData } = useGetAllCoins(selectedCoin?.coinType, activeAddress);
 
     const {
         mutateAsync: signAndExecuteTransaction,
@@ -56,12 +56,16 @@ function SendCoinDialog({
     } = useSignAndExecuteTransaction();
     const { data: sendCoinData } = useSendCoinTransaction(
         coinsData || [],
-        selectedCoin.coinType,
+        selectedCoin?.coinType,
         activeAddress,
         formData.to,
         formData.amount,
-        selectedCoin.totalBalance === formData.amount,
+        selectedCoin?.totalBalance === formData.amount,
     );
+
+    useEffect(() => {
+        setSelectedCoin(coin)
+    }, [coin])
 
     function handleTransfer() {
         if (!sendCoinData?.transaction) {
@@ -126,4 +130,4 @@ function SendCoinDialog({
     );
 }
 
-export default SendCoinDialog;
+export default SendTokenDialog;

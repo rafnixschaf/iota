@@ -18,8 +18,8 @@ import {
 import { useIotaClient } from '@iota/dapp-kit';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, FieldInputProps, Form, Formik, useFormikContext } from 'formik';
-import { useEffect, useMemo } from 'react';
+import { Field, FieldInputProps, Form, Formik } from 'formik';
+import { useMemo } from 'react';
 
 import {
     InfoBox,
@@ -205,6 +205,7 @@ export function SendTokenForm({
                                                 to: values.to,
                                                 amount: values.amount,
                                                 isPayAllIota: values.isPayAllIota,
+                                                setFieldValue
                                             });
                                             return (
                                             <SendTokenFormInput
@@ -255,16 +256,4 @@ export function SendTokenForm({
             </Formik>
         </Loading>
     );
-}
-
-interface SendTokenInputProps {
-    coinDecimals: number;
-    coins?: CoinStruct[];
-    symbol: string;
-    values: {
-        amount: string;
-        isPayAllIota: boolean;
-    };
-    onActionClick: () => Promise<void>;
-    isActionButtonDisabled?: boolean | 'auto';
 }

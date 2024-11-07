@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { CoinBalance, CoinStruct } from '@iota/iota-sdk/client';
-import { FormDataValues, INITIAL_VALUES } from '../SendCoinDialog';
+import { FormDataValues, INITIAL_VALUES } from '../SendTokenDialog';
 import {
     AddressInput,
     CoinFormat,
@@ -127,7 +127,7 @@ function EnterValuesFormView({
     }
 
     return (
-        <div>
+        <div className='flex h-full w-full flex-col gap-md'>
             <CoinSelector
                 activeCoinType={coin.coinType}
                 coins={coinsBalance ?? []}
@@ -189,6 +189,9 @@ function EnterValuesFormView({
                         queryResult.isPending ||
                         !coinBalance;
 
+                        console.log("amount", values.amount);
+                        
+
                     return (
                         <div className="flex h-full w-full flex-col">
                             <Form autoComplete="off" noValidate className="flex-1">
@@ -204,8 +207,6 @@ function EnterValuesFormView({
 
                                     <Field name="amount">
                                         {({ field }: { field: FieldInputProps<string> }) => {
-
-                                            // TODO: needs to be updated in fields value
                                             const gasBudgetEstimation = useGasBudgetEstimation({
                                                 coinDecimals,
                                                 coins: coins ?? [],
@@ -213,6 +214,7 @@ function EnterValuesFormView({
                                                 to: values.to,
                                                 amount: values.amount,
                                                 isPayAllIota: values.isPayAllIota,
+                                                setFieldValue
                                             });
 
                                             return (

@@ -19,7 +19,7 @@ import {
     Title,
 } from '@iota/apps-ui-kit';
 import { RecognizedBadge } from '@iota/ui-icons';
-import SendCoinDialog from '../Dialogs/SendToken/SendCoinDialog';
+import SendCoinDialog from '../Dialogs/SendToken/SendTokenDialog';
 
 enum TokenCategory {
     All = 'All',

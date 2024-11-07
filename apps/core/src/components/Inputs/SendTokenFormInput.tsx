@@ -37,7 +37,7 @@ export function SendTokenFormInput({
             label="Send Amount"
             placeholder="0.00"
             caption="Est. Gas Fees:"
-            suffix={`${symbol}`}
+            suffix={` ${symbol}`}
             decimals
             allowNegative={false}
             prefix={values.isPayAllIota ? '~ ' : undefined}
