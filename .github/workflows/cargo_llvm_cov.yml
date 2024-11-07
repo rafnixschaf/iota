@@ -47,6 +47,7 @@ jobs:
       - name: Compute code coverage and create report (nextest.info)
         run: |
           cargo llvm-cov clean --profraw-only
+
           TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
@@ -57,21 +58,28 @@ jobs:
             exit 1
           fi
           set +e
-          echo "Computing code coverage."
+
+          echo "Computing nextest code coverage."
           IOTA_SKIP_SIMTESTS=1 cargo llvm-cov \
             --workspace \
             --ignore-run-fail \
-            --ignore-filename-regex 'external-crates/.*' \
-            --no-report nextest -vv
-          echo "Checking validity of generated .profraw files."
+            --no-report \
+            nextest -vv
+
+          echo "Checking validity of generated .profraw files. This might take a while."
           find target/llvm-cov-target -name '*.profraw' | while read file; do
             if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
                 echo "Removing corrupted file: $file"
                 rm "$file"
             fi
           done
+
           echo "Creating nextest report."
-          cargo llvm-cov report --lcov --output-path target/nextest.info
+          cargo llvm-cov report \
+            --lcov \
+            --output-path target/nextest.info \
+            --ignore-filename-regex 'external-crates/.*'
+
           [ -f "target/nextest.info" ] || exit 1
 
       # - name: Compute code coverage and create report (simtest.info)
@@ -79,7 +87,6 @@ jobs:
       #     cargo llvm-cov clean --profraw-only
       #     git clean -fd
       #     set +e
-      #     echo "Computing code coverage."
       #     ./scripts/simtest/simtest-cov.sh
       #     # For now we accept failing simtest coverage
       #     # [ -f "target/simtest.info" ] || exit 1
