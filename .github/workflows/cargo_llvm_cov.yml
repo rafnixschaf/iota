@@ -31,10 +31,6 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 180
     steps:
-      # can be removed when actions are available on the image already
-      - name: Update Rust toolchain
-        run: rustup update stable
-
       - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # pin@v4
       - uses: bmwill/rust-cache@fb63fcd7a959767755b88b5af2f5cbf65fb8a127 # pin@v1
 
@@ -63,7 +59,7 @@ jobs:
           fi
           set +e
           echo "Computing code coverage."
-          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --ignore-run-fail --no-report nextest -vv
+          IOTA_SKIP_SIMTESTS=1 cargo llvm-cov --workspace --ignore-run-fail --no-report nextest -vv
           echo "Checking validity of generated .profraw files."
           find target/llvm-cov-target -name '*.profraw' | while read file; do
             if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
@@ -82,7 +78,9 @@ jobs:
       #     set +e
       #     echo "Computing code coverage."
       #     ./scripts/simtest/simtest-cov.sh
-      #     [ -f "target/simtest.info" ] || exit 1
+      #     # For now we accept failing simtest coverage
+      #     # [ -f "target/simtest.info" ] || exit 1
+      #     exit 0
 
       - name: Create html report (report.tgz)
         run: |
@@ -94,8 +92,11 @@ jobs:
             rm -rf report
           fi
           echo "Creating html report."
-          # genhtml -o report nextest.info simtest.info
-          genhtml -o report nextest.info
+          if [ -f "simtest.info" ]; then
+            genhtml -o report nextest.info simtest.info
+          else
+            genhtml -o report nextest.info
+          fi
           [ -d "report" ] || exit 1
           echo "Packaging html report."
           tar -czf report.tgz report
