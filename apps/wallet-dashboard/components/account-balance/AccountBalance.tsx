@@ -12,13 +12,14 @@ import {
 } from '@iota/core';
 import { Address, Button, ButtonSize, ButtonType, Panel } from '@iota/apps-ui-kit';
 import { CoinBalance, getNetwork } from '@iota/iota-sdk/client';
+import { ReceiveFundsDialog, SendCoinDialog } from '../Dialogs';
 import toast from 'react-hot-toast';
-import SendCoinDialog from '../Dialogs/SendToken/SendCoinDialog';
 import { useState } from 'react';
 
 export function AccountBalance() {
     const account = useCurrentAccount();
     const address = account?.address;
+    const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
     const { network } = useIotaClientContext();
     const { explorer } = getNetwork(network);
     const { data: coinBalance, isPending } = useBalance(address!);
@@ -38,11 +39,15 @@ export function AccountBalance() {
     const [selectedCoin, setSelectedCoin] = useState<CoinBalance>();
     const explorerLink = `${explorer}/address/${address}`;
 
-    function openSendTokenPopup(coin: CoinBalance, address: string): void {
+    function openSendTokenPopup(coin: CoinBalance): void {
         if (coinBalances) {
             setIsSendTokenDialogOpen(true);
             setSelectedCoin(coin);
         }
+    }
+
+    function openReceiveTokenPopup(): void {
+        setIsReceiveDialogOpen(true);
     }
 
     function handleOnCopySuccess() {
@@ -50,21 +55,37 @@ export function AccountBalance() {
     }
 
     return (
-        <Panel>
-            {isPending && <p>Loading...</p>}
-            {!isPending && (
-                <div className="flex h-full flex-col items-center justify-center gap-y-lg p-lg">
-                    <div className="flex h-full flex-col items-center justify-center gap-y-xs">
-                        {address && (
-                            <Address
-                                text={formattedAddress}
-                                isCopyable
-                                copyText={address}
-                                isExternal
-                                externalLink={explorerLink}
-                                onCopySuccess={handleOnCopySuccess}
+        <>
+            <Panel>
+                {isPending ? <p>Loading...</p> : (
+                    <div className="flex h-full flex-col items-center justify-center gap-y-lg p-lg">
+                        <div className="flex h-full flex-col items-center justify-center gap-y-xs">
+                            {address && (
+                                <Address
+                                    text={formattedAddress}
+                                    isCopyable
+                                    copyText={address}
+                                    isExternal
+                                    externalLink={explorerLink}
+                                    onCopySuccess={handleOnCopySuccess}
+                                />
+                            )}
+                            <span className="text-headline-lg text-neutral-10 dark:text-neutral-92">
+                                {formatted} {symbol}
+                            </span>
+                        </div>
+                        <div className="flex w-full max-w-56 gap-xs">
+                            <Button
+                                onClick={() =>
+                                    coinBalance &&
+                                    openSendTokenPopup(coinBalance)
+                                }
+                                text="Send"
+                                size={ButtonSize.Small}
+                                disabled={!address}
+                                testId="send-coin-button"
+                                fullWidth
                             />
-                        )}
                         <span className="text-headline-lg text-neutral-10 dark:text-neutral-92">
                             {formatted} {symbol}
                         </span>
@@ -72,7 +93,7 @@ export function AccountBalance() {
                     <div className="flex w-full max-w-56 gap-xs">
                         <Button
                             onClick={() =>
-                                coinBalance && openSendTokenPopup(coinBalance, address ?? '')
+                                coinBalance && openSendTokenPopup(coinBalance)
                             }
                             text="Send"
                             size={ButtonSize.Small}
@@ -81,7 +102,7 @@ export function AccountBalance() {
                             fullWidth
                         />
                         <Button
-                            onClick={() => {}}
+                            onClick={openReceiveTokenPopup}
                             type={ButtonType.Secondary}
                             text="Receive"
                             size={ButtonSize.Small}
@@ -89,7 +110,7 @@ export function AccountBalance() {
                         />
                     </div>
                 </div>
-            )}
+                )}
             {selectedCoin && address && (
                 <SendCoinDialog
                     activeAddress={address}
@@ -98,6 +119,12 @@ export function AccountBalance() {
                     setOpen={setIsSendTokenDialogOpen}
                 />
             )}
+             <ReceiveFundsDialog
+                address={address!}
+                open={isReceiveDialogOpen}
+                setOpen={setIsReceiveDialogOpen}
+            />
         </Panel>
+        </>
     );
 }

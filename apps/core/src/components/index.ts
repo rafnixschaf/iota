@@ -5,3 +5,4 @@ export * from './KioskClientProvider';
 
 export * from './coin';
 export * from './Inputs';
+export * from './QR';
