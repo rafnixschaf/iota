@@ -133,11 +133,11 @@ Download each package. For example, on macOS use [homebrew](https://brew.sh/):
 
 ### Learn more about Iota
 
-- https://docs.iota.io/learn
+- https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/learn
 
 ### Learn more about building and running a Full node from source code
 
-- https://docs.iota.io/build/fullnode
+- https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/build/fullnode
 
 ### Learn more about Docker Compose
 

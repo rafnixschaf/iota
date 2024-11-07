@@ -3,4 +3,4 @@
 A suite of standard utilities for implementing wallets and libraries based on the
 [Wallet Standard](https://github.com/wallet-standard/wallet-standard/).
 
-**Documentation:** https://wiki.iota.org/standards/wallet-standard
+**Documentation:** https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/standards/wallet-standard

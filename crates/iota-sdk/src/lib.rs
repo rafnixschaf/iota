@@ -6,7 +6,7 @@
 //!
 //! It aims at providing a similar SDK functionality like the one existing for
 //! [TypeScript](https://github.com/iotaledger/iota/tree/main/sdk/typescript/).
-//! Iota Rust SDK builds on top of the [JSON RPC API](https://docs.iota.io/iota-jsonrpc)
+//! Iota Rust SDK builds on top of the [JSON RPC API](https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/iota-jsonrpc)
 //! and therefore many of the return types are the ones specified in
 //! [iota_types].
 //!

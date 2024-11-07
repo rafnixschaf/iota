@@ -137,7 +137,7 @@ export default function MultiSigAddressGenerator() {
                     <CardHeader>
                         <CardTitle>IOTA MultiSig Address</CardTitle>
                         <CardDescription>
-                            https://wiki.iota.org/testnet/learn/cryptography/iota-multisig
+                            https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/testnet/learn/cryptography/iota-multisig
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

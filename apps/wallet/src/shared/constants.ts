@@ -4,7 +4,7 @@
 
 export const ToS_LINK = 'https://www.iota.org/terms-of-use';
 export const PRIVACY_POLICY_LINK = 'https://www.iota.org/privacy-policy';
-export const FAQ_LINK = 'https://wiki.iota.org/';
+export const FAQ_LINK = 'https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/';
 
 // number of epochs before earning
 // Staking Rewards Redeemable

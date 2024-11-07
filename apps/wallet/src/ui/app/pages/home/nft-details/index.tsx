@@ -61,11 +61,11 @@ function NFTDetailsPage() {
     const isPending = isNftLoading || isPendingDisplay || isGuardLoading;
 
     function handleMoreAboutKiosk() {
-        window.open('https://wiki.iota.org/', '_blank');
+        window.open('https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/', '_blank');
     }
 
     function handleMarketplace() {
-        window.open('https://wiki.iota.org/', '_blank');
+        window.open('https://wiki:zsijvJgGyfCk4Eo@docs.iota.org/', '_blank');
     }
 
     function handleSend() {
