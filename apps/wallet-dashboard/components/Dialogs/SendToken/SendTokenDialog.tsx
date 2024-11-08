@@ -102,7 +102,7 @@ function SendTokenDialog({
                     title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
                     onClose={() => setOpen(false)}
                 />
-                <div className="h-full">
+                <div className="h-full [&>div]:h-full">
                     <DialogBody>
                         {step === FormStep.EnterValues && (
                             <EnterValuesFormView
@@ -120,9 +120,9 @@ function SendTokenDialog({
                                 onBack={onBack}
                                 executeTransfer={handleTransfer}
                                 senderAddress={activeAddress}
-                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                                 error={error?.message}
                                 isPending={isPending}
+                                coinType={selectedCoin?.coinType}
                             />
                         )}
                     </DialogBody>
