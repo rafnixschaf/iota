@@ -16,7 +16,7 @@ git apply ./scripts/simtest/config-patch
 root_dir=$(git rev-parse --show-toplevel)
 export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
-TOOLCHAIN=$(rustup show active-toolchain | awk '{print $1}')
+TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
 LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
 
 echo "Computing simtest code coverage."
@@ -34,7 +34,7 @@ find target/llvm-cov-target -name '*.profraw' | while read file; do
 done 
 
 echo "Creating simtest report."
-CARGO_LOG=debug cargo llvm-cov report \
+cargo llvm-cov report \
   --lcov \
   --output-path target/simtest.info \
   --ignore-filename-regex 'external-crates/.*'
