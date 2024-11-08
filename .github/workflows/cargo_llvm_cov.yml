@@ -25,7 +25,6 @@ jobs:
       CARGO_PROFILE_TEST_OVERFLOW_CHECKS: false
       CARGO_PROFILE_TEST_LTO: off
       CARGO_PROFILE_TEST_CODEGEN_UNITS: 1
-      CARGO_LOG: debug
       # Allow more retries for network requests in cargo (downloading crates) and
       # rustup (installing toolchains). This should help to reduce flaky CI failures
       # from transient network timeouts or other issues.

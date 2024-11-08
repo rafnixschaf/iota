@@ -34,7 +34,7 @@ find target/llvm-cov-target -name '*.profraw' | while read file; do
 done 
 
 echo "Creating simtest report."
-cargo llvm-cov report \
+CARGO_LOG=debug cargo llvm-cov report \
   --lcov \
   --output-path target/simtest.info \
   --ignore-filename-regex 'external-crates/.*'
