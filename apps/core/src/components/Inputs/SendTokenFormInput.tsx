@@ -39,7 +39,6 @@ export default function SendTokenFormInput({
     onBlur,
     errorMessage,
 }: SendTokenInputProps) {
-
     const gasBudgetEstimation = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
