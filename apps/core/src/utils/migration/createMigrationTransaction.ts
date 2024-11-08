@@ -4,8 +4,8 @@
 import { IotaClient, IotaObjectData } from '@iota/iota-sdk/client';
 import { Transaction } from '@iota/iota-sdk/transactions';
 import { STARDUST_PACKAGE_ID } from '../../constants/migration.constants';
-import { IOTA_COIN_TYPE } from '../../constants/coins.constants';
 import { z } from 'zod';
+import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
 type NestedResultType = {
     $kind: 'NestedResult';
@@ -134,7 +134,7 @@ export async function createMigrationTransaction(
 
         const migratableResult = ptb.moveCall({
             target: `${STARDUST_PACKAGE_ID}::basic_output::extract_assets`,
-            typeArguments: [IOTA_COIN_TYPE],
+            typeArguments: [IOTA_TYPE_ARG],
             arguments: [ptb.object(basicOutputObjectId)],
         });
 
@@ -144,7 +144,7 @@ export async function createMigrationTransaction(
         // Convert Balance in Coin
         const [coin] = ptb.moveCall({
             target: '0x02::coin::from_balance',
-            typeArguments: [IOTA_COIN_TYPE],
+            typeArguments: [IOTA_TYPE_ARG],
             arguments: [ptb.object(balance)],
         });
 
@@ -178,7 +178,7 @@ export async function createMigrationTransaction(
 
         const migratableResult = ptb.moveCall({
             target: `${STARDUST_PACKAGE_ID}::nft_output::extract_assets`,
-            typeArguments: [IOTA_COIN_TYPE],
+            typeArguments: [IOTA_TYPE_ARG],
             arguments: [ptb.object(nftOutputObjectId)],
         });
 
@@ -191,7 +191,7 @@ export async function createMigrationTransaction(
         // Convert Balance in Coin
         const [coin] = ptb.moveCall({
             target: '0x02::coin::from_balance',
-            typeArguments: [IOTA_COIN_TYPE],
+            typeArguments: [IOTA_TYPE_ARG],
             arguments: [ptb.object(balance)],
         });
         coinsFromNftOutputs.push(coin);

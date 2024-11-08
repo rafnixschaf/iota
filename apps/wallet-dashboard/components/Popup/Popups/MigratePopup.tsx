@@ -64,6 +64,7 @@ function MigratePopup({
                 addNotification('Migration transaction was not sent', NotificationType.Error);
             });
     }
+
     const virtualItem = (asset: IotaObjectData): JSX.Element => (
         <a href={`${explorer}/object/${asset.objectId}`} target="_blank" rel="noreferrer">
             {asset.objectId}

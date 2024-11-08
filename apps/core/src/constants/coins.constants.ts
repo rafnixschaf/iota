@@ -3,4 +3,3 @@
 
 export const COINS_QUERY_REFETCH_INTERVAL = 20_000;
 export const COINS_QUERY_STALE_TIME = 20_000;
-export const IOTA_COIN_TYPE = '0x2::iota::IOTA';
