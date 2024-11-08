@@ -164,6 +164,11 @@ module iota::display {
         pub.from_package<T>()
     }
 
+    /// Read the `id` field.
+    public fun id<T: key>(d: &Display<T>): &ID {
+        d.id.uid_as_inner()
+    }
+
     /// Read the `version` field.
     public fun version<T: key>(d: &Display<T>): u16 {
         d.version

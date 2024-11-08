@@ -3,21 +3,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 module iota_system::iota_system_state_inner {
+    use std::string::{Self, String};
+
     use iota::balance::{Self, Balance};
     use iota::coin::Coin;
+    use iota::display::{Self, Display};
     use iota::iota::{IOTA, IotaTreasuryCap};
     use iota::system_admin_cap::IotaSystemAdminCap;
+    use iota::vec_map::{Self, VecMap};
+    use iota::vec_set::{Self, VecSet};
+    use iota::event;
+    use iota::table::Table;
+    use iota::bag::{Self, Bag};
+
     use iota_system::validator::{Self, ValidatorV1};
     use iota_system::validator_set::{Self, ValidatorSetV1};
     use iota_system::validator_cap::{UnverifiedValidatorOperationCap, ValidatorOperationCap};
     use iota_system::storage_fund::{Self, StorageFundV1};
     use iota_system::staking_pool::{PoolTokenExchangeRate, StakedIota};
-    use iota::vec_map::{Self, VecMap};
-    use iota::vec_set::{Self, VecSet};
-    use iota::event;
-    use iota::table::Table;
-    use iota::bag::Bag;
-    use iota::bag;
 
     // same as in validator_set
     const ACTIVE_VALIDATOR_ONLY: u8 = 1;
@@ -104,6 +107,10 @@ module iota_system::iota_system_state_inner {
 
         /// Unix timestamp of the current epoch start
         epoch_start_timestamp_ms: u64,
+
+        /// A map contains the system display object IDs stored in the extra fields.
+        system_display_objects: VecMap<String, ID>,
+
         /// Any extra fields that's not defined statically.
         extra_fields: Bag,
     }
@@ -171,6 +178,7 @@ module iota_system::iota_system_state_inner {
             safe_mode_storage_rebates: 0,
             safe_mode_non_refundable_storage_fee: 0,
             epoch_start_timestamp_ms,
+            system_display_objects: vec_map::empty(),
             extra_fields: bag::new(ctx),
         };
         system_state
@@ -442,37 +450,75 @@ module iota_system::iota_system_state_inner {
         }
     }
 
-    /// Add an object with the specified key to the extra fields collection.
-    public(package) fun add_extra_field<K: copy + drop + store, V: store>(
+    /// Create an empty `Display` object with `IotaSystemAdminCap`.
+    public(package) fun new_system_display<T: key>(
+        self: &IotaSystemStateV1,
+        ctx: &mut TxContext,
+    ): Display<T> {
+        display::system_new<T>(&self.iota_system_admin_cap, ctx)
+    }
+
+    /// Create a new `Display<T>` object with a set of fields using `IotaSystemAdminCap`.
+    public(package) fun new_system_display_with_fields<T: key>(
+        self: &IotaSystemStateV1,
+        fields: vector<String>,
+        values: vector<String>,
+        ctx: &mut TxContext,
+    ): Display<T> {
+        display::system_new_with_fields<T>(&self.iota_system_admin_cap, fields, values, ctx)
+    }
+
+    /// Insert a display object.
+    public(package) fun insert_display_object<T: key>(
         self: &mut IotaSystemStateV1,
-        key: K,
-        value: V,
+        display: Display<T>,
     ) {
-        self.extra_fields.add(key, value);
+        // Get a display object unique key.
+        let key = display_object_key<T>();
+        let display_id = *display.id();
+
+        // Store the display object.
+        self.system_display_objects.insert(key, display_id);
+        self.extra_fields.add(display_id, display);
     }
 
-    /// Immutable borrows the value associated with the key in the extra fields.
-    public(package) fun borrow_extra_field<K: copy + drop + store, V: store>(
-        self: &IotaSystemStateV1,
-        key: K,
-    ): &V {
-        self.extra_fields.borrow(key)
+    /// Borrow an immutable display object.
+    public(package) fun borrow_display_object<T: key>(self: &IotaSystemStateV1): &Display<T> {
+        // Get a display object unique key.
+        let key = display_object_key<T>();
+
+        // Get the id.
+        let display_id = *self.system_display_objects.get(&key);
+
+        // Borrow the display object.
+        self.extra_fields.borrow(display_id)
     }
 
-    /// Mutable borrows the value associated with the key in the extra fields.
-    public(package) fun borrow_extra_field_mut<K: copy + drop + store, V: store>(
-        self: &mut IotaSystemStateV1,
-        key: K,
-    ): &mut V {
-        self.extra_fields.borrow_mut(key)
+    /// Borrow a mutable display object.
+    public(package) fun borrow_display_object_mut<T: key>(self: &mut IotaSystemStateV1): &mut Display<T> {
+        // Get a display object unique key.
+        let key = display_object_key<T>();
+
+        // Get the id.
+        let display_id = *self.system_display_objects.get(&key);
+
+        // Borrow the display object.
+        self.extra_fields.borrow_mut(display_id)
     }
 
-    /// Returns true if there is an extra field associated with the key.
-    public(package) fun contains_extra_field<K: copy + drop + store>(
-        self: &IotaSystemStateV1,
-        key: K,
-    ): bool {
-        self.extra_fields.contains(key)
+    /// Returns true if the related display object exists.
+    public(package) fun contains_display_object<T: key>(self: &IotaSystemStateV1): bool {
+        // Get a display object unique key.
+        let key = display_object_key<T>();
+
+        // Check if the related display object exists.
+        self.system_display_objects.contains(&key)
+    }
+
+    /// Return a fully qualified type name with the original package IDs
+    /// that is used as a display object key.
+    fun display_object_key<T>(): String {
+        string::from_ascii(std::type_name::get_with_original_ids<T>().into_string())
     }
 
     // ==== validator metadata management functions ====

@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -18,6 +18,7 @@ use crate::{
     IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID, MoveTypeTagTrait,
     base_types::ObjectID,
     committee::CommitteeWithNetworkMetadata,
+    display::DisplayObject,
     dynamic_field::{Field, get_dynamic_field_from_store, get_dynamic_field_object_from_store},
     error::IotaError,
     id::UID,
@@ -390,6 +391,47 @@ where
         validators.push(validator);
     }
     Ok(validators)
+}
+
+/// Get the system display objects stored in the system state.
+pub fn get_system_display_objects(
+    object_store: &dyn ObjectStore,
+) -> Result<HashMap<String, DisplayObject>, IotaError> {
+    let system_state = get_iota_system_state(object_store)?;
+
+    match system_state {
+        IotaSystemState::V1(inner) => inner
+            .system_display_objects
+            .contents
+            .into_iter()
+            .map(|entry| {
+                let display_object_id = entry.value.bytes;
+
+                let display_object: DisplayObject = get_dynamic_field_from_store(
+                    object_store,
+                    *inner.extra_fields.id.object_id(),
+                    &display_object_id,
+                )
+                .map_err(|err| {
+                    IotaError::DynamicFieldRead(format!(
+                        "Failed to load a system display object with ID {display_object_id:?}: {err}",
+                    ))
+                })?;
+
+                Ok((entry.key, display_object))
+            })
+            .collect::<Result<HashMap<_, _>, _>>(),
+        #[cfg(msim)]
+        _ => unimplemented!("System display objects are not implemented for mock system states"),
+    }
+}
+
+/// Get a system display object unique key.
+/// * ty - is a type for which a display object is created.
+pub fn display_object_key(ty: StructTag) -> String {
+    let with_prefix = false;
+
+    ty.to_canonical_string(with_prefix)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Default)]

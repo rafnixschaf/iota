@@ -41,18 +41,20 @@
 
 module iota_system::iota_system {
     use iota::balance::Balance;
+    use std::string::String;
 
     use iota::coin::Coin;
-    use iota_system::staking_pool::StakedIota;
+    use iota::display::Display;
     use iota::iota::{IOTA, IotaTreasuryCap};
     use iota::table::Table;
     use iota::system_admin_cap::IotaSystemAdminCap;
-    use iota_system::validator::ValidatorV1;
-    use iota_system::validator_cap::UnverifiedValidatorOperationCap;
-    use iota_system::iota_system_state_inner::{Self, SystemParametersV1, IotaSystemStateV1};
-    use iota_system::staking_pool::PoolTokenExchangeRate;
     use iota::dynamic_field;
     use iota::vec_map::VecMap;
+
+    use iota_system::iota_system_state_inner::{Self, SystemParametersV1, IotaSystemStateV1};
+    use iota_system::staking_pool::{PoolTokenExchangeRate, StakedIota};
+    use iota_system::validator::ValidatorV1;
+    use iota_system::validator_cap::UnverifiedValidatorOperationCap;
 
     #[test_only] use iota::balance;
     #[test_only] use iota_system::validator_set::ValidatorSetV1;
@@ -505,41 +507,51 @@ module iota_system::iota_system {
         self.load_system_state().iota_system_admin_cap()
     }
 
-    /// Add an object with the specified key to the extra fields collection.
-    public(package) fun add_extra_field<K: copy + drop + store, V: store>(
+    /// Create an empty `Display` object with `IotaSystemAdminCap`.
+    public(package) fun new_system_display<T: key>(
         wrapper: &mut IotaSystemState,
-        key: K,
-        value: V,
+        ctx: &mut TxContext,
+    ): Display<T> {
+        let self = wrapper.load_system_state();
+        self.new_system_display(ctx)
+    }
+
+    /// Create a new `Display<T>` object with a set of fields using `IotaSystemAdminCap`.
+    public(package) fun new_system_display_with_fields<T: key>(
+        wrapper: &mut IotaSystemState,
+        fields: vector<String>,
+        values: vector<String>,
+        ctx: &mut TxContext,
+    ): Display<T> {
+        let self = wrapper.load_system_state();
+        self.new_system_display_with_fields(fields, values, ctx)
+    }
+
+    /// Insert a display object.
+    public(package) fun insert_display_object<T: key>(
+        wrapper: &mut IotaSystemState,
+        display: Display<T>,
     ) {
-        let self = load_system_state_mut(wrapper);
-        self.add_extra_field(key, value);
+        let self = wrapper.load_system_state_mut();
+        self.insert_display_object(display);
     }
 
-    /// Immutable borrows the value associated with the key in the extra fields.
-    public(package) fun borrow_extra_field<K: copy + drop + store, V: store>(
-        wrapper: &mut IotaSystemState,
-        key: K,
-    ): &V {
-        let self = load_system_state(wrapper);
-        self.borrow_extra_field(key)
+    /// Borrow an immutable display object.
+    public(package) fun borrow_display_object<T: key>(wrapper: &mut IotaSystemState): &Display<T> {
+        let self = wrapper.load_system_state();
+        self.borrow_display_object<T>()
     }
 
-    /// Mutable borrows the value associated with the key in the extra fields.
-    public(package) fun borrow_extra_field_mut<K: copy + drop + store, V: store>(
-        wrapper: &mut IotaSystemState,
-        key: K,
-    ): &mut V {
-        let self = load_system_state_mut(wrapper);
-        self.borrow_extra_field_mut(key)
+    /// Borrow a mutable display object.
+    public(package) fun borrow_display_object_mut<T: key>(wrapper: &mut IotaSystemState): &mut Display<T> {
+        let self = wrapper.load_system_state_mut();
+        self.borrow_display_object_mut<T>()
     }
 
-    /// Returns true if there is an extra field associated with the key.
-    public(package) fun contains_extra_field<K: copy + drop + store>(
-        wrapper: &mut IotaSystemState,
-        key: K,
-    ): bool {
-        let self = load_system_state_mut(wrapper);
-        self.contains_extra_field(key)
+    /// Returns true if the related display object exists.
+    public(package) fun contains_display_object<T: key>(wrapper: &mut IotaSystemState): bool {
+        let self = wrapper.load_system_state();
+        self.contains_display_object<T>()
     }
 
     #[allow(unused_function)]

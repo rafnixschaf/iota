@@ -454,6 +454,7 @@ pub struct IotaSystemStateV1 {
     pub safe_mode_storage_rebates: u64,
     pub safe_mode_non_refundable_storage_fee: u64,
     pub epoch_start_timestamp_ms: u64,
+    pub system_display_objects: VecMap<String, ID>,
     pub extra_fields: Bag,
     // TODO: Use getters instead of all pub.
 }
@@ -631,6 +632,7 @@ impl IotaSystemStateTrait for IotaSystemStateV1 {
             safe_mode_storage_rebates,
             safe_mode_non_refundable_storage_fee,
             epoch_start_timestamp_ms,
+            system_display_objects: _,
             extra_fields: _,
         } = self;
         IotaSystemStateSummary {
