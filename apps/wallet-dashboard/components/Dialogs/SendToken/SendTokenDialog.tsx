@@ -65,7 +65,9 @@ function SendTokenDialog({
 
     useEffect(() => {
         setSelectedCoin(coin);
-    }, [coin]);
+        setStep(FormStep.EnterValues);
+        setFormData(INITIAL_VALUES);
+    }, [open, setOpen, coin]);
 
     function handleTransfer() {
         if (!sendCoinData?.transaction) {

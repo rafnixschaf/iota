@@ -4,13 +4,17 @@
 import { ButtonPill, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { FormInput } from './';
+import { useGasBudgetEstimation } from '../../hooks';
 
 export interface SendTokenInputProps {
-    gasBudgetEstimation: string;
-    coins?: CoinStruct[];
+    coins: CoinStruct[];
     symbol: string;
+    coinDecimals: number;
+    activeAddress: string;
+    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
     values: {
         amount: string;
+        to: string;
         isPayAllIota: boolean;
     };
     onActionClick: () => Promise<void>;
@@ -22,10 +26,12 @@ export interface SendTokenInputProps {
 }
 
 export default function SendTokenFormInput({
-    gasBudgetEstimation,
     coins,
     values,
     symbol,
+    coinDecimals,
+    activeAddress,
+    setFieldValue,
     onActionClick,
     isActionButtonDisabled,
     value,
@@ -33,6 +39,17 @@ export default function SendTokenFormInput({
     onBlur,
     errorMessage,
 }: SendTokenInputProps) {
+
+    const gasBudgetEstimation = useGasBudgetEstimation({
+        coinDecimals,
+        coins: coins ?? [],
+        activeAddress,
+        to: values.to,
+        amount: values.amount,
+        isPayAllIota: values.isPayAllIota,
+        setFieldValue,
+    });
+
     return (
         <FormInput
             type={InputType.NumericFormat}

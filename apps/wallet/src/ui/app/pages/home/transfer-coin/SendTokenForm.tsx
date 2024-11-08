@@ -12,10 +12,8 @@ import {
     parseAmount,
     AddressInput,
     SendTokenFormInput,
-    useGasBudgetEstimation,
     createValidationSchemaSendTokenForm,
 } from '@iota/core';
-import { useIotaClient } from '@iota/dapp-kit';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, type FieldInputProps, Form, Formik } from 'formik';
@@ -72,7 +70,6 @@ export function SendTokenForm({
     initialAmount = '',
     initialTo = '',
 }: SendTokenFormProps) {
-    const client = useIotaClient();
     const activeAddress = useActiveAddress();
     // Get all coins of the type
     const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(coinType, activeAddress!);
@@ -98,7 +95,7 @@ export function SendTokenForm({
 
     const validationSchemaStepOne = useMemo(
         () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
-        [client, coinBalance, symbol, coinDecimals],
+        [coinBalance, symbol, coinDecimals],
     );
 
     // remove the comma from the token balance
@@ -202,21 +199,13 @@ export function SendTokenForm({
 
                                     <Field name="amount">
                                         {({ field }: { field: FieldInputProps<string> }) => {
-                                            const gasBudgetEstimation = useGasBudgetEstimation({
-                                                coinDecimals: coinDecimals,
-                                                coins: coins ?? [],
-                                                activeAddress: activeAddress ?? '',
-                                                to: values.to,
-                                                amount: values.amount,
-                                                isPayAllIota: values.isPayAllIota,
-                                                setFieldValue,
-                                            });
-
                                             return (
                                                 <SendTokenFormInput
-                                                    gasBudgetEstimation={gasBudgetEstimation}
                                                     symbol={symbol}
-                                                    coins={coins}
+                                                    coinDecimals={coinDecimals}
+                                                    activeAddress={activeAddress ?? ''}
+                                                    setFieldValue={setFieldValue}
+                                                    coins={coins ?? []}
                                                     values={values}
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isActionButtonDisabled={isMaxActionDisabled}

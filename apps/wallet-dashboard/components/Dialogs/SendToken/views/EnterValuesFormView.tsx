@@ -15,7 +15,6 @@ import {
     SendTokenFormInput,
     useCoinMetadata,
     useFormatCoin,
-    useGasBudgetEstimation,
     useGetAllCoins,
 } from '@iota/core';
 import {
@@ -27,7 +26,7 @@ import {
     InfoBoxStyle,
     LoadingIndicator,
 } from '@iota/apps-ui-kit';
-import { useIotaClient, useIotaClientQuery } from '@iota/dapp-kit';
+import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, FieldInputProps, Form, Formik } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
@@ -56,7 +55,6 @@ function EnterValuesFormView({
     setSelectedCoin,
     onNext,
 }: EnterValuesFormProps): JSX.Element {
-    const client = useIotaClient();
     // Get all coins of the type
     const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(
         coin.coinType,
@@ -94,7 +92,7 @@ function EnterValuesFormView({
 
     const validationSchemaStepOne = useMemo(
         () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
-        [client, coinBalance, symbol, coinDecimals],
+        [coinBalance, symbol, coinDecimals],
     );
 
     const formattedTokenBalance = tokenBalance.replace(/,/g, '');
@@ -209,21 +207,13 @@ function EnterValuesFormView({
 
                                     <Field name="amount">
                                         {({ field }: { field: FieldInputProps<string> }) => {
-                                            const gasBudgetEstimation = useGasBudgetEstimation({
-                                                coinDecimals,
-                                                coins: coins ?? [],
-                                                activeAddress,
-                                                to: values.to,
-                                                amount: values.amount,
-                                                isPayAllIota: values.isPayAllIota,
-                                                setFieldValue,
-                                            });
-
                                             return (
                                                 <SendTokenFormInput
-                                                    gasBudgetEstimation={gasBudgetEstimation}
                                                     symbol={symbol}
-                                                    coins={coins}
+                                                    coins={coins ?? []}
+                                                    coinDecimals={coinDecimals}
+                                                    activeAddress={activeAddress}
+                                                    setFieldValue={setFieldValue}
                                                     values={values}
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isActionButtonDisabled={isMaxActionDisabled}
