@@ -105,6 +105,7 @@ function MigratePopup({
                         <Loader className="h-4 w-4 animate-spin" />
                     ) : null
                 }
+                iconAfterText
             />
         </div>
     );

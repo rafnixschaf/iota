@@ -66,9 +66,15 @@ const BasicOutputObjectSchema = CommonOutputObjectWithUcSchema.extend({
 
 const NftOutputObjectSchema = CommonOutputObjectWithUcSchema;
 
+export type ExpirationUnlockCondition = z.infer<typeof ExpirationUnlockConditionSchema>;
+export type StorageDepositReturnUnlockCondition = z.infer<
+    typeof StorageDepositReturnUnlockConditionSchema
+>;
+export type TimelockUnlockCondition = z.infer<typeof TimelockUnlockConditionSchema>;
+export type CommonOutputObject = z.infer<typeof CommonOutputObjectSchema>;
 export type CommonOutputObjectWithUc = z.infer<typeof CommonOutputObjectWithUcSchema>;
-type BasicOutputObject = z.infer<typeof BasicOutputObjectSchema>;
-type NftOutputObject = z.infer<typeof NftOutputObjectSchema>;
+export type BasicOutputObject = z.infer<typeof BasicOutputObjectSchema>;
+export type NftOutputObject = z.infer<typeof NftOutputObjectSchema>;
 
 export async function getNativeTokenTypesFromBag(
     bagId: string,
