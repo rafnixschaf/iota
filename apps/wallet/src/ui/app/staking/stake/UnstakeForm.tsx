@@ -8,13 +8,13 @@ import {
     useFormatCoin,
     useGetTimeBeforeEpochNumber,
     useTimeAgo,
+    GAS_COIN_SYMBOL,
 } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Form } from 'formik';
 import { useMemo } from 'react';
 
 import { useActiveAddress, useTransactionGasBudget } from '../../hooks';
-import { GAS_SYMBOL } from '../../redux/slices/iota-objects/Coin';
 import { Divider, KeyValueInfo, Panel } from '@iota/apps-ui-kit';
 
 export interface StakeFromProps {
@@ -65,7 +65,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Your Stake"
                         value={tokenBalance}
-                        supportingLabel={GAS_SYMBOL}
+                        supportingLabel={GAS_COIN_SYMBOL}
                         fullwidth
                     />
                     <KeyValueInfo
@@ -78,7 +78,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Total unstaked IOTA"
                         value={totalIota}
-                        supportingLabel={GAS_SYMBOL}
+                        supportingLabel={GAS_COIN_SYMBOL}
                         fullwidth
                     />
                 </div>
@@ -88,7 +88,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Gas Fees"
                         value={gasBudget || '-'}
-                        supportingLabel={GAS_SYMBOL}
+                        supportingLabel={GAS_COIN_SYMBOL}
                         fullwidth
                     />
                 </div>

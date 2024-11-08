@@ -43,8 +43,10 @@ export function CoinIcon({
     hasCoinWrapper,
 }: CoinIconProps) {
     const Component = hasCoinWrapper ? CoinIconWrapper : React.Fragment;
+    const coinWrapperProps = hasCoinWrapper ? { hasBorder: true, size: ImageIconSize.Large } : {};
+
     return coinType === IOTA_TYPE_ARG ? (
-        <Component hasBorder size={ImageIconSize.Large}>
+        <Component {...coinWrapperProps}>
             <div className={cx(size, 'text-neutral-10')}>
                 <IotaLogoMark className="h-full w-full" />
             </div>

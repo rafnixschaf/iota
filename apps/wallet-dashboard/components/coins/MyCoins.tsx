@@ -3,8 +3,7 @@
 
 import React, { useState } from 'react';
 import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
-import { CoinItem, SendCoinPopup } from '@/components';
-import { usePopups } from '@/hooks';
+import { CoinItem } from '@/components';
 import { CoinBalance } from '@iota/iota-sdk/client';
 import {
     COINS_QUERY_REFETCH_INTERVAL,
@@ -20,6 +19,7 @@ import {
     Title,
 } from '@iota/apps-ui-kit';
 import { RecognizedBadge } from '@iota/ui-icons';
+import SendCoinDialog from '../Dialogs/SendToken/SendTokenDialog';
 
 enum TokenCategory {
     All = 'All',
@@ -44,8 +44,9 @@ const TOKEN_CATEGORIES = [
 
 function MyCoins(): React.JSX.Element {
     const [selectedTokenCategory, setSelectedTokenCategory] = useState(TokenCategory.All);
+    const [isSendTokenDialogOpen, setIsSendTokenDialogOpen] = useState(false);
+    const [selectedCoin, setSelectedCoin] = useState<CoinBalance>();
 
-    const { openPopup, closePopup } = usePopups();
     const account = useCurrentAccount();
     const activeAccountAddress = account?.address;
 
@@ -61,16 +62,10 @@ function MyCoins(): React.JSX.Element {
     );
     const { recognized, unrecognized } = useSortedCoinsByCategories(coinBalances ?? []);
 
-    function openSendTokenPopup(coin: CoinBalance, address: string): void {
+    function openSendTokenDialog(coin: CoinBalance): void {
         if (coinBalances) {
-            openPopup(
-                <SendCoinPopup
-                    coin={coin}
-                    senderAddress={address}
-                    onClose={closePopup}
-                    coins={coinBalances}
-                />,
-            );
+            setIsSendTokenDialogOpen(true);
+            setSelectedCoin(coin);
         }
     }
 
@@ -111,9 +106,7 @@ function MyCoins(): React.JSX.Element {
                                         key={index}
                                         coinType={coin.coinType}
                                         balance={BigInt(coin.totalBalance)}
-                                        onClick={() =>
-                                            openSendTokenPopup(coin, account?.address ?? '')
-                                        }
+                                        onClick={() => openSendTokenDialog(coin)}
                                         icon={
                                             <RecognizedBadge className="h-4 w-4 text-primary-40" />
                                         }
@@ -129,15 +122,21 @@ function MyCoins(): React.JSX.Element {
                                         key={index}
                                         coinType={coin.coinType}
                                         balance={BigInt(coin.totalBalance)}
-                                        onClick={() =>
-                                            openSendTokenPopup(coin, account?.address ?? '')
-                                        }
+                                        onClick={() => openSendTokenDialog(coin)}
                                     />
                                 );
                             })}
                     </div>
                 </div>
             </div>
+            {selectedCoin && activeAccountAddress && (
+                <SendCoinDialog
+                    activeAddress={activeAccountAddress}
+                    coin={selectedCoin}
+                    open={isSendTokenDialogOpen}
+                    setOpen={setIsSendTokenDialogOpen}
+                />
+            )}
         </Panel>
     );
 }

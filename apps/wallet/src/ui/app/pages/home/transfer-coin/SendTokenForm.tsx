@@ -3,35 +3,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useActiveAddress } from '_app/hooks/useActiveAddress';
-import { AddressInput, Loading } from '_components';
-import { GAS_SYMBOL } from '_src/ui/app/redux/slices/iota-objects/Coin';
+import { Loading } from '_components';
 import {
     useGetAllCoins,
     CoinFormat,
-    createTokenTransferTransaction,
     useCoinMetadata,
     useFormatCoin,
     parseAmount,
+    AddressInput,
+    SendTokenFormInput,
+    createValidationSchemaSendTokenForm,
 } from '@iota/core';
-import { useIotaClient } from '@iota/dapp-kit';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useQuery } from '@tanstack/react-query';
-import { Field, Form, Formik, useFormikContext } from 'formik';
-import { useEffect, useMemo } from 'react';
+import { Field, type FieldInputProps, Form, Formik } from 'formik';
+import { useMemo } from 'react';
 
-import { createValidationSchemaStepOne } from './validation';
 import {
     InfoBox,
     InfoBoxStyle,
     InfoBoxType,
-    InputType,
     Button,
     ButtonType,
     ButtonHtmlType,
-    ButtonPill,
 } from '@iota/apps-ui-kit';
-import { FormInput } from './FormInput';
 import { Exclamation } from '@iota/ui-icons';
 
 const INITIAL_VALUES = {
@@ -66,61 +61,6 @@ function getBalanceFromCoinStruct(coin: CoinStruct): bigint {
     return BigInt(coin.balance);
 }
 
-function useGasBudgetEstimation({
-    coinDecimals,
-    coins,
-}: {
-    coinDecimals: number;
-    coins: CoinStruct[];
-}) {
-    const activeAddress = useActiveAddress();
-    const { values, setFieldValue } = useFormikContext<FormValues>();
-
-    const client = useIotaClient();
-    const { data: gasBudget } = useQuery({
-        // eslint-disable-next-line @tanstack/query/exhaustive-deps
-        queryKey: [
-            'transaction-gas-budget-estimate',
-            {
-                to: values.to,
-                amount: values.amount,
-                coins,
-                activeAddress,
-                coinDecimals,
-            },
-        ],
-        queryFn: async () => {
-            if (!values.amount || !values.to || !coins || !activeAddress) {
-                return null;
-            }
-
-            const to = values.to;
-
-            const tx = createTokenTransferTransaction({
-                to,
-                amount: values.amount,
-                coinType: IOTA_TYPE_ARG,
-                coinDecimals,
-                isPayAllIota: values.isPayAllIota,
-                coins,
-            });
-
-            tx.setSender(activeAddress);
-            await tx.build({ client });
-            return tx.blockData.gasConfig.budget;
-        },
-    });
-
-    const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-    // gasBudgetEstimation should change when the amount above changes
-
-    useEffect(() => {
-        setFieldValue('gasBudgetEst', formattedGas, false);
-    }, [formattedGas, setFieldValue, values.amount]);
-
-    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
-}
-
 // Set the initial gasEstimation from initial amount
 // base on the input amount field update the gasEstimation value
 // Separating the gasEstimation from the formik context to access the input amount value and update the gasEstimation value
@@ -130,7 +70,6 @@ export function SendTokenForm({
     initialAmount = '',
     initialTo = '',
 }: SendTokenFormProps) {
-    const client = useIotaClient();
     const activeAddress = useActiveAddress();
     // Get all coins of the type
     const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(coinType, activeAddress!);
@@ -155,8 +94,8 @@ export function SendTokenForm({
     );
 
     const validationSchemaStepOne = useMemo(
-        () => createValidationSchemaStepOne(coinBalance, symbol, coinDecimals),
-        [client, coinBalance, symbol, coinDecimals],
+        () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
+        [coinBalance, symbol, coinDecimals],
     );
 
     // remove the comma from the token balance
@@ -205,7 +144,16 @@ export function SendTokenForm({
                 validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
-                {({ isValid, isSubmitting, setFieldValue, values, submitForm }) => {
+                {({
+                    isValid,
+                    isSubmitting,
+                    setFieldValue,
+                    values,
+                    submitForm,
+                    handleBlur,
+                    touched,
+                    errors,
+                }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
                         coinType === IOTA_TYPE_ARG;
@@ -226,6 +174,11 @@ export function SendTokenForm({
                         await setFieldValue('amount', formattedTokenBalance);
                     }
 
+                    function handleOnChangeAmountInput(value: string, symbol: string) {
+                        const valueWithoutSuffix = value.replace(symbol, '');
+                        setFieldValue('amount', valueWithoutSuffix);
+                    }
+
                     const isMaxActionDisabled =
                         parseAmount(values?.amount, coinDecimals) === coinBalance ||
                         queryResult.isPending ||
@@ -244,14 +197,32 @@ export function SendTokenForm({
                                         />
                                     ) : null}
 
-                                    <SendTokenFormInput
-                                        coinDecimals={coinDecimals}
-                                        symbol={symbol}
-                                        coins={coins}
-                                        values={values}
-                                        onActionClick={onMaxTokenButtonClick}
-                                        isActionButtonDisabled={isMaxActionDisabled}
-                                    />
+                                    <Field name="amount">
+                                        {({ field }: { field: FieldInputProps<string> }) => {
+                                            return (
+                                                <SendTokenFormInput
+                                                    symbol={symbol}
+                                                    coinDecimals={coinDecimals}
+                                                    activeAddress={activeAddress ?? ''}
+                                                    setFieldValue={setFieldValue}
+                                                    coins={coins ?? []}
+                                                    values={values}
+                                                    onActionClick={onMaxTokenButtonClick}
+                                                    isActionButtonDisabled={isMaxActionDisabled}
+                                                    value={field.value}
+                                                    onChange={(value) =>
+                                                        handleOnChangeAmountInput(value, symbol)
+                                                    }
+                                                    onBlur={handleBlur}
+                                                    errorMessage={
+                                                        touched.amount && errors.amount
+                                                            ? errors.amount
+                                                            : undefined
+                                                    }
+                                                />
+                                            );
+                                        }}
+                                    </Field>
                                     <Field
                                         component={AddressInput}
                                         allowNegative={false}
@@ -281,58 +252,5 @@ export function SendTokenForm({
                 }}
             </Formik>
         </Loading>
-    );
-}
-
-interface SendTokenInputProps {
-    coinDecimals: number;
-    coins?: CoinStruct[];
-    symbol: string;
-    values: {
-        amount: string;
-        isPayAllIota: boolean;
-    };
-    onActionClick: () => Promise<void>;
-    isActionButtonDisabled?: boolean | 'auto';
-}
-
-function SendTokenFormInput({
-    coinDecimals,
-    coins,
-    values,
-    symbol,
-    onActionClick,
-    isActionButtonDisabled,
-}: SendTokenInputProps) {
-    const gasBudgetEstimation = useGasBudgetEstimation({
-        coinDecimals: coinDecimals,
-        coins: coins ?? [],
-    });
-
-    return (
-        <FormInput
-            type={InputType.NumericFormat}
-            name="amount"
-            label="Send Amount"
-            placeholder="0.00"
-            caption="Est. Gas Fees:"
-            suffix={` ${symbol}`}
-            decimals
-            allowNegative={false}
-            prefix={values.isPayAllIota ? '~ ' : undefined}
-            amountCounter={coins ? gasBudgetEstimation : '--'}
-            renderAction={(isButtonDisabled) => (
-                <ButtonPill
-                    disabled={
-                        isActionButtonDisabled === 'auto'
-                            ? isButtonDisabled
-                            : isActionButtonDisabled
-                    }
-                    onClick={onActionClick}
-                >
-                    Max
-                </ButtonPill>
-            )}
-        />
     );
 }

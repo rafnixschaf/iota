@@ -7,14 +7,14 @@ const nextConfig = {
         return [
             {
                 source: '/dashboard',
-                destination: '/dashboard/home',
+                destination: '/home',
                 permanent: true,
             },
         ];
     },
     images: {
         // Remove this domain when fetching data
-        domains: ['d315pvdvxi2gex.cloudfront.net'],
+        domains: ['d315pvdvxi2gex.cloudfront.net', 'd122fl2kiki5hg.cloudfront.net'],
     },
 };
 
