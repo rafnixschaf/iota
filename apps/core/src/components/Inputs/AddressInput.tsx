@@ -14,7 +14,7 @@ export interface AddressInputProps {
         onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
         onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
     };
-    form: {
+    formContext: {
         setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
         errors: Record<string, string>;
         touched: Record<string, boolean>;
@@ -26,7 +26,7 @@ export interface AddressInputProps {
 
 export function AddressInput({
     field,
-    form,
+    formContext,
     disabled,
     placeholder = '0x...',
     label = 'Enter Recipient Address',
@@ -39,16 +39,16 @@ export function AddressInput({
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
             const validatedValue = iotaAddressValidation.cast(address);
-            form.setFieldValue(field.name, validatedValue, true);
+            formContext.setFieldValue(field.name, validatedValue, true);
         },
-        [form, field.name, iotaAddressValidation],
+        [formContext, field.name, iotaAddressValidation],
     );
 
-    const clearAddress = useCallback(() => {
-        form.setFieldValue(field.name, '');
-    }, [form, field.name]);
+    const clearAddress = () => {
+        formContext.setFieldValue(field.name, '');
+    };
 
-    const errorMessage = form.touched[field.name] && form.errors[field.name];
+    const errorMessage = formContext.touched[field.name] && formContext.errors[field.name];
 
     return (
         <Input
