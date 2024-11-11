@@ -49,11 +49,49 @@ const aboutIota = [
                      'about-iota/iota-wallet/how-to/basics',
                      'about-iota/iota-wallet/how-to/stake',
                      'about-iota/iota-wallet/how-to/multi-account',
-                    'about-iota/iota-wallet/how-to/get-test-tokens',
+                     'about-iota/iota-wallet/how-to/get-test-tokens',
                      'about-iota/iota-wallet/how-to/integrate-ledger',
                 ]
             },
             'about-iota/iota-wallet/FAQ',
+        ],
+    },
+    {
+        type: 'category',
+        label: 'Programs & Funding',
+        items: ['about-iota/programs/touchpoint', 'about-iota/programs/community-treasury'],
+    },
+    {
+        type: 'category',
+        label: 'The Community',
+        link: {
+            type: 'doc',
+            id: 'about-iota/the-community/community-links',
+        },
+        collapsed: true,
+        items: [
+            'about-iota/the-community/how-to-support',
+            'about-iota/the-community/discord',
+            'about-iota/the-community/x-teams',
+            'about-iota/the-community/social-media',
+        ],
+    },
+    {
+        type: 'category',
+        label: 'Programs & Funding',
+        items: ['about-iota/programs/touchpoint',
+            'about-iota/programs/community-treasury'],
+    },
+
+    {
+        type: 'category',
+        label: 'Tools',
+        items: [
+            {
+                type: 'link',
+                label: 'IOTA Explorer',
+                href: 'https://explorer.iota.org/testnet',
+            },
         ],
     },
 ];
