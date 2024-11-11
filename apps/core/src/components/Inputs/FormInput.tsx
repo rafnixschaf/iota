@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Input, InputType, type InputProps, type NumericFormatInputProps } from '@iota/apps-ui-kit';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 interface FormInputProps extends Omit<InputProps, 'onChange'> {
     name: string;
@@ -18,7 +18,7 @@ interface FormInputProps extends Omit<InputProps, 'onChange'> {
     isSubmitting?: boolean;
 }
 
-export default function FormInput({
+export function FormInput({
     renderAction,
     decimals,
     value,
@@ -39,16 +39,13 @@ export default function FormInput({
     const isInputDisabled = isSubmitting || disabled;
     const isNumericFormat = type === InputType.NumericFormat;
 
-    const numericPropsOnly: Partial<NumericFormatInputProps> = useMemo(
-        () => ({
-            decimalScale: decimals ? undefined : 0,
-            thousandSeparator: true,
-            onValueChange: (values) => {
-                onChange(values.value);
-            },
-        }),
-        [decimals, onChange],
-    );
+    const numericPropsOnly: Partial<NumericFormatInputProps> = {
+        decimalScale: decimals ? undefined : 0,
+        thousandSeparator: true,
+        onValueChange: (values) => {
+            onChange(values.value);
+        },
+    };
 
     const isActionButtonDisabled = isInputDisabled || !value || !!errorMessage;
 

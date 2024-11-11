@@ -10,6 +10,16 @@ import { useFormatCoin } from './useFormatCoin';
 import { GAS_SYMBOL } from '../constants';
 import { useEffect } from 'react';
 
+interface useGasBudgetEstimation {
+    coinDecimals: number;
+    coins: CoinStruct[];
+    activeAddress: string;
+    to: string;
+    amount: string;
+    isPayAllIota: boolean;
+    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
+}
+
 export function useGasBudgetEstimation({
     coinDecimals,
     coins,
@@ -18,15 +28,7 @@ export function useGasBudgetEstimation({
     amount,
     isPayAllIota,
     setFieldValue,
-}: {
-    coinDecimals: number;
-    coins: CoinStruct[];
-    activeAddress: string;
-    to: string;
-    amount: string;
-    isPayAllIota: boolean;
-    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
-}) {
+}: useGasBudgetEstimation) {
     const client = useIotaClient();
     const { data: gasBudget } = useQuery({
         // eslint-disable-next-line @tanstack/query/exhaustive-deps

@@ -5,7 +5,7 @@
 import { Input, InputType } from '@iota/apps-ui-kit';
 import { Close } from '@iota/ui-icons';
 import { useIotaAddressValidation } from '../../hooks';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 export interface AddressInputProps {
     field: {
@@ -24,7 +24,7 @@ export interface AddressInputProps {
     label?: string;
 }
 
-export default function AddressInput({
+export function AddressInput({
     field,
     form,
     disabled,
@@ -33,10 +33,7 @@ export default function AddressInput({
 }: AddressInputProps) {
     const iotaAddressValidation = useIotaAddressValidation();
 
-    const formattedValue = useMemo(
-        () => iotaAddressValidation.cast(field.value),
-        [field.value, iotaAddressValidation],
-    );
+    const formattedValue = iotaAddressValidation.cast(field.value);
 
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {

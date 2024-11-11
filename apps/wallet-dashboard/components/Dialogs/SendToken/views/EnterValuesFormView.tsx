@@ -30,7 +30,6 @@ import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, FieldInputProps, Form, Formik } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
-import { useMemo } from 'react';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
@@ -90,9 +89,10 @@ function EnterValuesFormView({
     const coinMetadata = useCoinMetadata(coin.coinType);
     const coinDecimals = coinMetadata.data?.decimals ?? 0;
 
-    const validationSchemaStepOne = useMemo(
-        () => createValidationSchemaSendTokenForm(coinBalance, symbol, coinDecimals),
-        [coinBalance, symbol, coinDecimals],
+    const validationSchemaStepOne = createValidationSchemaSendTokenForm(
+        coinBalance,
+        symbol,
+        coinDecimals,
     );
 
     const formattedTokenBalance = tokenBalance.replace(/,/g, '');
