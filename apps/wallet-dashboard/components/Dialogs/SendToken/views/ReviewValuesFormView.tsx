@@ -18,27 +18,29 @@ import {
     ButtonType,
 } from '@iota/apps-ui-kit';
 import { formatAddress } from '@iota/iota-sdk/utils';
-import { GAS_SYMBOL } from '@/lib/constants';
-import { CoinIcon, ImageIconSize, parseAmount, useCoinMetadata, useFormatCoin } from '@iota/core';
+import {
+    GAS_SYMBOL,
+    CoinIcon,
+    ImageIconSize,
+    parseAmount,
+    useCoinMetadata,
+    useFormatCoin,
+} from '@iota/core';
 import { Loader } from '@iota/ui-icons';
 
 interface ReviewValuesFormProps {
     formData: FormDataValues;
     senderAddress: string;
-    error: string | undefined;
     isPending: boolean;
     executeTransfer: () => void;
-    onBack: () => void;
     coinType: string;
 }
 
-function ReviewValuesFormView({
+export function ReviewValuesFormView({
     formData: { amount, to, isPayAllIota, gasBudgetEst },
     senderAddress,
     isPending,
-    error,
     executeTransfer,
-    onBack,
     coinType,
 }: ReviewValuesFormProps): JSX.Element {
     const { data: metadata } = useCoinMetadata(coinType);
@@ -106,4 +108,3 @@ function ReviewValuesFormView({
         </div>
     );
 }
-export default ReviewValuesFormView;
