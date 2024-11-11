@@ -1862,6 +1862,7 @@
             "type": "object",
             "required": [
               "computation_charge",
+              "computation_charge_burned",
               "epoch",
               "epoch_start_timestamp_ms",
               "kind",
@@ -1874,6 +1875,11 @@
             "properties": {
               "computation_charge": {
                 "description": "The total amount of gas charged for computation during the epoch.",
+                "type": "string",
+                "format": "u64"
+              },
+              "computation_charge_burned": {
+                "description": "The total amount of gas burned for computation during the epoch.",
                 "type": "string",
                 "format": "u64"
               },
