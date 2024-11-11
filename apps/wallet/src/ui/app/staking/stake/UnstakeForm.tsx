@@ -8,7 +8,7 @@ import {
     useFormatCoin,
     useGetTimeBeforeEpochNumber,
     useTimeAgo,
-    GAS_COIN_SYMBOL,
+    GAS_SYMBOL,
 } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Form } from 'formik';
@@ -65,7 +65,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Your Stake"
                         value={tokenBalance}
-                        supportingLabel={GAS_COIN_SYMBOL}
+                        supportingLabel={GAS_SYMBOL}
                         fullwidth
                     />
                     <KeyValueInfo
@@ -78,7 +78,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Total unstaked IOTA"
                         value={totalIota}
-                        supportingLabel={GAS_COIN_SYMBOL}
+                        supportingLabel={GAS_SYMBOL}
                         fullwidth
                     />
                 </div>
@@ -88,7 +88,7 @@ export function UnStakeForm({
                     <KeyValueInfo
                         keyText="Gas Fees"
                         value={gasBudget || '-'}
-                        supportingLabel={GAS_COIN_SYMBOL}
+                        supportingLabel={GAS_SYMBOL}
                         fullwidth
                     />
                 </div>

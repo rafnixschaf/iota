@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createTokenTransferTransaction } from '../utils';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { useFormatCoin } from './useFormatCoin';
-import { GAS_COIN_SYMBOL } from '../constants';
+import { GAS_SYMBOL } from '../constants';
 import { useEffect } from 'react';
 
 export function useGasBudgetEstimation({
@@ -67,5 +67,5 @@ export function useGasBudgetEstimation({
         setFieldValue('gasBudgetEst', formattedGas, false);
     }, [formattedGas, setFieldValue, amount]);
 
-    return formattedGas ? formattedGas + ' ' + GAS_COIN_SYMBOL : '--';
+    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
 }
