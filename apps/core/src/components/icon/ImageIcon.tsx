@@ -20,15 +20,17 @@ export interface ImageIconProps {
     size?: ImageIconSize;
 }
 
+interface FallBackAvatarProps {
+    str: string;
+    rounded?: boolean;
+    size?: ImageIconSize;
+}
+
 function FallBackAvatar({
     str,
     rounded,
     size = ImageIconSize.Large,
-}: {
-    str: string;
-    rounded?: boolean;
-    size?: ImageIconSize;
-}) {
+}: FallBackAvatarProps) {
     function generateTextSize(size: ImageIconSize) {
         switch (size) {
             case ImageIconSize.Small:

@@ -8,15 +8,17 @@ import { useFormatCoin } from '../../hooks';
 import { CoinIcon } from './CoinIcon';
 import { ImageIconSize } from '../icon';
 
+interface CoinSelectorProps {
+    activeCoinType: string;
+    coins: CoinBalance[];
+    onClick: (coinType: string) => void;
+}
+
 export function CoinSelector({
     activeCoinType = IOTA_TYPE_ARG,
     coins,
     onClick,
-}: {
-    activeCoinType: string;
-    coins: CoinBalance[];
-    onClick: (coinType: string) => void;
-}) {
+}: CoinSelectorProps) {
     const activeCoin = coins?.find(({ coinType }) => coinType === activeCoinType) ?? coins?.[0];
     const initialValue = activeCoin?.coinType;
     const coinsOptions: SelectOption[] =

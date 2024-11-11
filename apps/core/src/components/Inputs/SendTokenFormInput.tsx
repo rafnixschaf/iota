@@ -3,8 +3,9 @@
 
 import { ButtonPill, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
-import { FormInput } from './';
 import { useGasBudgetEstimation } from '../../hooks';
+import { FormInput } from '..';
+import React from 'react';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
@@ -25,7 +26,7 @@ export interface SendTokenInputProps {
     errorMessage?: string;
 }
 
-export default function SendTokenFormInput({
+export function SendTokenFormInput({
     coins,
     values,
     symbol,
