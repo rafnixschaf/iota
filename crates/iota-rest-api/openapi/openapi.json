@@ -3925,6 +3925,7 @@
           "reference_gas_price",
           "safe_mode",
           "safe_mode_computation_rewards",
+          "safe_mode_computation_rewards_burned",
           "safe_mode_non_refundable_storage_fee",
           "safe_mode_storage_charges",
           "safe_mode_storage_rebates",
@@ -4062,6 +4063,11 @@
           },
           "safe_mode_computation_rewards": {
             "description": "Amount of computation rewards accumulated (and not yet distributed) during safe mode.",
+            "type": "string",
+            "format": "u64"
+          },
+          "safe_mode_computation_rewards_burned": {
+            "description": "Amount of burned computation rewards accumulated during safe mode.",
             "type": "string",
             "format": "u64"
           },
