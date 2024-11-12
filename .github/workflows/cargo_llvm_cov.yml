@@ -49,7 +49,7 @@ jobs:
           TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA=$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata
-          echo "$LLVM_PROFDATA" >> $GITHUB_ENV
+          echo "LLVM_PROFDATA=$LLVM_PROFDATA" >> $GITHUB_ENV
 
           if [ -x "$LLVM_PROFDATA" ]; then
             $LLVM_PROFDATA --version
