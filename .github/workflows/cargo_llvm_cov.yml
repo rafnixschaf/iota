@@ -104,12 +104,10 @@ jobs:
 
           echo "Creating html report."
           if [ -f "simtest.profdata" ]; then
-            $LLVM_PROFDATA merge --failure-mode=warn --sparse llvm-cov-target/nextest.profdata llvm-cov/target/simtest.profdata -o merged.profdata
+            $LLVM_PROFDATA merge --failure-mode=warn --sparse nextest.profdata simtest.profdata --output merged.profdata
           else
-            $LLVM_PROFDATA merge --failure-mode=warn --sparse llvm-cov-target/nextest.profdata -o merged.profdata
+            $LLVM_PROFDATA merge --failure-mode=warn --sparse nextest.profdata --output merged.profdata
           fi
-
-          echo "Creating html report."
           [ -f "merged.profdata" ] || exit 1
           LLVM_PROFILE_FILE="merged.profdata" cargo llvm-cov report \
             --html \
