@@ -10,7 +10,7 @@ use super::{
     epoch_start_iota_system_state::EpochStartValidatorInfoV1,
     get_validators_from_table_vec,
     iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
-    iota_system_state_inner_v1::{SystemParametersV1, ValidatorV1, StorageFundV1},
+    iota_system_state_inner_v1::{StorageFundV1, SystemParametersV1, ValidatorV1},
 };
 use crate::{
     balance::Balance,
@@ -22,6 +22,7 @@ use crate::{
     iota_system_state::epoch_start_iota_system_state::EpochStartSystemState,
     storage::ObjectStore,
 };
+use crate::system_admin_cap::IotaSystemAdminCap;
 
 /// Rust version of the Move iota_system::validator_set::ValidatorSetV2 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
@@ -48,6 +49,7 @@ pub struct IotaSystemStateV2 {
     pub validators: ValidatorSetV2,
     pub storage_fund: StorageFundV1,
     pub parameters: SystemParametersV1,
+    pub iota_system_admin_cap: IotaSystemAdminCap,
     pub reference_gas_price: u64,
     pub validator_report_records: VecMap<IotaAddress, VecSet<IotaAddress>>,
     pub safe_mode: bool,
@@ -222,6 +224,7 @@ impl IotaSystemStateTrait for IotaSystemStateV2 {
                     validator_low_stake_grace_period,
                     extra_fields: _,
                 },
+            iota_system_admin_cap: _,
             reference_gas_price,
             validator_report_records:
                 VecMap {
