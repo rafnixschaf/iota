@@ -4,77 +4,18 @@
 import { IotaClient, IotaObjectData } from '@iota/iota-sdk/client';
 import { Transaction } from '@iota/iota-sdk/transactions';
 import { STARDUST_PACKAGE_ID } from '../../constants/migration.constants';
-import { z } from 'zod';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
+import {
+    BasicOutputObject,
+    BasicOutputObjectSchema,
+    NftOutputObject,
+    NftOutputObjectSchema,
+} from './types';
 
 type NestedResultType = {
     $kind: 'NestedResult';
     NestedResult: [number, number];
 };
-
-const ExpirationUnlockConditionSchema = z.object({
-    type: z.string(),
-    fields: z.object({
-        owner: z.string(),
-        return_address: z.string(),
-        unix_time: z.number(),
-    }),
-});
-
-const StorageDepositReturnUnlockConditionSchema = z.object({
-    type: z.string(),
-    fields: z.object({
-        return_address: z.string(),
-        return_amount: z.string(),
-    }),
-});
-
-const TimelockUnlockConditionSchema = z.object({
-    type: z.string(),
-    fields: z.object({
-        unix_time: z.number(),
-    }),
-});
-
-const CommonOutputObjectSchema = z.object({
-    id: z.object({
-        id: z.string(),
-    }),
-    balance: z.string(),
-    native_tokens: z.object({
-        type: z.string(),
-        fields: z.object({
-            id: z.object({
-                id: z.string(),
-            }),
-            size: z.string(),
-        }),
-    }),
-});
-
-const CommonOutputObjectWithUcSchema = CommonOutputObjectSchema.extend({
-    expiration_uc: ExpirationUnlockConditionSchema.nullable().optional(),
-    storage_deposit_return_uc: StorageDepositReturnUnlockConditionSchema.nullable().optional(),
-    timelock_uc: TimelockUnlockConditionSchema.nullable().optional(),
-});
-
-const BasicOutputObjectSchema = CommonOutputObjectWithUcSchema.extend({
-    metadata: z.array(z.number()).nullable().optional(),
-    tag: z.array(z.number()).nullable().optional(),
-    sender: z.string().nullable().optional(),
-});
-
-const NftOutputObjectSchema = CommonOutputObjectWithUcSchema;
-
-export type ExpirationUnlockCondition = z.infer<typeof ExpirationUnlockConditionSchema>;
-export type StorageDepositReturnUnlockCondition = z.infer<
-    typeof StorageDepositReturnUnlockConditionSchema
->;
-export type TimelockUnlockCondition = z.infer<typeof TimelockUnlockConditionSchema>;
-export type CommonOutputObject = z.infer<typeof CommonOutputObjectSchema>;
-export type CommonOutputObjectWithUc = z.infer<typeof CommonOutputObjectWithUcSchema>;
-export type BasicOutputObject = z.infer<typeof BasicOutputObjectSchema>;
-export type NftOutputObject = z.infer<typeof NftOutputObjectSchema>;
 
 export async function getNativeTokenTypesFromBag(
     bagId: string,
