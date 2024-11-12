@@ -17,7 +17,7 @@ root_dir=$(git rev-parse --show-toplevel)
 export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
 #TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
-TOOLCHAIN=nightly
+TOOLCHAIN=nightly-x86_64-unknown-linux-gnu
 LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
 
 echo "Computing simtest code coverage."
