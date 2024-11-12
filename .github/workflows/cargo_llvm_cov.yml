@@ -77,7 +77,7 @@ jobs:
           #   fi
           # done
 
-          $LLVM_PROFDATA merge --failure-mode=warn --sparse target/llvm-cov-target/*.profraw -o nextest.profdata
+          find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge --failure-mode=warn --sparse --output target/nextest.profdata
           [ -f "target/nextest.profdata" ] || exit 1
 
       # - name: Compute code coverage and create report (simtest.info)
