@@ -6,7 +6,17 @@
 import { StakeDialog } from '@/components';
 import { StakeDetailsDialog } from '@/components/Dialogs';
 import { StartStaking } from '@/components/staking-overview/StartStaking';
-import { Button, ButtonSize, ButtonType, InfoBox, InfoBoxStyle, InfoBoxType, Panel, Title, TitleSize } from '@iota/apps-ui-kit';
+import {
+    Button,
+    ButtonSize,
+    ButtonType,
+    InfoBox,
+    InfoBoxStyle,
+    InfoBoxType,
+    Panel,
+    Title,
+    TitleSize,
+} from '@iota/apps-ui-kit';
 import {
     ExtendedDelegatedStake,
     formatDelegatedStake,
