@@ -4,10 +4,13 @@
 
 import { Divider, KeyValueInfo, Panel, TooltipPosition } from '@iota/apps-ui-kit';
 import {
-    NUM_OF_EPOCH_BEFORE_STAKING_REWARDS_REDEEMABLE,
+    useGetTimeBeforeEpochNumber,
+    useTimeAgo,
+    TimeUnit,
+    type GasSummaryType,
     NUM_OF_EPOCH_BEFORE_STAKING_REWARDS_STARTS,
-} from '_src/shared/constants';
-import { useGetTimeBeforeEpochNumber, useTimeAgo, TimeUnit, type GasSummaryType } from '@iota/core';
+    NUM_OF_EPOCH_BEFORE_STAKING_REWARDS_REDEEMABLE,
+} from '@iota/core';
 import { GasSummary } from '../../shared/transaction-summary/cards/GasSummary';
 
 interface StakeTxnInfoProps {
