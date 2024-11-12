@@ -69,13 +69,13 @@ jobs:
             --no-report \
             nextest -vv
 
-          # echo "Scanning for corrupted .profraw files. This might take a while."
-          # find target/llvm-cov-target -name '*.profraw' | while read file; do
-          #   if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
-          #       echo "Removing corrupted file: $file"
-          #       rm "$file"
-          #   fi
-          # done
+          echo "Scanning for corrupted .profraw files. This might take a while."
+          find target/llvm-cov-target -name '*.profraw' | while read file; do
+            if ! "$LLVM_PROFDATA" show "$file" > /dev/null 2>&1; then
+                echo "Removing corrupted file: $file"
+                rm "$file"
+            fi
+          done
 
           find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge --failure-mode=warn --sparse --output target/nextest.profdata
           [ -f "target/nextest.profdata" ] || exit 1
