@@ -36,7 +36,7 @@ enum FormStep {
     ReviewValues,
 }
 
-function SendTokenDialog({
+function SendTokenDialogBody({
     coin,
     activeAddress,
     setOpen,
@@ -54,6 +54,7 @@ function SendTokenDialog({
         error,
         isPending,
     } = useSignAndExecuteTransaction();
+
     const { data: sendCoinData } = useSendCoinTransaction(
         coinsData || [],
         selectedCoin?.coinType,
@@ -62,12 +63,6 @@ function SendTokenDialog({
         formData.amount,
         selectedCoin?.totalBalance === formData.amount,
     );
-
-    useEffect(() => {
-        setSelectedCoin(coin);
-        setStep(FormStep.EnterValues);
-        setFormData(INITIAL_VALUES);
-    }, [open, setOpen, coin]);
 
     function handleTransfer() {
         if (!sendCoinData?.transaction) {
@@ -96,37 +91,45 @@ function SendTokenDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <>
+            <Header
+                title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
+                onClose={() => setOpen(false)}
+            />
+            <div className="h-full">
+                <DialogBody>
+                    {step === FormStep.EnterValues && (
+                        <EnterValuesFormView
+                            coin={selectedCoin}
+                            activeAddress={activeAddress}
+                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
+                            setSelectedCoin={setSelectedCoin}
+                            onNext={onNext}
+                            setFormData={setFormData}
+                        />
+                    )}
+                    {step === FormStep.ReviewValues && (
+                        <ReviewValuesFormView
+                            formData={formData}
+                            onBack={onBack}
+                            executeTransfer={handleTransfer}
+                            senderAddress={activeAddress}
+                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
+                            error={error?.message}
+                            isPending={isPending}
+                        />
+                    )}
+                </DialogBody>
+            </div>
+        </>
+    );
+}
+
+function SendTokenDialog(props: SendCoinPopupProps): React.JSX.Element {
+    return (
+        <Dialog open={props.open} onOpenChange={props.setOpen}>
             <DialogContent containerId="overlay-portal-container" position={DialogPosition.Right}>
-                <Header
-                    title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
-                    onClose={() => setOpen(false)}
-                />
-                <div className="h-full">
-                    <DialogBody>
-                        {step === FormStep.EnterValues && (
-                            <EnterValuesFormView
-                                coin={selectedCoin}
-                                activeAddress={activeAddress}
-                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
-                                setSelectedCoin={setSelectedCoin}
-                                onNext={onNext}
-                                setFormData={setFormData}
-                            />
-                        )}
-                        {step === FormStep.ReviewValues && (
-                            <ReviewValuesFormView
-                                formData={formData}
-                                onBack={onBack}
-                                executeTransfer={handleTransfer}
-                                senderAddress={activeAddress}
-                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
-                                error={error?.message}
-                                isPending={isPending}
-                            />
-                        )}
-                    </DialogBody>
-                </div>
+                <SendTokenDialogBody {...props} />
             </DialogContent>
         </Dialog>
     );

@@ -14,7 +14,7 @@ export interface AddressInputProps {
         onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
         onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
     };
-    formContext: {
+    form: {
         setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
         errors: Record<string, string>;
         touched: Record<string, boolean>;
@@ -26,7 +26,7 @@ export interface AddressInputProps {
 
 export function AddressInput({
     field,
-    formContext,
+    form: formContext,
     disabled,
     placeholder = '0x...',
     label = 'Enter Recipient Address',
