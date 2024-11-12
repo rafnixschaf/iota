@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: iota-metrics
+    static_configs:
+    - targets:
+      - http://validator-0:9184
+      - http://validator-1:9184
+      - http://validator-2:9184
+      - http://validator-3:9184
+      - http://fullnode-0:9184
+      - http://fullnode-1:9184
+
+  - job_name: faucet-metrics
+    static_configs:
+    - targets:
+      - http://faucet:9185
+
+  - job_name: indexer-metrics
+    static_configs:
+    - targets:
+      - http://indexer-writer:9181
+      - http://indexer-reader:9181
+
+  - job_name: graphql-metrics
+    static_configs:
+    - targets:
+      - http://graphql:9184
