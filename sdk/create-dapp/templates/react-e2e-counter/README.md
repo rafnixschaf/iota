@@ -13,7 +13,7 @@ Client dApp using the following tools:
 - [pnpm](https://pnpm.io/) for package management
 
 For a full guide on how to build this dApp from scratch, visit this
-[guide](http://docs.iota.org/guides/developer/app-examples/e2e-counter#frontend).
+[guide](https://docs.iota.org/guides/developer/app-examples/e2e-counter#frontend).
 
 ## Deploying your Move code
 
