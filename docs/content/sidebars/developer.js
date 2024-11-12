@@ -95,6 +95,7 @@ const developer = [
                             'developer/iota-101/objects/object-ownership/wrapped',
                         ],
                     },
+                    'developer/iota-101/objects/uid-id',
                     {
                         type: 'category',
                         label: 'Dynamic Fields',
