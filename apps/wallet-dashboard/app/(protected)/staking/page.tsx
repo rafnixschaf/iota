@@ -21,7 +21,7 @@ import { useState } from 'react';
 
 function StakingDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
-    const [dialogStakeView, setDialogStakeView] = useState<StakeDialogView | undefined>();
+    const [stakeDialogView, setStakeDialogView] = useState<StakeDialogView | undefined>();
     const [selectedStake, setSelectedStake] = useState<ExtendedDelegatedStake | null>(null);
     const { data: delegatedStakeData } = useGetDelegatedStake({
         address: account?.address || '',
@@ -42,21 +42,21 @@ function StakingDashboardPage(): JSX.Element {
     );
 
     const viewStakeDetails = (extendedStake: ExtendedDelegatedStake) => {
-        setDialogStakeView(StakeDialogView.Details);
+        setStakeDialogView(StakeDialogView.Details);
         setSelectedStake(extendedStake);
     };
 
     function handleCloseStakeDialog() {
         setSelectedStake(null);
-        setDialogStakeView(undefined);
+        setStakeDialogView(undefined);
     }
 
     function handleNewStake() {
         setSelectedStake(null);
-        setDialogStakeView(undefined);
+        setStakeDialogView(StakeDialogView.SelectValidator);
     }
 
-    const isDialogStakeOpen = dialogStakeView !== undefined;
+    const isDialogStakeOpen = stakeDialogView !== undefined;
 
     return (
         <>
@@ -92,8 +92,8 @@ function StakingDashboardPage(): JSX.Element {
                     stakedDetails={selectedStake}
                     isOpen={isDialogStakeOpen}
                     handleClose={handleCloseStakeDialog}
-                    view={dialogStakeView}
-                    setView={setDialogStakeView}
+                    view={stakeDialogView}
+                    setView={setStakeDialogView}
                 />
             )}
         </>

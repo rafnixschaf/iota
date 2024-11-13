@@ -3,4 +3,3 @@
 
 export * from './ReceiveFundsDialog';
 export * from './Staking';
-export * from './StakeDetails';

@@ -2,26 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState } from 'react';
-import { EnterAmountView, SelectValidatorView, DetailsView } from './views';
+import { EnterAmountView, SelectValidatorView } from './views';
 import {
     useNotifications,
     useNewStakeTransaction,
     useGetCurrentEpochStartTimestamp,
 } from '@/hooks';
 import {
+    ExtendedDelegatedStake,
     GroupedTimelockObject,
     parseAmount,
     TIMELOCK_IOTA_TYPE,
     useCoinMetadata,
     useGetAllOwnedObjects,
     useGetValidatorsApy,
-    ExtendedDelegatedStake,
 } from '@iota/core';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
 import { Dialog } from '@iota/apps-ui-kit';
+import { DetailsView, UnstakeView } from './views';
 
 export enum StakeDialogView {
     Details,
@@ -35,16 +36,16 @@ interface StakeDialogProps {
     onSuccess?: (digest: string) => void;
     isOpen: boolean;
     handleClose: () => void;
-    stakedDetails?: ExtendedDelegatedStake | null;
     view: StakeDialogView;
-    setView: (nextView: StakeDialogView) => void;
+    setView: (view: StakeDialogView) => void;
+    stakedDetails?: ExtendedDelegatedStake | null;
 }
 
 function StakeDialog({
     onSuccess,
     isTimelockedStaking,
     isOpen,
-    handleClose: handleClose,
+    handleClose,
     view,
     setView,
     stakedDetails,
@@ -93,6 +94,20 @@ function StakeDialog({
         setSelectedValidator(validator);
     }
 
+    function selectValidatorHandleNext(): void {
+        if (selectedValidator) {
+            setView(StakeDialogView.EnterAmount);
+        }
+    }
+
+    function detailsHandleUnstake() {
+        setView(StakeDialogView.Unstake);
+    }
+
+    function detailsHandleStake() {
+        setView(StakeDialogView.SelectValidator);
+    }
+
     function handleStake(): void {
         if (isTimelockedStaking && groupedTimelockObjects.length === 0) {
             addNotification('Invalid stake amount. Please try again.', NotificationType.Error);
@@ -122,18 +137,6 @@ function StakeDialog({
             });
     }
 
-    function detailsHandleUnstake() {
-        setView(StakeDialogView.Unstake);
-    }
-
-    function detailsHandleStake() {
-        setView(StakeDialogView.SelectValidator);
-    }
-
-    function selectValidatorHandleNext() {
-        setView(StakeDialogView.EnterAmount);
-    }
-
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
             {view === StakeDialogView.Details && stakedDetails && (
@@ -157,10 +160,17 @@ function StakeDialog({
                 <EnterAmountView
                     selectedValidator={selectedValidator}
                     amount={amount}
+                    handleClose={handleClose}
                     onChange={(e) => setAmount(e.target.value)}
                     onBack={handleBack}
                     onStake={handleStake}
-                    isStakeDisabled={!amount}
+                />
+            )}
+            {view === StakeDialogView.Unstake && stakedDetails && (
+                <UnstakeView
+                    extendedStake={stakedDetails}
+                    handleClose={handleClose}
+                    showActiveStatus
                 />
             )}
         </Dialog>
