@@ -16,7 +16,6 @@ git apply ./scripts/simtest/config-patch
 root_dir=$(git rev-parse --show-toplevel)
 export SIMTEST_STATIC_INIT_MOVE=$root_dir"/examples/move/basics"
 
-#TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
 TOOLCHAIN=nightly-x86_64-unknown-linux-gnu
 LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata"
 
@@ -34,7 +33,10 @@ find target/llvm-cov-target -name '*.profraw' | while read file; do
   fi
 done 
 
-find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge --failure-mode=warn --sparse --output target/simtest.profdata
+find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge \
+  --failure-mode=warn \
+  --sparse \
+  --output target/simtest.profdata
 
 # remove the patch
 git checkout .cargo/config Cargo.toml Cargo.lock

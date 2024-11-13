@@ -46,12 +46,10 @@ jobs:
 
       - name: Install llvm-tools
         run: |
-          # TOOLCHAIN=$(rustup show active-toolchain | cut -d ' ' -f 1)
           TOOLCHAIN=nightly-x86_64-unknown-linux-gnu
           rustup component add llvm-tools --toolchain "$TOOLCHAIN"
           LLVM_PROFDATA=$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-linux-gnu/bin/llvm-profdata
           echo "LLVM_PROFDATA=$LLVM_PROFDATA" >> $GITHUB_ENV
-
           if [ -x "$LLVM_PROFDATA" ]; then
             $LLVM_PROFDATA --version
           else
@@ -78,22 +76,21 @@ jobs:
             fi
           done
 
-          find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge --failure-mode=warn --sparse --output target/nextest.profdata
+          find target/llvm-cov-target -name '*.profraw' -print0 | xargs -0 $LLVM_PROFDATA merge \
+            --failure-mode=warn \
+            --sparse \
+            --output target/nextest.profdata
+
           [ -f "target/nextest.profdata" ] || exit 1
 
-      # - name: Compute code coverage (simtest.profdata)
-      #   run: |
-      #     cargo +nightly llvm-cov clean --profraw-only
+      - name: Compute code coverage (simtest.profdata)
+        run: |
+          cargo +nightly llvm-cov clean --profraw-only
 
-      #     git clean -fd
-      #     set +e
-      #     ./scripts/simtest/simtest-cov.sh
-      #     # For now we accept failing simtest coverage
-      #     # [ -f "target/simtest.profdata" ] || exit 1
-      #     if [ ! -f "target/simtest.profdata" ]; then
-      #       echo "Error: failed to create simtest.profdata."
-      #     fi
-      #     exit 0
+          git clean -fd
+          set +e
+          ./scripts/simtest/simtest-cov.sh
+          [ -f "target/simtest.profdata" ] || exit 1
 
       - name: Create html report (report.tgz)
         run: |
