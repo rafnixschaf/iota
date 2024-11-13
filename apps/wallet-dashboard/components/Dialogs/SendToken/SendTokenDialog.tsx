@@ -96,7 +96,7 @@ function SendTokenDialogBody({
                 title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
                 onClose={() => setOpen(false)}
             />
-            <div className="h-full">
+            <div className="h-full [&>div]:h-full">
                 <DialogBody>
                     {step === FormStep.EnterValues && (
                         <EnterValuesFormView
