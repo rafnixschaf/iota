@@ -38,9 +38,9 @@ impl SystemStateSummary {
         Some(SafeMode {
             enabled: Some(self.native.safe_mode),
             gas_summary: Some(GasCostSummary {
-                computation_cost: self.native.safe_mode_computation_rewards,
+                computation_cost: self.native.safe_mode_computation_charges,
                 // All computation costs are burned in protocol v1.
-                computation_cost_burned: self.native.safe_mode_computation_rewards,
+                computation_cost_burned: self.native.safe_mode_computation_charges,
                 storage_cost: self.native.safe_mode_storage_charges,
                 storage_rebate: self.native.safe_mode_storage_rebates,
                 non_refundable_storage_fee: self.native.safe_mode_non_refundable_storage_fee,

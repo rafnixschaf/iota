@@ -547,6 +547,7 @@ impl From<EndOfEpochTransactionKind> for crate::transaction::EndOfEpochTransacti
                     protocol_version: change_epoch.protocol_version.into(),
                     storage_charge: change_epoch.storage_charge,
                     computation_charge: change_epoch.computation_charge,
+                    computation_charge_burned: change_epoch.computation_charge_burned,
                     storage_rebate: change_epoch.storage_rebate,
                     non_refundable_storage_fee: change_epoch.non_refundable_storage_fee,
                     epoch_start_timestamp_ms: change_epoch.epoch_start_timestamp_ms,

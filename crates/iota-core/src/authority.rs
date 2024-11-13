@@ -1576,19 +1576,13 @@ impl AuthorityState {
         let tx_data = certificate.data().transaction_data();
         tx_data.validity_check(epoch_store.protocol_config())?;
 
-        // Determine what to use as reference gas price based on protocol config.
-        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
-            epoch_store.protocol_config().base_gas_price()
-        } else {
-            epoch_store.reference_gas_price()
-        };
         // The cost of partially re-auditing a transaction before execution is
         // tolerated.
         let (gas_status, input_objects) = iota_transaction_checks::check_certificate_input(
             certificate,
             input_objects,
             epoch_store.protocol_config(),
-            reference_gas_price,
+            epoch_store.reference_gas_price(),
         )?;
 
         let owned_object_refs = input_objects.inner().filter_owned_objects();
@@ -1732,12 +1726,7 @@ impl AuthorityState {
 
         // make a gas object if one was not provided
         let mut gas_object_refs = transaction.gas().to_vec();
-        // Determine what to use as reference gas price based on protocol config.
-        let reference_gas_price = if epoch_store.protocol_config().fixed_base_fee() {
-            epoch_store.protocol_config().base_gas_price()
-        } else {
-            epoch_store.reference_gas_price()
-        };
+        let reference_gas_price = epoch_store.reference_gas_price();
         let ((gas_status, checked_input_objects), mock_gas) = if transaction.gas().is_empty() {
             let sender = transaction.sender();
             // use a 1B iota coin
@@ -1963,12 +1952,7 @@ impl AuthorityState {
         } else {
             transaction.gas().to_vec()
         };
-        // Determine what to use as reference gas price based on protocol config.
-        let reference_gas_price = if protocol_config.fixed_base_fee() {
-            protocol_config.base_gas_price()
-        } else {
-            epoch_store.reference_gas_price()
-        };
+        let reference_gas_price = epoch_store.reference_gas_price();
 
         let (gas_status, checked_input_objects) = if skip_checks {
             // If we are skipping checks, then we call the check_dev_inspect_input function
@@ -4591,6 +4575,7 @@ impl AuthorityState {
             next_epoch_protocol_version,
             gas_cost_summary.storage_cost,
             gas_cost_summary.computation_cost,
+            gas_cost_summary.computation_cost_burned,
             gas_cost_summary.storage_rebate,
             gas_cost_summary.non_refundable_storage_fee,
             epoch_start_timestamp_ms,

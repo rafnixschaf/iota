@@ -421,11 +421,11 @@ pub struct AdvanceEpochParams {
     pub validator_subsidy: u64,
     pub storage_charge: u64,
     pub computation_charge: u64,
+    pub computation_charge_burned: u64,
     pub storage_rebate: u64,
     pub non_refundable_storage_fee: u64,
     pub reward_slashing_rate: u64,
     pub epoch_start_timestamp_ms: u64,
-    pub base_gas_price: u64,
 }
 
 #[cfg(msim)]

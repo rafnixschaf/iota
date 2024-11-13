@@ -859,11 +859,11 @@ mod checked {
             validator_subsidy: protocol_config.validator_subsidy(),
             storage_charge: change_epoch.storage_charge,
             computation_charge: change_epoch.computation_charge,
+            computation_charge_burned: change_epoch.computation_charge_burned,
             storage_rebate: change_epoch.storage_rebate,
             non_refundable_storage_fee: change_epoch.non_refundable_storage_fee,
             reward_slashing_rate: protocol_config.reward_slashing_rate(),
             epoch_start_timestamp_ms: change_epoch.epoch_start_timestamp_ms,
-            base_gas_price: protocol_config.base_gas_price(),
         };
         let advance_epoch_pt = construct_advance_epoch_pt(builder, &params)?;
         let result = programmable_transactions::execution::execute::<execution_mode::System>(
