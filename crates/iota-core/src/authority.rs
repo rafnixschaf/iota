@@ -4597,6 +4597,7 @@ impl AuthorityState {
             ?next_epoch_protocol_version,
             ?next_epoch_system_packages,
             computation_cost=?gas_cost_summary.computation_cost,
+            computation_cost_burned=?gas_cost_summary.computation_cost_burned,
             storage_cost=?gas_cost_summary.storage_cost,
             storage_rebate=?gas_cost_summary.storage_rebate,
             non_refundable_storage_fee=?gas_cost_summary.non_refundable_storage_fee,

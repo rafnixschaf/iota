@@ -176,7 +176,7 @@ pub struct ChangeEpoch {
     pub storage_charge: u64,
     /// The total amount of gas charged for computation during the epoch.
     pub computation_charge: u64,
-    /// The amount of gas burned for computation during the epoch.
+    /// The burned component of the total computation/execution costs.
     pub computation_charge_burned: u64,
     /// The amount of storage rebate refunded to the txn senders.
     pub storage_rebate: u64,
