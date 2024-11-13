@@ -30,8 +30,10 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            const validatedValue = iotaAddressValidation.cast(address);
-            form.setFieldValue(field.name, validatedValue, true);
+            iotaAddressValidation.cast(address);
+            form.setFieldValue(field.name, iotaAddressValidation.cast(address)).then(() => {
+                form.validateField(field.name);
+            });
         },
         [form, field.name, iotaAddressValidation],
     );

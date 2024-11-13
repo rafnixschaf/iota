@@ -21,6 +21,5 @@ export * from './transactions';
 export * from './staking-overview';
 export * from './ExplorerLink';
 export * from './Dialogs';
-export * from './ImageIcon';
 export * from './ValidatorStakingData';
 export * from './tiles';
