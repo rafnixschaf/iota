@@ -47,7 +47,7 @@ export function SendTokenFormInput({
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
     });
-    
+
     const numericPropsOnly: Partial<NumericFormatInputProps> = {
         decimalScale: coinDecimals ? undefined : 0,
         thousandSeparator: true,
@@ -56,21 +56,16 @@ export function SendTokenFormInput({
         },
     };
 
-    
     const isActionButtonDisabled = !value || !!errorMessage;
-    
+
     const renderAction = (isButtonDisabled: boolean | undefined) => (
         <ButtonPill
-            disabled={
-                isMaxActionDisabled === 'auto'
-                    ? isButtonDisabled
-                    : isActionButtonDisabled
-                }
+            disabled={isMaxActionDisabled === 'auto' ? isButtonDisabled : isActionButtonDisabled}
             onClick={onActionClick}
-            >
+        >
             Max
         </ButtonPill>
-    )
+    );
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -80,7 +75,7 @@ export function SendTokenFormInput({
     return (
         <Input
             type={InputType.NumericFormat}
-            name={"amount"}
+            name={'amount'}
             value={value}
             caption="Est. Gas Fees:"
             placeholder="0.00"
