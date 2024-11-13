@@ -3,4 +3,3 @@
 
 export { default as MyCoins } from './MyCoins';
 export { default as CoinItem } from './CoinItem';
-export * from './CoinIcon';
