@@ -49,5 +49,11 @@ export function ThemeSwitcher(): React.JSX.Element {
         updateDocumentClass(theme);
     }, [theme]);
 
-    return <Button type={ButtonType.Ghost} onClick={handleOnClick} icon={<ThemeIcon />} />;
+    return (
+        <Button
+            type={ButtonType.Ghost}
+            onClick={handleOnClick}
+            icon={<ThemeIcon className="h-5 w-5" />}
+        />
+    );
 }
