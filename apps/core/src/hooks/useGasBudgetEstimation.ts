@@ -16,7 +16,10 @@ interface UseGasBudgetEstimationOptions {
     to: string;
     amount: string;
     isPayAllIota: boolean;
+    showGasSymbol?: boolean;
 }
+
+const FALLBACK_GAS_VALUE = '--';
 
 export function useGasBudgetEstimation({
     coinDecimals,
@@ -25,6 +28,7 @@ export function useGasBudgetEstimation({
     to,
     amount,
     isPayAllIota,
+    showGasSymbol = true,
 }: UseGasBudgetEstimationOptions) {
     const client = useIotaClient();
     const { data: gasBudget } = useQuery({
@@ -61,5 +65,7 @@ export function useGasBudgetEstimation({
 
     const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
 
-    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
+    return formattedGas
+        ? `${formattedGas}${showGasSymbol ? ` ${GAS_SYMBOL}` : ''}`
+        : FALLBACK_GAS_VALUE;
 }

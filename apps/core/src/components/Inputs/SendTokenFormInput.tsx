@@ -6,6 +6,7 @@ import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
 import { FormInput } from '..';
 import React, { useEffect } from 'react';
+import { GAS_SYMBOL } from '../../constants';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
@@ -47,6 +48,7 @@ export function SendTokenFormInput({
         to: values.to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
+        showGasSymbol: false,
     });
 
     // gasBudgetEstimation should change when the amount above changes
@@ -65,7 +67,7 @@ export function SendTokenFormInput({
             decimals
             allowNegative={false}
             prefix={values.isPayAllIota ? '~ ' : undefined}
-            amountCounter={coins ? gasBudgetEstimation : '--'}
+            amountCounter={coins ? `${gasBudgetEstimation} ${GAS_SYMBOL}` : '--'}
             value={value}
             onChange={onChange}
             onBlur={onBlur}

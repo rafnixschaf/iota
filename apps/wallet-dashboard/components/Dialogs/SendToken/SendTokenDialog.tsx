@@ -114,11 +114,10 @@ function SendTokenDialogBody({
                     {step === FormStep.ReviewValues && (
                         <ReviewValuesFormView
                             formData={formData}
-                            onBack={onBack}
                             executeTransfer={handleTransfer}
                             senderAddress={activeAddress}
-                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                             isPending={isPending}
+                            coinType={selectedCoin.coinType}
                         />
                     )}
                 </DialogBody>
