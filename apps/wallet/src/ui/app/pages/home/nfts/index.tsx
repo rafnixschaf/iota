@@ -46,19 +46,10 @@ function NftsPage() {
     const observerElem = useRef<HTMLDivElement | null>(null);
 
     const accountAddress = useActiveAddress();
-    const {
-        data: ownedAssets,
-        hasNextPage,
-        isLoading,
-        isFetchingNextPage,
-        error,
-        isPending,
-        isError,
-    } = useGetNFTs(accountAddress);
-
+    const { data: ownedAssets, isLoading, error, isPending, isError } = useGetNFTs(accountAddress);
     const isAssetsLoaded = !!ownedAssets;
 
-    const isSpinnerVisible = isFetchingNextPage && hasNextPage;
+    const isSpinnerVisible = isLoading && isPending;
 
     const filteredAssets = (() => {
         if (!ownedAssets) return [];

@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { AssetCategory } from '@/lib/enums';
 import { AssetList } from '@/components/AssetsList';
 
-const PAGINATION_RANGE = [20, 40, 60];
+const PAGINATION_RANGE = [20, 35, 50];
 
 const ASSET_CATEGORIES: { label: string; value: AssetCategory }[] = [
     {
