@@ -99,7 +99,7 @@ module iota_system::iota_system_state_inner {
         safe_mode: bool,
         safe_mode_storage_charges: Balance<IOTA>,
         safe_mode_computation_charges: Balance<IOTA>,
-        safe_mode_computation_charges_burned: Balance<IOTA>,
+        safe_mode_computation_charges_burned: u64,
         safe_mode_storage_rebates: u64,
         safe_mode_non_refundable_storage_fee: u64,
 
@@ -169,7 +169,7 @@ module iota_system::iota_system_state_inner {
             safe_mode: false,
             safe_mode_storage_charges: balance::zero(),
             safe_mode_computation_charges: balance::zero(),
-            safe_mode_computation_charges_burned: balance::zero(),
+            safe_mode_computation_charges_burned: 0,
             safe_mode_storage_rebates: 0,
             safe_mode_non_refundable_storage_fee: 0,
             epoch_start_timestamp_ms,
@@ -652,6 +652,7 @@ module iota_system::iota_system_state_inner {
         validator_subsidy: u64,
         mut storage_charge: Balance<IOTA>,
         mut computation_charge: Balance<IOTA>,
+        mut computation_charge_burned: u64,
         mut storage_rebate_amount: u64,
         mut non_refundable_storage_fee_amount: u64,
         reward_slashing_rate: u64, // how much rewards are slashed to punish a validator, in bps.
@@ -669,6 +670,7 @@ module iota_system::iota_system_state_inner {
         storage_charge.join(safe_mode_storage_charges);
         let safe_mode_computation_charges = self.safe_mode_computation_charges.withdraw_all();
         computation_charge.join(safe_mode_computation_charges);
+        computation_charge_burned = computation_charge_burned + self.safe_mode_computation_charges_burned;
         storage_rebate_amount = storage_rebate_amount + self.safe_mode_storage_rebates;
         self.safe_mode_storage_rebates = 0;
         non_refundable_storage_fee_amount = non_refundable_storage_fee_amount + self.safe_mode_non_refundable_storage_fee;
@@ -677,9 +679,10 @@ module iota_system::iota_system_state_inner {
         let storage_charge_value = storage_charge.value();
         let computation_fees = computation_charge.value();
 
-        let (mut total_validator_rewards, minted_tokens_amount, mut burnt_tokens_amount) = match_computation_charge_to_target_reward(
+        let (mut total_validator_rewards, minted_tokens_amount, mut burnt_tokens_amount) = match_computation_charge_burned_to_validator_subsidy(
             validator_subsidy,
             computation_charge,
+            computation_charge_burned,
             &mut self.iota_treasury_cap,
             ctx
         );
@@ -751,24 +754,35 @@ module iota_system::iota_system_state_inner {
 
     /// Mint or burn IOTA tokens depending on the given target reward per validator
     /// and the amount of computation fees burned in this epoch.
-    fun match_computation_charge_to_target_reward(
+    fun match_computation_charge_burned_to_validator_subsidy(
         validator_subsidy: u64,
         mut computation_charge: Balance<IOTA>,
+        computation_charge_burned: u64,
         iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
         ctx: &TxContext,
     ): (Balance<IOTA>, u64, u64) {
         let mut burnt_tokens_amount = 0;
         let mut minted_tokens_amount = 0;
-        if (computation_charge.value() < validator_subsidy) {
-            let tokens_to_mint = validator_subsidy - computation_charge.value();
-            let new_tokens = iota_treasury_cap.mint_balance(tokens_to_mint, ctx);
-            minted_tokens_amount = new_tokens.value();
-            computation_charge.join(new_tokens);
-        } else if (computation_charge.value() > validator_subsidy) {
-            let tokens_to_burn = computation_charge.value() - validator_subsidy;
-            let rewards_to_burn = computation_charge.split(tokens_to_burn);
-            burnt_tokens_amount = rewards_to_burn.value();
-            iota_treasury_cap.burn_balance(rewards_to_burn, ctx);
+        if (computation_charge_burned < validator_subsidy) {
+            let amount_to_mint = validator_subsidy - computation_charge_burned;
+            let minted_balance = iota_treasury_cap.mint_balance(amount_to_mint, ctx);
+            minted_tokens_amount = minted_balance.value();
+            // total validator reward 
+            // = computation_charge + (minted_balance)
+            // = computation_charge + (validator_subsidy - computation_charge_burned)
+            // = validator_subsidy + (computation_charge - computation_charge_burned)
+            // = validator_subsidy + (tips)
+            computation_charge.join(minted_balance);
+        } else if (computation_charge_burned > validator_subsidy) {
+            let amount_to_burn = computation_charge_burned - validator_subsidy;
+            // total validator reward
+            // = computation_charge - (amount_to_burn)
+            // = computation_charge - (computation_charge_burned - validator_subsidy)
+            // = validator_subsidy + (computation_charge - computation_charge_burned)
+            // = validator_subsidy + (tips)
+            let balance_to_burn = computation_charge.split(amount_to_burn);
+            burnt_tokens_amount = balance_to_burn.value();
+            iota_treasury_cap.burn_balance(balance_to_burn, ctx);
         };
         (computation_charge, minted_tokens_amount, burnt_tokens_amount)
     }

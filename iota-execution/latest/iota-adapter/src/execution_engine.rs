@@ -758,7 +758,7 @@ mod checked {
             vec![storage_charge_arg],
         );
 
-        // Create computation rewards.
+        // Create computation charges.
         let computation_charge_arg = builder
             .input(CallArg::Pure(
                 bcs::to_bytes(&params.computation_charge).unwrap(),
@@ -785,7 +785,7 @@ mod checked {
         mut builder: ProgrammableTransactionBuilder,
         params: &AdvanceEpochParams,
     ) -> Result<ProgrammableTransaction, ExecutionError> {
-        // Step 1: Create storage charges and computation rewards.
+        // Step 1: Create storage and computation charges.
         let (storage_charges, computation_charges) = mint_epoch_rewards_in_pt(&mut builder, params);
 
         // Step 2: Advance the epoch.
@@ -797,6 +797,7 @@ mod checked {
             computation_charges,
         ];
         let call_arg_arguments = vec![
+            CallArg::Pure(bcs::to_bytes(&params.computation_charge_burned).unwrap()),
             CallArg::IOTA_SYSTEM_MUT,
             CallArg::Pure(bcs::to_bytes(&params.epoch).unwrap()),
             CallArg::Pure(bcs::to_bytes(&params.next_protocol_version.as_u64()).unwrap()),

@@ -496,9 +496,8 @@ impl IotaSystemStateTrait for IotaSystemStateV1 {
         self.safe_mode_storage_rebates += params.storage_rebate;
         self.safe_mode_computation_charges
             .deposit_for_safe_mode(params.computation_charge);
-        // In protocol version 1 all computation costs are burned.
-        self.safe_mode_computation_rewards_burned
-            .deposit_for_safe_mode(params.computation_charge);
+        self.safe_mode_computation_charges_burned
+            .deposit_for_safe_mode(params.computation_charge_burned);
         self.safe_mode_non_refundable_storage_fee += params.non_refundable_storage_fee;
         self.epoch_start_timestamp_ms = params.epoch_start_timestamp_ms;
         self.protocol_version = params.next_protocol_version.as_u64();
