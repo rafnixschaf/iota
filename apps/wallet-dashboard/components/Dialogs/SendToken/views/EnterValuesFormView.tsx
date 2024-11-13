@@ -129,7 +129,7 @@ function FormInputs({
                                     setFieldValue={setFieldValue}
                                     values={values}
                                     onActionClick={onMaxTokenButtonClick}
-                                    isActionButtonDisabled={isMaxActionDisabled}
+                                    isMaxActionDisabled={isMaxActionDisabled}
                                     value={field.value}
                                     onChange={(value) => handleOnChangeAmountInput(value, symbol)}
                                     onBlur={handleBlur}

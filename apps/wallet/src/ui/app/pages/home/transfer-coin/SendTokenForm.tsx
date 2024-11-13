@@ -208,7 +208,7 @@ export function SendTokenForm({
                                                     coins={coins ?? []}
                                                     values={values}
                                                     onActionClick={onMaxTokenButtonClick}
-                                                    isActionButtonDisabled={isMaxActionDisabled}
+                                                    isMaxActionDisabled={isMaxActionDisabled}
                                                     value={field.value}
                                                     onChange={(value) =>
                                                         handleOnChangeAmountInput(value, symbol)

@@ -1,10 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { ButtonPill, InputType } from '@iota/apps-ui-kit';
+import { ButtonPill, Input, InputType, NumericFormatInputProps } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
-import { FormInput } from '..';
 import React, { useEffect } from 'react';
 
 export interface SendTokenInputProps {
@@ -19,7 +18,7 @@ export interface SendTokenInputProps {
         isPayAllIota: boolean;
     };
     onActionClick: () => Promise<void>;
-    isActionButtonDisabled?: boolean | 'auto';
+    isMaxActionDisabled?: boolean | 'auto';
     value: string;
     onChange: (value: string) => void;
     onBlur?: React.FocusEventHandler<HTMLInputElement>;
@@ -34,7 +33,7 @@ export function SendTokenFormInput({
     activeAddress,
     setFieldValue,
     onActionClick,
-    isActionButtonDisabled,
+    isMaxActionDisabled,
     value,
     onChange,
     onBlur,
@@ -48,6 +47,30 @@ export function SendTokenFormInput({
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
     });
+    
+    const numericPropsOnly: Partial<NumericFormatInputProps> = {
+        decimalScale: coinDecimals ? undefined : 0,
+        thousandSeparator: true,
+        onValueChange: (values) => {
+            onChange(values.value);
+        },
+    };
+
+    
+    const isActionButtonDisabled = !value || !!errorMessage;
+    
+    const renderAction = (isButtonDisabled: boolean | undefined) => (
+        <ButtonPill
+            disabled={
+                isMaxActionDisabled === 'auto'
+                    ? isButtonDisabled
+                    : isActionButtonDisabled
+                }
+            onClick={onActionClick}
+            >
+            Max
+        </ButtonPill>
+    )
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -55,33 +78,22 @@ export function SendTokenFormInput({
     }, [gasBudgetEstimation, setFieldValue, values.amount]);
 
     return (
-        <FormInput
+        <Input
             type={InputType.NumericFormat}
-            name="amount"
-            label="Send Amount"
-            placeholder="0.00"
-            caption="Est. Gas Fees:"
-            suffix={` ${symbol}`}
-            decimals
-            allowNegative={false}
-            prefix={values.isPayAllIota ? '~ ' : undefined}
-            amountCounter={coins ? gasBudgetEstimation : '--'}
+            name={"amount"}
             value={value}
-            onChange={onChange}
+            caption="Est. Gas Fees:"
+            placeholder="0.00"
             onBlur={onBlur}
+            label="Send Amount"
+            suffix={` ${symbol}`}
+            prefix={values.isPayAllIota ? '~ ' : undefined}
+            allowNegative={false}
             errorMessage={errorMessage}
-            renderAction={(isButtonDisabled) => (
-                <ButtonPill
-                    disabled={
-                        isActionButtonDisabled === 'auto'
-                            ? isButtonDisabled
-                            : isActionButtonDisabled
-                    }
-                    onClick={onActionClick}
-                >
-                    Max
-                </ButtonPill>
-            )}
+            onChange={(e) => onChange(e.currentTarget.value)}
+            amountCounter={!errorMessage ? (coins ? gasBudgetEstimation : '--') : undefined}
+            trailingElement={renderAction(isActionButtonDisabled)}
+            {...numericPropsOnly}
         />
     );
 }
