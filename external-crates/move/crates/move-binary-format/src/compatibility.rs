@@ -133,9 +133,6 @@ impl Compatibility {
             };
         }
 
-        let mut friend_linking = true;
-        let mut entry_linking = true;
-
         // module's name and address are changed
         if self.check_datatype_and_pub_function_linking {
             if old_module.address != new_module.address {
@@ -300,13 +297,12 @@ impl Compatibility {
             }
 
             // Check entry compatibility
-            if (
-                (old_module.file_format_version < VERSION_5
-                    && new_module.file_format_version < VERSION_5
-                    && old_func.visibility != Visibility::Private
-                    && old_func.is_entry != new_func.is_entry)
-                || old_func.is_entry && !new_func.is_entry
-            ) && self.check_private_entry_linking {
+            if self.check_private_entry_linking && ((
+                old_module.file_format_version < VERSION_5
+                && new_module.file_format_version < VERSION_5
+                && old_func.visibility != Visibility::Private
+                && old_func.is_entry != new_func.is_entry
+            ) || old_func.is_entry && !new_func.is_entry) {
                 return error!("changed entry status of function {name}");
             }
 
@@ -319,15 +315,17 @@ impl Compatibility {
                 )
             {
                 match old_func.visibility {
-                    Visibility::Friend => friend_linking = false,
+                    Visibility::Friend => if self.check_friend_linking {
+                        return error!("changed signature of friend function {name}");
+                    },
                     Visibility::Public => if self.check_datatype_and_pub_function_linking {
-                        return error!("changed signature of function {name}");
+                        return error!("changed signature of public function {name}");
                     },
                     Visibility::Private => (),
                 }
 
-                if old_func.is_entry {
-                    entry_linking = false;
+                if old_func.is_entry && self.check_private_entry_linking {
+                    return error!("changed signature of entry function {name}");
                 }
             }
         }
@@ -339,23 +337,10 @@ impl Compatibility {
         //
         let old_friend_module_ids: BTreeSet<_> = old_module.friends.iter().cloned().collect();
         let new_friend_module_ids: BTreeSet<_> = new_module.friends.iter().cloned().collect();
-        if !old_friend_module_ids.is_subset(&new_friend_module_ids) {
-            friend_linking = false;
+        if !old_friend_module_ids.is_subset(&new_friend_module_ids) && self.check_friend_linking {
+            return error!("removed friend module declaration");
         }
 
-        if self.check_friend_linking && !friend_linking {
-            println!("check_friend_linking");
-            return Err(PartialVMError::new(
-                StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
-            ));
-        }
-
-        if self.check_private_entry_linking && !entry_linking {
-            println!("check_private_entry_linking");
-            return Err(PartialVMError::new(
-                StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
-            ));
-        }
         Ok(())
     }
 }

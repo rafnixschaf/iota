@@ -176,14 +176,9 @@ pub async fn compare_system_package<S: ObjectStore>(
     binary_config: &BinaryConfig,
 ) -> Option<ObjectRef> {
     let cur_object = match object_store.get_object(id) {
-        Ok(Some(cur_object)) => {
-            println!("here1 {:?}", id);
-
-            cur_object},
+        Ok(Some(cur_object)) => cur_object,
 
         Ok(None) => {
-            println!("here2 {:?}", id);
-
             // creating a new framework package--nothing to check
             return Some(
                 Object::new_system_package(
@@ -203,8 +198,6 @@ pub async fn compare_system_package<S: ObjectStore>(
         }
 
         Err(e) => {
-            println!("here3 {:?}", id);
-
             error!("Error loading framework object at {id}: {e:?}");
             return None;
         }
@@ -216,8 +209,6 @@ pub async fn compare_system_package<S: ObjectStore>(
         .try_as_package()
         .expect("Framework not package");
 
-    println!("here4 {:?}", id);
-
     let mut new_object = Object::new_system_package(
         modules,
         // Start at the same version as the current package, and increment if compatibility is
@@ -227,13 +218,9 @@ pub async fn compare_system_package<S: ObjectStore>(
         cur_object.previous_transaction,
     );
 
-    println!("here5 {:?}", id);
-
     if cur_ref == new_object.compute_object_reference() {
         return Some(cur_ref);
     }
-
-    println!("here6 {:?}", id);
 
     let compatibility = Compatibility {
         check_datatype_and_pub_function_linking: true,
@@ -253,8 +240,6 @@ pub async fn compare_system_package<S: ObjectStore>(
         disallow_new_variants: true,
     };
 
-    println!("here7 {:?}", id);
-
     let new_pkg = new_object
         .data
         .try_as_package_mut()
@@ -269,21 +254,14 @@ pub async fn compare_system_package<S: ObjectStore>(
     };
     let mut new_normalized = new_pkg.normalize(binary_config).ok()?;
 
-    println!("here8 {:?}", id);
-
     for (name, cur_module) in cur_normalized {
         let new_module = new_normalized.remove(&name)?;
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
-            println!("here10 {id}::{name}: {e:?}");
-
             error!("Compatibility check failed, for new version of {id}::{name}: {e:?}");
             return None;
         }
     }
-
-    println!("here9 {:?}", id);
-
     new_pkg.increment_version();
     Some(new_object.compute_object_reference())
 }
