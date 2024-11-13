@@ -5,20 +5,12 @@
 import { Input, InputType } from '@iota/apps-ui-kit';
 import { Close } from '@iota/ui-icons';
 import { useIotaAddressValidation } from '../../hooks';
-import React, { useCallback } from 'react';
+import React, { ComponentProps, useCallback } from 'react';
+import type { Field, FieldInputProps } from 'formik';
 
 export interface AddressInputProps {
-    field: {
-        name: string;
-        value: string;
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-        onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-    };
-    form: {
-        setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
-        errors: Record<string, string>;
-        touched: Record<string, boolean>;
-    };
+    field: FieldInputProps<string>;
+    form: ComponentProps<typeof Field>;
     disabled?: boolean;
     placeholder?: string;
     label?: string;
@@ -44,9 +36,9 @@ export function AddressInput({
         [form, field.name, iotaAddressValidation],
     );
 
-    const clearAddress = useCallback(() => {
+    const clearAddress = () => {
         form.setFieldValue(field.name, '');
-    }, [form, field.name]);
+    };
 
     const errorMessage = form.touched[field.name] && form.errors[field.name];
 

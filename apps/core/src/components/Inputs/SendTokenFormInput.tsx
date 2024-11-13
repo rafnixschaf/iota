@@ -5,7 +5,7 @@ import { ButtonPill, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
 import { FormInput } from '..';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
@@ -47,8 +47,12 @@ export function SendTokenFormInput({
         to: values.to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
-        setFieldValue,
     });
+
+    // gasBudgetEstimation should change when the amount above changes
+    useEffect(() => {
+        setFieldValue('gasBudgetEst', gasBudgetEstimation, false);
+    }, [gasBudgetEstimation, setFieldValue, values.amount]);
 
     return (
         <FormInput

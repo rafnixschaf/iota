@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { EnterValuesFormView, ReviewValuesFormView } from './views';
 import { CoinBalance } from '@iota/iota-sdk/client';
 import { useSendCoinTransaction, useNotifications } from '@/hooks';
@@ -36,7 +36,7 @@ enum FormStep {
     ReviewValues,
 }
 
-function SendTokenDialog({
+function SendTokenDialogBody({
     coin,
     activeAddress,
     setOpen,
@@ -58,12 +58,6 @@ function SendTokenDialog({
         formData.amount,
         selectedCoin?.totalBalance === formData.amount,
     );
-
-    useEffect(() => {
-        setSelectedCoin(coin);
-        setStep(FormStep.EnterValues);
-        setFormData(INITIAL_VALUES);
-    }, [open, setOpen, coin]);
 
     function handleTransfer() {
         if (!sendCoinData?.transaction) {
@@ -99,36 +93,45 @@ function SendTokenDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <>
+            <Header
+                title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
+                onClose={() => setOpen(false)}
+                onBack={step === FormStep.ReviewValues ? onBack : undefined}
+            />
+            <div className="h-full [&>div]:h-full">
+                <DialogBody>
+                    {step === FormStep.EnterValues && (
+                        <EnterValuesFormView
+                            coin={selectedCoin}
+                            activeAddress={activeAddress}
+                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
+                            setSelectedCoin={setSelectedCoin}
+                            onNext={onNext}
+                            setFormData={setFormData}
+                        />
+                    )}
+                    {step === FormStep.ReviewValues && (
+                        <ReviewValuesFormView
+                            formData={formData}
+                            onBack={onBack}
+                            executeTransfer={handleTransfer}
+                            senderAddress={activeAddress}
+                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
+                            isPending={isPending}
+                        />
+                    )}
+                </DialogBody>
+            </div>
+        </>
+    );
+}
+
+function SendTokenDialog(props: SendCoinPopupProps): React.JSX.Element {
+    return (
+        <Dialog open={props.open} onOpenChange={props.setOpen}>
             <DialogContent containerId="overlay-portal-container" position={DialogPosition.Right}>
-                <Header
-                    title={step === FormStep.EnterValues ? 'Send' : 'Review & Send'}
-                    onClose={() => setOpen(false)}
-                    onBack={step === FormStep.ReviewValues ? onBack : undefined}
-                />
-                <div className="h-full [&>div]:h-full">
-                    <DialogBody>
-                        {step === FormStep.EnterValues && (
-                            <EnterValuesFormView
-                                coin={selectedCoin}
-                                activeAddress={activeAddress}
-                                gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
-                                setSelectedCoin={setSelectedCoin}
-                                onNext={onNext}
-                                setFormData={setFormData}
-                            />
-                        )}
-                        {step === FormStep.ReviewValues && (
-                            <ReviewValuesFormView
-                                formData={formData}
-                                executeTransfer={handleTransfer}
-                                senderAddress={activeAddress}
-                                isPending={isPending}
-                                coinType={selectedCoin?.coinType}
-                            />
-                        )}
-                    </DialogBody>
-                </div>
+                <SendTokenDialogBody {...props} />
             </DialogContent>
         </Dialog>
     );

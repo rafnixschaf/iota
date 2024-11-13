@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { CoinBalance, CoinStruct } from '@iota/iota-sdk/client';
+import { CoinBalance, CoinMetadata, CoinStruct } from '@iota/iota-sdk/client';
 import { FormDataValues, INITIAL_VALUES } from '../SendTokenDialog';
 import {
     AddressInput,
@@ -28,8 +28,9 @@ import {
 } from '@iota/apps-ui-kit';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, FieldInputProps, Form, Formik } from 'formik';
+import { Field, FieldInputProps, Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
+import { UseQueryResult } from '@tanstack/react-query';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
@@ -40,11 +41,129 @@ interface EnterValuesFormProps {
     onNext: () => void;
 }
 
+interface FormInputsProps extends FormikProps<FormDataValues> {
+    coinType: string;
+    coinDecimals: number;
+    coinBalance: bigint;
+    iotaBalance: bigint;
+    formattedTokenBalance: string;
+    symbol: string;
+    activeAddress: string;
+    coins: CoinStruct[];
+    queryResult: UseQueryResult<CoinMetadata | null>;
+}
+
 function totalBalance(coins: CoinStruct[]): bigint {
     return coins.reduce((partialSum, c) => partialSum + getBalanceFromCoinStruct(c), BigInt(0));
 }
 function getBalanceFromCoinStruct(coin: CoinStruct): bigint {
     return BigInt(coin.balance);
+}
+
+function FormInputs({
+    isValid,
+    isSubmitting,
+    setFieldValue,
+    values,
+    submitForm,
+    touched,
+    errors,
+    handleBlur,
+    coinType,
+    coinDecimals,
+    coinBalance,
+    iotaBalance,
+    formattedTokenBalance,
+    symbol,
+    activeAddress,
+    coins,
+    queryResult,
+}: FormInputsProps): React.JSX.Element {
+    const newPayIotaAll =
+        parseAmount(values.amount, coinDecimals) === coinBalance && coinType === IOTA_TYPE_ARG;
+    if (values.isPayAllIota !== newPayIotaAll) {
+        setFieldValue('isPayAllIota', newPayIotaAll);
+    }
+
+    const hasEnoughBalance =
+        values.isPayAllIota ||
+        iotaBalance >
+            parseAmount(values.gasBudgetEst, coinDecimals) +
+                parseAmount(coinType === IOTA_TYPE_ARG ? values.amount : '0', coinDecimals);
+
+    async function onMaxTokenButtonClick() {
+        await setFieldValue('amount', formattedTokenBalance);
+    }
+
+    function handleOnChangeAmountInput(value: string, symbol: string) {
+        const valueWithoutSuffix = value.replace(symbol, '');
+        setFieldValue('amount', valueWithoutSuffix);
+    }
+
+    const isMaxActionDisabled =
+        parseAmount(values?.amount, coinDecimals) === coinBalance ||
+        queryResult.isPending ||
+        !coinBalance;
+
+    return (
+        <div className="flex h-full w-full flex-col">
+            <Form autoComplete="off" noValidate className="flex-1">
+                <div className="flex h-full w-full flex-col gap-md">
+                    {!hasEnoughBalance && (
+                        <InfoBox
+                            type={InfoBoxType.Error}
+                            supportingText="Insufficient IOTA to cover transaction"
+                            style={InfoBoxStyle.Elevated}
+                            icon={<Exclamation />}
+                        />
+                    )}
+
+                    <Field name="amount">
+                        {({ field }: { field: FieldInputProps<string> }) => {
+                            return (
+                                <SendTokenFormInput
+                                    symbol={symbol}
+                                    coins={coins}
+                                    coinDecimals={coinDecimals}
+                                    activeAddress={activeAddress}
+                                    setFieldValue={setFieldValue}
+                                    values={values}
+                                    onActionClick={onMaxTokenButtonClick}
+                                    isActionButtonDisabled={isMaxActionDisabled}
+                                    value={field.value}
+                                    onChange={(value) => handleOnChangeAmountInput(value, symbol)}
+                                    onBlur={handleBlur}
+                                    errorMessage={
+                                        touched.amount && errors.amount ? errors.amount : undefined
+                                    }
+                                />
+                            );
+                        }}
+                    </Field>
+
+                    <Field
+                        component={AddressInput}
+                        name="to"
+                        placeholder="Enter Address"
+                        errorMessage={touched.to && errors.to ? errors.to : undefined}
+                    />
+                </div>
+            </Form>
+
+            <div className="pt-xs">
+                <Button
+                    onClick={submitForm}
+                    htmlType={ButtonHtmlType.Submit}
+                    type={ButtonType.Primary}
+                    disabled={
+                        !isValid || isSubmitting || !hasEnoughBalance || values.gasBudgetEst === ''
+                    }
+                    text="Review"
+                    fullWidth
+                />
+            </div>
+        </div>
+    );
 }
 
 function EnterValuesFormView({
@@ -152,115 +271,20 @@ function EnterValuesFormView({
                 validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
-                {({
-                    isValid,
-                    isSubmitting,
-                    setFieldValue,
-                    values,
-                    submitForm,
-                    touched,
-                    errors,
-                    handleBlur,
-                }) => {
-                    const newPayIotaAll =
-                        parseAmount(values.amount, coinDecimals) === coinBalance &&
-                        coin.coinType === IOTA_TYPE_ARG;
-                    if (values.isPayAllIota !== newPayIotaAll) {
-                        setFieldValue('isPayAllIota', newPayIotaAll);
-                    }
-
-                    const hasEnoughBalance =
-                        values.isPayAllIota ||
-                        iotaBalance >
-                            parseAmount(values.gasBudgetEst, coinDecimals) +
-                                parseAmount(
-                                    coin.coinType === IOTA_TYPE_ARG ? values.amount : '0',
-                                    coinDecimals,
-                                );
-
-                    async function onMaxTokenButtonClick() {
-                        await setFieldValue('amount', formattedTokenBalance);
-                    }
-
-                    function handleOnChangeAmountInput(value: string, symbol: string) {
-                        const valueWithoutSuffix = value.replace(symbol, '');
-                        setFieldValue('amount', valueWithoutSuffix);
-                    }
-
-                    const isMaxActionDisabled =
-                        parseAmount(values?.amount, coinDecimals) === coinBalance ||
-                        queryResult.isPending ||
-                        !coinBalance;
-
-                    return (
-                        <div className="flex h-full w-full flex-col">
-                            <Form autoComplete="off" noValidate className="flex-1">
-                                <div className="flex h-full w-full flex-col gap-md">
-                                    {!hasEnoughBalance && (
-                                        <InfoBox
-                                            type={InfoBoxType.Error}
-                                            supportingText="Insufficient IOTA to cover transaction"
-                                            style={InfoBoxStyle.Elevated}
-                                            icon={<Exclamation />}
-                                        />
-                                    )}
-
-                                    <Field name="amount">
-                                        {({ field }: { field: FieldInputProps<string> }) => {
-                                            return (
-                                                <SendTokenFormInput
-                                                    symbol={symbol}
-                                                    coins={coins ?? []}
-                                                    coinDecimals={coinDecimals}
-                                                    activeAddress={activeAddress}
-                                                    setFieldValue={setFieldValue}
-                                                    values={values}
-                                                    onActionClick={onMaxTokenButtonClick}
-                                                    isActionButtonDisabled={isMaxActionDisabled}
-                                                    value={field.value}
-                                                    onChange={(value) =>
-                                                        handleOnChangeAmountInput(value, symbol)
-                                                    }
-                                                    onBlur={handleBlur}
-                                                    errorMessage={
-                                                        touched.amount && errors.amount
-                                                            ? errors.amount
-                                                            : undefined
-                                                    }
-                                                />
-                                            );
-                                        }}
-                                    </Field>
-
-                                    <Field
-                                        component={AddressInput}
-                                        name="to"
-                                        placeholder="Enter Address"
-                                        errorMessage={
-                                            touched.to && errors.to ? errors.to : undefined
-                                        }
-                                    />
-                                </div>
-                            </Form>
-
-                            <div className="pt-xs">
-                                <Button
-                                    onClick={submitForm}
-                                    htmlType={ButtonHtmlType.Submit}
-                                    type={ButtonType.Primary}
-                                    disabled={
-                                        !isValid ||
-                                        isSubmitting ||
-                                        !hasEnoughBalance ||
-                                        values.gasBudgetEst === ''
-                                    }
-                                    text="Review"
-                                    fullWidth
-                                />
-                            </div>
-                        </div>
-                    );
-                }}
+                {(props: FormikProps<FormDataValues>) => (
+                    <FormInputs
+                        {...props}
+                        coinType={coin.coinType}
+                        coinDecimals={coinDecimals}
+                        coinBalance={coinBalance}
+                        iotaBalance={iotaBalance}
+                        formattedTokenBalance={formattedTokenBalance}
+                        symbol={symbol}
+                        activeAddress={activeAddress}
+                        coins={coins ?? []}
+                        queryResult={queryResult}
+                    />
+                )}
             </Formik>
         </div>
     );
