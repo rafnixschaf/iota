@@ -22,7 +22,6 @@ LLVM_PROFDATA="$HOME/.rustup/toolchains/$TOOLCHAIN/lib/rustlib/x86_64-unknown-li
 
 echo "Computing simtest code coverage."
 MSIM_WATCHDOG_TIMEOUT_MS=60000 MSIM_TEST_SEED=1 cargo llvm-cov \
-  --branch \
   --ignore-run-fail \
   --no-report \
   nextest -vv # --cargo-profile simulator

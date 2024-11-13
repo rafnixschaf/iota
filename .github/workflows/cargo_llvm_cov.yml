@@ -66,7 +66,6 @@ jobs:
           echo "Computing nextest code coverage."
           set +e
           IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov \
-            --branch \
             --ignore-run-fail \
             --no-report \
             nextest -vv
