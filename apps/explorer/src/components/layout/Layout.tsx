@@ -12,6 +12,7 @@ import { NetworkContext } from '~/contexts';
 import { useInitialPageView, useNetwork } from '~/hooks';
 import { createIotaClient, persistableStorage, SupportedNetworks } from '~/lib/utils';
 import { Toaster } from '../toaster';
+import { ThemeProvider } from '../ThemeProvider';
 
 export function Layout(): JSX.Element {
     const [network, setNetwork] = useNetwork();
@@ -39,9 +40,11 @@ export function Layout(): JSX.Element {
                 <WalletProvider autoConnect enableUnsafeBurner={import.meta.env.DEV}>
                     <KioskClientProvider>
                         <NetworkContext.Provider value={[network, setNetwork]}>
-                            <Outlet />
-                            <Toaster />
-                            <ReactQueryDevtools />
+                            <ThemeProvider>
+                                <Outlet />
+                                <Toaster />
+                                <ReactQueryDevtools />
+                            </ThemeProvider>
                         </NetworkContext.Provider>
                     </KioskClientProvider>
                 </WalletProvider>

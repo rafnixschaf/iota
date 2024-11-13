@@ -21,3 +21,4 @@ export * from './useRecognizedPackages';
 export * from './useResolveVideo';
 export * from './useSearch';
 export * from './useVerifiedSourceCode';
+export * from './useTheme';
