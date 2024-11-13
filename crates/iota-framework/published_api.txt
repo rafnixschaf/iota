@@ -619,6 +619,9 @@ SystemParametersV1
 IotaSystemStateV1
 	public struct
 	0x3::iota_system_state_inner
+IotaSystemStateV2
+	public struct
+	0x3::iota_system_state_inner
 SystemEpochInfoEventV1
 	public struct
 	0x3::iota_system_state_inner
@@ -626,6 +629,9 @@ create
 	public(package) fun
 	0x3::iota_system_state_inner
 create_system_parameters
+	public(package) fun
+	0x3::iota_system_state_inner
+v1_to_v2
 	public(package) fun
 	0x3::iota_system_state_inner
 request_add_validator_candidate
@@ -679,19 +685,19 @@ new_system_display
 new_system_display_with_fields
 	public(package) fun
 	0x3::iota_system_state_inner
-insert_display_object
+insert_system_display_object
 	public(package) fun
 	0x3::iota_system_state_inner
-borrow_display_object
+borrow_system_display_object
 	public(package) fun
 	0x3::iota_system_state_inner
-borrow_display_object_mut
+borrow_system_display_object_mut
 	public(package) fun
 	0x3::iota_system_state_inner
-contains_display_object
+contains_system_display_object
 	public(package) fun
 	0x3::iota_system_state_inner
-display_object_key
+system_display_object_key
 	fun
 	0x3::iota_system_state_inner
 rotate_operation_cap
@@ -919,16 +925,16 @@ new_system_display
 new_system_display_with_fields
 	public(package) fun
 	0x3::iota_system
-insert_display_object
+insert_system_display_object
 	public(package) fun
 	0x3::iota_system
-borrow_display_object
+borrow_system_display_object
 	public(package) fun
 	0x3::iota_system
-borrow_display_object_mut
+borrow_system_display_object_mut
 	public(package) fun
 	0x3::iota_system
-contains_display_object
+contains_system_display_object
 	public(package) fun
 	0x3::iota_system
 advance_epoch
@@ -1039,6 +1045,15 @@ allocate_tokens
 activate_validators
 	fun
 	0x3::genesis
+create_staked_iota_display_v1
+	fun
+	0x3::system_display
+create_timelocked_staked_iota_display_v1
+	fun
+	0x3::system_display
+create_timelocked_iota_display_v1
+	fun
+	0x3::system_display
 secp256k1_ecrecover
 	public fun
 	0x2::ecdsa_k1

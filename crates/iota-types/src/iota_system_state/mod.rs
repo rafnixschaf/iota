@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use self::{
     iota_system_state_inner_v1::{IotaSystemStateV1, ValidatorV1},
+    iota_system_state_inner_v2::IotaSystemStateV2,
     iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
 };
 use crate::{
@@ -30,6 +31,7 @@ use crate::{
 
 pub mod epoch_start_iota_system_state;
 pub mod iota_system_state_inner_v1;
+pub mod iota_system_state_inner_v2;
 pub mod iota_system_state_summary;
 
 #[cfg(msim)]
@@ -45,6 +47,13 @@ const IOTA_SYSTEM_STATE_WRAPPER_STRUCT_NAME: &IdentStr = ident_str!("IotaSystemS
 pub const IOTA_SYSTEM_MODULE_NAME: &IdentStr = ident_str!("iota_system");
 pub const ADVANCE_EPOCH_FUNCTION_NAME: &IdentStr = ident_str!("advance_epoch");
 pub const ADVANCE_EPOCH_SAFE_MODE_FUNCTION_NAME: &IdentStr = ident_str!("advance_epoch_safe_mode");
+
+pub const IOTA_SYSTEM_DISPLAY_MODULE_NAME: &IdentStr = ident_str!("system_display");
+pub const CREATE_STAKED_IOTA_DISPLAY_V1: &IdentStr = ident_str!("create_staked_iota_display_v1");
+pub const CREATE_TIMELOCKED_STAKED_IOTA_DISPLAY_V1: &IdentStr =
+    ident_str!("create_timelocked_staked_iota_display_v1");
+pub const CREATE_TIMELOCKED_IOTA_DISPLAY_V1: &IdentStr =
+    ident_str!("create_timelocked_iota_display_v1");
 
 #[cfg(msim)]
 pub const IOTA_SYSTEM_STATE_SIM_TEST_V1: u64 = 18446744073709551605; // u64::MAX - 10
@@ -98,6 +107,13 @@ impl IotaSystemStateWrapper {
         match self.version {
             1 => {
                 Self::advance_epoch_safe_mode_impl::<IotaSystemStateV1>(
+                    move_object,
+                    params,
+                    protocol_config,
+                );
+            }
+            2 => {
+                Self::advance_epoch_safe_mode_impl::<IotaSystemStateV2>(
                     move_object,
                     params,
                     protocol_config,
@@ -191,6 +207,7 @@ pub trait IotaSystemStateTrait {
 #[enum_dispatch(IotaSystemStateTrait)]
 pub enum IotaSystemState {
     V1(IotaSystemStateV1),
+    V2(IotaSystemStateV2),
     #[cfg(msim)]
     SimTestV1(SimTestIotaSystemStateV1),
     #[cfg(msim)]
@@ -212,11 +229,8 @@ impl IotaSystemState {
     pub fn into_genesis_version_for_tooling(self) -> IotaSystemStateInnerGenesis {
         match self {
             IotaSystemState::V1(inner) => inner,
-            #[cfg(msim)]
-            _ => {
-                // Types other than V1 used in simtests should be unreachable
-                unreachable!()
-            }
+            // Types other than V1 and used in simtests should be unreachable
+            _ => unreachable!(),
         }
     }
 
@@ -259,6 +273,18 @@ pub fn get_iota_system_state(object_store: &dyn ObjectStore) -> Result<IotaSyste
                     },
                 )?;
             Ok(IotaSystemState::V1(result))
+        }
+        2 => {
+            let result: IotaSystemStateV2 =
+                get_dynamic_field_from_store(object_store, id, &wrapper.version).map_err(
+                    |err| {
+                        IotaError::DynamicFieldRead(format!(
+                            "Failed to load iota system state inner object with ID {:?} and version {:?}: {:?}",
+                            id, wrapper.version, err
+                        ))
+                    },
+                )?;
+            Ok(IotaSystemState::V2(result))
         }
         #[cfg(msim)]
         IOTA_SYSTEM_STATE_SIM_TEST_V1 => {
@@ -400,12 +426,13 @@ pub fn get_system_display_objects(
     let system_state = get_iota_system_state(object_store)?;
 
     match system_state {
-        IotaSystemState::V1(inner) => inner
+        IotaSystemState::V1(_) => Ok(HashMap::new()),
+        IotaSystemState::V2(inner) => inner
             .system_display_objects
             .contents
             .into_iter()
             .map(|entry| {
-                let display_object_id = entry.value.bytes;
+                let display_object_id = entry.value;
 
                 let display_object: DisplayObject = get_dynamic_field_from_store(
                     object_store,
@@ -427,11 +454,11 @@ pub fn get_system_display_objects(
 }
 
 /// Get a system display object unique key.
-/// * ty - is a type for which a display object is created.
-pub fn display_object_key(ty: StructTag) -> String {
+/// * tag - is a tag of a type for which the display object is created.
+pub fn system_display_object_key(tag: StructTag) -> String {
     let with_prefix = false;
 
-    ty.to_canonical_string(with_prefix)
+    tag.to_canonical_string(with_prefix)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Default)]

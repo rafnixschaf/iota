@@ -1438,9 +1438,6 @@ mod tests {
                 safe_mode_storage_rebates: Default::default(),
                 safe_mode_non_refundable_storage_fee: Default::default(),
                 epoch_start_timestamp_ms: Default::default(),
-                system_display_objects: VecMap {
-                    contents: Default::default(),
-                },
                 extra_fields: Default::default(),
             }
         }

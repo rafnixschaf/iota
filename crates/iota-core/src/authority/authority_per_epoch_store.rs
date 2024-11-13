@@ -42,8 +42,8 @@ use iota_types::{
     error::{IotaError, IotaResult},
     executable_transaction::{TrustedExecutableTransaction, VerifiedExecutableTransaction},
     iota_system_state::{
-        display_object_key,
         epoch_start_iota_system_state::{EpochStartSystemState, EpochStartSystemStateTrait},
+        system_display_object_key,
     },
     message_envelope::TrustedEnvelope,
     messages_checkpoint::{
@@ -961,8 +961,8 @@ impl AuthorityPerEpochStore {
         self.epoch_start_configuration.bridge_committee_initiated()
     }
 
-    pub fn system_display_object_created(&self, ty: StructTag, version: u16) -> bool {
-        let key = display_object_key(ty);
+    pub fn is_system_display_object_created(&self, tag: StructTag, version: u16) -> bool {
+        let key = system_display_object_key(tag);
 
         let object_version = self
             .epoch_start_configuration
