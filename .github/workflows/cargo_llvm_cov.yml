@@ -116,9 +116,6 @@ jobs:
 
           LLVM_PROFILE_FILE="merged.profdata" cargo +nightly llvm-cov report \
             --html \
-            #--show-instantiations \
-            #--show-missing-lines \
-            #--doctests \
             --output-dir . \
             --ignore-filename-regex 'external-crates/.*'
 
