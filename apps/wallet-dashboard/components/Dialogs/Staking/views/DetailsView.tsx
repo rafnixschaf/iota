@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
     useGetValidatorsApy,
     ExtendedDelegatedStake,
@@ -32,6 +32,7 @@ import { Warning } from '@iota/ui-icons';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Layout, LayoutFooter, LayoutBody } from './Layout';
+
 interface StakeDialogProps {
     stakedDetails: ExtendedDelegatedStake;
     showActiveStatus?: boolean;
@@ -39,6 +40,7 @@ interface StakeDialogProps {
     handleUnstake: () => void;
     handleStake: () => void;
 }
+
 export function DetailsView({
     handleClose,
     handleUnstake,
@@ -64,15 +66,9 @@ export function DetailsView({
     // flag if the validator is at risk of being removed from the active set
     const isAtRisk = system?.atRiskValidators.some((item) => item[0] === validatorAddress);
 
-    const validatorSummary = useMemo(() => {
-        if (!system) return null;
-
-        return (
-            system.activeValidators.find(
-                (validator) => validator.iotaAddress === validatorAddress,
-            ) || null
-        );
-    }, [validatorAddress, system]);
+    const validatorSummary =
+        system?.activeValidators.find((validator) => validator.iotaAddress === validatorAddress) ||
+        null;
 
     const validatorName = validatorSummary?.name || '';
     const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);

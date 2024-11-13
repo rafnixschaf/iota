@@ -4,7 +4,7 @@
 'use client';
 
 import { AmountBox, Box, StakeCard, StakeDialog, Button } from '@/components';
-import { View } from '@/components/Dialogs/Staking/StakeDialog';
+import { StakeDialogView } from '@/components/Dialogs/Staking/StakeDialog';
 import {
     ExtendedDelegatedStake,
     formatDelegatedStake,
@@ -21,8 +21,7 @@ import { useState } from 'react';
 
 function StakingDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
-    const [dialogStakeInitView, setDialogStakeInitView] = useState<View | undefined>();
-    const [isDialogStakeOpen, setIsDialogStakeOpen] = useState(false);
+    const [dialogStakeView, setDialogStakeView] = useState<StakeDialogView | undefined>();
     const [selectedStake, setSelectedStake] = useState<ExtendedDelegatedStake | null>(null);
     const { data: delegatedStakeData } = useGetDelegatedStake({
         address: account?.address || '',
@@ -43,20 +42,21 @@ function StakingDashboardPage(): JSX.Element {
     );
 
     const viewStakeDetails = (extendedStake: ExtendedDelegatedStake) => {
-        setIsDialogStakeOpen(true);
-        setDialogStakeInitView(View.Details);
+        setDialogStakeView(StakeDialogView.Details);
         setSelectedStake(extendedStake);
     };
 
     function handleCloseStakeDialog() {
-        setIsDialogStakeOpen(false);
         setSelectedStake(null);
-        setDialogStakeInitView(undefined);
+        setDialogStakeView(undefined);
     }
 
     function handleNewStake() {
-        setIsDialogStakeOpen(true);
+        setSelectedStake(null);
+        setDialogStakeView(undefined);
     }
+
+    const isDialogStakeOpen = dialogStakeView !== undefined;
 
     return (
         <>
@@ -92,7 +92,8 @@ function StakingDashboardPage(): JSX.Element {
                     stakedDetails={selectedStake}
                     isOpen={isDialogStakeOpen}
                     handleClose={handleCloseStakeDialog}
-                    initView={dialogStakeInitView}
+                    view={dialogStakeView}
+                    setView={setDialogStakeView}
                 />
             )}
         </>

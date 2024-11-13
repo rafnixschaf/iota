@@ -23,7 +23,7 @@ import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
 import { Dialog } from '@iota/apps-ui-kit';
 
-export enum View {
+export enum StakeDialogView {
     Details,
     SelectValidator,
     EnterAmount,
@@ -35,8 +35,9 @@ interface StakeDialogProps {
     onSuccess?: (digest: string) => void;
     isOpen: boolean;
     handleClose: () => void;
-    stakedDetails: ExtendedDelegatedStake | null;
-    initView?: View;
+    stakedDetails?: ExtendedDelegatedStake | null;
+    view: StakeDialogView;
+    setView: (nextView: StakeDialogView) => void;
 }
 
 function StakeDialog({
@@ -44,12 +45,10 @@ function StakeDialog({
     isTimelockedStaking,
     isOpen,
     handleClose: handleClose,
-    initView,
+    view,
+    setView,
     stakedDetails,
 }: StakeDialogProps): JSX.Element {
-    const [view, setView] = useState<View>(
-        initView !== undefined ? initView : View.SelectValidator,
-    );
     const [selectedValidator, setSelectedValidator] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
     const account = useCurrentAccount();
@@ -87,11 +86,11 @@ function StakeDialog({
     const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
     function handleNext(): void {
-        setView(View.EnterAmount);
+        setView(StakeDialogView.EnterAmount);
     }
 
     function handleBack(): void {
-        setView(View.SelectValidator);
+        setView(StakeDialogView.SelectValidator);
     }
 
     function handleValidatorSelect(validator: string): void {
@@ -129,16 +128,16 @@ function StakeDialog({
     }
 
     function detailsHandleUnstake() {
-        setView(View.Unstake);
+        setView(StakeDialogView.Unstake);
     }
 
     function detailsHandleStake() {
-        setView(View.SelectValidator);
+        setView(StakeDialogView.SelectValidator);
     }
 
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
-            {view === View.Details && stakedDetails && (
+            {view === StakeDialogView.Details && stakedDetails && (
                 <DetailsView
                     handleStake={detailsHandleStake}
                     handleUnstake={detailsHandleUnstake}
@@ -146,10 +145,10 @@ function StakeDialog({
                     handleClose={handleClose}
                 />
             )}
-            {view === View.SelectValidator && (
+            {view === StakeDialogView.SelectValidator && (
                 <SelectValidatorView validators={validators} onSelect={handleValidatorSelect} />
             )}
-            {view === View.EnterAmount && (
+            {view === StakeDialogView.EnterAmount && (
                 <EnterAmountView
                     selectedValidator={selectedValidator}
                     amount={amount}
