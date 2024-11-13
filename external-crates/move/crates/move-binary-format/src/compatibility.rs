@@ -120,105 +120,142 @@ impl Compatibility {
     /// Check compatibility for `new_module` relative to old module
     /// `old_module`.
     pub fn check(&self, old_module: &Module, new_module: &Module) -> PartialVMResult<()> {
-        let mut datatype_and_function_linking = true;
-        let mut datatype_layout = true;
+        // add macro to simplify error handling with a formatted error reason
+        macro_rules! error {
+            ($($arg:tt)*) => {
+                Err(PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
+                    .with_message(format!(
+                        "error in module {}: {}",
+                        old_module.module_id(),
+                        format!($($arg)*),
+                    ))
+                )
+            };
+        }
+
         let mut friend_linking = true;
         let mut entry_linking = true;
-        let mut no_new_variants = true;
 
-        // module's name and address are unchanged
-        if old_module.address != new_module.address || old_module.name != new_module.name {
-            datatype_and_function_linking = false;
+        // module's name and address are changed
+        if self.check_datatype_and_pub_function_linking {
+            if old_module.address != new_module.address {
+                return error!(
+                    "changed address from {} to {}", old_module.address, new_module.address,
+                );
+            }
+
+            if old_module.name != new_module.name {
+                return error!("changed name from {} to {}", old_module.name, new_module.name);
+            }
         }
 
         // old module's structs are a subset of the new module's structs
         for (name, old_struct) in &old_module.structs {
             let Some(new_struct) = new_module.structs.get(name) else {
-                // Struct not present in new . Existing modules that depend on this struct will
-                // fail to link with the new version of the module. Also, struct
-                // layout cannot be guaranteed transitively, because after
-                // removing the struct, it could be re-added later with a different layout.
-                datatype_and_function_linking = false;
-                datatype_layout = false;
+                if self.check_datatype_and_pub_function_linking || self.check_datatype_layout {
+                    // Struct not present in new. Existing modules that depend on this struct will
+                    // fail to link with the new version of the module. Also, struct
+                    // layout cannot be guaranteed transitively, because after
+                    // removing the struct, it could be re-added later with a different layout.
+                    return error!("removed struct with name {name}");
+                }
                 break;
             };
 
-            if !datatype_abilities_compatible(
-                self.disallowed_new_abilities,
-                old_struct.abilities,
-                new_struct.abilities,
-            ) || !datatype_type_parameters_compatible(
-                self.disallow_change_datatype_type_params,
-                &old_struct.type_parameters,
-                &new_struct.type_parameters,
-            ) {
-                datatype_and_function_linking = false;
+            if self.check_datatype_and_pub_function_linking {
+                if !datatype_abilities_compatible(
+                    self.disallowed_new_abilities,
+                    old_struct.abilities,
+                    new_struct.abilities,
+                ) {
+                    return error!("incompatible abilities of struct {name}");
+                }
+
+                if !datatype_type_parameters_compatible(
+                    self.disallow_change_datatype_type_params,
+                    &old_struct.type_parameters,
+                    &new_struct.type_parameters,
+                ) {
+                    return error!("incompatible type params of struct {name}");
+                }
             }
-            if new_struct.fields != old_struct.fields {
+
+            if new_struct.fields != old_struct.fields && self.check_datatype_layout {
                 // Fields changed. Code in this module will fail at runtime if it tries to
                 // read a previously published struct value
                 // TODO: this is a stricter definition than required. We could in principle
                 // choose that changing the name (but not position or type) of a field is
                 // compatible. The VM does not care about the name of a field
                 // (it's purely informational), but clients presumably do.
-                datatype_layout = false
+                return error!("updated fields of struct {name}");
             }
         }
 
         for (name, old_enum) in &old_module.enums {
             let Some(new_enum) = new_module.enums.get(name) else {
-                // Enum not present in new. Existing modules that depend on this enum will fail
-                // to link with the new version of the module. Also, enum layout
-                // cannot be guaranteed transitively, because after removing the
-                // enum, it could be re-added later with a different layout.
-                datatype_and_function_linking = false;
-                datatype_layout = false;
+                if self.check_datatype_and_pub_function_linking || self.check_datatype_layout {
+                    // Enum not present in new. Existing modules that depend on this enum will fail
+                    // to link with the new version of the module. Also, enum layout
+                    // cannot be guaranteed transitively, because after removing the
+                    // enum, it could be re-added later with a different layout.
+                    return error!("removed enum with name {name}");
+                }
                 break;
             };
 
-            if !datatype_abilities_compatible(
-                self.disallowed_new_abilities,
-                old_enum.abilities,
-                new_enum.abilities,
-            ) || !datatype_type_parameters_compatible(
-                self.disallow_change_datatype_type_params,
-                &old_enum.type_parameters,
-                &new_enum.type_parameters,
-            ) {
-                datatype_and_function_linking = false;
+            if self.check_datatype_and_pub_function_linking {
+                if !datatype_abilities_compatible(
+                    self.disallowed_new_abilities,
+                    old_enum.abilities,
+                    new_enum.abilities,
+                ) {
+                    return error!("incompatible abilities for enum {name}");
+                }
+
+                if !datatype_type_parameters_compatible(
+                    self.disallow_change_datatype_type_params,
+                    &old_enum.type_parameters,
+                    &new_enum.type_parameters,
+                ) {
+                    return error!("incompatible type params for enum {name}");
+                }
             }
 
-            if new_enum.variants.len() > old_enum.variants.len() {
-                no_new_variants = false;
+            if new_enum.variants.len() > old_enum.variants.len() && self.disallow_new_variants {
+                return error!("added variants to enum {name}");
             }
 
-            if new_enum.variants.len() < old_enum.variants.len() {
-                datatype_layout = false;
+            if new_enum.variants.len() < old_enum.variants.len() && self.check_datatype_layout {
+                return error!("removed variants from enum {name}");
             }
 
             for (tag, old_variant) in old_enum.variants.iter().enumerate() {
                 // If the new enum has fewer variants than the old one, datatype_layout is false
                 // and we don't need to check the rest of the variants.
                 let Some(new_variant) = new_enum.variants.get(tag) else {
-                    datatype_layout = false;
+                    if self.check_datatype_layout {
+                        return error!("removed variant {tag} from enum {name}");
+                    }
                     break;
                 };
-                if new_variant.name != old_variant.name {
+
+                if new_variant.name != old_variant.name && self.check_datatype_layout {
                     // TODO: Variant renamed. This is a stricter definition than required.
                     // We could in principle choose that changing the name (but not position or
                     // type) of a variant is compatible. The VM does not care about the name of a
                     // variant if it's non-public (it's purely informational), but clients
                     // presumably would.
-                    datatype_layout = false;
+                    return error!("renamed variant {tag} in enum {name}");
                 }
-                if new_variant.fields != old_variant.fields {
+
+                if new_variant.fields != old_variant.fields && self.check_datatype_layout {
                     // Fields changed. Code in this module will fail at runtime if it tries to
                     // read a previously published enum value
                     // TODO: this is a stricter definition than required. We could in principle
                     // choose that changing the name (but not position or type) of a field is
                     // compatible. The VM does not care about the name of a field
                     // (it's purely informational), but clients presumably do.
-                    datatype_layout = false
+                    return error!("updated fields of variant {tag} in enum {name}");
                 }
             }
         }
@@ -241,36 +278,36 @@ impl Compatibility {
         // we may revisit this in the future.
         for (name, old_func) in &old_module.functions {
             let Some(new_func) = new_module.functions.get(name) else {
-                if old_func.visibility == Visibility::Friend {
-                    friend_linking = false;
-                } else if old_func.visibility != Visibility::Private {
-                    datatype_and_function_linking = false;
+                if old_func.visibility == Visibility::Friend && self.check_friend_linking {
+                    return error!("removed friend function {name}");
+                } else if old_func.visibility != Visibility::Private && self.check_datatype_and_pub_function_linking {
+                    return error!("removed non-private function {name}");
                 } else if old_func.is_entry && self.check_private_entry_linking {
-                    // This must be a private entry function. So set the link breakage if we're
-                    // checking for that.
-                    entry_linking = false;
+                    return error!("removed entry function {name}");
                 }
                 continue;
             };
 
             // Check visibility compatibility
             match (old_func.visibility, new_func.visibility) {
-                (Visibility::Public, Visibility::Private | Visibility::Friend) => {
-                    datatype_and_function_linking = false
-                }
-                (Visibility::Friend, Visibility::Private) => friend_linking = false,
+                (Visibility::Public, Visibility::Private | Visibility::Friend) => if self.check_datatype_and_pub_function_linking {
+                    return error!("downgraded visibility of public function {name}");
+                },
+                (Visibility::Friend, Visibility::Private) => if self.check_friend_linking {
+                    return error!("downgraded visibility of friend function {name}")
+                },
                 _ => (),
             }
 
             // Check entry compatibility
-            if old_module.file_format_version < VERSION_5
-                && new_module.file_format_version < VERSION_5
-                && old_func.visibility != Visibility::Private
-                && old_func.is_entry != new_func.is_entry
-            {
-                entry_linking = false
-            } else if old_func.is_entry && !new_func.is_entry {
-                entry_linking = false;
+            if (
+                (old_module.file_format_version < VERSION_5
+                    && new_module.file_format_version < VERSION_5
+                    && old_func.visibility != Visibility::Private
+                    && old_func.is_entry != new_func.is_entry)
+                || old_func.is_entry && !new_func.is_entry
+            ) && self.check_private_entry_linking {
+                return error!("changed entry status of function {name}");
             }
 
             // Check signature compatibility
@@ -283,7 +320,9 @@ impl Compatibility {
             {
                 match old_func.visibility {
                     Visibility::Friend => friend_linking = false,
-                    Visibility::Public => datatype_and_function_linking = false,
+                    Visibility::Public => if self.check_datatype_and_pub_function_linking {
+                        return error!("changed signature of function {name}");
+                    },
                     Visibility::Private => (),
                 }
 
@@ -304,27 +343,15 @@ impl Compatibility {
             friend_linking = false;
         }
 
-        if self.check_datatype_and_pub_function_linking && !datatype_and_function_linking {
-            return Err(PartialVMError::new(
-                StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
-            ));
-        }
-        if self.check_datatype_layout && !datatype_layout {
-            return Err(PartialVMError::new(
-                StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
-            ));
-        }
         if self.check_friend_linking && !friend_linking {
+            println!("check_friend_linking");
             return Err(PartialVMError::new(
                 StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
             ));
         }
+
         if self.check_private_entry_linking && !entry_linking {
-            return Err(PartialVMError::new(
-                StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
-            ));
-        }
-        if self.disallow_new_variants && !no_new_variants {
+            println!("check_private_entry_linking");
             return Err(PartialVMError::new(
                 StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE,
             ));
