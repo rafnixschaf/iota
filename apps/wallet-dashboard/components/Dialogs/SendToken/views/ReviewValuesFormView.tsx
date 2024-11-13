@@ -25,8 +25,10 @@ import {
     parseAmount,
     useCoinMetadata,
     useFormatCoin,
+    ExplorerLinkType,
 } from '@iota/core';
 import { Loader } from '@iota/ui-icons';
+import { ExplorerLink } from '@/components';
 
 interface ReviewValuesFormProps {
     formData: FormDataValues;
@@ -73,14 +75,25 @@ export function ReviewValuesFormView({
                             <div className="flex flex-col gap-md--rs p-sm--rs">
                                 <KeyValueInfo
                                     keyText={'From'}
-                                    value={formatAddress(senderAddress)}
+                                    value={
+                                        <ExplorerLink
+                                            type={ExplorerLinkType.Address}
+                                            address={senderAddress}
+                                        >
+                                            {formatAddress(senderAddress)}
+                                        </ExplorerLink>
+                                    }
                                     fullwidth
                                 />
 
                                 <Divider />
                                 <KeyValueInfo
                                     keyText={'To'}
-                                    value={formatAddress(to || '')}
+                                    value={
+                                        <ExplorerLink type={ExplorerLinkType.Address} address={to}>
+                                            {formatAddress(to || '')}
+                                        </ExplorerLink>
+                                    }
                                     fullwidth
                                 />
 

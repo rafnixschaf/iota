@@ -72,7 +72,7 @@ function SendTokenDialog({
         } else {
             signAndExecuteTransaction(
                 {
-                    transaction: '',
+                    transaction: sendCoinData.transaction,
                 },
                 {
                     onSuccess: () => {
