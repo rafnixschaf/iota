@@ -89,7 +89,11 @@ export function SendTokenFormInput({
             errorMessage={errorMessage}
             onChange={(e) => onChange(e.currentTarget.value)}
             amountCounter={
-                !errorMessage ? (coins ? `${gasBudgetEstimation} ${GAS_SYMBOL}` : '--') : undefined
+                !errorMessage
+                    ? coins && gasBudgetEstimation !== '--'
+                        ? `${gasBudgetEstimation} ${GAS_SYMBOL}`
+                        : '--'
+                    : undefined
             }
             trailingElement={renderAction(isActionButtonDisabled)}
             {...numericPropsOnly}
