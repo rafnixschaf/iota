@@ -160,48 +160,43 @@ impl Compatibility {
                 &old_struct.type_parameters,
                 &new_struct.type_parameters,
             ) {
-                return_if!(check_datatype_and_pub_function_linking, "incompatible abilities or type params of struct {name}");
+                return_if!(check_datatype_and_pub_function_linking,
+                    "incompatible abilities or type params for struct {name}");
             }
 
-            if new_struct.fields != old_struct.fields && self.check_datatype_layout {
+            if new_struct.fields != old_struct.fields {
                 // Fields changed. Code in this module will fail at runtime if it tries to
                 // read a previously published struct value
                 // TODO: this is a stricter definition than required. We could in principle
                 // choose that changing the name (but not position or type) of a field is
                 // compatible. The VM does not care about the name of a field
                 // (it's purely informational), but clients presumably do.
-                return error!("updated fields of struct {name}");
+                return_if!(check_datatype_layout, "updated fields of struct {name}");
             }
         }
 
         for (name, old_enum) in &old_module.enums {
             let Some(new_enum) = new_module.enums.get(name) else {
-                if self.check_datatype_and_pub_function_linking || self.check_datatype_layout {
-                    // Enum not present in new. Existing modules that depend on this enum will fail
-                    // to link with the new version of the module. Also, enum layout
-                    // cannot be guaranteed transitively, because after removing the
-                    // enum, it could be re-added later with a different layout.
-                    return error!("removed enum with name {name}");
-                }
+                // Enum not present in new. Existing modules that depend on this enum will fail
+                // to link with the new version of the module. Also, enum layout
+                // cannot be guaranteed transitively, because after removing the
+                // enum, it could be re-added later with a different layout.
+                return_if!(check_datatype_and_pub_function_linking, "removed enum with name {name}");
+                return_if!(check_datatype_layout, "removed enum with name {name}");
                 break;
             };
 
-            if self.check_datatype_and_pub_function_linking {
-                if !datatype_abilities_compatible(
-                    self.disallowed_new_abilities,
-                    old_enum.abilities,
-                    new_enum.abilities,
-                ) {
-                    return error!("incompatible abilities for enum {name}");
-                }
-
-                if !datatype_type_parameters_compatible(
-                    self.disallow_change_datatype_type_params,
-                    &old_enum.type_parameters,
-                    &new_enum.type_parameters,
-                ) {
-                    return error!("incompatible type params for enum {name}");
-                }
+            if !datatype_abilities_compatible(
+                self.disallowed_new_abilities,
+                old_enum.abilities,
+                new_enum.abilities,
+            ) || !datatype_type_parameters_compatible(
+                self.disallow_change_datatype_type_params,
+                &old_enum.type_parameters,
+                &new_enum.type_parameters,
+            ) {
+                return_if!(check_datatype_and_pub_function_linking,
+                    "incompatible abilities or type params for enum {name}");
             }
 
             if new_enum.variants.len() > old_enum.variants.len() {
