@@ -4,6 +4,7 @@
 
 use std::fmt::Formatter;
 
+use anyhow::{Result, anyhow};
 use iota_types::{
     BRIDGE_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID,
     STARDUST_PACKAGE_ID,
@@ -175,7 +176,7 @@ pub async fn compare_system_package<S: ObjectStore>(
     modules: &[CompiledModule],
     dependencies: Vec<ObjectID>,
     binary_config: &BinaryConfig,
-) -> PartialVMResult<ObjectRef> {
+) -> Result<ObjectRef> {
     let cur_object = match object_store.get_object(id) {
         Ok(Some(cur_object)) => cur_object,
 
@@ -198,7 +199,7 @@ pub async fn compare_system_package<S: ObjectStore>(
 
         Err(e) => {
             error!("Error loading framework object at {id}: {e:?}");
-            return Err(PartialVMError::new(StatusCode::UNKNOWN_STATUS));
+            return Err(anyhow!("Error loading framework object at {id}: {e:?}"));
         }
     };
 
@@ -248,7 +249,7 @@ pub async fn compare_system_package<S: ObjectStore>(
         Ok(v) => v,
         Err(e) => {
             error!("Could not normalize existing package: {e:?}");
-            return Err(PartialVMError::new(StatusCode::UNKNOWN_STATUS));
+            return Err(anyhow!("Could not normalize existing package: {e:?}"));
         }
     };
     let mut new_normalized = new_pkg
@@ -262,7 +263,9 @@ pub async fn compare_system_package<S: ObjectStore>(
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
             error!("Compatibility check failed, for new version of {id}::{name}: {e:?}");
-            return Err(e);
+            return Err(anyhow!(
+                "Compatibility check failed, for new version of {id}::{name}: {e:?}"
+            ));
         }
     }
     new_pkg.increment_version();
