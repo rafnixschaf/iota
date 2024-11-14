@@ -181,21 +181,19 @@ pub async fn compare_system_package<S: ObjectStore>(
 
         Ok(None) => {
             // creating a new framework package--nothing to check
-            return Ok(
-                Object::new_system_package(
-                    modules,
-                    // note: execution_engine assumes any system package with version
-                    // OBJECT_START_VERSION is freshly created rather than
-                    // upgraded
-                    OBJECT_START_VERSION,
-                    dependencies,
-                    // Genesis is fine here, we only use it to calculate an object ref that we can
-                    // use for all validators to commit to the same bytes in
-                    // the update
-                    TransactionDigest::genesis_marker(),
-                )
-                .compute_object_reference(),
-            );
+            return Ok(Object::new_system_package(
+                modules,
+                // note: execution_engine assumes any system package with version
+                // OBJECT_START_VERSION is freshly created rather than
+                // upgraded
+                OBJECT_START_VERSION,
+                dependencies,
+                // Genesis is fine here, we only use it to calculate an object ref that we can
+                // use for all validators to commit to the same bytes in
+                // the update
+                TransactionDigest::genesis_marker(),
+            )
+            .compute_object_reference());
         }
 
         Err(e) => {
@@ -256,7 +254,9 @@ pub async fn compare_system_package<S: ObjectStore>(
     let mut new_normalized = new_pkg.normalize(binary_config)?;
 
     for (name, cur_module) in cur_normalized {
-        let new_module = new_normalized.remove(&name).ok_or_else(|| anyhow!("unexpected"))?;
+        let new_module = new_normalized
+            .remove(&name)
+            .ok_or_else(|| anyhow!("failed to remove module"))?;
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
             error!("Compatibility check failed, for new version of {id}::{name}: {e}");

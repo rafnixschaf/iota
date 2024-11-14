@@ -32,12 +32,14 @@ mod compatibility_tests {
                     &binary_config,
                 )
                 .await
-                .unwrap_or_else(|e| panic!(
-                    "The current Iota framework {:?} is not compatible with version {:?}: {:?}",
-                    cur_package.id(),
-                    version,
-                    e
-                ));
+                .unwrap_or_else(|e| {
+                    panic!(
+                        "The current Iota framework {:?} is not compatible with version {:?}: {:?}",
+                        cur_package.id(),
+                        version,
+                        e
+                    );
+                });
             }
         }
     }
