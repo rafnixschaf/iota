@@ -41,7 +41,7 @@ interface UnstakeDialogProps {
 export function UnstakeView({
     extendedStake,
     handleClose,
-    showActiveStatus = true,
+    showActiveStatus,
 }: UnstakeDialogProps): JSX.Element {
     const stakingReward = BigInt(extendedStake.estimatedReward ?? '').toString();
     const [rewards, rewardSymbol] = useFormatCoin(stakingReward, IOTA_TYPE_ARG);

@@ -10,9 +10,9 @@ import {
     useGetDelegatedStake,
     DELEGATED_STAKES_QUERY_REFETCH_INTERVAL,
     DELEGATED_STAKES_QUERY_STALE_TIME,
+    useValidatorInfo,
 } from '@iota/core';
 import { KeyValueInfo, Panel, TooltipPosition } from '@iota/apps-ui-kit';
-import { useValidatorInfo } from '@/hooks';
 
 export function StakedInfo({
     validatorAddress,

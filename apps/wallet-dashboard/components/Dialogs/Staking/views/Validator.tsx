@@ -1,6 +1,6 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { ImageIcon, ImageIconSize, formatPercentageDisplay } from '@iota/core';
+import { ImageIcon, ImageIconSize, formatPercentageDisplay, useValidatorInfo } from '@iota/core';
 import {
     Card,
     CardBody,
@@ -12,7 +12,6 @@ import {
     BadgeType,
 } from '@iota/apps-ui-kit';
 import { formatAddress } from '@iota/iota-sdk/utils';
-import { useValidatorInfo } from '@/hooks';
 
 export function Validator({
     address,
