@@ -12,8 +12,14 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, appId }: PropsWithChildren<ThemeProviderProps>) {
     const storageKey = `theme_${appId}`;
     const [theme, setTheme] = useState<Theme>(() => {
-        if (typeof window !== 'undefined' && localStorage.getItem(storageKey)) {
-            return localStorage.getItem(storageKey) as Theme;
+        if (typeof window !== 'undefined') {
+            const storedTheme = localStorage.getItem(storageKey);
+            if (storedTheme) {
+                return storedTheme as Theme;
+            } else {
+                const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                return prefersDarkScheme ? Theme.Dark : Theme.Light;
+            }
         }
         return Theme.Light;
     });
