@@ -133,14 +133,16 @@ impl Compatibility {
                 }
             };
         }
-
+        macro_rules! datatype_and_function_linking {
+            ($($arg:tt)*) => { return_if!(check_datatype_and_pub_function_linking, $($arg)*); }
+        }
         macro_rules! entry_linking {
             ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
         }
 
         // module's name and address are changed
         if old_module.address != new_module.address || old_module.name != new_module.name {
-            return_if!(check_datatype_and_pub_function_linking, "changed address or name");
+            datatype_and_function_linking!("changed address or name");
         }
 
         // old module's structs are a subset of the new module's structs
@@ -150,7 +152,7 @@ impl Compatibility {
                 // fail to link with the new version of the module. Also, struct
                 // layout cannot be guaranteed transitively, because after
                 // removing the struct, it could be re-added later with a different layout.
-                return_if!(check_datatype_and_pub_function_linking, "removed struct with name {name}");
+                datatype_and_function_linking!("removed struct with name {name}");
                 return_if!(check_datatype_layout, "removed struct with name {name}");
                 break;
             };
@@ -164,7 +166,7 @@ impl Compatibility {
                 &old_struct.type_parameters,
                 &new_struct.type_parameters,
             ) {
-                return_if!(check_datatype_and_pub_function_linking,
+                datatype_and_function_linking!(
                     "incompatible abilities or type params for struct {name}");
             }
             if new_struct.fields != old_struct.fields {
@@ -184,7 +186,7 @@ impl Compatibility {
                 // to link with the new version of the module. Also, enum layout
                 // cannot be guaranteed transitively, because after removing the
                 // enum, it could be re-added later with a different layout.
-                return_if!(check_datatype_and_pub_function_linking, "removed enum with name {name}");
+                datatype_and_function_linking!("removed enum with name {name}");
                 return_if!(check_datatype_layout, "removed enum with name {name}");
                 break;
             };
@@ -198,7 +200,7 @@ impl Compatibility {
                 &old_enum.type_parameters,
                 &new_enum.type_parameters,
             ) {
-                return_if!(check_datatype_and_pub_function_linking,
+                datatype_and_function_linking!(
                     "incompatible abilities or type params for enum {name}");
             }
 
@@ -260,7 +262,7 @@ impl Compatibility {
                 if old_func.visibility == Visibility::Friend {
                     return_if!(check_friend_linking, "removed friend function {name}");
                 } else if old_func.visibility != Visibility::Private {
-                    return_if!(check_datatype_and_pub_function_linking, "removed non-private function {name}");
+                    datatype_and_function_linking!("removed non-private function {name}");
                 } else if old_func.is_entry && self.check_private_entry_linking {
                     // This must be a private entry function. So set the link breakage if we're
                     // checking for that.
@@ -272,7 +274,7 @@ impl Compatibility {
             // Check visibility compatibility
             match (old_func.visibility, new_func.visibility) {
                 (Visibility::Public, Visibility::Private | Visibility::Friend) => {
-                    return_if!(check_datatype_and_pub_function_linking, "downgraded visibility of public function {name}");
+                    datatype_and_function_linking!("downgraded visibility of public function {name}");
                 },
                 (Visibility::Friend, Visibility::Private) => {
                     return_if!(check_friend_linking, "downgraded visibility of friend function {name}")
@@ -301,7 +303,7 @@ impl Compatibility {
             {
                 match old_func.visibility {
                     Visibility::Friend => return_if!(check_friend_linking, "changed signature of friend function {name}"),
-                    Visibility::Public => return_if!(check_datatype_and_pub_function_linking, "changed signature of public function {name}"),
+                    Visibility::Public => datatype_and_function_linking!("changed signature of public function {name}"),
                     Visibility::Private => (),
                 }
 
