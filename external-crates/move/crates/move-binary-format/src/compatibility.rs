@@ -134,6 +134,10 @@ impl Compatibility {
             };
         }
 
+        macro_rules! entry_linking {
+            ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
+        }
+
         // module's name and address are changed
         if old_module.address != new_module.address || old_module.name != new_module.name {
             return_if!(check_datatype_and_pub_function_linking, "changed address or name");
@@ -260,7 +264,7 @@ impl Compatibility {
                 } else if old_func.is_entry && self.check_private_entry_linking {
                     // This must be a private entry function. So set the link breakage if we're
                     // checking for that.
-                    return_if!(check_private_entry_linking, "removed entry function {name}");
+                    entry_linking!("removed entry function {name}");
                 }
                 continue;
             };
@@ -282,9 +286,9 @@ impl Compatibility {
                 && old_func.visibility != Visibility::Private
                 && old_func.is_entry != new_func.is_entry
             {
-                return_if!(check_private_entry_linking, "changed entry status of function {name}");
+                entry_linking!("changed entry status of function {name}");
             } else if old_func.is_entry && !new_func.is_entry {
-                return_if!(check_private_entry_linking, "changed entry status of function {name}");
+                entry_linking!("changed entry status of function {name}");
             }
 
             // Check signature compatibility
@@ -302,7 +306,7 @@ impl Compatibility {
                 }
 
                 if old_func.is_entry {
-                    return_if!(check_private_entry_linking, "changed signature of entry function {name}");
+                    entry_linking!("changed signature of entry function {name}");
                 }
             }
         }
