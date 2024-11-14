@@ -21,19 +21,20 @@ import { useCurrentAccount, useSignAndExecuteTransaction } from '@iota/dapp-kit'
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
-import { Dialog } from '@iota/apps-ui-kit';
 import { DetailsView, UnstakeView } from './views';
+import { Dialog } from '@iota/apps-ui-kit';
+import { SuccessScreenView } from './views/ConfirmAndExit';
 
 export enum StakeDialogView {
     Details,
     SelectValidator,
     EnterAmount,
     Unstake,
+    TransactionDetails,
 }
 
 interface StakeDialogProps {
     isTimelockedStaking?: boolean;
-    onSuccess?: (digest: string) => void;
     isOpen: boolean;
     handleClose: () => void;
     view: StakeDialogView;
@@ -42,7 +43,6 @@ interface StakeDialogProps {
 }
 
 function StakeDialog({
-    onSuccess,
     isTimelockedStaking,
     isOpen,
     handleClose,
@@ -86,6 +86,9 @@ function StakeDialog({
 
     const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
+    const validatorApy =
+        rollingAverageApys && selectedValidator ? rollingAverageApys[selectedValidator] : null;
+
     function handleBack(): void {
         setView(StakeDialogView.SelectValidator);
     }
@@ -122,10 +125,8 @@ function StakeDialog({
                 transaction: newStakeData?.transaction,
             },
             {
-                onSuccess: (tx) => {
-                    if (onSuccess) {
-                        onSuccess(tx.digest);
-                    }
+                onSuccess: () => {
+                    setView(StakeDialogView.TransactionDetails);
                 },
             },
         )
@@ -156,7 +157,7 @@ function StakeDialog({
                     onNext={selectValidatorHandleNext}
                 />
             )}
-            {view === StakeDialogView.EnterAmount && (
+            {view === StakeDialogView.EnterAmount && validatorApy !== null && (
                 <EnterAmountView
                     selectedValidator={selectedValidator}
                     amount={amount}
@@ -164,6 +165,7 @@ function StakeDialog({
                     onChange={(e) => setAmount(e.target.value)}
                     onBack={handleBack}
                     onStake={handleStake}
+                    validatorApy={validatorApy}
                 />
             )}
             {view === StakeDialogView.Unstake && stakedDetails && (
@@ -171,6 +173,16 @@ function StakeDialog({
                     extendedStake={stakedDetails}
                     handleClose={handleClose}
                     showActiveStatus
+                />
+            )}
+            {view === StakeDialogView.TransactionDetails && validatorApy !== null && (
+                <SuccessScreenView
+                    validatorAddress={selectedValidator}
+                    gasBudget={newStakeData?.gasBudget}
+                    onConfirm={handleClose}
+                    amount={amount}
+                    symbol={metadata?.symbol}
+                    validatorApy={validatorApy}
                 />
             )}
         </Dialog>

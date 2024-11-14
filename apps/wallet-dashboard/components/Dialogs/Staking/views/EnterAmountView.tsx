@@ -2,23 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useFormatCoin, useBalance, CoinFormat } from '@iota/core';
+import { useFormatCoin, useBalance, CoinFormat, ValidatorApyData } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import {
-    Button,
-    ButtonType,
-    KeyValueInfo,
-    Panel,
-    Divider,
-    Input,
-    InputType,
-    Header,
-} from '@iota/apps-ui-kit';
-import { useStakeTxnInfo } from '../hooks';
-import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
+import { Button, ButtonType, Input, InputType, Header } from '@iota/apps-ui-kit';
+import { useCurrentAccount } from '@iota/dapp-kit';
 import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
+import { StakingTransactionDetails } from './StakingTransactionDetails';
 
 interface EnterAmountViewProps {
     selectedValidator: string;
@@ -29,6 +20,7 @@ interface EnterAmountViewProps {
     showActiveStatus?: boolean;
     gasBudget?: string | number | null;
     handleClose: () => void;
+    validatorApy: ValidatorApyData;
 }
 
 function EnterAmountView({
@@ -39,11 +31,11 @@ function EnterAmountView({
     onStake,
     gasBudget = 0,
     handleClose,
+    validatorApy,
 }: EnterAmountViewProps): JSX.Element {
     const account = useCurrentAccount();
     const accountAddress = account?.address;
 
-    const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
     const { data: iotaBalance } = useBalance(accountAddress!);
 
     const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
@@ -52,10 +44,6 @@ function EnterAmountView({
         maxTokenBalance,
         IOTA_TYPE_ARG,
         CoinFormat.FULL,
-    );
-    const [gas, symbol] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-    const { stakedRewardsStartEpoch, timeBeforeStakeRewardsRedeemableAgoDisplay } = useStakeTxnInfo(
-        system?.epoch,
     );
 
     return (
@@ -83,28 +71,7 @@ function EnterAmountView({
                                 caption={`${maxTokenFormatted} ${maxTokenFormattedSymbol} Available`}
                             />
                         </div>
-
-                        <Panel hasBorder>
-                            <div className="flex flex-col gap-y-sm p-md">
-                                <KeyValueInfo
-                                    keyText="Staking Rewards Start"
-                                    value={stakedRewardsStartEpoch}
-                                    fullwidth
-                                />
-                                <KeyValueInfo
-                                    keyText="Redeem Rewards"
-                                    value={timeBeforeStakeRewardsRedeemableAgoDisplay}
-                                    fullwidth
-                                />
-                                <Divider />
-                                <KeyValueInfo
-                                    keyText="Gas fee"
-                                    value={gas || '--'}
-                                    supportingLabel={symbol}
-                                    fullwidth
-                                />
-                            </div>
-                        </Panel>
+                        <StakingTransactionDetails gasBudget={gasBudget} {...validatorApy} />
                     </div>
                 </div>
             </LayoutBody>
