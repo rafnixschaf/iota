@@ -145,6 +145,9 @@ impl Compatibility {
         macro_rules! entry_linking {
             ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
         }
+        macro_rules! no_new_variants {
+            ($($arg:tt)*) => { return_if!(disallow_new_variants, $($arg)*); }
+        }
 
         // module's name and address are unchanged
         if old_module.address != new_module.address || old_module.name != new_module.name {
@@ -211,7 +214,7 @@ impl Compatibility {
             }
 
             if new_enum.variants.len() > old_enum.variants.len() {
-                return_if!(disallow_new_variants, "added variants to enum {name}");
+                no_new_variants!("added variants to enum {name}");
             }
 
             if new_enum.variants.len() < old_enum.variants.len() {
