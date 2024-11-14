@@ -188,32 +188,16 @@ export function SendTokenForm({
                                             icon={<Exclamation />}
                                         />
                                     ) : null}
-
-                                    <Field name="amount">
-                                        {({
-                                            field,
-                                            form,
-                                        }: {
-                                            field: FieldInputProps<string>;
-                                            form: FormikProps<FormValues>;
-                                        }) => {
-                                            return (
-                                                <SendTokenFormInput
-                                                    form={form}
-                                                    name={field.name}
-                                                    amount={values.amount}
-                                                    to={values.to}
-                                                    isPayAllIota={values.isPayAllIota}
-                                                    symbol={symbol}
-                                                    coinDecimals={coinDecimals}
-                                                    activeAddress={activeAddress ?? ''}
-                                                    coins={coins ?? []}
-                                                    onActionClick={onMaxTokenButtonClick}
-                                                    isMaxActionDisabled={isMaxActionDisabled}
-                                                />
-                                            );
-                                        }}
-                                    </Field>
+                                    <SendTokenFormInput
+                                        name="amount"
+                                        to={values.to}
+                                        symbol={symbol}
+                                        coinDecimals={coinDecimals}
+                                        activeAddress={activeAddress ?? ''}
+                                        coins={coins ?? []}
+                                        onActionClick={onMaxTokenButtonClick}
+                                        isMaxActionDisabled={isMaxActionDisabled}
+                                    />
                                     <AddressInput name="to" placeholder="Enter Address" />
                                 </div>
                             </Form>

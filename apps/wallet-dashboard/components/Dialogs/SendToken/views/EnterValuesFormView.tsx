@@ -109,32 +109,16 @@ function FormInputs({
                         />
                     )}
 
-                    <Field name="amount">
-                        {({
-                            field,
-                            form,
-                        }: {
-                            field: FieldInputProps<string>;
-                            form: FormikProps<FormDataValues>;
-                        }) => {
-                            return (
-                                <SendTokenFormInput
-                                    form={form}
-                                    amount={values.amount}
-                                    to={values.to}
-                                    isPayAllIota={values.isPayAllIota}
-                                    name={field.name}
-                                    symbol={symbol}
-                                    coins={coins}
-                                    coinDecimals={coinDecimals}
-                                    activeAddress={activeAddress}
-                                    onActionClick={onMaxTokenButtonClick}
-                                    isMaxActionDisabled={isMaxActionDisabled}
-                                />
-                            );
-                        }}
-                    </Field>
-
+                    <SendTokenFormInput
+                        name="amount"
+                        to={values.to}
+                        symbol={symbol}
+                        coins={coins}
+                        coinDecimals={coinDecimals}
+                        activeAddress={activeAddress}
+                        onActionClick={onMaxTokenButtonClick}
+                        isMaxActionDisabled={isMaxActionDisabled}
+                    />
                     <AddressInput name="to" placeholder="Enter Address" />
                 </div>
             </Form>
