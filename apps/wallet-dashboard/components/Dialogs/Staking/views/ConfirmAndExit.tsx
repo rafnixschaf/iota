@@ -12,9 +12,9 @@ import {
     ImageType,
 } from '@iota/apps-ui-kit';
 import { ValidatorApyData } from '@iota/core';
-import { StakingTransactionDetails } from './StakingTransactionDetails';
 import { Validator } from './Validator';
 import { IotaLogoMark } from '@iota/ui-icons';
+import { StakingTransactionDetails } from './StakingTransactionDetails';
 
 interface SuccessScreenViewProps {
     validatorAddress: string;
@@ -27,11 +27,11 @@ interface SuccessScreenViewProps {
 
 export function SuccessScreenView({
     validatorAddress,
-    gasBudget,
     onConfirm,
     amount,
     symbol,
     validatorApy: { apy, isApyApproxZero },
+    gasBudget,
 }: SuccessScreenViewProps): React.JSX.Element {
     return (
         <div className="flex flex-1 flex-col">
@@ -47,9 +47,9 @@ export function SuccessScreenView({
                     </Card>
 
                     <StakingTransactionDetails
-                        gasBudget={gasBudget}
                         apy={apy}
                         isApyApproxZero={isApyApproxZero}
+                        gasBudget={gasBudget}
                     />
                 </div>
             </div>

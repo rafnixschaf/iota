@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, KeyValueInfo, Panel } from '@iota/apps-ui-kit';
-import { useFormatCoin, ValidatorApyData } from '@iota/core';
+import { formatApy, useFormatCoin, ValidatorApyData } from '@iota/core';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { useStakeTxnInfo } from '../hooks';
@@ -23,13 +23,11 @@ export function StakingTransactionDetails({
         system?.epoch,
     );
 
-    const apyDisplay = `${isApyApproxZero ? '~' : ''}${apy}%`;
-
     return (
         <Panel hasBorder>
             <div className="flex flex-col gap-y-sm p-md">
                 {apy !== null && apy !== undefined ? (
-                    <KeyValueInfo keyText="APY" value={apyDisplay} fullwidth />
+                    <KeyValueInfo keyText="APY" value={formatApy(apy, isApyApproxZero)} fullwidth />
                 ) : null}
 
                 <KeyValueInfo
