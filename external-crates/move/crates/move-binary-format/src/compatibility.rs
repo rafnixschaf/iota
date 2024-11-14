@@ -295,9 +295,9 @@ impl Compatibility {
             if old_func.parameters != new_func.parameters
                 || old_func.return_ != new_func.return_
                 || !fun_type_parameters_compatible(
-                &old_func.type_parameters,
-                &new_func.type_parameters,
-            )
+                    &old_func.type_parameters,
+                    &new_func.type_parameters,
+                )
             {
                 match old_func.visibility {
                     Visibility::Friend => friend_linking!("changed signature of friend function {name}"),
