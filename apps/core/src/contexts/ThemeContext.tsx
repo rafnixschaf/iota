@@ -24,12 +24,17 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children, appId }: PropsWithChildren<ThemeProviderProps>) {
     const storageKey = `theme_${appId}`;
-    const [theme, setTheme] = useState<Theme>(
-        () => (localStorage.getItem(storageKey) as Theme) || Theme.Light,
-    );
+    const [theme, setTheme] = useState<Theme>(() => {
+        if (typeof window !== 'undefined' && localStorage.getItem(storageKey)) {
+            return localStorage.getItem(storageKey) as Theme;
+        }
+        return Theme.Light;
+    });
 
     useEffect(() => {
-        localStorage.setItem(storageKey, theme);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(storageKey, theme);
+        }
         document.documentElement.classList.toggle(Theme.Dark, theme === Theme.Dark);
     }, [theme, storageKey]);
 
