@@ -144,13 +144,7 @@ export function SendTokenForm({
                 validateOnBlur={true}
                 onSubmit={handleFormSubmit}
             >
-                {({
-                    isValid,
-                    isSubmitting,
-                    setFieldValue,
-                    values,
-                    submitForm,
-                }) => {
+                {({ isValid, isSubmitting, setFieldValue, values, submitForm }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
                         coinType === IOTA_TYPE_ARG;
