@@ -28,7 +28,7 @@ import {
 } from '@iota/apps-ui-kit';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, FieldInputProps, Form, Formik, FormikProps } from 'formik';
+import { Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { UseQueryResult } from '@tanstack/react-query';
 
