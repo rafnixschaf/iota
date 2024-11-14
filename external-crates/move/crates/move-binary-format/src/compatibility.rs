@@ -367,18 +367,18 @@ fn datatype_type_parameters_compatible(
 ) -> bool {
     old_type_parameters.len() == new_type_parameters.len()
         && old_type_parameters.iter().zip(new_type_parameters).all(
-        |(old_type_parameter, new_type_parameter)| {
-            type_parameter_phantom_decl_compatible(
-                disallow_changing_generic_abilities,
-                old_type_parameter,
-                new_type_parameter,
-            ) && type_parameter_constraints_compatible(
-                disallow_changing_generic_abilities,
-                old_type_parameter.constraints,
-                new_type_parameter.constraints,
-            )
-        },
-    )
+            |(old_type_parameter, new_type_parameter)| {
+                type_parameter_phantom_decl_compatible(
+                    disallow_changing_generic_abilities,
+                    old_type_parameter,
+                    new_type_parameter,
+                ) && type_parameter_constraints_compatible(
+                    disallow_changing_generic_abilities,
+                    old_type_parameter.constraints,
+                    new_type_parameter.constraints,
+                )
+            },
+        )
 }
 
 // When upgrading, the new constraints must be a subset of (or equal to) the old
@@ -443,9 +443,9 @@ impl InclusionCheck {
         // size of all of the tables are the exact same except for constants.
         if (self == &Self::Equal)
             && (old_module.structs.len() != new_module.structs.len()
-            || old_module.enums.len() != new_module.enums.len()
-            || old_module.functions.len() != new_module.functions.len()
-            || old_module.friends.len() != new_module.friends.len())
+                || old_module.enums.len() != new_module.enums.len()
+                || old_module.functions.len() != new_module.functions.len()
+                || old_module.friends.len() != new_module.friends.len())
         {
             return err;
         }
