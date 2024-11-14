@@ -198,7 +198,7 @@ function AccountAvatar({ account }: { account: SerializedUIAccount }) {
     }
     return (
         <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-white ${account.isLocked ? 'bg-neutral-80' : 'bg-primary-30'}`}
+            className={`flex h-8 w-8 items-center justify-center rounded-full [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-neutral-100 ${account.isLocked ? 'bg-neutral-90 dark:bg-neutral-20 [&_svg]:dark:text-neutral-50' : 'bg-primary-30 '}`}
         >
             {logo}
         </div>

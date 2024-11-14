@@ -113,13 +113,15 @@ export function AccountGroup({
                         <div className="flex items-center gap-1">
                             <TriangleDown
                                 className={clsx(
-                                    'h-5 w-5 text-neutral-60',
+                                    'h-5 w-5 text-neutral-10 dark:text-neutral-92',
                                     isOpen
                                         ? 'rotate-0 transition-transform ease-linear'
                                         : '-rotate-90 transition-transform ease-linear',
                                 )}
                             />
-                            <div className="text-title-md">{getGroupTitle(accounts[0])}</div>
+                            <div className="text-title-md text-neutral-10 dark:text-neutral-92">
+                                {getGroupTitle(accounts[0])}
+                            </div>
                         </div>
                         <div className="flex items-center gap-1">
                             {(isMnemonicDerivedGroup || isSeedDerivedGroup) && accountSource ? (
