@@ -72,7 +72,7 @@ export function SendTokenFormInput({
             decimalScale={coinDecimals ? undefined : 0}
             thousandSeparator
             onValueChange={(values) => {
-                helpers.setValue(values.value)
+                helpers.setValue(values.value);
             }}
         />
     );

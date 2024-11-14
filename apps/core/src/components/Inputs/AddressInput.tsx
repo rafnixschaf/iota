@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useField } from 'formik';
 
 export interface AddressInputProps {
-    name: string,
+    name: string;
     disabled?: boolean;
     placeholder?: string;
     label?: string;
@@ -21,7 +21,7 @@ export function AddressInput({
     placeholder = '0x...',
     label = 'Enter Recipient Address',
 }: AddressInputProps) {
-    const [field, meta, helpers] = useField<string>(name)
+    const [field, meta, helpers] = useField<string>(name);
     const iotaAddressValidation = useIotaAddressValidation();
 
     const formattedValue = iotaAddressValidation.cast(field.value);
