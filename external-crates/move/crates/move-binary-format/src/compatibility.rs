@@ -258,6 +258,8 @@ impl Compatibility {
                 } else if old_func.visibility != Visibility::Private {
                     return_if!(check_datatype_and_pub_function_linking, "removed non-private function {name}");
                 } else if old_func.is_entry && self.check_private_entry_linking {
+                    // This must be a private entry function. So set the link breakage if we're
+                    // checking for that.
                     return_if!(check_private_entry_linking, "removed entry function {name}");
                 }
                 continue;
@@ -275,13 +277,14 @@ impl Compatibility {
             }
 
             // Check entry compatibility
-            if self.check_private_entry_linking && ((
-                old_module.file_format_version < VERSION_5
+            if old_module.file_format_version < VERSION_5
                 && new_module.file_format_version < VERSION_5
                 && old_func.visibility != Visibility::Private
                 && old_func.is_entry != new_func.is_entry
-            ) || old_func.is_entry && !new_func.is_entry) {
-                return error!("changed entry status of function {name}");
+            {
+                return_if!(check_private_entry_linking, "changed entry status of function {name}");
+            } else if old_func.is_entry && !new_func.is_entry {
+                return_if!(check_private_entry_linking, "changed entry status of function {name}");
             }
 
             // Check signature compatibility
