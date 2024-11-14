@@ -526,7 +526,7 @@ pub struct ProtocolConfig {
     object_runtime_max_num_store_entries_system_tx: Option<u64>,
 
     // === Execution gas costs ====
-    /// Base cost for any Iota transaction
+    /// Base cost for any Iota transaction in computation units
     base_tx_cost_fixed: Option<u64>,
 
     /// Additional cost for a transaction that publishes a package
@@ -1258,7 +1258,6 @@ impl ProtocolConfig {
             object_runtime_max_num_store_entries: Some(1000),
             object_runtime_max_num_store_entries_system_tx: Some(1000 * 16),
             // min gas budget is in NANOS and an absolute value 1000 NANOS or 0.000001IOTA
-            // TODO: this implies 1 computation unit for the transaction because base gas price is 1000.
             base_tx_cost_fixed: Some(1_000),
             package_publish_cost_fixed: Some(1_000),
             base_tx_cost_per_byte: Some(0),
