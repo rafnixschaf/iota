@@ -132,7 +132,7 @@ impl Compatibility {
             };
         }
 
-        macro_rules! report {
+        macro_rules! return_if {
             ($check:ident, $($arg:tt)*) => {
                 if self.$check {
                     return Err(
@@ -231,18 +231,18 @@ impl Compatibility {
             }
 
             if new_enum.variants.len() > old_enum.variants.len() {
-                report!(disallow_new_variants, "added variants to enum {name}");
+                return_if!(disallow_new_variants, "added variants to enum {name}");
             }
 
             if new_enum.variants.len() < old_enum.variants.len() {
-                report!(check_datatype_layout, "removed variants from enum {name}");
+                return_if!(check_datatype_layout, "removed variants from enum {name}");
             }
 
             for (tag, old_variant) in old_enum.variants.iter().enumerate() {
                 // If the new enum has fewer variants than the old one, datatype_layout is false
                 // and we don't need to check the rest of the variants.
                 let Some(new_variant) = new_enum.variants.get(tag) else {
-                    report!(check_datatype_layout, "removed variant {tag} from enum {name}");
+                    return_if!(check_datatype_layout, "removed variant {tag} from enum {name}");
                     break;
                 };
 
@@ -252,7 +252,7 @@ impl Compatibility {
                     // type) of a variant is compatible. The VM does not care about the name of a
                     // variant if it's non-public (it's purely informational), but clients
                     // presumably would.
-                    report!(check_datatype_layout, "renamed variant {tag} in enum {name}");
+                    return_if!(check_datatype_layout, "renamed variant {tag} in enum {name}");
                 }
 
                 if new_variant.fields != old_variant.fields {
@@ -262,7 +262,7 @@ impl Compatibility {
                     // choose that changing the name (but not position or type) of a field is
                     // compatible. The VM does not care about the name of a field
                     // (it's purely informational), but clients presumably do.
-                    report!(check_datatype_layout, "updated fields of variant {tag} in enum {name}");
+                    return_if!(check_datatype_layout, "updated fields of variant {tag} in enum {name}");
                 }
             }
         }
@@ -325,17 +325,13 @@ impl Compatibility {
                 )
             {
                 match old_func.visibility {
-                    Visibility::Friend => if self.check_friend_linking {
-                        return error!("changed signature of friend function {name}");
-                    },
-                    Visibility::Public => if self.check_datatype_and_pub_function_linking {
-                        return error!("changed signature of public function {name}");
-                    },
+                    Visibility::Friend => return_if!(check_friend_linking, "changed signature of friend function {name}"),
+                    Visibility::Public => return_if!(check_datatype_and_pub_function_linking, "changed signature of public function {name}"),
                     Visibility::Private => (),
                 }
 
-                if old_func.is_entry && self.check_private_entry_linking {
-                    return error!("changed signature of entry function {name}");
+                if old_func.is_entry {
+                    return_if!(check_private_entry_linking, "changed signature of entry function {name}");
                 }
             }
         }
@@ -347,8 +343,8 @@ impl Compatibility {
         //
         let old_friend_module_ids: BTreeSet<_> = old_module.friends.iter().cloned().collect();
         let new_friend_module_ids: BTreeSet<_> = new_module.friends.iter().cloned().collect();
-        if !old_friend_module_ids.is_subset(&new_friend_module_ids) && self.check_friend_linking {
-            return error!("removed friend module declaration");
+        if !old_friend_module_ids.is_subset(&new_friend_module_ids) {
+            return_if!(check_friend_linking, "removed friend module declaration");
         }
 
         Ok(())
