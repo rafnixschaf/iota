@@ -257,7 +257,7 @@ impl Compatibility {
                     return_if!(check_friend_linking, "removed friend function {name}");
                 } else if old_func.visibility != Visibility::Private {
                     return_if!(check_datatype_and_pub_function_linking, "removed non-private function {name}");
-                } else if old_func.is_entry {
+                } else if old_func.is_entry && self.check_private_entry_linking {
                     return_if!(check_private_entry_linking, "removed entry function {name}");
                 }
                 continue;
@@ -265,11 +265,11 @@ impl Compatibility {
 
             // Check visibility compatibility
             match (old_func.visibility, new_func.visibility) {
-                (Visibility::Public, Visibility::Private | Visibility::Friend) => if self.check_datatype_and_pub_function_linking {
-                    return error!("downgraded visibility of public function {name}");
+                (Visibility::Public, Visibility::Private | Visibility::Friend) => {
+                    return_if!(check_datatype_and_pub_function_linking, "downgraded visibility of public function {name}");
                 },
-                (Visibility::Friend, Visibility::Private) => if self.check_friend_linking {
-                    return error!("downgraded visibility of friend function {name}")
+                (Visibility::Friend, Visibility::Private) => {
+                    return_if!(check_friend_linking, "downgraded visibility of friend function {name}")
                 },
                 _ => (),
             }
