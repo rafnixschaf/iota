@@ -16,8 +16,8 @@ import {
 } from '@iota/core';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, type FieldInputProps, Form, Formik } from 'formik';
-import { ComponentProps, useMemo } from 'react';
+import { Field, type FieldInputProps, Form, Formik, FormikProps } from 'formik';
+import { useMemo } from 'react';
 
 import {
     InfoBox,
@@ -174,11 +174,6 @@ export function SendTokenForm({
                         await setFieldValue('amount', formattedTokenBalance);
                     }
 
-                    function handleOnChangeAmountInput(value: string, symbol: string) {
-                        const valueWithoutSuffix = value.replace(symbol, '');
-                        setFieldValue('amount', valueWithoutSuffix);
-                    }
-
                     const isMaxActionDisabled =
                         parseAmount(values?.amount, coinDecimals) === coinBalance ||
                         queryResult.isPending ||
@@ -203,12 +198,12 @@ export function SendTokenForm({
                                             form,
                                         }: {
                                             field: FieldInputProps<string>;
-                                            form: ComponentProps<typeof Field>;
+                                            form: FormikProps<FormValues>;
                                         }) => {
                                             return (
                                                 <SendTokenFormInput
                                                     form={form}
-                                                    field={field}
+                                                    name={field.name}
                                                     symbol={symbol}
                                                     coinDecimals={coinDecimals}
                                                     activeAddress={activeAddress ?? ''}
@@ -216,21 +211,11 @@ export function SendTokenForm({
                                                     values={values}
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isMaxActionDisabled={isMaxActionDisabled}
-                                                    errorMessage={
-                                                        touched.amount && errors.amount
-                                                            ? errors.amount
-                                                            : undefined
-                                                    }
                                                 />
                                             );
                                         }}
                                     </Field>
-                                    <Field
-                                        component={AddressInput}
-                                        allowNegative={false}
-                                        name="to"
-                                        placeholder="Enter Address"
-                                    />
+                                    <AddressInput name="to" placeholder="Enter Address" />
                                 </div>
                             </Form>
 

@@ -31,7 +31,6 @@ import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, FieldInputProps, Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { UseQueryResult } from '@tanstack/react-query';
-import { ComponentProps } from 'react';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
@@ -118,12 +117,12 @@ function FormInputs({
                             form,
                         }: {
                             field: FieldInputProps<string>;
-                            form: ComponentProps<typeof Field>;
+                            form: FormikProps<FormDataValues>;
                         }) => {
                             return (
                                 <SendTokenFormInput
                                     form={form}
-                                    field={field}
+                                    name={field.name}
                                     symbol={symbol}
                                     coins={coins}
                                     coinDecimals={coinDecimals}
@@ -131,20 +130,12 @@ function FormInputs({
                                     values={values}
                                     onActionClick={onMaxTokenButtonClick}
                                     isMaxActionDisabled={isMaxActionDisabled}
-                                    errorMessage={
-                                        touched.amount && errors.amount ? errors.amount : undefined
-                                    }
                                 />
                             );
                         }}
                     </Field>
 
-                    <Field
-                        component={AddressInput}
-                        name="to"
-                        placeholder="Enter Address"
-                        errorMessage={touched.to && errors.to ? errors.to : undefined}
-                    />
+                    <AddressInput name="to" placeholder="Enter Address" />
                 </div>
             </Form>
 
@@ -267,8 +258,8 @@ function EnterValuesFormView({
                 }}
                 validationSchema={validationSchemaStepOne}
                 enableReinitialize
-                validateOnChange={false}
-                validateOnBlur={false}
+                validateOnChange={true}
+                validateOnBlur={true}
                 onSubmit={handleFormSubmit}
             >
                 {(props: FormikProps<FormDataValues>) => (

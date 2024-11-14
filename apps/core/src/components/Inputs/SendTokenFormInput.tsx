@@ -4,10 +4,10 @@
 import { ButtonPill, Input, InputType, NumericFormatInputProps } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
-import React, { ComponentProps, useEffect } from 'react';
-import { Field, FieldInputProps } from 'formik';
+import { useEffect } from 'react';
+import { FormikProps, useField } from 'formik';
 
-export interface SendTokenInputProps {
+export interface SendTokenInputProps<FormValues> {
     coins: CoinStruct[];
     symbol: string;
     coinDecimals: number;
@@ -19,12 +19,11 @@ export interface SendTokenInputProps {
     };
     onActionClick: () => Promise<void>;
     isMaxActionDisabled?: boolean;
-    field: FieldInputProps<string>;
-    form: ComponentProps<typeof Field>;
-    errorMessage?: string;
+    name: string;
+    form: FormikProps<FormValues>;
 }
 
-export function SendTokenFormInput({
+export function SendTokenFormInput<FormValues>({
     coins,
     values,
     symbol,
@@ -32,10 +31,9 @@ export function SendTokenFormInput({
     activeAddress,
     onActionClick,
     isMaxActionDisabled,
-    field,
+    name,
     form,
-    errorMessage,
-}: SendTokenInputProps) {
+}: SendTokenInputProps<FormValues>) {
     const gasBudgetEstimation = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
@@ -44,6 +42,8 @@ export function SendTokenFormInput({
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
     });
+
+    const [field, meta] = useField<string>(name);
 
     const numericPropsOnly: Partial<NumericFormatInputProps> = {
         decimalScale: coinDecimals ? undefined : 0,
@@ -55,6 +55,7 @@ export function SendTokenFormInput({
         },
     };
 
+    const errorMessage = meta?.error ? meta.error : undefined;
     const isActionButtonDisabled = form.isSubmitting || !!errorMessage || isMaxActionDisabled;
 
     const renderAction = () => (
