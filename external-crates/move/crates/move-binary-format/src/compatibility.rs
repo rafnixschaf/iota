@@ -136,11 +136,14 @@ impl Compatibility {
         macro_rules! datatype_and_function_linking {
             ($($arg:tt)*) => { return_if!(check_datatype_and_pub_function_linking, $($arg)*); }
         }
+        macro_rules! datatype_layout {
+            ($($arg:tt)*) => { return_if!(check_datatype_layout, $($arg)*); }
+        }
         macro_rules! entry_linking {
             ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
         }
 
-        // module's name and address are changed
+        // module's name and address are unchanged
         if old_module.address != new_module.address || old_module.name != new_module.name {
             datatype_and_function_linking!("changed address or name");
         }
@@ -153,7 +156,7 @@ impl Compatibility {
                 // layout cannot be guaranteed transitively, because after
                 // removing the struct, it could be re-added later with a different layout.
                 datatype_and_function_linking!("removed struct with name {name}");
-                return_if!(check_datatype_layout, "removed struct with name {name}");
+                datatype_layout!("removed struct with name {name}");
                 break;
             };
 
@@ -176,7 +179,7 @@ impl Compatibility {
                 // choose that changing the name (but not position or type) of a field is
                 // compatible. The VM does not care about the name of a field
                 // (it's purely informational), but clients presumably do.
-                return_if!(check_datatype_layout, "updated fields of struct {name}");
+                datatype_layout!("updated fields of struct {name}");
             }
         }
 
@@ -187,7 +190,7 @@ impl Compatibility {
                 // cannot be guaranteed transitively, because after removing the
                 // enum, it could be re-added later with a different layout.
                 datatype_and_function_linking!("removed enum with name {name}");
-                return_if!(check_datatype_layout, "removed enum with name {name}");
+                datatype_layout!("removed enum with name {name}");
                 break;
             };
 
@@ -209,14 +212,14 @@ impl Compatibility {
             }
 
             if new_enum.variants.len() < old_enum.variants.len() {
-                return_if!(check_datatype_layout, "removed variants from enum {name}");
+                datatype_layout!("removed variants from enum {name}");
             }
 
             for (tag, old_variant) in old_enum.variants.iter().enumerate() {
                 // If the new enum has fewer variants than the old one, datatype_layout is false
                 // and we don't need to check the rest of the variants.
                 let Some(new_variant) = new_enum.variants.get(tag) else {
-                    return_if!(check_datatype_layout, "removed variant {tag} from enum {name}");
+                    datatype_layout!("removed variant {tag} from enum {name}");
                     break;
                 };
 
@@ -226,7 +229,7 @@ impl Compatibility {
                     // type) of a variant is compatible. The VM does not care about the name of a
                     // variant if it's non-public (it's purely informational), but clients
                     // presumably would.
-                    return_if!(check_datatype_layout, "renamed variant {tag} in enum {name}");
+                    datatype_layout!("renamed variant {tag} in enum {name}");
                 }
 
                 if new_variant.fields != old_variant.fields {
@@ -236,7 +239,7 @@ impl Compatibility {
                     // choose that changing the name (but not position or type) of a field is
                     // compatible. The VM does not care about the name of a field
                     // (it's purely informational), but clients presumably do.
-                    return_if!(check_datatype_layout, "updated fields of variant {tag} in enum {name}");
+                    datatype_layout!("updated fields of variant {tag} in enum {name}");
                 }
             }
         }
