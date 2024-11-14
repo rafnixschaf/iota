@@ -142,7 +142,7 @@ impl Compatibility {
         // old module's structs are a subset of the new module's structs
         for (name, old_struct) in &old_module.structs {
             let Some(new_struct) = new_module.structs.get(name) else {
-                // Struct not present in new. Existing modules that depend on this struct will
+                // Struct not present in new . Existing modules that depend on this struct will
                 // fail to link with the new version of the module. Also, struct
                 // layout cannot be guaranteed transitively, because after
                 // removing the struct, it could be re-added later with a different layout.
@@ -163,7 +163,6 @@ impl Compatibility {
                 return_if!(check_datatype_and_pub_function_linking,
                     "incompatible abilities or type params for struct {name}");
             }
-
             if new_struct.fields != old_struct.fields {
                 // Fields changed. Code in this module will fail at runtime if it tries to
                 // read a previously published struct value
@@ -254,12 +253,12 @@ impl Compatibility {
         // we may revisit this in the future.
         for (name, old_func) in &old_module.functions {
             let Some(new_func) = new_module.functions.get(name) else {
-                if old_func.visibility == Visibility::Friend && self.check_friend_linking {
-                    return error!("removed friend function {name}");
-                } else if old_func.visibility != Visibility::Private && self.check_datatype_and_pub_function_linking {
-                    return error!("removed non-private function {name}");
-                } else if old_func.is_entry && self.check_private_entry_linking {
-                    return error!("removed entry function {name}");
+                if old_func.visibility == Visibility::Friend {
+                    return_if!(check_friend_linking, "removed friend function {name}");
+                } else if old_func.visibility != Visibility::Private {
+                    return_if!(check_datatype_and_pub_function_linking, "removed non-private function {name}");
+                } else if old_func.is_entry {
+                    return_if!(check_private_entry_linking, "removed entry function {name}");
                 }
                 continue;
             };
