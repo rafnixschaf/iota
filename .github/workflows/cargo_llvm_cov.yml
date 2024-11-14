@@ -113,6 +113,7 @@ jobs:
 
           LLVM_PROFILE_FILE="merged.profdata" cargo +nightly llvm-cov report \
             --html \
+            --package iota-sdk \
             --show-missing-lines \
             --output-dir . \
             --ignore-filename-regex 'external-crates/.*'
