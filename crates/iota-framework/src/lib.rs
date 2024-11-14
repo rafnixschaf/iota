@@ -23,7 +23,6 @@ use move_binary_format::{
 use move_core_types::gas_algebra::InternalGas;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use tracing::error;
 
 /// Represents a system package in the framework, that's built from the source
 /// code inside iota-framework.
@@ -197,7 +196,6 @@ pub async fn compare_system_package<S: ObjectStore>(
         }
 
         Err(e) => {
-            error!("Error loading framework object at {id}: {e:?}");
             return Err(anyhow!("Error loading framework object at {id}: {e:?}"));
         }
     };
@@ -247,7 +245,6 @@ pub async fn compare_system_package<S: ObjectStore>(
     let cur_normalized = match cur_pkg.normalize(binary_config) {
         Ok(v) => v,
         Err(e) => {
-            error!("Could not normalize existing package: {e:?}");
             return Err(anyhow!("Could not normalize existing package: {e:?}"));
         }
     };
@@ -259,7 +256,6 @@ pub async fn compare_system_package<S: ObjectStore>(
             .ok_or_else(|| anyhow!("failed to remove module"))?;
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
-            error!("Compatibility check failed, for new version of {id}::{name}: {e}");
             return Err(anyhow!(
                 "Compatibility check failed, for new version of {id}::{name}: {e}"
             ));

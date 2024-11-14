@@ -4194,18 +4194,19 @@ impl AuthorityState {
             let modules = framework_injection::get_override_modules(system_package.id(), self.name)
                 .unwrap_or(modules);
 
-            let Ok(obj_ref) = iota_framework::compare_system_package(
+            match iota_framework::compare_system_package(
                 &self.get_object_store(),
                 system_package.id(),
                 &modules,
                 system_package.dependencies().to_vec(),
                 binary_config,
-            )
-            .await
-            else {
-                return vec![];
-            };
-            results.push(obj_ref);
+            ).await {
+                Ok(obj_ref) => results.push(obj_ref),
+                Err(e) => {
+                    error!("Error comparing system packages: {?}", e);
+                    return vec![];
+                }
+            }
         }
 
         results
