@@ -133,6 +133,14 @@ impl Compatibility {
             };
         }
 
+        macro_rules! datatype_layout_error {
+            ($($arg:tt)*) => {
+                if self.check_datatype_layout {
+                    return error!($($arg)*)
+                }
+            };
+        }
+
         // module's name and address are changed
         if self.check_datatype_and_pub_function_linking {
             if old_module.address != new_module.address {
@@ -222,17 +230,15 @@ impl Compatibility {
                 return error!("added variants to enum {name}");
             }
 
-            if new_enum.variants.len() < old_enum.variants.len() && self.check_datatype_layout {
-                return error!("removed variants from enum {name}");
+            if new_enum.variants.len() < old_enum.variants.len() {
+                datatype_layout_error!("removed variants from enum {name}");
             }
 
             for (tag, old_variant) in old_enum.variants.iter().enumerate() {
                 // If the new enum has fewer variants than the old one, datatype_layout is false
                 // and we don't need to check the rest of the variants.
                 let Some(new_variant) = new_enum.variants.get(tag) else {
-                    if self.check_datatype_layout {
-                        return error!("removed variant {tag} from enum {name}");
-                    }
+                    datatype_layout_error!("removed variant {tag} from enum {name}");
                     break;
                 };
 
@@ -245,14 +251,14 @@ impl Compatibility {
                     return error!("renamed variant {tag} in enum {name}");
                 }
 
-                if new_variant.fields != old_variant.fields && self.check_datatype_layout {
+                if new_variant.fields != old_variant.fields {
                     // Fields changed. Code in this module will fail at runtime if it tries to
                     // read a previously published enum value
                     // TODO: this is a stricter definition than required. We could in principle
                     // choose that changing the name (but not position or type) of a field is
                     // compatible. The VM does not care about the name of a field
                     // (it's purely informational), but clients presumably do.
-                    return error!("updated fields of variant {tag} in enum {name}");
+                    datatype_layout_error!("updated fields of variant {tag} in enum {name}");
                 }
             }
         }
