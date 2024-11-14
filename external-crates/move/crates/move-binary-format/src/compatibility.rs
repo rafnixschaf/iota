@@ -121,17 +121,6 @@ impl Compatibility {
     /// `old_module`.
     pub fn check(&self, old_module: &Module, new_module: &Module) -> PartialVMResult<()> {
         // add macro to simplify error handling with a formatted error reason
-        macro_rules! error {
-            ($($arg:tt)*) => {
-                Err(
-                    PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
-                    .with_message(format!(
-                        "error in module {}: {}", old_module.module_id(), format!($($arg)*),
-                    ))
-                )
-            };
-        }
-
         macro_rules! return_if {
             ($check:ident, $($arg:tt)*) => {
                 if self.$check {
@@ -146,47 +135,32 @@ impl Compatibility {
         }
 
         // module's name and address are changed
-        if self.check_datatype_and_pub_function_linking {
-            if old_module.address != new_module.address {
-                return error!(
-                    "changed address from {} to {}", old_module.address, new_module.address,
-                );
-            }
-
-            if old_module.name != new_module.name {
-                return error!("changed name from {} to {}", old_module.name, new_module.name);
-            }
+        if old_module.address != new_module.address || old_module.name != new_module.name {
+            return_if!(check_datatype_and_pub_function_linking, "changed address or name");
         }
 
         // old module's structs are a subset of the new module's structs
         for (name, old_struct) in &old_module.structs {
             let Some(new_struct) = new_module.structs.get(name) else {
-                if self.check_datatype_and_pub_function_linking || self.check_datatype_layout {
-                    // Struct not present in new. Existing modules that depend on this struct will
-                    // fail to link with the new version of the module. Also, struct
-                    // layout cannot be guaranteed transitively, because after
-                    // removing the struct, it could be re-added later with a different layout.
-                    return error!("removed struct with name {name}");
-                }
+                // Struct not present in new. Existing modules that depend on this struct will
+                // fail to link with the new version of the module. Also, struct
+                // layout cannot be guaranteed transitively, because after
+                // removing the struct, it could be re-added later with a different layout.
+                return_if!(check_datatype_and_pub_function_linking, "removed struct with name {name}");
+                return_if!(check_datatype_layout, "removed struct with name {name}");
                 break;
             };
 
-            if self.check_datatype_and_pub_function_linking {
-                if !datatype_abilities_compatible(
-                    self.disallowed_new_abilities,
-                    old_struct.abilities,
-                    new_struct.abilities,
-                ) {
-                    return error!("incompatible abilities of struct {name}");
-                }
-
-                if !datatype_type_parameters_compatible(
-                    self.disallow_change_datatype_type_params,
-                    &old_struct.type_parameters,
-                    &new_struct.type_parameters,
-                ) {
-                    return error!("incompatible type params of struct {name}");
-                }
+            if !datatype_abilities_compatible(
+                self.disallowed_new_abilities,
+                old_struct.abilities,
+                new_struct.abilities,
+            ) || !datatype_type_parameters_compatible(
+                self.disallow_change_datatype_type_params,
+                &old_struct.type_parameters,
+                &new_struct.type_parameters,
+            ) {
+                return_if!(check_datatype_and_pub_function_linking, "incompatible abilities or type params of struct {name}");
             }
 
             if new_struct.fields != old_struct.fields && self.check_datatype_layout {
