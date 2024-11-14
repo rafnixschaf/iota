@@ -51,6 +51,10 @@ WORKDIR "$WORKDIR"
 # Install runtime dependencies and tools
 RUN apt update && apt install -y libpq5 ca-certificates curl
 
+# Install jemalloc as the default allocator
+RUN apt install -y libjemalloc-dev
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libjemalloc.so
+
 COPY --from=builder /iota/bridge-indexer /usr/local/bin
 
 ARG BUILD_DATE

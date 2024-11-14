@@ -52,6 +52,7 @@ WORKDIR "$WORKDIR"
 RUN apt update && apt install -y libpq5 ca-certificates curl
 
 COPY --from=builder /iota/iota-source-validation-service /usr/local/bin
+COPY --from=builder /iota/crates/iota-source-validation-service/config.toml /var/iota/
 
 ARG BUILD_DATE
 ARG GIT_REVISION
