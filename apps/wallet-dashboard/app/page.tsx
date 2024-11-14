@@ -42,12 +42,14 @@ function HomeDashboardPage(): JSX.Element {
                 <div className="flex max-w-sm flex-col items-center gap-8 text-center">
                     <div className="flex flex-col items-center gap-4">
                         <span className="text-headline-sm text-neutral-40">Welcome to</span>
-                        <h1 className="text-display-lg text-neutral-10">IOTA Wallet</h1>
+                        <h1 className="text-display-lg text-neutral-10 dark:text-neutral-100">
+                            IOTA Wallet
+                        </h1>
                         <span className="text-title-lg text-neutral-40">
                             Connecting you to the decentralized web and IOTA network
                         </span>
                     </div>
-                    <div className="[&_button]:!bg-neutral-90">
+                    <div className="[&_button]:!bg-neutral-90 [&_button]:dark:!bg-neutral-20">
                         <ConnectButton connectText="Connect" />
                     </div>
                 </div>
