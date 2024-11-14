@@ -4205,7 +4205,7 @@ impl AuthorityState {
             {
                 Ok(obj_ref) => results.push(obj_ref),
                 Err(e) => {
-                    error!("Error comparing system packages: {?}", e);
+                    error!("Error comparing system packages: {e}");
                     return vec![];
                 }
             }
