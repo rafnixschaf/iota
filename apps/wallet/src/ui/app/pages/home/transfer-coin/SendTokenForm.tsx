@@ -140,8 +140,8 @@ export function SendTokenForm({
                 }}
                 validationSchema={validationSchemaStepOne}
                 enableReinitialize
-                validateOnChange={false}
-                validateOnBlur={false}
+                validateOnChange={true}
+                validateOnBlur={true}
                 onSubmit={handleFormSubmit}
             >
                 {({
@@ -150,9 +150,6 @@ export function SendTokenForm({
                     setFieldValue,
                     values,
                     submitForm,
-                    handleBlur,
-                    touched,
-                    errors,
                 }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
@@ -204,11 +201,13 @@ export function SendTokenForm({
                                                 <SendTokenFormInput
                                                     form={form}
                                                     name={field.name}
+                                                    amount={values.amount}
+                                                    to={values.to}
+                                                    isPayAllIota={values.isPayAllIota}
                                                     symbol={symbol}
                                                     coinDecimals={coinDecimals}
                                                     activeAddress={activeAddress ?? ''}
                                                     coins={coins ?? []}
-                                                    values={values}
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isMaxActionDisabled={isMaxActionDisabled}
                                                 />

@@ -29,7 +29,6 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            iotaAddressValidation.cast(address);
             helpers.setValue(iotaAddressValidation.cast(address));
         },
         [name, iotaAddressValidation],

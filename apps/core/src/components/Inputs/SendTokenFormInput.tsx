@@ -6,17 +6,16 @@ import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
 import { useEffect } from 'react';
 import { FormikProps, useField } from 'formik';
+import React from 'react';
 
 export interface SendTokenInputProps<FormValues> {
     coins: CoinStruct[];
     symbol: string;
     coinDecimals: number;
     activeAddress: string;
-    values: {
-        amount: string;
-        to: string;
-        isPayAllIota: boolean;
-    };
+    amount: string;
+    to: string;
+    isPayAllIota: boolean;
     onActionClick: () => Promise<void>;
     isMaxActionDisabled?: boolean;
     name: string;
@@ -25,7 +24,9 @@ export interface SendTokenInputProps<FormValues> {
 
 export function SendTokenFormInput<FormValues>({
     coins,
-    values,
+    amount,
+    to,
+    isPayAllIota,
     symbol,
     coinDecimals,
     activeAddress,
@@ -38,20 +39,18 @@ export function SendTokenFormInput<FormValues>({
         coinDecimals,
         coins: coins ?? [],
         activeAddress,
-        to: values.to,
-        amount: values.amount,
-        isPayAllIota: values.isPayAllIota,
+        to: to,
+        amount: amount,
+        isPayAllIota: isPayAllIota,
     });
 
-    const [field, meta] = useField<string>(name);
+    const [field, meta, helpers] = useField<string>(name);
 
     const numericPropsOnly: Partial<NumericFormatInputProps> = {
         decimalScale: coinDecimals ? undefined : 0,
         thousandSeparator: true,
         onValueChange: (values) => {
-            form.setFieldValue(field.name, values.value).then(() => {
-                form.validateField(field.name);
-            });
+            helpers.setValue(values.value)
         },
     };
 
@@ -67,18 +66,18 @@ export function SendTokenFormInput<FormValues>({
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
         form.setFieldValue('gasBudgetEst', gasBudgetEstimation, false);
-    }, [gasBudgetEstimation, form.setFieldValue, values.amount]);
+    }, [gasBudgetEstimation, form.setFieldValue, amount]);
 
     return (
         <Input
             type={InputType.NumericFormat}
-            name={'amount'}
+            name="amount"
             value={field.value}
             caption="Est. Gas Fees:"
             placeholder="0.00"
             label="Send Amount"
             suffix={` ${symbol}`}
-            prefix={values.isPayAllIota ? '~ ' : undefined}
+            prefix={isPayAllIota ? '~ ' : undefined}
             allowNegative={false}
             errorMessage={errorMessage}
             amountCounter={!errorMessage ? (coins ? gasBudgetEstimation : '--') : undefined}

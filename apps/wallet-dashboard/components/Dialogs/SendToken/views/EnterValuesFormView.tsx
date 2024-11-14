@@ -65,8 +65,6 @@ function FormInputs({
     setFieldValue,
     values,
     submitForm,
-    touched,
-    errors,
     coinType,
     coinDecimals,
     coinBalance,
@@ -122,12 +120,14 @@ function FormInputs({
                             return (
                                 <SendTokenFormInput
                                     form={form}
+                                    amount={values.amount}
+                                    to={values.to}
+                                    isPayAllIota={values.isPayAllIota}
                                     name={field.name}
                                     symbol={symbol}
                                     coins={coins}
                                     coinDecimals={coinDecimals}
                                     activeAddress={activeAddress}
-                                    values={values}
                                     onActionClick={onMaxTokenButtonClick}
                                     isMaxActionDisabled={isMaxActionDisabled}
                                 />
