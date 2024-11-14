@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useFormatCoin, useBalance, CoinFormat } from '@iota/core';
+import { useFormatCoin, useBalance, CoinFormat, parseAmount, useCoinMetadata } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import {
     Button,
@@ -13,17 +13,25 @@ import {
     Input,
     InputType,
     Header,
+    InfoBoxType,
+    InfoBoxStyle,
+    InfoBox,
 } from '@iota/apps-ui-kit';
-import { useStakeTxnInfo } from '../hooks';
+import { Field, type FieldProps, useFormikContext } from 'formik';
+import { Exclamation } from '@iota/ui-icons';
 import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
+
+import { useStakeTxnInfo } from '../hooks';
 import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 
+interface FormValues {
+    amount: string;
+}
+
 interface EnterAmountViewProps {
     selectedValidator: string;
-    amount: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onBack: () => void;
     onStake: () => void;
     showActiveStatus?: boolean;
@@ -33,30 +41,47 @@ interface EnterAmountViewProps {
 
 function EnterAmountView({
     selectedValidator: selectedValidatorAddress,
-    amount,
-    onChange,
     onBack,
     onStake,
     gasBudget = 0,
     handleClose,
 }: EnterAmountViewProps): JSX.Element {
+    const coinType = IOTA_TYPE_ARG;
+    const { data: metadata } = useCoinMetadata(coinType);
+    const decimals = metadata?.decimals ?? 0;
+
     const account = useCurrentAccount();
     const accountAddress = account?.address;
 
+    const { values } = useFormikContext<FormValues>();
+    const amount = values.amount;
+
+    console.log('amount', amount);
+
     const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
     const { data: iotaBalance } = useBalance(accountAddress!);
-
     const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
+
     const maxTokenBalance = coinBalance - BigInt(Number(gasBudget));
     const [maxTokenFormatted, maxTokenFormattedSymbol] = useFormatCoin(
         maxTokenBalance,
         IOTA_TYPE_ARG,
         CoinFormat.FULL,
     );
+
+    const _gasBudget = BigInt(gasBudget ?? 0);
     const [gas, symbol] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
+
     const { stakedRewardsStartEpoch, timeBeforeStakeRewardsRedeemableAgoDisplay } = useStakeTxnInfo(
         system?.epoch,
     );
+
+    const hasEnoughRemaingBalance =
+        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * _gasBudget;
+    const shouldShowInsufficientRemainingFundsWarning =
+        maxTokenFormatted >= values.amount && !hasEnoughRemaingBalance;
+
+    console.log(gasBudget);
 
     return (
         <Layout>
@@ -76,14 +101,39 @@ function EnterAmountView({
                             accountAddress={accountAddress!}
                         />
                         <div className="my-md w-full">
-                            <Input
-                                type={InputType.NumericFormat}
-                                label="Amount"
-                                value={amount}
-                                onChange={onChange}
-                                placeholder="Enter amount to stake"
-                                caption={`${maxTokenFormatted} ${maxTokenFormattedSymbol} Available`}
-                            />
+                            <Field name="amount">
+                                {({
+                                    field: { onChange, ...field },
+                                    form: { setFieldValue },
+                                    meta,
+                                }: FieldProps<FormValues>) => {
+                                    return (
+                                        <Input
+                                            {...field}
+                                            onValueChange={(values) =>
+                                                setFieldValue('amount', values.value, true)
+                                            }
+                                            type={InputType.NumericFormat}
+                                            label="Amount"
+                                            value={amount}
+                                            onChange={onChange}
+                                            placeholder="Enter amount to stake"
+                                            errorMessage={
+                                                values.amount && meta.error ? meta.error : undefined
+                                            }
+                                            caption={`${maxTokenFormatted} ${maxTokenFormattedSymbol} Available`}
+                                        />
+                                    );
+                                }}
+                            </Field>
+                            {shouldShowInsufficientRemainingFundsWarning ? (
+                                <InfoBox
+                                    type={InfoBoxType.Error}
+                                    supportingText="You have selected an amount that will leave you with insufficient funds to pay for gas fees for unstaking or any other transactions."
+                                    style={InfoBoxStyle.Elevated}
+                                    icon={<Exclamation />}
+                                />
+                            ) : null}
                         </div>
 
                         <Panel hasBorder>
