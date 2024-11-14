@@ -27,6 +27,7 @@ import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
 import { Dialog } from '@iota/apps-ui-kit';
 import { DetailsView, UnstakeView } from './views';
+import { FormValues } from './views/EnterAmountView';
 
 export const MIN_NUMBER_IOTA_TO_STAKE = 1;
 
@@ -62,6 +63,7 @@ function StakeDialog({
 }: StakeDialogProps): JSX.Element {
     const [selectedValidator, setSelectedValidator] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
+
     const account = useCurrentAccount();
     const senderAddress = account?.address ?? '';
 
@@ -165,14 +167,12 @@ function StakeDialog({
             });
     }
 
-    function onSubmit(
-        values: Record<string, string>,
-        { resetForm }: FormikHelpers<Record<string, string>>,
-    ) {
-        setAmount(values.amount);
+    function onSubmit(values: FormValues, { resetForm }: FormikHelpers<FormValues>) {
         handleStake();
         resetForm();
     }
+
+    console.log(newStakeData?.gasBudget);
 
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
@@ -204,6 +204,7 @@ function StakeDialog({
                         <EnterAmountView
                             selectedValidator={selectedValidator}
                             handleClose={handleClose}
+                            setAmount={setAmount}
                             onBack={handleBack}
                             onStake={handleStake}
                             gasBudget={newStakeData?.gasBudget}

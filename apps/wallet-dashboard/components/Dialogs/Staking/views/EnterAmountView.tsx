@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormatCoin, useBalance, CoinFormat, parseAmount, useCoinMetadata } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import {
@@ -26,12 +26,13 @@ import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 
-interface FormValues {
+export interface FormValues {
     amount: string;
 }
 
 interface EnterAmountViewProps {
     selectedValidator: string;
+    setAmount: (amount: string) => void;
     onBack: () => void;
     onStake: () => void;
     showActiveStatus?: boolean;
@@ -45,6 +46,7 @@ function EnterAmountView({
     onStake,
     gasBudget = 0,
     handleClose,
+    setAmount,
 }: EnterAmountViewProps): JSX.Element {
     const coinType = IOTA_TYPE_ARG;
     const { data: metadata } = useCoinMetadata(coinType);
@@ -55,8 +57,6 @@ function EnterAmountView({
 
     const { values } = useFormikContext<FormValues>();
     const amount = values.amount;
-
-    console.log('amount', amount);
 
     const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
     const { data: iotaBalance } = useBalance(accountAddress!);
@@ -81,7 +81,9 @@ function EnterAmountView({
     const shouldShowInsufficientRemainingFundsWarning =
         maxTokenFormatted >= values.amount && !hasEnoughRemaingBalance;
 
-    console.log(gasBudget);
+    useEffect(() => {
+        setAmount(amount);
+    }, [amount, setAmount]);
 
     return (
         <Layout>
@@ -127,12 +129,14 @@ function EnterAmountView({
                                 }}
                             </Field>
                             {shouldShowInsufficientRemainingFundsWarning ? (
-                                <InfoBox
-                                    type={InfoBoxType.Error}
-                                    supportingText="You have selected an amount that will leave you with insufficient funds to pay for gas fees for unstaking or any other transactions."
-                                    style={InfoBoxStyle.Elevated}
-                                    icon={<Exclamation />}
-                                />
+                                <div className="mt-md">
+                                    <InfoBox
+                                        type={InfoBoxType.Error}
+                                        supportingText="You have selected an amount that will leave you with insufficient funds to pay for gas fees for unstaking or any other transactions."
+                                        style={InfoBoxStyle.Elevated}
+                                        icon={<Exclamation />}
+                                    />
+                                </div>
                             ) : null}
                         </div>
 
