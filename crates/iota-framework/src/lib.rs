@@ -18,10 +18,9 @@ use move_binary_format::{
     CompiledModule,
     binary_config::BinaryConfig,
     compatibility::Compatibility,
-    errors::{PartialVMError, PartialVMResult},
     file_format::{Ability, AbilitySet},
 };
-use move_core_types::{gas_algebra::InternalGas, vm_status::StatusCode};
+use move_core_types::gas_algebra::InternalGas;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tracing::error;
@@ -252,14 +251,12 @@ pub async fn compare_system_package<S: ObjectStore>(
             return Err(anyhow!("Could not normalize existing package: {e:?}"));
         }
     };
-    let mut new_normalized = new_pkg
-        .normalize(binary_config)
-        .map_err(|e| PartialVMError::new(StatusCode::UNKNOWN_STATUS).with_message(e.to_string()))?;
+    let mut new_normalized = new_pkg.normalize(binary_config)?;
 
     for (name, cur_module) in cur_normalized {
         let new_module = new_normalized
             .remove(&name)
-            .ok_or(PartialVMError::new(StatusCode::UNKNOWN_STATUS))?;
+            .ok_or_else(|| anyhow!("removed"))?;
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
             error!("Compatibility check failed, for new version of {id}::{name}: {e:?}");
