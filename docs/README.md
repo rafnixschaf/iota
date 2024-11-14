@@ -41,7 +41,6 @@ IOTA is for the community. Contribute for the benefit of all.
 - [Docs contributing guidelines](https://docs.iota.org/references/contribute/contribution-process)
 - [Repo contributing guidelines](https://docs.iota.org/references/contribute/contribute-to-iota-repos)
 - [Style guide](https://docs.iota.org/references/contribute/style-guide)
-- [Localization](https://docs.iota.org/references/contribute/localize-iota-docs)
 - [Code of conduct](https://docs.iota.org/references/contribute/code-of-conduct)
 
 ## License
