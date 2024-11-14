@@ -23,6 +23,7 @@ function StakingDashboardPage(): JSX.Element {
     const account = useCurrentAccount();
     const [stakeDialogView, setStakeDialogView] = useState<StakeDialogView | undefined>();
     const [selectedStake, setSelectedStake] = useState<ExtendedDelegatedStake | null>(null);
+    const [selectedValidator, setSelectedValidator] = useState<string>('');
     const { data: delegatedStakeData } = useGetDelegatedStake({
         address: account?.address || '',
         staleTime: DELEGATED_STAKES_QUERY_STALE_TIME,
@@ -47,6 +48,7 @@ function StakingDashboardPage(): JSX.Element {
     };
 
     function handleCloseStakeDialog() {
+        setSelectedValidator('');
         setSelectedStake(null);
         setStakeDialogView(undefined);
     }
@@ -94,6 +96,8 @@ function StakingDashboardPage(): JSX.Element {
                     handleClose={handleCloseStakeDialog}
                     view={stakeDialogView}
                     setView={setStakeDialogView}
+                    selectedValidator={selectedValidator}
+                    setSelectedValidator={setSelectedValidator}
                 />
             )}
         </>

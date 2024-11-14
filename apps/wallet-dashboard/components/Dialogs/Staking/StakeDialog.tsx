@@ -48,11 +48,14 @@ interface StakeDialogProps {
     isOpen: boolean;
     handleClose: () => void;
     view: StakeDialogView;
-    setView: (view: StakeDialogView) => void;
+    setView?: (view: StakeDialogView) => void;
     stakedDetails?: ExtendedDelegatedStake | null;
+
+    selectedValidator?: string;
+    setSelectedValidator?: (validator: string) => void;
 }
 
-function StakeDialog({
+export function StakeDialog({
     onSuccess,
     isTimelockedStaking,
     isOpen,
@@ -60,8 +63,9 @@ function StakeDialog({
     view,
     setView,
     stakedDetails,
+    selectedValidator = '',
+    setSelectedValidator,
 }: StakeDialogProps): JSX.Element {
-    const [selectedValidator, setSelectedValidator] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
 
     const account = useCurrentAccount();
@@ -99,7 +103,6 @@ function StakeDialog({
     const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
     const minimumStake = parseAmount(MIN_NUMBER_IOTA_TO_STAKE.toString(), coinDecimals);
     const coinSymbol = metadata?.symbol ?? '';
-    console.log('symbol', coinSymbol);
 
     const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
@@ -116,25 +119,25 @@ function StakeDialog({
     );
 
     function handleBack(): void {
-        setView(StakeDialogView.SelectValidator);
+        setView?.(StakeDialogView.SelectValidator);
     }
 
     function handleValidatorSelect(validator: string): void {
-        setSelectedValidator(validator);
+        setSelectedValidator?.(validator);
     }
 
     function selectValidatorHandleNext(): void {
         if (selectedValidator) {
-            setView(StakeDialogView.EnterAmount);
+            setView?.(StakeDialogView.EnterAmount);
         }
     }
 
     function detailsHandleUnstake() {
-        setView(StakeDialogView.Unstake);
+        setView?.(StakeDialogView.Unstake);
     }
 
     function detailsHandleStake() {
-        setView(StakeDialogView.SelectValidator);
+        setView?.(StakeDialogView.SelectValidator);
     }
 
     function handleStake(): void {
@@ -171,8 +174,6 @@ function StakeDialog({
         handleStake();
         resetForm();
     }
-
-    console.log(newStakeData?.gasBudget);
 
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
@@ -222,5 +223,3 @@ function StakeDialog({
         </Dialog>
     );
 }
-
-export default StakeDialog;
