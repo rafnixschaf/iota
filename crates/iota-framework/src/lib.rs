@@ -181,21 +181,19 @@ pub async fn compare_system_package<S: ObjectStore>(
 
         Ok(None) => {
             // creating a new framework package--nothing to check
-            return Ok(
-                Object::new_system_package(
-                    modules,
-                    // note: execution_engine assumes any system package with version
-                    // OBJECT_START_VERSION is freshly created rather than
-                    // upgraded
-                    OBJECT_START_VERSION,
-                    dependencies,
-                    // Genesis is fine here, we only use it to calculate an object ref that we can
-                    // use for all validators to commit to the same bytes in
-                    // the update
-                    TransactionDigest::genesis_marker(),
-                )
-                .compute_object_reference(),
-            );
+            return Ok(Object::new_system_package(
+                modules,
+                // note: execution_engine assumes any system package with version
+                // OBJECT_START_VERSION is freshly created rather than
+                // upgraded
+                OBJECT_START_VERSION,
+                dependencies,
+                // Genesis is fine here, we only use it to calculate an object ref that we can
+                // use for all validators to commit to the same bytes in
+                // the update
+                TransactionDigest::genesis_marker(),
+            )
+            .compute_object_reference());
         }
 
         Err(e) => {
