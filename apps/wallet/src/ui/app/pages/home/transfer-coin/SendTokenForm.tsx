@@ -16,7 +16,7 @@ import {
 } from '@iota/core';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, type FieldInputProps, Form, Formik, FormikProps } from 'formik';
+import { Form, Formik } from 'formik';
 import { useMemo } from 'react';
 
 import {
