@@ -38,7 +38,7 @@ mod compatibility_tests {
                         cur_package.id(),
                         version,
                         e
-                    )
+                    );
                 });
             }
         }
