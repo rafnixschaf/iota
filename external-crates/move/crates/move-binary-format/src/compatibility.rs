@@ -134,19 +134,19 @@ impl Compatibility {
             };
         }
         macro_rules! datatype_and_function_linking {
-            ($($arg:tt)*) => { return_if!(check_datatype_and_pub_function_linking, $($arg)*); }
+            ($($arg:tt)*) => { return_if!(check_datatype_and_pub_function_linking, $($arg)*) }
         }
         macro_rules! datatype_layout {
-            ($($arg:tt)*) => { return_if!(check_datatype_layout, $($arg)*); }
+            ($($arg:tt)*) => { return_if!(check_datatype_layout, $($arg)*) }
         }
         macro_rules! friend_linking {
-            ($($arg:tt)*) => { return_if!(check_friend_linking, $($arg)*); }
+            ($($arg:tt)*) => { return_if!(check_friend_linking, $($arg)*) }
         }
         macro_rules! entry_linking {
-            ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
+            ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*) }
         }
         macro_rules! no_new_variants {
-            ($($arg:tt)*) => { return_if!(disallow_new_variants, $($arg)*); }
+            ($($arg:tt)*) => { return_if!(disallow_new_variants, $($arg)*) }
         }
 
         // module's name and address are unchanged
@@ -285,7 +285,7 @@ impl Compatibility {
                     datatype_and_function_linking!("downgraded visibility of public function {name}");
                 },
                 (Visibility::Friend, Visibility::Private) => {
-                    friend_linking!("downgraded visibility of friend function {name}")
+                    friend_linking!("downgraded visibility of friend function {name}");
                 },
                 _ => (),
             }
