@@ -14,7 +14,7 @@ export function StatsDetail({ balance, title }: DisplayStatsProps) {
     const [formatted, symbol] = useFormatCoin(balance, IOTA_TYPE_ARG);
 
     return (
-        <div className="flex h-[96px] flex-1 flex-col justify-between rounded-xl bg-neutral-96 p-md">
+        <div className="flex h-[96px] flex-1 flex-col justify-between rounded-xl bg-neutral-96 p-md dark:bg-neutral-12">
             <div className="text-label-sm text-neutral-10">{title}</div>
 
             <div className="flex items-baseline gap-xxs">

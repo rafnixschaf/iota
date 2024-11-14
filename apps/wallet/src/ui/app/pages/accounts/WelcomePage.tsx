@@ -22,7 +22,7 @@ export function WelcomePage() {
 
     return (
         <Loading loading={isInitializedLoading || isFullscreenGuardLoading}>
-            <div className="flex h-full w-full flex-col items-center justify-between bg-white px-md py-2xl shadow-wallet-content">
+            <div className="flex h-full w-full flex-col items-center justify-between bg-neutral-100 px-md py-2xl shadow-wallet-content dark:bg-neutral-6">
                 <IotaLogoWeb width={130} height={32} />
                 <div className="flex flex-col items-center gap-8 text-center">
                     <div className="flex flex-col items-center gap-4">
