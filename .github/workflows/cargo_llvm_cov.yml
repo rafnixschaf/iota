@@ -20,8 +20,8 @@ jobs:
       CARGO_INCREMENTAL: 0
       # Find a good balance between runtime performance and accurate code coverage analysis.
       CARGO_PROFILE_TEST_OPT_LEVEL: 1
-      CARGO_PROFILE_TEST_DEBUG: true
-      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: true
+      CARGO_PROFILE_TEST_DEBUG: false
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: false
       CARGO_PROFILE_TEST_OVERFLOW_CHECKS: false
       CARGO_PROFILE_TEST_LTO: off
       CARGO_PROFILE_TEST_CODEGEN_UNITS: 1
@@ -64,6 +64,7 @@ jobs:
           echo "Computing nextest code coverage."
           set +e
           IOTA_SKIP_SIMTESTS=1 cargo +nightly llvm-cov \
+            --branch \
             --ignore-run-fail \
             --no-report \
             nextest -vv
@@ -83,14 +84,14 @@ jobs:
 
           [ -f "target/nextest.profdata" ] || exit 1
 
-      - name: Compute code coverage (simtest.profdata)
-        run: |
-          cargo +nightly llvm-cov clean --profraw-only
+      # - name: Compute code coverage (simtest.profdata)
+      #   run: |
+      #     cargo +nightly llvm-cov clean --profraw-only
 
-          git clean -fd
-          set +e
-          ./scripts/simtest/simtest-cov.sh
-          [ -f "target/simtest.profdata" ] || exit 1
+      #     git clean -fd
+      #     set +e
+      #     ./scripts/simtest/simtest-cov.sh
+      #     [ -f "target/simtest.profdata" ] || exit 1
 
       - name: Create html report (report.tgz)
         run: |
@@ -112,8 +113,11 @@ jobs:
 
           LLVM_PROFILE_FILE="merged.profdata" cargo +nightly llvm-cov report \
             --html \
+            --show-missing-lines \
             --output-dir . \
             --ignore-filename-regex 'external-crates/.*'
+            #--show-instantiations \
+            #--doctests \
 
           [ -d "html" ] || exit 1
           mv html report
