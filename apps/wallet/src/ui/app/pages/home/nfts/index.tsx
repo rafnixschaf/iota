@@ -19,6 +19,7 @@ import HiddenAssets from './HiddenAssets';
 import NonVisualAssets from './NonVisualAssets';
 import VisualAssets from './VisualAssets';
 import { Warning } from '@iota/ui-icons';
+import { useOnScreen } from '@iota/core';
 
 enum AssetCategory {
     Visual = 'Visual',
@@ -44,12 +45,23 @@ const ASSET_CATEGORIES = [
 function NftsPage() {
     const [selectedAssetCategory, setSelectedAssetCategory] = useState<AssetCategory | null>(null);
     const observerElem = useRef<HTMLDivElement | null>(null);
+    const { isIntersecting } = useOnScreen(observerElem);
 
     const accountAddress = useActiveAddress();
-    const { data: ownedAssets, isLoading, error, isPending, isError } = useGetNFTs(accountAddress);
+    const {
+        data: ownedAssets,
+        hasNextPage,
+        isLoading,
+        isFetchingNextPage,
+        fetchNextPage,
+        error,
+        isPending,
+        isError,
+    } = useGetNFTs(accountAddress);
+
     const isAssetsLoaded = !!ownedAssets;
 
-    const isSpinnerVisible = isLoading && isPending;
+    const isSpinnerVisible = isFetchingNextPage && hasNextPage;
 
     const filteredAssets = (() => {
         if (!ownedAssets) return [];
@@ -85,6 +97,12 @@ function NftsPage() {
                 }) ?? []
         );
     }, [ownedAssets]);
+
+    useEffect(() => {
+        if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [isIntersecting, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
     useEffect(() => {
         let computeSelectedCategory = false;
