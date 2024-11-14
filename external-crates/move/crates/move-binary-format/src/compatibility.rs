@@ -123,20 +123,24 @@ impl Compatibility {
         // add macro to simplify error handling with a formatted error reason
         macro_rules! error {
             ($($arg:tt)*) => {
-                Err(PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
+                Err(
+                    PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
                     .with_message(format!(
-                        "error in module {}: {}",
-                        old_module.module_id(),
-                        format!($($arg)*),
+                        "error in module {}: {}", old_module.module_id(), format!($($arg)*),
                     ))
                 )
             };
         }
 
-        macro_rules! datatype_layout_error {
-            ($($arg:tt)*) => {
-                if self.check_datatype_layout {
-                    return error!($($arg)*)
+        macro_rules! report {
+            ($check:ident, $($arg:tt)*) => {
+                if self.$check {
+                    return Err(
+                        PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
+                        .with_message(format!(
+                            "error in module {}: {}", old_module.module_id(), format!($($arg)*),
+                        ))
+                    );
                 }
             };
         }
@@ -226,29 +230,29 @@ impl Compatibility {
                 }
             }
 
-            if new_enum.variants.len() > old_enum.variants.len() && self.disallow_new_variants {
-                return error!("added variants to enum {name}");
+            if new_enum.variants.len() > old_enum.variants.len() {
+                report!(disallow_new_variants, "added variants to enum {name}");
             }
 
             if new_enum.variants.len() < old_enum.variants.len() {
-                datatype_layout_error!("removed variants from enum {name}");
+                report!(check_datatype_layout, "removed variants from enum {name}");
             }
 
             for (tag, old_variant) in old_enum.variants.iter().enumerate() {
                 // If the new enum has fewer variants than the old one, datatype_layout is false
                 // and we don't need to check the rest of the variants.
                 let Some(new_variant) = new_enum.variants.get(tag) else {
-                    datatype_layout_error!("removed variant {tag} from enum {name}");
+                    report!(check_datatype_layout, "removed variant {tag} from enum {name}");
                     break;
                 };
 
-                if new_variant.name != old_variant.name && self.check_datatype_layout {
+                if new_variant.name != old_variant.name {
                     // TODO: Variant renamed. This is a stricter definition than required.
                     // We could in principle choose that changing the name (but not position or
                     // type) of a variant is compatible. The VM does not care about the name of a
                     // variant if it's non-public (it's purely informational), but clients
                     // presumably would.
-                    return error!("renamed variant {tag} in enum {name}");
+                    report!(check_datatype_layout, "renamed variant {tag} in enum {name}");
                 }
 
                 if new_variant.fields != old_variant.fields {
@@ -258,7 +262,7 @@ impl Compatibility {
                     // choose that changing the name (but not position or type) of a field is
                     // compatible. The VM does not care about the name of a field
                     // (it's purely informational), but clients presumably do.
-                    datatype_layout_error!("updated fields of variant {tag} in enum {name}");
+                    report!(check_datatype_layout, "updated fields of variant {tag} in enum {name}");
                 }
             }
         }
