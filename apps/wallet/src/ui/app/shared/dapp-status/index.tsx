@@ -123,7 +123,7 @@ function DappStatus() {
                                     <span className="text-label-md text-neutral-40">
                                         Connected to
                                     </span>
-                                    <div className="break-all text-body-sm text-neutral-10">
+                                    <div className="break-all text-body-sm text-neutral-10 dark:text-neutral-92">
                                         {activeOrigin}
                                     </div>
                                 </div>

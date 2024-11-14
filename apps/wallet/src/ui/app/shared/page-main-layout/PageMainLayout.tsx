@@ -109,7 +109,9 @@ function LeftContent({
             >
                 {isLedgerAccount ? <Ledger /> : <IotaLogoMark />}
             </div>
-            <span className="shrink-0 text-title-sm text-neutral-10">{accountName}</span>
+            <span className="shrink-0 text-title-sm text-neutral-10 dark:text-neutral-92">
+                {accountName}
+            </span>
         </Link>
     );
 }

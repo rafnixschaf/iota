@@ -127,7 +127,9 @@ export function AccountGroup({
                                     size={ButtonSize.Small}
                                     type={ButtonType.Ghost}
                                     onClick={handleAdd}
-                                    icon={<Add className="h-5 w-5 text-neutral-10" />}
+                                    icon={
+                                        <Add className="h-5 w-5 text-neutral-10 dark:text-neutral-92" />
+                                    }
                                 />
                             ) : null}
                             {showMoreButton && (
@@ -139,7 +141,9 @@ export function AccountGroup({
                                             e.stopPropagation();
                                             setDropdownOpen(true);
                                         }}
-                                        icon={<MoreHoriz className="h-5 w-5 text-neutral-10" />}
+                                        icon={
+                                            <MoreHoriz className="h-5 w-5 text-neutral-10 dark:text-neutral-92" />
+                                        }
                                     />
                                 </div>
                             )}
