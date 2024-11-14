@@ -4200,7 +4200,9 @@ impl AuthorityState {
                 &modules,
                 system_package.dependencies().to_vec(),
                 binary_config,
-            ).await {
+            )
+            .await
+            {
                 Ok(obj_ref) => results.push(obj_ref),
                 Err(e) => {
                     error!("Error comparing system packages: {?}", e);
