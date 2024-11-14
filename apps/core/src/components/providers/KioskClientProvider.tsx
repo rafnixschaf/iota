@@ -4,7 +4,7 @@
 
 import { useIotaClientContext } from '@iota/dapp-kit';
 import { KioskClient } from '@iota/kiosk';
-import { createContext, useMemo, type ReactNode } from 'react';
+import React, { createContext, useMemo, type ReactNode } from 'react';
 
 export const KioskClientContext = createContext<KioskClient | null>(null);
 

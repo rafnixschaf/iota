@@ -96,8 +96,8 @@ function AppWrapper() {
                             >
                                 <KioskClientProvider>
                                     <AccountsFormProvider>
-                                        <UnlockAccountProvider>
-                                            <ThemeProvider appId="wallet">
+                                        <ThemeProvider appId="wallet">
+                                            <UnlockAccountProvider>
                                                 <div
                                                     className={cn(
                                                         'relative flex h-screen max-h-popup-height min-h-popup-minimum w-popup-width flex-col flex-nowrap items-center justify-center overflow-hidden',
@@ -110,8 +110,8 @@ function AppWrapper() {
                                                     <div id="overlay-portal-container"></div>
                                                     <div id="toaster-portal-container"></div>
                                                 </div>
-                                            </ThemeProvider>
-                                        </UnlockAccountProvider>
+                                            </UnlockAccountProvider>
+                                        </ThemeProvider>
                                     </AccountsFormProvider>
                                 </KioskClientProvider>
                             </IotaClientProvider>

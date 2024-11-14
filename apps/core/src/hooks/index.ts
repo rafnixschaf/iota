@@ -38,5 +38,6 @@ export * from './useGetAllOwnedObjects';
 export * from './useGetTimelockedStakedObjects';
 export * from './useGetActiveValidatorsInfo';
 export * from './useCursorPagination';
+export * from './useTheme';
 
 export * from './stake';
