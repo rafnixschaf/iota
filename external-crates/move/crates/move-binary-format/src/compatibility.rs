@@ -337,9 +337,9 @@ fn datatype_abilities_compatible(
 ) -> bool {
     old_abilities.is_subset(new_abilities)
         && disallowed_new_abilities.into_iter().all(|ability| {
-        // If the new abilities have the ability the old ones must have it to
-        !new_abilities.has_ability(ability) || old_abilities.has_ability(ability)
-    })
+            // If the new abilities have the ability the old ones must have it to
+            !new_abilities.has_ability(ability) || old_abilities.has_ability(ability)
+        })
 }
 
 // When upgrading, the new type parameters must be the same length, and the new
@@ -350,14 +350,14 @@ fn fun_type_parameters_compatible(
 ) -> bool {
     old_type_parameters.len() == new_type_parameters.len()
         && old_type_parameters.iter().zip(new_type_parameters).all(
-        |(old_type_parameter_constraint, new_type_parameter_constraint)| {
-            type_parameter_constraints_compatible(
-                false, // generic abilities can change for functions
-                *old_type_parameter_constraint,
-                *new_type_parameter_constraint,
-            )
-        },
-    )
+            |(old_type_parameter_constraint, new_type_parameter_constraint)| {
+                type_parameter_constraints_compatible(
+                    false, // generic abilities can change for functions
+                    *old_type_parameter_constraint,
+                    *new_type_parameter_constraint,
+                )
+            },
+        )
 }
 
 fn datatype_type_parameters_compatible(
