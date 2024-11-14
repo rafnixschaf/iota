@@ -167,8 +167,7 @@ impl Compatibility {
                 &old_struct.type_parameters,
                 &new_struct.type_parameters,
             ) {
-                datatype_and_function_linking!(
-                    "incompatible abilities or type params for struct {name}");
+                datatype_and_function_linking!("incompatible abilities or type params for struct {name}");
             }
             if new_struct.fields != old_struct.fields {
                 // Fields changed. Code in this module will fail at runtime if it tries to
