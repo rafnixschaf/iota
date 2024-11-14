@@ -31,11 +31,11 @@ import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, FieldInputProps, Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { UseQueryResult } from '@tanstack/react-query';
+import { ComponentProps } from 'react';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
     activeAddress: string;
-    gasBudget: string;
     setFormData: React.Dispatch<React.SetStateAction<FormDataValues>>;
     setSelectedCoin: React.Dispatch<React.SetStateAction<CoinBalance>>;
     onNext: () => void;
@@ -68,7 +68,6 @@ function FormInputs({
     submitForm,
     touched,
     errors,
-    handleBlur,
     coinType,
     coinDecimals,
     coinBalance,
@@ -95,13 +94,8 @@ function FormInputs({
         await setFieldValue('amount', formattedTokenBalance);
     }
 
-    function handleOnChangeAmountInput(value: string, symbol: string) {
-        const valueWithoutSuffix = value.replace(symbol, '');
-        setFieldValue('amount', valueWithoutSuffix);
-    }
-
     const isMaxActionDisabled =
-        parseAmount(values?.amount, coinDecimals) === coinBalance ||
+        parseAmount(values.amount, coinDecimals) === coinBalance ||
         queryResult.isPending ||
         !coinBalance;
 
@@ -119,20 +113,24 @@ function FormInputs({
                     )}
 
                     <Field name="amount">
-                        {({ field }: { field: FieldInputProps<string> }) => {
+                        {({
+                            field,
+                            form,
+                        }: {
+                            field: FieldInputProps<string>;
+                            form: ComponentProps<typeof Field>;
+                        }) => {
                             return (
                                 <SendTokenFormInput
+                                    form={form}
+                                    field={field}
                                     symbol={symbol}
                                     coins={coins}
                                     coinDecimals={coinDecimals}
                                     activeAddress={activeAddress}
-                                    setFieldValue={setFieldValue}
                                     values={values}
                                     onActionClick={onMaxTokenButtonClick}
                                     isMaxActionDisabled={isMaxActionDisabled}
-                                    value={field.value}
-                                    onChange={(value) => handleOnChangeAmountInput(value, symbol)}
-                                    onBlur={handleBlur}
                                     errorMessage={
                                         touched.amount && errors.amount ? errors.amount : undefined
                                     }
@@ -231,9 +229,11 @@ function EnterValuesFormView({
             .sort((a, b) => Number(b.balance) - Number(a.balance))
             .map(({ coinObjectId }) => coinObjectId);
 
+        const formattedAmount = parseAmount(amount, coinDecimals).toString();
+
         const data = {
             to,
-            amount,
+            amount: formattedAmount,
             isPayAllIota,
             coins,
             coinIds: coinsIDs,

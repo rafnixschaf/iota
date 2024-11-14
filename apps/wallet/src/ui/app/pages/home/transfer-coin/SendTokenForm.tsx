@@ -17,7 +17,7 @@ import {
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Field, type FieldInputProps, Form, Formik } from 'formik';
-import { useMemo } from 'react';
+import { ComponentProps, useMemo } from 'react';
 
 import {
     InfoBox,
@@ -198,22 +198,24 @@ export function SendTokenForm({
                                     ) : null}
 
                                     <Field name="amount">
-                                        {({ field }: { field: FieldInputProps<string> }) => {
+                                        {({
+                                            field,
+                                            form,
+                                        }: {
+                                            field: FieldInputProps<string>;
+                                            form: ComponentProps<typeof Field>;
+                                        }) => {
                                             return (
                                                 <SendTokenFormInput
+                                                    form={form}
+                                                    field={field}
                                                     symbol={symbol}
                                                     coinDecimals={coinDecimals}
                                                     activeAddress={activeAddress ?? ''}
-                                                    setFieldValue={setFieldValue}
                                                     coins={coins ?? []}
                                                     values={values}
                                                     onActionClick={onMaxTokenButtonClick}
                                                     isMaxActionDisabled={isMaxActionDisabled}
-                                                    value={field.value}
-                                                    onChange={(value) =>
-                                                        handleOnChangeAmountInput(value, symbol)
-                                                    }
-                                                    onBlur={handleBlur}
                                                     errorMessage={
                                                         touched.amount && errors.amount
                                                             ? errors.amount

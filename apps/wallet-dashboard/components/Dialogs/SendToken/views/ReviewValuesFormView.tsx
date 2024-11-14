@@ -7,7 +7,6 @@ import { Button } from '@/components';
 interface ReviewValuesFormProps {
     formData: FormDataValues;
     senderAddress: string;
-    gasBudget: string;
     error: string | undefined;
     isPending: boolean;
     executeTransfer: () => void;
@@ -15,9 +14,8 @@ interface ReviewValuesFormProps {
 }
 
 function ReviewValuesFormView({
-    formData: { amount, to },
+    formData: { amount, to, gasBudgetEst },
     senderAddress,
-    gasBudget,
     error,
     isPending,
     executeTransfer,
@@ -30,7 +28,7 @@ function ReviewValuesFormView({
                 <p>Sending: {amount}</p>
                 <p>From: {senderAddress}</p>
                 <p>To: {to}</p>
-                <p>Gas fee: {gasBudget}</p>
+                <p>Gas fee: {gasBudgetEst}</p>
             </div>
             {error ? <span className="text-red-700">{error}</span> : null}
             <div className="mt-4 flex justify-around">

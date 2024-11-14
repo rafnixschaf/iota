@@ -40,14 +40,13 @@ function SendTokenDialogBody({
     coin,
     activeAddress,
     setOpen,
-    open,
 }: SendCoinPopupProps): React.JSX.Element {
     const [step, setStep] = useState<FormStep>(FormStep.EnterValues);
     const [selectedCoin, setSelectedCoin] = useState<CoinBalance>(coin);
     const [formData, setFormData] = useState<FormDataValues>(INITIAL_VALUES);
     const { addNotification } = useNotifications();
 
-    const { data: coinsData } = useGetAllCoins(selectedCoin?.coinType, activeAddress);
+    const { data: coinsData } = useGetAllCoins(selectedCoin.coinType, activeAddress);
 
     const {
         mutateAsync: signAndExecuteTransaction,
@@ -55,7 +54,7 @@ function SendTokenDialogBody({
         isPending,
     } = useSignAndExecuteTransaction();
 
-    const { data: sendCoinData } = useSendCoinTransaction(
+    const { data: transaction } = useSendCoinTransaction(
         coinsData || [],
         selectedCoin?.coinType,
         activeAddress,
@@ -65,12 +64,12 @@ function SendTokenDialogBody({
     );
 
     function handleTransfer() {
-        if (!sendCoinData?.transaction) {
+        if (!transaction) {
             addNotification('There was an error with the transaction', NotificationType.Error);
             return;
         } else {
             signAndExecuteTransaction({
-                transaction: sendCoinData.transaction,
+                transaction,
             })
                 .then(() => {
                     setOpen(false);
@@ -102,7 +101,6 @@ function SendTokenDialogBody({
                         <EnterValuesFormView
                             coin={selectedCoin}
                             activeAddress={activeAddress}
-                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                             setSelectedCoin={setSelectedCoin}
                             onNext={onNext}
                             setFormData={setFormData}
@@ -114,7 +112,6 @@ function SendTokenDialogBody({
                             onBack={onBack}
                             executeTransfer={handleTransfer}
                             senderAddress={activeAddress}
-                            gasBudget={sendCoinData?.gasBudget?.toString() || '--'}
                             error={error?.message}
                             isPending={isPending}
                         />
