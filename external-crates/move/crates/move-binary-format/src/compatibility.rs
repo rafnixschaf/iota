@@ -3,8 +3,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{Result, anyhow};
-
 use std::collections::BTreeSet;
 
 use move_core_types::vm_status::StatusCode;
@@ -121,22 +119,26 @@ impl Compatibility {
 
     /// Check compatibility for `new_module` relative to old module
     /// `old_module`.
-    pub fn check(&self, old_module: &Module, new_module: &Module) -> Result<()> {
-        // add macro to simplify error handling
+    pub fn check(&self, old_module: &Module, new_module: &Module) -> PartialVMResult<()> {
+        macro_rules! return_err { ($($arg:tt)*) => {
+            return Err(PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
+                .with_message(format!($($arg)*)))
+        }}
+        // add macros to simplify error handling
         macro_rules! datatype_and_function_linking { ($($arg:tt)*) => {
-            if self.check_datatype_and_pub_function_linking { return Err(anyhow!($($arg)*)); }
+            if self.check_datatype_and_pub_function_linking { return_err!($($arg)*) }
         }}
         macro_rules! datatype_layout { ($($arg:tt)*) => {
-            if self.check_datatype_layout { return Err(anyhow!($($arg)*)); }
+            if self.check_datatype_layout { return_err!($($arg)*) }
         }}
         macro_rules! friend_linking { ($($arg:tt)*) => {
-            if self.check_friend_linking { return Err(anyhow!($($arg)*)); }
+            if self.check_friend_linking { return_err!($($arg)*) }
         }}
         macro_rules! entry_linking { ($($arg:tt)*) => {
-            if self.check_private_entry_linking { return Err(anyhow!($($arg)*)); }
+            if self.check_private_entry_linking { return_err!($($arg)*) }
         }}
         macro_rules! no_new_variants { ($($arg:tt)*) => {
-            if self.disallow_new_variants { return Err(anyhow!($($arg)*)); }
+            if self.disallow_new_variants { return_err!($($arg)*) }
         }}
 
         // module's name and address are unchanged
