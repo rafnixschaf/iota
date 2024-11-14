@@ -220,7 +220,6 @@ impl Compatibility {
                     datatype_layout!("removed variant {tag} from enum {name}");
                     break;
                 };
-
                 if new_variant.name != old_variant.name {
                     // TODO: Variant renamed. This is a stricter definition than required.
                     // We could in principle choose that changing the name (but not position or
@@ -273,12 +272,12 @@ impl Compatibility {
 
             // Check visibility compatibility
             match (old_func.visibility, new_func.visibility) {
-                (Visibility::Public, Visibility::Private | Visibility::Friend) => {
-                    datatype_and_function_linking!("downgraded visibility of public function {name}");
-                },
-                (Visibility::Friend, Visibility::Private) => {
-                    friend_linking!("downgraded visibility of friend function {name}");
-                },
+                (Visibility::Public, Visibility::Private | Visibility::Friend) => datatype_and_function_linking!(
+                    "downgraded visibility of public function {name}"
+                ),
+                (Visibility::Friend, Visibility::Private) => friend_linking!(
+                    "downgraded visibility of friend function {name}"
+                ),
                 _ => (),
             }
 
