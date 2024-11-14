@@ -17,13 +17,10 @@ use move_binary_format::{
     CompiledModule,
     binary_config::BinaryConfig,
     compatibility::Compatibility,
-    errors::PartialVMError,
+    errors::{PartialVMError, PartialVMResult},
     file_format::{Ability, AbilitySet},
 };
-use move_core_types::{
-    gas_algebra::InternalGas,
-    vm_status::StatusCode,
-};
+use move_core_types::{gas_algebra::InternalGas, vm_status::StatusCode};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tracing::error;
@@ -178,7 +175,7 @@ pub async fn compare_system_package<S: ObjectStore>(
     modules: &[CompiledModule],
     dependencies: Vec<ObjectID>,
     binary_config: &BinaryConfig,
-) -> Result<ObjectRef, PartialVMError> {
+) -> PartialVMResult<ObjectRef> {
     let cur_object = match object_store.get_object(id) {
         Ok(Some(cur_object)) => cur_object,
 
@@ -256,14 +253,18 @@ pub async fn compare_system_package<S: ObjectStore>(
             return Err(PartialVMError::new(StatusCode::UNKNOWN_STATUS));
         }
     };
-    let mut new_normalized = new_pkg.normalize(binary_config).map_err(|e| PartialVMError::new(StatusCode::UNKNOWN_STATUS).with_message(e.to_string()))?;
+    let mut new_normalized = new_pkg
+        .normalize(binary_config)
+        .map_err(|e| PartialVMError::new(StatusCode::UNKNOWN_STATUS).with_message(e.to_string()))?;
 
     for (name, cur_module) in cur_normalized {
-        let new_module = new_normalized.remove(&name).ok_or(PartialVMError::new(StatusCode::UNKNOWN_STATUS))?;
+        let new_module = new_normalized
+            .remove(&name)
+            .ok_or(PartialVMError::new(StatusCode::UNKNOWN_STATUS))?;
 
         if let Err(e) = compatibility.check(&cur_module, &new_module) {
             error!("Compatibility check failed, for new version of {id}::{name}: {e:?}");
-            return Err(e.into());
+            return Err(e);
         }
     }
     new_pkg.increment_version();
