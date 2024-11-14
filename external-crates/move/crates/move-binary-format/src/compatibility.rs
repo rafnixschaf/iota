@@ -139,6 +139,9 @@ impl Compatibility {
         macro_rules! datatype_layout {
             ($($arg:tt)*) => { return_if!(check_datatype_layout, $($arg)*); }
         }
+        macro_rules! friend_linking {
+            ($($arg:tt)*) => { return_if!(check_friend_linking, $($arg)*); }
+        }
         macro_rules! entry_linking {
             ($($arg:tt)*) => { return_if!(check_private_entry_linking, $($arg)*); }
         }
@@ -231,7 +234,6 @@ impl Compatibility {
                     // presumably would.
                     datatype_layout!("renamed variant {tag} in enum {name}");
                 }
-
                 if new_variant.fields != old_variant.fields {
                     // Fields changed. Code in this module will fail at runtime if it tries to
                     // read a previously published enum value
@@ -263,7 +265,7 @@ impl Compatibility {
         for (name, old_func) in &old_module.functions {
             let Some(new_func) = new_module.functions.get(name) else {
                 if old_func.visibility == Visibility::Friend {
-                    return_if!(check_friend_linking, "removed friend function {name}");
+                    friend_linking!("removed friend function {name}");
                 } else if old_func.visibility != Visibility::Private {
                     datatype_and_function_linking!("removed non-private function {name}");
                 } else if old_func.is_entry && self.check_private_entry_linking {
@@ -280,7 +282,7 @@ impl Compatibility {
                     datatype_and_function_linking!("downgraded visibility of public function {name}");
                 },
                 (Visibility::Friend, Visibility::Private) => {
-                    return_if!(check_friend_linking, "downgraded visibility of friend function {name}")
+                    friend_linking!("downgraded visibility of friend function {name}")
                 },
                 _ => (),
             }
@@ -305,7 +307,7 @@ impl Compatibility {
                 )
             {
                 match old_func.visibility {
-                    Visibility::Friend => return_if!(check_friend_linking, "changed signature of friend function {name}"),
+                    Visibility::Friend => friend_linking!("changed signature of friend function {name}"),
                     Visibility::Public => datatype_and_function_linking!("changed signature of public function {name}"),
                     Visibility::Private => (),
                 }
@@ -324,7 +326,7 @@ impl Compatibility {
         let old_friend_module_ids: BTreeSet<_> = old_module.friends.iter().cloned().collect();
         let new_friend_module_ids: BTreeSet<_> = new_module.friends.iter().cloned().collect();
         if !old_friend_module_ids.is_subset(&new_friend_module_ids) {
-            return_if!(check_friend_linking, "removed friend module declaration");
+            friend_linking!("removed friend module declaration");
         }
 
         Ok(())
