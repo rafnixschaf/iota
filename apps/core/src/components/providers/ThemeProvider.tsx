@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { PropsWithChildren, useState, useEffect } from 'react';
+import { PropsWithChildren, useState, useEffect } from 'react';
 import { Theme } from '../../enums';
 import { ThemeContext } from '../../contexts';
 
