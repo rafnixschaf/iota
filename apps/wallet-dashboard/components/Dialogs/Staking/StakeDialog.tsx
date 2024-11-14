@@ -130,6 +130,7 @@ function StakeDialog({
             },
         )
             .then(() => {
+                handleClose();
                 addNotification('Stake transaction has been sent');
             })
             .catch(() => {

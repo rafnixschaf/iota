@@ -64,11 +64,13 @@ function EnterAmountView({
             <LayoutBody>
                 <div className="flex w-full flex-col justify-between">
                     <div>
-                        <Validator
-                            address={selectedValidatorAddress}
-                            isSelected
-                            showAction={false}
-                        />
+                        <div className="mb-md">
+                            <Validator
+                                address={selectedValidatorAddress}
+                                isSelected
+                                showAction={false}
+                            />
+                        </div>
                         <StakedInfo
                             validatorAddress={selectedValidatorAddress}
                             accountAddress={accountAddress!}
