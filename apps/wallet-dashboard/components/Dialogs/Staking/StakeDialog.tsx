@@ -152,6 +152,7 @@ export function StakeDialog({
             addNotification('Stake transaction was not created', NotificationType.Error);
             return;
         }
+
         signAndExecuteTransaction(
             {
                 transaction: newStakeData?.transaction,
@@ -159,16 +160,12 @@ export function StakeDialog({
             {
                 onSuccess: () => {
                     setView?.(StakeDialogView.TransactionDetails);
+                    addNotification('Stake transaction has been sent');
                 },
             },
-        )
-            .then(() => {
-                handleClose();
-                addNotification('Stake transaction has been sent');
-            })
-            .catch(() => {
-                addNotification('Stake transaction was not sent', NotificationType.Error);
-            });
+        ).catch(() => {
+            addNotification('Stake transaction was not sent', NotificationType.Error);
+        });
     }
 
     function onSubmit(values: FormValues, { resetForm }: FormikHelpers<FormValues>) {
@@ -216,7 +213,7 @@ export function StakeDialog({
                     {view === StakeDialogView.Unstake && stakedDetails && (
                         <UnstakeView
                             extendedStake={stakedDetails}
-                            handleClose={handleClose}
+                            onUnstake={handleClose}
                             showActiveStatus
                         />
                     )}
@@ -225,6 +222,7 @@ export function StakeDialog({
                             validatorAddress={selectedValidator}
                             gasBudget={newStakeData?.gasBudget}
                             onConfirm={handleClose}
+                            onClose={handleClose}
                             amount={amount}
                             symbol={metadata?.symbol}
                             validatorApy={validatorApy}

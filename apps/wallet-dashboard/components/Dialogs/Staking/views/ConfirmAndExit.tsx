@@ -8,6 +8,7 @@ import {
     CardBody,
     CardImage,
     CardType,
+    Header,
     ImageShape,
     ImageType,
 } from '@iota/apps-ui-kit';
@@ -15,6 +16,7 @@ import { ValidatorApyData } from '@iota/core';
 import { Validator } from './Validator';
 import { IotaLogoMark } from '@iota/ui-icons';
 import { StakingTransactionDetails } from './StakingTransactionDetails';
+import { Layout, LayoutBody, LayoutFooter } from './Layout';
 
 interface SuccessScreenViewProps {
     validatorAddress: string;
@@ -23,6 +25,7 @@ interface SuccessScreenViewProps {
     amount: string;
     symbol: string | undefined;
     validatorApy: ValidatorApyData;
+    onClose: () => void;
 }
 
 export function SuccessScreenView({
@@ -30,12 +33,14 @@ export function SuccessScreenView({
     onConfirm,
     amount,
     symbol,
+    onClose,
     validatorApy: { apy, isApyApproxZero },
     gasBudget,
 }: SuccessScreenViewProps): React.JSX.Element {
     return (
-        <div className="flex flex-1 flex-col">
-            <div className="flex w-full flex-1 flex-col justify-between">
+        <Layout>
+            <Header title="Transaction" onClose={onClose} />
+            <LayoutBody>
                 <div className="flex flex-col gap-y-md">
                     <Validator address={validatorAddress} isSelected showAction={false} />
 
@@ -52,16 +57,18 @@ export function SuccessScreenView({
                         gasBudget={gasBudget}
                     />
                 </div>
-            </div>
+            </LayoutBody>
 
-            <div className="flex w-full">
-                <Button
-                    type={ButtonType.Primary}
-                    fullWidth
-                    onClick={onConfirm}
-                    text="Confirm & Exit"
-                />
-            </div>
-        </div>
+            <LayoutFooter>
+                <div className="flex w-full">
+                    <Button
+                        type={ButtonType.Primary}
+                        fullWidth
+                        onClick={onConfirm}
+                        text="Confirm & Exit"
+                    />
+                </div>
+            </LayoutFooter>
+        </Layout>
     );
 }
