@@ -49,7 +49,7 @@ module iota_system::iota_system {
     use iota::system_admin_cap::IotaSystemAdminCap;
     use iota_system::validator::ValidatorV1;
     use iota_system::validator_cap::UnverifiedValidatorOperationCap;
-    use iota_system::iota_system_state_inner::{Self, SystemParametersV1, IotaSystemStateV1};
+    use iota_system::iota_system_state_inner::{Self, SystemParametersV1, IotaSystemStateV1, IotaSystemStateV2};
     use iota_system::staking_pool::PoolTokenExchangeRate;
     use iota::dynamic_field;
     use iota::vec_map::VecMap;
@@ -550,16 +550,25 @@ module iota_system::iota_system {
         storage_rebate
     }
 
-    fun load_system_state(self: &mut IotaSystemState): &IotaSystemStateV1 {
+    fun load_system_state(self: &mut IotaSystemState): &IotaSystemStateV2 {
         load_inner_maybe_upgrade(self)
     }
 
-    fun load_system_state_mut(self: &mut IotaSystemState): &mut IotaSystemStateV1 {
+    fun load_system_state_mut(self: &mut IotaSystemState): &mut IotaSystemStateV2 {
         load_inner_maybe_upgrade(self)
     }
 
-    fun load_inner_maybe_upgrade(self: &mut IotaSystemState): &mut IotaSystemStateV1 {
-        let inner: &mut IotaSystemStateV1 = dynamic_field::borrow_mut(
+    fun load_inner_maybe_upgrade(self: &mut IotaSystemState): &mut IotaSystemStateV2 {
+        if (self.version == 1) {
+            let v1: IotaSystemStateV1 = dynamic_field::remove(
+                &mut self.id,
+                self.version
+            );
+            let v2 = v1.v1_to_v2();
+            self.version = 2;
+            dynamic_field::add(&mut self.id, self.version, v2);
+        };
+        let inner: &mut IotaSystemStateV2 = dynamic_field::borrow_mut(
             &mut self.id,
             self.version
         );
