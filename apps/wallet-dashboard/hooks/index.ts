@@ -10,4 +10,3 @@ export * from './useCreateSendAssetTransaction';
 export * from './useGetCurrentEpochStartTimestamp';
 export * from './useTimelockedUnstakeTransaction';
 export * from './useExplorerLinkGetter';
-export * from '@iota/core/src/hooks/stake/useValidatorInfo';

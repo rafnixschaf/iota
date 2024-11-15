@@ -61,7 +61,7 @@ export function StartStaking() {
                 <StakeDialog
                     isOpen={isDialogStakeOpen}
                     handleClose={handleClose}
-                    view={dialogStakeView}
+                    view={StakeDialogView.SelectValidator}
                     setView={setDialogStakeView}
                 />
             )}

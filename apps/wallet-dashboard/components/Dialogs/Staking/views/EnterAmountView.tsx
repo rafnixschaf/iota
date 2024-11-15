@@ -1,20 +1,42 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
-import { useFormatCoin, useBalance, CoinFormat, ValidatorApyData } from '@iota/core';
+import {
+    useFormatCoin,
+    useBalance,
+    CoinFormat,
+    parseAmount,
+    useCoinMetadata,
+    ValidatorApyData,
+} from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Button, ButtonType, Input, InputType, Header } from '@iota/apps-ui-kit';
+import {
+    Button,
+    ButtonType,
+    Input,
+    InputType,
+    Header,
+    InfoBoxType,
+    InfoBoxStyle,
+    InfoBox,
+} from '@iota/apps-ui-kit';
+import { Field, type FieldProps, useFormikContext } from 'formik';
+import { Exclamation } from '@iota/ui-icons';
 import { useCurrentAccount } from '@iota/dapp-kit';
+
 import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 import { StakingTransactionDetails } from './StakingTransactionDetails';
+import { useEffect } from 'react';
+
+export interface FormValues {
+    amount: string;
+}
 
 interface EnterAmountViewProps {
     selectedValidator: string;
-    amount: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    setAmount: (amount: string) => void;
     onBack: () => void;
     onStake: () => void;
     showActiveStatus?: boolean;
@@ -25,20 +47,26 @@ interface EnterAmountViewProps {
 
 function EnterAmountView({
     selectedValidator: selectedValidatorAddress,
-    amount,
-    onChange,
     onBack,
     onStake,
     gasBudget = 0,
     handleClose,
     validatorApy,
+    setAmount,
 }: EnterAmountViewProps): JSX.Element {
+    const coinType = IOTA_TYPE_ARG;
+    const { data: metadata } = useCoinMetadata(coinType);
+    const decimals = metadata?.decimals ?? 0;
+
     const account = useCurrentAccount();
     const accountAddress = account?.address;
 
-    const { data: iotaBalance } = useBalance(accountAddress!);
+    const { values } = useFormikContext<FormValues>();
+    const amount = values.amount;
 
+    const { data: iotaBalance } = useBalance(accountAddress!);
     const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
+
     const maxTokenBalance = coinBalance - BigInt(Number(gasBudget));
     const [maxTokenFormatted, maxTokenFormattedSymbol] = useFormatCoin(
         maxTokenBalance,
@@ -46,30 +74,70 @@ function EnterAmountView({
         CoinFormat.FULL,
     );
 
+    const _gasBudget = BigInt(gasBudget ?? 0);
+
+    const hasEnoughRemaingBalance =
+        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * _gasBudget;
+    const shouldShowInsufficientRemainingFundsWarning =
+        maxTokenFormatted >= values.amount && !hasEnoughRemaingBalance;
+
+    useEffect(() => {
+        setAmount(amount);
+    }, [amount, setAmount]);
+
     return (
         <Layout>
             <Header title="Enter amount" onClose={handleClose} onBack={handleClose} titleCentered />
             <LayoutBody>
                 <div className="flex w-full flex-col justify-between">
                     <div>
-                        <Validator
-                            address={selectedValidatorAddress}
-                            isSelected
-                            showAction={false}
-                        />
+                        <div className="mb-md">
+                            <Validator
+                                address={selectedValidatorAddress}
+                                isSelected
+                                showAction={false}
+                            />
+                        </div>
                         <StakedInfo
                             validatorAddress={selectedValidatorAddress}
                             accountAddress={accountAddress!}
                         />
                         <div className="my-md w-full">
-                            <Input
-                                type={InputType.NumericFormat}
-                                label="Amount"
-                                value={amount}
-                                onChange={onChange}
-                                placeholder="Enter amount to stake"
-                                caption={`${maxTokenFormatted} ${maxTokenFormattedSymbol} Available`}
-                            />
+                            <Field name="amount">
+                                {({
+                                    field: { onChange, ...field },
+                                    form: { setFieldValue },
+                                    meta,
+                                }: FieldProps<FormValues>) => {
+                                    return (
+                                        <Input
+                                            {...field}
+                                            onValueChange={(values) =>
+                                                setFieldValue('amount', values.value, true)
+                                            }
+                                            type={InputType.NumericFormat}
+                                            label="Amount"
+                                            value={amount}
+                                            onChange={onChange}
+                                            placeholder="Enter amount to stake"
+                                            errorMessage={
+                                                values.amount && meta.error ? meta.error : undefined
+                                            }
+                                            caption={`${maxTokenFormatted} ${maxTokenFormattedSymbol} Available`}
+                                        />
+                                    );
+                                }}
+                            </Field>
+                            {shouldShowInsufficientRemainingFundsWarning ? (
+                                <div className="mt-md">
+                                    <InfoBox
+                                        type={InfoBoxType.Error}
+                                        supportingText="You have selected an amount that will leave you with insufficient funds to pay for gas fees for unstaking or any other transactions."
+                                        style={InfoBoxStyle.Elevated}
+                                        icon={<Exclamation />}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                         <StakingTransactionDetails gasBudget={gasBudget} {...validatorApy} />
                     </div>
