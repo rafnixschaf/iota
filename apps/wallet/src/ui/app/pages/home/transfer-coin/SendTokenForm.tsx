@@ -140,8 +140,8 @@ export function SendTokenForm({
                 }}
                 validationSchema={validationSchemaStepOne}
                 enableReinitialize
-                validateOnChange={true}
-                validateOnBlur={true}
+                validateOnChange={false}
+                validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
                 {({ isValid, isSubmitting, setFieldValue, values, submitForm }) => {

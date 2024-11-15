@@ -29,7 +29,7 @@ export function SendTokenFormInput({
     isMaxActionDisabled,
     name,
 }: SendTokenInputProps) {
-    const { values, setFieldValue, isSubmitting } = useFormikContext<TokenForm>();
+    const { values, setFieldValue, isSubmitting, validateField } = useFormikContext<TokenForm>();
     const gasBudgetEstimation = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
@@ -40,8 +40,7 @@ export function SendTokenFormInput({
     });
 
     const [field, meta, helpers] = useField<string>(name);
-
-    const errorMessage = meta?.error ? meta.error : undefined;
+    const errorMessage = meta.error;
     const isActionButtonDisabled = isSubmitting || !!errorMessage || isMaxActionDisabled;
 
     const renderAction = () => (
@@ -49,6 +48,12 @@ export function SendTokenFormInput({
             Max
         </ButtonPill>
     );
+
+    useEffect(() => {
+        if(meta.touched) {
+            validateField(name);
+        }
+    }, [field.value, meta.touched])
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -58,7 +63,8 @@ export function SendTokenFormInput({
     return (
         <Input
             type={InputType.NumericFormat}
-            name="amount"
+            name={field.name}
+            onBlur={field.onBlur}
             value={field.value}
             caption="Est. Gas Fees:"
             placeholder="0.00"
@@ -72,6 +78,7 @@ export function SendTokenFormInput({
             decimalScale={coinDecimals ? undefined : 0}
             thousandSeparator
             onValueChange={(values) => {
+                helpers.setTouched(true);
                 helpers.setValue(values.value);
             }}
         />
