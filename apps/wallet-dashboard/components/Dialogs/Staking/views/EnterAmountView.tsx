@@ -2,7 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect } from 'react';
-import { useFormatCoin, useBalance, CoinFormat, parseAmount, useCoinMetadata } from '@iota/core';
+import {
+    useFormatCoin,
+    useBalance,
+    CoinFormat,
+    parseAmount,
+    useCoinMetadata,
+    useStakeTxnInfo,
+} from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import {
     Button,
@@ -21,7 +28,6 @@ import { Field, type FieldProps, useFormikContext } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { useCurrentAccount, useIotaClientQuery } from '@iota/dapp-kit';
 
-import { useStakeTxnInfo } from '../hooks';
 import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
