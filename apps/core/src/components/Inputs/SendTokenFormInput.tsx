@@ -1,70 +1,53 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { ButtonPill, Input, InputType, NumericFormatInputProps } from '@iota/apps-ui-kit';
+import { ButtonPill, Input, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useGasBudgetEstimation } from '../../hooks';
 import React, { useEffect } from 'react';
 import { GAS_SYMBOL } from '../../constants';
+import { useField, useFormikContext } from 'formik';
+import { TokenForm } from '../../forms';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
     symbol: string;
     coinDecimals: number;
     activeAddress: string;
-    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
-    values: {
-        amount: string;
-        to: string;
-        isPayAllIota: boolean;
-    };
+    to: string;
     onActionClick: () => Promise<void>;
-    isMaxActionDisabled?: boolean | 'auto';
-    value: string;
-    onChange: (value: string) => void;
-    onBlur?: React.FocusEventHandler<HTMLInputElement>;
-    errorMessage?: string;
+    isMaxActionDisabled?: boolean;
+    name: string;
 }
 
 export function SendTokenFormInput({
     coins,
-    values,
+    to,
     symbol,
     coinDecimals,
     activeAddress,
-    setFieldValue,
     onActionClick,
     isMaxActionDisabled,
-    value,
-    onChange,
-    onBlur,
-    errorMessage,
+    name,
 }: SendTokenInputProps) {
+    const { values, setFieldValue, isSubmitting } = useFormikContext<TokenForm>();
     const gasBudgetEstimation = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
         activeAddress,
-        to: values.to,
+        to: to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
         showGasSymbol: false,
     });
 
-    const numericPropsOnly: Partial<NumericFormatInputProps> = {
-        decimalScale: coinDecimals ? undefined : 0,
-        thousandSeparator: true,
-        onValueChange: (values) => {
-            onChange(values.value);
-        },
-    };
+    const [field, meta, helpers] = useField<string>(name);
 
-    const isActionButtonDisabled = !value || !!errorMessage;
+    const errorMessage = meta?.error ? meta.error : undefined;
+    const isActionButtonDisabled = isSubmitting || !!errorMessage || isMaxActionDisabled;
 
-    const renderAction = (isButtonDisabled: boolean | undefined) => (
-        <ButtonPill
-            disabled={isMaxActionDisabled === 'auto' ? isButtonDisabled : isActionButtonDisabled}
-            onClick={onActionClick}
-        >
+    const renderAction = () => (
+        <ButtonPill disabled={isActionButtonDisabled} onClick={onActionClick}>
             Max
         </ButtonPill>
     );
@@ -77,17 +60,15 @@ export function SendTokenFormInput({
     return (
         <Input
             type={InputType.NumericFormat}
-            name={'amount'}
-            value={value}
+            name="amount"
+            value={field.value}
             caption="Est. Gas Fees:"
             placeholder="0.00"
-            onBlur={onBlur}
             label="Send Amount"
             suffix={` ${symbol}`}
             prefix={values.isPayAllIota ? '~ ' : undefined}
             allowNegative={false}
             errorMessage={errorMessage}
-            onChange={(e) => onChange(e.currentTarget.value)}
             amountCounter={
                 !errorMessage
                     ? coins && gasBudgetEstimation !== '--'
@@ -95,8 +76,12 @@ export function SendTokenFormInput({
                         : '--'
                     : undefined
             }
-            trailingElement={renderAction(isActionButtonDisabled)}
-            {...numericPropsOnly}
+            trailingElement={renderAction()}
+            decimalScale={coinDecimals ? undefined : 0}
+            thousandSeparator
+            onValueChange={(values) => {
+                helpers.setValue(values.value);
+            }}
         />
     );
 }

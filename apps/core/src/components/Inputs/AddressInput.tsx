@@ -5,24 +5,23 @@
 import { Input, InputType } from '@iota/apps-ui-kit';
 import { Close } from '@iota/ui-icons';
 import { useIotaAddressValidation } from '../../hooks';
-import React, { ComponentProps, useCallback } from 'react';
-import type { Field, FieldInputProps } from 'formik';
+import React, { useCallback } from 'react';
+import { useField } from 'formik';
 
 export interface AddressInputProps {
-    field: FieldInputProps<string>;
-    form: ComponentProps<typeof Field>;
+    name: string;
     disabled?: boolean;
     placeholder?: string;
     label?: string;
 }
 
 export function AddressInput({
-    field,
-    form,
+    name,
     disabled,
     placeholder = '0x...',
     label = 'Enter Recipient Address',
 }: AddressInputProps) {
+    const [field, meta, helpers] = useField<string>(name);
     const iotaAddressValidation = useIotaAddressValidation();
 
     const formattedValue = iotaAddressValidation.cast(field.value);
@@ -30,19 +29,16 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            iotaAddressValidation.cast(address);
-            form.setFieldValue(field.name, iotaAddressValidation.cast(address)).then(() => {
-                form.validateField(field.name);
-            });
+            helpers.setValue(iotaAddressValidation.cast(address));
         },
-        [form, field.name, iotaAddressValidation],
+        [name, iotaAddressValidation],
     );
 
     const clearAddress = () => {
-        form.setFieldValue(field.name, '');
+        helpers.setValue('');
     };
 
-    const errorMessage = form.touched[field.name] && form.errors[field.name];
+    const errorMessage = meta.touched && meta.error;
 
     return (
         <Input
