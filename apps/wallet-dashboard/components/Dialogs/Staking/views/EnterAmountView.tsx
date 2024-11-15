@@ -1,6 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import React, { useEffect } from 'react';
 import {
     useFormatCoin,
     useBalance,
@@ -28,7 +29,6 @@ import { Validator } from './Validator';
 import { StakedInfo } from './StakedInfo';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 import { StakingTransactionDetails } from './StakingTransactionDetails';
-import { useEffect } from 'react';
 
 export interface FormValues {
     amount: string;
