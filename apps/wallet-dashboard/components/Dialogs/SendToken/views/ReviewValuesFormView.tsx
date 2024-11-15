@@ -18,15 +18,7 @@ import {
     ButtonType,
 } from '@iota/apps-ui-kit';
 import { formatAddress } from '@iota/iota-sdk/utils';
-import {
-    GAS_SYMBOL,
-    CoinIcon,
-    ImageIconSize,
-    parseAmount,
-    useCoinMetadata,
-    useFormatCoin,
-    ExplorerLinkType,
-} from '@iota/core';
+import { GAS_SYMBOL, CoinIcon, ImageIconSize, useFormatCoin, ExplorerLinkType } from '@iota/core';
 import { Loader } from '@iota/ui-icons';
 import { ExplorerLink } from '@/components';
 
@@ -45,10 +37,7 @@ export function ReviewValuesFormView({
     executeTransfer,
     coinType,
 }: ReviewValuesFormProps): JSX.Element {
-    const { data: metadata } = useCoinMetadata(coinType);
-    const amountWithoutDecimals = parseAmount(amount, metadata?.decimals ?? 0);
-    const [formatAmount, symbol] = useFormatCoin(amountWithoutDecimals, coinType);
-
+    const [formatAmount, symbol] = useFormatCoin(amount, coinType);
     return (
         <div className="flex h-full flex-col">
             <div className="flex h-full w-full flex-col gap-md">
