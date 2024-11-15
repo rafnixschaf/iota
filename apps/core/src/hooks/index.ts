@@ -40,5 +40,8 @@ export * from './useGetActiveValidatorsInfo';
 export * from './useTransactionData';
 export * from './useGetStakingValidatorDetails';
 export * from './useCursorPagination';
+export * from './useNFTBasicData';
+export * from './useOwnedNFT';
+export * from './useNftDetails';
 
 export * from './stake';
