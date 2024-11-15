@@ -109,7 +109,7 @@ Transaction finality means that once a transaction is executed, it can't be reve
 
 ### Settlement Finality
 
-After executing a transaction, validators send back the signed effects to the network. When a majority of validators have executed the transaction and the [effects _certificate_](#effects-_certificate_) exists, the transaction's effects (like transfers or newly created objects) are implemented. This allows the network to process new transactions that depend on these effects.
+After executing a transaction, validators send back the signed effects to the network. When a majority of validators have executed the transaction and the [effects _certificate_](#effects-certificate) exists, the transaction's effects (like transfers or newly created objects) are implemented. This allows the network to process new transactions that depend on these effects.
 
 Settlement finality depends on [object ownership](../../developer/iota-101/objects/object-ownership/object-ownership.mdx). For transactions involving only owned objects, this happens quickly, in under half a second. For those involving shared objects, it happens shortly after consensus, which can take a few seconds. At this point, the transaction reaches settlement finality, meaning the network can now process more transactions using the same input objects.
 
