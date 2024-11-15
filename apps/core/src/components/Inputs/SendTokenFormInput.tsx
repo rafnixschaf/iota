@@ -50,10 +50,10 @@ export function SendTokenFormInput({
     );
 
     useEffect(() => {
-        if(meta.touched) {
+        if (meta.touched) {
             validateField(name);
         }
-    }, [field.value, meta.touched])
+    }, [field.value, meta.touched]);
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {

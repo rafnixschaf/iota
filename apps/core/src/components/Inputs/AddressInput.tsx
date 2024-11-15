@@ -30,17 +30,17 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            helpers.setTouched(true)
+            helpers.setTouched(true);
             helpers.setValue(iotaAddressValidation.cast(address));
         },
         [name, iotaAddressValidation, helpers.setTouched, helpers.setValue, validateField],
     );
 
     useEffect(() => {
-        if(meta.touched) {
+        if (meta.touched) {
             validateField(name);
         }
-    }, [field.value])
+    }, [field.value]);
 
     const clearAddress = () => {
         helpers.setValue('');
