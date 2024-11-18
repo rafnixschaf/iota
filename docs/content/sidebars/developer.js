@@ -324,6 +324,7 @@ const developer = [
             'developer/advanced/custom-indexer',
             'developer/advanced/onchain-randomness',
             'developer/advanced/asset-tokenization',
+            'developer/advanced/create-review-rating-dao-with-multisig',
         ],
     },
     {
