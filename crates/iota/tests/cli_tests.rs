@@ -4205,8 +4205,10 @@ async fn test_faucet_batch() -> Result<(), anyhow::Error> {
 
     let tmp = tempfile::tempdir().unwrap();
     let prom_registry = prometheus::Registry::new();
-    let mut config = iota_faucet::FaucetConfig::default();
-    config.batch_enabled = true;
+    let config = iota_faucet::FaucetConfig {
+        batch_enabled: true,
+        ..Default::default()
+    };
 
     let prometheus_registry = prometheus::Registry::new();
     let app_state = std::sync::Arc::new(iota_faucet::AppState {
