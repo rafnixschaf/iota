@@ -149,9 +149,6 @@ impl SimpleFaucet {
             coins.len() // All coins go to the gas pool if batch is disabled
         };
 
-        // Put half of the coins in the old faucet impl queue, and put half in the other
-        // queue for batch coins. In the test cases we create an account with 5
-        // coins so we just let this run with a minimum of 5 coins
         for (coins_processed, coin) in coins.iter().enumerate() {
             let coin_id = *coin.id();
             if let Some(write_ahead_log::Entry {
