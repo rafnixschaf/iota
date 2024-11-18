@@ -1306,7 +1306,10 @@ mod tests {
     #[tokio::test]
     async fn test_batch_transfer_interface() {
         let test_cluster = TestClusterBuilder::new().build().await;
-        let config: FaucetConfig = Default::default();
+        let config: FaucetConfig = FaucetConfig {
+            batch_enabled: true,
+            ..Default::default()
+        };
         let coin_amount = config.amount;
         let prom_registry = Registry::new();
         let tmp = tempfile::tempdir().unwrap();
@@ -1906,7 +1909,10 @@ mod tests {
     #[tokio::test]
     async fn test_amounts_transferred_on_batch() {
         let test_cluster = TestClusterBuilder::new().build().await;
-        let config: FaucetConfig = Default::default();
+        let config: FaucetConfig = FaucetConfig {
+            batch_enabled: true,
+            ..Default::default()
+        };
         let address = test_cluster.get_address_0();
         let mut context = test_cluster.wallet;
         let gas_coins = context
