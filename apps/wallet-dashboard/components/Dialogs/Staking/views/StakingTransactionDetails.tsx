@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, KeyValueInfo, Panel } from '@iota/apps-ui-kit';
-import { formatApy, useFormatCoin, ValidatorApyData } from '@iota/core';
+import { formatApy, useFormatCoin, useStakeTxnInfo, ValidatorApyData } from '@iota/core';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useStakeTxnInfo } from '../hooks';
 
 interface StakingTransactionDetailsProps extends ValidatorApyData {
     gasBudget: string | number | null | undefined;
