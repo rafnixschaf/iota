@@ -137,9 +137,8 @@ impl SimpleFaucet {
         );
 
         // Split the coins eventually into two pools: one for the gas pool and one for
-        // the batch pool. The batch pool will only be populated if the batch
-        // feature is enabled and the gas pool will serve as a fallback in case the
-        // batch pool is empty.
+        // the batch pool. The batch pool will only be populated if the batch feature is
+        // enabled.
         let split_point = if config.batch_enabled {
             if coins.len() > 1 {
                 1 // At least one coin goes to the gas pool the rest to the batch pool
