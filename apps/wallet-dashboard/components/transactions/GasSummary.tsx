@@ -6,7 +6,7 @@ import { useFormatCoin, type GasSummaryType } from '@iota/core';
 import { useCurrentAccount } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
-export function GasSummary({ gasSummary }: { gasSummary: GasSummaryType }) {
+export default function GasSummary({ gasSummary }: { gasSummary: GasSummaryType }) {
     const [gas, symbol] = useFormatCoin(gasSummary?.totalGas, IOTA_TYPE_ARG);
     const address = useCurrentAccount();
 
@@ -38,5 +38,3 @@ export function GasSummary({ gasSummary }: { gasSummary: GasSummaryType }) {
         </div>
     );
 }
-
-export default GasSummary;
