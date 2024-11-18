@@ -30,7 +30,7 @@ use crate::{
     storage::WriteKind,
 };
 
-mod effects_v1;
+pub(crate) mod effects_v1;
 mod object_change;
 mod test_effects_builder;
 
@@ -43,7 +43,7 @@ pub const APPROX_SIZE_OF_EXECUTION_STATUS: usize = 120;
 // Approximate size of `EpochId` type in bytes
 pub const APPROX_SIZE_OF_EPOCH_ID: usize = 10;
 // Approximate size of `GasCostSummary` type in bytes
-pub const APPROX_SIZE_OF_GAS_COST_SUMMARY: usize = 40;
+pub const APPROX_SIZE_OF_GAS_COST_SUMMARY: usize = 50;
 // Approximate size of `Option<TransactionEventsDigest>` type in bytes
 pub const APPROX_SIZE_OF_OPT_TX_EVENTS_DIGEST: usize = 40;
 // Approximate size of `TransactionDigest` type in bytes
