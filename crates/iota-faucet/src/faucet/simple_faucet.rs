@@ -119,6 +119,11 @@ impl SimpleFaucet {
             .map(|q| GasCoin::try_from(&q.1).unwrap())
             .filter(|coin| coin.0.balance.value() >= (config.amount * config.num_coins as u64))
             .collect::<Vec<GasCoin>>();
+
+        if coins.is_empty() {
+            return Err(FaucetError::NoGasCoinAvailable);
+        }
+
         let metrics = FaucetMetrics::new(prometheus_registry);
 
         let wal = WriteAheadLog::open(wal_path);
@@ -131,14 +136,18 @@ impl SimpleFaucet {
             config.max_request_queue_length as usize,
         );
 
-        // This is to handle the case where there is only 1 coin, we want it to go to
-        // the normal queue
-        let split_point = if coins.len() > 10 {
-            coins.len() / 2
-        } else if coins.len() > 1 {
-            coins.len() - 1 // At least one coin goes to the batch pool
+        // Split the coins eventually into two pools: one for the gas pool and one for
+        // the batch pool. The batch pool will only be populated if the batch
+        // feature is enabled and the gas pool will serve as a fallback in case the
+        // batch pool is empty.
+        let split_point = if config.batch_enabled {
+            if coins.len() > 1 {
+                1 // At least one coin goes to the gas pool the rest to the batch pool
+            } else {
+                0 // Only one coin available, all coins go to the batch pool. This is safe as we have already checked above that `coins` is not empty.
+            }
         } else {
-            coins.len() // All coins go to the gas pool if there's only one coin
+            coins.len() // All coins go to the gas pool if batch is disabled
         };
 
         // Put half of the coins in the old faucet impl queue, and put half in the other

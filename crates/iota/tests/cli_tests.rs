@@ -4177,6 +4177,11 @@ async fn test_faucet() -> Result<(), anyhow::Error> {
     .execute(&mut context)
     .await?;
 
+    if let IotaClientCommandResult::NoOutput = faucet_result {
+    } else {
+        unreachable!("Invalid response");
+    };
+
     sleep(Duration::from_secs(5)).await;
 
     let gas_objects_after = context
@@ -4185,11 +4190,6 @@ async fn test_faucet() -> Result<(), anyhow::Error> {
         .unwrap()
         .len();
     assert_eq!(gas_objects_after, 1);
-
-    if let IotaClientCommandResult::NoOutput = faucet_result {
-    } else {
-        unreachable!("Invalid response");
-    };
 
     Ok(())
 }
