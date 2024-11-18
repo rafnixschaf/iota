@@ -1540,17 +1540,22 @@ impl IotaClientCommands {
                     let active_env = context.config().get_active_env();
 
                     if let Ok(env) = active_env {
-                        let network = match env.rpc().as_str() {
-                            IOTA_DEVNET_URL => "https://faucet.devnet.iota.cafe/v1/gas",
-                            IOTA_TESTNET_URL => "https://faucet.testnet.iota.cafe/v1/gas",
-                            IOTA_LOCAL_NETWORK_URL | IOTA_LOCAL_NETWORK_URL_0 => {
-                                "http://127.0.0.1:9123/gas"
+                        let faucet_url = if let Some(faucet_url) = env.faucet() {
+                            faucet_url
+                        } else {
+                            match env.rpc().as_str() {
+                                IOTA_DEVNET_URL => "https://faucet.devnet.iota.cafe/v1/gas",
+                                IOTA_TESTNET_URL => "https://faucet.testnet.iota.cafe/v1/gas",
+                                IOTA_LOCAL_NETWORK_URL | IOTA_LOCAL_NETWORK_URL_0 => {
+                                    // TODO: should this be /v1/gas instead?
+                                    "http://127.0.0.1:9123/gas"
+                                }
+                                _ => bail!(
+                                    "Cannot recognize the active network. Please provide the gas faucet full URL."
+                                ),
                             }
-                            _ => bail!(
-                                "Cannot recognize the active network. Please provide the gas faucet full URL."
-                            ),
                         };
-                        network.to_string()
+                        faucet_url.to_string()
                     } else {
                         bail!("No URL for faucet was provided and there is no active network.")
                     }
