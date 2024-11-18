@@ -5,8 +5,8 @@
 import { Input, InputType } from '@iota/apps-ui-kit';
 import { Close } from '@iota/ui-icons';
 import { useIotaAddressValidation } from '../../hooks';
-import React, { useCallback } from 'react';
-import { useField } from 'formik';
+import React, { useCallback, useEffect } from 'react';
+import { useField, useFormikContext } from 'formik';
 
 export interface AddressInputProps {
     name: string;
@@ -21,6 +21,7 @@ export function AddressInput({
     placeholder = '0x...',
     label = 'Enter Recipient Address',
 }: AddressInputProps) {
+    const { validateField } = useFormikContext();
     const [field, meta, helpers] = useField<string>(name);
     const iotaAddressValidation = useIotaAddressValidation();
 
@@ -29,10 +30,17 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
+            helpers.setTouched(true);
             helpers.setValue(iotaAddressValidation.cast(address));
         },
-        [name, iotaAddressValidation],
+        [name, iotaAddressValidation, helpers.setTouched, helpers.setValue, validateField],
     );
+
+    useEffect(() => {
+        if (meta.touched) {
+            validateField(name);
+        }
+    }, [field.value]);
 
     const clearAddress = () => {
         helpers.setValue('');

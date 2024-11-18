@@ -242,8 +242,8 @@ function EnterValuesFormView({
                 }}
                 validationSchema={validationSchemaStepOne}
                 enableReinitialize
-                validateOnChange={true}
-                validateOnBlur={true}
+                validateOnChange={false}
+                validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
                 {(props: FormikProps<FormDataValues>) => (
