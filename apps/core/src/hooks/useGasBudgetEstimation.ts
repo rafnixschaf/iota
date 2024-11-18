@@ -6,8 +6,6 @@ import { CoinStruct } from '@iota/iota-sdk/client';
 import { useQuery } from '@tanstack/react-query';
 import { createTokenTransferTransaction } from '../utils';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useFormatCoin } from './useFormatCoin';
-import { GAS_SYMBOL } from '../constants';
 
 interface UseGasBudgetEstimationOptions {
     coinDecimals: number;
@@ -19,8 +17,6 @@ interface UseGasBudgetEstimationOptions {
     showGasSymbol?: boolean;
 }
 
-const FALLBACK_GAS_VALUE = '--';
-
 export function useGasBudgetEstimation({
     coinDecimals,
     coins,
@@ -31,7 +27,7 @@ export function useGasBudgetEstimation({
     showGasSymbol = true,
 }: UseGasBudgetEstimationOptions) {
     const client = useIotaClient();
-    const { data: gasBudget } = useQuery({
+    return useQuery({
         // eslint-disable-next-line @tanstack/query/exhaustive-deps
         queryKey: [
             'transaction-gas-budget-estimate',
@@ -62,10 +58,4 @@ export function useGasBudgetEstimation({
             return tx.getData().gasData.budget;
         },
     });
-
-    const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-
-    return formattedGas
-        ? `${formattedGas}${showGasSymbol ? ` ${GAS_SYMBOL}` : ''}`
-        : FALLBACK_GAS_VALUE;
 }

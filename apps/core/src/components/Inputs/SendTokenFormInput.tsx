@@ -3,11 +3,12 @@
 
 import { ButtonPill, Input, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
-import { useGasBudgetEstimation } from '../../hooks';
+import { useFormatCoin, useGasBudgetEstimation } from '../../hooks';
 import React, { useEffect } from 'react';
 import { GAS_SYMBOL } from '../../constants';
 import { useField, useFormikContext } from 'formik';
 import { TokenForm } from '../../forms';
+import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
@@ -31,7 +32,8 @@ export function SendTokenFormInput({
     name,
 }: SendTokenInputProps) {
     const { values, setFieldValue, isSubmitting, validateField } = useFormikContext<TokenForm>();
-    const gasBudgetEstimation = useGasBudgetEstimation({
+
+    const { data: gasBudgetEstimation } = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
         activeAddress,
@@ -40,6 +42,7 @@ export function SendTokenFormInput({
         isPayAllIota: values.isPayAllIota,
         showGasSymbol: false,
     });
+    const [formattedGasBudgetEstimation] = useFormatCoin(gasBudgetEstimation, IOTA_TYPE_ARG);
 
     const [field, meta, helpers] = useField<string>(name);
     const errorMessage = meta.error;
@@ -59,8 +62,8 @@ export function SendTokenFormInput({
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
-        setFieldValue('gasBudgetEst', gasBudgetEstimation, false);
-    }, [gasBudgetEstimation, setFieldValue, values.amount]);
+        setFieldValue('gasBudgetEst', formattedGasBudgetEstimation, false);
+    }, [formattedGasBudgetEstimation, setFieldValue, values.amount]);
 
     return (
         <Input
@@ -77,8 +80,8 @@ export function SendTokenFormInput({
             errorMessage={errorMessage}
             amountCounter={
                 !errorMessage
-                    ? coins && gasBudgetEstimation !== '--'
-                        ? `${gasBudgetEstimation} ${GAS_SYMBOL}`
+                    ? coins && formattedGasBudgetEstimation !== '--'
+                        ? `${formattedGasBudgetEstimation} ${GAS_SYMBOL}`
                         : '--'
                     : undefined
             }
