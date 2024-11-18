@@ -135,9 +135,12 @@ impl SimpleFaucet {
         // the normal queue
         let split_point = if coins.len() > 10 {
             coins.len() / 2
+        } else if coins.len() > 1 {
+            coins.len() - 1 // At least one coin goes to the batch pool
         } else {
-            coins.len()
+            coins.len() // All coins go to the gas pool if there's only one coin
         };
+
         // Put half of the coins in the old faucet impl queue, and put half in the other
         // queue for batch coins. In the test cases we create an account with 5
         // coins so we just let this run with a minimum of 5 coins
@@ -946,6 +949,7 @@ impl Faucet for SimpleFaucet {
         {
             return Err(FaucetError::BatchSendQueueFull);
         }
+
         let mut task_map = self.task_id_cache.lock().await;
         task_map.insert(
             id,
@@ -1035,6 +1039,7 @@ pub async fn batch_transfer_gases(
         "Batch transfer attempted of size: {:?}", total_requests
     );
     let total_iota_needed: u64 = requests.iter().flat_map(|(_, _, amounts)| amounts).sum();
+
     // This loop is utilized to grab a coin that is large enough for the request
     loop {
         let gas_coin_response = faucet
