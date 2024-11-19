@@ -41,19 +41,13 @@ export function SendTokenFormInput({
 
     const [field, meta, helpers] = useField<string>(name);
     const errorMessage = meta.error;
-    const isActionButtonDisabled = isSubmitting || !!errorMessage || isMaxActionDisabled;
+    const isActionButtonDisabled = isSubmitting || isMaxActionDisabled;
 
     const renderAction = () => (
         <ButtonPill disabled={isActionButtonDisabled} onClick={onActionClick}>
             Max
         </ButtonPill>
     );
-
-    useEffect(() => {
-        if (meta.touched) {
-            validateField(name);
-        }
-    }, [field.value, meta.touched]);
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -77,9 +71,9 @@ export function SendTokenFormInput({
             trailingElement={renderAction()}
             decimalScale={coinDecimals ? undefined : 0}
             thousandSeparator
-            onValueChange={(values) => {
-                helpers.setTouched(true);
-                helpers.setValue(values.value);
+            onValueChange={async (values) => {
+                await helpers.setValue(values.value);
+                validateField(name);
             }}
         />
     );

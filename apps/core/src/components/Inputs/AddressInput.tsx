@@ -28,25 +28,17 @@ export function AddressInput({
     const formattedValue = iotaAddressValidation.cast(field.value);
 
     const handleOnChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
+        async (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            helpers.setTouched(true);
-            helpers.setValue(iotaAddressValidation.cast(address));
-        },
-        [name, iotaAddressValidation, helpers.setTouched, helpers.setValue, validateField],
-    );
-
-    useEffect(() => {
-        if (meta.touched) {
+            await helpers.setValue(iotaAddressValidation.cast(address));
             validateField(name);
-        }
-    }, [field.value]);
+        },
+        [name, iotaAddressValidation],
+    );
 
     const clearAddress = () => {
         helpers.setValue('');
     };
-
-    const errorMessage = meta.touched && meta.error;
 
     return (
         <Input
@@ -58,7 +50,7 @@ export function AddressInput({
             onBlur={field.onBlur}
             label={label}
             onChange={handleOnChange}
-            errorMessage={errorMessage as string}
+            errorMessage={meta.error}
             trailingElement={
                 formattedValue ? (
                     <button
