@@ -18,7 +18,7 @@ import { IotaLogoMark } from '@iota/ui-icons';
 import { StakingTransactionDetails } from './StakingTransactionDetails';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 
-interface SuccessScreenViewProps {
+interface FinishStakingViewProps {
     validatorAddress: string;
     gasBudget: string | number | null | undefined;
     onConfirm: () => void;
@@ -28,7 +28,7 @@ interface SuccessScreenViewProps {
     onClose: () => void;
 }
 
-export function SuccessScreenView({
+export function FinishStakingView({
     validatorAddress,
     onConfirm,
     amount,
@@ -36,7 +36,7 @@ export function SuccessScreenView({
     onClose,
     validatorApy: { apy, isApyApproxZero },
     gasBudget,
-}: SuccessScreenViewProps): React.JSX.Element {
+}: FinishStakingViewProps): React.JSX.Element {
     return (
         <Layout>
             <Header title="Transaction" onClose={onClose} />
@@ -61,12 +61,7 @@ export function SuccessScreenView({
 
             <LayoutFooter>
                 <div className="flex w-full">
-                    <Button
-                        type={ButtonType.Primary}
-                        fullWidth
-                        onClick={onConfirm}
-                        text="Confirm & Exit"
-                    />
+                    <Button type={ButtonType.Primary} fullWidth onClick={onConfirm} text="Finish" />
                 </div>
             </LayoutFooter>
         </Layout>

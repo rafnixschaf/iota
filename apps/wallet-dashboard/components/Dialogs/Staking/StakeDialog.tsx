@@ -27,7 +27,7 @@ import { NotificationType } from '@/stores/notificationStore';
 import { prepareObjectsForTimelockedStakingTransaction } from '@/lib/utils';
 import { DetailsView, UnstakeView } from './views';
 import { Dialog } from '@iota/apps-ui-kit';
-import { SuccessScreenView } from './views/ConfirmAndExit';
+import { FinishStakingView } from './views/FinishStaking';
 import { FormValues } from './views/EnterAmountView';
 
 export const MIN_NUMBER_IOTA_TO_STAKE = 1;
@@ -218,7 +218,7 @@ export function StakeDialog({
                         />
                     )}
                     {view === StakeDialogView.TransactionDetails && validatorApy !== null && (
-                        <SuccessScreenView
+                        <FinishStakingView
                             validatorAddress={selectedValidator}
                             gasBudget={newStakeData?.gasBudget}
                             onConfirm={handleClose}
