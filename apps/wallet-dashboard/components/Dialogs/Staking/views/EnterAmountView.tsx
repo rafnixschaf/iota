@@ -75,7 +75,7 @@ function EnterAmountView({
         CoinFormat.FULL,
     );
 
-    const _gasBudget = BigInt(gasBudget ?? 0);
+    const gasBudgetBigInt = BigInt(gasBudget ?? 0);
     const [gas, symbol] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
 
     const { stakedRewardsStartEpoch, timeBeforeStakeRewardsRedeemableAgoDisplay } = useStakeTxnInfo(
@@ -83,7 +83,7 @@ function EnterAmountView({
     );
 
     const hasEnoughRemaingBalance =
-        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * _gasBudget;
+        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * gasBudgetBigInt;
     const shouldShowInsufficientRemainingFundsWarning =
         maxTokenFormatted >= values.amount && !hasEnoughRemaingBalance;
 

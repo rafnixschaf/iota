@@ -1,27 +1,24 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from 'react';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 import { useGetValidatorsApy } from '../';
+import { getTotalValidatorStake } from '../../utils';
 
 export function useValidatorInfo({ validatorAddress }: { validatorAddress: string }) {
-    const { data: system } = useIotaClientQuery('getLatestIotaSystemState');
+    const {
+        data: system,
+        isPending: isPendingValidators,
+        isError: errorValidators,
+    } = useIotaClientQuery('getLatestIotaSystemState');
     const { data: rollingAverageApys } = useGetValidatorsApy();
 
-    const validatorSummary = useMemo(() => {
-        if (!system) return null;
-
-        return (
-            system.activeValidators.find(
-                (validator) => validator.iotaAddress === validatorAddress,
-            ) || null
-        );
-    }, [validatorAddress, system]);
+    const validatorSummary =
+        system?.activeValidators.find((validator) => validator.iotaAddress === validatorAddress) ||
+        null;
 
     const currentEpoch = Number(system?.epoch || 0);
 
-    //TODO: verify this is the correct validator stake balance
-    const totalValidatorStake = validatorSummary?.stakingPoolIotaBalance || 0;
+    const totalValidatorStake = getTotalValidatorStake(validatorSummary);
 
     const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);
 
@@ -36,12 +33,18 @@ export function useValidatorInfo({ validatorAddress }: { validatorAddress: strin
         apy: null,
     };
 
+    const commission = validatorSummary ? Number(validatorSummary.commissionRate) / 100 : 0;
+
     return {
         system,
+        isPendingValidators,
+        errorValidators,
+
+        currentEpoch,
         validatorSummary,
         name: validatorSummary?.name || '',
         stakingPoolActivationEpoch,
-        commission: validatorSummary ? Number(validatorSummary.commissionRate) / 100 : 0,
+        commission,
         newValidator,
         isAtRisk,
         apy,

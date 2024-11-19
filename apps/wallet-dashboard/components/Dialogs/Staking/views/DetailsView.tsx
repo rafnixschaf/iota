@@ -3,12 +3,12 @@
 
 import React from 'react';
 import {
-    useGetValidatorsApy,
     ExtendedDelegatedStake,
     ImageIcon,
     ImageIconSize,
     useFormatCoin,
     formatPercentageDisplay,
+    useValidatorInfo,
 } from '@iota/core';
 import {
     Header,
@@ -29,7 +29,6 @@ import {
     LoadingIndicator,
 } from '@iota/apps-ui-kit';
 import { Warning } from '@iota/ui-icons';
-import { useIotaClientQuery } from '@iota/dapp-kit';
 import { formatAddress, IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Layout, LayoutFooter, LayoutBody } from './Layout';
 
@@ -51,33 +50,24 @@ export function DetailsView({
     const totalStake = BigInt(stakedDetails?.principal || 0n);
     const validatorAddress = stakedDetails?.validatorAddress;
     const {
-        data: system,
-        isPending: loadingValidators,
-        isError: errorValidators,
-    } = useIotaClientQuery('getLatestIotaSystemState');
-    const { data: rollingAverageApys } = useGetValidatorsApy();
-    const { apy, isApyApproxZero } = rollingAverageApys?.[validatorAddress] ?? {
-        apy: null,
-    };
+        isAtRisk,
+        isPendingValidators,
+        errorValidators,
+        validatorSummary,
+        apy,
+        isApyApproxZero,
+        newValidator,
+        commission,
+    } = useValidatorInfo({
+        validatorAddress,
+    });
+
     const iotaEarned = BigInt(stakedDetails?.estimatedReward || 0n);
     const [iotaEarnedFormatted, iotaEarnedSymbol] = useFormatCoin(iotaEarned, IOTA_TYPE_ARG);
     const [totalStakeFormatted, totalStakeSymbol] = useFormatCoin(totalStake, IOTA_TYPE_ARG);
 
-    // flag if the validator is at risk of being removed from the active set
-    const isAtRisk = system?.atRiskValidators.some((item) => item[0] === validatorAddress);
-
-    const validatorSummary =
-        system?.activeValidators.find((validator) => validator.iotaAddress === validatorAddress) ||
-        null;
-
     const validatorName = validatorSummary?.name || '';
-    const stakingPoolActivationEpoch = Number(validatorSummary?.stakingPoolActivationEpoch || 0);
-    const currentEpoch = Number(system?.epoch || 0);
-    const commission = validatorSummary ? Number(validatorSummary.commissionRate) / 100 : 0;
 
-    // flag as new validator if the validator was activated in the last epoch
-    // for genesis validators, this will be false
-    const newValidator = currentEpoch - stakingPoolActivationEpoch <= 1 && currentEpoch !== 0;
     const subtitle = showActiveStatus ? (
         <div className="flex items-center gap-1">
             {formatAddress(validatorAddress)}
@@ -88,7 +78,7 @@ export function DetailsView({
         formatAddress(validatorAddress)
     );
 
-    if (loadingValidators) {
+    if (isPendingValidators) {
         return (
             <div className="flex h-full w-full items-center justify-center p-2">
                 <LoadingIndicator />
