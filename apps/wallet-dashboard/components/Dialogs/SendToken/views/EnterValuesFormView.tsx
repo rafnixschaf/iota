@@ -31,6 +31,7 @@ import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { UseQueryResult } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
@@ -77,9 +78,6 @@ function FormInputs({
 }: FormInputsProps): React.JSX.Element {
     const newPayIotaAll =
         parseAmount(values.amount, coinDecimals) === coinBalance && coinType === IOTA_TYPE_ARG;
-    if (values.isPayAllIota !== newPayIotaAll) {
-        setFieldValue('isPayAllIota', newPayIotaAll);
-    }
 
     const hasEnoughBalance =
         values.isPayAllIota ||
@@ -95,6 +93,12 @@ function FormInputs({
         parseAmount(values.amount, coinDecimals) === coinBalance ||
         queryResult.isPending ||
         !coinBalance;
+
+    useEffect(() => {
+        if (values.isPayAllIota !== newPayIotaAll) {
+            setFieldValue('isPayAllIota', newPayIotaAll);
+        }
+    }, [values.isPayAllIota, newPayIotaAll]);
 
     return (
         <div className="flex h-full w-full flex-col">
