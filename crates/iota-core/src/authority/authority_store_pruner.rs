@@ -269,10 +269,6 @@ impl AuthorityStorePruner {
 
         perpetual_batch.delete_batch(&perpetual_db.transactions, transactions.iter())?;
         perpetual_batch.delete_batch(&perpetual_db.executed_effects, transactions.iter())?;
-        perpetual_batch.delete_batch(
-            &perpetual_db.executed_transactions_to_checkpoint,
-            transactions,
-        )?;
 
         let mut effect_digests = vec![];
         for effects in effects_to_prune {
@@ -1187,7 +1183,6 @@ mod pprof_tests {
     }
 
     #[tokio::test]
-    #[ignore = "https://github.com/iotaledger/iota/issues/958"]
     async fn ensure_no_tombstone_fragmentation_in_stack_frame_with_ignore_tombstones()
     -> Result<(), anyhow::Error> {
         // This test writes a bunch of objects to objects table, invokes pruning on it
@@ -1225,7 +1220,6 @@ mod pprof_tests {
     }
 
     #[tokio::test]
-    #[ignore = "https://github.com/iotaledger/iota/issues/958"]
     async fn ensure_no_tombstone_fragmentation_in_stack_frame_after_flush()
     -> Result<(), anyhow::Error> {
         // This test writes a bunch of objects to objects table, invokes pruning on it

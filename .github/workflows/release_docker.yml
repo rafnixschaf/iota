@@ -46,11 +46,19 @@ jobs:
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # pin@v5
         with:
           images: docker-registry.iota.org/iota-node
+          # mapping semver tags to networks
+          # v{MAJOR}.{MINOR}.{PATCH}-alpha -> alphanet
+          # v{MAJOR}.{MINOR}.{PATCH}-beta -> devnet
+          # v{MAJOR}.{MINOR}.{PATCH}-rc -> testnet
+          # v{MAJOR}.{MINOR}.{PATCH} -> mainnet
           tags: |
             type=raw,value={{sha}},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value={{tag}},enable=${{ github.event_name == 'release' }}
-            type=match,pattern=(.*)-v\d+\.\d+\.\d+,group=1,enable=${{ github.event_name == 'release' }}
+            type=raw,value=alphanet,enable=${{ github.event_name == 'release' && contains(github.ref, '-alpha') }}
+            type=raw,value=devnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-beta') }}
+            type=raw,value=testnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-rc') }}
+            type=raw,value=mainnet,enable=${{ github.event_name == 'release' && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-rc') }}
 
       - name: Login to Docker Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # pin@v3
@@ -67,6 +75,12 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}
           private-key-name: github-ppk
 
+      - name: Get git revision and build date
+        id: git-info
+        run: |
+          echo "GIT_REVISION=$(git describe --always --abbrev=12 --dirty --exclude '*')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Build and push Docker image for iota-node
         uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # pin@v6
         with:
@@ -77,6 +91,9 @@ jobs:
           tags: ${{ steps.meta-node.outputs.tags }}
           push: true
           pull: true
+          build-args: |
+            GIT_REVISION=${{ env.GIT_REVISION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
 
   build-iota-indexer:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.iota_indexer == 'true' || github.event_name == 'release'
@@ -97,11 +114,19 @@ jobs:
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # pin@v5
         with:
           images: docker-registry.iota.org/iota-indexer
+          # mapping semver tags to networks
+          # v{MAJOR}.{MINOR}.{PATCH}-alpha -> alphanet
+          # v{MAJOR}.{MINOR}.{PATCH}-beta -> devnet
+          # v{MAJOR}.{MINOR}.{PATCH}-rc -> testnet
+          # v{MAJOR}.{MINOR}.{PATCH} -> mainnet
           tags: |
             type=raw,value={{sha}},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value={{tag}},enable=${{ github.event_name == 'release' }}
-            type=match,pattern=(.*)-v\d+\.\d+\.\d+,group=1,enable=${{ github.event_name == 'release' }}
+            type=raw,value=alphanet,enable=${{ github.event_name == 'release' && contains(github.ref, '-alpha') }}
+            type=raw,value=devnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-beta') }}
+            type=raw,value=testnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-rc') }}
+            type=raw,value=mainnet,enable=${{ github.event_name == 'release' && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-rc') }}
 
       - name: Login to Docker Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # pin@v3
@@ -118,6 +143,12 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}
           private-key-name: github-ppk
 
+      - name: Get git revision and build date
+        id: git-info
+        run: |
+          echo "GIT_REVISION=$(git describe --always --abbrev=12 --dirty --exclude '*')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Build and push Docker image for iota-indexer
         uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # pin@v6
         with:
@@ -128,6 +159,9 @@ jobs:
           tags: ${{ steps.meta-indexer.outputs.tags }}
           push: true
           pull: true
+          build-args: |
+            GIT_REVISION=${{ env.GIT_REVISION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
 
   build-iota-tools:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.iota_tools == 'true' || github.event_name == 'release'
@@ -148,11 +182,19 @@ jobs:
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # pin@v5
         with:
           images: docker-registry.iota.org/iota-tools
+          # mapping semver tags to networks
+          # v{MAJOR}.{MINOR}.{PATCH}-alpha -> alphanet
+          # v{MAJOR}.{MINOR}.{PATCH}-beta -> devnet
+          # v{MAJOR}.{MINOR}.{PATCH}-rc -> testnet
+          # v{MAJOR}.{MINOR}.{PATCH} -> mainnet
           tags: |
             type=raw,value={{sha}},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value={{tag}},enable=${{ github.event_name == 'release' }}
-            type=match,pattern=(.*)-v\d+\.\d+\.\d+,group=1,enable=${{ github.event_name == 'release' }}
+            type=raw,value=alphanet,enable=${{ github.event_name == 'release' && contains(github.ref, '-alpha') }}
+            type=raw,value=devnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-beta') }}
+            type=raw,value=testnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-rc') }}
+            type=raw,value=mainnet,enable=${{ github.event_name == 'release' && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-rc') }}
 
       - name: Login to Docker Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # pin@v3
@@ -169,6 +211,12 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}
           private-key-name: github-ppk
 
+      - name: Get git revision and build date
+        id: git-info
+        run: |
+          echo "GIT_REVISION=$(git describe --always --abbrev=12 --dirty --exclude '*')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Build and push Docker image for iota-tools
         uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # pin@v6
         with:
@@ -179,6 +227,9 @@ jobs:
           tags: ${{ steps.meta-tools.outputs.tags }}
           push: true
           pull: true
+          build-args: |
+            GIT_REVISION=${{ env.GIT_REVISION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
 
   build-iota-graphql-rpc:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.iota_graphql_rpc == 'true' || github.event_name == 'release'
@@ -199,11 +250,19 @@ jobs:
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # pin@v5
         with:
           images: docker-registry.iota.org/iota-graphql-rpc
+          # mapping semver tags to networks
+          # v{MAJOR}.{MINOR}.{PATCH}-alpha -> alphanet
+          # v{MAJOR}.{MINOR}.{PATCH}-beta -> devnet
+          # v{MAJOR}.{MINOR}.{PATCH}-rc -> testnet
+          # v{MAJOR}.{MINOR}.{PATCH} -> mainnet
           tags: |
             type=raw,value={{sha}},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value={{tag}},enable=${{ github.event_name == 'release' }}
-            type=match,pattern=(.*)-v\d+\.\d+\.\d+,group=1,enable=${{ github.event_name == 'release' }}
+            type=raw,value=alphanet,enable=${{ github.event_name == 'release' && contains(github.ref, '-alpha') }}
+            type=raw,value=devnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-beta') }}
+            type=raw,value=testnet,enable=${{ github.event_name == 'release' && contains(github.ref, '-rc') }}
+            type=raw,value=mainnet,enable=${{ github.event_name == 'release' && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') && !contains(github.ref, '-rc') }}
 
       - name: Login to Docker Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # pin@v3
@@ -220,6 +279,12 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY_IOTA_CI }}
           private-key-name: github-ppk
 
+      - name: Get git revision and build date
+        id: git-info
+        run: |
+          echo "GIT_REVISION=$(git describe --always --abbrev=12 --dirty --exclude '*')" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Build and push Docker image for iota-graphql-rpc
         uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # pin@v6
         with:
@@ -230,3 +295,6 @@ jobs:
           tags: ${{ steps.meta-tools.outputs.tags }}
           push: true
           pull: true
+          build-args: |
+            GIT_REVISION=${{ env.GIT_REVISION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
