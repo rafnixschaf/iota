@@ -34,6 +34,39 @@ feature enabled:
 $ cargo nextest run --features pg_integration
 ```
 
+# Test coverage
+
+The e2e tests focus on validating the behavior and consistency of GraphQL queries against indexer DB.
+For the `Query` type, the coverage is as follows:
+
+- [x] chain_identifier
+- [x] available_range
+- [x] service_config
+- [x] dry_run_transaction_block
+- [x] owner
+- [x] objects
+- [x] package
+- [x] address
+- [x] type_
+- [x] epoch
+- [x] checkpoint
+- [x] transaction_block
+- [x] coins
+- [x] checkpoints
+- [x] transaction_blocks
+- [x] events
+- [x] objects
+- [x] packages
+- [x] protocol_config
+- [x] coin_metadata
+- [] verify_zklogin_signature
+
+For the `Mutation` type, the coverage is as follows:
+
+- [x] execute_transaction_block
+
+Please note that `dry_run_transaction_block` and `execute_transaction_block` are not covered directly in the `iota-graphql-e2e-tests` tests, but in the `iota-graphql-rpc` tests.
+
 # Snapshot Stability
 
 Tests are pinned to an existing protocol version that has already been used on a
