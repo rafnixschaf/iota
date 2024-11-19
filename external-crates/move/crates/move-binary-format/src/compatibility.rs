@@ -120,11 +120,14 @@ impl Compatibility {
     /// Check compatibility for `new_module` relative to old module
     /// `old_module`.
     pub fn check(&self, old_module: &Module, new_module: &Module) -> PartialVMResult<()> {
+        // add macros for simplified error handling
         macro_rules! return_err { ($($arg:tt)*) => {
-            return Err(PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE)
-                .with_message(format!($($arg)*)))
+            return Err(
+                PartialVMError::new(StatusCode::BACKWARD_INCOMPATIBLE_MODULE_UPDATE).with_message(
+                    format!("error in module {}: {}", old_module.module_id(), format!($($arg)*))
+                )
+            )
         }}
-        // add macros to simplify error handling
         macro_rules! datatype_and_function_linking { ($($arg:tt)*) => {
             if self.check_datatype_and_pub_function_linking { return_err!($($arg)*) }
         }}
