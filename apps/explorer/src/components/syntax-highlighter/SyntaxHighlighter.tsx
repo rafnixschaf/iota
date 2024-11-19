@@ -49,7 +49,7 @@ export function SyntaxHighlighter({
     const codeTheme = isDark ? themes.oneDark : themes.github;
 
     return (
-        <div className="overflow-auto whitespace-pre font-mono text-sm [&_*]:transition-colors">
+        <div className="overflow-auto whitespace-pre font-mono text-sm">
             <Highlight code={code} language={language} theme={codeTheme}>
                 {({ style, tokens, getLineProps, getTokenProps }) => (
                     <pre className="overflow-auto bg-transparent p-xs font-medium" style={style}>
