@@ -84,7 +84,6 @@ module reviews_rating::service {
         service: &mut Service,
         review_id: ID,
         _upvoter: address,
-        _ctx: &mut TxContext
     ) {
         let review = service.reviews.borrow_mut(review_id);
         let total_score = review.upvote();
