@@ -12,24 +12,19 @@ export enum ImageIconSize {
     Full = 'w-full h-full',
 }
 
-export interface ImageIconProps {
-    src: string | null | undefined;
-    label: string;
-    fallback: string;
-    alt?: string;
+interface FallBackAvatarProps {
+    str: string;
     rounded?: boolean;
     size?: ImageIconSize;
+    hasDarkmodeBackground?: boolean;
 }
 
 function FallBackAvatar({
     str,
     rounded,
     size = ImageIconSize.Large,
-}: {
-    str: string;
-    rounded?: boolean;
-    size?: ImageIconSize;
-}) {
+    hasDarkmodeBackground,
+}: FallBackAvatarProps) {
     function generateTextSize(size: ImageIconSize) {
         switch (size) {
             case ImageIconSize.Small:
@@ -45,7 +40,8 @@ function FallBackAvatar({
     return (
         <div
             className={cn(
-                'flex items-center justify-center bg-neutral-96 bg-gradient-to-r capitalize text-neutral-10 dark:bg-neutral-92 dark:text-primary-100',
+                'flex items-center justify-center bg-neutral-96 bg-gradient-to-r capitalize text-neutral-10 dark:text-primary-100',
+                hasDarkmodeBackground ? 'dark:bg-neutral-12' : 'dark:bg-neutral-96',
                 { 'rounded-full': rounded, 'rounded-lg': !rounded },
                 size,
                 generateTextSize(size),
@@ -56,12 +52,35 @@ function FallBackAvatar({
     );
 }
 
-export function ImageIcon({ src, label, alt = label, fallback, rounded, size }: ImageIconProps) {
+export interface ImageIconProps {
+    src: string | null | undefined;
+    label: string;
+    fallback: string;
+    alt?: string;
+    rounded?: boolean;
+    size?: ImageIconSize;
+    fallbackWithDarkBg?: boolean;
+}
+
+export function ImageIcon({
+    src,
+    label,
+    alt = label,
+    fallback,
+    rounded,
+    size,
+    fallbackWithDarkBg,
+}: ImageIconProps) {
     const [error, setError] = useState(false);
     return (
         <div role="img" aria-label={label} className={size}>
             {error || !src ? (
-                <FallBackAvatar rounded={rounded} str={fallback} size={size} />
+                <FallBackAvatar
+                    rounded={rounded}
+                    str={fallback}
+                    size={size}
+                    hasDarkmodeBackground={fallbackWithDarkBg}
+                />
             ) : (
                 <img
                     src={src}
