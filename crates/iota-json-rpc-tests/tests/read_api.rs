@@ -150,12 +150,26 @@ async fn get_transaction_block_with_options(options: IotaTransactionBlockRespons
 
     let digest = transactions.digest;
 
+    let checkpoint_seq = http_client
+        .get_latest_checkpoint_sequence_number()
+        .await
+        .unwrap();
+    cluster
+        .wait_for_checkpoint(checkpoint_seq.saturating_add(4).into(), None)
+        .await;
     let rpc_transaction_block = http_client
         .get_transaction_block(digest, Some(options.clone()))
         .await
         .unwrap();
-
+    assert!(rpc_transaction_block.timestamp_ms.is_some());
     assert!(rpc_transaction_block.matches_response_options(&options));
+
+    cluster.force_new_epoch().await;
+    let rpc_transaction_block = http_client
+        .get_transaction_block(digest, Some(options.clone()))
+        .await
+        .unwrap();
+    assert!(rpc_transaction_block.timestamp_ms.is_some());
 }
 
 async fn multi_get_transaction_blocks_with_options(options: IotaTransactionBlockResponseOptions) {
