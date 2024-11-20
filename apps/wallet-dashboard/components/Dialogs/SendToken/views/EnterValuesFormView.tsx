@@ -98,7 +98,7 @@ function FormInputs({
         if (values.isPayAllIota !== newPayIotaAll) {
             setFieldValue('isPayAllIota', newPayIotaAll);
         }
-    }, [values.isPayAllIota, newPayIotaAll]);
+    }, [values.isPayAllIota, newPayIotaAll, setFieldValue]);
 
     return (
         <div className="flex h-full w-full flex-col">
