@@ -166,7 +166,7 @@ export default function EpochDetail() {
                         {isCurrentEpoch && <ValidatorStatus />}
                     </div>
 
-                    <Panel bgColor="dark:bg-neutral-6 rounded-xl bg-neutral-100">
+                    <Panel>
                         <div className="relative">
                             <SegmentedButton
                                 type={SegmentedButtonType.Transparent}
