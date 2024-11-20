@@ -39,9 +39,11 @@ export function SendTokenFormInput({
         to: to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
-        showGasSymbol: false,
     });
-    const [formattedGasBudgetEstimation] = useFormatCoin(gasBudgetEstimation, IOTA_TYPE_ARG);
+    const [formattedGasBudgetEstimation, gasToken] = useFormatCoin(
+        gasBudgetEstimation,
+        IOTA_TYPE_ARG,
+    );
 
     const [field, meta, helpers] = useField<string>(name);
     const errorMessage = meta.error;
@@ -52,6 +54,10 @@ export function SendTokenFormInput({
             Max
         </ButtonPill>
     );
+
+    const gasAmount = formattedGasBudgetEstimation
+        ? formattedGasBudgetEstimation + ' ' + gasToken
+        : undefined;
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -71,9 +77,7 @@ export function SendTokenFormInput({
             prefix={values.isPayAllIota ? '~ ' : undefined}
             allowNegative={false}
             errorMessage={errorMessage}
-            amountCounter={
-                !errorMessage ? (coins ? formattedGasBudgetEstimation : '--') : undefined
-            }
+            amountCounter={!errorMessage ? (coins ? gasAmount : '--') : undefined}
             trailingElement={renderAction()}
             decimalScale={coinDecimals ? undefined : 0}
             thousandSeparator
