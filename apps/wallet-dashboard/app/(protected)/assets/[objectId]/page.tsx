@@ -15,7 +15,7 @@ const VisualAssetDetailPage = () => {
     const params = useParams();
     const objectId = params.objectId as string;
     const { data: asset } = useGetObject(objectId);
-    const [isAssetTransferable] = useIsAssetTransferable(asset?.data);
+    const { data: isAssetTransferable } = useIsAssetTransferable(asset?.data);
     const activeAccount = useCurrentAccount();
 
     const { openPopup, closePopup } = usePopups();

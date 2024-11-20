@@ -24,7 +24,8 @@ function NFTDetailsPage() {
     const nftId = searchParams.get('objectId');
     const accountAddress = useActiveAddress();
     const { data: objectData, isPending: isNftLoading } = useOwnedNFT(nftId || '', accountAddress);
-    const [isTransferable, isCheckingAssetTransferability] = useIsAssetTransferable(objectData);
+    const { data: isAssetTransferable, isLoading: isCheckingAssetTransferability } =
+        useIsAssetTransferable(objectData);
     const { nftFields, fileExtensionType, filePath } = useNFTBasicData(objectData);
     const address = useActiveAddress();
     const { data } = useGetKioskContents(address);
@@ -242,7 +243,7 @@ function NFTDetailsPage() {
                                     ) : (
                                         <div className="flex flex-1 items-end">
                                             <Button
-                                                disabled={!isTransferable}
+                                                disabled={!isAssetTransferable}
                                                 onClick={handleSend}
                                                 text="Send"
                                                 fullWidth

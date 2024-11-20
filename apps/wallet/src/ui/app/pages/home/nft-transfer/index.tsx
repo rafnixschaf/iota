@@ -15,7 +15,8 @@ function NftTransferPage() {
     const address = useActiveAddress();
     // verify that the nft is owned by the user and is transferable
     const { data: ownedNFT, isPending: isNftLoading } = useOwnedNFT(nftId || '', address);
-    const [isAssetTransferable, isCheckingAssetTransferability] = useIsAssetTransferable(ownedNFT);
+    const { data: isAssetTransferable, isLoading: isCheckingAssetTransferability } =
+        useIsAssetTransferable(ownedNFT);
     const navigate = useNavigate();
     const isGuardLoading = useUnlockedGuard();
     const isPending = isNftLoading || isGuardLoading;

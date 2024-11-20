@@ -1,64 +1,49 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
 import { useIotaClient } from '@iota/dapp-kit';
 import { IotaMoveNormalizedStruct, IotaObjectData } from '@iota/iota-sdk/client';
+import { useQuery } from '@tanstack/react-query';
+
+function getObjectTypeParams(obj: IotaObjectData | null | undefined) {
+    const objectType =
+        obj?.type ??
+        (obj?.content?.dataType === 'package' ? 'package' : obj?.content?.type) ??
+        null;
+
+    return objectType?.split('<')[0]?.split('::') || [];
+}
 
 export function useIsAssetTransferable(obj: IotaObjectData | null | undefined) {
     const client = useIotaClient();
+    const [packageId, moduleName, functionName] = getObjectTypeParams(obj);
 
-    const [isAssetTransferable, setIsAssetTransferable] = useState<boolean>(false);
-    const [isCheckingAssetTransferability, setIsCheckingAssetTransferability] =
-        useState<boolean>(true);
-
-    useEffect(() => {
-        (async () => {
-            setIsCheckingAssetTransferability(true);
-
+    return useQuery({
+        // eslint-disable-next-line @tanstack/query/exhaustive-deps
+        queryKey: ['is-asset-transferable', packageId, moduleName, functionName],
+        queryFn: async () => {
             if (!obj) {
-                return false;
+                return undefined;
             }
 
-            const objectType =
-                obj?.type ??
-                (obj?.content?.dataType === 'package' ? 'package' : obj?.content?.type) ??
-                null;
-
-            const [packageId, moduleName, functionName] =
-                objectType?.split('<')[0]?.split('::') || [];
-
-            const normalizedStruct: IotaMoveNormalizedStruct = await client.getNormalizedMoveStruct(
-                {
-                    package: packageId,
-                    module: moduleName,
-                    struct: functionName,
-                },
-            );
-
-            if (!normalizedStruct) {
-                return false;
-            }
-
-            const structAbilities = normalizedStruct?.abilities?.abilities ?? null;
-
-            if (structAbilities) {
-                // The object is transferable if it has the 'Store' ability.
-                return structAbilities.includes('Store');
-            }
-
-            return false;
-        })()
-            .then((isTransferable) => {
-                setIsAssetTransferable(isTransferable);
-            })
-            .catch(() => {
-                setIsAssetTransferable(false);
-            })
-            .finally(() => {
-                setIsCheckingAssetTransferability(false);
+            return await client.getNormalizedMoveStruct({
+                package: packageId,
+                module: moduleName,
+                struct: functionName,
             });
-    }, [client, obj]);
+        },
+        select: (moveNormalizedStruct: IotaMoveNormalizedStruct | undefined): boolean => {
+            if (!moveNormalizedStruct) {
+                return false;
+            }
 
-    return [isAssetTransferable, isCheckingAssetTransferability];
+            const structAbilities = moveNormalizedStruct?.abilities?.abilities ?? null;
+
+            if (!structAbilities) {
+                return false;
+            }
+
+            return structAbilities.includes('Store');
+        },
+    });
 }
