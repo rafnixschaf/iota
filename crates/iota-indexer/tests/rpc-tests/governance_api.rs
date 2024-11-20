@@ -17,7 +17,7 @@ use iota_types::{
     utils::to_sender_signed_transaction,
 };
 use move_core_types::{identifier::Identifier, language_storage::TypeTag};
-
+use iota_protocol_config::MAX_PROTOCOL_VERSION;
 use crate::common::{
     ApiTestSetup, indexer_wait_for_checkpoint, indexer_wait_for_latest_checkpoint,
     indexer_wait_for_object, indexer_wait_for_transaction,
@@ -484,8 +484,8 @@ fn get_latest_iota_system_state() {
         indexer_wait_for_checkpoint(store, 1).await;
 
         let system_state = client.get_latest_iota_system_state().await.unwrap();
-        assert_eq!(system_state.protocol_version, 2);
-        assert_eq!(system_state.system_state_version, 2);
+        assert_eq!(system_state.protocol_version, MAX_PROTOCOL_VERSION);
+        assert_eq!(system_state.system_state_version, 1);
     });
 }
 

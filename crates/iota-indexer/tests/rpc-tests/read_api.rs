@@ -1126,7 +1126,7 @@ fn get_protocol_config_invalid_protocol_version() {
 
         assert!(rpc_call_error_msg_matches(
             result,
-            r#"{"code":-32603,"message":"Unsupported protocol version requested. Min supported: 1, max supported: 2"}"#,
+            &format!(r#"{{"code":-32603,"message":"Unsupported protocol version requested. Min supported: 1, max supported: {MAX_PROTOCOL_VERSION}"}}"#),
         ));
     });
 }
