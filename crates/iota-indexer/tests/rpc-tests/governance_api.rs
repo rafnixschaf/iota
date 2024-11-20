@@ -484,7 +484,7 @@ fn get_latest_iota_system_state() {
         indexer_wait_for_checkpoint(store, 1).await;
 
         let system_state = client.get_latest_iota_system_state().await.unwrap();
-        assert_eq!(system_state.protocol_version, 1);
+        assert_eq!(system_state.protocol_version, 2);
         assert_eq!(system_state.system_state_version, 2);
     });
 }
