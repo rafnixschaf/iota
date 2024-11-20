@@ -11,7 +11,7 @@ export function EpochStats({
     ...titleProps
 }: React.PropsWithChildren<TitleProps>): JSX.Element {
     return (
-        <Panel>
+        <Panel bgColor="bg-neutral-100 dark:bg-neutral-6">
             <div className="flex flex-col">
                 {titleProps && <Title {...titleProps} />}
                 <div className="w-full p-md--rs">{children}</div>
