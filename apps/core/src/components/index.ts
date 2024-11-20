@@ -7,4 +7,3 @@ export * from './coin';
 export * from './icon';
 export * from './Inputs';
 export * from './QR';
-export * from './image-icon';

@@ -12,7 +12,6 @@ import {
     CardType,
     ImageType,
 } from '@iota/apps-ui-kit';
-import { ImageIconSize } from '../../shared/image-icon';
 
 interface TxnAmountProps {
     amount: string | number | bigint;
