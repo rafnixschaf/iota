@@ -22,7 +22,7 @@ export function useIsAssetTransferable(obj: IotaObjectData | null | undefined) {
         // eslint-disable-next-line @tanstack/query/exhaustive-deps
         queryKey: ['is-asset-transferable', packageId, moduleName, functionName],
         queryFn: async () => {
-            if (!obj) {
+            if (!packageId || !moduleName || !functionName) {
                 return undefined;
             }
 
