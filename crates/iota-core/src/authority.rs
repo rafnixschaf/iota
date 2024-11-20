@@ -811,6 +811,8 @@ pub struct AuthorityState {
 /// Repeating valid commands should produce no changes and return no error.
 impl AuthorityState {
     pub fn is_validator(&self, epoch_store: &AuthorityPerEpochStore) -> bool {
+        info!("self.name is {}", &self.name);
+        info!("epoch store committee is: {:?}", epoch_store.committee().voting_rights);
         epoch_store.committee().authority_exists(&self.name)
     }
 
