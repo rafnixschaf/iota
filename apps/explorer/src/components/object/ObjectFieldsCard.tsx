@@ -151,7 +151,7 @@ export function ObjectFieldsCard({
                                     }}
                                     isLoading={false}
                                     renderSuggestion={(suggestion) => (
-                                        <div className="flex cursor-pointer justify-between">
+                                        <div className="search-suggestions-solid-bg flex cursor-pointer justify-between backdrop-blur">
                                             <ListItem hideBottomBorder>
                                                 <div className="overflow-hidden text-ellipsis">
                                                     {suggestion.label}

@@ -166,4 +166,8 @@ body,
                 'owner lastTxBlock storageRebate';
         }
     }
+
+    .search-suggestions-solid-bg {
+        @apply bg-neutral-100 dark:bg-neutral-10;
+    }
 }
