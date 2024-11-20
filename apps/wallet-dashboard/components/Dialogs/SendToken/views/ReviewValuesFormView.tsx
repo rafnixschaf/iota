@@ -31,13 +31,13 @@ interface ReviewValuesFormProps {
 }
 
 export function ReviewValuesFormView({
-    formData: { amount, to, isPayAllIota, gasBudgetEst },
+    formData: { amount, to, formattedAmount, isPayAllIota, gasBudgetEst },
     senderAddress,
     isPending,
     executeTransfer,
     coinType,
 }: ReviewValuesFormProps): JSX.Element {
-    const [formatAmount, symbol] = useFormatCoin(amount, coinType);
+    const [formatAmount, symbol] = useFormatCoin(formattedAmount, coinType);
     return (
         <div className="flex h-full flex-col">
             <div className="flex h-full w-full flex-col gap-md">

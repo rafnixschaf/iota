@@ -76,6 +76,8 @@ function SendTokenDialogBody({
         setStep(FormStep.EnterValues);
     }
 
+    console.log({ formData });
+
     return (
         <>
             <Header
@@ -92,6 +94,7 @@ function SendTokenDialogBody({
                             setSelectedCoin={setSelectedCoin}
                             onNext={onNext}
                             setFormData={setFormData}
+                            initialFormValues={formData}
                         />
                     )}
                     {step === FormStep.ReviewValues && (
