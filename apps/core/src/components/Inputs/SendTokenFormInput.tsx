@@ -1,83 +1,97 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { ButtonPill, InputType } from '@iota/apps-ui-kit';
+import { ButtonPill, Input, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
-import { useGasBudgetEstimation } from '../../hooks';
-import { FormInput } from '..';
-import React from 'react';
+import { useFormatCoin, useGasBudgetEstimation } from '../../hooks';
+import React, { useEffect } from 'react';
+import { GAS_SYMBOL } from '../../constants';
+import { useField, useFormikContext } from 'formik';
+import { TokenForm } from '../../forms';
+import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 
 export interface SendTokenInputProps {
     coins: CoinStruct[];
     symbol: string;
     coinDecimals: number;
     activeAddress: string;
-    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
-    values: {
-        amount: string;
-        to: string;
-        isPayAllIota: boolean;
-    };
+    to: string;
     onActionClick: () => Promise<void>;
-    isActionButtonDisabled?: boolean | 'auto';
-    value: string;
-    onChange: (value: string) => void;
-    onBlur?: React.FocusEventHandler<HTMLInputElement>;
-    errorMessage?: string;
+    isMaxActionDisabled?: boolean;
+    name: string;
 }
 
 export function SendTokenFormInput({
     coins,
-    values,
+    to,
     symbol,
     coinDecimals,
     activeAddress,
-    setFieldValue,
     onActionClick,
-    isActionButtonDisabled,
-    value,
-    onChange,
-    onBlur,
-    errorMessage,
+    isMaxActionDisabled,
+    name,
 }: SendTokenInputProps) {
-    const gasBudgetEstimation = useGasBudgetEstimation({
+    const { values, setFieldValue, isSubmitting, validateField } = useFormikContext<TokenForm>();
+
+    const { data: gasBudgetEstimation } = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
         activeAddress,
-        to: values.to,
+        to: to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
-        setFieldValue,
+        showGasSymbol: false,
     });
+    const [formattedGasBudgetEstimation] = useFormatCoin(gasBudgetEstimation, IOTA_TYPE_ARG);
+
+    const [field, meta, helpers] = useField<string>(name);
+    const errorMessage = meta.error;
+    const isActionButtonDisabled = isSubmitting || !!errorMessage || isMaxActionDisabled;
+
+    const renderAction = () => (
+        <ButtonPill disabled={isActionButtonDisabled} onClick={onActionClick}>
+            Max
+        </ButtonPill>
+    );
+
+    useEffect(() => {
+        if (meta.touched) {
+            validateField(name);
+        }
+    }, [field.value, meta.touched]);
+
+    // gasBudgetEstimation should change when the amount above changes
+    useEffect(() => {
+        setFieldValue('gasBudgetEst', formattedGasBudgetEstimation, false);
+    }, [formattedGasBudgetEstimation, setFieldValue, values.amount]);
 
     return (
-        <FormInput
+        <Input
             type={InputType.NumericFormat}
-            name="amount"
-            label="Send Amount"
-            placeholder="0.00"
+            name={field.name}
+            onBlur={field.onBlur}
+            value={field.value}
             caption="Est. Gas Fees:"
+            placeholder="0.00"
+            label="Send Amount"
             suffix={` ${symbol}`}
-            decimals
-            allowNegative={false}
             prefix={values.isPayAllIota ? '~ ' : undefined}
-            amountCounter={coins ? gasBudgetEstimation : '--'}
-            value={value}
-            onChange={onChange}
-            onBlur={onBlur}
+            allowNegative={false}
             errorMessage={errorMessage}
-            renderAction={(isButtonDisabled) => (
-                <ButtonPill
-                    disabled={
-                        isActionButtonDisabled === 'auto'
-                            ? isButtonDisabled
-                            : isActionButtonDisabled
-                    }
-                    onClick={onActionClick}
-                >
-                    Max
-                </ButtonPill>
-            )}
+            amountCounter={
+                !errorMessage
+                    ? coins && formattedGasBudgetEstimation !== '--'
+                        ? `${formattedGasBudgetEstimation} ${GAS_SYMBOL}`
+                        : '--'
+                    : undefined
+            }
+            trailingElement={renderAction()}
+            decimalScale={coinDecimals ? undefined : 0}
+            thousandSeparator
+            onValueChange={(values) => {
+                helpers.setTouched(true);
+                helpers.setValue(values.value);
+            }}
         />
     );
 }

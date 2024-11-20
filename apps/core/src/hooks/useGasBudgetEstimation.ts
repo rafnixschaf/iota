@@ -6,18 +6,15 @@ import { CoinStruct } from '@iota/iota-sdk/client';
 import { useQuery } from '@tanstack/react-query';
 import { createTokenTransferTransaction } from '../utils';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { useFormatCoin } from './useFormatCoin';
-import { GAS_SYMBOL } from '../constants';
-import { useEffect } from 'react';
 
-interface useGasBudgetEstimation {
+interface UseGasBudgetEstimationOptions {
     coinDecimals: number;
     coins: CoinStruct[];
     activeAddress: string;
     to: string;
     amount: string;
     isPayAllIota: boolean;
-    setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
+    showGasSymbol?: boolean;
 }
 
 export function useGasBudgetEstimation({
@@ -27,10 +24,10 @@ export function useGasBudgetEstimation({
     to,
     amount,
     isPayAllIota,
-    setFieldValue,
-}: useGasBudgetEstimation) {
+    showGasSymbol = true,
+}: UseGasBudgetEstimationOptions) {
     const client = useIotaClient();
-    const { data: gasBudget } = useQuery({
+    return useQuery({
         // eslint-disable-next-line @tanstack/query/exhaustive-deps
         queryKey: [
             'transaction-gas-budget-estimate',
@@ -61,13 +58,4 @@ export function useGasBudgetEstimation({
             return tx.getData().gasData.budget;
         },
     });
-
-    const [formattedGas] = useFormatCoin(gasBudget, IOTA_TYPE_ARG);
-    // gasBudgetEstimation should change when the amount above changes
-
-    useEffect(() => {
-        setFieldValue('gasBudgetEst', formattedGas, false);
-    }, [formattedGas, setFieldValue, amount]);
-
-    return formattedGas ? formattedGas + ' ' + GAS_SYMBOL : '--';
 }

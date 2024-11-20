@@ -26,11 +26,7 @@ interface FallBackAvatarProps {
     size?: ImageIconSize;
 }
 
-function FallBackAvatar({
-    str,
-    rounded,
-    size = ImageIconSize.Large,
-}: FallBackAvatarProps) {
+function FallBackAvatar({ str, rounded, size = ImageIconSize.Large }: FallBackAvatarProps) {
     function generateTextSize(size: ImageIconSize) {
         switch (size) {
             case ImageIconSize.Small:

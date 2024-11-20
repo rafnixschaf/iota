@@ -16,7 +16,7 @@ import {
 } from '@iota/core';
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
-import { Field, type FieldInputProps, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import { useMemo } from 'react';
 
 import {
@@ -144,16 +144,7 @@ export function SendTokenForm({
                 validateOnBlur={false}
                 onSubmit={handleFormSubmit}
             >
-                {({
-                    isValid,
-                    isSubmitting,
-                    setFieldValue,
-                    values,
-                    submitForm,
-                    handleBlur,
-                    touched,
-                    errors,
-                }) => {
+                {({ isValid, isSubmitting, setFieldValue, values, submitForm }) => {
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
                         coinType === IOTA_TYPE_ARG;
@@ -174,11 +165,6 @@ export function SendTokenForm({
                         await setFieldValue('amount', formattedTokenBalance);
                     }
 
-                    function handleOnChangeAmountInput(value: string, symbol: string) {
-                        const valueWithoutSuffix = value.replace(symbol, '');
-                        setFieldValue('amount', valueWithoutSuffix);
-                    }
-
                     const isMaxActionDisabled =
                         parseAmount(values?.amount, coinDecimals) === coinBalance ||
                         queryResult.isPending ||
@@ -196,39 +182,17 @@ export function SendTokenForm({
                                             icon={<Exclamation />}
                                         />
                                     ) : null}
-
-                                    <Field name="amount">
-                                        {({ field }: { field: FieldInputProps<string> }) => {
-                                            return (
-                                                <SendTokenFormInput
-                                                    symbol={symbol}
-                                                    coinDecimals={coinDecimals}
-                                                    activeAddress={activeAddress ?? ''}
-                                                    setFieldValue={setFieldValue}
-                                                    coins={coins ?? []}
-                                                    values={values}
-                                                    onActionClick={onMaxTokenButtonClick}
-                                                    isActionButtonDisabled={isMaxActionDisabled}
-                                                    value={field.value}
-                                                    onChange={(value) =>
-                                                        handleOnChangeAmountInput(value, symbol)
-                                                    }
-                                                    onBlur={handleBlur}
-                                                    errorMessage={
-                                                        touched.amount && errors.amount
-                                                            ? errors.amount
-                                                            : undefined
-                                                    }
-                                                />
-                                            );
-                                        }}
-                                    </Field>
-                                    <Field
-                                        component={AddressInput}
-                                        allowNegative={false}
-                                        name="to"
-                                        placeholder="Enter Address"
+                                    <SendTokenFormInput
+                                        name="amount"
+                                        to={values.to}
+                                        symbol={symbol}
+                                        coinDecimals={coinDecimals}
+                                        activeAddress={activeAddress ?? ''}
+                                        coins={coins ?? []}
+                                        onActionClick={onMaxTokenButtonClick}
+                                        isMaxActionDisabled={isMaxActionDisabled}
                                     />
+                                    <AddressInput name="to" placeholder="Enter Address" />
                                 </div>
                             </Form>
 

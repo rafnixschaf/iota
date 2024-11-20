@@ -5,32 +5,24 @@
 import { Input, InputType } from '@iota/apps-ui-kit';
 import { Close } from '@iota/ui-icons';
 import { useIotaAddressValidation } from '../../hooks';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { useField, useFormikContext } from 'formik';
 
 export interface AddressInputProps {
-    field: {
-        name: string;
-        value: string;
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-        onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
-    };
-    form: {
-        setFieldValue: (field: string, value: string, shouldValidate?: boolean) => void;
-        errors: Record<string, string>;
-        touched: Record<string, boolean>;
-    };
+    name: string;
     disabled?: boolean;
     placeholder?: string;
     label?: string;
 }
 
 export function AddressInput({
-    field,
-    form,
+    name,
     disabled,
     placeholder = '0x...',
     label = 'Enter Recipient Address',
 }: AddressInputProps) {
+    const { validateField } = useFormikContext();
+    const [field, meta, helpers] = useField<string>(name);
     const iotaAddressValidation = useIotaAddressValidation();
 
     const formattedValue = iotaAddressValidation.cast(field.value);
@@ -38,17 +30,23 @@ export function AddressInput({
     const handleOnChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const address = e.currentTarget.value;
-            const validatedValue = iotaAddressValidation.cast(address);
-            form.setFieldValue(field.name, validatedValue, true);
+            helpers.setTouched(true);
+            helpers.setValue(iotaAddressValidation.cast(address));
         },
-        [form, field.name, iotaAddressValidation],
+        [name, iotaAddressValidation, helpers.setTouched, helpers.setValue, validateField],
     );
 
-    const clearAddress = useCallback(() => {
-        form.setFieldValue(field.name, '');
-    }, [form, field.name]);
+    useEffect(() => {
+        if (meta.touched) {
+            validateField(name);
+        }
+    }, [field.value]);
 
-    const errorMessage = form.touched[field.name] && form.errors[field.name];
+    const clearAddress = () => {
+        helpers.setValue('');
+    };
+
+    const errorMessage = meta.touched && meta.error;
 
     return (
         <Input

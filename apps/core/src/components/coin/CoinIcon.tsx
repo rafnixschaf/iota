@@ -55,11 +55,9 @@ export function CoinIcon({
         <NonIotaCoin rounded={rounded} size={size} coinType={coinType} />
     );
 }
-
 type CoinIconWrapperProps = React.PropsWithChildren<Pick<CoinIconProps, 'size'>> & {
     hasBorder?: boolean;
 };
-
 export function CoinIconWrapper({ children, size, hasBorder }: CoinIconWrapperProps) {
     return (
         <div
