@@ -2,9 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { useCoinMetadata, ImageIcon, ImageIconSize } from '@iota/core';
-import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { IotaLogoMark } from '@iota/ui-icons';
+import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
+import { ImageIcon, ImageIconSize } from '../icon';
 import cx from 'clsx';
 
 interface NonIotaCoinProps {
@@ -27,7 +29,6 @@ function NonIotaCoin({ coinType, size = ImageIconSize.Full, rounded }: NonIotaCo
         </div>
     );
 }
-
 export interface CoinIconProps {
     coinType: string;
     size?: ImageIconSize;
@@ -36,7 +37,7 @@ export interface CoinIconProps {
 
 export function CoinIcon({ coinType, size = ImageIconSize.Full, rounded }: CoinIconProps) {
     return coinType === IOTA_TYPE_ARG ? (
-        <div className={cx(size)}>
+        <div className={cx(size, 'text-neutral-10')}>
             <IotaLogoMark className="h-full w-full" />
         </div>
     ) : (
