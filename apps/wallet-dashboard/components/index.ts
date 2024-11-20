@@ -8,7 +8,6 @@ export { default as AmountBox } from './AmountBox';
 export { default as Input } from './Input';
 export { default as VirtualList } from './VirtualList';
 export { default as ExternalImage } from './ExternalImage';
-export { default as Dropdown } from './Dropdown';
 export * from './PageSizeSelector';
 export * from './PaginationOptions';
 
@@ -21,4 +20,5 @@ export * from './Buttons';
 export * from './transactions';
 export * from './staking-overview';
 export * from './Dialogs';
-export * from './ImageIcon';
+export * from './ValidatorStakingData';
+export * from './tiles';

@@ -53,11 +53,6 @@ exclude = [
   "external-crates/move/crates/move-vm-types",
   "external-crates/move/crates/serializer-tests",
   "external-crates/move/crates/test-generation",
-  "external-crates/move/move-execution/v0/crates/bytecode-verifier-tests",
-  "external-crates/move/move-execution/v0/crates/move-abstract-interpreter",
-  "external-crates/move/move-execution/v0/crates/move-bytecode-verifier",
-  "external-crates/move/move-execution/v0/crates/move-stdlib-natives",
-  "external-crates/move/move-execution/v0/crates/move-vm-runtime",
   "sdk/move-bytecode-template",
 ]
 members = [
@@ -162,9 +157,6 @@ members = [
   "iota-execution/latest/iota-adapter",
   "iota-execution/latest/iota-move-natives",
   "iota-execution/latest/iota-verifier",
-  "iota-execution/v0/iota-adapter",
-  "iota-execution/v0/iota-move-natives",
-  "iota-execution/v0/iota-verifier",
 ]
 
 [workspace.package]
@@ -282,7 +274,7 @@ leb128 = "0.2.5"
 lru = "0.12"
 mockall = "0.11.4"
 more-asserts = "0.3.1"
-msim = { git = "ssh://git@github.com/iotaledger/iota-sim.git", rev = "8fe1939f4bf1e54d0638756c82aaa6c29212e2bb", package = "msim" }
+msim = { git = "https://github.com/iotaledger/iota-sim.git", rev = "f16ef50ba7d874fe1f0960f248f6c651a634d6a5", package = "msim" }
 nonempty = "0.9.0"
 notify = "6.1.1"
 num-bigint = "0.4.4"
