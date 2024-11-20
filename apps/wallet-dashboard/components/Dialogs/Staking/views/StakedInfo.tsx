@@ -7,13 +7,12 @@ import {
 } from '@iota/core';
 import { KeyValueInfo, Panel, TooltipPosition } from '@iota/apps-ui-kit';
 
-export function StakedInfo({
-    validatorAddress,
-    accountAddress,
-}: {
+interface StakedInfoProps {
     validatorAddress: string;
     accountAddress: string;
-}) {
+}
+
+export function StakedInfo({ validatorAddress, accountAddress }: StakedInfoProps) {
     const { apy, isApyApproxZero } = useValidatorInfo({
         validatorAddress: validatorAddress,
     });
