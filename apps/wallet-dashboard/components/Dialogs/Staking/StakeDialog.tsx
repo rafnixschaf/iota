@@ -19,7 +19,7 @@ import {
     useBalance,
     createValidationSchema,
 } from '@iota/core';
-import { Formik } from 'formik';
+import { FormikProvider, useFormik } from 'formik';
 import type { FormikHelpers } from 'formik';
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@iota/dapp-kit';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
@@ -66,14 +66,46 @@ export function StakeDialog({
     selectedValidator = '',
     setSelectedValidator,
 }: StakeDialogProps): JSX.Element {
-    const [amount, setAmount] = useState<string>('');
-
     const account = useCurrentAccount();
     const senderAddress = account?.address ?? '';
 
     const { data: metadata } = useCoinMetadata(IOTA_TYPE_ARG);
     const coinDecimals = metadata?.decimals ?? 0;
-    const amountWithoutDecimals = parseAmount(amount, coinDecimals);
+    const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+    const { addNotification } = useNotifications();
+    const { data: rollingAverageApys } = useGetValidatorsApy();
+    const { data: iotaBalance } = useBalance(senderAddress!);
+    const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
+    const minimumStake = parseAmount(MIN_NUMBER_IOTA_TO_STAKE.toString(), coinDecimals);
+    const coinSymbol = metadata?.symbol ?? '';
+
+    const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
+
+    function onSubmit(values: FormValues, { resetForm }: FormikHelpers<FormValues>) {
+        handleStake();
+        resetForm();
+    }
+
+    const validationSchema = useMemo(
+        () =>
+            createValidationSchema(
+                coinBalance,
+                coinSymbol,
+                coinDecimals,
+                view === StakeDialogView.Unstake,
+                minimumStake,
+            ),
+        [coinBalance, coinSymbol, coinDecimals, view, minimumStake],
+    );
+
+    const formik = useFormik({
+        initialValues: INITIAL_VALUES,
+        validationSchema: validationSchema,
+        onSubmit: onSubmit,
+        validateOnMount: true
+    })
+
+    const amountWithoutDecimals = parseAmount(formik.values.amount, coinDecimals);
     const { data: currentEpochMs } = useGetCurrentEpochStartTimestamp();
     const { data: timelockedObjects } = useGetAllOwnedObjects(senderAddress, {
         StructType: TIMELOCK_IOTA_TYPE,
@@ -96,27 +128,11 @@ export function StakeDialog({
         groupedTimelockObjects,
     );
 
-    const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-    const { addNotification } = useNotifications();
-    const { data: rollingAverageApys } = useGetValidatorsApy();
-    const { data: iotaBalance } = useBalance(senderAddress!);
-    const coinBalance = BigInt(iotaBalance?.totalBalance || 0);
-    const minimumStake = parseAmount(MIN_NUMBER_IOTA_TO_STAKE.toString(), coinDecimals);
-    const coinSymbol = metadata?.symbol ?? '';
 
-    const validators = Object.keys(rollingAverageApys ?? {}) ?? [];
 
-    const validationSchema = useMemo(
-        () =>
-            createValidationSchema(
-                coinBalance,
-                coinSymbol,
-                coinDecimals,
-                view === StakeDialogView.Unstake,
-                minimumStake,
-            ),
-        [coinBalance, coinSymbol, coinDecimals, view, minimumStake],
-    );
+
+
+
 
     function handleBack(): void {
         setView?.(StakeDialogView.SelectValidator);
@@ -170,18 +186,11 @@ export function StakeDialog({
             });
     }
 
-    function onSubmit(values: FormValues, { resetForm }: FormikHelpers<FormValues>) {
-        handleStake();
-        resetForm();
-    }
 
     return (
         <Dialog open={isOpen} onOpenChange={() => handleClose()}>
-            <Formik
-                initialValues={INITIAL_VALUES}
-                validationSchema={validationSchema}
-                onSubmit={onSubmit}
-                validateOnMount
+            <FormikProvider
+                value={formik}
             >
                 <>
                     {view === StakeDialogView.Details && stakedDetails && (
@@ -205,7 +214,6 @@ export function StakeDialog({
                         <EnterAmountView
                             selectedValidator={selectedValidator}
                             handleClose={handleClose}
-                            setAmount={setAmount}
                             onBack={handleBack}
                             onStake={handleStake}
                             gasBudget={newStakeData?.gasBudget}
@@ -219,7 +227,7 @@ export function StakeDialog({
                         />
                     )}
                 </>
-            </Formik>
+            </FormikProvider>
         </Dialog>
     );
 }
