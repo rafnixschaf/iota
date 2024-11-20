@@ -12,7 +12,6 @@ import {
     InfoBoxStyle,
     InfoBoxType,
     Panel,
-    TableHeader,
     Title,
     TooltipPosition,
 } from '@iota/apps-ui-kit';
