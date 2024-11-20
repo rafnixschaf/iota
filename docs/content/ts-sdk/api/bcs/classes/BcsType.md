@@ -26,19 +26,19 @@
 
 > **$inferType**: `T`
 
-***
+---
 
 ### $inferInput
 
 > **$inferInput**: `Input`
 
-***
+---
 
 ### name
 
 > **name**: `string`
 
-***
+---
 
 ### read()
 
@@ -52,7 +52,7 @@
 
 `T`
 
-***
+---
 
 ### serializedSize()
 
@@ -68,7 +68,7 @@
 
 `null` \| `number`
 
-***
+---
 
 ### validate()
 
@@ -98,7 +98,7 @@
 
 `void`
 
-***
+---
 
 ### serialize()
 
@@ -114,7 +114,7 @@
 
 `SerializedBcs`\<`T`, `Input`\>
 
-***
+---
 
 ### parse()
 
@@ -128,7 +128,7 @@
 
 `T`
 
-***
+---
 
 ### fromHex()
 
@@ -142,7 +142,7 @@
 
 `T`
 
-***
+---
 
 ### fromBase58()
 
@@ -156,7 +156,7 @@
 
 `T`
 
-***
+---
 
 ### fromBase64()
 
@@ -170,7 +170,7 @@
 
 `T`
 
-***
+---
 
 ### transform()
 

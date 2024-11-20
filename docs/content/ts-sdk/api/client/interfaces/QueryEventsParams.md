@@ -11,7 +11,7 @@ Return list of events for a specified query criteria.
 The event query criteria. See [Event filter](https://docs.iota.io/build/event_api#event-filters)
 documentation for examples.
 
-***
+---
 
 ### cursor?
 
@@ -19,7 +19,7 @@ documentation for examples.
 
 optional paging cursor
 
-***
+---
 
 ### limit?
 
@@ -27,7 +27,7 @@ optional paging cursor
 
 maximum number of items per page, default to [QUERY_MAX_RESULT_LIMIT] if not specified.
 
-***
+---
 
 ### order?
 
