@@ -5,6 +5,7 @@ use iota_json_rpc_api::{GovernanceReadApiClient, TransactionBuilderClient};
 use iota_json_rpc_types::{
     DelegatedStake, DelegatedTimelockedStake, StakeStatus, TransactionBlockBytes,
 };
+use iota_protocol_config::MAX_PROTOCOL_VERSION;
 use iota_test_transaction_builder::TestTransactionBuilder;
 use iota_types::{
     IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
@@ -17,7 +18,7 @@ use iota_types::{
     utils::to_sender_signed_transaction,
 };
 use move_core_types::{identifier::Identifier, language_storage::TypeTag};
-use iota_protocol_config::MAX_PROTOCOL_VERSION;
+
 use crate::common::{
     ApiTestSetup, indexer_wait_for_checkpoint, indexer_wait_for_latest_checkpoint,
     indexer_wait_for_object, indexer_wait_for_transaction,
