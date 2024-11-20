@@ -175,6 +175,23 @@ module iota_system::iota_system_state_inner {
         minted_tokens_amount: u64,
     }
 
+    /// Event containing system-level epoch information, emitted during
+    /// the epoch advancement transaction.
+    public struct SystemEpochInfoEventV2 has copy, drop {
+        epoch: u64,
+        protocol_version: u64,
+        reference_gas_price: u64,
+        total_stake: u64,
+        storage_charge: u64,
+        storage_rebate: u64,
+        storage_fund_balance: u64,
+        total_gas_fees: u64,
+        total_stake_rewards_distributed: u64,
+        burnt_tokens_amount: u64,
+        minted_tokens_amount: u64,
+        tips_amount: u64,
+    }
+
     // Errors
     const ENotValidator: u64 = 0;
     const ELimitExceeded: u64 = 1;
@@ -771,8 +788,9 @@ module iota_system::iota_system_state_inner {
 
         let storage_charge_value = storage_charge.value();
         let computation_fees = computation_charge.value();
+        let tips_amount = computation_fees - computation_charge_burned;
 
-        let (mut total_validator_rewards, minted_tokens_amount, mut burnt_tokens_amount) = match_computation_charge_burned_to_validator_subsidy(
+        let mut total_validator_rewards = match_computation_charge_burned_to_validator_subsidy(
             validator_subsidy,
             computation_charge,
             computation_charge_burned,
@@ -809,7 +827,7 @@ module iota_system::iota_system_state_inner {
         // remaining balance in `total_validator_rewards`.
         let leftover_staking_rewards = total_validator_rewards;
         // Burn any remaining leftover rewards.
-        burnt_tokens_amount = burnt_tokens_amount + leftover_staking_rewards.value();
+        let burnt_tokens_amount = computation_charge_burned + leftover_staking_rewards.value();
         self.iota_treasury_cap.burn_balance(leftover_staking_rewards, ctx);
 
         let refunded_storage_rebate =
@@ -820,7 +838,7 @@ module iota_system::iota_system_state_inner {
             );
 
         event::emit(
-            SystemEpochInfoEventV1 {
+            SystemEpochInfoEventV2 {
                 epoch: self.epoch,
                 protocol_version: self.protocol_version,
                 reference_gas_price: self.reference_gas_price,
@@ -831,7 +849,8 @@ module iota_system::iota_system_state_inner {
                 total_gas_fees: computation_fees,
                 total_stake_rewards_distributed: total_validator_rewards_distributed,
                 burnt_tokens_amount,
-                minted_tokens_amount
+                minted_tokens_amount: validator_subsidy,
+                tips_amount,
             }
         );
         self.safe_mode = false;
@@ -853,13 +872,10 @@ module iota_system::iota_system_state_inner {
         computation_charge_burned: u64,
         iota_treasury_cap: &mut iota::iota::IotaTreasuryCap,
         ctx: &TxContext,
-    ): (Balance<IOTA>, u64, u64) {
-        let mut burnt_tokens_amount = 0;
-        let mut minted_tokens_amount = 0;
+    ): Balance<IOTA> {
         if (computation_charge_burned < validator_subsidy) {
             let amount_to_mint = validator_subsidy - computation_charge_burned;
             let minted_balance = iota_treasury_cap.mint_balance(amount_to_mint, ctx);
-            minted_tokens_amount = minted_balance.value();
             // total validator reward 
             // = computation_charge + (minted_balance)
             // = computation_charge + (validator_subsidy - computation_charge_burned)
@@ -874,10 +890,9 @@ module iota_system::iota_system_state_inner {
             // = validator_subsidy + (computation_charge - computation_charge_burned)
             // = validator_subsidy + (tips)
             let balance_to_burn = computation_charge.split(amount_to_burn);
-            burnt_tokens_amount = balance_to_burn.value();
             iota_treasury_cap.burn_balance(balance_to_burn, ctx);
         };
-        (computation_charge, minted_tokens_amount, burnt_tokens_amount)
+        computation_charge
     }
 
     /// Return the current epoch number. Useful for applications that need a coarse-grained concept of time,

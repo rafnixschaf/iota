@@ -162,7 +162,7 @@ impl Event {
     }
 }
 
-// Event emitted in move code `fun advance_epoch`
+// Event emitted in move code `fun advance_epoch` in protocol V1
 #[derive(Deserialize)]
 pub struct SystemEpochInfoEventV1 {
     pub epoch: u64,
@@ -176,4 +176,21 @@ pub struct SystemEpochInfoEventV1 {
     pub total_stake_rewards_distributed: u64,
     pub burnt_tokens_amount: u64,
     pub minted_tokens_amount: u64,
+}
+
+// Event emitted in move code `fun advance_epoch` in protocol V2
+#[derive(Deserialize)]
+pub struct SystemEpochInfoEventV2 {
+    pub epoch: u64,
+    pub protocol_version: u64,
+    pub reference_gas_price: u64,
+    pub total_stake: u64,
+    pub storage_charge: u64,
+    pub storage_rebate: u64,
+    pub storage_fund_balance: u64,
+    pub total_gas_fees: u64,
+    pub total_stake_rewards_distributed: u64,
+    pub burnt_tokens_amount: u64,
+    pub minted_tokens_amount: u64,
+    pub tips_amount: u64,
 }
