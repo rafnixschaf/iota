@@ -3,7 +3,7 @@
 
 'use client';
 
-import { FormDataValues } from '../SendTokenDialog';
+import { FormDataValues } from '../interfaces';
 import {
     Button,
     Card,

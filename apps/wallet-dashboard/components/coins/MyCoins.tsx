@@ -19,7 +19,7 @@ import {
     Title,
 } from '@iota/apps-ui-kit';
 import { RecognizedBadge } from '@iota/ui-icons';
-import SendCoinDialog from '../Dialogs/SendToken/SendTokenDialog';
+import { SendTokenDialog } from '../Dialogs/SendToken/SendTokenDialog';
 
 enum TokenCategory {
     All = 'All',
@@ -130,7 +130,7 @@ function MyCoins(): React.JSX.Element {
                 </div>
             </div>
             {selectedCoin && activeAccountAddress && (
-                <SendCoinDialog
+                <SendTokenDialog
                     activeAddress={activeAccountAddress}
                     coin={selectedCoin}
                     open={isSendTokenDialogOpen}

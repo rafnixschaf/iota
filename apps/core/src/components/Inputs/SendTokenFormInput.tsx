@@ -1,11 +1,11 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { ButtonPill, Input, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useFormatCoin, useGasBudgetEstimation } from '../../hooks';
-import React, { useEffect } from 'react';
-import { GAS_SYMBOL } from '../../constants';
+import { useEffect } from 'react';
 import { useField, useFormikContext } from 'formik';
 import { TokenForm } from '../../forms';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
@@ -32,7 +32,6 @@ export function SendTokenFormInput({
     name,
 }: SendTokenInputProps) {
     const { values, setFieldValue, isSubmitting, validateField } = useFormikContext<TokenForm>();
-
     const { data: gasBudgetEstimation } = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
@@ -73,11 +72,7 @@ export function SendTokenFormInput({
             allowNegative={false}
             errorMessage={errorMessage}
             amountCounter={
-                !errorMessage
-                    ? coins && formattedGasBudgetEstimation !== '--'
-                        ? `${formattedGasBudgetEstimation} ${GAS_SYMBOL}`
-                        : '--'
-                    : undefined
+                !errorMessage ? (coins ? formattedGasBudgetEstimation : '--') : undefined
             }
             trailingElement={renderAction()}
             decimalScale={coinDecimals ? undefined : 0}

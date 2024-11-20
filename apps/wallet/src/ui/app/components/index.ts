@@ -13,6 +13,7 @@ export * from './SummaryCard';
 export * from './WalletListSelect';
 export * from './accounts';
 export * from './active-coins-card';
+export * from './active-coins-card/CoinItem';
 export * from './error-boundary';
 export * from './explorer-link';
 export * from './explorer-link/Explorer';
