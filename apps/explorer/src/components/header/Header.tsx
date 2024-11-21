@@ -9,8 +9,7 @@ import { ThemeSwitcher, ThemedIotaLogo } from '~/components';
 
 function Header(): JSX.Element {
     return (
-        <header className="relative flex h-header justify-center overflow-visible">
-            <div className="absolute left-0 top-0 z-[-1] h-full w-full before:absolute before:inset-0 before:backdrop-blur" />
+        <header className="flex h-header justify-center overflow-visible backdrop-blur-lg">
             <div className="container flex h-full flex-1 items-center justify-between gap-5">
                 <LinkWithQuery
                     data-testid="nav-logo-button"
