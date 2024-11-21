@@ -17,7 +17,7 @@ import {
 import { type CoinStruct } from '@iota/iota-sdk/client';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Form, Formik } from 'formik';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import {
     InfoBox,
@@ -148,9 +148,6 @@ export function SendTokenForm({
                     const newPayIotaAll =
                         parseAmount(values.amount, coinDecimals) === coinBalance &&
                         coinType === IOTA_TYPE_ARG;
-                    if (values.isPayAllIota !== newPayIotaAll) {
-                        setFieldValue('isPayAllIota', newPayIotaAll);
-                    }
 
                     const hasEnoughBalance =
                         values.isPayAllIota ||
@@ -169,6 +166,12 @@ export function SendTokenForm({
                         parseAmount(values?.amount, coinDecimals) === coinBalance ||
                         queryResult.isPending ||
                         !coinBalance;
+
+                    useEffect(() => {
+                        if (values.isPayAllIota !== newPayIotaAll) {
+                            setFieldValue('isPayAllIota', newPayIotaAll);
+                        }
+                    }, [values.isPayAllIota, newPayIotaAll, setFieldValue]);
 
                     return (
                         <div className="flex h-full w-full flex-col">

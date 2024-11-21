@@ -14,7 +14,6 @@ interface UseGasBudgetEstimationOptions {
     to: string;
     amount: string;
     isPayAllIota: boolean;
-    showGasSymbol?: boolean;
 }
 
 export function useGasBudgetEstimation({
@@ -24,7 +23,6 @@ export function useGasBudgetEstimation({
     to,
     amount,
     isPayAllIota,
-    showGasSymbol = true,
 }: UseGasBudgetEstimationOptions) {
     const client = useIotaClient();
     return useQuery({

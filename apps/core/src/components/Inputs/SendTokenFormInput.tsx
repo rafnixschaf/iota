@@ -1,11 +1,11 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { ButtonPill, Input, InputType } from '@iota/apps-ui-kit';
 import { CoinStruct } from '@iota/iota-sdk/client';
 import { useFormatCoin, useGasBudgetEstimation } from '../../hooks';
-import React, { useEffect } from 'react';
-import { GAS_SYMBOL } from '../../constants';
+import { useEffect } from 'react';
 import { useField, useFormikContext } from 'formik';
 import { TokenForm } from '../../forms';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
@@ -32,7 +32,6 @@ export function SendTokenFormInput({
     name,
 }: SendTokenInputProps) {
     const { values, setFieldValue, isSubmitting, validateField } = useFormikContext<TokenForm>();
-
     const { data: gasBudgetEstimation } = useGasBudgetEstimation({
         coinDecimals,
         coins: coins ?? [],
@@ -40,13 +39,15 @@ export function SendTokenFormInput({
         to: to,
         amount: values.amount,
         isPayAllIota: values.isPayAllIota,
-        showGasSymbol: false,
     });
-    const [formattedGasBudgetEstimation] = useFormatCoin(gasBudgetEstimation, IOTA_TYPE_ARG);
+    const [formattedGasBudgetEstimation, gasToken] = useFormatCoin(
+        gasBudgetEstimation,
+        IOTA_TYPE_ARG,
+    );
 
     const [field, meta, helpers] = useField<string>(name);
     const errorMessage = meta.error;
-    const isActionButtonDisabled = isSubmitting || !!errorMessage || isMaxActionDisabled;
+    const isActionButtonDisabled = isSubmitting || isMaxActionDisabled;
 
     const renderAction = () => (
         <ButtonPill disabled={isActionButtonDisabled} onClick={onActionClick}>
@@ -54,11 +55,9 @@ export function SendTokenFormInput({
         </ButtonPill>
     );
 
-    useEffect(() => {
-        if (meta.touched) {
-            validateField(name);
-        }
-    }, [field.value, meta.touched]);
+    const gasAmount = formattedGasBudgetEstimation
+        ? formattedGasBudgetEstimation + ' ' + gasToken
+        : undefined;
 
     // gasBudgetEstimation should change when the amount above changes
     useEffect(() => {
@@ -78,19 +77,13 @@ export function SendTokenFormInput({
             prefix={values.isPayAllIota ? '~ ' : undefined}
             allowNegative={false}
             errorMessage={errorMessage}
-            amountCounter={
-                !errorMessage
-                    ? coins && formattedGasBudgetEstimation !== '--'
-                        ? `${formattedGasBudgetEstimation} ${GAS_SYMBOL}`
-                        : '--'
-                    : undefined
-            }
+            amountCounter={!errorMessage ? (coins ? gasAmount : '--') : undefined}
             trailingElement={renderAction()}
             decimalScale={coinDecimals ? undefined : 0}
             thousandSeparator
-            onValueChange={(values) => {
-                helpers.setTouched(true);
-                helpers.setValue(values.value);
+            onValueChange={async (values) => {
+                await helpers.setValue(values.value);
+                validateField(name);
             }}
         />
     );

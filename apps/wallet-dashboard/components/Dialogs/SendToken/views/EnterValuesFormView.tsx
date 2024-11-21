@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { CoinBalance, CoinMetadata, CoinStruct } from '@iota/iota-sdk/client';
-import { FormDataValues, INITIAL_VALUES } from '../SendTokenDialog';
 import {
     AddressInput,
     CoinFormat,
@@ -31,10 +30,14 @@ import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { Form, Formik, FormikProps } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { UseQueryResult } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { FormDataValues } from '../interfaces';
+import { INITIAL_VALUES } from '../constants';
 
 interface EnterValuesFormProps {
     coin: CoinBalance;
     activeAddress: string;
+    initialFormValues: FormDataValues;
     setFormData: React.Dispatch<React.SetStateAction<FormDataValues>>;
     setSelectedCoin: React.Dispatch<React.SetStateAction<CoinBalance>>;
     onNext: () => void;
@@ -77,9 +80,6 @@ function FormInputs({
 }: FormInputsProps): React.JSX.Element {
     const newPayIotaAll =
         parseAmount(values.amount, coinDecimals) === coinBalance && coinType === IOTA_TYPE_ARG;
-    if (values.isPayAllIota !== newPayIotaAll) {
-        setFieldValue('isPayAllIota', newPayIotaAll);
-    }
 
     const hasEnoughBalance =
         values.isPayAllIota ||
@@ -95,6 +95,12 @@ function FormInputs({
         parseAmount(values.amount, coinDecimals) === coinBalance ||
         queryResult.isPending ||
         !coinBalance;
+
+    useEffect(() => {
+        if (values.isPayAllIota !== newPayIotaAll) {
+            setFieldValue('isPayAllIota', newPayIotaAll);
+        }
+    }, [values.isPayAllIota, newPayIotaAll, setFieldValue]);
 
     return (
         <div className="flex h-full w-full flex-col">
@@ -139,12 +145,13 @@ function FormInputs({
     );
 }
 
-function EnterValuesFormView({
+export function EnterValuesFormView({
     coin,
     activeAddress,
     setFormData,
     setSelectedCoin,
     onNext,
+    initialFormValues,
 }: EnterValuesFormProps): JSX.Element {
     // Get all coins of the type
     const { data: coinsData, isPending: coinsIsPending } = useGetAllCoins(
@@ -208,7 +215,8 @@ function EnterValuesFormView({
 
         const data = {
             to,
-            amount: formattedAmount,
+            amount,
+            formattedAmount,
             isPayAllIota,
             coins,
             coinIds: coinsIDs,
@@ -232,13 +240,15 @@ function EnterValuesFormView({
 
             <Formik
                 initialValues={{
-                    amount: '',
-                    to: '',
+                    amount: initialFormValues.amount ?? '',
+                    to: initialFormValues.to ?? '',
+                    formattedAmount: initialFormValues.formattedAmount ?? '',
                     isPayAllIota:
-                        !!initAmountBig &&
-                        initAmountBig === coinBalance &&
-                        coin.coinType === IOTA_TYPE_ARG,
-                    gasBudgetEst: '',
+                        initialFormValues.isPayAllIota ??
+                        (!!initAmountBig &&
+                            initAmountBig === coinBalance &&
+                            coin.coinType === IOTA_TYPE_ARG),
+                    gasBudgetEst: initialFormValues.gasBudgetEst ?? '',
                 }}
                 validationSchema={validationSchemaStepOne}
                 enableReinitialize
@@ -264,5 +274,3 @@ function EnterValuesFormView({
         </div>
     );
 }
-
-export default EnterValuesFormView;
