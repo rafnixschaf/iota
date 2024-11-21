@@ -176,6 +176,8 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
+    /// [`Command::TransferObjects`].
     pub async fn transfer_object_tx_kind(
         &self,
         object_id: ObjectID,
@@ -225,6 +227,10 @@ impl TransactionBuilder {
         Ok(())
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
+    /// [`Command::SplitCoins`] if some amount is provided and then transfers
+    /// the split amount or the whole gas object with
+    /// [`Command::TransferObjects`] to the recipient.
     pub fn transfer_iota_tx_kind(
         &self,
         recipient: IotaAddress,
@@ -258,6 +264,11 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
+    /// [`Command::MergeCoins`] if multiple inputs coins are provided and then a
+    /// [`Command::SplitCoins`] together with [`Command::TransferObject`] for
+    /// each recipient + amount.
+    /// The length of the vectors for recipients and amounts must be the same.
     pub async fn pay_tx_kind(
         &self,
         input_coins: Vec<ObjectID>,
@@ -373,6 +384,8 @@ impl TransactionBuilder {
         )
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
+    /// [`Command::TransferObjects`] that sends the gas coin to the recipient.
     pub fn pay_all_iota_tx_kind(&self, recipient: IotaAddress) -> TransactionKind {
         let mut builder = ProgrammableTransactionBuilder::new();
         builder.pay_all_iota(recipient);
@@ -417,6 +430,8 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
+    /// [`Command::MoveCall`].
     pub async fn move_call_tx_kind(
         &self,
         package_object_id: ObjectID,
@@ -921,6 +936,8 @@ impl TransactionBuilder {
         )
     }
 
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains
+    /// [`Command::MergeCoins`] with the provided coins.
     pub async fn merge_coins_tx_kind(
         &self,
         primary_coin: ObjectID,
