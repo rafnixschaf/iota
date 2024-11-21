@@ -15,7 +15,7 @@ import {
 import { ValidatorApyData } from '@iota/core';
 import { Validator } from './Validator';
 import { IotaLogoMark } from '@iota/ui-icons';
-import { StakingTransactionDetails } from './StakingTransactionDetails';
+import { StakingRewardDetails } from './StakingRewardDetails';
 import { Layout, LayoutBody, LayoutFooter } from './Layout';
 
 interface FinishStakingViewProps {
@@ -51,7 +51,7 @@ export function FinishStakingView({
                         <CardBody title={`${amount} ${symbol}`} subtitle="Stake" />
                     </Card>
 
-                    <StakingTransactionDetails
+                    <StakingRewardDetails
                         apy={apy}
                         isApyApproxZero={isApyApproxZero}
                         gasBudget={gasBudget}

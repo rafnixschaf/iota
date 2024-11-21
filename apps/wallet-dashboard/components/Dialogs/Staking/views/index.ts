@@ -6,4 +6,7 @@ export { default as SelectValidatorView } from './SelectValidatorView';
 
 export * from './DetailsView';
 export * from './UnstakeView';
-export * from './StakingTransactionDetails';
+export * from './StakingRewardDetails';
+export * from './Validator';
+export * from './StakedInfo';
+export * from './Layout';

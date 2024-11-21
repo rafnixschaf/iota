@@ -24,11 +24,7 @@ import {
 import { Field, type FieldProps, useFormikContext } from 'formik';
 import { Exclamation } from '@iota/ui-icons';
 import { useCurrentAccount } from '@iota/dapp-kit';
-
-import { Validator } from './Validator';
-import { StakedInfo } from './StakedInfo';
-import { Layout, LayoutBody, LayoutFooter } from './Layout';
-import { StakingTransactionDetails } from './StakingTransactionDetails';
+import { StakingRewardDetails, Validator, StakedInfo, Layout, LayoutBody, LayoutFooter } from './';
 
 export interface FormValues {
     amount: string;
@@ -133,7 +129,7 @@ function EnterAmountView({
                                 </div>
                             ) : null}
                         </div>
-                        <StakingTransactionDetails gasBudget={gasBudget} {...validatorApy} />
+                        <StakingRewardDetails gasBudget={gasBudget} {...validatorApy} />
                     </div>
                 </div>
             </LayoutBody>
