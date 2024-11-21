@@ -640,8 +640,8 @@ impl TransactionBuilder {
         Ok(args)
     }
 
-    /// Build a TransactionKind::ProgrammableTransaction that contains
-    /// Command::Publish for the provided package.
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains
+    /// [`Command::Publish`] for the provided package.
     pub async fn publish_tx_kind(
         &self,
         sender: IotaAddress,
@@ -680,8 +680,8 @@ impl TransactionBuilder {
         ))
     }
 
-    /// Build a TransactionKind::ProgrammableTransaction that contains
-    /// Command::Upgrade for the provided package.
+    /// Build a [`TransactionKind::ProgrammableTransaction`] that contains
+    /// [`Command::Upgrade`] for the provided package.
     pub async fn upgrade_tx_kind(
         &self,
         package_id: ObjectID,
