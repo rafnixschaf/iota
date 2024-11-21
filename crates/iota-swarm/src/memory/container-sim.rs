@@ -34,7 +34,9 @@ impl Drop for Container {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
             tracing::info!("shutting down {}", handle.node_id);
-            iota_simulator::runtime::Handle::try_current().map(|h| h.delete_node(handle.node_id));
+            if let Some(h) = iota_simulator::runtime::Handle::try_current() {
+                h.delete_node(handle.node_id);
+            }
         }
     }
 }
