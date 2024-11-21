@@ -44,7 +44,6 @@ function ValidatorWithImage({
                         size={ImageIconSize.Medium}
                         label={validator.name}
                         fallback={validator.name}
-                        fallbackWithDarkBg
                     />
                     <span
                         className={clsx('text-label-lg', {

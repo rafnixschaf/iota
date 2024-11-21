@@ -34,7 +34,6 @@ export function ValidatorMeta({ validatorData }: ValidatorMetaProps): JSX.Elemen
                                 label={validatorName}
                                 fallback={validatorName}
                                 size={ImageIconSize.Full}
-                                fallbackWithDarkBg
                             />
                         </div>
                         <div className="flex flex-col gap-y-sm">
