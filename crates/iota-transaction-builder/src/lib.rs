@@ -266,7 +266,7 @@ impl TransactionBuilder {
 
     /// Build a [`TransactionKind::ProgrammableTransaction`] that contains a
     /// [`Command::MergeCoins`] if multiple inputs coins are provided and then a
-    /// [`Command::SplitCoins`] together with [`Command::TransferObject`] for
+    /// [`Command::SplitCoins`] together with [`Command::TransferObjects`] for
     /// each recipient + amount.
     /// The length of the vectors for recipients and amounts must be the same.
     pub async fn pay_tx_kind(
