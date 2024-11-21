@@ -1230,8 +1230,9 @@ impl TransactionBuilder {
         )
     }
 
-    // TODO: we should add retrial to reduce the transaction building error rate
+    /// Get the latest object ref for an object.
     pub async fn get_object_ref(&self, object_id: ObjectID) -> anyhow::Result<ObjectRef> {
+        // TODO: we should add retrial to reduce the transaction building error rate
         self.get_object_ref_and_type(object_id)
             .await
             .map(|(oref, _)| oref)
