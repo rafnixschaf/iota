@@ -1161,7 +1161,7 @@ fn get_total_transaction_blocks() {
 
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, checkpoint).await;
-        // even tough when the indexer catched up with the desired checkpoint from the
+        // even tough when the indexer caught up with the desired checkpoint from the
         // fullnode, sometimes when requesting the fullnode
         // get_checkpoint(CheckpointId::SequenceNumber(checkpoint)) it can say that it
         // does not exist, here we make sure that also the fullnode is synced
