@@ -54,7 +54,7 @@ export function TransactionView({ transaction }: TransactionViewProps): JSX.Elem
             <div className="flex flex-col gap-md md:flex-row">
                 <div className="flex h-full w-full flex-1 overflow-auto md:w-1/3">
                     <div className="w-full">
-                        <Panel bgColor="bg-neutral-100 dark:bg-neutral-6">
+                        <Panel>
                             <SegmentedButton type={SegmentedButtonType.Transparent}>
                                 <ButtonSegment
                                     onClick={() => setActiveTab(TabCategory.Summary)}
