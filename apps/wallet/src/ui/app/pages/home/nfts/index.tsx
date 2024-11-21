@@ -181,17 +181,17 @@ function NftsPage() {
                                 ) : (
                                     <NoData message="No assets found yet." />
                                 )}
+                                <div ref={observerElem}>
+                                    {isSpinnerVisible ? (
+                                        <div className="mt-1 flex w-full justify-center">
+                                            <LoadingIndicator />
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
                         </Loading>
                     </>
                 )}
-                <div ref={observerElem}>
-                    {isSpinnerVisible ? (
-                        <div className="mt-1 flex w-full justify-center">
-                            <LoadingIndicator />
-                        </div>
-                    ) : null}
-                </div>
             </div>
         </PageTemplate>
     );

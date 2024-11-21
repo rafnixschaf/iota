@@ -3,16 +3,13 @@
 
 'use client';
 
-import { PageSizeSelector, PaginationOptions } from '@/components';
-import { Panel, Title, Chip, TitleSize, DropdownPosition } from '@iota/apps-ui-kit';
-import { hasDisplayData, useCursorPagination, useGetOwnedObjects } from '@iota/core';
+import { Panel, Title, Chip, TitleSize } from '@iota/apps-ui-kit';
+import { hasDisplayData, useGetOwnedObjects } from '@iota/core';
 import { useCurrentAccount } from '@iota/dapp-kit';
 import { IotaObjectData } from '@iota/iota-sdk/client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AssetCategory } from '@/lib/enums';
 import { AssetList } from '@/components/AssetsList';
-
-const PAGINATION_RANGE = [20, 35, 50];
 
 const ASSET_CATEGORIES: { label: string; value: AssetCategory }[] = [
     {
@@ -27,33 +24,30 @@ const ASSET_CATEGORIES: { label: string; value: AssetCategory }[] = [
 
 export default function AssetsDashboardPage(): React.JSX.Element {
     const [selectedCategory, setSelectedCategory] = useState<AssetCategory>(AssetCategory.Visual);
-    const [limit, setLimit] = useState<number>(PAGINATION_RANGE[1]);
-
     const account = useCurrentAccount();
-    const ownedObjectsQuery = useGetOwnedObjects(account?.address, undefined, limit);
+    const { data, isFetching, fetchNextPage, hasNextPage } = useGetOwnedObjects(
+        account?.address,
+        undefined,
+        50,
+    );
 
-    const { data, pagination } = useCursorPagination(ownedObjectsQuery);
-
-    const { data: ownedObjects } = data || {};
-
-    const [visual, nonVisual] = (() => {
+    const [visual, nonVisual] = useMemo(() => {
         const visual: IotaObjectData[] = [];
         const nonVisual: IotaObjectData[] = [];
 
-        ownedObjects
-            ?.filter((asset) => asset.data && asset.data.objectId)
-            .forEach((asset) => {
-                if (asset.data) {
+        data?.pages.forEach((page) =>
+            page.data.forEach((asset) => {
+                if (asset.data && asset.data.objectId) {
                     if (hasDisplayData(asset)) {
                         visual.push(asset.data);
                     } else {
                         nonVisual.push(asset.data);
                     }
                 }
-            });
-
+            }),
+        );
         return [visual, nonVisual];
-    })();
+    }, [data]);
 
     const categoryToAsset: Record<AssetCategory, IotaObjectData[]> = {
         [AssetCategory.Visual]: visual,
@@ -77,21 +71,13 @@ export default function AssetsDashboardPage(): React.JSX.Element {
                     ))}
                 </div>
 
-                <AssetList assets={assetList} selectedCategory={selectedCategory} />
-                <div className="flex flex-row items-center justify-end py-xs">
-                    <PaginationOptions
-                        pagination={pagination}
-                        action={
-                            <PageSizeSelector
-                                pagination={pagination}
-                                range={PAGINATION_RANGE}
-                                dropdownPosition={DropdownPosition.Top}
-                                setLimit={(e) => setLimit(e)}
-                                limit={limit.toString()}
-                            />
-                        }
-                    />
-                </div>
+                <AssetList
+                    assets={assetList}
+                    selectedCategory={selectedCategory}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetching}
+                    fetchNextPage={fetchNextPage}
+                />
             </div>
         </Panel>
     );
