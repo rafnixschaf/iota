@@ -69,6 +69,7 @@ impl TransactionBuilder {
         Self(data_reader)
     }
 
+    /// Select a gas coin for the provided gas budget.
     async fn select_gas(
         &self,
         signer: IotaAddress,
@@ -212,6 +213,8 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Add a TransferObjects command to the provided
+    /// [`ProgrammableTransactionBuilder`].
     async fn single_transfer_object(
         &self,
         builder: &mut ProgrammableTransactionBuilder,
@@ -488,6 +491,8 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Add a single move call to the provided
+    /// [`ProgrammableTransactionBuilder`].
     pub async fn single_move_call(
         &self,
         builder: &mut ProgrammableTransactionBuilder,
@@ -517,6 +522,8 @@ impl TransactionBuilder {
         Ok(())
     }
 
+    /// Resolve a provided [`ObjectID`] to the required [`ObjectArg`] for a
+    /// given move module.
     async fn get_object_arg(
         &self,
         id: ObjectID,
@@ -551,6 +558,8 @@ impl TransactionBuilder {
         })
     }
 
+    /// Convert provided JSON arguments for a move function to their
+    /// [`Argument`] representation and check their validity.
     pub async fn resolve_and_checks_json_args(
         &self,
         builder: &mut ProgrammableTransactionBuilder,
@@ -631,6 +640,8 @@ impl TransactionBuilder {
         Ok(args)
     }
 
+    /// Build a TransactionKind::ProgrammableTransaction that contains
+    /// Command::Publish for the provided package.
     pub async fn publish_tx_kind(
         &self,
         sender: IotaAddress,
@@ -669,6 +680,8 @@ impl TransactionBuilder {
         ))
     }
 
+    /// Build a TransactionKind::ProgrammableTransaction that contains
+    /// Command::Upgrade for the provided package.
     pub async fn upgrade_tx_kind(
         &self,
         package_id: ObjectID,
@@ -983,6 +996,7 @@ impl TransactionBuilder {
         )
     }
 
+    /// Create an unsigned batched transaction, useful for the JSON RPC.
     pub async fn batch_transaction(
         &self,
         signer: IotaAddress,
