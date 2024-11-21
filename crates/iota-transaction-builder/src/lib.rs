@@ -215,7 +215,7 @@ impl TransactionBuilder {
         ))
     }
 
-    /// Add a TransferObjects command to the provided
+    /// Add a [`Command::TransferObjects`] to the provided
     /// [`ProgrammableTransactionBuilder`].
     async fn single_transfer_object(
         &self,
