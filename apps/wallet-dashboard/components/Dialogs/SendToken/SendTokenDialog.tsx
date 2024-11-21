@@ -76,8 +76,6 @@ function SendTokenDialogBody({
         setStep(FormStep.EnterValues);
     }
 
-    console.log({ formData });
-
     return (
         <>
             <Header

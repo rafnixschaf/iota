@@ -244,9 +244,10 @@ export function EnterValuesFormView({
                     to: initialFormValues.to ?? '',
                     formattedAmount: initialFormValues.formattedAmount ?? '',
                     isPayAllIota:
-                        !!initAmountBig &&
-                        initAmountBig === coinBalance &&
-                        coin.coinType === IOTA_TYPE_ARG,
+                        initialFormValues.isPayAllIota ??
+                        (!!initAmountBig &&
+                            initAmountBig === coinBalance &&
+                            coin.coinType === IOTA_TYPE_ARG),
                     gasBudgetEst: initialFormValues.gasBudgetEst ?? '',
                 }}
                 validationSchema={validationSchemaStepOne}
