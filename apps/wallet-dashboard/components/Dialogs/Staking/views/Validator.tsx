@@ -13,19 +13,21 @@ import {
 } from '@iota/apps-ui-kit';
 import { formatAddress } from '@iota/iota-sdk/utils';
 
+interface ValidatorProps {
+    isSelected: boolean;
+    address: string;
+    showActiveStatus?: boolean;
+    onClick?: (address: string) => void;
+    showAction?: boolean;
+}
+
 export function Validator({
     address,
     showActiveStatus,
     onClick,
     isSelected,
     showAction = true,
-}: {
-    isSelected: boolean;
-    address: string;
-    showActiveStatus?: boolean;
-    onClick?: (address: string) => void;
-    showAction?: boolean;
-}) {
+}: ValidatorProps) {
     const { name, newValidator, isAtRisk, apy, isApyApproxZero } = useValidatorInfo({
         validatorAddress: address,
     });

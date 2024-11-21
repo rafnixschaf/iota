@@ -2,11 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! The Iota Rust SDK
+//! The IOTA Rust SDK
 //!
 //! It aims at providing a similar SDK functionality like the one existing for
 //! [TypeScript](https://github.com/iotaledger/iota/tree/main/sdk/typescript/).
-//! Iota Rust SDK builds on top of the [JSON RPC API](https://docs.iota.io/iota-jsonrpc)
+//! IOTA Rust SDK builds on top of the [JSON RPC API](https://docs.iota.org/iota-api-ref)
 //! and therefore many of the return types are the ones specified in
 //! [iota_types].
 //!
@@ -118,8 +118,8 @@ pub const IOTA_COIN_TYPE: &str = "0x2::iota::IOTA";
 pub const IOTA_LOCAL_NETWORK_URL: &str = "http://127.0.0.1:9000";
 pub const IOTA_LOCAL_NETWORK_URL_0: &str = "http://0.0.0.0:9000";
 pub const IOTA_LOCAL_NETWORK_GAS_URL: &str = "http://127.0.0.1:5003/gas";
-pub const IOTA_DEVNET_URL: &str = "https://fullnode.devnet.iota.io:443";
-pub const IOTA_TESTNET_URL: &str = "https://fullnode.testnet.iota.io:443";
+pub const IOTA_DEVNET_URL: &str = "https://api.devnet.iota.cafe";
+pub const IOTA_TESTNET_URL: &str = "https://api.testnet.iota.cafe";
 
 /// Builder for creating an [IotaClient] for connecting to the Iota network.
 ///

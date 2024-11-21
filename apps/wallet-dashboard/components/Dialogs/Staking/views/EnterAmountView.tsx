@@ -1,7 +1,7 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
     useFormatCoin,
     useBalance,
@@ -36,7 +36,6 @@ export interface FormValues {
 
 interface EnterAmountViewProps {
     selectedValidator: string;
-    setAmount: (amount: string) => void;
     onBack: () => void;
     onStake: () => void;
     showActiveStatus?: boolean;
@@ -52,7 +51,6 @@ function EnterAmountView({
     gasBudget = 0,
     handleClose,
     validatorApy,
-    setAmount,
 }: EnterAmountViewProps): JSX.Element {
     const coinType = IOTA_TYPE_ARG;
     const { data: metadata } = useCoinMetadata(coinType);
@@ -74,16 +72,12 @@ function EnterAmountView({
         CoinFormat.FULL,
     );
 
-    const _gasBudget = BigInt(gasBudget ?? 0);
+    const gasBudgetBigInt = BigInt(gasBudget ?? 0);
 
     const hasEnoughRemaingBalance =
-        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * _gasBudget;
+        maxTokenBalance > parseAmount(values.amount, decimals) + BigInt(2) * gasBudgetBigInt;
     const shouldShowInsufficientRemainingFundsWarning =
         maxTokenFormatted >= values.amount && !hasEnoughRemaingBalance;
-
-    useEffect(() => {
-        setAmount(amount);
-    }, [amount, setAmount]);
 
     return (
         <Layout>

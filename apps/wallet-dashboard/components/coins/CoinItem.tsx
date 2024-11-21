@@ -10,11 +10,9 @@ import {
     CardType,
     ImageType,
 } from '@iota/apps-ui-kit';
-import { useFormatCoin } from '@iota/core';
+import { CoinIcon, useFormatCoin, ImageIconSize } from '@iota/core';
 import { IOTA_TYPE_ARG } from '@iota/iota-sdk/utils';
 import { type ReactNode } from 'react';
-import { ImageIconSize } from '../ImageIcon';
-import { CoinIcon } from './CoinIcon';
 
 interface CoinItemProps {
     coinType: string;
